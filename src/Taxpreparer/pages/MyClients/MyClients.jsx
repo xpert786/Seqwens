@@ -122,7 +122,7 @@ export default function MyClients() {
     } else {
       setEditedInviteEmail('');
     }
-    
+
     // If invite link is missing, try to fetch it
     if (!inviteData.invite_link && (inviteData.id || inviteData.invite_id || inviteData.client_id)) {
       try {
@@ -132,7 +132,7 @@ export default function MyClients() {
         } else if (inviteData.client_id) {
           params.client_id = inviteData.client_id;
         }
-        
+
         const linkResponse = await taxPreparerClientAPI.getInviteLink(params);
         if (linkResponse.success) {
           const inviteLink = linkResponse.invite_link || linkResponse.data?.invite_link;
@@ -537,7 +537,7 @@ export default function MyClients() {
               expires_at: inviteResponse.data?.expires_at,
               status: inviteResponse.data?.status || 'pending'
             };
-            
+
             openInviteActionsModal(inviteData);
             toast.info("Invite link created. Share or send it below.", {
               position: "top-right",
@@ -665,10 +665,10 @@ export default function MyClients() {
 
   const handleRefreshInviteLink = async () => {
     if (!activeInviteDetails) return;
-    
+
     try {
       setInviteLinkRefreshing(true);
-      
+
       // Use the new tax preparer API to regenerate invite link
       // If we have invite_id, use it; otherwise use client_id
       let response;
@@ -687,18 +687,18 @@ export default function MyClients() {
       } else {
         throw new Error("No invite ID or client ID available");
       }
-      
+
       if (response.success) {
         // Update invite link from response
         const newInviteLink = response.invite_link || response.data?.invite_link;
         const newExpiresAt = response.data?.expires_at;
-        
+
         setActiveInviteDetails((prev) => ({
           ...prev,
           invite_link: newInviteLink,
           expires_at: newExpiresAt || prev.expires_at
         }));
-        
+
         toast.success("Invite link regenerated successfully.", {
           position: "top-right",
           autoClose: 3000
@@ -725,7 +725,7 @@ export default function MyClients() {
 
     // Remove all non-digit characters
     const digitsOnly = phoneValue.replace(/\D/g, '');
-    
+
     // Country code (ISO) to dial code mapping
     // Source: https://countrycode.org/
     const countryToDialCode = {
@@ -753,7 +753,7 @@ export default function MyClients() {
 
     // Get dial code for the country (default to '1' if not found)
     const dialCode = countryToDialCode[countryCode.toLowerCase()] || '1';
-    
+
     // PhoneInput value format: [dialCode][phoneNumber] (e.g., "1234567890" for US)
     // If phone starts with the dial code, extract it
     let extractedCountryCode = dialCode;
@@ -821,10 +821,10 @@ export default function MyClients() {
           ...prev,
           ...response.data
         }));
-        
+
         // Check for errors in delivery_summary
         const deliverySummary = response.data?.delivery_summary;
-        
+
         // Show SMS error if present
         if (deliverySummary?.sms_error) {
           toast.error(deliverySummary.sms_error, {
@@ -832,12 +832,12 @@ export default function MyClients() {
             autoClose: 5000
           });
         }
-        
+
         // Show success message if at least one method was sent successfully
         const emailSent = deliverySummary?.email_sent === true;
         const smsSent = deliverySummary?.sms_sent === true;
         const hasError = deliverySummary?.sms_error || (deliverySummary?.email_sent === false && methods.includes('email'));
-        
+
         if ((emailSent || smsSent) && !hasError) {
           toast.success(response.message || "Invite notifications processed.", {
             position: "top-right",
@@ -933,9 +933,9 @@ export default function MyClients() {
 
       // Use POST to regenerate invite link
       // POST /accounts/tax-preparer/clients/invite/link/ with { client_id: X, regenerate: true }
-      const linkResponse = await taxPreparerClientAPI.generateInviteLink({ 
-        client_id: client.id, 
-        regenerate: true 
+      const linkResponse = await taxPreparerClientAPI.generateInviteLink({
+        client_id: client.id,
+        regenerate: true
       });
 
       if (linkResponse.success) {
@@ -1245,7 +1245,7 @@ export default function MyClients() {
       </div>
 
       {/* Tabs */}
-      <div className="d-flex gap-2 mb-4 align-items-center" style={{ 
+      <div className="d-flex gap-2 mb-4 align-items-center" style={{
         borderBottom: '2px solid #E8F0FF',
         paddingBottom: '0',
         marginTop: '20px',
@@ -1285,7 +1285,7 @@ export default function MyClients() {
         >
           Pending Invites
           {(pendingInvites.length > 0 || invitesPagination.total_count > 0) && (
-            <span className="badge bg-danger text-white ms-2" style={{ 
+            <span className="badge bg-danger text-white ms-2" style={{
               fontSize: '10px',
               padding: '2px 6px',
               borderRadius: '10px',
@@ -1318,151 +1318,151 @@ export default function MyClients() {
 
       {/* Search & Filter - Show for clients and unlinked taxpayers tabs */}
       {(activeTab === 'clients' || activeTab === 'unlinked-taxpayers') && (
-      <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-        <div className="position-relative " style={{ width: '260px', flexShrink: 0 }}>
-          <input
-            type="text"
-            className="form-control rounded"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            style={{
-              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-              paddingLeft: "38px",
-              paddingRight: "12px",
-              paddingTop: "10px",
-              paddingBottom: "8px",
-              width: "100%",
-              height: "38px",
-              fontSize: "14px",
-              lineHeight: "22px"
-            }}
-          />
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 12 12"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="search-icon"
-            style={{
-              position: 'absolute',
-              left: '14px',
-              top: '12px',
-              zIndex: 10,
-              pointerEvents: 'none'
-            }}
-          >
-            <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-
-        <div className="position-relative filter-dropdown-container" style={{ display: 'flex', alignItems: 'center' }}>
-          <button
-            className="btn btn-filter d-flex align-items-center justify-content-center rounded px-3"
-            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            style={{
-              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-              background: "#fff",
-              height: "38px",
-              paddingLeft: "38px",
-              paddingRight: "12px",
-              paddingTop: "10px",
-              paddingBottom: "8px",
-              fontSize: "14px",
-              lineHeight: "22px",
-              marginTop: "-9px",
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            <FiltIcon className="me-2 text-muted" style={{ fontSize: "14px" }} />
-            <span>Filter</span>
-            {(statusFilter || priorityFilter) && (
-              <span className="badge bg-danger text-white ms-2" style={{ fontSize: "10px", color: "#ffffff" }}>
-                {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0)}
-              </span>
-            )}
-          </button>
-          {showFilterDropdown && (
-            <div
-              className="card shadow-sm"
+        <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+          <div className="position-relative " style={{ width: '260px', flexShrink: 0 }}>
+            <input
+              type="text"
+              className="form-control rounded"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={handleSearchChange}
               style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                zIndex: 1000,
-                minWidth: "200px",
-                marginTop: "8px",
-                padding: "12px"
+                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                paddingLeft: "38px",
+                paddingRight: "12px",
+                paddingTop: "10px",
+                paddingBottom: "8px",
+                width: "100%",
+                height: "38px",
+                fontSize: "14px",
+                lineHeight: "22px"
+              }}
+            />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 12 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="search-icon"
+              style={{
+                position: 'absolute',
+                left: '14px',
+                top: '12px',
+                zIndex: 10,
+                pointerEvents: 'none'
               }}
             >
-              <div className="mb-2">
-                <label className="form-label small fw-semibold">Status</label>
-                <div className="d-flex flex-column gap-1">
-                  <button
-                    className={`btn btn-sm ${statusFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleStatusFilter(null)}
-                  >
-                    All
-                  </button>
-                  <button
-                    className={`btn btn-sm ${statusFilter === 'active' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleStatusFilter('active')}
-                  >
-                    Active
-                  </button>
-                  <button
-                    className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleStatusFilter('pending')}
-                  >
-                    Pending
-                  </button>
-                </div>
-              </div>
-              <div className="mb-2">
-                <label className="form-label small fw-semibold">Priority</label>
-                <div className="d-flex flex-column gap-1">
-                  <button
-                    className={`btn btn-sm ${priorityFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handlePriorityFilter(null)}
-                  >
-                    All
-                  </button>
-                  <button
-                    className={`btn btn-sm ${priorityFilter === 'high' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handlePriorityFilter('high')}
-                  >
-                    High
-                  </button>
-                  <button
-                    className={`btn btn-sm ${priorityFilter === 'medium' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handlePriorityFilter('medium')}
-                  >
-                    Medium
-                  </button>
-                  <button
-                    className={`btn btn-sm ${priorityFilter === 'low' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handlePriorityFilter('low')}
-                  >
-                    Low
-                  </button>
-                </div>
-              </div>
-              {(statusFilter || priorityFilter || searchQuery) && (
-                <button
-                  className="btn btn-sm btn-outline-danger w-100 mt-2"
-                  onClick={clearFilters}
-                  style={{ borderRadius: '8px' }}
-                >
-                  Clear Filters
-                </button>
+              <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          <div className="position-relative filter-dropdown-container" style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              className="btn btn-filter d-flex align-items-center justify-content-center rounded px-3"
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              style={{
+                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                background: "#fff",
+                height: "38px",
+                paddingLeft: "38px",
+                paddingRight: "12px",
+                paddingTop: "10px",
+                paddingBottom: "8px",
+                fontSize: "14px",
+                lineHeight: "22px",
+                marginTop: "-9px",
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <FiltIcon className="me-2 text-muted" style={{ fontSize: "14px" }} />
+              <span>Filter</span>
+              {(statusFilter || priorityFilter) && (
+                <span className="badge bg-danger text-white ms-2" style={{ fontSize: "10px", color: "#ffffff" }}>
+                  {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0)}
+                </span>
               )}
-            </div>
-          )}
+            </button>
+            {showFilterDropdown && (
+              <div
+                className="card shadow-sm"
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  zIndex: 1000,
+                  minWidth: "200px",
+                  marginTop: "8px",
+                  padding: "12px"
+                }}
+              >
+                <div className="mb-2">
+                  <label className="form-label small fw-semibold">Status</label>
+                  <div className="d-flex flex-column gap-1">
+                    <button
+                      className={`btn btn-sm ${statusFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleStatusFilter(null)}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`btn btn-sm ${statusFilter === 'active' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleStatusFilter('active')}
+                    >
+                      Active
+                    </button>
+                    <button
+                      className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleStatusFilter('pending')}
+                    >
+                      Pending
+                    </button>
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <label className="form-label small fw-semibold">Priority</label>
+                  <div className="d-flex flex-column gap-1">
+                    <button
+                      className={`btn btn-sm ${priorityFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handlePriorityFilter(null)}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`btn btn-sm ${priorityFilter === 'high' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handlePriorityFilter('high')}
+                    >
+                      High
+                    </button>
+                    <button
+                      className={`btn btn-sm ${priorityFilter === 'medium' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handlePriorityFilter('medium')}
+                    >
+                      Medium
+                    </button>
+                    <button
+                      className={`btn btn-sm ${priorityFilter === 'low' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handlePriorityFilter('low')}
+                    >
+                      Low
+                    </button>
+                  </div>
+                </div>
+                {(statusFilter || priorityFilter || searchQuery) && (
+                  <button
+                    className="btn btn-sm btn-outline-danger w-100 mt-2"
+                    onClick={clearFilters}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* Client List Card - Only show for clients tab */}
@@ -1473,62 +1473,43 @@ export default function MyClients() {
           <h6 className="fw-semibold mb-3">Client List</h6>
           <div className="mb-3">All clients assigned to you</div>
 
-        {processedClients.length === 0 ? (
-          <div className="text-center py-5">
-            <p className="text-muted">No clients found</p>
-            {(searchQuery || statusFilter || priorityFilter) && (
-              <button className="btn btn-sm btn-outline-primary mt-2" onClick={clearFilters}>
-                Clear filters to see all clients
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="row g-3">
-            {processedClients.map((client) => (
-              <div
-                key={client.id}
-                className={processedClients.length === 1 ? "col-12" : "col-md-6 col-12"}
-              >
+          {processedClients.length === 0 ? (
+            <div className="text-center py-5">
+              <p className="text-muted">No clients found</p>
+              {(searchQuery || statusFilter || priorityFilter) && (
+                <button className="btn btn-sm btn-outline-primary mt-2" onClick={clearFilters}>
+                  Clear filters to see all clients
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="row g-3">
+              {processedClients.map((client) => (
                 <div
-                  className="card client-card"
-                  style={{
-                    border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)"
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openClientDetails(client)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openClientDetails(client);
-                    }
-                  }}
+                  key={client.id}
+                  className={processedClients.length === 1 ? "col-12" : "col-md-6 col-12"}
                 >
-                  <div className="d-flex justify-content-between align-items-start">
-                    {/* Left */}
-                    <div className="d-flex gap-3">
-                      <button
-                        type="button"
-                        className="client-initials"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openClientDetails(client);
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            openClientDetails(client);
-                          }
-                        }}
-                        aria-label={`Open ${client.name} details`}
-                      >
-                        {client.initials}
-                      </button>
-                      <div>
+                  <div
+                    className="card client-card"
+                    style={{
+                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)"
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openClientDetails(client)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openClientDetails(client);
+                      }
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start">
+                      {/* Left */}
+                      <div className="d-flex gap-3">
                         <button
                           type="button"
-                          className="client-name-button fw-semibold"
+                          className="client-initials"
                           onClick={(event) => {
                             event.stopPropagation();
                             openClientDetails(client);
@@ -1540,111 +1521,130 @@ export default function MyClients() {
                               openClientDetails(client);
                             }
                           }}
+                          aria-label={`Open ${client.name} details`}
                         >
-                          {client.name}
+                          {client.initials}
                         </button>
-                        <div className="client-contact-info">
-                          <small className="text-muted client-email">
-                            {client.email}
-                          </small>
-                          {client.phone && (
-                            <small className="text-muted client-phone">
-                              <Phone /> {client.phone}
+                        <div>
+                          <button
+                            type="button"
+                            className="client-name-button fw-semibold"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openClientDetails(client);
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                openClientDetails(client);
+                              }
+                            }}
+                          >
+                            {client.name}
+                          </button>
+                          <div className="client-contact-info">
+                            <small className="text-muted client-email">
+                              {client.email}
                             </small>
-                          )}
-                        </div>
-                        <div className="info-left">
-                          <span className="info-item">{client.tasks} pending tasks</span>
-                          <span className="info-item">{client.documents} documents</span>
-                          {client.due && (
-                            <span className="info-item">Due: {client.due}</span>
-                          )}
+                            {client.phone && (
+                              <small className="text-muted client-phone">
+                                <Phone /> {client.phone}
+                              </small>
+                            )}
+                          </div>
+                          <div className="info-left">
+                            <span className="info-item">{client.tasks} pending tasks</span>
+                            <span className="info-item">{client.documents} documents</span>
+                            {client.due && (
+                              <span className="info-item">Due: {client.due}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Right Info + Dot Dropdown */}
-                    <div className="info-row" style={{ position: 'relative', alignSelf: 'flex-start' }}>
-                      <div className="info-right" style={{ position: 'relative' }}>
-                        <div
-                          className="dot-container"
-                          ref={el => dropdownRefs.current[client.id] = el}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setOpenDropdown(openDropdown === client.id ? null : client.id);
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
+                      {/* Right Info + Dot Dropdown */}
+                      <div className="info-row" style={{ position: 'relative', alignSelf: 'flex-start' }}>
+                        <div className="info-right" style={{ position: 'relative' }}>
+                          <div
+                            className="dot-container"
+                            ref={el => dropdownRefs.current[client.id] = el}
+                            onClick={(event) => {
                               event.stopPropagation();
                               setOpenDropdown(openDropdown === client.id ? null : client.id);
-                            }
-                          }}
-                          tabIndex={0}
-                          style={{ position: 'relative' }}
-                        >
-                          <Dot />
-                          {openDropdown === client.id && (
-                            <ul className="dot-dropdown" style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px' }}>
-                              <li
-                                onMouseDown={(e) => handleMenuSelect(e, "invite", client)}
-                                onClick={(e) => handleMenuSelect(e, "invite", client)}
-                                tabIndex={0}
-                                role="button"
-                              >
-                                Send Invite
-                              </li>
-                              <li
-                                onMouseDown={(e) => handleMenuSelect(e, "details", client)}
-                                onClick={(e) => handleMenuSelect(e, "details", client)}
-                                tabIndex={0}
-                                role="button"
-                              >
-                                View Details
-                              </li>
-                              <li
-                                onMouseDown={(e) => handleMenuSelect(e, "tasks", client)}
-                                onClick={(e) => handleMenuSelect(e, "tasks", client)}
-                                tabIndex={0}
-                                role="button"
-                              >
-                                View Tasks
-                              </li>
-                              <li
-                                onMouseDown={(e) => handleMenuSelect(e, "documents", client)}
-                                onClick={(e) => handleMenuSelect(e, "documents", client)}
-                                tabIndex={0}
-                                role="button"
-                              >
-                                Documents
-                              </li>
-                              <li
-                                onMouseDown={(e) => handleMenuSelect(e, "messages", client)}
-                                onClick={(e) => handleMenuSelect(e, "messages", client)}
-                                tabIndex={0}
-                                role="button"
-                              >
-                                Send Message
-                              </li>
-                              <li
-                                onMouseDown={(e) => handleMenuSelect(e, "schedule", client)}
-                                onClick={(e) => handleMenuSelect(e, "schedule", client)}
-                                tabIndex={0}
-                                role="button"
-                              >
-                                Schedule Meeting
-                              </li>
-                            </ul>
-                          )}
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setOpenDropdown(openDropdown === client.id ? null : client.id);
+                              }
+                            }}
+                            tabIndex={0}
+                            style={{ position: 'relative' }}
+                          >
+                            <Dot />
+                            {openDropdown === client.id && (
+                              <ul className="dot-dropdown" style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px' }}>
+                                <li
+                                  onMouseDown={(e) => handleMenuSelect(e, "invite", client)}
+                                  onClick={(e) => handleMenuSelect(e, "invite", client)}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  Send Invite
+                                </li>
+                                <li
+                                  onMouseDown={(e) => handleMenuSelect(e, "details", client)}
+                                  onClick={(e) => handleMenuSelect(e, "details", client)}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  View Details
+                                </li>
+                                <li
+                                  onMouseDown={(e) => handleMenuSelect(e, "tasks", client)}
+                                  onClick={(e) => handleMenuSelect(e, "tasks", client)}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  View Tasks
+                                </li>
+                                <li
+                                  onMouseDown={(e) => handleMenuSelect(e, "documents", client)}
+                                  onClick={(e) => handleMenuSelect(e, "documents", client)}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  Documents
+                                </li>
+                                <li
+                                  onMouseDown={(e) => handleMenuSelect(e, "messages", client)}
+                                  onClick={(e) => handleMenuSelect(e, "messages", client)}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  Send Message
+                                </li>
+                                <li
+                                  onMouseDown={(e) => handleMenuSelect(e, "schedule", client)}
+                                  onClick={(e) => handleMenuSelect(e, "schedule", client)}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  Schedule Meeting
+                                </li>
+                              </ul>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
         </div>
       )}
 

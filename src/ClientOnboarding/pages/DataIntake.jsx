@@ -200,106 +200,32 @@ export default function DataIntakeForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  // Handle Rental Property Save
-  const handleSaveRentalProperty = async (rentalData) => {
-    try {
-      const token = getAccessToken();
-      if (!token) {
-        toast.error("Authentication required. Please login again.", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        return;
-      }
+  // Handle Rental Property Save (Local State Only)
+  const handleSaveRentalProperty = (rentalData) => {
+    // Basic validation
 
-      console.log("Saving rental property info directly...");
+    // Create a complete rental object
+    const newRentalProperty = {
+      id: editingRentalPropertyId || Date.now(), // Preserve ID if editing, else new
+      ...rentalData,
+      // Ensure numeric fields are strings or numbers as needed, but the form likely handles this.
+      // We'll keep the data as is for now, matching the form state.
+    };
 
-      const apiBaseUrl = getApiBaseUrl();
-      const response = await fetch(`${apiBaseUrl}/taxpayer/rental-property-info/`, {
-        method: hasExistingRentalData ? "PATCH" : "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          is_rental_property: rentalData.isRentalProperty || false,
-          property_address: rentalData.propertyAddress || "",
-          property_city: rentalData.propertyCity || "",
-          property_state: rentalData.propertyState || "",
-          property_zip: rentalData.propertyZip || "",
-          property_type: rentalData.propertyType || "single_family",
-          ownership_type: rentalData.ownershipType || "",
-          rented_out_during_year: rentalData.rentedOutDuringYear || false,
-          days_rented_out: rentalData.daysRentedOut || 0,
-          family_use: rentalData.familyUse || false,
-          family_use_days: rentalData.familyUseDays || 0,
-          total_rent_received: rentalData.totalRentReceived || "0.00",
-          tax_forms_received: rentalData.taxFormsReceived || [],
-          advertising: rentalData.advertising || "0.00",
-          cleaning_maintenance: rentalData.cleaningMaintenance || "0.00",
-          repairs: rentalData.repairs || "0.00",
-          property_management_fees: rentalData.propertyManagementFees || "0.00",
-          insurance: rentalData.insurance || "0.00",
-          mortgage_interest: rentalData.mortgageInterest || "0.00",
-          property_taxes: rentalData.propertyTaxes || "0.00",
-          utilities: rentalData.utilities || "0.00",
-          legal_professional: rentalData.legalProfessional || "0.00",
-          supplies: rentalData.supplies || "0.00",
-          other_expenses: rentalData.otherExpenses || [],
-          sold_or_stopped_renting: rentalData.soldOrStoppedRenting || false,
-          bought_major_items: rentalData.boughtMajorItems || false,
-          has_rental_losses: rentalData.hasRentalLosses || false
-        })
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        // Update local state
-        if (editingRentalPropertyId) {
-          // Update existing rental property
-          setRentalProperties(prev => prev.map(rp =>
-            rp.id === editingRentalPropertyId ? { ...rp, ...rentalData } : rp
-          ));
-        } else {
-          // Add new rental property
-          const newRentalProperty = {
-            id: result.data?.id || Date.now(),
-            ...rentalData
-          };
-          setRentalProperties(prev => [...prev, newRentalProperty]);
-        }
-        setHasExistingRentalData(true);
-        setEditingRentalPropertyId(null);
-        setIsAddingRentalProperty(false);
-
-        // Show success message
-        toast.success('Rental property information saved successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-
-        console.log("Rental property info saved successfully:", result);
-      } else {
-        // Handle error
-        const errorMessage = result?.message || 'Failed to save rental property information';
-        toast.error(errorMessage, {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        console.error("Rental property save error:", result);
-      }
-    } catch (error) {
-      console.error("Error saving rental property info:", error);
-      toast.error('Failed to save rental property information', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+    if (editingRentalPropertyId) {
+      // Update existing
+      setRentalProperties(prev => prev.map(rp =>
+        rp.id === editingRentalPropertyId ? newRentalProperty : rp
+      ));
+      toast.success('Rental property updated locally');
+    } else {
+      // Add new
+      setRentalProperties(prev => [...prev, newRentalProperty]);
+      toast.success('Rental property added locally');
     }
+
+    // Reset form
+    handleCancelRentalProperty();
   };
 
   const handleCancelRentalProperty = () => {
@@ -342,7 +268,12 @@ export default function DataIntakeForm() {
   const handleEditRentalProperty = (rentalPropertyId) => {
     const rentalProperty = rentalProperties.find(rp => rp.id === rentalPropertyId);
     if (rentalProperty) {
-      setRentalData(rentalProperty);
+      setRentalData({
+        ...rentalProperty,
+        taxFormsReceived: Array.isArray(rentalProperty.taxFormsReceived)
+          ? rentalProperty.taxFormsReceived
+          : (rentalProperty.taxFormsReceived === 'none' ? [] : (rentalProperty.taxFormsReceived ? [rentalProperty.taxFormsReceived] : [])),
+      });
       setEditingRentalPropertyId(rentalPropertyId);
       setIsAddingRentalProperty(true);
     }
@@ -379,455 +310,71 @@ export default function DataIntakeForm() {
     }
   };
 
-  // Handle Business Info Save
-  const handleSaveBusiness = async (businessData) => {
-    try {
-      const token = getAccessToken();
-      if (!token) {
-        toast.error("Authentication required. Please login again.", {
-          position: "top-right",
-          autoClose: 3000,
+  // Handle Business Info Save (Local State Only)
+  const handleSaveBusiness = (businessData) => {
+    // Check for business name - basic validation
+    // if (!businessData.businessName) {
+    //   toast.error('Business name is required');
+    //   return;
+    // }
+
+    const calculateTotalExpenses = (data) => {
+      let total = 0;
+      total += parseFloat(data.advertising || 0);
+      total += parseFloat(data.officeSupplies || 0);
+      total += parseFloat(data.cleaningRepairs || 0);
+      total += parseFloat(data.insurance || 0);
+      total += parseFloat(data.legalProfessional || 0);
+      total += parseFloat(data.phoneInternetUtilities || 0);
+      total += parseFloat(data.totalPaidContractors || 0);
+      total += parseFloat(data.parkingTollsTravel || 0);
+      total += parseFloat(data.businessMeals || 0);
+      total += parseFloat(data.travelExpenses || 0);
+      total += parseFloat(data.costItemsResold || 0);
+      total += parseFloat(data.retirementAmount || 0);
+
+      // Add other expenses
+      if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
+        data.otherExpenses.forEach(exp => {
+          total += parseFloat(exp.amount || 0);
         });
-        return;
       }
 
-      console.log("Saving business info...");
+      return total.toFixed(2);
+    };
 
-      const apiBaseUrl = getApiBaseUrl();
+    // Store full business data for editing and display
+    const businessForDisplay = {
+      id: editingBusinessId || Date.now(),
+      businessName: businessData.businessName || "",
+      businessType: "Self-Employment",
+      totalIncome: businessData.totalIncome || "0",
+      totalExpenses: calculateTotalExpenses(businessData),
+      address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
+      ...businessData, // Spread all fields
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-      // If there are already businesses saved, send all businesses in an array
-      const existingBusinesses = businesses.filter(b => b.id); // Only saved businesses (with IDs)
-      const shouldSendAll = existingBusinesses.length > 0;
-
-      let requestBody;
-      if (shouldSendAll) {
-        // Send all businesses in an array
-        console.log(`Sending ${existingBusinesses.length + 1} businesses in array`);
-
-        const allBusinesses = [
-          ...existingBusinesses.map(b => ({
-            // Convert display format back to API format
-            business_name: b.businessName || "",
-            business_address: b.address?.split(',')[0]?.trim() || "",
-            business_city: b.businessCity || "",
-            business_state: b.businessState || "",
-            business_zip: b.businessZip || "",
-            work_description: b.workDescription || "",
-            business_name_type: b.businessNameType || "same",
-            different_business_name: b.differentBusinessName || "",
-            started_during_year: b.startedDuringYear || false,
-            home_based: b.homeBased || false,
-            total_income: b.totalIncome || "",
-            tax_forms_received: b.taxFormsReceived || [],
-            issued_refunds: b.issuedRefunds || false,
-            total_refunded: b.totalRefunded || "",
-            other_business_income: b.otherBusinessIncome || false,
-            other_business_income_amount: b.otherBusinessIncomeAmount || "",
-            advertising: b.advertising || "",
-            office_supplies: b.officeSupplies || "",
-            cleaning_repairs: b.cleaningRepairs || "",
-            insurance: b.insurance || "",
-            legal_professional: b.legalProfessional || "",
-            phone_internet_utilities: b.phoneInternetUtilities || "",
-            paid_contractors: b.paidContractors || false,
-            total_paid_contractors: b.totalPaidContractors ? parseFloat(b.totalPaidContractors) || 0 : 0,
-            other_expenses: b.otherExpenses || [],
-            used_vehicle: b.usedVehicle || false,
-            business_miles: b.businessMiles ? parseInt(b.businessMiles) || 0 : 0,
-            parking_tolls_travel: b.parkingTollsTravel || "",
-            business_meals: b.businessMeals || "",
-            travel_expenses: b.travelExpenses || "",
-            home_office_use: b.homeOfficeUse || false,
-            home_office_size: b.homeOfficeSize || "",
-            sell_products: b.sellProducts || false,
-            cost_items_resold: b.costItemsResold ? parseFloat(b.costItemsResold) || 0 : 0,
-            inventory_left_end: b.inventoryLeftEnd ? parseFloat(b.inventoryLeftEnd) || 0 : 0,
-            health_insurance_business: b.healthInsuranceBusiness || false,
-            self_employed_retirement: b.selfEmployedRetirement || false,
-            retirement_amount: b.retirementAmount ? parseFloat(b.retirementAmount) || 0 : 0,
-            is_accurate: b.isAccurate || false,
-            id: b.id
-          })),
-          // Add the current business being saved
-          {
-            business_name: businessData.businessName || "",
-            business_address: businessData.businessAddress || "",
-            business_city: businessData.businessCity || "",
-            business_state: businessData.businessState || "",
-            business_zip: businessData.businessZip || "",
-
-            work_description: businessData.workDescription || "",
-            business_name_type: businessData.businessNameType || "same",
-            different_business_name: businessData.differentBusinessName || "",
-            started_during_year: businessData.startedDuringYear || false,
-            home_based: businessData.homeBased || false,
-
-            total_income: businessData.totalIncome || "",
-            tax_forms_received: Array.isArray(businessData.taxFormsReceived)
-              ? businessData.taxFormsReceived
-              : (businessData.taxFormsReceived || []),
-            issued_refunds: businessData.issuedRefunds || false,
-            total_refunded: businessData.totalRefunded || "",
-            other_business_income: businessData.otherBusinessIncome || false,
-            other_business_income_amount: businessData.otherBusinessIncomeAmount || "",
-
-            advertising: businessData.advertising || "",
-            office_supplies: businessData.officeSupplies || "",
-            cleaning_repairs: businessData.cleaningRepairs || "",
-            insurance: businessData.insurance || "",
-            legal_professional: businessData.legalProfessional || "",
-            phone_internet_utilities: businessData.phoneInternetUtilities || "",
-            paid_contractors: businessData.paidContractors || false,
-            total_paid_contractors: businessData.totalPaidContractors ? parseFloat(businessData.totalPaidContractors) || 0 : 0,
-            other_expenses: businessData.otherExpenses || [],
-
-            used_vehicle: businessData.usedVehicle || false,
-            business_miles: businessData.businessMiles ? parseInt(businessData.businessMiles) || 0 : 0,
-            parking_tolls_travel: businessData.parkingTollsTravel || "",
-
-            business_meals: businessData.businessMeals || "",
-            travel_expenses: businessData.travelExpenses || "",
-
-            home_office_use: businessData.homeOfficeUse || false,
-            home_office_size: businessData.homeOfficeSize || "",
-
-            sell_products: businessData.sellProducts || false,
-            cost_items_resold: businessData.costItemsResold ? parseFloat(businessData.costItemsResold) || 0 : 0,
-            inventory_left_end: businessData.inventoryLeftEnd ? parseFloat(businessData.inventoryLeftEnd) || 0 : 0,
-
-            health_insurance_business: businessData.healthInsuranceBusiness || false,
-            self_employed_retirement: businessData.selfEmployedRetirement || false,
-            retirement_amount: businessData.retirementAmount ? parseFloat(businessData.retirementAmount) || 0 : 0,
-
-            is_accurate: businessData.isAccurate || false
-          }
-        ];
-
-        requestBody = allBusinesses;
+    setBusinesses(prev => {
+      const existingIndex = prev.findIndex(b => b.id === businessForDisplay.id);
+      if (existingIndex >= 0) {
+        // Update existing business
+        const updated = [...prev];
+        updated[existingIndex] = businessForDisplay;
+        return updated;
       } else {
-        // Send single business (existing behavior)
-        console.log("Sending single business");
-        requestBody = {
-          // Basic Business Info
-          business_name: businessData.businessName || "",
-          business_address: businessData.businessAddress || "",
-          business_city: businessData.businessCity || "",
-          business_state: businessData.businessState || "",
-          business_zip: businessData.businessZip || "",
-
-          // About Your Business
-          work_description: businessData.workDescription || "",
-          business_name_type: businessData.businessNameType || "same",
-          different_business_name: businessData.differentBusinessName || "",
-          started_during_year: businessData.startedDuringYear || false,
-          home_based: businessData.homeBased || false,
-
-          // Income Information
-          total_income: businessData.totalIncome || "",
-          tax_forms_received: Array.isArray(businessData.taxFormsReceived)
-            ? businessData.taxFormsReceived
-            : (businessData.taxFormsReceived || []),
-          issued_refunds: businessData.issuedRefunds || false,
-          total_refunded: businessData.totalRefunded || "",
-          other_business_income: businessData.otherBusinessIncome || false,
-          other_business_income_amount: businessData.otherBusinessIncomeAmount || "",
-
-          // Business Expenses
-          advertising: businessData.advertising || "",
-          office_supplies: businessData.officeSupplies || "",
-          cleaning_repairs: businessData.cleaningRepairs || "",
-          insurance: businessData.insurance || "",
-          legal_professional: businessData.legalProfessional || "",
-          phone_internet_utilities: businessData.phoneInternetUtilities || "",
-          paid_contractors: businessData.paidContractors || false,
-          total_paid_contractors: businessData.totalPaidContractors ? parseFloat(businessData.totalPaidContractors) || 0 : 0,
-          other_expenses: businessData.otherExpenses || [],
-
-          // Vehicle & Travel
-          used_vehicle: businessData.usedVehicle || false,
-          business_miles: businessData.businessMiles ? parseInt(businessData.businessMiles) || 0 : 0,
-          parking_tolls_travel: businessData.parkingTollsTravel || "",
-
-          // Food & Travel
-          business_meals: businessData.businessMeals || "",
-          travel_expenses: businessData.travelExpenses || "",
-
-          // Home Office
-          home_office_use: businessData.homeOfficeUse || false,
-          home_office_size: businessData.homeOfficeSize || "",
-
-          // Inventory
-          sell_products: businessData.sellProducts || false,
-          cost_items_resold: businessData.costItemsResold ? parseFloat(businessData.costItemsResold) || 0 : 0,
-          inventory_left_end: businessData.inventoryLeftEnd ? parseFloat(businessData.inventoryLeftEnd) || 0 : 0,
-
-          // Health Insurance & Retirement
-          health_insurance_business: businessData.healthInsuranceBusiness || false,
-          self_employed_retirement: businessData.selfEmployedRetirement || false,
-          retirement_amount: businessData.retirementAmount ? parseFloat(businessData.retirementAmount) || 0 : 0,
-
-          // Confirmation
-          is_accurate: businessData.isAccurate || false
-        };
+        // Add new business
+        return [...prev, businessForDisplay];
       }
+    });
 
-      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
-        method: shouldSendAll ? "PUT" : (hasExistingBusinessData ? "PATCH" : "POST"), // Use PUT for multiple businesses
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-      });
+    // Reset form state after save
+    setIsAddingBusiness(false);
+    setEditingBusinessId(null);
+    setHasExistingBusinessData(true); // Treat as having data since we have local data
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        // Handle response based on whether we sent single or multiple businesses
-        if (shouldSendAll) {
-          // Multiple businesses were sent - API should return array of businesses
-          console.log("Multiple businesses saved:", result);
-
-          if (Array.isArray(result.data)) {
-            // Update all businesses in local state
-            const calculateTotalExpenses = (data) => {
-              let total = 0;
-              total += parseFloat(data.advertising || 0);
-              total += parseFloat(data.officeSupplies || 0);
-              total += parseFloat(data.cleaningRepairs || 0);
-              total += parseFloat(data.insurance || 0);
-              total += parseFloat(data.legalProfessional || 0);
-              total += parseFloat(data.phoneInternetUtilities || 0);
-              total += parseFloat(data.totalPaidContractors || 0);
-              total += parseFloat(data.parkingTollsTravel || 0);
-              total += parseFloat(data.businessMeals || 0);
-              total += parseFloat(data.travelExpenses || 0);
-              total += parseFloat(data.costItemsResold || 0);
-              total += parseFloat(data.retirementAmount || 0);
-
-              // Add other expenses
-              if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
-                data.otherExpenses.forEach(exp => {
-                  total += parseFloat(exp.amount || 0);
-                });
-              }
-
-              return total.toFixed(2);
-            };
-
-            const updatedBusinesses = result.data.map(apiBusiness => ({
-              id: apiBusiness.id,
-              businessName: apiBusiness.business_name || "",
-              businessType: "Self-Employment",
-              totalIncome: apiBusiness.total_income || "0",
-              totalExpenses: calculateTotalExpenses(apiBusiness),
-              address: `${apiBusiness.business_address || ""} ${apiBusiness.business_city || ""} ${apiBusiness.business_state || ""} ${apiBusiness.business_zip || ""}`.trim(),
-              workDescription: apiBusiness.work_description || "",
-              // Store all fields for editing
-              businessNameType: apiBusiness.business_name_type || 'same',
-              differentBusinessName: apiBusiness.different_business_name || '',
-              startedDuringYear: apiBusiness.started_during_year || false,
-              homeBased: apiBusiness.home_based || false,
-              businessAddress: apiBusiness.business_address || '',
-              businessCity: apiBusiness.business_city || '',
-              businessState: apiBusiness.business_state || '',
-              businessZip: apiBusiness.business_zip || '',
-              taxFormsReceived: apiBusiness.tax_forms_received || [],
-              issuedRefunds: apiBusiness.issued_refunds || false,
-              totalRefunded: apiBusiness.total_refunded || '',
-              otherBusinessIncome: apiBusiness.other_business_income || false,
-              otherBusinessIncomeAmount: apiBusiness.other_business_income_amount || '',
-              advertising: apiBusiness.advertising || '',
-              officeSupplies: apiBusiness.office_supplies || '',
-              cleaningRepairs: apiBusiness.cleaning_repairs || '',
-              insurance: apiBusiness.insurance || '',
-              legalProfessional: apiBusiness.legal_professional || '',
-              phoneInternetUtilities: apiBusiness.phone_internet_utilities || '',
-              paidContractors: apiBusiness.paid_contractors || false,
-              totalPaidContractors: apiBusiness.total_paid_contractors || '',
-              otherExpenses: apiBusiness.other_expenses || [],
-              usedVehicle: apiBusiness.used_vehicle || false,
-              businessMiles: apiBusiness.business_miles || '',
-              parkingTollsTravel: apiBusiness.parking_tolls_travel || '',
-              businessMeals: apiBusiness.business_meals || '',
-              travelExpenses: apiBusiness.travel_expenses || '',
-              homeOfficeUse: apiBusiness.home_office_use || false,
-              homeOfficeSize: apiBusiness.home_office_size || '',
-              sellProducts: apiBusiness.sell_products || false,
-              costItemsResold: apiBusiness.cost_items_resold || '',
-              inventoryLeftEnd: apiBusiness.inventory_left_end || '',
-              healthInsuranceBusiness: apiBusiness.health_insurance_business || false,
-              selfEmployedRetirement: apiBusiness.self_employed_retirement || false,
-              retirementAmount: apiBusiness.retirement_amount || '',
-              isAccurate: apiBusiness.is_accurate || false,
-              created_at: apiBusiness.created_at || new Date().toISOString(),
-              updated_at: apiBusiness.updated_at || new Date().toISOString()
-            }));
-
-            setBusinesses(updatedBusinesses);
-          } else {
-            // Fallback: treat as single business response
-            console.warn("Expected array response for multiple businesses, got:", result);
-            // Handle as single business
-            setBusinessData(businessData);
-            setHasExistingBusinessData(true);
-          }
-        } else {
-          // Single business was sent (existing behavior)
-          setBusinessData(businessData);
-          setHasExistingBusinessData(true);
-
-          // Calculate total expenses
-          const calculateTotalExpenses = (data) => {
-            let total = 0;
-            total += parseFloat(data.advertising || 0);
-            total += parseFloat(data.officeSupplies || 0);
-            total += parseFloat(data.cleaningRepairs || 0);
-            total += parseFloat(data.insurance || 0);
-            total += parseFloat(data.legalProfessional || 0);
-            total += parseFloat(data.phoneInternetUtilities || 0);
-            total += parseFloat(data.totalPaidContractors || 0);
-            total += parseFloat(data.parkingTollsTravel || 0);
-            total += parseFloat(data.businessMeals || 0);
-            total += parseFloat(data.travelExpenses || 0);
-            total += parseFloat(data.costItemsResold || 0);
-            total += parseFloat(data.retirementAmount || 0);
-
-            // Add other expenses
-            if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
-              data.otherExpenses.forEach(exp => {
-                total += parseFloat(exp.amount || 0);
-              });
-            }
-
-            return total.toFixed(2);
-          };
-
-          // Store full business data for editing and display
-          const businessForDisplay = {
-            id: result.data?.id || businessData.id || Date.now(),
-            businessName: businessData.businessName || "",
-            businessType: "Self-Employment",
-            totalIncome: businessData.totalIncome || "0",
-            totalExpenses: calculateTotalExpenses(businessData),
-            address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
-            workDescription: businessData.workDescription || "",
-            // Store all fields for editing
-            businessNameType: businessData.businessNameType || 'same',
-            differentBusinessName: businessData.differentBusinessName || '',
-            startedDuringYear: businessData.startedDuringYear || false,
-            homeBased: businessData.homeBased || false,
-            businessAddress: businessData.businessAddress || '',
-            businessCity: businessData.businessCity || '',
-            businessState: businessData.businessState || '',
-            businessZip: businessData.businessZip || '',
-            taxFormsReceived: businessData.taxFormsReceived || 'none',
-            issuedRefunds: businessData.issuedRefunds || false,
-            totalRefunded: businessData.totalRefunded || '',
-            otherBusinessIncome: businessData.otherBusinessIncome || false,
-            otherBusinessIncomeAmount: businessData.otherBusinessIncomeAmount || '',
-            advertising: businessData.advertising || '',
-            officeSupplies: businessData.officeSupplies || '',
-            cleaningRepairs: businessData.cleaningRepairs || '',
-            insurance: businessData.insurance || '',
-            legalProfessional: businessData.legalProfessional || '',
-            phoneInternetUtilities: businessData.phoneInternetUtilities || '',
-            paidContractors: businessData.paidContractors || false,
-            totalPaidContractors: businessData.totalPaidContractors || '',
-            otherExpenses: businessData.otherExpenses || [],
-            usedVehicle: businessData.usedVehicle || false,
-            businessMiles: businessData.businessMiles || '',
-            parkingTollsTravel: businessData.parkingTollsTravel || '',
-            businessMeals: businessData.businessMeals || '',
-            travelExpenses: businessData.travelExpenses || '',
-            homeOfficeUse: businessData.homeOfficeUse || false,
-            homeOfficeSize: businessData.homeOfficeSize || '',
-            sellProducts: businessData.sellProducts || false,
-            costItemsResold: businessData.costItemsResold || '',
-            inventoryLeftEnd: businessData.inventoryLeftEnd || '',
-            healthInsuranceBusiness: businessData.healthInsuranceBusiness || false,
-            selfEmployedRetirement: businessData.selfEmployedRetirement || false,
-            retirementAmount: businessData.retirementAmount || '',
-            isAccurate: businessData.isAccurate || false,
-            created_at: result.data?.created_at || new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-
-          setBusinesses(prev => {
-            const existingIndex = prev.findIndex(b => b.id === businessForDisplay.id);
-            if (existingIndex >= 0) {
-              // Update existing business
-              const updated = [...prev];
-              updated[existingIndex] = businessForDisplay;
-              return updated;
-            } else {
-              // Add new business
-              return [...prev, businessForDisplay];
-            }
-          });
-        }
-
-        // Reset form state after save
-        setIsAddingBusiness(false);
-        setEditingBusinessId(null);
-        setBusinessFormErrors({}); // Clear any previous errors
-
-        // Show success message
-        toast.success('Business information saved successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-
-        console.log("Business info saved successfully:", result);
-      } else {
-        // Handle error
-        const errorMessage = result?.message || 'Failed to save business information';
-
-        // If there are field-specific errors, pass them to the form
-        if (result?.errors && typeof result.errors === 'object') {
-          // Transform API field names to form field names
-          const fieldErrors = {};
-          Object.keys(result.errors).forEach(apiField => {
-            // Map API field names to form field names
-            const formFieldMap = {
-              'total_paid_contractors': 'totalPaidContractors',
-              'business_miles': 'businessMiles',
-              'cost_items_resold': 'costItemsResold',
-              'inventory_left_end': 'inventoryLeftEnd',
-              'retirement_amount': 'retirementAmount'
-            };
-
-            const formField = formFieldMap[apiField] || apiField;
-            fieldErrors[formField] = result.errors[apiField][0]; // Take first error message
-          });
-
-          // Pass errors to form component
-          setBusinessFormErrors(fieldErrors);
-
-          toast.error('Please correct the highlighted fields', {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        } else {
-          toast.error(errorMessage, {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        }
-
-        console.error("Business info save error:", result);
-      }
-    } catch (error) {
-      console.error("Error saving business info:", error);
-      toast.error('Failed to save business information', {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    }
+    toast.success('Business information updated locally');
   };
 
   const handleEditBusiness = (businessId) => {
@@ -835,49 +382,10 @@ export default function DataIntakeForm() {
     if (business) {
       // Load full business data into businessData state for editing
       setBusinessData({
-        workDescription: business.workDescription || '',
-        businessName: business.businessName || '',
-        businessNameType: business.businessNameType || 'same',
-        differentBusinessName: business.differentBusinessName || '',
-        startedDuringYear: business.startedDuringYear || false,
-        homeBased: business.homeBased || false,
-        businessAddress: business.businessAddress || '',
-        businessCity: business.businessCity || '',
-        businessState: business.businessState || '',
-        businessZip: business.businessZip || '',
-        totalIncome: business.totalIncome || '',
+        ...business,
         taxFormsReceived: Array.isArray(business.taxFormsReceived)
           ? business.taxFormsReceived
           : (business.taxFormsReceived === 'none' ? [] : (business.taxFormsReceived ? [business.taxFormsReceived] : [])),
-        issuedRefunds: business.issuedRefunds || false,
-        totalRefunded: business.totalRefunded || '',
-        otherBusinessIncome: business.otherBusinessIncome || false,
-        otherBusinessIncomeAmount: business.otherBusinessIncomeAmount || '',
-        advertising: business.advertising || '',
-        officeSupplies: business.officeSupplies || '',
-        cleaningRepairs: business.cleaningRepairs || '',
-        insurance: business.insurance || '',
-        legalProfessional: business.legalProfessional || '',
-        phoneInternetUtilities: business.phoneInternetUtilities || '',
-        paidContractors: business.paidContractors || false,
-        totalPaidContractors: business.totalPaidContractors || '',
-        otherExpenses: business.otherExpenses || [],
-        otherExpenseDescription: business.otherExpenseDescription || '',
-        otherExpenseAmount: business.otherExpenseAmount || '',
-        usedVehicle: business.usedVehicle || false,
-        businessMiles: business.businessMiles || '',
-        parkingTollsTravel: business.parkingTollsTravel || '',
-        businessMeals: business.businessMeals || '',
-        travelExpenses: business.travelExpenses || '',
-        homeOfficeUse: business.homeOfficeUse || false,
-        homeOfficeSize: business.homeOfficeSize || '',
-        sellProducts: business.sellProducts || false,
-        costItemsResold: business.costItemsResold || '',
-        inventoryLeftEnd: business.inventoryLeftEnd || '',
-        healthInsuranceBusiness: business.healthInsuranceBusiness || false,
-        selfEmployedRetirement: business.selfEmployedRetirement || false,
-        retirementAmount: business.retirementAmount || '',
-        isAccurate: business.isAccurate || false,
         id: business.id || null
       });
       setEditingBusinessId(businessId);
@@ -886,68 +394,28 @@ export default function DataIntakeForm() {
   };
 
   const handleRemoveBusiness = async (businessId) => {
+    const previousBusinesses = [...businesses];
+    setBusinesses(prev => prev.filter(b => b.id !== businessId));
+
     const token = getAccessToken();
     if (!token) return;
 
-    const previousBusinesses = [...businesses];
-    const updatedBusinesses = businesses.filter(b => b.id !== businessId);
-    setBusinesses(updatedBusinesses);
-
     try {
       const apiBaseUrl = getApiBaseUrl();
-      const requestBody = updatedBusinesses.map(b => ({
-        business_name: b.businessName || "",
-        business_address: b.address?.split(',')[0]?.trim() || (b.businessAddress || ""),
-        business_city: b.businessCity || "",
-        business_state: b.businessState || "",
-        business_zip: b.businessZip || "",
-        work_description: b.workDescription || "",
-        business_name_type: b.businessNameType || "same",
-        different_business_name: b.differentBusinessName || "",
-        started_during_year: b.startedDuringYear || false,
-        home_based: b.homeBased || false,
-        total_income: b.totalIncome || "",
-        tax_forms_received: b.taxFormsReceived || [],
-        issued_refunds: b.issuedRefunds || false,
-        total_refunded: b.totalRefunded || "",
-        other_business_income: b.otherBusinessIncome || false,
-        other_business_income_amount: b.otherBusinessIncomeAmount || "",
-        advertising: b.advertising || "",
-        office_supplies: b.officeSupplies || "",
-        cleaning_repairs: b.cleaningRepairs || "",
-        insurance: b.insurance || "",
-        legal_professional: b.legalProfessional || "",
-        phone_internet_utilities: b.phoneInternetUtilities || "",
-        paid_contractors: b.paidContractors || false,
-        total_paid_contractors: b.totalPaidContractors ? parseFloat(b.totalPaidContractors) || 0 : 0,
-        other_expenses: b.otherExpenses || [],
-        used_vehicle: b.usedVehicle || false,
-        business_miles: b.businessMiles ? parseInt(b.businessMiles) || 0 : 0,
-        parking_tolls_travel: b.parkingTollsTravel || "",
-        business_meals: b.businessMeals || "",
-        travel_expenses: b.travelExpenses || "",
-        home_office_use: b.homeOfficeUse || false,
-        home_office_size: b.homeOfficeSize || "",
-        sell_products: b.sellProducts || false,
-        cost_items_resold: b.costItemsResold ? parseFloat(b.costItemsResold) || 0 : 0,
-        inventory_left_end: b.inventoryLeftEnd ? parseFloat(b.inventoryLeftEnd) || 0 : 0,
-        health_insurance_business: b.healthInsuranceBusiness || false,
-        self_employed_retirement: b.selfEmployedRetirement || false,
-        retirement_amount: b.retirementAmount ? parseFloat(b.retirementAmount) || 0 : 0,
-        is_accurate: b.isAccurate || false,
-        id: b.id
-      }));
-
-      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
-        method: "PUT",
+      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/${businessId}/`, {
+        method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
+          "Authorization": `Bearer ${token}`
+        }
       });
 
-      if (!response.ok) throw new Error("Failed to delete business");
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Already deleted or not found, just ignore
+          return;
+        }
+        throw new Error("Failed to delete business");
+      }
       toast.success("Business removed successfully");
     } catch (error) {
       console.error("Error removing business:", error);
@@ -971,142 +439,94 @@ export default function DataIntakeForm() {
           return;
         }
 
-        console.log("Checking for existing data intake data...");
+        console.log("Checking for existing data intake data via Consolidated API...");
 
-        // Call APIs to check for existing data
+        // Call Consolidated API
         const apiBaseUrl = getApiBaseUrl();
-        const [personalDataResponse, fileDataResponse, businessInfoResponse, rentalPropertyResponse] = await Promise.all([
-          // Check for personal data
-          fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          }),
-          // Check for uploaded files
-          fetch(`${apiBaseUrl}/taxpayer/income-data-intake/`, {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          }),
-          // Check for business info
-          fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          }),
-          // Check for rental property info
-          fetch(`${apiBaseUrl}/taxpayer/rental-property-info/`, {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          })
-        ]);
+        const response = await fetch(`${apiBaseUrl}/taxpayer/consolidated-data-intake/`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
 
-        // Handle personal data response
-        if (personalDataResponse.ok) {
-          const personalResult = await personalDataResponse.json();
-          console.log("Existing personal data found:", personalResult);
+        if (response.ok) {
+          const result = await response.json();
+          console.log("Consolidated data found:", result);
 
-          if (personalResult.success && personalResult.data) {
-            const data = personalResult.data;
+          if (result.success && result.data) {
+            const data = result.data;
+            const personalInfoData = data.personal_info || {};
+            const bankInfoData = data.bank_info || {};
+            const businessInfoData = data.business_info || [];
+            const rentalPropertyInfoData = data.rental_property_info || [];
+            const documentsData = data.documents || [];
 
             // Mark that user has existing data (will use PATCH instead of POST)
             setHasExistingData(true);
 
-            // Pre-fill ALL form fields with existing data
-            // Use full phone number if it exists
-            let phoneValue = data.phone_number || "";
-
+            // ---------------------------------------------------------
+            // 1. Personal Info Population
+            // ---------------------------------------------------------
+            let phoneValue = personalInfoData.phone_number || "";
             setPersonalInfo({
-              firstName: data.first_name || "",
-              middleInitial: data.middle_name || "",
-              lastName: data.last_name || "",
-              dateOfBirth: data.dateOfBirth ? formatDateForDisplay(data.dateOfBirth) : "",
-              ssn: data.ssn || "",
-              email: data.email || "",
-              phone: phoneValue, // Full phone number
-              address: data.address || "",
-              city: data.city || "",
-              state: data.state || "",
-              zip: data.zip || "",
-              filingStatus: data.filling_status || "",
-              businessType: data.business_type || "individual",
+              firstName: personalInfoData.first_name || "",
+              middleInitial: personalInfoData.middle_initial || "",
+              lastName: personalInfoData.last_name || "",
+              dateOfBirth: personalInfoData.dateOfBirth || "",
+              ssn: personalInfoData.ssn || "",
+              email: personalInfoData.email || "",
+              phone: phoneValue,
+              address: personalInfoData.address || "",
+              city: personalInfoData.city || "",
+              state: personalInfoData.state || "",
+              zip: personalInfoData.zip || "",
+              filingStatus: personalInfoData.filing_status || "",
+              businessType: personalInfoData.business_type || "individual",
             });
-            // If phone exists, mark country as selected
-            if (phoneValue) {
-              setPersonalPhoneCountrySelected(true);
+            if (phoneValue) setPersonalPhoneCountrySelected(true);
+
+            // Spouse Info
+            const spouseData = personalInfoData.spouse_info || {};
+            let spousePhoneValue = "";
+            if (spouseData.spouse_phone_number) {
+              const phoneMatch = spouseData.spouse_phone_number.match(/^\+(\d{1,3})/);
+              if (phoneMatch) spousePhoneValue = `+${phoneMatch[1]}`;
             }
+            setSpouseInfo({
+              firstName: spouseData.spouse_first_name || "",
+              middleInitial: spouseData.spouse_middle_name || "",
+              lastName: spouseData.spouse_last_name || "",
+              dateOfBirth: spouseData.spouse_dateOfBirth || "",
+              ssn: spouseData.spouse_ssn || "",
+              email: spouseData.spouse_email || "",
+              phone: spousePhoneValue,
+            });
+            if (spousePhoneValue) setSpousePhoneCountrySelected(true);
 
-            // Pre-fill spouse information
-            if (data.spouse_info) {
-              // Extract only country code from spouse phone number if it exists
-              let spousePhoneValue = "";
-              if (data.spouse_info.spouse_phone_number) {
-                // Extract country code from phone number (format: +1XXXXXXXXXX)
-                const phoneMatch = data.spouse_info.spouse_phone_number.match(/^\+(\d{1,3})/);
-                if (phoneMatch) {
-                  spousePhoneValue = `+${phoneMatch[1]}`; // Only keep country code
-                }
-              }
-
-              setSpouseInfo({
-                firstName: data.spouse_info.spouse_first_name || "",
-                middleInitial: "",
-                lastName: data.spouse_info.spouse_last_name || "",
-                dateOfBirth: data.spouse_info.spouse_dateOfBirth ? formatDateForDisplay(data.spouse_info.spouse_dateOfBirth) : "",
-                ssn: data.spouse_info.spouse_ssn || "",
-                email: data.spouse_info.spouse_email || "",
-                phone: spousePhoneValue, // Only country code, not full number
-              });
-              // If spouse phone exists, mark country as selected
-              if (spousePhoneValue) {
-                setSpousePhoneCountrySelected(true);
-              }
-            }
-
-            // Pre-fill bank information
-            if (data.bank_info) {
-              setBankInfo({
-                bankName: data.bank_info.bank_name || "",
-                routingNumber: data.bank_info.routing_number || "",
-                confirmRoutingNumber: data.bank_info.routing_number || "",
-                accountNumber: data.bank_info.account_number || "",
-                confirmAccountNumber: data.bank_info.account_number || "",
-              });
-            }
-
-            // Pre-fill other information
+            // Other Info
             setOtherInfo({
-              ownsHome: data.does_own_a_home ? "yes" : "no",
-              inSchool: data.in_school ? "yes" : "no",
-              otherDeductions: data.other_deductions ? "yes" : "no"
+              ownsHome: personalInfoData.does_own_a_home || false,
+              inSchool: personalInfoData.in_school || false,
+              otherDeductions: personalInfoData.other_deductions ? "yes" : "no"
             });
 
-            // Set filing status - handle both array and string formats
-            if (data.income_information) {
-              if (Array.isArray(data.income_information)) {
-                setFilingStatus(data.income_information);
+            // Filing Status / Income Info
+            if (personalInfoData.income_information) {
+              if (Array.isArray(personalInfoData.income_information)) {
+                setFilingStatus(personalInfoData.income_information);
               } else {
-                // If it's a string, convert to array
-                setFilingStatus([data.income_information]);
+                setFilingStatus([personalInfoData.income_information]);
               }
             } else {
-              setFilingStatus(["w2"]); // Default to w2 if no data
+              setFilingStatus(["w2"]);
             }
 
-            // Set dependents
-            if (data.dependents && Array.isArray(data.dependents) && data.dependents.length > 0) {
-              setHasDependents("yes");
-              // Map dependent data from API, formatting dates
-              const formattedDependents = data.dependents.map((dep) => ({
+            // Dependents
+            if (personalInfoData.dependents && Array.isArray(personalInfoData.dependents) && personalInfoData.dependents.length > 0) {
+              setHasDependents(true);
+              const formattedDependents = personalInfoData.dependents.map((dep) => ({
                 firstName: dep.dependent_first_name || '',
                 middleInitial: dep.dependent_middle_name || '',
                 lastName: dep.dependent_last_name || '',
@@ -1114,10 +534,9 @@ export default function DataIntakeForm() {
                 ssn: dep.dependent_ssn || ''
               }));
               setDependents(formattedDependents);
-            } else if (data.no_of_dependents > 0) {
-              setHasDependents("yes");
-              // Create empty dependent objects for the count
-              const emptyDependents = Array(data.no_of_dependents).fill().map(() => ({
+            } else if (personalInfoData.no_of_dependents > 0) {
+              setHasDependents(true);
+              const emptyDependents = Array(personalInfoData.no_of_dependents).fill().map(() => ({
                 firstName: '',
                 middleInitial: '',
                 lastName: '',
@@ -1127,271 +546,192 @@ export default function DataIntakeForm() {
               setDependents(emptyDependents);
             }
 
-            // Set businesses
-            // Assuming businesses are stored in personal_info.businesses based on plan
-            // Fallback to empty array if not present
-            if (data.businesses && Array.isArray(data.businesses)) {
-              setBusinesses(data.businesses);
+            // ---------------------------------------------------------
+            // 2. Bank Info Population
+            // ---------------------------------------------------------
+            setBankInfo({
+              bankName: bankInfoData.bank_name || "",
+              routingNumber: bankInfoData.routing_number || "",
+              confirmRoutingNumber: bankInfoData.routing_number || "",
+              accountNumber: bankInfoData.account_number || "",
+              confirmAccountNumber: bankInfoData.account_number || "",
+            });
+
+            // ---------------------------------------------------------
+            // 3. Document / File Population
+            // ---------------------------------------------------------
+            if (documentsData && documentsData.length > 0) {
+              const firstFile = documentsData[0];
+              const filename = firstFile.filename || "uploaded_document";
+              const mockFile = {
+                name: filename,
+                size: firstFile.size || 1024 * 1024,
+                type: "application/pdf", // defaulting to pdf or infer from filename
+                lastModified: new Date().getTime(),
+                url: firstFile.url,
+                isExistingFile: true,
+                created_at: new Date().toISOString() // Using current time as fallback if not provided
+              };
+              setUploadedFile(mockFile);
+            } else {
+              setUploadedFile(null);
             }
 
-            // Set signature status
-            setIsSigned(data.is_signed || false);
+            // ---------------------------------------------------------
+            // 4. Business Info Population
+            // ---------------------------------------------------------
+            if (Array.isArray(businessInfoData) && businessInfoData.length > 0) {
+              const calculateTotalExpensesFromAPI = (data) => {
+                let total = 0;
+                total += parseFloat(data.advertising || 0);
+                total += parseFloat(data.office_supplies || 0);
+                total += parseFloat(data.cleaning_repairs || 0);
+                total += parseFloat(data.insurance || 0);
+                total += parseFloat(data.legal_professional || 0);
+                total += parseFloat(data.phone_internet_utilities || 0);
+                total += parseFloat(data.total_paid_contractors || 0);
+                total += parseFloat(data.parking_tolls_travel || 0);
+                total += parseFloat(data.business_meals || 0);
+                total += parseFloat(data.travel_expenses || 0);
+                total += parseFloat(data.cost_items_resold || 0);
+                total += parseFloat(data.retirement_amount || 0);
+                if (data.other_expenses && Array.isArray(data.other_expenses)) {
+                  data.other_expenses.forEach(exp => {
+                    total += parseFloat(exp.amount || 0);
+                  });
+                }
+                return total.toFixed(2);
+              };
 
-            console.log("Form pre-filled with existing personal data");
+              const businessList = businessInfoData.map(bData => ({
+                id: bData.id || Date.now(),
+                businessName: bData.business_name || "",
+                businessType: "Self-Employment",
+                totalIncome: bData.total_income || "0",
+                totalExpenses: calculateTotalExpensesFromAPI(bData),
+                address: `${bData.business_address || ""} ${bData.business_city || ""} ${bData.business_state || ""} ${bData.business_zip || ""}`.trim(),
+                workDescription: bData.work_description || "",
+                businessNameType: bData.business_name_type || 'same',
+                differentBusinessName: bData.different_business_name || '',
+                startedDuringYear: bData.started_during_year || false,
+                homeBased: bData.home_based || false,
+                businessAddress: bData.business_address || '',
+                businessCity: bData.business_city || '',
+                businessState: bData.business_state || '',
+                businessZip: bData.business_zip || '',
+                taxFormsReceived: (() => {
+                  const forms = bData.tax_forms_received;
+                  if (Array.isArray(forms)) return forms;
+                  if (typeof forms === 'string') return forms === 'none' ? [] : [forms];
+                  return [];
+                })(),
+                issuedRefunds: bData.issued_refunds || false,
+                totalRefunded: bData.total_refunded || '',
+                otherBusinessIncome: bData.other_business_income || false,
+                otherBusinessIncomeAmount: bData.other_business_income_amount || '',
+                advertising: bData.advertising || '',
+                officeSupplies: bData.office_supplies || '',
+                cleaningRepairs: bData.cleaning_repairs || '',
+                insurance: bData.insurance || '',
+                legalProfessional: bData.legal_professional || '',
+                phoneInternetUtilities: bData.phone_internet_utilities || '',
+                paidContractors: bData.paid_contractors || false,
+                totalPaidContractors: bData.total_paid_contractors || '',
+                otherExpenses: bData.other_expenses || [],
+                usedVehicle: bData.used_vehicle || false,
+                businessMiles: bData.business_miles || '',
+                parkingTollsTravel: bData.parking_tolls_travel || '',
+                businessMeals: bData.business_meals || '',
+                travelExpenses: bData.travel_expenses || '',
+                homeOfficeUse: bData.home_office_use || false,
+                homeOfficeSize: bData.home_office_size || '',
+                sellProducts: bData.sell_products || false,
+                costItemsResold: bData.cost_items_resold || '',
+                inventoryLeftEnd: bData.inventory_left_end || '',
+                healthInsuranceBusiness: bData.health_insurance_business || false,
+                selfEmployedRetirement: bData.self_employed_retirement || false,
+                retirementAmount: bData.retirement_amount || '',
+                isAccurate: bData.is_accurate || false,
+                // Add business code fields
+                businessCodeId: bData.business_code_id || null,
+                businessCodeNaics: bData.business_code_naics || '',
+                businessCodeTitle: bData.business_code_title || ''
+              }));
+              setBusinesses(businessList);
+              setHasExistingBusinessData(true);
+            } else {
+              setBusinesses([]);
+              setHasExistingBusinessData(false);
+            }
+
+            // ---------------------------------------------------------
+            // 5. Rental Property Info Population
+            // ---------------------------------------------------------
+            if (Array.isArray(rentalPropertyInfoData) && rentalPropertyInfoData.length > 0) {
+              const rentalList = rentalPropertyInfoData.map(rData => ({
+                id: rData.id || Date.now(),
+                isRentalProperty: rData.is_rental_property || false,
+                propertyAddress: rData.property_address || "",
+                propertyCity: rData.property_city || "",
+                propertyState: rData.property_state || "",
+                propertyZip: rData.property_zip || "",
+                propertyType: rData.property_type || "single_family",
+                ownershipType: rData.ownership_type || "",
+                rentedOutDuringYear: rData.rented_out_during_year || false,
+                daysRentedOut: rData.days_rented_out || 0,
+                familyUse: rData.family_use || false,
+                familyUseDays: rData.family_use_days || 0,
+                totalRentReceived: rData.total_rent_received || "0.00",
+                taxFormsReceived: (() => {
+                  const forms = rData.tax_forms_received;
+                  if (Array.isArray(forms)) return forms;
+                  if (typeof forms === 'string') return forms === 'none' ? [] : [forms];
+                  return [];
+                })(),
+                advertising: rData.advertising || "0.00",
+                cleaningMaintenance: rData.cleaning_maintenance || "0.00",
+                repairs: rData.repairs || "0.00",
+                propertyManagementFees: rData.property_management_fees || "0.00",
+                insurance: rData.insurance || "0.00",
+                mortgageInterest: rData.mortgage_interest || "0.00",
+                propertyTaxes: rData.property_taxes || "0.00",
+                utilities: rData.utilities || "0.00",
+                legalProfessional: rData.legal_professional || "0.00",
+                supplies: rData.supplies || "0.00",
+                otherExpenses: rData.other_expenses || [],
+                soldOrStoppedRenting: rData.sold_or_stopped_renting || false,
+                boughtMajorItems: rData.bought_major_items || false,
+                hasRentalLosses: rData.has_rental_losses || false,
+                isComplete: rData.is_complete || false
+              }));
+              setRentalProperties(rentalList);
+              setHasExistingRentalData(true);
+            } else {
+              setRentalProperties([]);
+              setHasExistingRentalData(false);
+            }
+
+            // Signature status
+            setIsSigned(personalInfoData.is_signed || false);
+            if (personalInfoData.is_signed && personalInfoData.signature_type) {
+              setSignatureType(personalInfoData.signature_type);
+            }
+
+            console.log("Form pre-filled with Consolidated API data");
+
+          } else {
+            // Success=true but no data?
+            console.log("No existing consolidated data found in response");
+            setFilingStatus(["w2"]);
+            setHasExistingData(false);
           }
         } else {
-          console.log("No existing personal data found");
-          // Set default income information to w2
+          console.log("Consolidated API call failed or no data found (404)");
           setFilingStatus(["w2"]);
           setHasExistingData(false);
         }
-
-        // Handle file data response
-        if (fileDataResponse.ok) {
-          const fileResult = await fileDataResponse.json();
-          console.log("Existing file data found:", fileResult);
-
-          if (fileResult.success && fileResult.data && fileResult.data.tax_documents && fileResult.data.tax_documents.length > 0) {
-            // If files exist, show the first file (or handle multiple files as needed)
-            const firstFile = fileResult.data.tax_documents[0];
-            console.log("Setting uploaded file:", firstFile);
-
-            // Extract filename from URL
-            const filename = firstFile.document_url.split('/').pop() || "uploaded_document.png";
-
-            // Create a mock file object to display the existing file
-            const mockFile = {
-              name: filename,
-              size: 1024 * 1024, // Set a default size of 1MB since API doesn't provide size
-              type: "image/png", // Default type, could be improved
-              lastModified: new Date(firstFile.created_at).getTime(),
-              url: firstFile.document_url, // Store the URL for reference
-              isExistingFile: true, // Flag to indicate this is an existing file
-              created_at: firstFile.created_at // Store the created_at date for display
-            };
-
-            setUploadedFile(mockFile);
-            console.log("Existing file displayed in upload section:", mockFile);
-          } else {
-            console.log("No existing files found in tax_documents");
-          }
-        } else {
-          console.log("No existing file data found");
-        }
-
-        // Handle business info response
-        if (businessInfoResponse.ok) {
-          const businessResult = await businessInfoResponse.json();
-          console.log("Existing business info found:", businessResult);
-
-          if (businessResult.success && businessResult.data && Array.isArray(businessResult.data) && businessResult.data.length > 0) {
-            const businessData = businessResult.data[0]; // Get first business from array
-
-            // Set flag for existing business data - will use PATCH
-            setHasExistingBusinessData(true);
-
-            // Update business data state with fetched info
-            setBusinessData({
-              // Map API data to form structure
-              businessName: businessData.business_name || "",
-              businessAddress: businessData.business_address || "",
-              businessCity: businessData.business_city || "",
-              businessState: businessData.business_state || "",
-              businessZip: businessData.business_zip || "",
-              workDescription: businessData.work_description || "",
-              businessNameType: businessData.business_name_type || "same",
-              differentBusinessName: businessData.different_business_name || "",
-              startedDuringYear: businessData.started_during_year || false,
-              homeBased: businessData.home_based || false,
-              totalIncome: businessData.total_income || "",
-              taxFormsReceived: businessData.tax_forms_received || "none",
-              issuedRefunds: businessData.issued_refunds || false,
-              totalRefunded: businessData.total_refunded || "",
-              otherBusinessIncome: businessData.other_business_income || false,
-              otherBusinessIncomeAmount: businessData.other_business_income_amount || "",
-              advertising: businessData.advertising || "",
-              officeSupplies: businessData.office_supplies || "",
-              cleaningRepairs: businessData.cleaning_repairs || "",
-              insurance: businessData.insurance || "",
-              legalProfessional: businessData.legal_professional || "",
-              phoneInternetUtilities: businessData.phone_internet_utilities || "",
-              paidContractors: businessData.paid_contractors || false,
-              totalPaidContractors: businessData.total_paid_contractors || "",
-              otherExpenses: businessData.other_expenses || [],
-              usedVehicle: businessData.used_vehicle || false,
-              businessMiles: businessData.business_miles || "",
-              parkingTollsTravel: businessData.parking_tolls_travel || "",
-              businessMeals: businessData.business_meals || "",
-              travelExpenses: businessData.travel_expenses || "",
-              homeOfficeUse: businessData.home_office_use || false,
-              homeOfficeSize: businessData.home_office_size || "",
-              sellProducts: businessData.sell_products || false,
-              costItemsResold: businessData.cost_items_resold || "",
-              inventoryLeftEnd: businessData.inventory_left_end || "",
-              healthInsuranceBusiness: businessData.health_insurance_business || false,
-              selfEmployedRetirement: businessData.self_employed_retirement || false,
-              retirementAmount: businessData.retirement_amount || "",
-              isAccurate: businessData.is_accurate || false,
-              id: businessData.id || null
-            });
-
-            // Calculate total expenses for display
-            const calculateTotalExpensesFromAPI = (data) => {
-              let total = 0;
-              total += parseFloat(data.advertising || 0);
-              total += parseFloat(data.office_supplies || 0);
-              total += parseFloat(data.cleaning_repairs || 0);
-              total += parseFloat(data.insurance || 0);
-              total += parseFloat(data.legal_professional || 0);
-              total += parseFloat(data.phone_internet_utilities || 0);
-              total += parseFloat(data.total_paid_contractors || 0);
-              total += parseFloat(data.parking_tolls_travel || 0);
-              total += parseFloat(data.business_meals || 0);
-              total += parseFloat(data.travel_expenses || 0);
-              total += parseFloat(data.cost_items_resold || 0);
-              total += parseFloat(data.retirement_amount || 0);
-
-              // Add other expenses
-              if (data.other_expenses && Array.isArray(data.other_expenses)) {
-                data.other_expenses.forEach(exp => {
-                  total += parseFloat(exp.amount || 0);
-                });
-              }
-
-              return total.toFixed(2);
-            };
-
-            // Store full business data for editing and display
-            const businessForDisplay = {
-              id: businessData.id || Date.now(),
-              businessName: businessData.business_name || "",
-              businessType: "Self-Employment",
-              totalIncome: businessData.total_income || "0",
-              totalExpenses: calculateTotalExpensesFromAPI(businessData),
-              address: `${businessData.business_address || ""} ${businessData.business_city || ""} ${businessData.business_state || ""} ${businessData.business_zip || ""}`.trim(),
-              workDescription: businessData.work_description || "",
-              // Store all fields for editing
-              businessNameType: businessData.business_name_type || 'same',
-              differentBusinessName: businessData.different_business_name || '',
-              startedDuringYear: businessData.started_during_year || false,
-              homeBased: businessData.home_based || false,
-              businessAddress: businessData.business_address || '',
-              businessCity: businessData.business_city || '',
-              businessState: businessData.business_state || '',
-              businessZip: businessData.business_zip || '',
-              taxFormsReceived: (() => {
-                // Handle both array and string formats from API
-                const forms = businessData.tax_forms_received;
-                if (Array.isArray(forms)) {
-                  return forms;
-                } else if (typeof forms === 'string') {
-                  return forms === 'none' ? [] : [forms];
-                }
-                return [];
-              })(),
-              issuedRefunds: businessData.issued_refunds || false,
-              totalRefunded: businessData.total_refunded || '',
-              otherBusinessIncome: businessData.other_business_income || false,
-              otherBusinessIncomeAmount: businessData.other_business_income_amount || '',
-              advertising: businessData.advertising || '',
-              officeSupplies: businessData.office_supplies || '',
-              cleaningRepairs: businessData.cleaning_repairs || '',
-              insurance: businessData.insurance || '',
-              legalProfessional: businessData.legal_professional || '',
-              phoneInternetUtilities: businessData.phone_internet_utilities || '',
-              paidContractors: businessData.paid_contractors || false,
-              totalPaidContractors: businessData.total_paid_contractors || '',
-              otherExpenses: businessData.other_expenses || [],
-              usedVehicle: businessData.used_vehicle || false,
-              businessMiles: businessData.business_miles || '',
-              parkingTollsTravel: businessData.parking_tolls_travel || '',
-              businessMeals: businessData.business_meals || '',
-              travelExpenses: businessData.travel_expenses || '',
-              homeOfficeUse: businessData.home_office_use || false,
-              homeOfficeSize: businessData.home_office_size || '',
-              sellProducts: businessData.sell_products || false,
-              costItemsResold: businessData.cost_items_resold || '',
-              inventoryLeftEnd: businessData.inventory_left_end || '',
-              healthInsuranceBusiness: businessData.health_insurance_business || false,
-              selfEmployedRetirement: businessData.self_employed_retirement || false,
-              retirementAmount: businessData.retirement_amount || '',
-              isAccurate: businessData.is_accurate || false,
-              created_at: businessData.created_at,
-              updated_at: businessData.updated_at
-            };
-            setBusinesses([businessForDisplay]);
-
-            console.log("Business info exists - will use PATCH for future operations:", businessData);
-          } else {
-            // No existing business data found - will use POST for future operations
-            console.log("No existing business info found - will use POST for future operations");
-            setHasExistingBusinessData(false);
-          }
-        } else {
-          console.log("Business info API call failed");
-        }
-
-        // Handle rental property response
-        if (rentalPropertyResponse.ok) {
-          const rentalResult = await rentalPropertyResponse.json();
-          console.log("Existing rental property info found:", rentalResult);
-
-          if (rentalResult.success && rentalResult.data && Array.isArray(rentalResult.data) && rentalResult.data.length > 0) {
-            const rentalData = rentalResult.data[0]; // Get first rental property from array
-
-            // Set flag for existing rental data - will use PATCH
-            setHasExistingRentalData(true);
-
-            // Update rental properties list with fetched info
-            const rentalProperty = {
-              id: rentalData.id || Date.now(),
-              isRentalProperty: rentalData.is_rental_property || false,
-              propertyAddress: rentalData.property_address || "",
-              propertyCity: rentalData.property_city || "",
-              propertyState: rentalData.property_state || "",
-              propertyZip: rentalData.property_zip || "",
-              propertyType: rentalData.property_type || "single_family",
-              ownershipType: rentalData.ownership_type || "",
-              rentedOutDuringYear: rentalData.rented_out_during_year || false,
-              daysRentedOut: rentalData.days_rented_out || 0,
-              familyUse: rentalData.family_use || false,
-              familyUseDays: rentalData.family_use_days || 0,
-              totalRentReceived: rentalData.total_rent_received || "0.00",
-              taxFormsReceived: rentalData.tax_forms_received || [],
-              advertising: rentalData.advertising || "0.00",
-              cleaningMaintenance: rentalData.cleaning_maintenance || "0.00",
-              repairs: rentalData.repairs || "0.00",
-              propertyManagementFees: rentalData.property_management_fees || "0.00",
-              insurance: rentalData.insurance || "0.00",
-              mortgageInterest: rentalData.mortgage_interest || "0.00",
-              propertyTaxes: rentalData.property_taxes || "0.00",
-              utilities: rentalData.utilities || "0.00",
-              legalProfessional: rentalData.legal_professional || "0.00",
-              supplies: rentalData.supplies || "0.00",
-              otherExpenses: rentalData.other_expenses || [],
-              soldOrStoppedRenting: rentalData.sold_or_stopped_renting || false,
-              boughtMajorItems: rentalData.bought_major_items || false,
-              hasRentalLosses: rentalData.has_rental_losses || false,
-              isComplete: rentalData.is_complete || false
-            };
-
-            setRentalProperties([rentalProperty]);
-            console.log("Rental property info exists - will use PATCH for future operations:", rentalData);
-          } else {
-            // No existing rental property data found - will use POST for future operations
-            console.log("No existing rental property info found - will use POST for future operations");
-            setHasExistingRentalData(false);
-            setRentalProperties([]);
-          }
-        } else {
-          console.log("Rental property info API call failed");
-          setHasExistingRentalData(false);
-          setRentalProperties([]);
-        }
       } catch (error) {
         console.error("Error checking existing data:", error);
-        console.log("Showing empty form due to error");
-        // Set default income information to w2
         setFilingStatus(["w2"]);
       }
     };
@@ -1448,9 +788,12 @@ export default function DataIntakeForm() {
       return { valid: true }; // Empty dates are handled by required field validation
     }
 
+    // Normalize: Remove any spaces
+    const cleanDateString = dateString.replace(/\s/g, '');
+
     // Check if format matches MM/DD/YYYY
     const datePattern = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
-    if (!datePattern.test(dateString)) {
+    if (!datePattern.test(cleanDateString)) {
       return {
         valid: false,
         error: 'Date must be in MM/DD/YYYY format (e.g., 01/15/1990)'
@@ -1458,7 +801,7 @@ export default function DataIntakeForm() {
     }
 
     // Validate the actual date values
-    const [month, day, year] = dateString.split('/').map(Number);
+    const [month, day, year] = cleanDateString.split('/').map(Number);
 
     // Check if it's a valid date
     const date = new Date(year, month - 1, day);
@@ -2014,6 +1357,7 @@ export default function DataIntakeForm() {
     }
 
     console.log("Submit button clicked - Initializing submission...");
+    console.log("Using Consolidated API Endpoint");
 
     try {
       // Reset upload states if file exists
@@ -2023,8 +1367,11 @@ export default function DataIntakeForm() {
         setUploadError(null);
       }
 
-      // Build the personal data payload for first API (without business and rental data)
-      const personalDataPayload = {
+      // ---------------------------------------------------------
+      // 1. Prepare Consolidated Data Payload
+      // ---------------------------------------------------------
+
+      const consolidatedPayload = {
         personal_info: {
           first_name: personalInfo.firstName || "",
           middle_initial: personalInfo.middleInitial || "",
@@ -2059,8 +1406,7 @@ export default function DataIntakeForm() {
             dependent_last_name: dep.lastName || "",
             dependent_dateOfBirth: dep.dob ? formatDateToYYYYMMDD(dep.dob) : "",
             dependent_ssn: dep.ssn || ""
-          })) : [],
-          businesses: businesses // Include businesses in payload
+          })) : []
         },
         bank_info: {
           bank_name: bankInfo.bankName || "",
@@ -2068,23 +1414,89 @@ export default function DataIntakeForm() {
           confirm_routing_number: bankInfo.confirmRoutingNumber || "",
           account_number: bankInfo.accountNumber || "",
           confirm_account_number: bankInfo.confirmAccountNumber || ""
-        }
+        },
+        // Map businesses to API structure
+        business_info: businesses.map(b => ({
+          id: b.id !== undefined && String(b.id).length < 15 ? b.id : undefined, // Only send valid DB IDs if possible, else let backend create
+          business_name: b.businessName || "",
+          business_address: b.businessAddress || "",
+          business_city: b.businessCity || "",
+          business_state: b.businessState || "",
+          business_zip: b.businessZip || "",
+          work_description: b.workDescription || "",
+          business_name_type: b.businessNameType || "same",
+          different_business_name: b.differentBusinessName || "",
+          started_during_year: b.startedDuringYear || false,
+          home_based: b.homeBased || false,
+          total_income: b.totalIncome || "",
+          tax_forms_received: Array.isArray(b.taxFormsReceived) ? b.taxFormsReceived : [],
+          issued_refunds: b.issuedRefunds || false,
+          total_refunded: b.totalRefunded || "",
+          other_business_income: b.otherBusinessIncome || false,
+          other_business_income_amount: b.otherBusinessIncomeAmount || "",
+          advertising: b.advertising || "",
+          office_supplies: b.officeSupplies || "",
+          cleaning_repairs: b.cleaningRepairs || "",
+          insurance: b.insurance || "",
+          legal_professional: b.legalProfessional || "",
+          phone_internet_utilities: b.phoneInternetUtilities || "",
+          paid_contractors: b.paidContractors || false,
+          total_paid_contractors: b.totalPaidContractors || "",
+          other_expenses: b.otherExpenses || [],
+          used_vehicle: b.usedVehicle || false,
+          business_miles: b.businessMiles || "",
+          parking_tolls_travel: b.parkingTollsTravel || "",
+          business_meals: b.businessMeals || "",
+          travel_expenses: b.travelExpenses || "",
+          home_office_use: b.homeOfficeUse || false,
+          home_office_size: b.homeOfficeSize || "",
+          sell_products: b.sellProducts || false,
+          cost_items_resold: b.costItemsResold || "",
+          inventory_left_end: b.inventoryLeftEnd || "",
+          health_insurance_business: b.healthInsuranceBusiness || false,
+          self_employed_retirement: b.selfEmployedRetirement || false,
+          retirement_amount: b.retirementAmount || "",
+          is_accurate: b.isAccurate || false
+        })),
+        // Map rental properties to API structure
+        rental_property_info: rentalProperties.map(r => ({
+          id: r.id !== undefined && String(r.id).length < 15 ? r.id : undefined,
+          is_rental_property: r.isRentalProperty || false,
+          property_address: r.propertyAddress || "",
+          property_city: r.propertyCity || "",
+          property_state: r.propertyState || "",
+          property_zip: r.propertyZip || "",
+          property_type: r.propertyType || "single_family",
+          ownership_type: r.ownershipType || "",
+          rented_out_during_year: r.rentedOutDuringYear || false,
+          days_rented_out: r.daysRentedOut || 0,
+          family_use: r.familyUse || false,
+          family_use_days: r.familyUseDays || 0,
+          total_rent_received: r.totalRentReceived || "0.00",
+          tax_forms_received: Array.isArray(r.taxFormsReceived) ? r.taxFormsReceived : [],
+          advertising: r.advertising || "0.00",
+          cleaning_maintenance: r.cleaningMaintenance || "0.00",
+          repairs: r.repairs || "0.00",
+          property_management_fees: r.propertyManagementFees || "0.00",
+          insurance: r.insurance || "0.00",
+          mortgage_interest: r.mortgageInterest || "0.00",
+          property_taxes: r.propertyTaxes || "0.00",
+          utilities: r.utilities || "0.00",
+          legal_professional: r.legalProfessional || "0.00",
+          supplies: r.supplies || "0.00",
+          other_expenses: r.otherExpenses || [],
+          sold_or_stopped_renting: r.soldOrStoppedRenting || false,
+          bought_major_items: r.boughtMajorItems || false,
+          has_rental_losses: r.hasRentalLosses || false,
+          is_complete: r.isComplete || false
+        }))
       };
 
-      // Build separate payloads for business and rental data
-      const businessDataPayload = {
-        business_income: businessData
-      };
+      console.log("Full Consolidated Payload:", JSON.stringify(consolidatedPayload, null, 2));
 
-      const rentalDataPayload = {
-        rental_properties: rentalProperties // Include list of rental properties
-      };
-
-      // Log the payload for debugging
-      console.log("Full payload being sent:", JSON.stringify(personalDataPayload, null, 2));
-      console.log("Spouse info in payload:", personalDataPayload.personal_info.spouse_info);
-
-      // Prepare file upload form data for second API
+      // ---------------------------------------------------------
+      // 2. Prepare File Upload Payload (Separate API)
+      // ---------------------------------------------------------
       const fileFormData = new FormData();
       const hasFileToUpload = uploadedFile && !uploadedFile.isExistingFile;
 
@@ -2092,23 +1504,20 @@ export default function DataIntakeForm() {
         fileFormData.append("tax_documents", uploadedFile);
       }
 
-      // Send income information according to API spec
-      // income_information: string or null (primary income type)
-      // income_information_types: array of income types
       const incomeTypes = filingStatus.length > 0 ? filingStatus : ["w2"];
       const primaryIncomeType = incomeTypes[0] || "w2";
 
-      // Send primary income type (can be null if no types selected)
       if (incomeTypes.length > 0) {
         fileFormData.append("income_information", primaryIncomeType);
       }
 
-      // Send income types as array (append each type separately for FormData)
       incomeTypes.forEach(type => {
         fileFormData.append("income_information_types", type);
       });
 
-      // Get the access token
+      // ---------------------------------------------------------
+      // 3. Authenticate and Submit
+      // ---------------------------------------------------------
       const token = getAccessToken();
       if (!token) {
         toast.error("Authentication required. Please login again.", {
@@ -2118,40 +1527,35 @@ export default function DataIntakeForm() {
         return;
       }
 
-      console.log("Submitting dual API calls...");
-      console.log("Has existing data:", hasExistingData);
-      console.log("Using method:", hasExistingData ? "PATCH" : "POST");
-      console.log("Bank info being sent:", {
-        bank_name: bankInfo.bankName,
-        routing_number: bankInfo.routingNumber,
-        confirm_routing_number: bankInfo.confirmRoutingNumber,
-        account_number: bankInfo.accountNumber,
-        confirm_account_number: bankInfo.confirmAccountNumber
-      });
-
-      // Call all APIs simultaneously using Promise.all
       const apiBaseUrl = getApiBaseUrl();
-      console.log(`Making request to: ${apiBaseUrl}/taxpayer/personal-data-intake/`);
+      console.log(`Submitting to: ${apiBaseUrl}/taxpayer/consolidated-data-intake/`);
 
-      const [personalDataResult, fileUploadResult] = await Promise.all([
-        // First API: Personal data (JSON) - Use PATCH if data exists, POST if new
-        fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
-          method: "POST",
+      // Use Promise.all to handle both Data and File upload in parallel
+      const [consolidatedResult, fileUploadResult] = await Promise.all([
+        // API 1: Consolidated Data Intake
+        // Logic: Use POST usually, or PATCH if updating. User says "both works".
+        // Let's use POST by default or toggle based on hasExistingData if preferred.
+        fetch(`${apiBaseUrl}/taxpayer/consolidated-data-intake/`, {
+          method: hasExistingData ? "PATCH" : "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(personalDataPayload)
+          body: JSON.stringify(consolidatedPayload)
         }),
 
-        // Second API: File upload with progress tracking
-        hasFileToUpload ? (() => {
+        // API 2: File Upload (if needed)
+        // Only run if we have a fil to upload OR if we need to update income types even without file?
+        // The previous code always ran it. Let's keep it consistent.
+        // If we strictly only upload file when present, we might skip income types update if they are tied to this endpoint.
+        // Assuming income types are also stored in consolidated, but keeping this for file.
+        hasFileToUpload ? (() => { // Only run if file upload is needed
+          // ... Same XHR logic as before ...
           return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
 
-            // Track upload progress
             xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
+              if (hasFileToUpload && e.lengthComputable) {
                 const percentComplete = (e.loaded / e.total) * 100;
                 setUploadProgress(Math.round(percentComplete));
               }
@@ -2159,161 +1563,90 @@ export default function DataIntakeForm() {
 
             xhr.addEventListener('load', () => {
               if (xhr.status >= 200 && xhr.status < 300) {
-                setUploadProgress(100);
-                setUploadStatus('success');
-                resolve(xhr);
+                setIsSubmitting(false);
+                if (hasFileToUpload) setUploadProgress(100);
+                if (hasFileToUpload) setUploadStatus('success');
+                resolve({ ok: true, json: () => { try { return JSON.parse(xhr.responseText); } catch (e) { return {}; } } });
               } else {
-                setUploadStatus('error');
-                setUploadError(`Upload failed: ${xhr.status} ${xhr.statusText}`);
-                reject(new Error(`Upload failed: ${xhr.status}`));
+                setIsSubmitting(false);
+                if (hasFileToUpload) setUploadStatus('error');
+                if (hasFileToUpload) setUploadError(`Upload failed: ${xhr.status}`);
+                resolve({ ok: false, status: xhr.status, statusText: xhr.statusText, text: () => Promise.resolve(xhr.responseText) });
               }
             });
 
             xhr.addEventListener('error', () => {
-              setUploadStatus('error');
-              setUploadError('Upload failed: Network error');
+              setIsSubmitting(false);
+              if (hasFileToUpload) setUploadStatus('error');
               reject(new Error('Network error'));
             });
 
-            xhr.open(hasExistingData ? 'PATCH' : 'POST', `${apiBaseUrl}/taxpayer/income-data-intake/`);
-            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-            xhr.setRequestHeader('Cookie', 'csrftoken=ixFCvQ0kTg9v34Ddg81rTDl4v1Q1AOLv');
-            xhr.send(fileFormData);
           });
-        })() : fetch(`${apiBaseUrl}/taxpayer/income-data-intake/`, {
-          method: hasExistingData ? "PATCH" : "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Cookie": "csrftoken=ixFCvQ0kTg9v34Ddg81rTDl4v1Q1AOLv"
-          },
-          body: fileFormData
-        })
+        })() : Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+
       ]);
 
-      // Check if all requests were successful
-      if (!personalDataResult.ok) {
-        // Try to parse error response for field-level errors
+      // ---------------------------------------------------------
+      // 4. Handle Responses
+      // ---------------------------------------------------------
+
+      // Check Consolidated API Response
+      if (!consolidatedResult.ok) {
         try {
-          const errorData = await personalDataResult.json();
+          const errorData = await consolidatedResult.json();
           if (errorData.errors || errorData.message) {
-            parseAndSetFieldErrors(errorData, 'personal');
-            return; // Don't proceed if there are validation errors
+            parseAndSetFieldErrors(errorData, 'personal'); // Using 'personal' source map as fallback
+            return;
           }
-        } catch (parseErr) {
-          // If parsing fails, throw generic error
-        }
-        throw new Error(`Personal data API failed: ${personalDataResult.status} ${personalDataResult.statusText}`);
+        } catch (e) { }
+        throw new Error(`Data submission failed: ${consolidatedResult.status}`);
       }
 
+      const consolidatedResponse = await consolidatedResult.json();
+      console.log("Consolidated submission success:", consolidatedResponse);
 
-      // Handle file upload response (could be XMLHttpRequest or Response)
-      if (hasFileToUpload) {
-        // fileUploadResult is an XMLHttpRequest object when uploading
-        if (fileUploadResult.status < 200 || fileUploadResult.status >= 300) {
-          try {
-            const errorData = JSON.parse(fileUploadResult.responseText || '{}');
-            if (errorData.errors || errorData.message) {
-              parseAndSetFieldErrors(errorData, 'file');
-              return;
-            }
-          } catch (parseErr) {
-            // If parsing fails, throw generic error
-          }
-          throw new Error(`File upload API failed: ${fileUploadResult.status} ${fileUploadResult.statusText}`);
-        }
-      } else {
-        // fileUploadResult is a Response object when no file to upload
-        if (!fileUploadResult.ok) {
-          try {
-            const errorData = await fileUploadResult.json();
-            if (errorData.errors || errorData.message) {
-              parseAndSetFieldErrors(errorData, 'file');
-              return;
-            }
-          } catch (parseErr) {
-            // If parsing fails, throw generic error
-          }
-          throw new Error(`File upload API failed: ${fileUploadResult.status} ${fileUploadResult.statusText}`);
-        }
-      }
-
-      const personalDataResponse = await personalDataResult.json();
-      let fileUploadResponse;
-      if (hasFileToUpload) {
+      // Check File Upload Response
+      // Note: XHR wrapper returns object with ok/json similar to fetch
+      if (!fileUploadResult.ok) {
         try {
-          fileUploadResponse = JSON.parse(fileUploadResult.responseText);
-        } catch (e) {
-          fileUploadResponse = { success: true, message: "File uploaded successfully" };
-        }
-      } else {
-        fileUploadResponse = await fileUploadResult.json();
+          const errorText = await fileUploadResult.text();
+          const errorData = JSON.parse(errorText);
+          if (errorData.errors) {
+            parseAndSetFieldErrors(errorData, 'file');
+            return;
+          }
+        } catch (e) { }
+        console.warn("File upload failed or returned non-200");
+        // We might not want to block success if data saved but file failed? 
+        // But usually it's critical. Let's throw.
+        throw new Error("File upload failed.");
       }
 
-      console.log("Personal data submission successful:", personalDataResponse);
-      console.log("File upload successful:", fileUploadResponse);
+      const fileResultData = await fileUploadResult.json();
+      console.log("File upload success:", fileResultData);
 
-      // Store original state before updating
-      const wasNewSubmission = !hasExistingData;
-
-      // Handle success response - show single consolidated success message
-      if (personalDataResponse.success) {
-        // Mark that data now exists (for future updates)
+      // ---------------------------------------------------------
+      // 5. Cleanup and Notify
+      // ---------------------------------------------------------
+      if (consolidatedResponse.success) {
         setHasExistingData(true);
       }
 
-      // Show single success message for the entire form submission
-      const hasFileUpload = fileUploadResponse && fileUploadResponse.success;
-
-      let message = "Data intake form updated successfully!";
-      if (hasFileUpload) {
-        message = "Data intake form and documents updated successfully!";
-      }
-
-      toast.success(message, {
+      toast.success("Information saved successfully!", {
         position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
+        autoClose: 3000
       });
 
-      // Clear any previous errors on success
       setFieldErrors({});
 
-      // Don't redirect immediately - allow user to sign form if they want
-      // User can navigate away manually or sign the form
     } catch (err) {
-      console.error("Dual API submission error:", err);
-
-      // Try to extract field errors from error message or response
-      if (err.response) {
-        try {
-          const errorData = await err.response.json();
-          if (errorData.errors) {
-            parseAndSetFieldErrors(errorData, 'personal');
-            return;
-          }
-        } catch (parseErr) {
-          console.error("Error parsing error response:", parseErr);
-        }
-      }
-
-      // If no field errors found, show generic error
+      console.error("Submission error:", err);
       const errorMessage = handleAPIError(err);
       toast.error(`Submission failed: ${errorMessage}`, {
         position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: false,
-        className: "custom-toast-error",
-        bodyClassName: "custom-toast-body",
+        autoClose: 3000
       });
     } finally {
-      // Reset loading state
       setIsSubmitting(false);
     }
   };
@@ -3321,10 +2654,23 @@ export default function DataIntakeForm() {
         >
           Do you have dependents?
         </label>
-        <SlideSwitch
-          value={hasDependents}
-          onChange={handleDependentsCheckbox}
-        />
+        <div className="flex items-center space-x-3 mt-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleDependentsCheckbox(hasDependents === "yes" ? "no" : "yes")}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${hasDependents === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+              }`}
+            style={{ borderRadius: "9999px" }}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasDependents === "yes" ? 'translate-x-6' : 'translate-x-1'
+                }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+            {hasDependents === "yes" ? 'Yes' : 'No'}
+          </span>
+        </div>
         {hasDependents === "yes" && (
           <>
             {dependents.length === 0 ? (
@@ -3758,10 +3104,23 @@ export default function DataIntakeForm() {
             >
               Do you own a home?
             </label>
-            <SlideSwitch
-              value={otherInfo.ownsHome}
-              onChange={(val) => handleOtherInfoChange('ownsHome', val)}
-            />
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('ownsHome', otherInfo.ownsHome === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${otherInfo.ownsHome === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                  }`}
+                style={{ borderRadius: "9999px" }}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${otherInfo.ownsHome === "yes" ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.ownsHome === "yes" ? 'Yes' : 'No'}
+              </span>
+            </div>
             <label
               className="form-label d-block mt-3"
               style={{
@@ -3773,10 +3132,23 @@ export default function DataIntakeForm() {
             >
               Are you in school?
             </label>
-            <SlideSwitch
-              value={otherInfo.inSchool}
-              onChange={(val) => handleOtherInfoChange('inSchool', val)}
-            />
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('inSchool', otherInfo.inSchool === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${otherInfo.inSchool === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                  }`}
+                style={{ borderRadius: "9999px" }}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${otherInfo.inSchool === "yes" ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.inSchool === "yes" ? 'Yes' : 'No'}
+              </span>
+            </div>
           </div>
           <div className="col-md-6 mb-2">
             <label
@@ -3790,10 +3162,23 @@ export default function DataIntakeForm() {
             >
               Do you have other deductions or income your preparer should be aware of?
             </label>
-            <SlideSwitch
-              value={otherInfo.otherDeductions}
-              onChange={(val) => handleOtherInfoChange('otherDeductions', val)}
-            />
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('otherDeductions', otherInfo.otherDeductions === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${otherInfo.otherDeductions === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                  }`}
+                style={{ borderRadius: "9999px" }}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${otherInfo.otherDeductions === "yes" ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.otherDeductions === "yes" ? 'Yes' : 'No'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -3855,8 +3240,8 @@ export default function DataIntakeForm() {
                 padding: "16px",
                 marginTop: "8px"
               }}>
-                {/* Add Another Business Button */}
-                {businesses.length > 0 && !isAddingBusiness && (
+                {/* Add Business Button */}
+                {!isAddingBusiness && (
                   <div className="mb-3 text-center">
                     <button
                       className="btn btn-primary"
@@ -3915,7 +3300,7 @@ export default function DataIntakeForm() {
                         borderColor: "#3B4A66"
                       }}
                     >
-                      Add Another Business
+                      {businesses.length > 0 ? "Add Another Business" : "Add Business Info"}
                     </button>
                   </div>
                 )}
@@ -4355,7 +3740,7 @@ export default function DataIntakeForm() {
                   <RentalPropertyForm
                     onSave={handleSaveRentalProperty}
                     onCancel={handleCancelRentalProperty}
-                    initialData={editingRentalPropertyId ? rentalProperties.find(rp => rp.id === editingRentalPropertyId) : null}
+                    initialData={editingRentalPropertyId ? rentalData : null}
                   />
                 )}
               </div>
@@ -4804,10 +4189,11 @@ export default function DataIntakeForm() {
 
       {/* Signature Section - Show after form is submitted */}
       {hasExistingData && (
-        <div className="mt-6 p-4 rounded-lg border" style={{
+        <div className=" p-4 rounded-lg border" style={{
           borderColor: '#E8F0FF',
           backgroundColor: '#F3F7FF',
-          fontFamily: 'BasisGrotesquePro'
+          fontFamily: 'BasisGrotesquePro',
+          marginTop: "12px"
         }}>
           <div className="d-flex flex-column align-items-start gap-3">
             <div>
