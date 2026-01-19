@@ -1910,7 +1910,6 @@ export default function DataIntakeForm() {
         </p>
       </div>
 
-      {/* General Error Display */}
       {generalErrors.length > 0 && (
         <div className="alert alert-danger mb-4" role="alert" style={{
           borderRadius: "8px",
