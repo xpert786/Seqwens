@@ -12,10 +12,7 @@ import FaqSection from "./FaqSection";
 export default function Home() {
     return (
         <div
-            className="w-full"
-            style={{
-                background: "linear-gradient(180deg, #ffffff 0%,rgb(255, 255, 255) 200%)"
-            }}
+            className="w-full bg-black"
         >
 
 

@@ -31,7 +31,7 @@ function HeroSection() {
           </div>
         </div>
 
-      
+
 
         <p className="trusted-text mt-5">
           <span className="text-orange fw-bold">Trusted</span> by leading tax firms worldwide

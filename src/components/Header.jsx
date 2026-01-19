@@ -7,7 +7,7 @@ export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   // Initialize with actual login status
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => isLoggedIn());
   const [userData, setUserData] = useState(() => {
@@ -119,7 +119,7 @@ export default function Header() {
     const checkAndUpdate = () => {
       const loggedIn = isLoggedIn();
       setIsUserLoggedIn(loggedIn);
-      
+
       if (loggedIn) {
         const user = getUserData();
         setUserData(user);
@@ -130,13 +130,13 @@ export default function Header() {
 
     // Check immediately
     checkAndUpdate();
-    
+
     // Check periodically in case login status changes
     const interval = setInterval(checkAndUpdate, 1000);
-    
+
     // Listen for storage changes (when user logs in/out in another tab)
     window.addEventListener('storage', checkAndUpdate);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', checkAndUpdate);
@@ -165,7 +165,7 @@ export default function Header() {
       const isEmailVerified = userData.is_email_verified;
       const isPhoneVerified = userData.is_phone_verified;
       const isCompleted = userData.is_completed;
-      
+
       if (!isEmailVerified && !isPhoneVerified) {
         navigate("/two-auth");
       } else if (isCompleted) {
@@ -184,7 +184,7 @@ export default function Header() {
     const firstName = userData.first_name || userData.name || "";
     const lastName = userData.last_name || "";
     const email = userData.email || "";
-    
+
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
     } else if (firstName) {
@@ -198,7 +198,7 @@ export default function Header() {
   return (
     <header className="w-full  bg-white">
       <div className="w-full pl-6 md:pl-8 lg:pl-12 xl:pl-16 2xl:pl-20 pr-4 md:pr-6 lg:pr-8 xl:pr-10 2xl:pr-12 py-3 flex items-center justify-between">
-        
+
         {/* Logo */}
         {isUserLoggedIn ? (
           <button
@@ -227,43 +227,40 @@ export default function Header() {
             to="/"
             className="text-lg !text-[#3AD6F2] font-[BasisGrotesquePro]"
           >
-            Home
+            Pricing
           </Link>
 
           <a
             href="#capabilities"
             onClick={handleAICapabilitiesClick}
-            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${
-              location.pathname === "/" && window.location.hash === "#capabilities"
-                ? "!text-[#3AD6F2]"
-                : "text-black hover:!text-[#3AD6F2]"
-            }`}
+            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#capabilities"
+              ? "!text-[#3AD6F2]"
+              : "text-black hover:!text-[#3AD6F2]"
+              }`}
           >
-            AI Capabilities
+            FAQ
           </a>
 
           <a
             href="#pricing"
             onClick={handlePricingClick}
-            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${
-              location.pathname === "/" && window.location.hash === "#pricing"
-                ? "!text-[#3AD6F2]"
-                : "text-black hover:!text-[#3AD6F2]"
-            }`}
+            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#pricing"
+              ? "!text-[#3AD6F2]"
+              : "text-black hover:!text-[#3AD6F2]"
+              }`}
           >
-            Pricing
+            Client Portal
           </a>
 
           <a
             href="#faq"
             onClick={handleFAQClick}
-            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${
-              location.pathname === "/" && window.location.hash === "#faq"
-                ? "!text-[#3AD6F2]"
-                : "text-black hover:!text-[#3AD6F2]"
-            }`}
+            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#faq"
+              ? "!text-[#3AD6F2]"
+              : "text-black hover:!text-[#3AD6F2]"
+              }`}
           >
-            FAQ
+            Get Started
           </a>
         </nav>
 
@@ -312,11 +309,10 @@ export default function Header() {
               handleAICapabilitiesClick(e);
               setMobileMenuOpen(false);
             }}
-            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${
-              location.pathname === "/" && window.location.hash === "#capabilities"
-                ? "text-[#3AD6F2]"
-                : "text-black hover:text-[#3AD6F2]"
-            }`}
+            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#capabilities"
+              ? "text-[#3AD6F2]"
+              : "text-black hover:text-[#3AD6F2]"
+              }`}
           >
             AI Capabilities
           </a>
@@ -326,11 +322,10 @@ export default function Header() {
               handlePricingClick(e);
               setMobileMenuOpen(false);
             }}
-            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${
-              location.pathname === "/" && window.location.hash === "#pricing"
-                ? "text-[#3AD6F2]"
-                : "text-black hover:text-[#3AD6F2]"
-            }`}
+            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#pricing"
+              ? "text-[#3AD6F2]"
+              : "text-black hover:text-[#3AD6F2]"
+              }`}
           >
             Pricing
           </a>
@@ -340,11 +335,10 @@ export default function Header() {
               handleFAQClick(e);
               setMobileMenuOpen(false);
             }}
-            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${
-              location.pathname === "/" && window.location.hash === "#faq"
-                ? "text-[#3AD6F2]"
-                : "text-black hover:text-[#3AD6F2]"
-            }`}
+            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#faq"
+              ? "text-[#3AD6F2]"
+              : "text-black hover:text-[#3AD6F2]"
+              }`}
           >
             FAQ
           </a>

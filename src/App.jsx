@@ -58,11 +58,11 @@ class RouteErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '100vh',
           padding: '20px',
           textAlign: 'center'
@@ -71,7 +71,7 @@ class RouteErrorBoundary extends React.Component {
           <p style={{ color: '#666', marginBottom: '20px' }}>
             {this.state.error?.message || 'An error occurred while loading this page.'}
           </p>
-          <button 
+          <button
             onClick={() => {
               this.setState({ hasError: false, error: null });
               window.location.reload();
@@ -128,28 +128,28 @@ const SuperRoutes = lazy(() => {
 // Loading component for lazy routes with timeout detection
 const RouteLoader = () => {
   const [showTimeout, setShowTimeout] = React.useState(false);
-  
+
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setShowTimeout(true);
       console.warn('Route loading is taking longer than expected. This might indicate a problem.');
     }, 10000); // Show warning after 10 seconds
-    
+
     return () => clearTimeout(timer);
   }, []);
-  
+
   return (
-    <div style={{ 
-      display: 'flex', 
+    <div style={{
+      display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'center', 
-      alignItems: 'center', 
+      justifyContent: 'center',
+      alignItems: 'center',
       height: '100vh',
       fontSize: '16px',
       color: '#666'
     }}>
       <div>
-        <div style={{ 
+        <div style={{
           border: '4px solid #f3f3f3',
           borderTop: '4px solid #3498db',
           borderRadius: '50%',
@@ -164,7 +164,7 @@ const RouteLoader = () => {
             <p style={{ color: '#EF4444', fontSize: '14px', marginBottom: '10px' }}>
               Loading is taking longer than expected.
             </p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               style={{
                 padding: '8px 16px',
@@ -207,7 +207,7 @@ export default function App() {
         <Route path="/tw-test" element={<TailwindTest />} />
         {/* Root path - Home page (public landing page) */}
         <Route path="/" element={<Home />} />
-        
+
         {/* Authenticated users redirect route */}
         <Route path="/home-redirect" element={<RootAuthCheck />} />
         <Route path="/create-account" element={
