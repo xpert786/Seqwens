@@ -90,7 +90,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
       if (typeof taxForms === 'string') {
         // If it's a string, convert to array (handle 'none' or single value)
         if (taxForms.toLowerCase() === 'none') {
-          taxForms = ['NONE'];
+          taxForms = ['none'];
         } else {
           taxForms = [taxForms];
         }
@@ -167,12 +167,12 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
       newErrors.businessName = 'Business name is required';
     }
 
-    // Business address is required when business name is provided (for different business names)
-    if (formData.businessNameType === 'different' && String(formData.businessName || '').trim()) {
-      if (!String(formData.businessAddress || '').trim()) newErrors.businessAddress = 'Business address is required when business name is provided';
-      if (!String(formData.businessCity || '').trim()) newErrors.businessCity = 'Business city is required when business name is provided';
-      if (!String(formData.businessState || '').trim()) newErrors.businessState = 'Business state is required when business name is provided';
-      if (!String(formData.businessZip || '').trim()) newErrors.businessZip = 'Business ZIP is required when business name is provided';
+    // Business address is required when business name is provided (for different business names) OR if business is home-based
+    if (formData.homeBased || (formData.businessNameType === 'different' && String(formData.businessName || '').trim())) {
+      if (!String(formData.businessAddress || '').trim()) newErrors.businessAddress = 'Business address is required';
+      if (!String(formData.businessCity || '').trim()) newErrors.businessCity = 'Business city is required';
+      if (!String(formData.businessState || '').trim()) newErrors.businessState = 'Business state is required';
+      if (!String(formData.businessZip || '').trim()) newErrors.businessZip = 'Business ZIP is required';
     }
     if (!String(formData.totalIncome || '').trim()) newErrors.totalIncome = 'Total income is required';
 
@@ -407,7 +407,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           </div>
         </div>
 
-        {formData.businessName.trim() && (
+        {(formData.businessName.trim() || formData.homeBased) && (
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
@@ -425,7 +425,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           </div>
         )}
 
-        {formData.businessName.trim() && (
+        {(formData.businessName.trim() || formData.homeBased) && (
           <div className="row g-3 mb-3">
             <div className="col-md-4">
               <input
