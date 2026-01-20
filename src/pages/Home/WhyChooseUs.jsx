@@ -5,38 +5,38 @@ export default function WhyChooseUs() {
   const galleryItems = [
     {
       id: 1,
-      title: "Secure Client Portal",
-      description: "Clients upload documents, e-sign forms, and track return status in real time, reducing back-and-forth communication.",
+      title: "Client Intake",
+      description: "Digitize onboarding with smart questionnaires and automated follow-ups.",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 2,
-      title: "Smart Intake & Forms",
-      description: "Replace static forms with guided, tax-specific data collection that adapts to each client's situation.",
+      title: "Return Tracking",
+      description: "Track every return from intake to e-file and funding with clear status stages.",
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2011&auto=format&fit=crop"
     },
     {
       id: 3,
-      title: "Document Management",
-      description: "Organize source documents, signed forms, and IRS notices in one secure, searchable system.",
+      title: "Team Management",
+      description: "Assign roles, permissions, and workloads across offices and preparers.",
       image: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 4,
-      title: "Task & Deadline Tracking",
-      description: "Never miss a deadline. Automatically assign tasks to admins, preparers, and reviewers based on return status.",
+      title: "Automation Rules",
+      description: "Trigger emails, SMS, tasks, and reminders automatically based on client behavior.",
       image: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 5,
-      title: "Practice Analytics",
-      description: "Track productivity, return volume, turnaround time, and staff performance with real-time reporting.",
+      title: "E-Signature & Compliance",
+      description: "Send, track, and store signed documents securely with audit-ready records.",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 6,
-      title: "End-to-End Tax Workflow Control",
-      description: "Unlock complete control over your entire tax preparation process from intake to filing and beyond.",
+      title: "Custom Forms & Requests",
+      description: "Create tax-specific document and data requests without technical setup.",
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop"
     }
   ];
@@ -50,7 +50,7 @@ export default function WhyChooseUs() {
               Client & Workflow Automation
             </h2>
             <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
-              Manage clients, returns, and staff tasks with intelligent, rule-based workflows designed specifically for tax offices.
+              Our AI-powered features give you complete control over your firm’s operations.
             </p>
           </div>
 

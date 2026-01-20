@@ -1,196 +1,103 @@
+import { useRef } from "react";
 
 export default function AiAutomation() {
+  const examples = [
+    "Send a reminder if documents aren’t uploaded in 3 days.",
+    "Move return to review when preparer marks it complete.",
+    "Notify client when e-file is accepted."
+  ];
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      <div className="absolute -top-40 -left-40 w-80 h-80 bg-zinc-900 rounded-full opacity-30 blur-[100px]"></div>
-      <div className="absolute top-1/2 -right-40 w-80 h-80 bg-zinc-900 rounded-full opacity-20 blur-[100px]"></div>
-      <div className="absolute -bottom-40 left-1/4 w-80 h-80 bg-zinc-900 rounded-full opacity-20 blur-[100px]"></div>
-      <div className="container mx-auto px-6 relative">
-        <div className="max-w-3xl mx-auto text-center mb-20" style={{ opacity: 1, transform: 'none' }}>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight"><span className="bg-clip-text text-transparent bg-linear-to-r from-white via-white to-zinc-400">Unlock Endless Design Possibilities</span></h2>
-          <div className="w-20 h-1 bg-zinc-700 mx-auto mb-6 rounded-full"></div>
-          <p className="text-lg text-zinc-400 font-light max-w-2xl mx-auto">Our AI-powered features give you complete control over your architectural design journey</p>
+    <section className="py-24 bg-black relative overflow-hidden" id="automation">
+      {/* Background gradients */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+            Edit & Automate With <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Natural Language</span>
+          </h2>
+          <p className="text-xl text-zinc-400 leading-relaxed">
+            Describe what you want to happen, and let the system do the work.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Home exteriors</div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* Visual Representation */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-lg opacity-30"></div>
+            <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-8 backdrop-blur-sm shadow-2xl">
+              <div className="flex items-center gap-2 mb-6 border-b border-zinc-800 pb-4">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <div className="ml-4 text-xs text-zinc-500 font-mono">automation-copilot.exe</div>
+              </div>
+
+              <div className="space-y-4 font-mono text-sm">
+                <div className="text-zinc-500"># Just type what you need...</div>
+                {examples.map((example, i) => (
+                  <div key={i} className="flex gap-3 text-zinc-300">
+                    <span className="text-blue-400">$</span>
+                    <span className="typing-effect">{example}</span>
+                  </div>
+                ))}
+                <div className="flex gap-3">
+                  <span className="text-blue-400">$</span>
+                  <span className="w-2 h-5 bg-blue-400 animate-pulse"></span>
                 </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Exterior Redesign</h3>
               </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Upload a photo of any home and visualize exterior renovations instantly. Apply new architectural styles, materials, and finishes while preserving the structure.</p>
+            </div>
+
+            {/* Value Prop Badge */}
+            <div className="absolute -bottom-6 -right-6 bg-zinc-900 border border-zinc-700 p-4 rounded-xl shadow-xl max-w-[200px]">
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-white font-bold">No Coding</span>
               </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
+              <p className="text-xs text-zinc-400">Perfect for firms that want power without complexity.</p>
             </div>
           </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Room makeovers</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Interior Redesign</h3>
+
+          {/* Context/Explanation */}
+          <div className="space-y-8">
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
               </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Transform any room with AI-powered interior design. Apply new styles, furniture, and decor while preserving the room's layout.</p>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Voice or Text Commands</h3>
+                <p className="text-zinc-400">Simply describe your workflow rules in plain English. Our AI interprets your intent and builds the automation for you.</p>
               </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
             </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Outdoor spaces</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Landscape Design</h3>
+
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0 border border-purple-500/20">
+                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Visualize landscape renovations instantly. Apply new garden styles, plantings, and hardscaping while preserving terrain layout.</p>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Instant Execution</h3>
+                <p className="text-zinc-400">From reminders to task movement, automations run instantly 24/7, ensuring nothing slips through the cracks.</p>
               </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
             </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Commercial buildings</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Commercial Redesign</h3>
+
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0 border border-green-500/20">
+                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Transform commercial building exteriors with new architectural styles and materials. Perfect for retail, office, or mixed-use properties.</p>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Zero complexity</h3>
+                <p className="text-zinc-400">Perfect for firms that want enterprise-grade power without the complexity of traditional CRM setup.</p>
               </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">CAD conversion</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">CAD to Photorealistic</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Transform CAD drawings and 3D renders into photorealistic visualizations. Apply realistic materials, lighting, and finishes instantly.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Building facades</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Front Elevation</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Transform elevation drawings and facade sketches into photorealistic building renders with accurate materials and lighting.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Plan to render</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Floorplan Visualization</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Convert floorplan blueprints into furnished top-down visualizations. Transform room labels and door swings into realistic interiors.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Text to image</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">DreamStyle</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Create photorealistic architectural visualizations from text alone. Describe any space you can imagine and bring it to life.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">AI editing</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Text Edit</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Modify designs with natural language. Update materials, swap finishes, adjust lighting, or change architectural elements.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Upscaling</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Image Enhancement</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Enhance any design to higher resolution. Refine details and improve quality while preserving the original concept.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Video generation</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">Image to Video</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Transform architectural images into cinematic videos. Add camera movement, lighting transitions, and environmental effects.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
-            </div>
-          </div>
-          <div className="h-full" style={{ opacity: 1, transform: 'none' }}>
-            <div className="rounded-lg border text-card-foreground shadow-xs group h-full relative overflow-hidden bg-zinc-900/40 backdrop-blur-xs border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-linear-to-br from-white via-zinc-500 to-zinc-900"></div>
-              <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 group-hover:border-zinc-700 transition-all">Virtual staging</div>
-                </div>
-                <h3 className="tracking-tight text-xl font-semibold text-white group-hover:text-white transition-colors">FurnishAI</h3>
-              </div>
-              <div className="p-6 pt-0">
-                <p className="text-zinc-400 group-hover:text-zinc-300 text-sm leading-relaxed transition-colors">Transform empty rooms into beautifully staged spaces. Select room type, furniture style, and optionally add reference images for precise virtual staging.</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>
             </div>
           </div>
         </div>
