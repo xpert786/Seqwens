@@ -3,7 +3,7 @@ import seqwensLogo from "../assets/seqwlogo.png.png";
 
 export default function Footer() {
     return (
-        <footer className="w-full bg-[#3B4A66] text-white rounded-t-2xl sm:rounded-t-3xl">
+        <footer className="w-full text-white rounded-t-2xl sm:rounded-t-3xl">
             <div className="max-w-[1300px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 sm:py-10 md:py-12 lg:py-16">
                 <div className="flex justify-center items-start">
 
@@ -109,11 +109,11 @@ export default function Footer() {
                         <Link to="/privacy" className="text-white hover:text-white/90 transition-colors">
                             Privacy Policy
                         </Link>
-                        
+
                         <Link to="/terms" className="text-white hover:text-white/90 transition-colors">
                             Terms of Service
                         </Link>
-                        
+
                         <Link to="/cookies" className="text-white hover:text-white/90 transition-colors">
                             Cookies Policy
                         </Link>
