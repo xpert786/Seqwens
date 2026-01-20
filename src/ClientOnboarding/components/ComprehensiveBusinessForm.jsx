@@ -2,10 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import SlideSwitch from '../../components/SlideSwitch';
 import BusinessAutocomplete from './BusinessAutocomplete';
+import DateInput from '../../components/DateInput';
+import { formatDateInput } from '../utils/dateUtils';
 
 export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, externalErrors = {}, initialData = null }) {
+  const getFieldError = (field) => {
+    const error = errors[field];
+    if (Array.isArray(error)) return error[0];
+    return error;
+  };
+
   const [formData, setFormData] = useState({
     // 1. About Your Business
+    businessType: '', // IRS-recognized business classification
     workDescription: '',
     businessCodeId: null, // Selected business code ID from backend
     businessCodeNaics: '', // NAICS code (read-only from backend)
@@ -13,7 +22,9 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     businessName: '',
     businessNameType: 'same', // 'same' or 'different'
     differentBusinessName: '',
+    ein: '', // Employer Identification Number
     startedDuringYear: false,
+    businessFormationDate: '', // Date business was formed (if not started during year)
     homeBased: false,
     businessAddress: '',
     businessCity: '',
@@ -72,14 +83,10 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
   });
 
   const [errors, setErrors] = useState({});
-  const [apiErrors, setApiErrors] = useState({});
-
   // Handle external API errors
   useEffect(() => {
-    if (Object.keys(externalErrors).length > 0) {
-      setApiErrors(externalErrors);
-    } else {
-      setApiErrors({});
+    if (externalErrors && Object.keys(externalErrors).length > 0) {
+      setErrors(prev => ({ ...prev, ...externalErrors }));
     }
   }, [externalErrors]);
 
@@ -110,10 +117,38 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     }
   }, [initialData]);
 
+  // Format EIN as XX-XXXXXXX
+  const formatEIN = (value) => {
+    if (!value) return '';
+    // Remove all non-numeric characters
+    const numbers = String(value).replace(/\D/g, '');
+
+    // Limit to 9 digits
+    const limited = numbers.slice(0, 9);
+
+    // Format as XX-XXXXXXX
+    if (limited.length <= 2) {
+      return limited;
+    }
+    return `${limited.slice(0, 2)}-${limited.slice(2)}`;
+  };
+
   const handleChange = (field, value) => {
+    let formattedValue = value;
+
+    // Format EIN field
+    if (field === 'ein') {
+      formattedValue = formatEIN(value);
+    }
+
+    // Format business formation date
+    if (field === 'businessFormationDate') {
+      formattedValue = formatDateInput(value);
+    }
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: formattedValue
     }));
 
     // Clear error for this field if it exists
@@ -156,6 +191,10 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     const newErrors = {};
 
     // Required validations
+    if (!String(formData.businessType || '').trim()) {
+      newErrors.businessType = 'Please select a business type';
+    }
+
     if (!String(formData.workDescription || '').trim()) {
       newErrors.workDescription = 'Please describe the kind of work you do';
     } else if (String(formData.workDescription || '').trim().length < 3) {
@@ -170,10 +209,52 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     // Business address is required when business name is provided (for different business names) OR if business is home-based
     if (formData.homeBased || (formData.businessNameType === 'different' && String(formData.businessName || '').trim())) {
       if (!String(formData.businessAddress || '').trim()) newErrors.businessAddress = 'Business address is required';
-      if (!String(formData.businessCity || '').trim()) newErrors.businessCity = 'Business city is required';
-      if (!String(formData.businessState || '').trim()) newErrors.businessState = 'Business state is required';
+      if (!String(formData.businessCity || '').trim()) {
+        newErrors.businessCity = 'Business city is required';
+      } else if (/\d/.test(formData.businessCity)) {
+        newErrors.businessCity = 'City cannot contain numbers';
+      }
+
+      if (!String(formData.businessState || '').trim()) {
+        newErrors.businessState = 'Business state is required';
+      } else if (/\d/.test(formData.businessState)) {
+        newErrors.businessState = 'State cannot contain numbers';
+      }
+
       if (!String(formData.businessZip || '').trim()) newErrors.businessZip = 'Business ZIP is required';
     }
+
+    // EIN validation - optional but must be valid if provided
+    if (formData.ein && String(formData.ein).trim()) {
+      const einDigits = String(formData.ein).replace(/\D/g, '');
+      if (einDigits.length !== 9) {
+        newErrors.ein = 'EIN must be exactly 9 digits';
+      }
+    }
+
+    // Business formation date validation - required if business was NOT started during the year
+    if (!formData.startedDuringYear) {
+      if (!String(formData.businessFormationDate || '').trim()) {
+        newErrors.businessFormationDate = 'Business formation date is required';
+      } else {
+        // Validate date format MM/DD/YYYY
+        const datePattern = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+        if (!datePattern.test(formData.businessFormationDate)) {
+          newErrors.businessFormationDate = 'Date must be in MM/DD/YYYY format';
+        } else {
+          // Check if date is not in the future
+          const [month, day, year] = formData.businessFormationDate.split('/');
+          const formationDate = new Date(year, month - 1, day);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          if (formationDate > today) {
+            newErrors.businessFormationDate = 'Business formation date cannot be in the future';
+          }
+        }
+      }
+    }
+
     if (!String(formData.totalIncome || '').trim()) newErrors.totalIncome = 'Total income is required';
 
     // Conditional validations
@@ -200,8 +281,8 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     ];
 
     numericFields.forEach(field => {
-      if (formData[field] && formData[field].trim() !== '') {
-        const numValue = parseFloat(formData[field]);
+      if (formData[field] && String(formData[field]).trim() !== '') {
+        const numValue = parseFloat(String(formData[field]));
         if (isNaN(numValue) || numValue < 0) {
           const fieldNames = {
             totalPaidContractors: 'Total paid to contractors',
@@ -216,7 +297,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     });
 
     // Calculate total expenses and compare with income
-    const totalIncome = parseFloat(formData.totalIncome.replace(/,/g, '')) || 0;
+    const totalIncome = parseFloat(String(formData.totalIncome || '').replace(/,/g, '')) || 0;
 
     let totalExpenses = 0;
     // Sum all expense fields
@@ -227,14 +308,14 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     ];
 
     expenseFields.forEach(field => {
-      const value = parseFloat(formData[field]?.replace(/,/g, '')) || 0;
+      const value = parseFloat(String(formData[field] || '').replace(/,/g, '')) || 0;
       totalExpenses += value;
     });
 
     // Add other expenses from array
     if (formData.otherExpenses && Array.isArray(formData.otherExpenses)) {
       formData.otherExpenses.forEach(expense => {
-        const amount = parseFloat(expense.amount?.replace(/,/g, '')) || 0;
+        const amount = parseFloat(String(expense.amount || '').replace(/,/g, '')) || 0;
         totalExpenses += amount;
       });
     }
@@ -298,6 +379,42 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
       <div className="mb-6">
         <h5 style={sectionStyle}>1. About Your Business</h5>
 
+
+        <div className="row g-3 mb-3">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Business Type <span style={{ color: "#EF4444" }}>*</span>
+            </label>
+            <select
+              className={`form-control ${errors.businessType ? 'is-invalid' : ''}`}
+              value={formData.businessType}
+              onChange={(e) => handleChange('businessType', e.target.value)}
+              style={{
+                fontFamily: "BasisGrotesquePro",
+                fontSize: "14px"
+              }}
+            >
+              <option value="">Select business type...</option>
+              <option value="Single-Member LLC (Disregarded Entity)">Single-Member LLC (Disregarded Entity)</option>
+              <option value="S Corporation">S Corporation</option>
+              <option value="C Corporation">C Corporation</option>
+              <option value="Limited Liability Partnership (LLP)">Limited Liability Partnership (LLP)</option>
+              <option value="Professional Corporation (PC)">Professional Corporation (PC)</option>
+              <option value="Professional Limited Liability Company (PLLC)">Professional Limited Liability Company (PLLC)</option>
+              <option value="Nonprofit Organization">Nonprofit Organization</option>
+              <option value="Joint Venture">Joint Venture</option>
+              <option value="Qualified Joint Venture (Spouses)">Qualified Joint Venture (Spouses)</option>
+              <option value="Trust or Estate">Trust or Estate</option>
+              <option value="Cooperative">Cooperative</option>
+              <option value="Foreign Entity (Doing Business in the U.S.)">Foreign Entity (Doing Business in the U.S.)</option>
+              <option value="Not Sure">Not Sure</option>
+            </select>
+            <div className="form-text text-muted small" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Select the IRS-recognized classification for your business entity.
+            </div>
+            {errors.businessType && <div className="invalid-feedback">{errors.businessType}</div>}
+          </div>
+        </div>
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -387,6 +504,26 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         </div>
 
         <div className="row g-3 mb-3">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Employer Identification Number (EIN)
+            </label>
+            <input
+              type="text"
+              className={`form-control ${errors.ein ? 'is-invalid' : ''}`}
+              placeholder="XX-XXXXXXX"
+              value={formData.ein}
+              onChange={(e) => handleChange('ein', e.target.value)}
+              maxLength={10}
+            />
+            <div className="form-text text-muted small" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Optional. Enter your 9-digit EIN if you have one (format: XX-XXXXXXX).
+            </div>
+            {errors.ein && <div className="invalid-feedback">{errors.ein}</div>}
+          </div>
+        </div>
+
+        <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
               Did you start this business during the year?
@@ -407,7 +544,27 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           </div>
         </div>
 
-        {(formData.businessName.trim() || formData.homeBased) && (
+        {!formData.startedDuringYear && (
+          <div className="row g-3 mb-3">
+            <div className="col-12">
+              <label className="form-label" style={labelStyle}>
+                Date Business Was Formed <span style={{ color: "#EF4444" }}>*</span>
+              </label>
+              <DateInput
+                className={`form-control ${errors.businessFormationDate ? 'is-invalid' : ''}`}
+                value={formData.businessFormationDate}
+                onChange={(e) => handleChange('businessFormationDate', e.target.value)}
+                placeholder="MM/DD/YYYY"
+              />
+              <div className="form-text text-muted small" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                Enter the date your business was originally formed.
+              </div>
+              {errors.businessFormationDate && <div className="invalid-feedback">{errors.businessFormationDate}</div>}
+            </div>
+          </div>
+        )}
+
+        {(String(formData.businessName || '').trim() || formData.homeBased) && (
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
@@ -415,47 +572,56 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               </label>
               <input
                 type="text"
-                className={`form-control ${errors.businessAddress ? 'is-invalid' : ''}`}
+                className={`form-control ${getFieldError('businessAddress') ? 'is-invalid' : ''}`}
                 placeholder="Street Address"
                 value={formData.businessAddress}
                 onChange={(e) => handleChange('businessAddress', e.target.value)}
               />
-              {errors.businessAddress && <div className="invalid-feedback">{errors.businessAddress}</div>}
+              {getFieldError('businessAddress') && <div className="invalid-feedback">{getFieldError('businessAddress')}</div>}
             </div>
           </div>
         )}
 
-        {(formData.businessName.trim() || formData.homeBased) && (
+        {(String(formData.businessName || '').trim() || formData.homeBased) && (
           <div className="row g-3 mb-3">
             <div className="col-md-4">
+              <label className="form-label" style={labelStyle}>
+                City: *
+              </label>
               <input
                 type="text"
-                className={`form-control ${errors.businessCity ? 'is-invalid' : ''}`}
+                className={`form-control ${getFieldError('businessCity') ? 'is-invalid' : ''}`}
                 placeholder="City"
                 value={formData.businessCity}
                 onChange={(e) => handleChange('businessCity', e.target.value)}
               />
-              {errors.businessCity && <div className="invalid-feedback">{errors.businessCity}</div>}
+              {getFieldError('businessCity') && <div className="invalid-feedback">{getFieldError('businessCity')}</div>}
             </div>
             <div className="col-md-4">
+              <label className="form-label" style={labelStyle}>
+                State: *
+              </label>
               <input
                 type="text"
-                className={`form-control ${errors.businessState ? 'is-invalid' : ''}`}
+                className={`form-control ${getFieldError('businessState') ? 'is-invalid' : ''}`}
                 placeholder="State"
                 value={formData.businessState}
                 onChange={(e) => handleChange('businessState', e.target.value)}
               />
-              {errors.businessState && <div className="invalid-feedback">{errors.businessState}</div>}
+              {getFieldError('businessState') && <div className="invalid-feedback">{getFieldError('businessState')}</div>}
             </div>
             <div className="col-md-4">
+              <label className="form-label" style={labelStyle}>
+                ZIP Code: *
+              </label>
               <input
                 type="text"
-                className={`form-control ${errors.businessZip ? 'is-invalid' : ''}`}
+                className={`form-control ${getFieldError('businessZip') ? 'is-invalid' : ''}`}
                 placeholder="ZIP"
                 value={formData.businessZip}
                 onChange={(e) => handleChange('businessZip', e.target.value)}
               />
-              {errors.businessZip && <div className="invalid-feedback">{errors.businessZip}</div>}
+              {getFieldError('businessZip') && <div className="invalid-feedback">{getFieldError('businessZip')}</div>}
             </div>
           </div>
         )}
@@ -808,14 +974,14 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                     </label>
                     <input
                       type="number"
-                      className={`form-control ${(errors.businessMiles || apiErrors.business_miles) ? 'is-invalid' : ''}`}
+                      className={`form-control ${(errors.businessMiles || errors.business_miles) ? 'is-invalid' : ''}`}
                       placeholder="0"
                       value={formData.businessMiles}
                       onChange={(e) => handleChange('businessMiles', e.target.value)}
                     />
-                    {(errors.businessMiles || apiErrors.business_miles) && (
+                    {(errors.businessMiles || errors.business_miles) && (
                       <div className="invalid-feedback">
-                        {errors.businessMiles || apiErrors.business_miles}
+                        {errors.businessMiles || errors.business_miles}
                       </div>
                     )}
                   </>
@@ -904,15 +1070,15 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                       <span className="input-group-text">$</span>
                       <input
                         type="number"
-                        className={`form-control ${(errors.totalPaidContractors || apiErrors.total_paid_contractors) ? 'is-invalid' : ''}`}
+                        className={`form-control ${(errors.totalPaidContractors || errors.total_paid_contractors) ? 'is-invalid' : ''}`}
                         placeholder="0.00"
                         value={formData.totalPaidContractors}
                         onChange={(e) => handleChange('totalPaidContractors', e.target.value)}
                       />
                     </div>
-                    {(errors.totalPaidContractors || apiErrors.total_paid_contractors) && (
+                    {(errors.totalPaidContractors || errors.total_paid_contractors) && (
                       <div className="invalid-feedback">
-                        {errors.totalPaidContractors || apiErrors.total_paid_contractors}
+                        {errors.totalPaidContractors || errors.total_paid_contractors}
                       </div>
                     )}
                   </>
@@ -1037,14 +1203,14 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                     <span className="input-group-text">$</span>
                     <input
                       type="number"
-                      className={`form-control ${(errors.costItemsResold || apiErrors.cost_items_resold) ? 'is-invalid' : ''}`}
+                      className={`form-control ${(errors.costItemsResold || errors.cost_items_resold) ? 'is-invalid' : ''}`}
                       placeholder="0.00"
                       value={formData.costItemsResold}
                       onChange={(e) => handleChange('costItemsResold', e.target.value)}
                     />
-                    {(errors.costItemsResold || apiErrors.cost_items_resold) && (
+                    {(errors.costItemsResold || errors.cost_items_resold) && (
                       <div className="invalid-feedback">
-                        {errors.costItemsResold || apiErrors.cost_items_resold}
+                        {errors.costItemsResold || errors.cost_items_resold}
                       </div>
                     )}
                   </div>
@@ -1057,14 +1223,14 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                     <span className="input-group-text">$</span>
                     <input
                       type="number"
-                      className={`form-control ${(errors.inventoryLeftEnd || apiErrors.inventory_left_end) ? 'is-invalid' : ''}`}
+                      className={`form-control ${(errors.inventoryLeftEnd || errors.inventory_left_end) ? 'is-invalid' : ''}`}
                       placeholder="0.00"
                       value={formData.inventoryLeftEnd}
                       onChange={(e) => handleChange('inventoryLeftEnd', e.target.value)}
                     />
-                    {(errors.inventoryLeftEnd || apiErrors.inventory_left_end) && (
+                    {(errors.inventoryLeftEnd || errors.inventory_left_end) && (
                       <div className="invalid-feedback">
-                        {errors.inventoryLeftEnd || apiErrors.inventory_left_end}
+                        {errors.inventoryLeftEnd || errors.inventory_left_end}
                       </div>
                     )}
                   </div>
@@ -1112,15 +1278,15 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                   <span className="input-group-text">$</span>
                   <input
                     type="number"
-                    className={`form-control ${(errors.retirementAmount || apiErrors.retirement_amount) ? 'is-invalid' : ''}`}
+                    className={`form-control ${(errors.retirementAmount || errors.retirement_amount) ? 'is-invalid' : ''}`}
                     placeholder="0.00"
                     value={formData.retirementAmount}
                     onChange={(e) => handleChange('retirementAmount', e.target.value)}
                   />
                 </div>
-                {(errors.retirementAmount || apiErrors.retirement_amount) && (
+                {(errors.retirementAmount || errors.retirement_amount) && (
                   <div className="invalid-feedback">
-                    {errors.retirementAmount || apiErrors.retirement_amount}
+                    {errors.retirementAmount || errors.retirement_amount}
                   </div>
                 )}
               </div>

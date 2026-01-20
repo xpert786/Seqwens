@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import SlideSwitch from '../../components/SlideSwitch';
 
-export default function RentalPropertyForm({ onSave, onCancel, initialData = null }) {
+export default function RentalPropertyForm({ onSave, onCancel, externalErrors = {}, initialData = null }) {
+  const getFieldError = (field) => {
+    const error = errors[field];
+    if (Array.isArray(error)) return error[0];
+    return error;
+  };
+
   const [formData, setFormData] = useState({
     // 1. Property Basics
-    isRentalProperty: false,
     propertyAddress: '',
     propertyCity: '',
     propertyState: '',
@@ -55,6 +60,13 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
   });
 
   const [errors, setErrors] = useState({});
+
+  // Handle external API errors
+  useEffect(() => {
+    if (Object.keys(externalErrors || {}).length > 0) {
+      setErrors(prev => ({ ...prev, ...externalErrors }));
+    }
+  }, [externalErrors]);
 
   useEffect(() => {
     if (initialData) {
@@ -123,15 +135,22 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
     const newErrors = {};
 
     // Required validations
-    if (formData.isRentalProperty) {
-      if (!formData.propertyAddress.trim()) newErrors.propertyAddress = 'Property address is required';
-      if (!formData.propertyCity.trim()) newErrors.propertyCity = 'Property city is required';
-      if (!formData.propertyState.trim()) newErrors.propertyState = 'Property state is required';
-      if (!formData.propertyZip.trim()) newErrors.propertyZip = 'Property ZIP is required';
-      if (!formData.propertyType) newErrors.propertyType = 'Property type is required';
-      if (formData.ownershipType === 'own_100' && !formData.ownershipType) {
-        newErrors.ownershipType = 'Ownership percentage is required when owned 100%';
-      }
+    if (!formData.propertyAddress.trim()) newErrors.propertyAddress = 'Property address is required';
+    if (!formData.propertyCity.trim()) {
+      newErrors.propertyCity = 'Property city is required';
+    } else if (/\d/.test(formData.propertyCity)) {
+      newErrors.propertyCity = 'City cannot contain numbers';
+    }
+
+    if (!formData.propertyState.trim()) {
+      newErrors.propertyState = 'Property state is required';
+    } else if (/\d/.test(formData.propertyState)) {
+      newErrors.propertyState = 'State cannot contain numbers';
+    }
+    if (!formData.propertyZip.trim()) newErrors.propertyZip = 'Property ZIP is required';
+    if (!formData.propertyType) newErrors.propertyType = 'Property type is required';
+    if (formData.ownershipType === 'own_100' && !formData.ownershipType) {
+      newErrors.ownershipType = 'Ownership percentage is required when owned 100%';
     }
 
     if (!formData.totalRentReceived.trim()) newErrors.totalRentReceived = 'Total rent received is required';
@@ -201,103 +220,96 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
-              Is this a rental property?
+              Property address <span style={{ color: "#EF4444" }}>*</span>
             </label>
-            <SlideSwitch
-              value={formData.isRentalProperty}
-              onChange={(val) => handleChange('isRentalProperty', val)}
+            <input
+              type="text"
+              className={`form-control ${getFieldError('propertyAddress') ? 'is-invalid' : ''}`}
+              placeholder="Street Address"
+              value={formData.propertyAddress}
+              onChange={(e) => handleChange('propertyAddress', e.target.value)}
             />
+            {getFieldError('propertyAddress') && <div className="invalid-feedback">{getFieldError('propertyAddress')}</div>}
           </div>
         </div>
 
-        {formData.isRentalProperty && (
-          <>
-            <div className="row g-3 mb-3">
-              <div className="col-12">
-                <label className="form-label" style={labelStyle}>
-                  Property address:
-                </label>
-                <input
-                  type="text"
-                  className={`form-control ${errors.propertyAddress ? 'is-invalid' : ''}`}
-                  placeholder="Street Address"
-                  value={formData.propertyAddress}
-                  onChange={(e) => handleChange('propertyAddress', e.target.value)}
-                />
-                {errors.propertyAddress && <div className="invalid-feedback">{errors.propertyAddress}</div>}
-              </div>
-            </div>
+        <div className="row g-3 mb-3">
+          <div className="col-md-4">
+            <label className="form-label" style={labelStyle}>
+              City <span style={{ color: "#EF4444" }}>*</span>
+            </label>
+            <input
+              type="text"
+              className={`form-control ${getFieldError('propertyCity') ? 'is-invalid' : ''}`}
+              placeholder="City"
+              value={formData.propertyCity}
+              onChange={(e) => handleChange('propertyCity', e.target.value)}
+            />
+            {getFieldError('propertyCity') && <div className="invalid-feedback">{getFieldError('propertyCity')}</div>}
+          </div>
+          <div className="col-md-4">
+            <label className="form-label" style={labelStyle}>
+              State <span style={{ color: "#EF4444" }}>*</span>
+            </label>
+            <input
+              type="text"
+              className={`form-control ${getFieldError('propertyState') ? 'is-invalid' : ''}`}
+              placeholder="State"
+              value={formData.propertyState}
+              onChange={(e) => handleChange('propertyState', e.target.value)}
+            />
+            {getFieldError('propertyState') && <div className="invalid-feedback">{getFieldError('propertyState')}</div>}
+          </div>
+          <div className="col-md-4">
+            <label className="form-label" style={labelStyle}>
+              ZIP Code <span style={{ color: "#EF4444" }}>*</span>
+            </label>
+            <input
+              type="text"
+              className={`form-control ${getFieldError('propertyZip') ? 'is-invalid' : ''}`}
+              placeholder="ZIP"
+              value={formData.propertyZip}
+              onChange={(e) => handleChange('propertyZip', e.target.value)}
+            />
+            {getFieldError('propertyZip') && <div className="invalid-feedback">{getFieldError('propertyZip')}</div>}
+          </div>
+        </div>
 
-            <div className="row g-3 mb-3">
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className={`form-control ${errors.propertyCity ? 'is-invalid' : ''}`}
-                  placeholder="City"
-                  value={formData.propertyCity}
-                  onChange={(e) => handleChange('propertyCity', e.target.value)}
-                />
-                {errors.propertyCity && <div className="invalid-feedback">{errors.propertyCity}</div>}
-              </div>
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className={`form-control ${errors.propertyState ? 'is-invalid' : ''}`}
-                  placeholder="State"
-                  value={formData.propertyState}
-                  onChange={(e) => handleChange('propertyState', e.target.value)}
-                />
-                {errors.propertyState && <div className="invalid-feedback">{errors.propertyState}</div>}
-              </div>
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className={`form-control ${errors.propertyZip ? 'is-invalid' : ''}`}
-                  placeholder="ZIP"
-                  value={formData.propertyZip}
-                  onChange={(e) => handleChange('propertyZip', e.target.value)}
-                />
-                {errors.propertyZip && <div className="invalid-feedback">{errors.propertyZip}</div>}
-              </div>
-            </div>
+        <div className="row g-3 mb-3">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Type of property:
+            </label>
+            <select
+              className={`form-control ${getFieldError('propertyType') ? 'is-invalid' : ''}`}
+              value={formData.propertyType}
+              onChange={(e) => handleChange('propertyType', e.target.value)}
+            >
+              <option value="single">Single-family home</option>
+              <option value="apartment">Apartment / Condo</option>
+              <option value="vacation">Vacation rental (Airbnb, VRBO, etc.)</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
 
-            <div className="row g-3 mb-3">
-              <div className="col-12">
-                <label className="form-label" style={labelStyle}>
-                  Type of property:
-                </label>
-                <select
-                  className={`form-control ${errors.propertyType ? 'is-invalid' : ''}`}
-                  value={formData.propertyType}
-                  onChange={(e) => handleChange('propertyType', e.target.value)}
-                >
-                  <option value="single">Single-family home</option>
-                  <option value="apartment">Apartment / Condo</option>
-                  <option value="vacation">Vacation rental (Airbnb, VRBO, etc.)</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="row g-3 mb-3">
-              <div className="col-12">
-                <label className="form-label" style={labelStyle}>
-                  Do you own this property by yourself?
-                </label>
-                <select
-                  className="form-control"
-                  value={formData.ownershipType}
-                  onChange={(e) => handleChange('ownershipType', e.target.value)}
-                >
-                  <option value="">Select ownership type</option>
-                  <option value="own_100">Yes, I own 100%</option>
-                  <option value="share">No, I share ownership</option>
-                  <option value="no">No</option>
-                </select>
-              </div>
-            </div>
-          </>
-        )}
+        <div className="row g-3 mb-3">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Do you own this property by yourself?
+            </label>
+            <select
+              className="form-control"
+              value={formData.ownershipType}
+              onChange={(e) => handleChange('ownershipType', e.target.value)}
+            >
+              <option value="">Select ownership type</option>
+              <option value="own_100">Yes, I own 100%</option>
+              <option value="share">No, I share ownership</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* 2. How the Property Was Used */}

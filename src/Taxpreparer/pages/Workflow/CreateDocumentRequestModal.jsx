@@ -12,42 +12,13 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category_ids: [],
     due_date: '',
   });
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
   const [errors, setErrors] = useState({});
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // Fetch available document categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const response = await documentsAPI.getDocumentCategories();
-        if (response.success && response.data) {
-          // Handle both array and object with results/data property
-          const categoriesList = Array.isArray(response.data) 
-            ? response.data 
-            : (response.data.results || response.data.categories || response.data || []);
-          setCategories(categoriesList);
-        } else {
-          throw new Error(response.message || 'Failed to fetch categories');
-        }
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        toast.error(handleAPIError(err) || 'Failed to load document categories');
-        // Set empty array on error
-        setCategories([]);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
 
-    fetchCategories();
-  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -73,28 +44,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
     }
   };
 
-  const handleCategoryToggle = (categoryId) => {
-    setFormData((prev) => {
-      const newCategoryIds = prev.category_ids.includes(categoryId)
-        ? prev.category_ids.filter((id) => id !== categoryId)
-        : [...prev.category_ids, categoryId];
-      return { ...prev, category_ids: newCategoryIds };
-    });
-  };
 
-  const handleCategorySelect = (categoryId) => {
-    handleCategoryToggle(categoryId);
-  };
-
-  const getSelectedCategoryNames = () => {
-    if (formData.category_ids.length === 0) {
-      return 'Select categories...';
-    }
-    const selectedNames = categories
-      .filter(cat => formData.category_ids.includes(cat.id))
-      .map(cat => cat.name);
-    return selectedNames.join(', ');
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -103,9 +53,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
       newErrors.title = 'Title is required';
     }
 
-    if (formData.category_ids.length === 0) {
-      newErrors.category_ids = 'Please select at least one document category';
-    }
+
 
     if (!formData.due_date) {
       newErrors.due_date = 'Due date is required';
@@ -150,7 +98,6 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
 
       const requestData = {
         workflow_instance_id: workflow.id,
-        category_ids: formData.category_ids,
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         due_date: formattedDueDate,
@@ -171,7 +118,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
       console.error('Error creating document request:', error);
       const errorMsg = handleAPIError(error) || error.message || 'Failed to create document request';
       toast.error(errorMsg);
-      
+
       // Handle field-specific errors
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
@@ -185,7 +132,6 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
     setFormData({
       title: '',
       description: '',
-      category_ids: [],
       due_date: '',
     });
     setErrors({});
@@ -193,7 +139,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{ zIndex: 99999 }}
     >
@@ -236,11 +182,10 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="e.g., 2024 Tax Documents Request"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] ${
-                errors.title
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] ${errors.title
                   ? 'border-red-300 focus:ring-red-500'
                   : 'border-[#E8F0FF] focus:ring-blue-500'
-              }`}
+                }`}
             />
             {errors.title && (
               <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">{errors.title}</p>
@@ -261,78 +206,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
             />
           </div>
 
-          {/* Document Categories Dropdown */}
-          <div className="mb-4 category-dropdown-container">
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-              Select Document Categories <span className="text-red-500">*</span>
-            </label>
-            {loadingCategories ? (
-              <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">Loading categories...</div>
-            ) : (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                  className={`w-full px-3 py-2 text-left border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] flex items-center justify-between ${
-                    errors.category_ids
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-[#E8F0FF] focus:ring-blue-500'
-                  }`}
-                  style={{ borderRadius: '8px' }}
-                >
-                  <span className={`${formData.category_ids.length === 0 ? 'text-gray-500' : 'text-gray-900'}`}>
-                    {getSelectedCategoryNames()}
-                  </span>
-                  <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform ${showCategoryDropdown ? 'transform rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {showCategoryDropdown && (
-                  <div 
-                    className="absolute z-50 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                    style={{ borderRadius: '8px', zIndex: 100000 }}
-                  >
-                    {categories.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-500 font-[BasisGrotesquePro]">
-                        No categories available
-                      </div>
-                    ) : (
-                      categories.map((category) => (
-                        <label
-                          key={category.id}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-3 border-b border-gray-100 last:border-b-0"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={formData.category_ids.includes(category.id)}
-                            onChange={() => handleCategorySelect(category.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700 font-[BasisGrotesquePro] flex-1">
-                            {category.name}
-                          </span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            {errors.category_ids && (
-              <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">{errors.category_ids}</p>
-            )}
-            {formData.category_ids.length > 0 && (
-              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-                {formData.category_ids.length} categor{formData.category_ids.length === 1 ? 'y' : 'ies'} selected
-              </p>
-            )}
-          </div>
+
 
           {/* Due Date */}
           <div className="mb-6">
@@ -343,11 +217,10 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
               value={formData.due_date}
               onChange={handleDateChange}
               placeholder="mm/dd/yyyy"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] ${
-                errors.due_date
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] ${errors.due_date
                   ? 'border-red-300 focus:ring-red-500'
                   : 'border-[#E8F0FF] focus:ring-blue-500'
-              }`}
+                }`}
             />
             {errors.due_date && (
               <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">{errors.due_date}</p>

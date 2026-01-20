@@ -533,133 +533,23 @@ const Billing = () => {
       <div className="align-items-center mb-3 ">
         <h3 className="mb-0 me-3" style={{ color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Billing Information</h3>
         <p className="mb-0" style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-          View your billing details and payment methods
+          View your billing details
         </p>
       </div>
 
 
 
 
-      <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Payment Methods</h5>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <div className="text-center">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3" style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-              Loading payment methods...
-            </p>
-          </div>
-        </div>
-      )}
+     
 
       {/* Payment Methods List */}
-      {!loading && paymentMethods.length > 0 && (
-        paymentMethods.map((method) => (
-          <div
-            key={method.id}
-            className="mb-3 rounded p-3"
-            style={{
-              border: "1px solid #F49C2D",
-              backgroundColor: selectedId === method.id ? "#FFF4E6" : "#FFFFFF",
-              cursor: "pointer",
-            }}
-            onClick={() => handleCardClick(method.id)}
-          >
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <div className="d-flex align-items-center gap-2">
-                <span className="bill">
-                  <BillIcon />
-                </span>
-                <div className="d-flex flex-column">
-                  <div>
-                    <span className="fw-bold">•••• •••• •••• {method.last4}</span>
-                    {method.isPrimary && (
-                      <span
-                        className="ms-2"
-                        style={{
-                          backgroundColor: "#22C55E",
-                          borderRadius: "1rem",
-                          padding: "0.35em 0.65em",
-                          fontSize: "0.75rem",
-                          fontWeight: "500",
-                          lineHeight: "1",
-                          color: "white",
-                          fontFamily: "BasisGrotesquePro",
-                        }}
-                      >
-                        Primary
-                      </span>
-                    )}
-                  </div>
-                  <small className="text-muted mt-2" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontWeight: "400", fontSize: "12px" }}>
-                    {method.brand} - Expires {method.expiry}
-                  </small>
-                </div>
-              </div>
-              <div className="d-flex gap-2">
-                {!method.isPrimary && (
-                  <button
-                    className="btn btn-sm"
-                    style={{ backgroundColor: "#FFFFFF", border: "1px solid #22C55E", color: "#22C55E", fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "400" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAsPrimary(method.id);
-                    }}
-                  >
-                    Set as Primary
-                  </button>
-                )}
-                <button
-                  className="btn btn-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditCard(method);
-                    const [month, year] = method.expiry.split("/");
-                    setEditMonth(month);
-                    setEditYear(year);
-                    setEditDefault(method.isPrimary);
-                    setShowEditModal(true);
-                  }}
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E8F0FF",
-                    color: "#3B4A66",
-                    fontFamily: "BasisGrotesquePro",
-                    fontSize: "16px",
-                    fontWeight: "400"
-                  }}
-                >
-                  Edit
-                </button>
-
-              </div>
-            </div>
-          </div>
-        ))
-      )}
+     
 
       {/* No Payment Methods Message */}
-      {!loading && paymentMethods.length === 0 && (
-        <div className="text-center py-4">
-          <p style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-            No payment methods found. Add your first payment method below.
-          </p>
-        </div>
-      )}
+      
 
-      <button
-        className="btn mb-4"
-        style={{ backgroundColor: "#FFFFFF", border: "2px solid #E8F0FF", color: "#3B4A66", fontSize: "17px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-        onClick={handleAddPaymentMethod}
-      >
-        <i className="bi bi-plus-lg me-2"></i> Add Payment Method
-      </button>
+     
 
-      <h5 className="mb-3" style={{ color: "#3B4A66", fontFamily: "BasisGrotesquePro", fontSize: "18px", fontWeight: "500" }}>Billing Address</h5>
 
       {!isEditingAddress ? (
         billingAddress ? (

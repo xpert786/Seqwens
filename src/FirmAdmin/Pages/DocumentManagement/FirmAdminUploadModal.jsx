@@ -25,15 +25,9 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
     const [selectedFolderId, setSelectedFolderId] = useState(null);
     const [validationErrors, setValidationErrors] = useState([]);
     const [uploading, setUploading] = useState(false);
-    const [categories, setCategories] = useState([]);
-    const [loadingCategories, setLoadingCategories] = useState(false);
     const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
     const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [creatingCategory, setCreatingCategory] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [newCategoryDescription, setNewCategoryDescription] = useState("");
-    const [creatingCategoryLoading, setCreatingCategoryLoading] = useState(false);
 
     // Folder tree - will be populated from API
     const [folderTree, setFolderTree] = useState([]);
@@ -112,80 +106,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         fetchRootFolders();
     }, [fetchRootFolders]);
 
-    // Fetch document categories from API using Firm Admin endpoint
-    useEffect(() => {
-        const fetchCategories = async () => {
-            if (!show) return;
 
-            try {
-                setLoadingCategories(true);
-                const API_BASE_URL = getApiBaseUrl();
-                const token = getAccessToken();
-
-                if (!token) {
-                    console.error('No authentication token found');
-                    return;
-                }
-
-                const config = {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                };
-
-                const response = await fetchWithCors(`${API_BASE_URL}/firm/document-categories/`, config);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                // Handle different response structures
-                let categoriesList = [];
-                if (result.success && result.data) {
-                    // Check if categories are in result.data.categories
-                    if (result.data.categories && Array.isArray(result.data.categories)) {
-                        categoriesList = result.data.categories;
-                    }
-                    // Check if data itself is an array
-                    else if (Array.isArray(result.data)) {
-                        categoriesList = result.data;
-                    }
-                } else if (Array.isArray(result)) {
-                    categoriesList = result;
-                } else if (result.data && Array.isArray(result.data)) {
-                    categoriesList = result.data;
-                }
-
-                console.log('📋 Categories fetched:', categoriesList);
-
-                // Filter only active categories
-                const activeCategories = categoriesList.filter(cat => cat.is_active !== false);
-                console.log('✅ Active categories:', activeCategories);
-                setCategories(activeCategories);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-                toast.error('Failed to load document categories. Please refresh the page.', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-                setCategories([]);
-            } finally {
-                setLoadingCategories(false);
-            }
-        };
-
-        fetchCategories();
-    }, [show]);
-
-    // Create category mapping
-    const categoryMapping = categories.reduce((acc, category) => {
-        acc[category.name] = category.id;
-        return acc;
-    }, {});
 
     // Drag and drop handlers
     const handleDragEnter = useCallback((e) => {
@@ -311,29 +232,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         if (selectedIndex >= updated.length) setSelectedIndex(0);
     };
 
-    const handleCategoryChange = (e) => {
-        const updated = [...files];
-        const selectedCategoryName = e.target.value;
-        updated[selectedIndex].category = selectedCategoryName;
 
-        // Find category by name (case-insensitive, trimmed)
-        const selectedCategory = categories.find(cat =>
-            cat.name && cat.name.trim().toLowerCase() === selectedCategoryName.trim().toLowerCase()
-        );
-
-        if (selectedCategory && selectedCategory.id) {
-            updated[selectedIndex].categoryId = selectedCategory.id;
-            console.log('Category selected:', selectedCategoryName, 'ID:', selectedCategory.id);
-        } else {
-            console.error('Category not found:', selectedCategoryName, 'Available categories:', categories.map(c => ({ name: c.name, id: c.id })));
-            updated[selectedIndex].categoryId = null;
-        }
-
-        // Clear validation errors for this file
-        setValidationErrors(prev => prev.filter(err => !err.includes(updated[selectedIndex].name)));
-
-        setFiles(updated);
-    };
 
     const handleFolderSelect = (path, folderId) => {
         if (!folderId) {
@@ -375,103 +274,11 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         setCreatingFolderLoading(false);
         setExpandedFolders(new Set());
         setIsDragging(false);
-        setCreatingCategory(false);
-        setNewCategoryName("");
-        setNewCategoryDescription("");
         handleClose();
     };
 
     // Create new category
-    const handleCreateCategory = async () => {
-        if (!newCategoryName.trim()) return;
 
-        setCreatingCategoryLoading(true);
-
-        try {
-            const API_BASE_URL = getApiBaseUrl();
-            const token = getAccessToken();
-
-            if (!token) {
-                toast.error('No authentication token found. Please login again.', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-                return;
-            }
-
-            const categoryData = {
-                name: newCategoryName.trim(),
-                description: newCategoryDescription.trim() || "",
-                is_active: true
-            };
-
-            const config = {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(categoryData)
-            };
-
-            const response = await fetchWithCors(`${API_BASE_URL}/firm/document-categories/`, config);
-
-            if (!response.ok) {
-                let errorMessage = `HTTP error! status: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-                } catch (parseError) {
-                    console.error('Error parsing create category response:', parseError);
-                }
-                throw new Error(errorMessage);
-            }
-
-            const result = await response.json();
-            let categoryInfo = result;
-            if (result.data) {
-                categoryInfo = result.data;
-            } else if (result.category) {
-                categoryInfo = result.category;
-            }
-
-            // Add new category to the list
-            const newCategory = {
-                id: categoryInfo.id,
-                name: categoryInfo.name || newCategoryName.trim(),
-                description: categoryInfo.description || newCategoryDescription.trim(),
-                is_active: categoryInfo.is_active !== false
-            };
-
-            const updatedCategories = [...categories, newCategory];
-            setCategories(updatedCategories);
-
-            // Auto-select the newly created category for the current file
-            const updatedFiles = [...files];
-            updatedFiles[selectedIndex].category = newCategory.name;
-            updatedFiles[selectedIndex].categoryId = newCategory.id;
-            setFiles(updatedFiles);
-
-            setNewCategoryName("");
-            setNewCategoryDescription("");
-            setCreatingCategory(false);
-
-            toast.success("Category created and selected successfully!", {
-                position: "top-right",
-                autoClose: 3000,
-            });
-
-        } catch (error) {
-            console.error('Error creating category:', error);
-            const errorMessage = handleAPIError(error);
-            toast.error(errorMessage, {
-                position: "top-right",
-                autoClose: 5000,
-            });
-        } finally {
-            setCreatingCategoryLoading(false);
-        }
-    };
 
     // Fetch subfolders for a specific folder
     const fetchSubfolders = async (folderId) => {
@@ -648,11 +455,8 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
     const handleFinalUpload = async () => {
         const errors = [];
 
-        // Basic validation - only check if category and folder are selected (not IDs)
+        // Basic validation - check if folder is selected
         files.forEach((file) => {
-            if (!file?.category || file.category.trim() === '') {
-                errors.push(`${file.name}: Please select a document category.`);
-            }
             if (!file?.folderPath || file.folderPath.trim() === '') {
                 errors.push(`${file.name}: Please select a folder.`);
             }
@@ -671,41 +475,19 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             return;
         }
 
-        // Before upload, ensure we have categoryId and extract folder name
         const filesToUpload = files.map((file) => {
-            let categoryId = file.categoryId;
             let folderName = null;
-
-            // If categoryId is missing, find it from the category name (case-insensitive)
-            if (!categoryId && file.category && file.category.trim() !== '') {
-                // Try exact match first
-                let foundCategory = categories.find(cat => cat.name && cat.name === file.category);
-                // If not found, try case-insensitive match
-                if (!foundCategory) {
-                    foundCategory = categories.find(cat =>
-                        cat.name && cat.name.trim().toLowerCase() === file.category.trim().toLowerCase()
-                    );
-                }
-                if (foundCategory && foundCategory.id) {
-                    categoryId = foundCategory.id;
-                    console.log('✅ Recovered categoryId for', file.name, ':', categoryId, 'from category:', file.category);
-                } else {
-                    console.warn('❌ Could not find categoryId for', file.name, 'category:', file.category);
-                }
-            }
 
             // Extract folder name from the folder path (use the last part)
             if (file.folderPath && file.folderPath.trim() !== '') {
                 const pathParts = file.folderPath.split(' > ').map(p => p.trim()).filter(p => p);
                 if (pathParts.length > 0) {
                     folderName = pathParts[pathParts.length - 1];
-                    console.log('✅ Extracted folderName for', file.name, ':', folderName, 'from path:', file.folderPath);
                 }
             }
 
             return {
                 ...file,
-                categoryId: categoryId || file.categoryId,
                 folderName
             };
         });
@@ -723,82 +505,12 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
 
             const documentsMetadata = filesToUpload.map((file) => {
                 const metadata = {};
-
-                // ALWAYS try to get category_id - even if we have one, verify it's valid
-                let categoryId = null;
-
-                // First, use the stored categoryId if it exists
-                if (file.categoryId) {
-                    // Verify it's still valid by checking categories array
-                    const categoryExists = categories.find(cat => cat.id === file.categoryId);
-                    if (categoryExists) {
-                        categoryId = file.categoryId;
-                    }
-                }
-
-                // If no valid categoryId found, try to find by category name
-                if (!categoryId && file.category && file.category.trim() !== '') {
-                    // Try exact match first
-                    let foundCategory = categories.find(cat => cat.name && cat.name === file.category);
-                    // If not found, try case-insensitive match
-                    if (!foundCategory) {
-                        foundCategory = categories.find(cat =>
-                            cat.name && cat.name.trim().toLowerCase() === file.category.trim().toLowerCase()
-                        );
-                    }
-                    if (foundCategory && foundCategory.id) {
-                        categoryId = foundCategory.id;
-                    }
-                }
-
-                // ALWAYS include category_id if we found one
-                if (categoryId) {
-                    metadata.category_id = categoryId;
-                } else {
-                    console.error('⚠️ Category ID not found for file:', file.name, {
-                        selectedCategory: file.category,
-                        availableCategories: categories.map(c => ({ name: c.name, id: c.id })),
-                        storedCategoryId: file.categoryId
-                    });
-                }
-
                 // Use folder_name (API now accepts folder names!)
-                let folderName = null;
-
-                // Extract folder name from the folder path (use the last part)
-                if (file.folderPath && file.folderPath.trim() !== '') {
-                    const pathParts = file.folderPath.split(' > ').map(p => p.trim()).filter(p => p);
-                    if (pathParts.length > 0) {
-                        folderName = pathParts[pathParts.length - 1];
-                    }
+                if (file.folderName) {
+                    metadata.folder_name = file.folderName;
                 }
-
-                // Include folder_name if we found one
-                if (folderName) {
-                    metadata.folder_name = folderName;
-                } else {
-                    console.warn('⚠️ Folder name not found for file:', file.name, {
-                        selectedFolderPath: file.folderPath
-                    });
-                }
-
-                console.log('📤 Document metadata for', file.name, ':', JSON.stringify(metadata), '| File:', {
-                    category: file.category,
-                    categoryId: file.categoryId,
-                    folderPath: file.folderPath,
-                    folderName: metadata.folder_name
-                });
-
                 return metadata;
             });
-
-            console.log('📋 Final documents_metadata before sending:', JSON.stringify(documentsMetadata, null, 2));
-            console.log('📋 Files to upload:', filesToUpload.map(f => ({
-                name: f.name,
-                category: f.category,
-                categoryId: f.categoryId,
-                folderPath: f.folderPath
-            })));
 
             formData.append('documents_metadata', JSON.stringify(documentsMetadata));
 
@@ -1021,103 +733,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                 <div className="config-scroll flex-grow-1">
                                     {!previewMode ? (
                                         <div className="config-panel">
-                                            <Form.Group className="mb-3">
-                                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 className="txt">Document Category</h6>
-                                                    {!creatingCategory ? (
-                                                        <Button
-                                                            variant="link"
-                                                            className="p-0 small create-folder-btn"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setCreatingCategory(true);
-                                                            }}
-                                                        >
-                                                            Create New Category
-                                                        </Button>
-                                                    ) : (
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <Form.Control
-                                                                size="sm"
-                                                                type="text"
-                                                                placeholder="Category name"
-                                                                value={newCategoryName}
-                                                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                                                disabled={creatingCategoryLoading}
-                                                                autoFocus
-                                                                style={{ minWidth: '150px' }}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter' && newCategoryName.trim() && !creatingCategoryLoading) {
-                                                                        handleCreateCategory();
-                                                                    }
-                                                                    if (e.key === 'Escape') {
-                                                                        setCreatingCategory(false);
-                                                                        setNewCategoryName('');
-                                                                        setNewCategoryDescription('');
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <Form.Control
-                                                                size="sm"
-                                                                type="text"
-                                                                placeholder="Description (optional)"
-                                                                value={newCategoryDescription}
-                                                                onChange={(e) => setNewCategoryDescription(e.target.value)}
-                                                                disabled={creatingCategoryLoading}
-                                                                style={{ minWidth: '150px' }}
-                                                            />
-                                                            <Button
-                                                                variant="primary"
-                                                                size="sm"
-                                                                onClick={handleCreateCategory}
-                                                                disabled={creatingCategoryLoading || !newCategoryName.trim()}
-                                                            >
-                                                                {creatingCategoryLoading ? "Creating..." : "Add"}
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline-secondary"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                    setCreatingCategory(false);
-                                                                    setNewCategoryName("");
-                                                                    setNewCategoryDescription("");
-                                                                }}
-                                                                disabled={creatingCategoryLoading}
-                                                            >
-                                                                Cancel
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <Form.Select
-                                                    className="custom-select"
-                                                    value={files[selectedIndex]?.category || ""}
-                                                    onChange={handleCategoryChange}
-                                                    disabled={loadingCategories || creatingCategory}
-                                                >
-                                                    <option value="" key="select-category-default">
-                                                        {loadingCategories ? "Loading categories..." : "Select a Category"}
-                                                    </option>
-                                                    {categories.map((category, catIdx) => (
-                                                        <option 
-                                                            key={category.id || `category-${catIdx}-${category.name}`} 
-                                                            value={category.name}
-                                                        >
-                                                            {category.name}
-                                                        </option>
-                                                    ))}
-                                                </Form.Select>
-                                                {/* Debug info */}
-                                                {files[selectedIndex] && (
-                                                    <small className="text-muted d-block mt-1">
-                                                        Selected: {files[selectedIndex].category || 'None'}
-                                                        {files[selectedIndex].categoryId && ` (ID: ${files[selectedIndex].categoryId})`}
-                                                    </small>
-                                                )}
-                                                {categories.length === 0 && !loadingCategories && (
-                                                    <small className="text-muted">No categories available. Create one to get started.</small>
-                                                )}
-                                            </Form.Group>
+
 
                                             <Form.Group className="mb-3">
                                                 <div className="d-flex justify-content-between align-items-center mb-2">
@@ -1222,8 +838,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                                         </div>
                                                         <div className="small text-muted">
                                                             {files[selectedIndex]?.name || "N/A"} &gt;{" "}
-                                                            {files[selectedIndex]?.folderPath || "No folder selected"} &gt;{" "}
-                                                            {files[selectedIndex]?.category || "No category selected"}
+                                                            {files[selectedIndex]?.folderPath || "No folder selected"}
                                                         </div>
                                                     </div>
 

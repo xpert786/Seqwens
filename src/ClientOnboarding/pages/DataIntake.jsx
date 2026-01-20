@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import SignatureModal from "../components/SignatureModal";
 import ComprehensiveBusinessForm from "../components/ComprehensiveBusinessForm";
 import RentalPropertyForm from "../components/RentalPropertyForm";
+import ErrorBoundary from "../../components/ErrorBoundary";
 import DateInput from "../../components/DateInput";
 import SlideSwitch from "../../components/SlideSwitch";
 import { formatDateForDisplay, formatDateForAPI, formatDateInput } from "../utils/dateUtils";
@@ -137,7 +138,6 @@ export default function DataIntakeForm() {
 
   // Rental Property Data State
   const [rentalData, setRentalData] = useState({
-    isRentalProperty: false,
     propertyAddress: '',
     propertyCity: '',
     propertyState: '',
@@ -230,7 +230,6 @@ export default function DataIntakeForm() {
 
   const handleCancelRentalProperty = () => {
     setRentalData({
-      isRentalProperty: false,
       propertyAddress: '',
       propertyCity: '',
       propertyState: '',
@@ -531,7 +530,8 @@ export default function DataIntakeForm() {
                 middleInitial: dep.dependent_middle_name || '',
                 lastName: dep.dependent_last_name || '',
                 dob: dep.dependent_dateOfBirth ? formatDateForDisplay(dep.dependent_dateOfBirth) : '',
-                ssn: dep.dependent_ssn || ''
+                ssn: dep.dependent_ssn || '',
+                relationship: dep.dependent_relationship || ''
               }));
               setDependents(formattedDependents);
             } else if (personalInfoData.no_of_dependents > 0) {
@@ -541,7 +541,8 @@ export default function DataIntakeForm() {
                 middleInitial: '',
                 lastName: '',
                 dob: '',
-                ssn: ''
+                ssn: '',
+                relationship: ''
               }));
               setDependents(emptyDependents);
             }
@@ -606,14 +607,16 @@ export default function DataIntakeForm() {
               const businessList = businessInfoData.map(bData => ({
                 id: bData.id || Date.now(),
                 businessName: bData.business_name || "",
-                businessType: "Self-Employment",
+                businessType: bData.business_type || "",
                 totalIncome: bData.total_income || "0",
                 totalExpenses: calculateTotalExpensesFromAPI(bData),
                 address: `${bData.business_address || ""} ${bData.business_city || ""} ${bData.business_state || ""} ${bData.business_zip || ""}`.trim(),
                 workDescription: bData.work_description || "",
                 businessNameType: bData.business_name_type || 'same',
                 differentBusinessName: bData.different_business_name || '',
+                ein: bData.ein || '',
                 startedDuringYear: bData.started_during_year || false,
+                businessFormationDate: bData.business_formation_date ? formatDateForDisplay(bData.business_formation_date) : '',
                 homeBased: bData.home_based || false,
                 businessAddress: bData.business_address || '',
                 businessCity: bData.business_city || '',
@@ -670,7 +673,6 @@ export default function DataIntakeForm() {
             if (Array.isArray(rentalPropertyInfoData) && rentalPropertyInfoData.length > 0) {
               const rentalList = rentalPropertyInfoData.map(rData => ({
                 id: rData.id || Date.now(),
-                isRentalProperty: rData.is_rental_property || false,
                 propertyAddress: rData.property_address || "",
                 propertyCity: rData.property_city || "",
                 propertyState: rData.property_state || "",
@@ -1058,6 +1060,12 @@ export default function DataIntakeForm() {
 
       // Helper function to recursively parse nested error objects
       const parseNestedErrors = (errorObj, prefix = '') => {
+        const formatFieldName = (key) => {
+           return key.split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        };
+
         Object.entries(errorObj).forEach(([key, value]) => {
           // Skip tax_documents as we handle it separately
           if (key === 'tax_documents') {
@@ -1065,17 +1073,36 @@ export default function DataIntakeForm() {
           }
 
           if (Array.isArray(value)) {
-            // This is a field with error messages
-            const fieldPath = prefix ? `${prefix}.${key}` : key;
-            const formFieldPath = mapApiFieldToFormField(fieldPath, source);
-            // Extract string from ErrorDetail objects if present
-            const errorMessages = value.map(item => {
-              if (typeof item === 'object' && item !== null && item.string) {
-                return item.string;
-              }
-              return String(item);
-            });
-            errors[formFieldPath] = errorMessages;
+            // Check if it's an array of nested objects (like business_info) or error strings
+            // We check if the first item looks like a nested object rather than an error detail
+            const firstItem = value.length > 0 ? value[0] : null;
+            const isNestedObjectArray = firstItem && typeof firstItem === 'object' && !firstItem.code && !firstItem.string && !firstItem.message;
+
+            if (isNestedObjectArray) {
+              // It's a list of nested objects (e.g. business_info list)
+              value.forEach((item, index) => {
+                if (typeof item === 'object' && item !== null) {
+                  const newPrefix = prefix ? `${prefix}.${key}.${index}` : `${key}.${index}`;
+                  parseNestedErrors(item, newPrefix);
+                }
+              });
+            } else {
+              // This is a field with error messages
+              const fieldPath = prefix ? `${prefix}.${key}` : key;
+              const formFieldPath = mapApiFieldToFormField(fieldPath, source);
+              // Extract string from ErrorDetail objects if present
+              const errorMessages = value.map(item => {
+                if (typeof item === 'object' && item !== null && item.string) {
+                  return item.string;
+                }
+                return String(item);
+              });
+              errors[formFieldPath] = errorMessages;
+              // Add to general errors for visibility with field name
+              const formattedName = formatFieldName(key);
+              const namedErrors = errorMessages.map(msg => `${formattedName}: ${msg}`);
+              generalErrorMessages.push(...namedErrors);
+            }
           } else if (typeof value === 'object' && value !== null) {
             // This is a nested object (e.g., personal_info, spouse_info, bank_info)
             const newPrefix = prefix ? `${prefix}.${key}` : key;
@@ -1085,6 +1112,9 @@ export default function DataIntakeForm() {
             const fieldPath = prefix ? `${prefix}.${key}` : key;
             const formFieldPath = mapApiFieldToFormField(fieldPath, source);
             errors[formFieldPath] = [value];
+            
+            const formattedName = formatFieldName(key);
+            generalErrorMessages.push(`${formattedName}: ${value}`);
           }
         });
       };
@@ -1320,6 +1350,39 @@ export default function DataIntakeForm() {
       });
     }
 
+    // Direct Deposit Information - Required only if ANY field is entered
+    const bankFields = [bankInfo.bankName, bankInfo.routingNumber, bankInfo.confirmRoutingNumber, bankInfo.accountNumber, bankInfo.confirmAccountNumber];
+    const hasAnyBankData = bankFields.some(val => val && val.trim() !== '');
+
+    if (hasAnyBankData) {
+      if (!bankInfo.bankName || bankInfo.bankName.trim() === '') {
+        errors['bankInfo.bankName'] = ['Bank name is required'];
+      }
+      if (!bankInfo.routingNumber || bankInfo.routingNumber.trim() === '') {
+        errors['bankInfo.routingNumber'] = ['Routing number is required'];
+      } else if (bankInfo.routingNumber.length !== 9) {
+        errors['bankInfo.routingNumber'] = ['Routing number must be exactly 9 digits'];
+      }
+
+      if (!bankInfo.confirmRoutingNumber || bankInfo.confirmRoutingNumber.trim() === '') {
+        errors['bankInfo.confirmRoutingNumber'] = ['Please confirm your routing number'];
+      } else if (bankInfo.routingNumber !== bankInfo.confirmRoutingNumber) {
+        errors['bankInfo.confirmRoutingNumber'] = ['Routing numbers do not match'];
+      }
+
+      if (!bankInfo.accountNumber || bankInfo.accountNumber.trim() === '') {
+        errors['bankInfo.accountNumber'] = ['Account number is required'];
+      } else if (bankInfo.accountNumber.length < 4 || bankInfo.accountNumber.length > 17) {
+        errors['bankInfo.accountNumber'] = ['Account number must be between 4 and 17 digits'];
+      }
+
+      if (!bankInfo.confirmAccountNumber || bankInfo.confirmAccountNumber.trim() === '') {
+        errors['bankInfo.confirmAccountNumber'] = ['Please confirm your account number'];
+      } else if (bankInfo.accountNumber !== bankInfo.confirmAccountNumber) {
+        errors['bankInfo.confirmAccountNumber'] = ['Account numbers do not match'];
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       console.log("Validation failed with errors:", errors);
     }
@@ -1337,20 +1400,19 @@ export default function DataIntakeForm() {
     const validationErrors = validateRequiredFields();
     if (Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
+      setGeneralErrors(["Please check the form for errors marked in red."]);
       // Scroll to first error
       setTimeout(() => {
         scrollToFirstError(validationErrors);
       }, 100);
-      toast.error('Please fill in all required fields', {
+      toast.success('Please fill in all required fields', {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-        icon: false,
-        className: "custom-toast-error",
-        bodyClassName: "custom-toast-body",
+        icon: true, // Use default success icon (green)
       });
       setIsSubmitting(false);
       return;
@@ -1405,7 +1467,8 @@ export default function DataIntakeForm() {
             dependent_middle_name: dep.middleInitial || "",
             dependent_last_name: dep.lastName || "",
             dependent_dateOfBirth: dep.dob ? formatDateToYYYYMMDD(dep.dob) : "",
-            dependent_ssn: dep.ssn || ""
+            dependent_ssn: dep.ssn || "",
+            dependent_relationship: dep.relationship || ""
           })) : []
         },
         bank_info: {
@@ -1418,6 +1481,7 @@ export default function DataIntakeForm() {
         // Map businesses to API structure
         business_info: businesses.map(b => ({
           id: b.id !== undefined && String(b.id).length < 15 ? b.id : undefined, // Only send valid DB IDs if possible, else let backend create
+          business_type: b.businessType || "",
           business_name: b.businessName || "",
           business_address: b.businessAddress || "",
           business_city: b.businessCity || "",
@@ -1426,7 +1490,9 @@ export default function DataIntakeForm() {
           work_description: b.workDescription || "",
           business_name_type: b.businessNameType || "same",
           different_business_name: b.differentBusinessName || "",
+          ein: b.ein || "",
           started_during_year: b.startedDuringYear || false,
+          business_formation_date: b.businessFormationDate ? formatDateToYYYYMMDD(b.businessFormationDate) : "",
           home_based: b.homeBased || false,
           total_income: b.totalIncome || "",
           tax_forms_received: Array.isArray(b.taxFormsReceived) ? b.taxFormsReceived : [],
@@ -1461,7 +1527,7 @@ export default function DataIntakeForm() {
         // Map rental properties to API structure
         rental_property_info: rentalProperties.map(r => ({
           id: r.id !== undefined && String(r.id).length < 15 ? r.id : undefined,
-          is_rental_property: r.isRentalProperty || false,
+          is_rental_property: true,
           property_address: r.propertyAddress || "",
           property_city: r.propertyCity || "",
           property_state: r.propertyState || "",
@@ -1553,6 +1619,9 @@ export default function DataIntakeForm() {
           // ... Same XHR logic as before ...
           return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
+            const apiBaseUrl = getApiBaseUrl();
+            xhr.open("POST", `${apiBaseUrl}/taxpayer/tax-data-intake-documents/`);
+            xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
             xhr.upload.addEventListener('progress', (e) => {
               if (hasFileToUpload && e.lengthComputable) {
@@ -1563,12 +1632,10 @@ export default function DataIntakeForm() {
 
             xhr.addEventListener('load', () => {
               if (xhr.status >= 200 && xhr.status < 300) {
-                setIsSubmitting(false);
                 if (hasFileToUpload) setUploadProgress(100);
                 if (hasFileToUpload) setUploadStatus('success');
                 resolve({ ok: true, json: () => { try { return JSON.parse(xhr.responseText); } catch (e) { return {}; } } });
               } else {
-                setIsSubmitting(false);
                 if (hasFileToUpload) setUploadStatus('error');
                 if (hasFileToUpload) setUploadError(`Upload failed: ${xhr.status}`);
                 resolve({ ok: false, status: xhr.status, statusText: xhr.statusText, text: () => Promise.resolve(xhr.responseText) });
@@ -1576,11 +1643,11 @@ export default function DataIntakeForm() {
             });
 
             xhr.addEventListener('error', () => {
-              setIsSubmitting(false);
               if (hasFileToUpload) setUploadStatus('error');
               reject(new Error('Network error'));
             });
 
+            xhr.send(fileFormData);
           });
         })() : Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
 
@@ -1755,7 +1822,7 @@ export default function DataIntakeForm() {
   const handleAddDependent = () => {
     setDependents([
       ...dependents,
-      { firstName: '', middleInitial: '', lastName: '', dob: '', ssn: '' }
+      { firstName: '', middleInitial: '', lastName: '', dob: '', ssn: '', relationship: '' }
     ]);
   };
 
@@ -1824,9 +1891,15 @@ export default function DataIntakeForm() {
   };
 
   const handleBankInfoChange = (field, value) => {
+    let finalValue = value;
+    // Enforce numeric only for routing and account numbers
+    if (['routingNumber', 'confirmRoutingNumber', 'accountNumber', 'confirmAccountNumber'].includes(field)) {
+      finalValue = value.replace(/\D/g, '');
+    }
+
     setBankInfo(prev => ({
       ...prev,
-      [field]: value
+      [field]: finalValue
     }));
     // Clear error when user starts typing
     clearFieldError(`bankInfo.${field}`);
@@ -1972,6 +2045,7 @@ export default function DataIntakeForm() {
           }}>
             Your basic personal and contact information
           </p>
+          
         </div>
         <div className="row g-3">
           <div className="col-md-5">
@@ -2893,6 +2967,77 @@ export default function DataIntakeForm() {
                           </div>
                         )}
                       </div>
+                    </div>
+                    <div className="row mt-3">
+                      <div className="col-md-12">
+                        <label className="form-label" style={{
+                          fontFamily: "BasisGrotesquePro",
+                          fontWeight: 400,
+                          fontSize: "16px",
+                          color: "#3B4A66"
+                        }}>
+                          Relationship <span style={{ color: "#EF4444" }}>*</span>
+                        </label>
+                        <select
+                          className={`form-control ${getFieldError(`dependents.${index}.relationship`) ? 'is-invalid' : ''}`}
+                          value={dep.relationship}
+                          onChange={(e) => handleInputChange(index, 'relationship', e.target.value)}
+                          data-field={`dependents.${index}.relationship`}
+                          ref={(el) => {
+                            if (!fieldRefs.current[`dependents.${index}.relationship`]) {
+                              fieldRefs.current[`dependents.${index}.relationship`] = el;
+                            }
+                          }}
+                          style={{
+                            fontFamily: "BasisGrotesquePro",
+                            fontSize: "14px"
+                          }}
+                        >
+                          <option value="">Select relationship...</option>
+                          <option value="Child">Child</option>
+                          <option value="Stepchild">Stepchild</option>
+                          <option value="Foster child">Foster child</option>
+                          <option value="Legally adopted child">Legally adopted child</option>
+                          <option value="Grandchild">Grandchild</option>
+                          <option value="Other descendant of your child">Other descendant of your child</option>
+                          <option value="Brother">Brother</option>
+                          <option value="Sister">Sister</option>
+                          <option value="Half brother">Half brother</option>
+                          <option value="Half sister">Half sister</option>
+                          <option value="Stepbrother">Stepbrother</option>
+                          <option value="Stepsister">Stepsister</option>
+                          <option value="Father">Father</option>
+                          <option value="Mother">Mother</option>
+                          <option value="Grandparent">Grandparent</option>
+                          <option value="Other direct ancestor (not a foster parent)">Other direct ancestor (not a foster parent)</option>
+                          <option value="Stepfather">Stepfather</option>
+                          <option value="Stepmother">Stepmother</option>
+                          <option value="Niece (child of your brother or sister)">Niece (child of your brother or sister)</option>
+                          <option value="Nephew (child of your brother or sister)">Nephew (child of your brother or sister)</option>
+                          <option value="Niece (child of your half brother or half sister)">Niece (child of your half brother or half sister)</option>
+                          <option value="Nephew (child of your half brother or half sister)">Nephew (child of your half brother or half sister)</option>
+                          <option value="Aunt (sister of your father or mother)">Aunt (sister of your father or mother)</option>
+                          <option value="Uncle (brother of your father or mother)">Uncle (brother of your father or mother)</option>
+                          <option value="Son-in-law">Son-in-law</option>
+                          <option value="Daughter-in-law">Daughter-in-law</option>
+                          <option value="Father-in-law">Father-in-law</option>
+                          <option value="Mother-in-law">Mother-in-law</option>
+                          <option value="Brother-in-law">Brother-in-law</option>
+                          <option value="Sister-in-law">Sister-in-law</option>
+                          <option value="Not Sure">Not Sure</option>
+                        </select>
+                        {getFieldError(`dependents.${index}.relationship`) && (
+                          <div className="invalid-feedback d-block" style={{
+                            fontSize: "12px",
+                            color: "#EF4444",
+                            marginTop: "4px"
+                          }}>
+                            {getFieldError(`dependents.${index}.relationship`)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="row">
                       <button
                         className="btn"
                         onClick={handleAddDependent}
@@ -3500,63 +3645,65 @@ export default function DataIntakeForm() {
 
                 {/* Business Form */}
                 {isAddingBusiness && (
-                  <ComprehensiveBusinessForm
-                    onSave={handleSaveBusiness}
-                    onCancel={() => {
-                      setIsAddingBusiness(false);
-                      setEditingBusinessId(null);
-                      setBusinessFormErrors({}); // Clear errors on cancel
-                      // Reset business data if canceling
-                      if (!editingBusinessId) {
-                        setBusinessData({
-                          workDescription: '',
-                          businessName: '',
-                          businessNameType: 'same',
-                          differentBusinessName: '',
-                          startedDuringYear: false,
-                          homeBased: false,
-                          businessAddress: '',
-                          businessCity: '',
-                          businessState: '',
-                          businessZip: '',
-                          totalIncome: '',
-                          taxFormsReceived: 'none',
-                          issuedRefunds: false,
-                          totalRefunded: '',
-                          otherBusinessIncome: false,
-                          otherBusinessIncomeAmount: '',
-                          advertising: '',
-                          officeSupplies: '',
-                          cleaningRepairs: '',
-                          insurance: '',
-                          legalProfessional: '',
-                          phoneInternetUtilities: '',
-                          paidContractors: false,
-                          totalPaidContractors: '',
-                          otherExpenses: [],
-                          otherExpenseDescription: '',
-                          otherExpenseAmount: '',
-                          usedVehicle: false,
-                          businessMiles: '',
-                          parkingTollsTravel: '',
-                          businessMeals: '',
-                          travelExpenses: '',
-                          homeOfficeUse: false,
-                          homeOfficeSize: '',
-                          sellProducts: false,
-                          costItemsResold: '',
-                          inventoryLeftEnd: '',
-                          healthInsuranceBusiness: false,
-                          selfEmployedRetirement: false,
-                          retirementAmount: '',
-                          isAccurate: false,
-                          id: null
-                        });
-                      }
-                    }}
-                    externalErrors={businessFormErrors}
-                    initialData={editingBusinessId ? businessData : null}
-                  />
+                  <ErrorBoundary>
+                    <ComprehensiveBusinessForm
+                      onSave={handleSaveBusiness}
+                      onCancel={() => {
+                        setIsAddingBusiness(false);
+                        setEditingBusinessId(null);
+                        setBusinessFormErrors({}); // Clear errors on cancel
+                        // Reset business data if canceling
+                        if (!editingBusinessId) {
+                          setBusinessData({
+                            workDescription: '',
+                            businessName: '',
+                            businessNameType: 'same',
+                            differentBusinessName: '',
+                            startedDuringYear: false,
+                            homeBased: false,
+                            businessAddress: '',
+                            businessCity: '',
+                            businessState: '',
+                            businessZip: '',
+                            totalIncome: '',
+                            taxFormsReceived: 'none',
+                            issuedRefunds: false,
+                            totalRefunded: '',
+                            otherBusinessIncome: false,
+                            otherBusinessIncomeAmount: '',
+                            advertising: '',
+                            officeSupplies: '',
+                            cleaningRepairs: '',
+                            insurance: '',
+                            legalProfessional: '',
+                            phoneInternetUtilities: '',
+                            paidContractors: false,
+                            totalPaidContractors: '',
+                            otherExpenses: [],
+                            otherExpenseDescription: '',
+                            otherExpenseAmount: '',
+                            usedVehicle: false,
+                            businessMiles: '',
+                            parkingTollsTravel: '',
+                            businessMeals: '',
+                            travelExpenses: '',
+                            homeOfficeUse: false,
+                            homeOfficeSize: '',
+                            sellProducts: false,
+                            costItemsResold: '',
+                            inventoryLeftEnd: '',
+                            healthInsuranceBusiness: false,
+                            selfEmployedRetirement: false,
+                            retirementAmount: '',
+                            isAccurate: false,
+                            id: null
+                          });
+                        }
+                      }}
+                      externalErrors={businessFormErrors}
+                      initialData={editingBusinessId ? businessData : null}
+                    />
+                  </ErrorBoundary>
                 )}
               </div>
             )}
@@ -3607,7 +3754,6 @@ export default function DataIntakeForm() {
                         setEditingRentalPropertyId(null);
                         setIsAddingRentalProperty(true);
                         setRentalData({
-                          isRentalProperty: false,
                           propertyAddress: '',
                           propertyCity: '',
                           propertyState: '',
@@ -3812,6 +3958,7 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               className={`form-control ${getFieldError('bankInfo.routingNumber') ? 'is-invalid' : ''}`}
               value={bankInfo.routingNumber}
               onChange={(e) => handleBankInfoChange('routingNumber', e.target.value)}
@@ -3843,6 +3990,7 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               className={`form-control ${getFieldError('bankInfo.confirmRoutingNumber') ? 'is-invalid' : ''}`}
               value={bankInfo.confirmRoutingNumber}
               onChange={(e) => handleBankInfoChange('confirmRoutingNumber', e.target.value)}
@@ -3874,6 +4022,7 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               className={`form-control ${getFieldError('bankInfo.accountNumber') ? 'is-invalid' : ''}`}
               value={bankInfo.accountNumber}
               onChange={(e) => handleBankInfoChange('accountNumber', e.target.value)}
@@ -3905,6 +4054,7 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               className={`form-control ${getFieldError('bankInfo.confirmAccountNumber') ? 'is-invalid' : ''}`}
               value={bankInfo.confirmAccountNumber}
               onChange={(e) => handleBankInfoChange('confirmAccountNumber', e.target.value)}
@@ -4156,7 +4306,13 @@ export default function DataIntakeForm() {
 
       {/* Buttons */}
       <div className="d-flex justify-content-between">
-        <button className="btn btn-outline-secondary">Save Draft</button>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save Draft"}
+        </button>
         <button
           className="btn text-white"
           style={{ backgroundColor: '#F56D2D' }}

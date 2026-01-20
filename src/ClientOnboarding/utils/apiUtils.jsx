@@ -105,8 +105,8 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
     // Check content-type before parsing JSON
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-    const result = await response.json();
-    return result;
+      const result = await response.json();
+      return result;
     } else {
       // If not JSON, read as text to see what we got
       const text = await response.text();
@@ -148,7 +148,7 @@ export const taxpayerPublicAPI = {
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
     const headers = getHeaders();
-    
+
     const config = {
       method,
       headers,
@@ -214,7 +214,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         // Check content-type before parsing JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
-        errorData = await response.json();
+          errorData = await response.json();
         } else {
           // If not JSON, read as text to see what we got
           const text = await response.text();
@@ -301,8 +301,8 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     // Check content-type before parsing JSON
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-    const result = await response.json();
-    return result;
+      const result = await response.json();
+      return result;
     } else {
       // If not JSON, read as text to see what we got
       const text = await response.text();
@@ -2331,7 +2331,7 @@ export const firmAdminTasksAPI = {
       search,
       sort_by
     } = params;
-    
+
     const queryParams = new URLSearchParams();
     if (page) queryParams.append('page', page.toString());
     if (page_size) queryParams.append('page_size', page_size.toString());
@@ -2342,7 +2342,7 @@ export const firmAdminTasksAPI = {
     if (assigned_to) queryParams.append('assigned_to', assigned_to.toString());
     if (search) queryParams.append('search', search);
     if (sort_by) queryParams.append('sort_by', sort_by);
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/firm/tasks/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
@@ -2432,7 +2432,7 @@ export const taskDetailAPI = {
         return response.json();
       });
   },
-  
+
   // Update task (full update) - PUT /taxpayer/tax-preparer/tasks/<task_id>/
   // Allows updating multiple fields: status, priority, due_date, description, estimated_hours
   updateTask: async (taskId, taskData) => {
@@ -2459,7 +2459,7 @@ export const taskDetailAPI = {
         return response.json();
       });
   },
-  
+
   // Get task audit log - GET /taxpayer/tasks/<task_id>/audit-log/
   getTaskAuditLog: async (taskId) => {
     const token = getAccessToken();
@@ -3459,6 +3459,16 @@ export const firmAdminClientsAPI = {
     return await apiRequest(`/user/firm-admin/clients/${clientId}/`, 'GET');
   },
 
+  // Get signed data entry form
+  getSignedDataEntryForm: async (clientId) => {
+    return await apiRequest(`/firm/clients/${clientId}/signed-data-entry-form/`, 'GET');
+  },
+
+  // Fill data intake form
+  fillDataIntake: async (clientId, payload) => {
+    return await apiRequest(`/firm/clients/${clientId}/fill-data-intake/`, 'POST', payload);
+  },
+
   // Update client details
   updateClient: async (clientId, payload) => {
     try {
@@ -3574,7 +3584,7 @@ export const firmAdminClientsAPI = {
     };
 
     const response = await fetchWithCors(url, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
@@ -3623,7 +3633,7 @@ export const firmAdminClientsAPI = {
   },
 
   // ========== Client Document Management ==========
-  
+
   // Upload documents for a client/taxpayer
   // POST /api/firm/clients/<client_id>/documents/upload/
   uploadClientDocuments: async (clientId, uploadData) => {
@@ -3633,7 +3643,7 @@ export const firmAdminClientsAPI = {
     }
 
     const { files, category_id, folder_id, tags } = uploadData;
-    
+
     // Create FormData for file upload
     const formData = new FormData();
 
@@ -3998,7 +4008,7 @@ export const firmAdminStaffAPI = {
     };
 
     const response = await fetchWithCors(url, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
@@ -4247,7 +4257,7 @@ export const firmOfficeAPI = {
     };
 
     const response = await fetchWithCors(url, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
@@ -4438,22 +4448,22 @@ export const firmSignatureDocumentRequestsAPI = {
 
           if (errorData.errors) {
             console.error('Validation Errors:', errorData.errors);
-            
+
             // Check if errors is an array (file validation errors)
             if (Array.isArray(errorData.errors)) {
               const errorMessages = errorData.errors.map((err) => {
                 if (typeof err === 'object' && err.error) {
                   // Format: "filename: error message"
-                  return err.filename 
+                  return err.filename
                     ? `${err.filename}: ${err.error}`
                     : err.error;
                 }
                 return typeof err === 'string' ? err : JSON.stringify(err);
               });
-              errorMessage = errorMessages.length > 0 
+              errorMessage = errorMessages.length > 0
                 ? `${errorData.message || 'Validation failed'}. ${errorMessages.join('. ')}`
                 : errorData.message || 'Validation failed';
-            } 
+            }
             // Check if errors is an object (field validation errors)
             else if (typeof errorData.errors === 'object') {
               const fieldErrors = Object.entries(errorData.errors)
@@ -5082,7 +5092,7 @@ export const taxPreparerClientAPI = {
 
     const API_BASE_URL = getApiBaseUrl();
     const requestUrl = `${API_BASE_URL}/taxpayer/esign/create/`;
-    
+
     // Console log request data (excluding file content)
     console.log('ESign Create API Request:', {
       url: requestUrl,
@@ -5096,7 +5106,7 @@ export const taxPreparerClientAPI = {
         file: file ? { name: file.name, size: file.size, type: file.type } : null
       }
     });
-    
+
     const response = await fetchWithCors(requestUrl, {
       method: 'POST',
       headers: {
@@ -5109,7 +5119,7 @@ export const taxPreparerClientAPI = {
       // Check content-type before parsing JSON
       const contentType = response.headers.get('content-type');
       let errorData = {};
-      
+
       if (contentType && contentType.includes('application/json')) {
         errorData = await response.json().catch(() => ({}));
       } else {
@@ -5121,7 +5131,7 @@ export const taxPreparerClientAPI = {
           errorData = { message: `Server returned non-JSON response (${response.status})` };
         }
       }
-      
+
       // Console log the received JSON for debugging
       console.error('ESign Create API Error Response:', {
         status: response.status,
@@ -5224,7 +5234,7 @@ export const taxPreparerClientAPI = {
     };
 
     const response = await fetchWithCors(url, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
@@ -6071,7 +6081,7 @@ export const customESignAPI = {
     if (!response.ok) {
       const contentType = response.headers.get('content-type');
       let errorData = {};
-      
+
       if (contentType && contentType.includes('application/json')) {
         errorData = await response.json().catch(() => ({}));
       } else {
@@ -6159,7 +6169,7 @@ export const customESignAPI = {
   listESignDocuments: async (options = {}) => {
     const { status, page, page_size } = options;
     const params = new URLSearchParams();
-    
+
     if (status) params.append('status', status);
     if (page) params.append('page', page.toString());
     if (page_size) params.append('page_size', page_size.toString());
@@ -6168,7 +6178,7 @@ export const customESignAPI = {
     const endpoint = queryString
       ? `/taxpayer/esign/custom/list/?${queryString}`
       : '/taxpayer/esign/custom/list/';
-    
+
     return await apiRequest(endpoint, 'GET');
   },
 

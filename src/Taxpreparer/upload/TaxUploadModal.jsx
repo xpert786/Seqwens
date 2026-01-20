@@ -47,11 +47,11 @@ const isPreviewable = (file) => {
   const extension = getExtension(file.name, file.type || file.fileObject?.type);
   const previewableExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
   const previewableMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml'];
-  
+
   if (file.fileObject?.type && previewableMimeTypes.includes(file.fileObject.type.toLowerCase())) {
     return true;
   }
-  
+
   return previewableExtensions.includes(extension.toLowerCase());
 };
 
@@ -62,8 +62,6 @@ const createFileEntry = (file) => {
     name: file.name,
     sizeBytes: file.size,
     sizeLabel: formatBytes(file.size),
-    category: "",
-    categoryId: null,
     folderPath: "",
     folderId: null,
     status: "queued",
@@ -88,7 +86,6 @@ const uploadSingleFile = async ({ fileEntry, clientId }) => {
 
   const documentsPayload = [
     {
-      category_id: fileEntry.categoryId,
       folder_id: fileEntry.folderId,
       file_name: fileEntry.name,
       ...(clientId ? { client_id: clientId } : {}),
@@ -141,9 +138,6 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
   const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
   const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [creatingCategory, setCreatingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [creatingCategoryLoading, setCreatingCategoryLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [previewModalShow, setPreviewModalShow] = useState(false);
   const [previewFileIndex, setPreviewFileIndex] = useState(null);
@@ -152,8 +146,6 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
   const [folderTree, setFolderTree] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const activeFile = files[selectedIndex] || null;
 
@@ -286,7 +278,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Only revoke if we created a new URL
       if (!file.previewUrl) {
         URL.revokeObjectURL(url);
@@ -328,22 +320,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     };
   }, [previewModalShow]);
 
-  const handleCategoryChange = (event) => {
-    const categoryName = event.target.value;
-    const category = categories.find((cat) => cat.name === categoryName);
-    setFiles((prev) =>
-      prev.map((file, index) =>
-        index === selectedIndex
-          ? {
-              ...file,
-              category: categoryName,
-              categoryId: category ? category.id : null,
-              issues: file.issues.filter((issue) => !issue.toLowerCase().includes("category")),
-            }
-          : file
-      )
-    );
-  };
+
 
   const validateFilesBeforeUpload = (fileEntries) => {
     const nameCounts = fileEntries.reduce((acc, file) => {
@@ -354,9 +331,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
     return fileEntries.map((file) => {
       const issues = [];
-      if (!file.categoryId) {
-        issues.push("Select a document category.");
-      }
+
       if (!file.folderId) {
         issues.push("Select a folder.");
       }
@@ -477,11 +452,11 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       prev.map((file, index) =>
         index === selectedIndex
           ? {
-              ...file,
-              folderPath: path,
-              folderId,
-              issues: file.issues.filter((issue) => !issue.toLowerCase().includes("folder")),
-            }
+            ...file,
+            folderPath: path,
+            folderId,
+            issues: file.issues.filter((issue) => !issue.toLowerCase().includes("folder")),
+          }
           : file
       )
     );
@@ -581,92 +556,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     }
   };
 
-  const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) {
-      toast.error("Please enter a category name");
-      return;
-    }
 
-    setCreatingCategoryLoading(true);
-
-    try {
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-
-      if (!token) {
-        toast.error("No authentication token found. Please login again.");
-        return;
-      }
-
-      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/document-categories/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newCategoryName.trim(),
-          description: `Document category: ${newCategoryName.trim()}`,
-          is_active: true,
-        }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.errors) {
-            const fieldErrors = Object.entries(errorData.errors)
-              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`)
-              .join("; ");
-            errorMessage = errorData.message ? `${errorData.message}. ${fieldErrors}` : fieldErrors;
-          } else {
-            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-          }
-        } catch (_) {
-          // ignore parse errors
-        }
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "Failed to create category");
-      }
-
-      const categoryInfo = result.data;
-      const newCategory = {
-        id: categoryInfo.id,
-        name: categoryInfo.name || newCategoryName.trim(),
-        description: categoryInfo.description || "",
-        is_active: categoryInfo.is_active !== false,
-      };
-
-      setCategories((prev) => [...prev, newCategory]);
-
-      setFiles((prev) =>
-        prev.map((file, index) =>
-          index === selectedIndex
-            ? {
-                ...file,
-                category: newCategory.name,
-                categoryId: newCategory.id,
-                issues: file.issues.filter((issue) => !issue.toLowerCase().includes("category")),
-              }
-            : file
-        )
-      );
-
-      toast.success(result.message || "Category created successfully!");
-      setNewCategoryName("");
-      setCreatingCategory(false);
-    } catch (error) {
-      console.error("Error creating category:", error);
-      toast.error(error.message || "Failed to create category.");
-    } finally {
-      setCreatingCategoryLoading(false);
-    }
-  };
 
   const renderFolderTree = (folders, path = []) =>
     folders.map((folder) => {
@@ -735,9 +625,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     setCreatingFolderLoading(false);
     setParentFolderForNewFolder(null);
     setUploading(false);
-    setCreatingCategory(false);
-    setNewCategoryName("");
-    setCreatingCategoryLoading(false);
+    setCreatingFolderLoading(false);
     setIsDragging(false);
 
     if (closeModal) {
@@ -760,7 +648,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     setUploading(true);
     setFolderDropdownOpen(false);
     setCreatingFolder(false);
-    setCreatingCategory(false);
+
 
     const updatedFiles = [...validated];
     let successCount = 0;
@@ -921,52 +809,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     fetchRootFolders();
   }, [show, clientId]);
 
-  useEffect(() => {
-    if (!show) return;
 
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const API_BASE_URL = getApiBaseUrl();
-        const token = getAccessToken();
-
-        if (!token) {
-          console.error("No authentication token found");
-          return;
-        }
-
-        const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/document-categories/`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success && Array.isArray(result.data)) {
-          setCategories(result.data.filter((category) => category.is_active !== false));
-        } else if (Array.isArray(result)) {
-          setCategories(result.filter((category) => category.is_active !== false));
-        } else {
-          setCategories([]);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        toast.error("Failed to load document categories.");
-        setCategories([]);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    fetchCategories();
-  }, [show]);
 
   useEffect(() => {
     if (files.length === 0) {
@@ -1047,8 +890,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                             <button
                               type="button"
                               className="btn btn-sm p-1"
-                              style={{ 
-                                border: 'none', 
+                              style={{
+                                border: 'none',
                                 background: 'transparent',
                                 color: '#3B4A66',
                                 padding: '4px',
@@ -1064,8 +907,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                             <button
                               type="button"
                               className="btn btn-sm p-1"
-                              style={{ 
-                                border: 'none', 
+                              style={{
+                                border: 'none',
                                 background: 'transparent',
                                 color: '#9CA3AF',
                                 padding: '4px',
@@ -1079,13 +922,13 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                               <FaEye size={14} />
                             </button>
                           )}
-                          
+
                           {/* Download Button */}
                           <button
                             type="button"
                             className="btn btn-sm p-1"
-                            style={{ 
-                              border: 'none', 
+                            style={{
+                              border: 'none',
                               background: 'transparent',
                               color: '#3B4A66',
                               padding: '4px',
@@ -1097,7 +940,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                           >
                             <FaDownload size={14} />
                           </button>
-                          
+
                           {/* Remove Button */}
                           <span
                             className="remove-icon"
@@ -1185,87 +1028,10 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                   <div className="config-panel">
                     <h6 className="mb-1 custom-doc-header">Details</h6>
                     <p className="small text-muted custom-doc-subtext">
-                      Set the category and destination folder for <strong>{activeFile?.name}</strong>
+                      Set the destination folder for <strong>{activeFile?.name}</strong>
                     </p>
 
-                    <Form.Group className="mb-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h6 className="txt">Document Category</h6>
-                        {!creatingCategory ? (
-                          <Button
-                            variant="link"
-                            className="p-0 small create-folder-btn"
-                            onClick={() => setCreatingCategory(true)}
-                          >
-                            Create New Category
-                          </Button>
-                        ) : (
-                          <div className="d-flex align-items-center gap-2">
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              placeholder="Enter category name"
-                              value={newCategoryName}
-                              onChange={(event) => setNewCategoryName(event.target.value)}
-                              disabled={creatingCategoryLoading}
-                              autoFocus
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                  event.preventDefault();
-                                  handleCreateCategory();
-                                } else if (event.key === "Escape") {
-                                  setCreatingCategory(false);
-                                  setNewCategoryName("");
-                                }
-                              }}
-                            />
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="p-0"
-                              onClick={handleCreateCategory}
-                              disabled={creatingCategoryLoading || !newCategoryName.trim()}
-                            >
-                              {creatingCategoryLoading ? "..." : "Create"}
-                            </Button>
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="p-0"
-                              onClick={() => {
-                                setCreatingCategory(false);
-                                setNewCategoryName("");
-                              }}
-                              disabled={creatingCategoryLoading}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                      {!creatingCategory && (
-                        <Form.Select
-                          className="custom-select"
-                          value={activeFile?.category || ""}
-                          onChange={handleCategoryChange}
-                          disabled={loadingCategories}
-                        >
-                          <option value="">
-                            {loadingCategories ? "Loading categories..." : "Select a Category"}
-                          </option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.name}>
-                              {category.name}
-                            </option>
-                          ))}
-                        </Form.Select>
-                      )}
-                      {categories.length === 0 && !loadingCategories && !creatingCategory && (
-                        <small className="text-muted" style={{ fontSize: "12px", display: "block", marginTop: "4px" }}>
-                          No categories available
-                        </small>
-                      )}
-                    </Form.Group>
+
 
                     <Form.Group className="mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-2">
@@ -1485,7 +1251,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {previewFileIndex !== null && files[previewFileIndex] 
+            {previewFileIndex !== null && files[previewFileIndex]
               ? `Preview: ${files[previewFileIndex].name}`
               : 'Preview Document'}
           </Modal.Title>
@@ -1493,8 +1259,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
         <Modal.Body style={{ padding: 0, minHeight: '500px' }}>
           {previewFileIndex !== null && files[previewFileIndex] && files[previewFileIndex].previewUrl ? (
             <div style={{ width: '100%', height: '70vh', position: 'relative' }}>
-              {files[previewFileIndex].extension === 'pdf' || 
-               files[previewFileIndex].fileObject?.type === 'application/pdf' ? (
+              {files[previewFileIndex].extension === 'pdf' ||
+                files[previewFileIndex].fileObject?.type === 'application/pdf' ? (
                 <iframe
                   src={files[previewFileIndex].previewUrl}
                   title={`Preview of ${files[previewFileIndex].name}`}

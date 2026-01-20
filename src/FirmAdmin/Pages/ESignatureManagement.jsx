@@ -27,7 +27,6 @@ export default function ESignatureManagement() {
   const [taskTitle, setTaskTitle] = useState('');
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [spouseAlso, setSpouseAlso] = useState(false);
-  const [documentCategory, setDocumentCategory] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [folderId, setFolderId] = useState('');
@@ -35,7 +34,7 @@ export default function ESignatureManagement() {
   const [priority, setPriority] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // Client and folder selection state
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
@@ -116,7 +115,7 @@ export default function ESignatureManagement() {
     is_active: '',
     search: ''
   });
-  
+
   // Client-side pagination for template cards (5 per page)
   const [templateCardsCurrentPage, setTemplateCardsCurrentPage] = useState(1);
   const TEMPLATE_CARDS_PER_PAGE = 5;
@@ -250,7 +249,6 @@ export default function ESignatureManagement() {
     setTaskTitle('');
     setSelectedClientIds([]);
     setSpouseAlso(false);
-    setDocumentCategory('');
     setFolderId('');
     setDueDate('');
     setPriority('');
@@ -462,15 +460,15 @@ export default function ESignatureManagement() {
           try {
             const response = await firmAdminClientsAPI.getClientDetails(clientId);
             if (response.success && response.data) {
-              const hasSpouse = response.data.personal_information?.spouse_information || 
-                               response.data.spouse_information ||
-                               response.data.has_spouse;
+              const hasSpouse = response.data.personal_information?.spouse_information ||
+                response.data.spouse_information ||
+                response.data.has_spouse;
               return {
                 clientId,
                 hasSpouse: !!hasSpouse,
-                clientName: response.data.profile?.name || 
-                           `${response.data.profile?.first_name || ''} ${response.data.profile?.last_name || ''}`.trim() ||
-                           `Client ${clientId}`
+                clientName: response.data.profile?.name ||
+                  `${response.data.profile?.first_name || ''} ${response.data.profile?.last_name || ''}`.trim() ||
+                  `Client ${clientId}`
               };
             }
             return { clientId, hasSpouse: false, clientName: `Client ${clientId}` };
@@ -553,7 +551,7 @@ export default function ESignatureManagement() {
 
       const token = getAccessToken();
       const queryParams = new URLSearchParams();
-      
+
       queryParams.append('page', esignCurrentPage.toString());
       queryParams.append('page_size', '10');
 
@@ -646,19 +644,7 @@ export default function ESignatureManagement() {
       // Each metadata object should have category_id and folder_id
       const documentsMetadata = uploadedFiles.map((file) => {
         const metadata = {};
-        
-        // Add category_id if document category is selected
-        // Note: If documentCategory is a string, we need to fetch the actual category ID
-        // For now, if it's a number, use it; otherwise, we'll need to fetch categories
-        if (documentCategory) {
-          const categoryId = parseInt(documentCategory);
-          if (!isNaN(categoryId)) {
-            metadata.category_id = categoryId;
-          }
-          // If documentCategory is a string, we might need to fetch categories first
-          // For now, we'll skip category_id if it's not a valid number
-        }
-        
+
         // Add folder_id if folder is selected (must be an integer)
         if (folderId) {
           const folderIdInt = parseInt(folderId);
@@ -666,7 +652,7 @@ export default function ESignatureManagement() {
             metadata.folder_id = folderIdInt;
           }
         }
-        
+
         // Ensure at least an empty object is returned (API requires metadata for each file)
         return metadata;
       });
@@ -718,7 +704,7 @@ export default function ESignatureManagement() {
         formData.append('type', requestData.type); // "signature_request" or "document_request"
         formData.append('task_title', requestData.task_title);
         formData.append('client_id', requestData.client_id.toString());
-        
+
         // spouse_sign field - always send, default to false if not provided
         formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
 
@@ -781,23 +767,23 @@ export default function ESignatureManagement() {
           try {
             const errorData = await response.json();
             console.error('Signature/Document Request API Error Response:', errorData);
-            
+
             if (errorData.errors) {
               // Check if errors is an array (file validation errors)
               if (Array.isArray(errorData.errors)) {
                 const errorMessages = errorData.errors.map((err) => {
                   if (typeof err === 'object' && err.error) {
                     // Format: "filename: error message"
-                    return err.filename 
+                    return err.filename
                       ? `${err.filename}: ${err.error}`
                       : err.error;
                   }
                   return typeof err === 'string' ? err : JSON.stringify(err);
                 });
-                errorMessage = errorMessages.length > 0 
+                errorMessage = errorMessages.length > 0
                   ? `${errorData.message || 'Validation failed'}. ${errorMessages.join('. ')}`
                   : errorData.message || 'Validation failed';
-              } 
+              }
               // Check if errors is an object (field validation errors)
               else if (typeof errorData.errors === 'object') {
                 const errorMessages = [];
@@ -805,7 +791,7 @@ export default function ESignatureManagement() {
                   const fieldMessages = Array.isArray(messages) ? messages : [messages];
                   errorMessages.push(...fieldMessages);
                 });
-                
+
                 if (errorMessages.length > 0) {
                   errorMessage = `${errorData.message || 'Validation failed'}. ${errorMessages.join('. ')}`;
                 } else {
@@ -834,7 +820,7 @@ export default function ESignatureManagement() {
       toast.success(`Signature request${selectedClientIds.length > 1 ? 's' : ''} created successfully!`);
       setShowCreateModal(false);
       resetAllState();
-      
+
       // Optionally refresh signature requests list here
       // fetchSignatureRequests();
     } catch (error) {
@@ -882,7 +868,7 @@ export default function ESignatureManagement() {
 
       const token = getAccessToken();
       const queryParams = new URLSearchParams();
-      
+
       queryParams.append('page', templatesCurrentPage.toString());
       queryParams.append('page_size', '10');
 
@@ -954,7 +940,7 @@ export default function ESignatureManagement() {
       setCreatingTemplate(true);
       const token = getAccessToken();
       const formData = new FormData();
-      
+
       formData.append('name', newTemplate.name);
       if (newTemplate.description) {
         formData.append('description', newTemplate.description);
@@ -972,7 +958,7 @@ export default function ESignatureManagement() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
+
         // Extract specific error messages from errors object
         if (errorData.errors && typeof errorData.errors === 'object') {
           const errorMessages = [];
@@ -980,12 +966,12 @@ export default function ESignatureManagement() {
             const fieldMessages = Array.isArray(messages) ? messages : [messages];
             errorMessages.push(...fieldMessages);
           });
-          
+
           if (errorMessages.length > 0) {
             throw new Error(errorMessages.join('. '));
           }
         }
-        
+
         throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
@@ -1012,12 +998,12 @@ export default function ESignatureManagement() {
             const fieldMessages = Array.isArray(messages) ? messages : [messages];
             errorMessages.push(...fieldMessages);
           });
-          
+
           if (errorMessages.length > 0) {
             throw new Error(errorMessages.join('. '));
           }
         }
-        
+
         throw new Error(result.message || 'Failed to create template');
       }
     } catch (err) {
@@ -1110,7 +1096,7 @@ export default function ESignatureManagement() {
         {/* Desktop Navigation - Always visible on screens ≥ 768px */}
         <div className="hidden md:block mb-6 w-fit">
           <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Signature Request', 'Templates'].map((tab) => (
+            {['Signature Request'/*, 'Templates'*/].map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -1205,7 +1191,7 @@ export default function ESignatureManagement() {
                   )}
                 </div>
               </button>
-              <button
+              {/* <button
                 onClick={() => handleTabChange('Templates')}
                 className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'Templates'
                   ? 'text-white bg-[#3AD6F2]'
@@ -1233,14 +1219,14 @@ export default function ESignatureManagement() {
                     </svg>
                   )}
                 </div>
-              </button>
+              </button> */}
             </div>
           )}
         </div>
       </div>
 
       {/* Templates Tab Content */}
-      {activeTab === 'Templates' && (
+      {/* {activeTab === 'Templates' && (
         <div className="bg-white rounded-lg p-4 sm:p-6">
           <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
@@ -1263,7 +1249,6 @@ export default function ESignatureManagement() {
             </button>
           </div>
 
-          {/* Filters */}
           <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Status</label>
@@ -1297,7 +1282,6 @@ export default function ESignatureManagement() {
             </div>
           </div>
 
-          {/* Template Cards Grid */}
           {templatesLoading ? (
             <div className="text-center py-8">
               <p className="text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Loading templates...</p>
@@ -1327,7 +1311,6 @@ export default function ESignatureManagement() {
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    {/* Template Title */}
                     <div className="flex items-start justify-between mb-2">
                       <h5 className="text-base sm:text-lg font-semibold text-gray-800 flex-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         {template.name}
@@ -1343,12 +1326,10 @@ export default function ESignatureManagement() {
                       )}
                     </div>
 
-                    {/* Template Description */}
                     <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       {template.description || 'No description'}
                     </p>
 
-                    {/* Template Details */}
                     <div className="space-y-2 mb-3 sm:mb-4">
                       <div className="flex justify-between items-center">
                         <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
@@ -1376,7 +1357,6 @@ export default function ESignatureManagement() {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
                       {template.document_url && (
                         <button
@@ -1402,7 +1382,6 @@ export default function ESignatureManagement() {
                 ))}
               </div>
 
-              {/* Client-side Pagination for Template Cards */}
               {templates.length > TEMPLATE_CARDS_PER_PAGE && (
                 <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
                   <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
@@ -1440,7 +1419,7 @@ export default function ESignatureManagement() {
             </>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Signature Request Tab Content */}
       {activeTab === 'Signature Request' && (
@@ -1644,11 +1623,10 @@ export default function ESignatureManagement() {
                       <button
                         key={pageNum}
                         onClick={() => setEsignCurrentPage(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
-                          esignCurrentPage === pageNum
+                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${esignCurrentPage === pageNum
                             ? 'bg-[#F56D2D] text-white'
                             : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>
@@ -1792,10 +1770,10 @@ export default function ESignatureManagement() {
                         {selectedClientIds.map((clientId) => {
                           const client = clients.find(c => c.id?.toString() === clientId.toString() || c.profile?.id?.toString() === clientId.toString());
                           if (!client) return null;
-                          const clientName = client.profile?.name || 
-                                           client.name ||
-                                           `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
-                                           `Client ${clientId}`;
+                          const clientName = client.profile?.name ||
+                            client.name ||
+                            `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
+                            `Client ${clientId}`;
                           return (
                             <div key={clientId} className="flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
                               <span style={{ fontFamily: 'BasisGrotesquePro' }}>{clientName}</span>
@@ -1836,10 +1814,10 @@ export default function ESignatureManagement() {
                       ) : (
                         clients.map((client) => {
                           const clientId = client.id || client.profile?.id;
-                          const clientName = client.profile?.name || 
-                                           client.name ||
-                                           `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
-                                           `Client ${clientId}`;
+                          const clientName = client.profile?.name ||
+                            client.name ||
+                            `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
+                            `Client ${clientId}`;
                           const isSelected = selectedClientIds.includes(clientId?.toString());
                           return (
                             <div
@@ -1851,14 +1829,13 @@ export default function ESignatureManagement() {
                                   setSelectedClientIds(prev => [...prev, clientId.toString()]);
                                 }
                               }}
-                              className={`p-3 cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${
-                                isSelected ? 'bg-blue-50' : ''
-                              }`}
+                              className={`p-3 cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${isSelected ? 'bg-blue-50' : ''
+                                }`}
                             >
                               <input
                                 type="checkbox"
                                 checked={isSelected}
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                               />
                               <span className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
@@ -1875,18 +1852,54 @@ export default function ESignatureManagement() {
 
               {/* Spouse Signature Toggle - Only for signature requests */}
               {signatureType === 'signature_request' && (
-                <div className="flex items-center gap-4">
-                  <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Spouse's signature required
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    justifyContent: 'space-between',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#3B4A66',
+                    opacity: loading ? 0.6 : 1,
+                    fontFamily: 'BasisGrotesquePro'
+                  }}>
+                    <span>Spouse's signature required</span>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <input
+                        type="checkbox"
+                        checked={spouseAlso}
+                        onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
+                        disabled={loading}
+                        style={{
+                          width: '44px',
+                          height: '24px',
+                          appearance: 'none',
+                          backgroundColor: spouseAlso ? '#00C0C6' : '#D1D5DB',
+                          borderRadius: '12px',
+                          position: 'relative',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          transition: 'background-color 0.2s',
+                          outline: 'none'
+                        }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '2px',
+                          left: spouseAlso ? '22px' : '2px',
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: 'white',
+                          borderRadius: '50%',
+                          transition: 'left 0.2s',
+                          pointerEvents: 'none',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                      />
+                    </div>
                   </label>
-                  <button
-                    onClick={() => handleSpouseSignatureToggle(!spouseAlso)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${spouseAlso ? 'bg-orange-500' : 'bg-gray-300'}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${spouseAlso ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
-                  </button>
                 </div>
               )}
 
@@ -1942,7 +1955,7 @@ export default function ESignatureManagement() {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Uploaded Files List */}
                 {uploadedFiles.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -1971,32 +1984,6 @@ export default function ESignatureManagement() {
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Document category */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Document category
-                </label>
-                <div className="relative">
-                  <select
-                    value={documentCategory}
-                    onChange={(e) => setDocumentCategory(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
-                    style={{ fontFamily: 'BasisGrotesquePro' }}
-                  >
-                    <option value="">Select a Category (Optional)</option>
-                    <option value="tax_documents">Tax Documents</option>
-                    <option value="legal_documents">Legal Documents</option>
-                    <option value="financial_documents">Financial Documents</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
               </div>
 
               {/* Folder Selection */}
@@ -2122,11 +2109,10 @@ export default function ESignatureManagement() {
               <button
                 onClick={createSignatureRequest}
                 disabled={loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0}
-                className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                  loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0
+                className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0
                     ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
                     : 'text-white bg-orange-500 hover:bg-orange-600'
-                }`}
+                  }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
                 {loading ? (

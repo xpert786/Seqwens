@@ -25,13 +25,8 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const [validationErrors, setValidationErrors] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [fileErrors, setFileErrors] = useState({}); // Store errors by file index
-    const [categories, setCategories] = useState([]);
-    const [loadingCategories, setLoadingCategories] = useState(false);
     const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
     const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
-    const [creatingCategory, setCreatingCategory] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [creatingCategoryLoading, setCreatingCategoryLoading] = useState(false);
 
     // Handle click outside folder dropdown
     useEffect(() => {
@@ -125,50 +120,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         fetchRootFolders();
     }, [show]);
 
-    // Fetch document categories from API
-    useEffect(() => {
-        const fetchCategories = async () => {
-            if (!show) return; // Only fetch when modal is open
 
-            try {
-                setLoadingCategories(true);
-                const result = await documentsAPI.getDocumentCategories();
-                console.log('Categories API response:', result);
-
-                // Handle different response structures
-                let categoriesData = [];
-                if (result.success && result.data && Array.isArray(result.data)) {
-                    categoriesData = result.data;
-                } else if (Array.isArray(result)) {
-                    categoriesData = result;
-                } else if (result.data && Array.isArray(result.data)) {
-                    categoriesData = result.data;
-                }
-
-                // Filter only active categories if is_active field exists
-                const activeCategories = categoriesData.filter(cat => cat.is_active !== false);
-                setCategories(activeCategories);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-                const errorMsg = handleAPIError(error);
-                toast.error(errorMsg || 'Failed to load document categories. Please refresh the page.', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-                setCategories([]);
-            } finally {
-                setLoadingCategories(false);
-            }
-        };
-
-        fetchCategories();
-    }, [show]);
-
-    // Create category mapping from fetched categories
-    const categoryMapping = categories.reduce((acc, category) => {
-        acc[category.name] = category.id;
-        return acc;
-    }, {});
 
     // Convert technical error messages to user-friendly messages
     const getUserFriendlyError = (errorMessage) => {
@@ -179,18 +131,18 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         const lowerMessage = errorMessage.toLowerCase();
 
         // Handle category/folder errors - check for "does not belong" first (most specific)
-        if (lowerMessage.includes('does not belong') || 
+        if (lowerMessage.includes('does not belong') ||
             lowerMessage.includes('category does not belong') ||
             (lowerMessage.includes('invalid category') && lowerMessage.includes('does not belong'))) {
             return 'Folder does not belong to you';
         }
-        
+
         // Handle invalid category ID errors
-        if (lowerMessage.includes('invalid category id') || 
+        if (lowerMessage.includes('invalid category id') ||
             (lowerMessage.includes('invalid') && lowerMessage.includes('category id'))) {
             return 'Folder does not belong to you';
         }
-        
+
         // Handle other invalid category errors
         if (lowerMessage.includes('invalid') && lowerMessage.includes('category')) {
             return 'Invalid folder selected';
@@ -198,19 +150,19 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
         // For any other errors, remove technical details but keep the message
         let friendlyMessage = errorMessage;
-        
+
         // Remove ID references (None, null, or numbers)
         friendlyMessage = friendlyMessage.replace(/category\s+ID\s+(None|null|\d+)/gi, '');
         friendlyMessage = friendlyMessage.replace(/ID\s+(None|null|\d+)/gi, '');
         friendlyMessage = friendlyMessage.replace(/id\s+(None|null|\d+)/gi, '');
-        
+
         // Remove "or" at the beginning
         friendlyMessage = friendlyMessage.replace(/^or\s+/i, '');
-        
+
         // Clean up extra spaces and punctuation
         friendlyMessage = friendlyMessage.replace(/\s+/g, ' ').trim();
         friendlyMessage = friendlyMessage.replace(/^\s*,\s*/, '');
-        
+
         return friendlyMessage || 'An error occurred with this file';
     };
 
@@ -221,15 +173,11 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
         // Validate all files have category and folder
         files.forEach((file, idx) => {
-            if (!file?.category) {
-                errors.push(`${file.name}: Please select a document category.`);
-            }
+
             if (!file?.folderPath) {
                 errors.push(`${file.name}: Please select a folder.`);
             }
-            if (!file?.categoryId) {
-                errors.push(`${file.name}: Invalid category selected.`);
-            }
+
             if (!file?.folderId) {
                 errors.push(`${file.name}: Invalid folder selected.`);
             }
@@ -266,7 +214,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             // Upload files one by one using the new API endpoint
             for (let idx = 0; idx < files.length; idx++) {
                 const file = files[idx];
-                
+
                 if (!file.fileObject) {
                     errorsByFileIndex[idx] = ['File object not found'];
                     failCount++;
@@ -277,16 +225,13 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                     // Prepare FormData for single file upload
                     const formData = new FormData();
                     formData.append('file', file.fileObject);
-                    
+
                     // Add optional folder_id if provided
                     if (file.folderId) {
                         formData.append('folder_id', file.folderId);
                     }
-                    
-                    // Add optional category_id if provided
-                    if (file.categoryId) {
-                        formData.append('category_id', file.categoryId);
-                    }
+
+
 
                     // Make API request for this file
                     const config = {
@@ -301,7 +246,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                     console.log(`Upload API Request for file ${idx + 1}/${files.length}:`, file.name);
                     console.log('Upload API Request URL:', `${API_BASE_URL}/taxpayer/documents/upload/`);
                     console.log('Folder ID:', file.folderId);
-                    console.log('Category ID:', file.categoryId);
+
 
                     const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
 
@@ -322,28 +267,27 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                     if (!response.ok) {
                         let errorMessage = `HTTP error! status: ${response.status}`;
                         errorMessage = result.message || result.detail || result.error || errorMessage;
-                        
+
                         // Handle specific error cases
                         if (response.status === 400) {
                             if (result.message && result.message.includes('Only PDF files are allowed')) {
                                 errorMessage = 'Only PDF files are allowed';
                             } else if (result.errors && result.errors.file) {
-                                errorMessage = Array.isArray(result.errors.file) 
-                                    ? result.errors.file.join(', ') 
+                                errorMessage = Array.isArray(result.errors.file)
+                                    ? result.errors.file.join(', ')
                                     : result.errors.file;
                             }
                         } else if (response.status === 404) {
                             if (result.message && result.message.includes('Folder not found')) {
                                 errorMessage = 'Folder not found';
-                            } else if (result.message && result.message.includes('Category not found')) {
-                                errorMessage = 'Category not found';
+
                             }
                         } else if (response.status === 401) {
                             errorMessage = 'Authentication failed. Please login again.';
                         } else if (response.status === 500) {
                             errorMessage = result.message || 'An error occurred while uploading the file';
                         }
-                        
+
                         errorsByFileIndex[idx] = [getUserFriendlyError(errorMessage)];
                         failCount++;
                         continue;
@@ -498,11 +442,6 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         const newFiles = pdfFiles.map((file) => ({
             name: file.name,
             size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
-            category: "",
-            folderPath: "",
-            status: "Incomplete",
-            file: URL.createObjectURL(file), // For preview
-            fileObject: file, // Store actual File object for upload
             categoryId: null,
             folderId: null,
         }));
@@ -522,91 +461,9 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         if (selectedIndex >= updated.length) setSelectedIndex(0);
     };
 
-    const handleCategoryChange = (e) => {
-        const updated = [...files];
-        updated[selectedIndex].category = e.target.value;
-        updated[selectedIndex].categoryId = categoryMapping[e.target.value] || null;
-        setFiles(updated);
-        
-        // Clear errors for this file when user makes changes
-        if (fileErrors[selectedIndex]) {
-            const newFileErrors = { ...fileErrors };
-            delete newFileErrors[selectedIndex];
-            setFileErrors(newFileErrors);
-        }
-    };
 
-    // Create new category
-    const handleCreateCategory = async () => {
-        if (!newCategoryName.trim()) {
-            toast.error('Please enter a category name', {
-                position: "top-right",
-                autoClose: 3000,
-            });
-            return;
-        }
 
-        setCreatingCategoryLoading(true);
 
-        try {
-            const categoryData = {
-                name: newCategoryName.trim(),
-                description: `Document category: ${newCategoryName.trim()}`,
-                is_active: true
-            };
-
-            const result = await documentsAPI.createDocumentCategory(categoryData);
-            
-            // Handle different response structures
-            let categoryInfo = result;
-            if (result.success && result.data) {
-                categoryInfo = result.data;
-            } else if (result.category) {
-                categoryInfo = result.category;
-            }
-
-            // Add new category to the list
-            const newCategory = {
-                id: categoryInfo.id,
-                name: categoryInfo.name || newCategoryName.trim(),
-                description: categoryInfo.description || categoryData.description,
-                is_active: categoryInfo.is_active !== false
-            };
-
-            const updatedCategories = [...categories, newCategory];
-            setCategories(updatedCategories);
-
-            // Auto-select the newly created category for the current file
-            const updated = [...files];
-            updated[selectedIndex].category = newCategory.name;
-            updated[selectedIndex].categoryId = newCategory.id;
-            setFiles(updated);
-
-            // Clear errors for this file
-            if (fileErrors[selectedIndex]) {
-                const newFileErrors = { ...fileErrors };
-                delete newFileErrors[selectedIndex];
-                setFileErrors(newFileErrors);
-            }
-
-            setNewCategoryName("");
-            setCreatingCategory(false);
-
-            toast.success(result.message || "Category created and selected successfully!", {
-                position: "top-right",
-                autoClose: 3000,
-            });
-        } catch (error) {
-            console.error('Error creating category:', error);
-            const errorMsg = handleAPIError(error);
-            toast.error(errorMsg || 'Failed to create category', {
-                position: "top-right",
-                autoClose: 5000,
-            });
-        } finally {
-            setCreatingCategoryLoading(false);
-        }
-    };
 
     const handleFolderSelect = (path, folderId) => {
         const updated = [...files];
@@ -616,7 +473,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         setSelectedFolder(path);
         setSelectedFolderId(folderId);
         setFolderDropdownOpen(false);
-        
+
         // Clear errors for this file when user makes changes
         if (fileErrors[selectedIndex]) {
             const newFileErrors = { ...fileErrors };
@@ -640,9 +497,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         setFileErrors({});
         setCreatingFolderLoading(false);
         setExpandedFolders(new Set());
-        setCreatingCategory(false);
-        setNewCategoryName("");
-        setCreatingCategoryLoading(false);
+        setCreatingFolderLoading(false);
         handleClose();
     };
 
@@ -1058,115 +913,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                             <p className="small text-muted custom-doc-subtext">Click on a document to configure it</p>
 
 
-                                            <Form.Group className="mb-3">
-                                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 className="txt">Document Category</h6>
-                                                    {!creatingCategory ? (
-                                                        <Button
-                                                            variant="link"
-                                                            className="p-0 small create-folder-btn"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setCreatingCategory(true);
-                                                            }}
-                                                            style={{
-                                                                color: '#00C0C6',
-                                                                textDecoration: 'none',
-                                                                fontSize: '12px',
-                                                                fontWeight: '500'
-                                                            }}
-                                                        >
-                                                            Create New Category
-                                                        </Button>
-                                                    ) : (
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <Form.Control
-                                                                size="sm"
-                                                                type="text"
-                                                                placeholder="Enter category name"
-                                                                value={newCategoryName}
-                                                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                                                disabled={creatingCategoryLoading}
-                                                                autoFocus
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter' && newCategoryName.trim() && !creatingCategoryLoading) {
-                                                                        e.preventDefault();
-                                                                        handleCreateCategory();
-                                                                    } else if (e.key === 'Escape') {
-                                                                        setCreatingCategory(false);
-                                                                        setNewCategoryName("");
-                                                                    }
-                                                                }}
-                                                                style={{
-                                                                    width: '150px',
-                                                                    borderRadius: '8px'
-                                                                }}
-                                                            />
-                                                            <Button
-                                                                size="sm"
-                                                                variant="success"
-                                                                onClick={handleCreateCategory}
-                                                                disabled={!newCategoryName.trim() || creatingCategoryLoading}
-                                                                style={{
-                                                                    borderRadius: '8px',
-                                                                    fontSize: '12px',
-                                                                    padding: '4px 12px'
-                                                                }}
-                                                            >
-                                                                {creatingCategoryLoading ? '...' : 'Save'}
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline-secondary"
-                                                                onClick={() => {
-                                                                    setCreatingCategory(false);
-                                                                    setNewCategoryName("");
-                                                                }}
-                                                                disabled={creatingCategoryLoading}
-                                                                style={{
-                                                                    borderRadius: '8px',
-                                                                    fontSize: '12px',
-                                                                    padding: '4px 12px'
-                                                                }}
-                                                            >
-                                                                Cancel
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <Form.Select
-                                                    className={`custom-select ${fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 ? 'border-danger' : ''}`}
-                                                    value={files[selectedIndex]?.category || ""}
-                                                    onChange={handleCategoryChange}
-                                                    disabled={loadingCategories || creatingCategory}
-                                                    style={{
-                                                        borderRadius: '8px'
-                                                    }}
-                                                >
-                                                    <option value="">
-                                                        {loadingCategories ? "Loading categories..." : "Select a Category"}
-                                                    </option>
-                                                    {categories.map((category) => (
-                                                        <option key={category.id} value={category.name}>
-                                                            {category.name}
-                                                        </option>
-                                                    ))}
-                                                </Form.Select>
-                                                {categories.length === 0 && !loadingCategories && (
-                                                    <small className="text-muted">No categories available</small>
-                                                )}
-                                                {/* Show category/folder related errors under the category field */}
-                                                {fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 && (
-                                                    <div className="mt-2">
-                                                        {fileErrors[selectedIndex].map((error, i) => (
-                                                            <div key={i} className="text-danger small">
-                                                                {error}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
 
-                                            </Form.Group>
 
                                             <Form.Group className="mb-3">
 
@@ -1278,8 +1025,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
                                                         <div className="small text-muted">
                                                             {files[selectedIndex]?.name || "N/A"} &gt;{" "}
-                                                            {files[selectedIndex]?.folderPath || "No folder selected"} &gt;{" "}
-                                                            {files[selectedIndex]?.category || "No category selected"}
+                                                            {files[selectedIndex]?.folderPath || "No folder selected"}
                                                         </div>
                                                     </div>
 
