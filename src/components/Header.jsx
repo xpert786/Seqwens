@@ -10,6 +10,9 @@ export default function Header() {
 
   // Initialize with actual login status
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => isLoggedIn());
+  const [isTransparent, setIsTransparent] = useState(true);
+  const [headerOpacity, setHeaderOpacity] = useState(1);
+  const [headerTransform, setHeaderTransform] = useState("none");
   const [userData, setUserData] = useState(() => {
     if (isLoggedIn()) {
       return getUserData();
@@ -17,51 +20,41 @@ export default function Header() {
     return null;
   });
 
-  const isActive = (path) => location.pathname === path;
-
-  // Handle navigation to AI Capabilities section
-  const handleAICapabilitiesClick = (e) => {
+  const handleClientPortalClick = (e) => {
     e.preventDefault();
     if (location.pathname === "/") {
-      // If on home page, scroll to section
-      const element = document.getElementById("capabilities");
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      window.location.hash = "#client-portal";
     } else {
-      // If on another page, navigate to home with hash
-      navigate("/#capabilities");
-      // Wait for navigation then scroll
-      setTimeout(() => {
-        const element = document.getElementById("capabilities");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
+      navigate("/#client-portal");
     }
   };
 
-  // Handle navigation to Pricing section
-  const handlePricingClick = (e) => {
+  const handleGetStartedClick = (e) => {
     e.preventDefault();
     if (location.pathname === "/") {
-      // If on home page, scroll to section
-      const element = document.getElementById("pricing");
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      window.location.hash = "#get-started";
     } else {
-      // If on another page, navigate to home with hash
-      navigate("/#pricing");
-      // Wait for navigation then scroll
-      setTimeout(() => {
-        const element = document.getElementById("pricing");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
+      navigate("/#get-started");
     }
   };
+
+  // Add scroll effect for transparency (optional)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > 100) {
+        setIsTransparent(true);
+        setHeaderOpacity(1);
+      } else {
+        setIsTransparent(true);
+        setHeaderOpacity(1);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
 
   // Handle navigation to FAQ section
   const handleFAQClick = (e) => {
@@ -196,148 +189,204 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full  bg-white">
-      <div className="w-full pl-6 md:pl-8 lg:pl-12 xl:pl-16 2xl:pl-20 pr-4 md:pr-6 lg:pr-8 xl:pr-10 2xl:pr-12 py-3 flex items-center justify-between">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black/20 backdrop-blur-xs'}`}
+      style={{ opacity: headerOpacity, transform: headerTransform }}
+    >
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex items-center justify-between h-20">
 
-        {/* Logo */}
-        {isUserLoggedIn ? (
-          <button
-            onClick={handleUserLogoClick}
-            className="flex items-center cursor-pointer flex-shrink-0 bg-transparent border-none p-0"
-          >
-            <img
-              src={seqwensLogo}
-              alt="SeQwens Logo"
-              className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
-            />
-          </button>
-        ) : (
-          <Link to="/" className="flex items-center cursor-pointer flex-shrink-0">
-            <img
-              src={seqwensLogo}
-              alt="SeQwens Logo"
-              className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
-            />
-          </Link>
-        )}
-
-        {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-8 lg:gap-10">
-          <Link
-            to="/"
-            className="text-lg !text-[#3AD6F2] font-[BasisGrotesquePro]"
-          >
-            Pricing
-          </Link>
-
-          <a
-            href="#capabilities"
-            onClick={handleAICapabilitiesClick}
-            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#capabilities"
-              ? "!text-[#3AD6F2]"
-              : "text-black hover:!text-[#3AD6F2]"
-              }`}
-          >
-            FAQ
-          </a>
-
-          <a
-            href="#pricing"
-            onClick={handlePricingClick}
-            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#pricing"
-              ? "!text-[#3AD6F2]"
-              : "text-black hover:!text-[#3AD6F2]"
-              }`}
-          >
-            Client Portal
-          </a>
-
-          <a
-            href="#faq"
-            onClick={handleFAQClick}
-            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#faq"
-              ? "!text-[#3AD6F2]"
-              : "text-black hover:!text-[#3AD6F2]"
-              }`}
-          >
-            Get Started
-          </a>
-        </nav>
-
-        {/* Right Buttons */}
-        <div className="hidden md:flex items-center gap-4 lg:gap-6">
+          {/* Logo */}
           {isUserLoggedIn ? (
             <button
               onClick={handleUserLogoClick}
-              className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro] hover:bg-[#2BC5E0] transition-colors cursor-pointer"
-              title="Go to Dashboard"
+              className="flex items-center cursor-pointer flex-shrink-0 bg-transparent border-none p-0"
             >
-              {getUserInitials()}
+              <img
+                src={seqwensLogo}
+                alt="SeQwens Logo"
+                className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
+              />
             </button>
           ) : (
-            <Link to="/login" className="text-lg text-black font-[BasisGrotesquePro]">
-              Sign In
+            <Link
+              to="/"
+              className="flex items-center cursor-pointer flex-shrink-0"
+            >
+              <img
+                src={seqwensLogo}
+                alt="SeQwens Logo"
+                className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
+              />
             </Link>
           )}
 
-          <button className="bg-[#FF7A2E] text-white text-sm px-3 py-2 !rounded-md font-[BasisGrotesquePro]">
-            Contact Sales
+          {/* Desktop Menu - Dynamic with underline animation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {/* Pricing */}
+            <div style={{ opacity: 1, transform: "none" }}>
+              <Link
+                to="/pricing"
+                className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/pricing"
+                  ? "text-white"
+                  : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                  }`}
+              >
+                Pricing
+                <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/pricing" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
+                  }`}></span>
+              </Link>
+            </div>
+
+            {/* FAQ - Note: Your original has FAQ mapped to Client Portal */}
+            <div style={{ opacity: 1, transform: "none" }}>
+              <a
+                href={location.pathname === "/" ? "#faq" : "/#faq"}
+                onClick={handleFAQClick}
+                className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/" && window.location.hash === "#faq"
+                  ? "text-white"
+                  : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                  }`}
+              >
+                FAQ
+                <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/" && window.location.hash === "#faq" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
+                  }`}></span>
+              </a>
+            </div>
+
+            {/* Client Portal - Dynamic link based on login status */}
+            <div style={{ opacity: 1, transform: "none" }}>
+              {isUserLoggedIn ? (
+                <button
+                  onClick={handleUserLogoClick}
+                  className="text-sm font-medium transition-colors duration-200 relative group text-white hover:text-white"
+                >
+                  Client Portal
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+                </button>
+              ) : (
+                <a
+                  href="#client-portal"
+                  onClick={handleClientPortalClick}
+                  className="text-sm font-medium transition-colors duration-200 relative group text-white hover:text-white"
+                >
+                  Client Portal
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+                </a>
+              )}
+            </div>
+
+            {/* Get Started - Shows 3D Floor Plan when logged in, Get Started when not */}
+            <div style={{ opacity: 1, transform: "none" }}>
+              {isUserLoggedIn ? (
+                <Link
+                  to="/floor-plan-creator"
+                  className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/floor-plan-creator"
+                    ? "text-white"
+                    : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                    }`}
+                >
+                  3D Floor Plan
+                  <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/floor-plan-creator" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                    } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
+                    }`}></span>
+                </Link>
+              ) : (
+                <a
+                  href="#get-started"
+                  onClick={handleGetStartedClick}
+                  className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/" && window.location.hash === "#get-started"
+                    ? "text-white"
+                    : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                    }`}
+                >
+                  Get Started
+                  <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/" && window.location.hash === "#get-started" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                    } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
+                    }`}></span>
+                </a>
+              )}
+            </div>
+          </nav>
+
+          {/* Right Buttons - Dynamic */}
+          <div className="hidden md:flex items-center gap-4 lg:gap-6">
+            {isUserLoggedIn ? (
+              <button
+                onClick={handleUserLogoClick}
+                className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro] hover:bg-[#2BC5E0] transition-colors cursor-pointer"
+                title="Go to Dashboard"
+              >
+                {getUserInitials()}
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className={`text-sm font-medium transition-colors duration-200 ${isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                  }`}
+              >
+                Sign In
+              </Link>
+            )}
+
+            <button className={`${isTransparent
+              ? "bg-white text-black px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-zinc-100 transition-colors duration-200 shadow-lg"
+              : "bg-[#FF7A2E] text-white px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-[#e66a25] transition-colors duration-200"
+              }`}>
+              Contact Sales
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="flex md:hidden text-white hover:text-zinc-300 p-2 rounded-lg hover:bg-white/5 transition-colors duration-200"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <span className="sr-only">Toggle menu</span>
+            <div style={{ opacity: 1, transform: "none" }}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-menu h-6 w-6"
+              >
+                <line x1="4" x2="20" y1="12" y2="12"></line>
+                <line x1="4" x2="20" y1="6" y2="6"></line>
+                <line x1="4" x2="20" y1="18" y2="18"></line>
+              </svg>
+            </div>
           </button>
         </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <span className="text-2xl">☰</span>
-        </button>
       </div>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white px-4 pb-4 space-y-4 border-t">
+        <div className="md:hidden bg-black/95 backdrop-blur-md px-6 pb-4 space-y-4">
           <Link
-            to="/"
-            className="block text-[#3AD6F2] font-[BasisGrotesquePro]"
-          >
-            Home
-          </Link>
-          <a
-            href="#capabilities"
-            onClick={(e) => {
-              handleAICapabilitiesClick(e);
-              setMobileMenuOpen(false);
-            }}
-            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#capabilities"
-              ? "text-[#3AD6F2]"
-              : "text-black hover:text-[#3AD6F2]"
-              }`}
-          >
-            AI Capabilities
-          </a>
-          <a
-            href="#pricing"
-            onClick={(e) => {
-              handlePricingClick(e);
-              setMobileMenuOpen(false);
-            }}
-            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#pricing"
-              ? "text-[#3AD6F2]"
-              : "text-black hover:text-[#3AD6F2]"
-              }`}
+            to="/pricing"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-white font-medium py-2"
           >
             Pricing
-          </a>
+          </Link>
+
           <a
             href="#faq"
             onClick={(e) => {
               handleFAQClick(e);
               setMobileMenuOpen(false);
             }}
-            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${location.pathname === "/" && window.location.hash === "#faq"
+            className={`block font-medium py-2 ${location.pathname === "/" && window.location.hash === "#faq"
               ? "text-[#3AD6F2]"
-              : "text-black hover:text-[#3AD6F2]"
+              : "text-white hover:text-[#3AD6F2]"
               }`}
           >
             FAQ
@@ -345,19 +394,69 @@ export default function Header() {
 
           {isUserLoggedIn ? (
             <button
-              onClick={handleUserLogoClick}
-              className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro] hover:bg-[#2BC5E0] transition-colors cursor-pointer mx-auto"
-              title="Go to Dashboard"
+              onClick={() => {
+                handleUserLogoClick();
+                setMobileMenuOpen(false);
+              }}
+              className="block w-full text-left text-white font-medium py-2 hover:text-[#3AD6F2]"
+            >
+              Client Portal
+            </button>
+          ) : (
+            <a
+              href="#client-portal"
+              onClick={(e) => {
+                handleClientPortalClick(e);
+                setMobileMenuOpen(false);
+              }}
+              className="block text-white font-medium py-2 hover:text-[#3AD6F2]"
+            >
+              Client Portal
+            </a>
+          )}
+
+          {isUserLoggedIn ? (
+            <Link
+              to="/floor-plan-creator"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-white font-medium py-2 hover:text-[#3AD6F2]"
+            >
+              3D Floor Plan
+            </Link>
+          ) : (
+            <a
+              href="#get-started"
+              onClick={(e) => {
+                handleGetStartedClick(e);
+                setMobileMenuOpen(false);
+              }}
+              className="block text-white font-medium py-2 hover:text-[#3AD6F2]"
+            >
+              Get Started
+            </a>
+          )}
+
+          {isUserLoggedIn ? (
+            <button
+              onClick={() => {
+                handleUserLogoClick();
+                setMobileMenuOpen(false);
+              }}
+              className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold mx-auto"
             >
               {getUserInitials()}
             </button>
           ) : (
-            <Link to="/login" className="block text-black font-[BasisGrotesquePro]">
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-white font-medium py-2"
+            >
               Sign In
             </Link>
           )}
 
-          <button className="bg-[#FF7A2E] text-white w-full py-2 rounded-md font-[BasisGrotesquePro]">
+          <button className="bg-[#FF7A2E] text-white w-full py-2.5 rounded-lg font-semibold">
             Contact Sales
           </button>
         </div>

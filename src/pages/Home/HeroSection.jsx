@@ -57,7 +57,7 @@ export default function HeroSection() {
                 </div>
               </div>
             </div>
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 leading-[1.1] bg-gradient-to-r from-zinc-100 via-white to-zinc-200 bg-clip-text text-transparent" style={{ opacity: 1, transform: "none" }}>
+            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 leading-[1.1] text-white" style={{ opacity: 1, transform: "none" }}>
               Run Your Entire Tax Office With AI-Powered Precision
             </h1>
             <p className="mb-12 text-lg lg:text-xl text-zinc-300 max-w-xl leading-relaxed" style={{ opacity: 1, transform: "none" }}>
