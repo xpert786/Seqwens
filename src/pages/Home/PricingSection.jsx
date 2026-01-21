@@ -27,8 +27,8 @@ export default function PricingSection() {
       mostPopular: false
     },
     {
-      id: "growth",
-      name: "Growth",
+      id: "team",
+      name: "Team",
       description: "For growing firms that need structure and automation.",
       monthlyPrice: 59,
       yearlyPrice: 59 * 12 * 0.83,
@@ -105,7 +105,7 @@ export default function PricingSection() {
           <div className="flex justify-center mt-10">
             <div className="bg-white p-1 rounded-xl shadow-sm border border-orange-100 flex items-center">
               <button
-                className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${billingCycle === "monthly"
+                className={`px-6 py-2 rounded-[10px] text-sm font-semibold transition-all duration-300 ${billingCycle === "monthly"
                   ? "bg-orange-500 text-white shadow-md"
                   : "text-gray-500 hover:text-gray-700"
                   }`}
@@ -114,7 +114,7 @@ export default function PricingSection() {
                 Monthly
               </button>
               <button
-                className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${billingCycle === "yearly"
+                className={`px-6 py-2 rounded-[10px] text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${billingCycle === "yearly"
                   ? "bg-orange-500 text-white shadow-md"
                   : "text-gray-500 hover:text-gray-700"
                   }`}
@@ -192,7 +192,7 @@ export default function PricingSection() {
 
               <button
                 onClick={() => navigate("/create-account")}
-                className={`w-full py-4 rounded-xl font-bold text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${plan.mostPopular
+                className={`w-full py-4 rounded-[10px] font-bold text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${plan.mostPopular
                   ? "bg-gradient-to-r from-orange-500 to-red-600 text-white hover:shadow-orange-500/25"
                   : "bg-[#1F2A55] text-white hover:bg-[#2C3E50] hover:shadow-blue-900/25"
                   }`}

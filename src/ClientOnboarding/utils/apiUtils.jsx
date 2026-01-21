@@ -7277,7 +7277,11 @@ export const firmAdminPaymentMethodsAPI = {
   },
   // Delete payment method
   deletePaymentMethod: async (paymentMethodId) => {
-    return await apiRequest(`/firm-admin/payment-methods/${paymentMethodId}/`, 'DELETE');
+    return await apiRequest(`/user/firm-admin/payment-methods/${paymentMethodId}/`, 'DELETE');
+  },
+  // Set payment method as primary
+  updatePaymentMethodPrimary: async (paymentMethodId) => {
+    return await apiRequest(`/user/firm-admin/payment-methods/${paymentMethodId}/`, 'PATCH', { is_primary: true });
   },
 };
 
@@ -7717,7 +7721,14 @@ export const maintenanceModeAPI = {
   sessionTimeoutLogout: async () => {
     return await apiRequest('/user/session-timeout/logout/', 'POST');
   },
+};
 
+// Subscription API functions
+export const subscriptionAPI = {
+  // Get public subscription plans
+  getPublicPlans: async () => {
+    return await publicApiRequest('/subscriptions/plans/public/', 'GET');
+  }
 };
 
 // Re-export utility functions for convenience

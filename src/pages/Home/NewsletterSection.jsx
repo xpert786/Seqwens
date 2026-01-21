@@ -24,10 +24,10 @@ export default function NewsletterSection() {
             <input
               type="email"
               placeholder="Enter your email"
-              className="bg-white !rounded-md px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm !text-[#4B5563] w-full sm:w-56 md:w-60 outline-none"
+              className="bg-white !rounded-[10px] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm !text-[#4B5563] w-full sm:w-56 md:w-60 outline-none"
             />
 
-            <button className="bg-[#FF7A1A] text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 !rounded-md whitespace-nowrap w-full sm:w-auto">
+            <button className="bg-[#FF7A1A] text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 !rounded-[10px] whitespace-nowrap w-full sm:w-auto">
               Subscribe
             </button>
           </div>

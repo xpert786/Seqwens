@@ -136,10 +136,11 @@ export default function FirmManagement() {
     // Helper function to get plan color
     const getPlanColor = (plan) => {
         const colors = {
-            'solo': 'bg-[#FBBF24]',
+            'starter': 'bg-[#FBBF24]',
             'team': 'bg-[#22C55E]',
-            'professional': 'bg-[#1E40AF]',
-            'enterprise': 'bg-[#3AD6F2]'
+            'growth': 'bg-[#22C55E]',
+            'pro': 'bg-[#1E40AF]',
+            'elite': 'bg-[#3AD6F2]'
         };
         return colors[plan?.toLowerCase()] || 'bg-gray-500';
     };
@@ -240,7 +241,7 @@ export default function FirmManagement() {
             });
             return;
         }
-        
+
         if (firms.length === 0) {
             toast.warning('No firms available to export.', {
                 position: "top-right",
@@ -248,7 +249,7 @@ export default function FirmManagement() {
             });
             return;
         }
-        
+
         try {
             const canvas = await html2canvas(pdfRef.current, {
                 scale: 2,
@@ -265,16 +266,16 @@ export default function FirmManagement() {
             const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
             const imgX = (pdfWidth - imgWidth * ratio) / 2;
             const imgY = 0;
-            
+
             pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-            
+
             // Generate PDF blob
             const pdfBlob = pdf.output('blob');
             const pdfUrl = URL.createObjectURL(pdfBlob);
-            
+
             // Open PDF in new window first
             window.open(pdfUrl, '_blank');
-            
+
             // Then trigger download
             const link = document.createElement('a');
             link.href = pdfUrl;
@@ -282,7 +283,7 @@ export default function FirmManagement() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             // Clean up the blob URL after a delay
             setTimeout(() => {
                 URL.revokeObjectURL(pdfUrl);
@@ -370,11 +371,11 @@ export default function FirmManagement() {
                     position: "top-right",
                     autoClose: 3000,
                 });
-                
+
                 // Close modal
                 setShowDeleteModal(false);
                 setFirmToDelete(null);
-                
+
                 // Refresh firms list
                 await fetchFirms();
             } else {
@@ -638,7 +639,7 @@ export default function FirmManagement() {
                         Total Firms: {firms.length}
                     </p>
                 </div>
-                
+
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#F3F4F6', borderBottom: '2px solid #E5E7EB' }}>
@@ -1157,13 +1158,13 @@ export default function FirmManagement() {
             {/* Add New Firm Modal */}
             {showAddFirmModal && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                    <div 
-                        className="absolute inset-0" 
+                    <div
+                        className="absolute inset-0"
                         style={{ backgroundColor: 'var(--Color-overlay, #00000099)' }}
                         onClick={handleCloseModal}
                     ></div>
-                    <div 
-                        className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 my-12" 
+                    <div
+                        className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 my-12"
                         style={{ borderRadius: '12px' }}
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -1236,27 +1237,27 @@ export default function FirmManagement() {
                             </div>
 
                             {/* Phone Number */}
-<div className="relative">
-  <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-    Phone Number
-  </label>
+                            <div className="relative">
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                                    Phone Number
+                                </label>
 
                                 <PhoneInput
                                     country={phoneCountry}
                                     value={newFirm.phone || ''}
                                     onChange={(phone) => handleInputChange('phone', phone)}
-    onCountryChange={(countryCode) =>
-      setPhoneCountry(countryCode.toLowerCase())
-    }
-    enableSearch
+                                    onCountryChange={(countryCode) =>
+                                        setPhoneCountry(countryCode.toLowerCase())
+                                    }
+                                    enableSearch
                                     countryCodeEditable={false}
                                     specialLabel=""
 
-    /* IMPORTANT FIXES */
-    containerClass="!w-full"
-    inputClass="!w-full !h-[40px] !pl-14 !pr-3 !text-sm !border !border-gray-300 !rounded-md focus:!ring-2 focus:!ring-blue-500 focus:!border-transparent"
-    buttonClass="!border !border-gray-300 !rounded-l-md !h-[40px]"
-    dropdownClass="!z-[9999]"
+                                    /* IMPORTANT FIXES */
+                                    containerClass="!w-full"
+                                    inputClass="!w-full !h-[40px] !pl-14 !pr-3 !text-sm !border !border-gray-300 !rounded-md focus:!ring-2 focus:!ring-blue-500 focus:!border-transparent"
+                                    buttonClass="!border !border-gray-300 !rounded-l-md !h-[40px]"
+                                    dropdownClass="!z-[9999]"
                                 />
                             </div>
 

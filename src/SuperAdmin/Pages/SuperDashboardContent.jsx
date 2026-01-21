@@ -35,11 +35,15 @@ import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { getStorage } from '../../ClientOnboarding/utils/userUtils';
 
 const SUBSCRIPTION_COLOR_MAP = {
+  starter: '#10B981',
   solo: '#10B981',
+  growth: '#3B82F6',
   team: '#3B82F6',
-  business: '#F59E0B',
+  pro: '#8B5CF6',
+  professional: '#8B5CF6',
+  elite: '#06B6D4',
   enterprise: '#06B6D4',
-  professional: '#8B5CF6'
+  business: '#F59E0B',
 };
 
 const FALLBACK_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#06B6D4', '#8B5CF6', '#EF4444', '#F97316'];
@@ -54,7 +58,7 @@ export default function SuperDashboardContent() {
   const [firmsCurrentPage, setFirmsCurrentPage] = useState(1);
   const [showAllFirms, setShowAllFirms] = useState(false);
   const FIRMS_PER_PAGE = 3;
-  
+
   // Security settings state
   const [securitySettings, setSecuritySettings] = useState(null);
   const [securityLoading, setSecurityLoading] = useState(false);
@@ -72,7 +76,7 @@ export default function SuperDashboardContent() {
   const [activeUsersLoading, setActiveUsersLoading] = useState(false);
   const [activeUsersError, setActiveUsersError] = useState(null);
   const [activeUsersTab, setActiveUsersTab] = useState('Firm');
-  
+
   // Generate current month value for default
   const getCurrentMonthValue = () => {
     const currentDate = new Date();
@@ -89,19 +93,19 @@ export default function SuperDashboardContent() {
   useEffect(() => {
     const storage = getStorage();
     const userType = storage?.getItem("userType");
-    
+
     // Redirect support_admin to support center
     if (userType === 'support_admin') {
       navigate("/superadmin/support", { replace: true });
       return;
     }
-    
+
     // Redirect billing_admin to subscriptions
     if (userType === 'billing_admin') {
       navigate("/superadmin/subscriptions", { replace: true });
       return;
     }
-    
+
     // Only super_admin should see the dashboard
     // If not super_admin, the route protection will handle it
   }, [navigate]);
@@ -128,24 +132,24 @@ export default function SuperDashboardContent() {
   // Generate last 6 months for dropdown
   const getLast6Months = () => {
     const months = [];
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
     const currentDate = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       const monthIndex = date.getMonth();
       const year = date.getFullYear();
       const monthName = monthNames[monthIndex];
       const monthValue = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-      
+
       months.push({
         value: monthValue,
         label: `${monthName} ${year}`,
         shortLabel: monthName
       });
     }
-    
+
     return months;
   };
 
@@ -166,24 +170,24 @@ export default function SuperDashboardContent() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Prepare API parameters based on selected months
       const apiParams = {};
-      
+
       // Parse revenue month filter
       if (selectedRevenueMonth !== 'all') {
         const [revenueYear, revenueMonth] = selectedRevenueMonth.split('-');
         apiParams.revenue_month = parseInt(revenueMonth);
         apiParams.revenue_year = parseInt(revenueYear);
       }
-      
+
       // Parse subscription distribution month filter
       if (selectedSubscriptionMonth !== 'all') {
         const [distributionYear, distributionMonth] = selectedSubscriptionMonth.split('-');
         apiParams.distribution_month = parseInt(distributionMonth);
         apiParams.distribution_year = parseInt(distributionYear);
       }
-      
+
       const response = await superAdminAPI.getAdminDashboard(apiParams);
 
       if (response.success && response.data) {
@@ -225,7 +229,7 @@ export default function SuperDashboardContent() {
     try {
       setUpdatingSecuritySetting(settingKey);
       const newValue = !currentValue;
-      
+
       const updateData = {
         admin_2fa_required: securitySettings?.admin_2fa_required?.enabled ?? false,
         password_complexity_enabled: securitySettings?.password_complexity_enabled?.enabled ?? false,
@@ -271,9 +275,9 @@ export default function SuperDashboardContent() {
   // Format month label for x-axis display
   const formatMonthLabel = (label) => {
     if (!label) return '';
-    
+
     const labelStr = String(label).trim();
-    
+
     // Try to parse various formats
     // Format: "Sep 2024" or "September 2024"
     const monthYearMatch = labelStr.match(/(\w+)\s+(\d{4})/i);
@@ -284,37 +288,37 @@ export default function SuperDashboardContent() {
       const shortMonth = monthName.substring(0, 3);
       return shortMonth;
     }
-    
+
     // Format: "2024-09" or "2024-9"
     const dateMatch = labelStr.match(/(\d{4})-(\d{1,2})/);
     if (dateMatch) {
       const monthIndex = parseInt(dateMatch[2]) - 1;
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return monthNames[monthIndex] || labelStr;
     }
-    
+
     // Format: "09/2024" or "9/2024"
     const slashMatch = labelStr.match(/(\d{1,2})\/(\d{4})/);
     if (slashMatch) {
       const monthIndex = parseInt(slashMatch[1]) - 1;
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return monthNames[monthIndex] || labelStr;
     }
-    
+
     // If it's already a short month name, return as is
-    const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     if (monthAbbrs.some(abbr => labelStr.toLowerCase().startsWith(abbr.toLowerCase()))) {
       return labelStr.substring(0, 3);
     }
-    
+
     // Return first 3 characters if it looks like a month name
     if (labelStr.length > 3) {
       return labelStr.substring(0, 3);
     }
-    
+
     return labelStr;
   };
 
@@ -340,7 +344,7 @@ export default function SuperDashboardContent() {
       const subscribers = subscriberValues[index] ?? 0;
       const revenueGrowth = revenueGrowthValues[index] ?? 0;
       const subscriberGrowth = subscriberGrowthValues[index] ?? 0;
-      
+
       // Debug: Log to ensure data is being processed
       if (index === 0) {
         console.log('Revenue Growth Chart Data:', {
@@ -351,7 +355,7 @@ export default function SuperDashboardContent() {
           subscriberGrowth
         });
       }
-      
+
       return {
         month: label,
         monthDisplay: formatMonthLabel(label),
@@ -564,11 +568,11 @@ export default function SuperDashboardContent() {
   const minSubscriberValue = revenueData.length > 0 ? revenueData.reduce((min, item) => Math.min(min, item.subscribers !== undefined ? item.subscribers : Infinity, Infinity), Infinity) : 0;
   const revenueUpperBound = maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.2) : 1;
   // Ensure subscriber axis has proper range - add padding and ensure minimum visibility
-  const subscriberUpperBound = maxSubscriberValue > 0 
-    ? Math.max(Math.ceil(maxSubscriberValue * 1.2), maxSubscriberValue + Math.max(2, Math.ceil(maxSubscriberValue * 0.2))) 
+  const subscriberUpperBound = maxSubscriberValue > 0
+    ? Math.max(Math.ceil(maxSubscriberValue * 1.2), maxSubscriberValue + Math.max(2, Math.ceil(maxSubscriberValue * 0.2)))
     : 10;
-  const subscriberLowerBound = (minSubscriberValue !== Infinity && minSubscriberValue > 0) 
-    ? Math.max(0, Math.floor(minSubscriberValue * 0.9)) 
+  const subscriberLowerBound = (minSubscriberValue !== Infinity && minSubscriberValue > 0)
+    ? Math.max(0, Math.floor(minSubscriberValue * 0.9))
     : 0;
 
   // Pagination logic for Recent Firms
@@ -593,7 +597,7 @@ export default function SuperDashboardContent() {
 
   const maxActivityValue = activityData.reduce((max, item) => Math.max(max, item.count || 0), 0);
   const activityUpperBound = maxActivityValue > 0 ? Math.ceil(maxActivityValue * 1.2) : 1;
-  
+
   // Use securitySettings from API if available, fallback to dashboardData
   const securityItems = securitySettings ? [
     {
@@ -765,7 +769,7 @@ export default function SuperDashboardContent() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
-        <div 
+        <div
           className="bg-white h-auto rounded-xl border border-[#E8F0FF] p-7 relative cursor-pointer hover:shadow-md transition-shadow"
           onClick={async () => {
             setShowAllFirmsModal(true);
@@ -965,17 +969,17 @@ export default function SuperDashboardContent() {
                     dataKey="subscribers"
                     stroke="#3B82F6"
                     strokeWidth={3}
-                    dot={{ 
-                      fill: '#3B82F6', 
-                      stroke: 'white', 
-                      strokeWidth: 3, 
+                    dot={{
+                      fill: '#3B82F6',
+                      stroke: 'white',
+                      strokeWidth: 3,
                       r: 6,
                       cursor: 'pointer'
                     }}
-                    activeDot={{ 
-                      r: 8, 
-                      stroke: '#3B82F6', 
-                      strokeWidth: 3, 
+                    activeDot={{
+                      r: 8,
+                      stroke: '#3B82F6',
+                      strokeWidth: 3,
                       fill: 'white',
                       cursor: 'pointer'
                     }}
@@ -1030,11 +1034,10 @@ export default function SuperDashboardContent() {
                             </div>
                             <span className="text-sm font-medium text-gray-700">Revenue Growth</span>
                           </div>
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
-                            isRevenuePositive ? 'bg-green-200 text-green-800' : 
-                            isRevenueNegative ? 'bg-red-200 text-red-800' : 
-                            'bg-gray-200 text-gray-800'
-                          }`}>
+                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${isRevenuePositive ? 'bg-green-200 text-green-800' :
+                              isRevenueNegative ? 'bg-red-200 text-red-800' :
+                                'bg-gray-200 text-gray-800'
+                            }`}>
                             {isRevenuePositive ? (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -1063,11 +1066,10 @@ export default function SuperDashboardContent() {
                             </div>
                             <span className="text-sm font-medium text-gray-700">Subscriber Growth</span>
                           </div>
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
-                            isSubscriberPositive ? 'bg-green-200 text-green-800' : 
-                            isSubscriberNegative ? 'bg-red-200 text-red-800' : 
-                            'bg-gray-200 text-gray-800'
-                          }`}>
+                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${isSubscriberPositive ? 'bg-green-200 text-green-800' :
+                              isSubscriberNegative ? 'bg-red-200 text-red-800' :
+                                'bg-gray-200 text-gray-800'
+                            }`}>
                             {isSubscriberPositive ? (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -1265,7 +1267,7 @@ export default function SuperDashboardContent() {
                   const backgroundClass = itemEnabled ? 'bg-green-50' : 'bg-yellow-50';
                   const StatusIcon = itemEnabled ? SecurityGreenIcon : SecurityYellowIcon;
                   const isUpdating = updatingSecuritySetting === item.key;
-                  
+
                   return (
                     <div
                       key={index}
@@ -1280,23 +1282,21 @@ export default function SuperDashboardContent() {
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Toggle Switch */}
                       <label className="relative inline-flex cursor-pointer items-center ml-3">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only" 
+                        <input
+                          type="checkbox"
+                          className="sr-only"
                           checked={itemEnabled}
                           onChange={() => handleSecuritySettingToggle(item.key, itemEnabled)}
                           disabled={isUpdating || securityLoading}
                         />
-                        <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${
-                          isUpdating ? 'opacity-50 cursor-wait' : ''
-                        } ${itemEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
+                        <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${isUpdating ? 'opacity-50 cursor-wait' : ''
+                          } ${itemEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              itemEnabled ? 'translate-x-5' : 'translate-x-0'
-                            }`}
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${itemEnabled ? 'translate-x-5' : 'translate-x-0'
+                              }`}
                           />
                         </div>
                       </label>
@@ -1441,41 +1441,37 @@ export default function SuperDashboardContent() {
             <div className="flex gap-0">
               <button
                 onClick={() => setActiveUsersTab('Firm')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
-                  activeUsersTab === 'Firm'
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Firm'
                     ? 'border-[#3AD6F2] text-[#3AD6F2]'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 Firm ({activeUsersData?.firm_users?.length || 0})
               </button>
               <button
                 onClick={() => setActiveUsersTab('Taxpayer')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
-                  activeUsersTab === 'Taxpayer'
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Taxpayer'
                     ? 'border-[#3AD6F2] text-[#3AD6F2]'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 Taxpayer ({activeUsersData?.taxpayer_users?.length || 0})
               </button>
               <button
                 onClick={() => setActiveUsersTab('Taxpreparer')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
-                  activeUsersTab === 'Taxpreparer'
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Taxpreparer'
                     ? 'border-[#3AD6F2] text-[#3AD6F2]'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 Tax Preparer ({activeUsersData?.taxpreparer_users?.length || 0})
               </button>
               <button
                 onClick={() => setActiveUsersTab('Superadmin')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
-                  activeUsersTab === 'Superadmin'
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Superadmin'
                     ? 'border-[#3AD6F2] text-[#3AD6F2]'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 Super Admin ({(activeUsersData?.billing_users?.length || 0) + (activeUsersData?.support_users?.length || 0)})
               </button>
@@ -1515,19 +1511,17 @@ export default function SuperDashboardContent() {
                               <p><span className="font-medium">Phone:</span> {firm.phone || 'N/A'}</p>
                               <p><span className="font-medium">Total Users:</span> {firm.total_users || 0}</p>
                               <p><span className="font-medium">Subscription:</span>
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  firm.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${firm.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {firm.subscription_status || 'Unknown'}
                                 </span>
                               </p>
                               <p><span className="font-medium">Status:</span>
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  firm.status === 'active' ? 'bg-green-100 text-green-800' :
-                                  firm.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${firm.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    firm.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {firm.status || 'Unknown'}
                                 </span>
                               </p>
@@ -1561,18 +1555,16 @@ export default function SuperDashboardContent() {
                               <p><span className="font-medium">Phone:</span> {taxpayer.phone || 'N/A'}</p>
                               <p><span className="font-medium">Firm:</span> {taxpayer.firm_name || 'N/A'}</p>
                               <p><span className="font-medium">Email Verified:</span>
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  taxpayer.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${taxpayer.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
                                   {taxpayer.email_verified ? 'Yes' : 'No'}
                                 </span>
                               </p>
                               <p><span className="font-medium">Status:</span>
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  taxpayer.status === 'active' ? 'bg-green-100 text-green-800' :
-                                  taxpayer.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${taxpayer.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    taxpayer.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {taxpayer.status || 'Unknown'}
                                 </span>
                               </p>
@@ -1607,18 +1599,16 @@ export default function SuperDashboardContent() {
                               <p><span className="font-medium">Role:</span> {preparer.role || 'Tax Preparer'}</p>
                               <p><span className="font-medium">Firm:</span> {preparer.firm_name || 'N/A'}</p>
                               <p><span className="font-medium">Email Verified:</span>
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  preparer.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${preparer.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
                                   {preparer.email_verified ? 'Yes' : 'No'}
                                 </span>
                               </p>
                               <p><span className="font-medium">Status:</span>
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  preparer.status === 'active' ? 'bg-green-100 text-green-800' :
-                                  preparer.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${preparer.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    preparer.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {preparer.status || 'Unknown'}
                                 </span>
                               </p>
@@ -1653,25 +1643,22 @@ export default function SuperDashboardContent() {
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Billing Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                    admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                  }`}>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {admin.email_verified ? 'Yes' : 'No'}
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Super User:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                    admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {admin.is_superuser ? 'Yes' : 'No'}
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Status:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                    admin.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
+                                      admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
                                 </p>
@@ -1703,25 +1690,22 @@ export default function SuperDashboardContent() {
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Support Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                    admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                  }`}>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {admin.email_verified ? 'Yes' : 'No'}
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Super User:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                    admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {admin.is_superuser ? 'Yes' : 'No'}
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Status:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                    admin.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
+                                      admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
                                 </p>
@@ -1830,13 +1814,12 @@ export default function SuperDashboardContent() {
                             <div>
                               <span className="font-medium">Status:</span>{' '}
                               <span
-                                className={`px-2 py-1 rounded text-xs ${
-                                  firm.status.toLowerCase() === 'active'
+                                className={`px-2 py-1 rounded text-xs ${firm.status.toLowerCase() === 'active'
                                     ? 'bg-green-100 text-green-800'
                                     : firm.status.toLowerCase() === 'suspended'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}
                               >
                                 {firm.status}
                               </span>

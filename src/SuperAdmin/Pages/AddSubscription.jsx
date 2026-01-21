@@ -4,13 +4,27 @@ import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl } from '../../ClientOnboarding/utils/corsConfig';
 
 export default function AddSubscription({ planType, onClose }) {
-  const plans = ['Solo', 'Team', 'Professional', 'Enterprise'];
+  const plans = ['Starter', 'Growth', 'Pro', 'Elite'];
 
   const normalizePlanType = (value) => {
     if (!value) {
-      return 'Solo';
+      return 'Starter';
     }
     const lowerValue = value.toLowerCase();
+
+    // Explicit mapping for old names
+    const mapping = {
+      'solo': 'Starter',
+      'team': 'Growth',
+      'growth': 'Growth',
+      'professional': 'Pro',
+      'enterprise': 'Elite'
+    };
+
+    if (mapping[lowerValue]) {
+      return mapping[lowerValue];
+    }
+
     const matchedPlan = plans.find((plan) => plan.toLowerCase() === lowerValue);
     if (matchedPlan) {
       return matchedPlan;
@@ -33,11 +47,7 @@ export default function AddSubscription({ planType, onClose }) {
     includedOffices: ''
   });
 
-  const [addOns, setAddOns] = useState({
-    additionalStorage: false,
-    prioritySupport: false,
-    additionalUser: false
-  });
+
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,7 +61,7 @@ export default function AddSubscription({ planType, onClose }) {
   useEffect(() => {
     const monthly = parseFloat(pricing.monthly) || 0;
     const discount = parseFloat(pricing.discount) || 0;
-    
+
     if (monthly > 0) {
       // Yearly price = (Monthly price * 12) * (1 - discount/100)
       const yearlyPrice = (monthly * 12) * (1 - discount / 100);
@@ -67,34 +77,56 @@ export default function AddSubscription({ planType, onClose }) {
     }
   }, [pricing.monthly, pricing.discount]);
 
-  const getFeatures = (plan) => {
-    const features = {
-      Solo: [
-        'Up to 1 User',
-        '50 Client Accounts',
-        '10 GB Storage',
-        '25 E-Signature Requests/month'
-      ],
-      Team: [
-        'Up to 10 Users',
-        '500 Client Accounts',
-        '50 GB Storage',
-        '100 E-Signature Requests/month'
-      ],
-      Professional: [
-        'Up to 25 Users',
-        '1000 Client Accounts',
-        '100 GB Storage',
-        '250 E-Signature Requests/month'
-      ],
-      Enterprise: [
-        'Up to 100 Users',
-        '5000 Client Accounts',
-        '500 GB Storage',
-        '1000 E-Signature Requests/month'
-      ]
-    };
-    return features[plan] || [];
+  const getFeatures = () => {
+    const list = [];
+
+    // User Limit
+    const users = limits.maxUsers;
+    if (users !== '') {
+      const usersNum = parseInt(users);
+      if (usersNum === 0 || users.toString().toLowerCase() === 'unlimited') {
+        list.push('Unlimited Users');
+      } else {
+        list.push(`Up to ${usersNum} User${usersNum === 1 ? '' : 's'}`);
+      }
+    }
+
+    // Client Limit
+    const clients = limits.maxClients;
+    if (clients !== '') {
+      const clientsNum = parseInt(clients);
+      if (clientsNum === 0 || clients.toString().toLowerCase() === 'unlimited') {
+        list.push('Unlimited Client Accounts');
+      } else {
+        list.push(`${clientsNum} Client Account${clientsNum === 1 ? '' : 's'}`);
+      }
+    }
+
+    // Storage
+    const storage = limits.storage;
+    if (storage !== '') {
+      const storageNum = parseFloat(storage);
+      list.push(`${storageNum} GB Storage`);
+    }
+
+    // E-Signatures
+    const eSigns = limits.eSignatures;
+    if (eSigns !== '') {
+      const eSignsNum = parseInt(eSigns);
+      if (eSignsNum === 0 || eSigns.toString().toLowerCase() === 'unlimited') {
+        list.push('Unlimited E-Signature Requests/month');
+      } else {
+        list.push(`${eSignsNum} E-Signature Request${eSignsNum === 1 ? '' : 's'}/month`);
+      }
+    }
+
+    // Add generic features if the list is still short
+    if (list.length > 0) {
+      list.push('Secure Document Management');
+      list.push('Client Intake Portal');
+    }
+
+    return list;
   };
 
   const handleTabChange = (plan) => {
@@ -102,7 +134,6 @@ export default function AddSubscription({ planType, onClose }) {
     // Clear all form values when changing tabs in Add mode
     setPricing({ monthly: '', yearly: '', discount: '' });
     setLimits({ maxUsers: '', maxClients: '', storage: '', eSignatures: '', includedOffices: '' });
-    setAddOns({ additionalStorage: false, prioritySupport: false, additionalUser: false });
   };
 
   return (
@@ -184,8 +215,8 @@ export default function AddSubscription({ planType, onClose }) {
                       disabled
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ 
-                        border: '1px solid #E8F0FF', 
+                      style={{
+                        border: '1px solid #E8F0FF',
                         color: '#3B4A66',
                         backgroundColor: '#F3F4F6',
                         cursor: 'not-allowed'
@@ -222,147 +253,149 @@ export default function AddSubscription({ planType, onClose }) {
               </div>
 
               {/* Limits & Features Section */}
-              <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
-                <div className="space-y-4 flex flex-row gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Users</label>
-                    <input
-                      type="number"
-                      step="1"
-                      min="0"
-                      value={limits.maxUsers ?? ''}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        const newMaxUsers = v === '' ? '' : parseInt(v) || 0;
-                        setLimits(prev => {
-                          const updated = { ...prev, maxUsers: v === '' ? '' : v };
-                          // If max clients exceeds new max users, cap it to max users
-                          if (newMaxUsers !== '' && prev.maxClients !== '' && parseInt(prev.maxClients) > newMaxUsers) {
-                            updated.maxClients = newMaxUsers;
-                          }
-                          return updated;
-                        });
-                      }}
-                      onBlur={(e) => {
-                        const n = parseInt(e.target.value);
-                        const maxUsers = isNaN(n) ? 0 : Math.max(0, n);
-                        setLimits(prev => {
-                          const updated = { ...prev, maxUsers: maxUsers };
-                          // Ensure max clients doesn't exceed max users
-                          if (prev.maxClients !== '' && parseInt(prev.maxClients) > maxUsers) {
-                            updated.maxClients = maxUsers;
-                          }
-                          return updated;
-                        });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                    />
-
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Clients</label>
-                    <input
-                      type="number"
-                      step="1"
-                      min="0"
-                      value={limits.maxClients ?? ''}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setLimits({ ...limits, maxClients: v === '' ? '' : v });
-                      }}
-                      onBlur={(e) => {
-                        const n = parseInt(e.target.value);
-                        const maxClients = isNaN(n) ? 0 : Math.max(0, n);
-                        const maxUsers = parseInt(limits.maxUsers) || 0;
-                        // Cap max clients to max users if it exceeds
-                        const cappedMaxClients = maxClients > maxUsers ? maxUsers : maxClients;
-                        setLimits({ ...limits, maxClients: cappedMaxClients });
-                        if (maxClients > maxUsers) {
-                          toast.warning(`Max clients cannot exceed max users. Set to ${maxUsers}.`, {
-                            position: "top-right",
-                            autoClose: 3000,
+              {activeTab !== 'Elite' && (
+                <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+                  <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
+                  <div className="space-y-4 flex flex-row gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Users</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={limits.maxUsers ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const newMaxUsers = v === '' ? '' : parseInt(v) || 0;
+                          setLimits(prev => {
+                            const updated = { ...prev, maxUsers: v === '' ? '' : v };
+                            // If max clients exceeds new max users, cap it to max users
+                            if (newMaxUsers !== '' && prev.maxClients !== '' && parseInt(prev.maxClients) > newMaxUsers) {
+                              updated.maxClients = newMaxUsers;
+                            }
+                            return updated;
                           });
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                    />
-                    {limits.maxUsers !== '' && limits.maxClients !== '' && parseInt(limits.maxClients) > parseInt(limits.maxUsers) && (
-                      <p className="text-xs mt-1" style={{ color: '#EF4444' }}>
-                        Max clients cannot exceed max users ({limits.maxUsers})
-                      </p>
-                    )}
+                        }}
+                        onBlur={(e) => {
+                          const n = parseInt(e.target.value);
+                          const maxUsers = isNaN(n) ? 0 : Math.max(0, n);
+                          setLimits(prev => {
+                            const updated = { ...prev, maxUsers: maxUsers };
+                            // Ensure max clients doesn't exceed max users
+                            if (prev.maxClients !== '' && parseInt(prev.maxClients) > maxUsers) {
+                              updated.maxClients = maxUsers;
+                            }
+                            return updated;
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      />
 
-                  </div>
-                </div>
-                <div className='space-y-4 flex flex-row gap-4 w-fit'>
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Storage (GB)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={limits.storage ?? ''}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setLimits({ ...limits, storage: v === '' ? '' : v });
-                      }}
-                      onBlur={(e) => {
-                        const n = parseFloat(e.target.value);
-                        setLimits({ ...limits, storage: isNaN(n) ? 0 : Math.max(0, Number(n.toFixed(2))) });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                    />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Clients</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={limits.maxClients ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setLimits({ ...limits, maxClients: v === '' ? '' : v });
+                        }}
+                        onBlur={(e) => {
+                          const n = parseInt(e.target.value);
+                          const maxClients = isNaN(n) ? 0 : Math.max(0, n);
+                          const maxUsers = parseInt(limits.maxUsers) || 0;
+                          // Cap max clients to max users if it exceeds
+                          const cappedMaxClients = maxClients > maxUsers ? maxUsers : maxClients;
+                          setLimits({ ...limits, maxClients: cappedMaxClients });
+                          if (maxClients > maxUsers) {
+                            toast.warning(`Max clients cannot exceed max users. Set to ${maxUsers}.`, {
+                              position: "top-right",
+                              autoClose: 3000,
+                            });
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      />
+                      {limits.maxUsers !== '' && limits.maxClients !== '' && parseInt(limits.maxClients) > parseInt(limits.maxUsers) && (
+                        <p className="text-xs mt-1" style={{ color: '#EF4444' }}>
+                          Max clients cannot exceed max users ({limits.maxUsers})
+                        </p>
+                      )}
 
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>E-Signatures/month</label>
+                  <div className='space-y-4 flex flex-row gap-4 w-fit'>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Storage (GB)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={limits.storage ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setLimits({ ...limits, storage: v === '' ? '' : v });
+                        }}
+                        onBlur={(e) => {
+                          const n = parseFloat(e.target.value);
+                          setLimits({ ...limits, storage: isNaN(n) ? 0 : Math.max(0, Number(n.toFixed(2))) });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      />
+
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>E-Signatures/month</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={limits.eSignatures ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setLimits({ ...limits, eSignatures: v === '' ? '' : v });
+                        }}
+                        onBlur={(e) => {
+                          const n = parseInt(e.target.value);
+                          setLimits({ ...limits, eSignatures: isNaN(n) ? 0 : Math.max(0, n) });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      />
+
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Included Offices</label>
                     <input
                       type="number"
                       step="1"
                       min="0"
-                      value={limits.eSignatures ?? ''}
+                      value={limits.includedOffices ?? ''}
                       onChange={(e) => {
                         const v = e.target.value;
-                        setLimits({ ...limits, eSignatures: v === '' ? '' : v });
+                        setLimits({ ...limits, includedOffices: v === '' ? '' : v });
                       }}
                       onBlur={(e) => {
                         const n = parseInt(e.target.value);
-                        setLimits({ ...limits, eSignatures: isNaN(n) ? 0 : Math.max(0, n) });
+                        setLimits({ ...limits, includedOffices: isNaN(n) ? 1 : Math.max(0, n) });
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      placeholder="1"
                     />
-
+                    <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                      Number of office locations included in the base plan
+                    </p>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Included Offices</label>
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={limits.includedOffices ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setLimits({ ...limits, includedOffices: v === '' ? '' : v });
-                    }}
-                    onBlur={(e) => {
-                      const n = parseInt(e.target.value);
-                      setLimits({ ...limits, includedOffices: isNaN(n) ? 1 : Math.max(0, n) });
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                    placeholder="1"
-                  />
-                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
-                    Number of office locations included in the base plan
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Features List Section - Full Width */}
@@ -371,7 +404,7 @@ export default function AddSubscription({ planType, onClose }) {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Features List</h3>
                   <ul className="space-y-2">
-                    {getFeatures(activeTab).map((feature, index) => (
+                    {getFeatures().map((feature, index) => (
                       <li key={index} className="flex items-center text-sm" style={{ color: '#3B4A66' }}>
                         <span className="w-1 h-1 bg-black rounded-full mr-3"></span>
                         {feature}
@@ -392,19 +425,20 @@ export default function AddSubscription({ planType, onClose }) {
                       setLoading(true);
                       setError('');
                       setSuccess(false);
+                      const isElite = activeTab === 'Elite';
                       const payload = {
                         subscription_type: activeTab.toLowerCase(),
                         monthly_price: Number(pricing.monthly || 0),
                         yearly_price: Number(pricing.yearly || 0),
                         discount_percentage_yearly: Number(pricing.discount || 0),
-                        max_users: Number(limits.maxUsers || 0),
-                        max_clients: Number(limits.maxClients || 0),
-                        storage_gb: Number(limits.storage || 0),
-                        e_signatures_per_month: Number(limits.eSignatures || 0),
-                        included_offices: Number(limits.includedOffices || 1),
-                        additional_storage_addon: addOns.additionalStorage,
-                        additional_user_addon: addOns.additionalUser,
-                        priority_support_addon: addOns.prioritySupport,
+                        max_users: isElite ? 'Unlimited' : (limits.maxUsers || 0).toString(),
+                        max_clients: isElite ? 'Unlimited' : (limits.maxClients || 0).toString(),
+                        storage_gb: isElite ? 5000 : Number(limits.storage || 0),
+                        e_signatures_per_month: isElite ? 'Unlimited' : (limits.eSignatures || 0).toString(),
+                        included_offices: isElite ? 100 : Number(limits.includedOffices || 1),
+                        additional_storage_addon: true,
+                        additional_user_addon: true,
+                        priority_support_addon: true,
                         is_active: true
                       };
                       try {
@@ -448,59 +482,7 @@ export default function AddSubscription({ planType, onClose }) {
               </div>
             </div>
 
-            {/* Compatible Add-Ons Section - Full Width */}
-            <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
-              <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Compatible Add-Ons</h3>
-              <div className="space-y-4">
-                {/* First Row - Additional Storage and Priority Support */}
-                <div className="flex gap-8">
-                  <div className="flex justify-between items-center flex-1">
-                    <span className="text-sm" style={{ color: '#3B4A66' }}>Additional Storage</span>
-                    <button
-                      onClick={() => setAddOns({ ...addOns, additionalStorage: !addOns.additionalStorage })}
-                      className={`relative inline-flex h-6 w-11 items-center transition-colors ${addOns.additionalStorage ? 'bg-orange-500' : 'bg-gray-300'
-                        }`}
-                      style={{ borderRadius: '20px' }}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${addOns.additionalStorage ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                      />
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center flex-1">
-                    <span className="text-sm" style={{ color: '#3B4A66' }}>Priority Support</span>
-                    <button
-                      onClick={() => setAddOns({ ...addOns, prioritySupport: !addOns.prioritySupport })}
-                      className={`relative inline-flex h-6 w-11 items-center transition-colors ${addOns.prioritySupport ? 'bg-orange-500' : 'bg-gray-300'
-                        }`}
-                      style={{ borderRadius: '20px' }}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${addOns.prioritySupport ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                      />
-                    </button>
-                  </div>
-                </div>
 
-                {/* Second Row - Additional User */}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm" style={{ color: '#3B4A66' }}>Additional User</span>
-                  <button
-                    onClick={() => setAddOns({ ...addOns, additionalUser: !addOns.additionalUser })}
-                    className={`relative inline-flex h-6 w-11 items-center transition-colors ${addOns.additionalUser ? 'bg-orange-500' : 'bg-gray-300'
-                      }`}
-                    style={{ borderRadius: '20px' }}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${addOns.additionalUser ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

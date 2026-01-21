@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { isLoggedIn, getUserData, getStorage } from "../../ClientOnboarding/utils/userUtils";
 
 import heroImage from "../../assets/heroimage.png";
 
@@ -13,6 +14,58 @@ import img6 from "../../assets/imagess6.png";
 
 export default function HeroSection() {
   const navigate = useNavigate();
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => isLoggedIn());
+  const [userData, setUserData] = useState(() => (isLoggedIn() ? getUserData() : null));
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const loggedIn = isLoggedIn();
+      setIsUserLoggedIn(loggedIn);
+      if (loggedIn) {
+        setUserData(getUserData());
+      } else {
+        setUserData(null);
+      }
+    };
+    checkAuth();
+    const interval = setInterval(checkAuth, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleDashboardClick = () => {
+    if (!isUserLoggedIn || !userData) {
+      navigate("/login");
+      return;
+    }
+
+    const storage = getStorage();
+    const userType = storage?.getItem("userType") || userData?.user_type;
+
+    if (userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') {
+      navigate("/superadmin");
+    } else if (userType === 'admin' || userType === 'firm') {
+      navigate("/firmadmin");
+    } else if (userType === 'tax_preparer') {
+      navigate("/taxdashboard");
+    } else {
+      // For clients and others
+      const isCompleted = userData.is_completed;
+      if (isCompleted) {
+        navigate("/dashboard");
+      } else {
+        navigate("/dashboard-first");
+      }
+    }
+  };
+
+  const getUserInitials = () => {
+    if (!userData) return "U";
+    const firstName = userData.first_name || userData.name || "";
+    const lastName = userData.last_name || "";
+    if (firstName && lastName) return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    if (firstName) return firstName[0].toUpperCase();
+    return "U";
+  };
 
   // Add imported images here
   const trustLogos = useMemo(
@@ -64,16 +117,31 @@ export default function HeroSection() {
               Experience the future of tax practice management. Our platform helps tax professionals organize, automate, and scale their firm with intelligent workflows, client management, and AI-driven efficiency.✨
             </p>
             <div className="mb-16" style={{ opacity: 1, transform: "none" }}>
-              <button
-                onClick={() => navigate("/sign-in")}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-11 rounded-md bg-white text-black hover:bg-zinc-100 px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                Get Started
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-right ml-2">
-                  <path d="M5 12h14"></path>
-                  <path d="m12 5 7 7-7 7"></path>
-                </svg>
-              </button>
+              {isUserLoggedIn ? (
+                <button
+                  onClick={handleDashboardClick}
+                  className="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-white text-black hover:bg-zinc-100 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 transform hover:scale-110 group relative border-2 border-zinc-200"
+                >
+                  <div className="absolute inset-0 rounded-full border-2 border-blue-500/0 group-hover:border-blue-500/50 transition-all duration-300 scale-110 opacity-0 group-hover:opacity-100"></div>
+                  <span className="text-2xl font-bold text-blue-600 mb-1">{getUserInitials()}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-blue-500 transition-colors">Dashboard</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mt-1 translate-x-0 group-hover:translate-x-1 transition-transform">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate("/sign-in")}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-11 rounded-full bg-white text-black hover:bg-zinc-100 px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  Get Started
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-right ml-2">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-8 max-w-xl" style={{ opacity: 1, transform: "none" }}>
               <div className="group" style={{ opacity: 1, transform: "none" }}>

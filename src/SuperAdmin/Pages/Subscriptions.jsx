@@ -19,7 +19,7 @@ export default function Subscriptions() {
   const [notificationError, setNotificationError] = useState(null);
   const [showEditPlan, setShowEditPlan] = useState(false);
   const [showAddPlan, setshowAddPlan] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState('Solo');
+  const [selectedPlan, setSelectedPlan] = useState('Starter');
   const [subscriptions, setSubscriptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [planOptions, setPlanOptions] = useState([]);
@@ -58,10 +58,10 @@ export default function Subscriptions() {
   const SUBSCRIPTION_CARDS_PER_PAGE = 3;
 
   const PLAN_CONFIG = [
-    { key: 'solo', label: 'Solo' },
-    { key: 'team', label: 'Team' },
-    { key: 'professional', label: 'Professional' },
-    { key: 'enterprise', label: 'Enterprise' }
+    { key: 'starter', label: 'Starter' },
+    { key: 'growth', label: 'Growth' },
+    { key: 'pro', label: 'Pro' },
+    { key: 'elite', label: 'Elite' }
   ];
 
   const planLookup = (plansData?.plans || []).reduce((acc, plan) => {
@@ -88,20 +88,21 @@ export default function Subscriptions() {
   }, {});
 
   const handleOpenAddPlan = (planLabel, planKey) => {
-    setSelectedPlan(planLabel || planKey || 'Solo');
+    setSelectedPlan(planLabel || planKey || 'Starter');
     setshowAddPlan(true);
   };
 
   const getPlanBadgeStyles = (planType) => {
     const normalizedType = planType?.toLowerCase?.();
     switch (normalizedType) {
-      case 'solo':
+      case 'starter':
         return { badgeClass: 'bg-[#FBBF24]', textClass: 'text-white' };
       case 'team':
+      case 'growth':
         return { badgeClass: 'bg-green-500', textClass: 'text-white' };
-      case 'professional':
+      case 'pro':
         return { badgeClass: 'bg-[#1E40AF]', textClass: 'text-white' };
-      case 'enterprise':
+      case 'elite':
         return { badgeClass: 'bg-[#CEC6FF]', textClass: 'text-[#1E1B4B]' };
       default:
         return { badgeClass: 'bg-gray-500', textClass: 'text-white' };
@@ -180,7 +181,7 @@ export default function Subscriptions() {
       });
       return;
     }
-    
+
     if (subscriptions.length === 0) {
       toast.warning('No subscriptions available to export.', {
         position: "top-right",
@@ -188,7 +189,7 @@ export default function Subscriptions() {
       });
       return;
     }
-    
+
     try {
       const canvas = await html2canvas(pdfRef.current, {
         scale: 2,
@@ -205,16 +206,16 @@ export default function Subscriptions() {
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       const imgY = 0;
-      
+
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      
+
       // Generate PDF blob
       const pdfBlob = pdf.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      
+
       // Open PDF in new window first
       window.open(pdfUrl, '_blank');
-      
+
       // Then trigger download
       const link = document.createElement('a');
       link.href = pdfUrl;
@@ -222,7 +223,7 @@ export default function Subscriptions() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up the blob URL after a delay
       setTimeout(() => {
         URL.revokeObjectURL(pdfUrl);
@@ -525,7 +526,7 @@ export default function Subscriptions() {
             Total Subscriptions: {subscriptions.length}
           </p>
         </div>
-        
+
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
           <thead>
             <tr style={{ backgroundColor: '#F3F4F6', borderBottom: '2px solid #E5E7EB' }}>
@@ -572,9 +573,9 @@ export default function Subscriptions() {
           <p style={{ color: '#3B4A66' }}>Monitor and manage all platform subscriptions</p>
         </div>
         <div className="flex gap-3 subscriptions-actions">
-          <button 
+          <button
             onClick={handleExportReport}
-            className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" 
+            className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
             style={{ borderRadius: '7px' }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -584,7 +585,7 @@ export default function Subscriptions() {
           </button>
           <button
             onClick={() => {
-              setSelectedPlan('Solo');
+              setSelectedPlan('Starter');
               setShowEditPlan(true);
             }}
             className="flex items-center gap-2 px-4 py-2 text-[10px] text-white transition-colors"
@@ -604,21 +605,19 @@ export default function Subscriptions() {
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('Plans')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
-                activeTab === 'Plans'
-                  ? 'bg-[#3AD6F2] text-white'
-                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Plans'
+                ? 'bg-[#3AD6F2] text-white'
+                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                }`}
             >
               Subscription Plans
             </button>
             <button
               onClick={() => setActiveTab('Addons')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
-                activeTab === 'Addons'
-                  ? 'bg-[#3AD6F2] text-white'
-                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Addons'
+                ? 'bg-[#3AD6F2] text-white'
+                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                }`}
             >
               Addons
             </button>
@@ -633,15 +632,15 @@ export default function Subscriptions() {
         <>
           {/* Metric Cards and main subscriptions content */}
           <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
-        {/* Total Revenue */}
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Total Revenue</p>
-              <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {metrics?.total_revenue?.formatted || '$0.00'}
-              </p>
-              {/* {metrics?.total_revenue && (
+            {/* Total Revenue */}
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Total Revenue</p>
+                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                    {metrics?.total_revenue?.formatted || '$0.00'}
+                  </p>
+                  {/* {metrics?.total_revenue && (
                 <div className="flex items-center gap-1">
                   {metrics.total_revenue.trend === 'up' && (
                     <>
@@ -668,37 +667,37 @@ export default function Subscriptions() {
                   )}
                 </div>
               )} */}
+                </div>
+                <BlueDollarIcon className="text-lg" />
+              </div>
             </div>
-            <BlueDollarIcon className="text-lg" />
-          </div>
-        </div>
 
-        {/* Active Subscribers */}
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscribers</p>
-              <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {metrics?.active_subscribers?.formatted || '0'}
-              </p>
-             
+            {/* Active Subscribers */}
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscribers</p>
+                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                    {metrics?.active_subscribers?.formatted || '0'}
+                  </p>
+
+                </div>
+                <BlueUserIcon className="text-lg" />
+              </div>
             </div>
-            <BlueUserIcon className="text-lg" />
-          </div>
-        </div>
 
-        {/* Most Popular Plan */}
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
-              <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {metrics?.most_popular_plan?.plan_label || 'N/A'}
-              </p>
-              {metrics?.most_popular_plan && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-1">
-                    {/* {metrics.most_popular_plan.trend === 'up' && (
+            {/* Most Popular Plan */}
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
+                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                    {metrics?.most_popular_plan?.plan_label || 'N/A'}
+                  </p>
+                  {metrics?.most_popular_plan && (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1">
+                        {/* {metrics.most_popular_plan.trend === 'up' && (
                       <>
                         <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
                         <span className="text-xs font-medium" style={{ color: '#10B981' }}>
@@ -721,707 +720,707 @@ export default function Subscriptions() {
                         </span>
                       </>
                     )} */}
-                  </div>
-                  <span className="text-xs" style={{ color: '#6B7280' }}>
-                    {metrics.most_popular_plan.count || 0} subscribers
-                  </span>
+                      </div>
+                      <span className="text-xs" style={{ color: '#6B7280' }}>
+                        {metrics.most_popular_plan.count || 0} subscribers
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <BlueClockIcon className="text-lg" />
+              </div>
+            </div>
+
+            {/* Average Growth */}
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Average Growth</p>
+                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                    {metrics?.average_growth?.formatted || '+0.00%'}
+                  </p>
+                  {metrics?.average_growth && (
+                    <div className="flex items-center gap-1">
+                      {metrics.average_growth.trend === 'up' && (
+                        <>
+                          <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                          <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                            Monthly
+                          </span>
+                        </>
+                      )}
+                      {metrics.average_growth.trend === 'down' && (
+                        <>
+                          <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                          <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                            Monthly
+                          </span>
+                        </>
+                      )}
+                      {metrics.average_growth.trend === 'neutral' && (
+                        <>
+                          <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                            Monthly
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <BlueExclamationTriangleIcon className="text-lg" />
+              </div>
+              {(notificationError || savingNotifications) && (
+                <div className="mt-2 px-1">
+                  {notificationError ? (
+                    <p className="text-xs text-red-500">{notificationError}</p>
+                  ) : (
+                    <p className="text-xs text-gray-500">Saving notification settings...</p>
+                  )}
                 </div>
               )}
             </div>
-            <BlueClockIcon className="text-lg" />
           </div>
-        </div>
 
-        {/* Average Growth */}
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Average Growth</p>
-              <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {metrics?.average_growth?.formatted || '+0.00%'}
-              </p>
-              {metrics?.average_growth && (
-                <div className="flex items-center gap-1">
-                  {metrics.average_growth.trend === 'up' && (
-                    <>
-                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                        Monthly
-                      </span>
-                    </>
-                  )}
-                  {metrics.average_growth.trend === 'down' && (
-                    <>
-                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
-                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
-                        Monthly
-                      </span>
-                    </>
-                  )}
-                  {metrics.average_growth.trend === 'neutral' && (
-                    <>
-                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
-                        Monthly
-                      </span>
-                    </>
-                  )}
+          {/* Plan and Alerts Section */}
+          <div className="grid gap-8 mb-8 subscriptions-plan-grid" style={{ gridTemplateColumns: '60% 35%' }}>
+            {/* Plan Section */}
+            <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+              <div className="flex justify-between items-center mb-3 ">
+                <div>
+                  <h3 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Plan</h3>
+                  <p className="text-sm" style={{ color: '#3B4A66' }}>Revenue and growth metrics by subscription plan</p>
                 </div>
-              )}
-            </div>
-            <BlueExclamationTriangleIcon className="text-lg" />
-          </div>
-          {(notificationError || savingNotifications) && (
-            <div className="mt-2 px-1">
-              {notificationError ? (
-                <p className="text-xs text-red-500">{notificationError}</p>
-              ) : (
-                <p className="text-xs text-gray-500">Saving notification settings...</p>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
 
-      {/* Plan and Alerts Section */}
-      <div className="grid gap-8 mb-8 subscriptions-plan-grid" style={{ gridTemplateColumns: '60% 35%' }}>
-        {/* Plan Section */}
-        <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-center mb-3 ">
-            <div>
-              <h3 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Plan</h3>
-              <p className="text-sm" style={{ color: '#3B4A66' }}>Revenue and growth metrics by subscription plan</p>
-            </div>
-          </div>
+              <div className="space-y-2">
+                {PLAN_CONFIG.map(({ key, label }) => {
+                  const normalizedKey = key.toLowerCase();
+                  const plan = planLookup[normalizedKey] || planLookup[label.toLowerCase()];
+                  const revenuePlan = revenueByPlanLookup[normalizedKey];
 
-          <div className="space-y-2">
-            {PLAN_CONFIG.map(({ key, label }) => {
-              const normalizedKey = key.toLowerCase();
-              const plan = planLookup[normalizedKey] || planLookup[label.toLowerCase()];
-              const revenuePlan = revenueByPlanLookup[normalizedKey];
-
-              if (plan) {
-                const { badgeClass, textClass } = getPlanBadgeStyles(plan.plan_type || label);
-                return (
-                  <div
-                    key={normalizedKey}
-                    className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors"
-                    style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
-                    onClick={() => {
-                      setSelectedPlan(plan.plan_display || label);
-                      setShowEditPlan(true);
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-start gap-3">
-                        <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
-                          {plan.plan_display || label}
-                        </span>
-                        <div>
-                          <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
-                            {plan.total_subscribers} subscribers
-                          </p>
-                          <div className='flex flex-col gap-1'>
-                            {revenuePlan && (
-                              <>
-                                <div className='flex flex-row gap-2'>
-                                  <p className="text-xs" style={{ color: '#3B4A66' }}>
-                                    {revenuePlan.formatted_revenue || '$0.00'} revenue
-                                  </p>
-                                  <p className="text-xs" style={{ color: '#6B7280' }}>
-                                    ({revenuePlan.percentage?.toFixed(1) || '0'}%)
-                                  </p>
-                                </div>
-                                <p className="text-xs" style={{ color: '#6B7280' }}>
-                                  {revenuePlan.invoice_count || 0} invoice{revenuePlan.invoice_count !== 1 ? 's' : ''}
-                                </p>
-                              </>
-                            )}
-                            {!revenuePlan && (
-                              <div className='flex flex-row gap-2'>
-                                <p className="text-xs" style={{ color: '#3B4A66' }}>
-                                  {plan.formatted_revenue || '$0.00'} revenue.
-                                </p>
-                                <p className="text-xs" style={{ color: '#3B4A66' }}>
-                                  {plan.formatted_growth || '0%'} growth
-                                </p>
+                  if (plan) {
+                    const { badgeClass, textClass } = getPlanBadgeStyles(plan.plan_type || label);
+                    return (
+                      <div
+                        key={normalizedKey}
+                        className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                        style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                        onClick={() => {
+                          setSelectedPlan(plan.plan_display || label);
+                          setShowEditPlan(true);
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-start gap-3">
+                            <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
+                              {plan.plan_display || label}
+                            </span>
+                            <div>
+                              <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
+                                {plan.total_subscribers} subscribers
+                              </p>
+                              <div className='flex flex-col gap-1'>
+                                {revenuePlan && (
+                                  <>
+                                    <div className='flex flex-row gap-2'>
+                                      <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                        {revenuePlan.formatted_revenue || '$0.00'} revenue
+                                      </p>
+                                      <p className="text-xs" style={{ color: '#6B7280' }}>
+                                        ({revenuePlan.percentage?.toFixed(1) || '0'}%)
+                                      </p>
+                                    </div>
+                                    <p className="text-xs" style={{ color: '#6B7280' }}>
+                                      {revenuePlan.invoice_count || 0} invoice{revenuePlan.invoice_count !== 1 ? 's' : ''}
+                                    </p>
+                                  </>
+                                )}
+                                {!revenuePlan && (
+                                  <div className='flex flex-row gap-2'>
+                                    <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                      {plan.formatted_revenue || '$0.00'} revenue.
+                                    </p>
+                                    <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                      {plan.formatted_growth || '0%'} growth
+                                    </p>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold mb-1" style={{ color: '#3B4A66' }}>
+                              {plan.formatted_price}/month
+                            </p>
+                            <p className="text-xs" style={{ color: '#3B4A66' }}>
+                              {plan.is_active ? 'Active' : 'Inactive'}
+                            </p>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold mb-1" style={{ color: '#3B4A66' }}>
-                          {plan.formatted_price}/month
-                        </p>
-                        <p className="text-xs" style={{ color: '#3B4A66' }}>
-                          {plan.is_active ? 'Active' : 'Inactive'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
+                    );
+                  }
 
-              const { badgeClass, textClass } = getPlanBadgeStyles(label);
-              return (
-                <div
-                  key={normalizedKey}
-                  className="bg-white p-4 border border-dashed border-[#E8F0FF] rounded-[7px] flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
-                      {label}
-                    </span>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium" style={{ color: '#3B4A66' }}>
-                        No {label} plan configured
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Click the plus icon to create this plan
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenAddPlan(label, normalizedKey)}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-[#F56D2D] text-white"
-                    style={{ borderRadius: '50%' }}
-                    title={`Create ${label} plan`}
-                  >
-                    <AddSubscriptionPlanIcon className="w-4 h-4" stroke="white" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Alerts & Notifications */}
-        <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px', height: 'fit-content' }}>
-          <h3 className="text-lg font-bold mb-4" style={{ color: '#3B4A66' }}>Alerts & Notifications</h3>
-
-          <div className="space-y-4">
-            {/* Email Notifications */}
-            <div className="bg-white p-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: '#3B4A66' }}>Email Notifications</p>
-                  <p className="text-xs" style={{ color: '#3B4A66' }}>Send email when  <br /> subscription events occur</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleNotificationUpdate({ subscription_email_updates_enabled: !emailNotifications })}
-                  disabled={savingNotifications}
-                  className="relative inline-flex h-6 w-11 items-center transition-colors disabled:opacity-60"
-                  style={{
-                    borderRadius: '20px',
-                    backgroundColor: emailNotifications ? '#F56D2D' : '#D1D5DB'
-                  }}
-                  aria-pressed={emailNotifications}
-                >
-                  <span
-                    className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                    style={{
-                      transform: emailNotifications ? 'translateX(24px)' : 'translateX(4px)'
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* SMS Alerts */}
-            <div className="bg-white p-4" >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: '#3B4A66' }}>SMS Alerts</p>
-                  <p className="text-xs" style={{ color: '#3B4A66' }}>Optional SMS notifications</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleNotificationUpdate({ subscription_sms_updates_enabled: !smsAlerts })}
-                  disabled={savingNotifications}
-                  className="relative inline-flex h-6 w-11 items-center transition-colors disabled:opacity-60"
-                  style={{
-                    borderRadius: '20px',
-                    backgroundColor: smsAlerts ? '#F56D2D' : '#D1D5DB'
-                  }}
-                  aria-pressed={smsAlerts}
-                >
-                  <span
-                    className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                    style={{
-                      transform: smsAlerts ? 'translateX(24px)' : 'translateX(4px)'
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* User Engagement Metrics Section */}
-      
-
-      {/* Plan Performance Section */}
-      <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-        <div className="flex flex-col gap-4 mb-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between subscriptions-plan-performance-header">
-            <div>
-              <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
-              <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              {/* Filter Dropdowns - Upper Right */}
-              <div className="flex gap-2 items-end subscriptions-plan-filter-row">
-                <select
-                  value={filterMonth}
-                  onChange={(e) => {
-                    setFilterMonth(e.target.value);
-                    if (!e.target.value) setFilterYear('');
-                  }}
-                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                >
-                  <option value="">All Months</option>
-                  {monthOptions.map(month => (
-                    <option key={month.value} value={month.value}>{month.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={filterYear}
-                  onChange={(e) => {
-                    setFilterYear(e.target.value);
-                    if (!e.target.value) setFilterMonth('');
-                  }}
-                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                  disabled={!filterMonth}
-                >
-                  <option value="">Year</option>
-                  {yearOptions.map(year => (
-                    <option key={year.value} value={year.value}>{year.label}</option>
-                  ))}
-                </select>
-                <button
-                  className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed subscriptions-apply-btn"
-                  onClick={handleApplyFilter}
-                  disabled={!filterMonth || !filterYear}
-                  style={{ backgroundColor: '#3B82F6' }}
-                >
-                  Apply
-                </button>
-                {(filterMonth && filterYear) && (
-                  <button
-                    onClick={() => {
-                      setFilterMonth('');
-                      setFilterYear('');
-                      setAppliedFilterMonth('');
-                      setAppliedFilterYear('');
-                    }}
-                    className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 subscriptions-clear-btn"
-                    title="Clear filter"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              {planPerformance?.timestamp && (
-                <span className="text-xs text-gray-500">
-                  Last updated: {formatDateTime(planPerformance.timestamp)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {planPerformance ? (
-          <div className="grid gap-6 lg:grid-cols-2 subscriptions-plan-performance-grid">
-            <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
-              <h4 className="text-sm sm:text-base font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
-              {mrrTrend.length > 0 ? (() => {
-                const svgWidth = 400;
-                const svgHeight = 180;
-                const paddingX = 40;
-                const paddingY = 24;
-                const innerWidth = svgWidth - paddingX * 2;
-                const innerHeight = svgHeight - paddingY * 2;
-                const stepWidth = mrrTrend.length ? innerWidth / mrrTrend.length : innerWidth;
-                const barWidth = stepWidth * 0.5;
-                const range = mrrMax - mrrMin || Math.max(mrrMax, 1);
-                
-                return (
-                  <div className="relative h-48 mt-2">
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full subscriptions-mrr-chart">
-                      {[0, 1, 2, 3, 4].map((step) => {
-                        const y = paddingY + (innerHeight / 4) * step;
-                        const labelValue = mrrMax - (range / 4) * step;
-                        return (
-                          <g key={`mrr-grid-${step}`}>
-                            <line
-                              x1={paddingX}
-                              y1={y}
-                              x2={svgWidth - paddingX}
-                              y2={y}
-                              stroke="#E5E7EB"
-                              strokeWidth="1"
-                              opacity="0.6"
-                            />
-                            <text
-                              x={paddingX - 8}
-                              y={y + 4}
-                              textAnchor="end"
-                              fontSize="12"
-                              fill="#6B7280"
-                            >
-                              {formatCurrency(labelValue)}
-                            </text>
-                          </g>
-                        );
-                      })}
-                      {mrrTrend.map((item, index) => {
-                        const value = Number(item?.value ?? 0);
-                        const height = range > 0 ? ((value - mrrMin) / range) * innerHeight : (value > 0 ? innerHeight * 0.3 : 0);
-                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
-                        const y = paddingY + innerHeight - height;
-                        return (
-                          <g key={`mrr-bar-${item.month}-${index}`}>
-                            <rect
-                              x={x}
-                              y={y}
-                              width={barWidth}
-                              height={height}
-                              fill="#3B4A66"
-                              rx="6"
-                            />
-                            <text
-                              x={x + barWidth / 2}
-                              y={y - 6}
-                              textAnchor="middle"
-                              fontSize="12"
-                              fill="#3B4A66"
-                              fontWeight="600"
-                            >
-                              {formatCurrency(value)}
-                            </text>
-                            <text
-                              x={x + barWidth / 2}
-                              y={svgHeight - 8}
-                              textAnchor="middle"
-                              fontSize="12"
-                              fill="#6B7280"
-                            >
-                              {item.month || `M${index + 1}`}
-                            </text>
-                          </g>
-                        );
-                      })}
-                    </svg>
-                  </div>
-                );
-              })() : (
-                <p className="text-xs text-gray-500 mt-4">No revenue trend data available.</p>
-              )}
-            </div>
-
-            <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
-              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
-              {churnTrend.length > 0 ? (() => {
-                const svgWidth = 400;
-                const svgHeight = 180;
-                const paddingX = 40;
-                const paddingY = 24;
-                const innerWidth = svgWidth - paddingX * 2;
-                const innerHeight = svgHeight - paddingY * 2;
-                const stepWidth = churnTrend.length ? innerWidth / churnTrend.length : innerWidth;
-                const barWidth = stepWidth * 0.5;
-                return (
-                  <div className="relative h-48 mt-2">
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full subscriptions-churn-chart">
-                      {[0, 1, 2, 3, 4].map((step) => {
-                        const y = paddingY + (innerHeight / 4) * step;
-                        const labelValue = churnMax - ((churnMax / 4) * step);
-                        return (
-                          <g key={`churn-grid-${step}`}>
-                            <line
-                              x1={paddingX}
-                              y1={y}
-                              x2={svgWidth - paddingX}
-                              y2={y}
-                              stroke="#E5E7EB"
-                              strokeWidth="1"
-                              opacity="0.6"
-                            />
-                            <text
-                              x={paddingX - 8}
-                              y={y + 4}
-                              textAnchor="end"
-                              fontSize="12"
-                              fill="#6B7280"
-                            >
-                              {formatPercentage(labelValue)}
-                            </text>
-                          </g>
-                        );
-                      })}
-                      {churnTrend.map((item, index) => {
-                        const value = Number(item?.value ?? 0);
-                        const height = churnMax ? (value / churnMax) * innerHeight : 0;
-                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
-                        const y = paddingY + innerHeight - height;
-                        return (
-                          <g key={`churn-bar-${item.month}-${index}`}>
-                            <rect
-                              x={x}
-                              y={y}
-                              width={barWidth}
-                              height={height}
-                              fill="#6366F1"
-                              rx="6"
-                            />
-                            <text
-                              x={x + barWidth / 2}
-                              y={y - 6}
-                              textAnchor="middle"
-                              fontSize="12"
-                              fill="#4C1D95"
-                              fontWeight="600"
-                            >
-                              {formatPercentage(value)}
-                            </text>
-                            <text
-                              x={x + barWidth / 2}
-                              y={svgHeight - 8}
-                              textAnchor="middle"
-                              fontSize="12"
-                              fill="#6B7280"
-                            >
-                              {item.month || `M${index + 1}`}
-                            </text>
-                          </g>
-                        );
-                      })}
-                    </svg>
-                  </div>
-                );
-              })() : (
-                <p className="text-xs text-gray-500 mt-4">No churn trend data available.</p>
-              )}
-            </div>
-
-            <div className="border border-[#E8F0FF] rounded-[10px] p-4 lg:col-span-2 subscriptions-plan-card-full">
-              <h4 className="text-sm font-semibold text-[#3B4A66] mb-4">Plan Distribution</h4>
-              <div className="space-y-3">
-                {planDistributionData.length > 0 ? planDistributionData.map((item) => {
-                  const width = distributionMax ? Math.max((item.firms / distributionMax) * 100, 6) : 0;
+                  const { badgeClass, textClass } = getPlanBadgeStyles(label);
                   return (
-                    <div key={item.plan} className="flex items-center gap-3">
-                      <span className="w-24 text-sm font-medium text-[#3B4A66]">
-                        {item.label}
-                      </span>
-                      <div className="flex-1 h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${width}%`, backgroundColor: '#3B82F6' }}
-                        ></div>
+                    <div
+                      key={normalizedKey}
+                      className="bg-white p-4 border border-dashed border-[#E8F0FF] rounded-[7px] flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
+                          {label}
+                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                            No {label} plan configured
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Click the plus icon to create this plan
+                          </span>
+                        </div>
                       </div>
-                      <span className="w-16 text-right text-xs font-semibold text-[#3B4A66]">
-                        {formatNumber(item.firms)} firms
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAddPlan(label, normalizedKey)}
+                        className="flex items-center justify-center w-10 h-10 rounded-full bg-[#F56D2D] text-white"
+                        style={{ borderRadius: '50%' }}
+                        title={`Create ${label} plan`}
+                      >
+                        <AddSubscriptionPlanIcon className="w-4 h-4" stroke="white" />
+                      </button>
                     </div>
                   );
-                }) : (
-                  <p className="text-xs text-gray-500">No plan distribution data available.</p>
-                )}
+                })}
               </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">Plan performance data is not available at the moment.</p>
-        )}
-      </div>
 
-      {/* Subscriptions Table */}
-      <div>
-        {/* Filter Bar */}
-        <div className='mb-4'>
-          <div className="flex gap-3 subscriptions-filter">
-            <div className="relative flex-1 max-w-md">
-              <input
-                type="text"
-                placeholder="Search subscriptions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
-                className="w-[400px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-            <select
-              className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Status</option>
-              {statusOptions.map((option) => (
-                <option key={option.value || option.label} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
-              value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
-            >
-              <option value="">All Plans</option>
-              {planOptions.map((option) => (
-                <option key={option.value || option.label} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="bg-white p-4 subscriptions-table-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-center mb-6 subscriptions-table-card-header">
-            <div>
-              <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
-              <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed view of all platform subscriptions</p>
-            </div>
-            {totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && (
-              <button
-                onClick={handleViewAllSubscriptionCards}
-                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
-                style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
-              >
-                {showAllSubscriptionCards ? 'Show Less' : 'View All'}
-              </button>
-            )}
-          </div>
+            {/* Alerts & Notifications */}
+            <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px', height: 'fit-content' }}>
+              <h3 className="text-lg font-bold mb-4" style={{ color: '#3B4A66' }}>Alerts & Notifications</h3>
 
-          {tableError && (
-            <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md px-4 py-2">
-              {tableError}
-            </div>
-          )}
+              <div className="space-y-4">
+                {/* Email Notifications */}
+                <div className="bg-white p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: '#3B4A66' }}>Email Notifications</p>
+                      <p className="text-xs" style={{ color: '#3B4A66' }}>Send email when  <br /> subscription events occur</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleNotificationUpdate({ subscription_email_updates_enabled: !emailNotifications })}
+                      disabled={savingNotifications}
+                      className="relative inline-flex h-6 w-11 items-center transition-colors disabled:opacity-60"
+                      style={{
+                        borderRadius: '20px',
+                        backgroundColor: emailNotifications ? '#F56D2D' : '#D1D5DB'
+                      }}
+                      aria-pressed={emailNotifications}
+                    >
+                      <span
+                        className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        style={{
+                          transform: emailNotifications ? 'translateX(24px)' : 'translateX(4px)'
+                        }}
+                      />
+                    </button>
+                  </div>
+                </div>
 
-          {/* Table Header */}
-          <div className=" px-6 py-3 mb-2 subscriptions-table-header">
-            <div className="grid grid-cols-6 gap-4 text-sm font-medium subscriptions-table-header-grid" style={{ color: '#3B4A66' }}>
-              <div>Firm</div>
-              <div>Plan</div>
-              <div>Amount</div>
-              <div>Status</div>
-              <div>Next Billing</div>
-              <div>Total Paid</div>
-              {/* <div>Actions</div> */}
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="space-y-4 subscriptions-table-list">
-            {tableLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                  Loading subscriptions...
+                {/* SMS Alerts */}
+                <div className="bg-white p-4" >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: '#3B4A66' }}>SMS Alerts</p>
+                      <p className="text-xs" style={{ color: '#3B4A66' }}>Optional SMS notifications</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleNotificationUpdate({ subscription_sms_updates_enabled: !smsAlerts })}
+                      disabled={savingNotifications}
+                      className="relative inline-flex h-6 w-11 items-center transition-colors disabled:opacity-60"
+                      style={{
+                        borderRadius: '20px',
+                        backgroundColor: smsAlerts ? '#F56D2D' : '#D1D5DB'
+                      }}
+                      aria-pressed={smsAlerts}
+                    >
+                      <span
+                        className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        style={{
+                          transform: smsAlerts ? 'translateX(24px)' : 'translateX(4px)'
+                        }}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
-            ) : displayedSubscriptionCards.length > 0 ? (
-              displayedSubscriptionCards.map((subscription) => {
-                const planStyles = getPlanBadgeStyles(subscription.plan);
-                const statusClasses = getStatusBadgeClasses(subscription.status);
-                return (
-                  <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
-                    <div className="grid grid-cols-6 gap-4 items-center subscriptions-table-row-grid">
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
-                          {subscription.firm_name || '—'}
-                        </p>
-                        <p className="text-xs" style={{ color: '#6C757D' }}>
-                          {subscription.firm_owner || '—'}
-                        </p>
-                      </div>
-                      <div>
-                        <span
-                          className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
-                          style={{ borderRadius: '12px' }}
-                        >
-                          {subscription.plan_label || subscription.plan || '—'}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
-                          {subscription.amount_formatted || formatCurrency(subscription.amount)}
-                        </p>
-                        <p className="text-xs" style={{ color: '#6C757D', fontWeight: 600 }}>
-                          {subscription.billing_frequency || '—'}
-                        </p>
-                      </div>
-                      <div>
-                        <span
-                          className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusClasses}`}
-                          style={{ borderRadius: '12px' }}
-                        >
-                          {subscription.status_label || subscription.status || '—'}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm" style={{ color: '#3B4A66' }}>
-                          {formatDateDisplay(subscription.next_billing_date)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
-                          {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
-                        </p>
-                      </div>
-                    </div>
+            </div>
+          </div>
+
+          {/* User Engagement Metrics Section */}
+
+
+          {/* Plan Performance Section */}
+          <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between subscriptions-plan-performance-header">
+                <div>
+                  <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
+                  <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  {/* Filter Dropdowns - Upper Right */}
+                  <div className="flex gap-2 items-end subscriptions-plan-filter-row">
+                    <select
+                      value={filterMonth}
+                      onChange={(e) => {
+                        setFilterMonth(e.target.value);
+                        if (!e.target.value) setFilterYear('');
+                      }}
+                      className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
+                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    >
+                      <option value="">All Months</option>
+                      {monthOptions.map(month => (
+                        <option key={month.value} value={month.value}>{month.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={filterYear}
+                      onChange={(e) => {
+                        setFilterYear(e.target.value);
+                        if (!e.target.value) setFilterMonth('');
+                      }}
+                      className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
+                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      disabled={!filterMonth}
+                    >
+                      <option value="">Year</option>
+                      {yearOptions.map(year => (
+                        <option key={year.value} value={year.value}>{year.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed subscriptions-apply-btn"
+                      onClick={handleApplyFilter}
+                      disabled={!filterMonth || !filterYear}
+                      style={{ backgroundColor: '#3B82F6' }}
+                    >
+                      Apply
+                    </button>
+                    {(filterMonth && filterYear) && (
+                      <button
+                        onClick={() => {
+                          setFilterMonth('');
+                          setFilterYear('');
+                          setAppliedFilterMonth('');
+                          setAppliedFilterYear('');
+                        }}
+                        className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 subscriptions-clear-btn"
+                        title="Clear filter"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-sm text-gray-500">
-                No subscriptions found for the selected filters.
+                  {planPerformance?.timestamp && (
+                    <span className="text-xs text-gray-500">
+                      Last updated: {formatDateTime(planPerformance.timestamp)}
+                    </span>
+                  )}
+                </div>
               </div>
+            </div>
+
+            {planPerformance ? (
+              <div className="grid gap-6 lg:grid-cols-2 subscriptions-plan-performance-grid">
+                <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
+                  <h4 className="text-sm sm:text-base font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
+                  {mrrTrend.length > 0 ? (() => {
+                    const svgWidth = 400;
+                    const svgHeight = 180;
+                    const paddingX = 40;
+                    const paddingY = 24;
+                    const innerWidth = svgWidth - paddingX * 2;
+                    const innerHeight = svgHeight - paddingY * 2;
+                    const stepWidth = mrrTrend.length ? innerWidth / mrrTrend.length : innerWidth;
+                    const barWidth = stepWidth * 0.5;
+                    const range = mrrMax - mrrMin || Math.max(mrrMax, 1);
+
+                    return (
+                      <div className="relative h-48 mt-2">
+                        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full subscriptions-mrr-chart">
+                          {[0, 1, 2, 3, 4].map((step) => {
+                            const y = paddingY + (innerHeight / 4) * step;
+                            const labelValue = mrrMax - (range / 4) * step;
+                            return (
+                              <g key={`mrr-grid-${step}`}>
+                                <line
+                                  x1={paddingX}
+                                  y1={y}
+                                  x2={svgWidth - paddingX}
+                                  y2={y}
+                                  stroke="#E5E7EB"
+                                  strokeWidth="1"
+                                  opacity="0.6"
+                                />
+                                <text
+                                  x={paddingX - 8}
+                                  y={y + 4}
+                                  textAnchor="end"
+                                  fontSize="12"
+                                  fill="#6B7280"
+                                >
+                                  {formatCurrency(labelValue)}
+                                </text>
+                              </g>
+                            );
+                          })}
+                          {mrrTrend.map((item, index) => {
+                            const value = Number(item?.value ?? 0);
+                            const height = range > 0 ? ((value - mrrMin) / range) * innerHeight : (value > 0 ? innerHeight * 0.3 : 0);
+                            const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                            const y = paddingY + innerHeight - height;
+                            return (
+                              <g key={`mrr-bar-${item.month}-${index}`}>
+                                <rect
+                                  x={x}
+                                  y={y}
+                                  width={barWidth}
+                                  height={height}
+                                  fill="#3B4A66"
+                                  rx="6"
+                                />
+                                <text
+                                  x={x + barWidth / 2}
+                                  y={y - 6}
+                                  textAnchor="middle"
+                                  fontSize="12"
+                                  fill="#3B4A66"
+                                  fontWeight="600"
+                                >
+                                  {formatCurrency(value)}
+                                </text>
+                                <text
+                                  x={x + barWidth / 2}
+                                  y={svgHeight - 8}
+                                  textAnchor="middle"
+                                  fontSize="12"
+                                  fill="#6B7280"
+                                >
+                                  {item.month || `M${index + 1}`}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-xs text-gray-500 mt-4">No revenue trend data available.</p>
+                  )}
+                </div>
+
+                <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
+                  <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
+                  {churnTrend.length > 0 ? (() => {
+                    const svgWidth = 400;
+                    const svgHeight = 180;
+                    const paddingX = 40;
+                    const paddingY = 24;
+                    const innerWidth = svgWidth - paddingX * 2;
+                    const innerHeight = svgHeight - paddingY * 2;
+                    const stepWidth = churnTrend.length ? innerWidth / churnTrend.length : innerWidth;
+                    const barWidth = stepWidth * 0.5;
+                    return (
+                      <div className="relative h-48 mt-2">
+                        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full subscriptions-churn-chart">
+                          {[0, 1, 2, 3, 4].map((step) => {
+                            const y = paddingY + (innerHeight / 4) * step;
+                            const labelValue = churnMax - ((churnMax / 4) * step);
+                            return (
+                              <g key={`churn-grid-${step}`}>
+                                <line
+                                  x1={paddingX}
+                                  y1={y}
+                                  x2={svgWidth - paddingX}
+                                  y2={y}
+                                  stroke="#E5E7EB"
+                                  strokeWidth="1"
+                                  opacity="0.6"
+                                />
+                                <text
+                                  x={paddingX - 8}
+                                  y={y + 4}
+                                  textAnchor="end"
+                                  fontSize="12"
+                                  fill="#6B7280"
+                                >
+                                  {formatPercentage(labelValue)}
+                                </text>
+                              </g>
+                            );
+                          })}
+                          {churnTrend.map((item, index) => {
+                            const value = Number(item?.value ?? 0);
+                            const height = churnMax ? (value / churnMax) * innerHeight : 0;
+                            const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                            const y = paddingY + innerHeight - height;
+                            return (
+                              <g key={`churn-bar-${item.month}-${index}`}>
+                                <rect
+                                  x={x}
+                                  y={y}
+                                  width={barWidth}
+                                  height={height}
+                                  fill="#6366F1"
+                                  rx="6"
+                                />
+                                <text
+                                  x={x + barWidth / 2}
+                                  y={y - 6}
+                                  textAnchor="middle"
+                                  fontSize="12"
+                                  fill="#4C1D95"
+                                  fontWeight="600"
+                                >
+                                  {formatPercentage(value)}
+                                </text>
+                                <text
+                                  x={x + barWidth / 2}
+                                  y={svgHeight - 8}
+                                  textAnchor="middle"
+                                  fontSize="12"
+                                  fill="#6B7280"
+                                >
+                                  {item.month || `M${index + 1}`}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-xs text-gray-500 mt-4">No churn trend data available.</p>
+                  )}
+                </div>
+
+                <div className="border border-[#E8F0FF] rounded-[10px] p-4 lg:col-span-2 subscriptions-plan-card-full">
+                  <h4 className="text-sm font-semibold text-[#3B4A66] mb-4">Plan Distribution</h4>
+                  <div className="space-y-3">
+                    {planDistributionData.length > 0 ? planDistributionData.map((item) => {
+                      const width = distributionMax ? Math.max((item.firms / distributionMax) * 100, 6) : 0;
+                      return (
+                        <div key={item.plan} className="flex items-center gap-3">
+                          <span className="w-24 text-sm font-medium text-[#3B4A66]">
+                            {item.label}
+                          </span>
+                          <div className="flex-1 h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${width}%`, backgroundColor: '#3B82F6' }}
+                            ></div>
+                          </div>
+                          <span className="w-16 text-right text-xs font-semibold text-[#3B4A66]">
+                            {formatNumber(item.firms)} firms
+                          </span>
+                        </div>
+                      );
+                    }) : (
+                      <p className="text-xs text-gray-500">No plan distribution data available.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Plan performance data is not available at the moment.</p>
             )}
           </div>
 
-          {/* Client-side Pagination Controls */}
-          {shouldShowSubscriptionCardsPagination && (
-            <div className="flex items-center justify-between px-4 py-3 mt-4 border-t border-[#E8F0FF]">
-              <button
-                onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage - 1)}
-                disabled={subscriptionCardsCurrentPage === 1}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                style={{ borderRadius: '8px' }}
-              >
-                Previous
-              </button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">
-                  Page {subscriptionCardsCurrentPage} of {totalSubscriptionCardsPages}
-                </span>
+          {/* Subscriptions Table */}
+          <div>
+            {/* Filter Bar */}
+            <div className='mb-4'>
+              <div className="flex gap-3 subscriptions-filter">
+                <div className="relative flex-1 max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search subscriptions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                    className="w-[400px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <select
+                  className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Status</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value || option.label} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                  value={planFilter}
+                  onChange={(e) => setPlanFilter(e.target.value)}
+                >
+                  <option value="">All Plans</option>
+                  {planOptions.map((option) => (
+                    <option key={option.value || option.label} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <button
-                onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage + 1)}
-                disabled={subscriptionCardsCurrentPage === totalSubscriptionCardsPages}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                style={{ borderRadius: '8px' }}
-              >
-                Next
-              </button>
             </div>
-          )}
+            <div className="bg-white p-4 subscriptions-table-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+              <div className="flex justify-between items-center mb-6 subscriptions-table-card-header">
+                <div>
+                  <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
+                  <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed view of all platform subscriptions</p>
+                </div>
+                {totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && (
+                  <button
+                    onClick={handleViewAllSubscriptionCards}
+                    className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                    style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                  >
+                    {showAllSubscriptionCards ? 'Show Less' : 'View All'}
+                  </button>
+                )}
+              </div>
+
+              {tableError && (
+                <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md px-4 py-2">
+                  {tableError}
+                </div>
+              )}
+
+              {/* Table Header */}
+              <div className=" px-6 py-3 mb-2 subscriptions-table-header">
+                <div className="grid grid-cols-6 gap-4 text-sm font-medium subscriptions-table-header-grid" style={{ color: '#3B4A66' }}>
+                  <div>Firm</div>
+                  <div>Plan</div>
+                  <div>Amount</div>
+                  <div>Status</div>
+                  <div>Next Billing</div>
+                  <div>Total Paid</div>
+                  {/* <div>Actions</div> */}
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="space-y-4 subscriptions-table-list">
+                {tableLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                      Loading subscriptions...
+                    </div>
+                  </div>
+                ) : displayedSubscriptionCards.length > 0 ? (
+                  displayedSubscriptionCards.map((subscription) => {
+                    const planStyles = getPlanBadgeStyles(subscription.plan);
+                    const statusClasses = getStatusBadgeClasses(subscription.status);
+                    return (
+                      <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
+                        <div className="grid grid-cols-6 gap-4 items-center subscriptions-table-row-grid">
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                              {subscription.firm_name || '—'}
+                            </p>
+                            <p className="text-xs" style={{ color: '#6C757D' }}>
+                              {subscription.firm_owner || '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <span
+                              className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
+                              style={{ borderRadius: '12px' }}
+                            >
+                              {subscription.plan_label || subscription.plan || '—'}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                              {subscription.amount_formatted || formatCurrency(subscription.amount)}
+                            </p>
+                            <p className="text-xs" style={{ color: '#6C757D', fontWeight: 600 }}>
+                              {subscription.billing_frequency || '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <span
+                              className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusClasses}`}
+                              style={{ borderRadius: '12px' }}
+                            >
+                              {subscription.status_label || subscription.status || '—'}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm" style={{ color: '#3B4A66' }}>
+                              {formatDateDisplay(subscription.next_billing_date)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                              {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-sm text-gray-500">
+                    No subscriptions found for the selected filters.
+                  </div>
+                )}
+              </div>
+
+              {/* Client-side Pagination Controls */}
+              {shouldShowSubscriptionCardsPagination && (
+                <div className="flex items-center justify-between px-4 py-3 mt-4 border-t border-[#E8F0FF]">
+                  <button
+                    onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage - 1)}
+                    disabled={subscriptionCardsCurrentPage === 1}
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ borderRadius: '8px' }}
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">
+                      Page {subscriptionCardsCurrentPage} of {totalSubscriptionCardsPages}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage + 1)}
+                    disabled={subscriptionCardsCurrentPage === totalSubscriptionCardsPages}
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ borderRadius: '8px' }}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
         </>
       )}
     </div>

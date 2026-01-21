@@ -5,38 +5,38 @@ export default function WhyChooseUs() {
   const galleryItems = [
     {
       id: 1,
-      title: "Client Intake",
-      description: "Digitize onboarding with smart questionnaires and automated follow-ups.",
+      title: "Client & Workflow Automation",
+      description: "Manage clients, returns, and staff tasks with intelligent, rule-based workflows designed specifically for tax offices.",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 2,
-      title: "Return Tracking",
-      description: "Track every return from intake to e-file and funding with clear status stages.",
+      title: "Client Intake",
+      description: "Clients upload documents, e-sign forms, and track return status in real time, reducing back-and-forth communication.",
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2011&auto=format&fit=crop"
     },
     {
       id: 3,
-      title: "Team Management",
-      description: "Assign roles, permissions, and workloads across offices and preparers.",
+      title: "Smart Intake & Forms",
+      description: "Replace static forms with guided, tax-specific data collection that adapts to each client’s situation.",
       image: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 4,
-      title: "Automation Rules",
-      description: "Trigger emails, SMS, tasks, and reminders automatically based on client behavior.",
+      title: "Document Management",
+      description: "Organize source documents, signed forms, and IRS notices in one secure, searchable system.",
       image: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 5,
-      title: "E-Signature & Compliance",
-      description: "Send, track, and store signed documents securely with audit-ready records.",
+      title: "Task & Deadline Tracking",
+      description: "Never miss a deadline. Automatically assign tasks to admins, preparers, and reviewers based on return status.",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
     },
     {
       id: 6,
-      title: "Custom Forms & Requests",
-      description: "Create tax-specific document and data requests without technical setup.",
+      title: "Practice Analytics",
+      description: "Track productivity, return volume, turnaround time, and staff performance with real-time reporting.",
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop"
     }
   ];
@@ -47,7 +47,7 @@ export default function WhyChooseUs() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Client & Workflow Automation
+              AI-Powered Tax Operations
             </h2>
             <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
               Our AI-powered features give you complete control over your firm’s operations.
@@ -107,7 +107,7 @@ export default function WhyChooseUs() {
           </div>
 
           {/* <div className="text-center mt-16">
-            <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold text-base md:text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-blue-500/25">
+            <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-[10px] font-semibold text-base md:text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-blue-500/25">
               Schedule a Demo
             </button>
             <p className="text-zinc-500 text-sm mt-4">
