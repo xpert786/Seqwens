@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { FaBell } from "react-icons/fa";
+import { FaBell, FaSun, FaMoon } from "react-icons/fa";
 import logo from "../../assets/logo.png";
 import { LogoIcond } from "../../Taxpreparer/component/icons"
 import { UserIconBuild } from "./icons";
 import SuperAdminNotificationPanel from "./SuperAdminNotificationPanel";
 import { superAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
+import { useTheme } from "../Context/ThemeContext";
 import "../style/SuperHeader.css";
 
 export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen = true }) {
+  const { isDarkMode, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
@@ -114,6 +116,52 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
 
           {/* Right Section */}
           <div className="d-flex align-items-center gap-3" style={{ minWidth: "fit-content" }}>
+            {/* Theme Toggle Switch */}
+            <div
+              className="d-flex align-items-center"
+              style={{ marginRight: '4px' }}
+            >
+              <div
+                className="theme-toggle-container"
+                onClick={toggleTheme}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: isDarkMode ? '#374151' : '#e5e7eb',
+                  borderRadius: '20px',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  width: '60px',
+                  height: '30px',
+                  position: 'relative',
+                }}
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: isDarkMode ? '32px' : '4px',
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                  }}
+                >
+                  {isDarkMode ? (
+                    <FaMoon size={12} color="#fbbf24" />
+                  ) : (
+                    <FaSun size={12} color="#f59e0b" />
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="relative">
               <div
                 ref={notificationButtonRef}

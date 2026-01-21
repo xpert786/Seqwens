@@ -10,7 +10,7 @@ const FirmPortalColorsContext = createContext({
   faviconUrl: null,
   loading: false,
   error: null,
-  refreshColors: () => {},
+  refreshColors: () => { },
 });
 
 export const useFirmPortalColors = () => {
@@ -38,29 +38,29 @@ export const FirmPortalColorsProvider = ({ children }) => {
       // Check if user is authenticated as firm admin
       const storage = getStorage();
       const userType = storage?.getItem('userType');
-      
-      if (userType !== 'admin') {
+
+      if (userType !== 'firm') {
         // Not a firm admin, use default colors
         setLoading(false);
         return;
       }
 
       const response = await firmAdminSettingsAPI.getSubdomainSettings();
-      
+
       if (response.success && response.data) {
         const primary = response.data.primary_color || '#178109';
         const secondary = response.data.secondary_color || '#ffffff';
         const logo = response.data.logo_url ? getMediaUrl(response.data.logo_url) : null;
         const favicon = response.data.favicon_url ? getMediaUrl(response.data.favicon_url) : null;
-        
+
         setPrimaryColor(primary);
         setSecondaryColor(secondary);
         setLogoUrl(logo);
         setFaviconUrl(favicon);
-        
+
         // Apply colors to CSS variables
         applyColorsToDocument(primary, secondary);
-        
+
         // Apply logo and favicon to document head
         applyLogoAndFavicon(logo, favicon);
       } else {
@@ -84,7 +84,7 @@ export const FirmPortalColorsProvider = ({ children }) => {
     const root = document.documentElement;
     root.style.setProperty('--firm-primary-color', primary);
     root.style.setProperty('--firm-secondary-color', secondary);
-    
+
     // Also set as data attributes for easier access
     root.setAttribute('data-firm-primary-color', primary);
     root.setAttribute('data-firm-secondary-color', secondary);
@@ -95,7 +95,7 @@ export const FirmPortalColorsProvider = ({ children }) => {
   const applyLogoAndFavicon = (logoUrl, faviconUrl) => {
     // Update favicon
     let faviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
-    
+
     if (faviconUrl) {
       if (!faviconLink) {
         faviconLink = document.createElement('link');
@@ -104,12 +104,12 @@ export const FirmPortalColorsProvider = ({ children }) => {
       }
       faviconLink.href = faviconUrl;
       faviconLink.type = faviconUrl.includes('.ico') ? 'image/x-icon' : 'image/png';
-      
+
       // Add crossorigin attribute for B2 images
       if (faviconUrl.includes('backblazeb2.com') || faviconUrl.includes('s3.us-')) {
         faviconLink.crossOrigin = 'anonymous';
       }
-      
+
       // Handle favicon load errors
       faviconLink.onerror = () => {
         console.warn('Failed to load custom favicon, using default');
@@ -134,25 +134,25 @@ export const FirmPortalColorsProvider = ({ children }) => {
   // Fetch colors on mount and when user type changes
   useEffect(() => {
     fetchPortalColors();
-    
+
     // Listen for storage changes (when user logs in/out)
     const handleStorageChange = (e) => {
       if (e.key === 'userType' || e.key === 'accessToken') {
         fetchPortalColors();
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Also check periodically in case colors are updated in another tab
     const interval = setInterval(() => {
       const storage = getStorage();
       const userType = storage?.getItem('userType');
-      if (userType === 'admin') {
+      if (userType === 'admin' || userType === 'firm') {
         fetchPortalColors();
       }
     }, 30000); // Check every 30 seconds
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
