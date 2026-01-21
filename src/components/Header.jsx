@@ -324,19 +324,14 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className={`text-sm font-medium transition-colors duration-200 ${isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                className={`${isTransparent
+                  ? "bg-white text-black px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-zinc-100 transition-colors duration-200 shadow-lg"
+                  : "bg-[#FF7A2E] text-white px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-[#e66a25] transition-colors duration-200"
                   }`}
               >
                 Sign In
               </Link>
             )}
-
-            <button className={`${isTransparent
-              ? "bg-white text-black px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-zinc-100 transition-colors duration-200 shadow-lg"
-              : "bg-[#FF7A2E] text-white px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-[#e66a25] transition-colors duration-200"
-              }`}>
-              Contact Sales
-            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -456,9 +451,7 @@ export default function Header() {
             </Link>
           )}
 
-          <button className="bg-[#FF7A2E] text-white w-full py-2.5 rounded-[10px] font-semibold">
-            Contact Sales
-          </button>
+
         </div>
       )}
     </header>

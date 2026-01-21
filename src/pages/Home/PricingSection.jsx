@@ -98,12 +98,12 @@ export default function PricingSection() {
             Choose Your <span className="text-white">Practice Management Plan</span>
           </h2>
           <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-            Run your tax firm with confidence using powerful automation, secure client tools, and AI-driven workflows.
+            Run yo11ur tax firm with confidence using powerful automation, secure client tools, and AI-driven workflows.
           </p>
 
           {/* Billing Toggle */}
           <div className="flex justify-center mt-10">
-            <div className="bg-white p-1 rounded-xl shadow-sm border border-orange-100 flex items-center">
+            <div className="bg-white p-1 rounded-[10px] shadow-sm border border-orange-100 flex items-center">
               <button
                 className={`px-6 py-2 rounded-[10px] text-sm font-semibold transition-all duration-300 ${billingCycle === "monthly"
                   ? "bg-orange-500 text-white shadow-md"
@@ -135,7 +135,7 @@ export default function PricingSection() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative p-8 rounded-3xl border transition-all duration-300 flex flex-col h-full group hover:-translate-y-2 ${plan.mostPopular
+              className={`relative p-8 rounded-[10px] border transition-all duration-300 flex flex-col h-full group hover:-translate-y-2 ${plan.mostPopular
                 ? "bg-[#1F2A55] text-white border-[#1F2A55] shadow-xl ring-4 ring-orange-500/20"
                 : "bg-white text-[#1F2A55] border-gray-100 hover:border-orange-200 hover:shadow-xl"
                 }`}

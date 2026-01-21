@@ -89,7 +89,7 @@ export default function FaqSection() {
           {faqs.map((item, index) => (
             <div
               key={index}
-              className="rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+              className="rounded-[10px] bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
             >
               <button
                 className="w-full flex items-center justify-between p-6 text-left"

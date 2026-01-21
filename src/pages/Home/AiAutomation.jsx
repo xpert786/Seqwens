@@ -117,12 +117,12 @@ export default function AiAutomation() {
   };
 
   const handleGetStarted = (planType) => {
-    const baseUrl = getLoginUrl('/firm-signup');
+    // Redirect to sign up page
+    let url = '/create-account';
     if (planType) {
-      window.location.href = `${baseUrl}?plan=${planType}&billing=${billingCycle}`;
-    } else {
-      window.location.href = baseUrl;
+      url += `?plan=${planType}&billing=${billingCycle}`;
     }
+    navigate(url);
   };
 
   const toggleFaq = (id) => {
@@ -497,7 +497,7 @@ export default function AiAutomation() {
                       </svg>
                     </button>
                   ) : (
-                    <button onClick={() => handleGetStarted()} className="bg-blue-600 hover:bg-blue-500 text-white text-lg font-semibold px-8 py-4 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25">
+                    <button onClick={() => handleGetStarted()} className="bg-blue-600 hover:bg-blue-500 text-white text-lg font-semibold px-8 py-4 rounded-[10px] transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25">
                       Start Today and Take Control
                     </button>
                   )}
@@ -530,7 +530,7 @@ export default function AiAutomation() {
           <div className="max-w-3xl mx-auto space-y-12">
             {sortedCategories.map((category, catIdx) => (
               <div key={catIdx}>
-               
+
                 <div className="space-y-4">
                   {groupedFaqs[category].map((faq) => (
                     <div key={faq.id || faq.title} className="border border-zinc-800 rounded-xl bg-zinc-950 overflow-hidden text-left">

@@ -22,7 +22,6 @@ export default function Home() {
             <FeatureCards />
             <WhyChooseUs />
             <AiAutomation />
-            <PricingSection />
             <Testimonials />
             <FaqSection />
 
