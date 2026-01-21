@@ -84,9 +84,10 @@ const MaintenanceMode = () => {
             setSessionExpired(false);
           }
 
-          // Check for Subscription Expiration (Firm Admin only)
+          // Check for Subscription Expiration or Missing Subscription (Firm Admin only)
           if ((userType === 'firm' || userType === 'admin') && response.subscription) {
-            if (response.subscription.status === 'expired') {
+            const subStatus = response.subscription.status;
+            if (subStatus === 'expired' || subStatus === 'none') {
                // Allow access to subscription management pages
                const isSubscriptionPage = location.pathname.includes('/firmadmin/subscription') || 
                                           location.pathname.includes('/firmadmin/finalize-subscription') ||
@@ -253,7 +254,7 @@ const MaintenanceMode = () => {
               fontFamily: 'BasisGrotesquePro',
             }}
           >
-            Subscription Expired
+            {subscriptionData?.status === 'none' ? 'No Active Subscription' : 'Subscription Expired'}
           </h2>
           
           <p
@@ -265,9 +266,19 @@ const MaintenanceMode = () => {
               lineHeight: '1.6',
             }}
           >
-            Your firm's subscription expired on <span style={{ fontWeight: '600', color: '#111827' }}>{subscriptionData?.expires_at ? new Date(subscriptionData.expires_at).toLocaleDateString() : 'Unknown date'}</span>. 
-            <br/>
-            To continue accessing the platform and managing your clients, please renew your subscription securely.
+            {subscriptionData?.status === 'none' ? (
+              <>
+                Your firm does not have an active subscription plan.
+                <br/>
+                To start using the platform and manage your clients, please select and purchase a subscription plan.
+              </>
+            ) : (
+              <>
+                Your firm's subscription expired on <span style={{ fontWeight: '600', color: '#111827' }}>{subscriptionData?.expires_at ? new Date(subscriptionData.expires_at).toLocaleDateString() : 'Unknown date'}</span>. 
+                <br/>
+                To continue accessing the platform and managing your clients, please renew your subscription securely.
+              </>
+            )}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -289,7 +300,7 @@ const MaintenanceMode = () => {
                 onMouseOver={(e) => e.target.style.backgroundColor = '#e05d1f'}
                 onMouseOut={(e) => e.target.style.backgroundColor = '#F56D2D'}
               >
-                Renew Subscription Now
+                {subscriptionData?.status === 'none' ? 'Purchase Subscription Now' : 'Renew Subscription Now'}
               </button>
               
               <button

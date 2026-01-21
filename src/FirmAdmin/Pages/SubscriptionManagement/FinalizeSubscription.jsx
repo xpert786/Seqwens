@@ -24,7 +24,7 @@ const FinalizeSubscription = () => {
       const storage = getStorage();
       const userDataStr = storage?.getItem("userData");
       const userType = storage?.getItem("userType");
-      
+
       // Check user type first
       if (userType !== 'admin' && userType !== 'firm') {
         navigate('/firmadmin', { replace: true });
@@ -38,7 +38,7 @@ const FinalizeSubscription = () => {
 
       try {
         const userData = JSON.parse(userDataStr);
-        
+
         // First check localStorage - if subscription_plan is set, user has subscription
         if (userData.subscription_plan !== null && userData.subscription_plan !== undefined) {
           navigate('/firmadmin', { replace: true });
@@ -60,14 +60,14 @@ const FinalizeSubscription = () => {
 
             if (statusResponse.ok) {
               const statusResult = await statusResponse.json();
-              
+
               // Check if subscription is active - subscription is at top level in response
               if (statusResult.success && statusResult.subscription && statusResult.subscription.status === 'active') {
                 // Update userData with subscription info
                 userData.subscription_plan = statusResult.subscription.plan_name || statusResult.subscription.plan_type || statusResult.subscription.subscription_type || 'active';
                 storage.setItem("userData", JSON.stringify(userData));
                 sessionStorage.setItem("userData", JSON.stringify(userData));
-                
+
                 console.log('Active subscription found, redirecting to firmadmin');
                 // Redirect to firm admin dashboard
                 navigate('/firmadmin', { replace: true });
@@ -130,24 +130,24 @@ const FinalizeSubscription = () => {
         // New structure: data.monthly_plans and data.yearly_plans
         if (result.data.monthly_plans && result.data.yearly_plans) {
           // Use current billingCycle state value
-          plansData = billingCycle === 'monthly' 
+          plansData = billingCycle === 'monthly'
             ? (result.data.monthly_plans || [])
             : (result.data.yearly_plans || []);
-        } 
+        }
         // Fallback: old structure with flat array
         else if (Array.isArray(result.data)) {
-          plansData = result.data.filter(plan => 
+          plansData = result.data.filter(plan =>
             plan.billing_cycle === billingCycle
           );
         } else if (result.data.plans && Array.isArray(result.data.plans)) {
           // Nested plans structure (old format)
-          plansData = result.data.plans.filter(plan => 
+          plansData = result.data.plans.filter(plan =>
             plan.billing_cycle === billingCycle
           );
         }
       } else if (Array.isArray(result)) {
         // Direct array response (old format)
-        plansData = result.filter(plan => 
+        plansData = result.filter(plan =>
           plan.billing_cycle === billingCycle
         );
       }
@@ -157,7 +157,7 @@ const FinalizeSubscription = () => {
         setBillingCycle(result.user_billing_cycle);
         // Refetch with correct billing cycle
         if (result.data && result.data.monthly_plans && result.data.yearly_plans) {
-          plansData = result.user_billing_cycle === 'monthly' 
+          plansData = result.user_billing_cycle === 'monthly'
             ? (result.data.monthly_plans || [])
             : (result.data.yearly_plans || []);
         }
@@ -238,10 +238,10 @@ const FinalizeSubscription = () => {
   // Get plan description
   const getPlanDescription = (type) => {
     const descriptions = {
-      solo: 'Perfect for individual tax preparers',
-      professional: 'Ideal for small firms',
-      team: 'Best for growing teams',
-      enterprise: 'Complete solution for large organizations'
+      starter: 'Perfect for individual tax preparers',
+      growth: 'Ideal for small firms',
+      pro: 'Best for growing teams',
+      elite: 'Complete solution for large organizations'
     };
     return descriptions[type?.toLowerCase()] || 'Subscription plan';
   };
@@ -286,15 +286,15 @@ const FinalizeSubscription = () => {
       }
       // Default features based on plan type
       const defaultFeatures = {
-        solo: [
+        starter: [
           'Up to 1 User',
-          '50 Client Accounts',
+          '150 Client Accounts',
           '10 GB Storage',
-          '25 E-Signature Requests/month',
+          '15 E-Signature Requests/month',
           '1 Office Location Included',
           'Email Support'
         ],
-        team: [
+        growth: [
           'Up to 10 Users',
           '500 Client Accounts',
           '50 GB Storage',
@@ -302,7 +302,7 @@ const FinalizeSubscription = () => {
           '1 Office Location Included',
           'Priority Email Support'
         ],
-        professional: [
+        pro: [
           'Up to 25 Users',
           '1000 Client Accounts',
           '100 GB Storage',
@@ -311,7 +311,7 @@ const FinalizeSubscription = () => {
           'Priority Support',
           'Advanced Analytics'
         ],
-        enterprise: [
+        elite: [
           'Unlimited Users',
           'Unlimited Client Accounts',
           '500 GB Storage',
@@ -373,16 +373,16 @@ const FinalizeSubscription = () => {
           // Update user data and redirect
           const storage = getStorage();
           const userDataStr = storage?.getItem("userData");
-          
+
           if (userDataStr) {
             try {
               const userData = JSON.parse(userDataStr);
               // Update subscription plan from response or selected plan
-              userData.subscription_plan = response.data?.new_plan?.subscription_type || 
-                                          response.data?.subscription_plan || 
-                                          selectedPlan.subscription_type;
+              userData.subscription_plan = response.data?.new_plan?.subscription_type ||
+                response.data?.subscription_plan ||
+                selectedPlan.subscription_type;
               storage.setItem("userData", JSON.stringify(userData));
-              
+
               // Also update in sessionStorage
               sessionStorage.setItem("userData", JSON.stringify(userData));
             } catch (error) {
@@ -390,10 +390,10 @@ const FinalizeSubscription = () => {
             }
           }
 
-          const planName = response.data?.new_plan?.subscription_type_display || 
-                         response.data?.new_plan?.subscription_type || 
-                         selectedPlan.subscription_type || 
-                         'selected plan';
+          const planName = response.data?.new_plan?.subscription_type_display ||
+            response.data?.new_plan?.subscription_type ||
+            selectedPlan.subscription_type ||
+            'selected plan';
 
           toast.success(response.message || `Subscription plan ${planName} selected successfully!`, {
             position: 'top-right',
@@ -456,21 +456,19 @@ const FinalizeSubscription = () => {
           <div className="bg-white rounded-lg p-1 border border-gray-200 inline-flex shadow-sm">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${
-                billingCycle === 'monthly'
+              className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${billingCycle === 'monthly'
                   ? 'bg-[#3AD6F2] text-white shadow-sm'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${
-                billingCycle === 'yearly'
+              className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${billingCycle === 'yearly'
                   ? 'bg-[#3AD6F2] text-white shadow-sm'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Yearly
             </button>
@@ -486,25 +484,24 @@ const FinalizeSubscription = () => {
               // Use price from API response (already filtered by billing_cycle)
               const price = parseFloat(plan.price || plan.monthly_price || plan.yearly_price || 0);
               const priceDisplay = plan.price_display || `$${price.toFixed(2)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
-              
+
               // Get plan display name
-              const planName = plan.subscription_type_display || 
-                              formatPlanType(plan.subscription_type) ||
-                              plan.name ||
-                              'Plan';
-              
+              const planName = plan.subscription_type_display ||
+                formatPlanType(plan.subscription_type) ||
+                plan.name ||
+                'Plan';
+
               // Get plan features
               const features = getPlanFeatures(plan);
-              
+
               return (
                 <div
                   key={plan.id}
                   onClick={() => handleSelectPlan(plan)}
-                  className={`bg-white rounded-xl border-2 p-5 sm:p-6 lg:p-7 cursor-pointer transition-all duration-200 hover:shadow-xl active:scale-[0.98] relative flex flex-col h-full ${
-                    isSelected
+                  className={`bg-white rounded-xl border-2 p-5 sm:p-6 lg:p-7 cursor-pointer transition-all duration-200 hover:shadow-xl active:scale-[0.98] relative flex flex-col h-full ${isSelected
                       ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
                       : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
-                  } ${plan.most_popular ? 'ring-2 ring-orange-200 sm:ring-4 sm:ring-opacity-30' : ''}`}
+                    } ${plan.most_popular ? 'ring-2 ring-orange-200 sm:ring-4 sm:ring-opacity-30' : ''}`}
                 >
                   {plan.most_popular && (
                     <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -513,7 +510,7 @@ const FinalizeSubscription = () => {
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Plan Header */}
                   <div className="text-center mb-5 sm:mb-6">
                     <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 font-[BasisGrotesquePro]">

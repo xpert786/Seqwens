@@ -95,9 +95,7 @@ export default function FaqSection() {
                 className="w-full flex items-center justify-between p-6 text-left"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <span className="text-[#1C4E80] font-semibold text-lg pr-8">
-                  {item.title}
-                </span>
+
 
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${openIndex === index ? "bg-[#00C0C6] text-white rotate-45" : "bg-gray-100 text-gray-400"}`}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

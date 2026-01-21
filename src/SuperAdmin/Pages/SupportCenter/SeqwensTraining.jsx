@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { superAdminAPI } from "../../utils/superAdminAPI";
+import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
+import { toast } from "react-toastify";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 
 export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrainingModal }) {
 
@@ -18,6 +20,11 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
     });
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState(null);
+
+    // Delete Modal State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [resourceToDelete, setResourceToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         fetchResources();
@@ -197,6 +204,68 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
         }
     };
 
+    const handleDeleteResource = (resourceId, e) => {
+        e.stopPropagation();
+        setResourceToDelete(resourceId);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteResource = async () => {
+        if (!resourceToDelete) return;
+
+        try {
+            setDeleting(true);
+            const response = await superAdminAPI.deleteResource(resourceToDelete);
+
+            if (response.success) {
+                toast.success('Resource deleted successfully', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    icon: false,
+                    className: "custom-toast-success",
+                    bodyClassName: "custom-toast-body",
+                });
+
+                // Refresh Resources
+                fetchResources();
+                setShowDeleteModal(false);
+                setResourceToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete resource', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    icon: false,
+                    className: "custom-toast-error",
+                    bodyClassName: "custom-toast-body",
+                });
+            }
+        } catch (err) {
+            console.error('Error deleting resource:', err);
+            const errorMessage = handleAPIError(err);
+            toast.error(errorMessage, {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
+            });
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const buttonText =
         selectedResourceType === "tax-resources"
             ? "Upload Files"
@@ -245,13 +314,24 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => handleDownload(resource.file)}
-                                        className="px-1 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs font-medium hover:bg-gray-50 transition-colors"
-                                        disabled={!resource.file}
-                                    >
-                                        Download
-                                    </button>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handleDownload(resource.file)}
+                                            className="px-1 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs font-medium hover:bg-gray-50 transition-colors"
+                                            disabled={!resource.file}
+                                        >
+                                            Download
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleDeleteResource(resource.id, e)}
+                                            className="p-1 bg-white border border-gray-300 text-red-500 rounded hover:bg-red-50 transition-colors"
+                                            title="Delete Resource"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -302,13 +382,24 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => handleWatchVideo(tutorial.video_url, tutorial.video_file)}
-                                        className="px-1 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs font-medium hover:bg-gray-50 transition-colors"
-                                        disabled={!tutorial.video_url && !tutorial.video_file}
-                                    >
-                                        Watch Video
-                                    </button>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handleWatchVideo(tutorial.video_url, tutorial.video_file)}
+                                            className="px-1 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs font-medium hover:bg-gray-50 transition-colors"
+                                            disabled={!tutorial.video_url && !tutorial.video_file}
+                                        >
+                                            Watch Video
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleDeleteResource(tutorial.id, e)}
+                                            className="p-1 bg-white border border-gray-300 text-red-500 rounded hover:bg-red-50 transition-colors"
+                                            title="Delete Resource"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -498,6 +589,16 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                     </div>
                 </div>
             )}
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={confirmDeleteResource}
+                title="Delete Resource"
+                message="Are you sure you want to delete this resource?"
+                confirmText="Delete"
+                isDestructive={true}
+                isLoading={deleting}
+            />
         </div>
     );
 }

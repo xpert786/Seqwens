@@ -530,7 +530,7 @@ export default function AiAutomation() {
           <div className="max-w-3xl mx-auto space-y-12">
             {sortedCategories.map((category, catIdx) => (
               <div key={catIdx}>
-                <h3 className="text-2xl font-bold mb-6 text-blue-400">{category}</h3>
+               
                 <div className="space-y-4">
                   {groupedFaqs[category].map((faq) => (
                     <div key={faq.id || faq.title} className="border border-zinc-800 rounded-xl bg-zinc-950 overflow-hidden text-left">
