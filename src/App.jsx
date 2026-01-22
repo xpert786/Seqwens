@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import React from "react";
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 // import Homepage from "./pages/Homepage";
 import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
@@ -186,6 +188,57 @@ const RouteLoader = () => {
 };
 
 export default function App() {
+  // Initialize AOS on component mount
+  React.useEffect(() => {
+    console.log(' Initializing AOS...');
+    // Initialize AOS with enhanced settings
+    AOS.init({
+      // Global settings
+      disable: false,
+      startEvent: 'DOMContentLoaded',
+      initClassName: 'aos-init',
+      animatedClassName: 'aos-animate',
+      useClassNames: false,
+      disableMutationObserver: false,
+      debounceDelay: 50,
+      throttleDelay: 99,
+      
+      // Animation settings
+      offset: 120,
+      delay: 0,
+      duration: 800,
+      easing: 'ease',
+      once: true,
+      mirror: false,
+      anchorPlacement: 'top-bottom',
+    });
+    
+    console.log(' AOS initialized successfully');
+    
+    // Test if AOS is working
+    setTimeout(() => {
+      if (window.AOS) {
+        console.log('✅ AOS is available globally');
+      } else {
+        console.log('❌ AOS is not available');
+      }
+    }, 1000);
+    
+    // Refresh AOS when route changes
+    const handleRouteChange = () => {
+      AOS.refresh();
+    };
+    
+    // Listen for route changes
+    window.addEventListener('load', handleRouteChange);
+    window.addEventListener('popstate', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('load', handleRouteChange);
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, []);
+  
   return (
     <FeedbackWrapper>
       <Routes>

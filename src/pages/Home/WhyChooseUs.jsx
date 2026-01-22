@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 export default function WhyChooseUs() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -43,18 +43,18 @@ export default function WhyChooseUs() {
 
   return (
     <section className="py-24 bg-black" id="gallery">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+          <div className="text-center mb-16" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="300">
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
               AI-Powered Tax Operations
             </h2>
-            <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
               Our AI-powered features give you complete control over your firm’s operations.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
             {galleryItems.map((item, index) => (
               <div
                 key={item.id}
@@ -62,7 +62,8 @@ export default function WhyChooseUs() {
                 className={`group relative overflow-hidden rounded-xl md:rounded-2xl border cursor-pointer transition-all duration-300 hover:shadow-2xl min-h-[320px] ${activeIndex === index
                   ? "border-zinc-700"
                   : "border-zinc-800"
-                  }`}
+                    }`}
+                data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600"
               >
                 {/* Image Background - Always visible */}
                 <div

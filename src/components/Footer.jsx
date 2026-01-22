@@ -9,7 +9,7 @@ export default function Footer() {
 
                     {/* Left Section - Company Info and Social Media (White Box) */}
                     <div className="w-full max-w-[420px]">
-                        <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10 shadow-sm">
+                        <div className="bg-zinc-900 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10 shadow-sm">
                             {/* Logo */}
                             <Link to="/" className="flex items-center gap-2 mb-3 sm:mb-4">
                                 <img
@@ -20,12 +20,12 @@ export default function Footer() {
                             </Link>
 
                             {/* Description */}
-                            <p className="text-[#3D4756] text-xs sm:text-sm md:text-base mb-4 sm:mb-5 md:mb-6 font-[BasisGrotesquePro] leading-relaxed">
+                            <p className="text-gray-400 text-xs sm:text-sm md:text-base mb-4 sm:mb-5 md:mb-6 font-[BasisGrotesquePro] leading-relaxed">
                                 The complete tax practice management platform designed for modern tax professionals. Streamline your workflow, secure your data, and grow your practice.
                             </p>
 
                             {/* Follow us */}
-                            <p className="text-[#3D4756] text-xs sm:text-sm font-[BasisGrotesquePro] mb-2 sm:mb-3">
+                            <p className="text-gray-500 text-xs sm:text-sm font-[BasisGrotesquePro] mb-2 sm:mb-3">
                                 Follow us on:
                             </p>
 

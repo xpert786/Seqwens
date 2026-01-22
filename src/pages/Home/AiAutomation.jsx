@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { subscriptionAPI, taxpayerPublicAPI, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
+import { subscriptionAPI, taxpayerPublicAPI } from '../../ClientOnboarding/utils/apiUtils';
 import { isLoggedIn, getUserData, getStorage } from '../../ClientOnboarding/utils/userUtils';
 import ReachOutModal from '../../components/ReachOutModal';
 
@@ -229,7 +229,7 @@ export default function AiAutomation() {
   ];
 
   return (
-    <div className="bg-black text-white">
+    <div className="bg-black text-white" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic">
       {/* Section 1: End-to-End Workflow */}
       <section className="py-24 relative overflow-hidden">
         {/* Background gradients */}
@@ -237,18 +237,18 @@ export default function AiAutomation() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+          <div className="max-w-4xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="400">
               Unlock End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Tax Workflow Control</span>
             </h2>
-            <p className="text-xl text-zinc-400 leading-relaxed">
+            <p className="text-xl text-zinc-400 leading-relaxed" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
               Our AI-powered features give you complete control over your firm’s operations.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="800">
             {features.map((feature, idx) => (
-              <div key={idx} className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-2xl hover:bg-zinc-900 transition-colors">
+              <div key={idx} className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-2xl hover:bg-zinc-900 transition-colors" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay={`${300 + idx * 100}`}>
                 <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6 border border-blue-500/20">
                   {feature.icon}
                 </div>
@@ -263,23 +263,23 @@ export default function AiAutomation() {
       {/* Section 2: Before & After + Natural Language */}
       <section className="py-24 bg-zinc-900/30 border-y border-zinc-800 relative z-10">
         <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">From Chaos to Control</h2>
-            <p className="text-lg text-zinc-400">
+          <div className="max-w-4xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="400">From Chaos to Control</h2>
+            <p className="text-lg text-zinc-400" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
               See how firms transform from spreadsheets, emails, and disconnected tools into a fully automated tax operation in days, not months.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
             <div className="order-2 lg:order-1">
-              <h3 className="text-3xl font-bold mb-6">
+              <h3 className="text-3xl font-bold mb-6" data-aos="fade-up" data-aos-duration="5000" data-aos-easing="ease-out-cubic" data-aos-delay="300">
                 Edit & Automate With <span className="text-blue-400">Natural Language</span>
               </h3>
-              <p className="text-zinc-400 mb-8 text-lg">
+              <p className="text-zinc-400 mb-8 text-lg" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="1200">
                 Describe what you want to happen, and let the system do the work. Perfect for firms that want power without complexity.
               </p>
               {/* Examples */}
-              <div className="space-y-4">
+              <div className="space-y-4" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="500">
                 {examples.map((ex, i) => (
                   <div key={i} className="flex items-start gap-4 p-4 bg-zinc-900 rounded-xl border border-zinc-800">
                     <div className="mt-1 w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
@@ -292,7 +292,7 @@ export default function AiAutomation() {
             </div>
 
             {/* Visual Representation (Terminal) */}
-            <div className="order-1 lg:order-2 relative">
+            <div className="order-1 lg:order-2 relative" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="400">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-lg opacity-20"></div>
               <div className="relative bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
                 <div className="flex items-center gap-2 mb-6 border-b border-zinc-800 pb-4">
@@ -323,16 +323,16 @@ export default function AiAutomation() {
       {/* Section 3: Built for Real Tax Professionals */}
       <section className="py-24 relative">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-12 items-center justify-between mb-16">
+          <div className="flex flex-col md:flex-row gap-12 items-center justify-between mb-16" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="200">
             <div className="max-w-xl">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Real Tax Professionals</h2>
-              <p className="text-xl text-zinc-400">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="400">Built for Real Tax Professionals</h2>
+              <p className="text-xl text-zinc-400" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
                 From Solo Preparers to Service Bureaus. Whether you prepare 50 returns or manage thousands across multiple offices, the platform scales with your firm.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="400">
               {["Multi-office friendly", "Role-based permissions", "Bank product-ready workflows", "IRS-compliant data handling"].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-4 py-3 rounded-lg border border-zinc-800">
+                <div key={i} className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-4 py-3 rounded-lg border border-zinc-800" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay={`${1000 + i * 100}`}>
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -347,10 +347,10 @@ export default function AiAutomation() {
       {/* Section 4: Testimonials */}
       <section className="py-24 bg-gradient-to-b from-zinc-900 to-black border-t border-zinc-800">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-16">Trusted by Tax Professionals Nationwide</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <h2 className="text-3xl font-bold text-center mb-16" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">Trusted by Tax Professionals Nationwide</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
             {reviews.map((review, i) => (
-              <div key={i} className="bg-zinc-950 border border-zinc-800 p-8 rounded-2xl relative">
+              <div key={i} className="bg-zinc-950 border border-zinc-800 p-8 rounded-2xl relative" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay={`${300 + i * 100}`}>
                 <div className="text-blue-500 mb-6">
                   <svg className="w-8 h-8 opacity-50" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14.017 21L14.017 18C14.017 16.0547 15.1924 14.6328 16.9414 14.2852V6H19.9824V14.2852C19.9824 17.5195 18.0664 21 14.017 21ZM5.01367 21L5.01367 18C5.01367 16.0547 6.18906 14.6328 7.93809 14.2852V6H10.9791V14.2852C10.9791 17.5195 9.06309 21 5.01367 21Z" />
@@ -369,16 +369,16 @@ export default function AiAutomation() {
       {/* Section 5: Pricing */}
       <section className="py-24 bg-zinc-900/20 relative border-t border-zinc-800">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Choose Your <span className="text-blue-400">Practice Management Plan</span></h2>
-            <p className="text-lg text-zinc-400 mb-8">Run your tax firm with confidence using powerful automation, secure client tools, and AI-driven workflows.</p>
+          <div className="max-w-3xl mx-auto text-center mb-12" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Choose Your <span className="text-blue-400">Practice Management Plan</span></h2>
+            <p className="text-lg text-zinc-400 mb-8" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="400">Run your tax firm with confidence using powerful automation, secure client tools, and AI-driven workflows.</p>
 
             {/* Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="flex items-center justify-center gap-4 mb-8" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
               <span className={`text-sm font-semibold ${billingCycle === 'monthly' ? 'text-white' : 'text-zinc-500'}`}>Monthly</span>
               <button
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className="w-14 h-8 bg-zinc-800 rounded-full p-1 relative transition-colors duration-200"
+                className="w-14 h-8 bg-zinc-800 rounded-full p-1 relative transition-colors duration-200" style={{ borderRadius: '30px' }}
               >
                 <div className={`w-6 h-6 bg-blue-500 rounded-full transition-all duration-200 transform ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'}`}></div>
               </button>
@@ -386,21 +386,21 @@ export default function AiAutomation() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
             {loading ? (
-              <div className="col-span-full py-12 text-center">
+              <div className="col-span-full py-12 text-center" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-4"></div>
                 <p className="text-zinc-500">Loading plans...</p>
               </div>
             ) : (billingCycle === 'monthly' ? plans.monthly : plans.yearly).length > 0 ? (
-              (billingCycle === 'monthly' ? plans.monthly : plans.yearly).map((plan) => {
+              (billingCycle === 'monthly' ? plans.monthly : plans.yearly).map((plan, idx) => {
                 const meta = getPlanMeta(plan.subscription_type);
                 const isPopular = plan.most_popular;
                 const isCurrent = plan.is_current;
                 const price = parseFloat(plan.price);
 
                 return (
-                  <div key={plan.id} className={`bg-zinc-900 border ${isCurrent ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-900/20 transform md:-translate-y-4 relative' : isPopular ? 'border-2 border-blue-500 shadow-xl shadow-blue-900/20 transform md:-translate-y-4 relative' : 'border-zinc-800 hover:border-zinc-700'} rounded-2xl p-6 flex flex-col transition-all`}>
+                  <div key={plan.id} className={`bg-zinc-900 border ${isCurrent ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-900/20 transform md:-translate-y-4 relative' : isPopular ? 'border-2 border-blue-500 shadow-xl shadow-blue-900/20 transform md:-translate-y-4 relative' : 'border-zinc-800 hover:border-zinc-700'} rounded-2xl p-6 flex flex-col transition-all`} data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay={`${500 + idx * 100}`}>
                     {isCurrent ? (
                       <div className="absolute top-0 right-0 left-0 bg-emerald-600 text-white text-xs font-bold text-center py-1 rounded-t-lg uppercase tracking-wider">Your Current Plan</div>
                     ) : isPopular ? (
@@ -448,7 +448,7 @@ export default function AiAutomation() {
                 );
               })
             ) : (
-              <div className="col-span-full py-12 text-center text-zinc-500">
+              <div className="col-span-full py-12 text-center text-zinc-500" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">
                 <p>No subscription plans currently available.</p>
               </div>
             )}
@@ -457,20 +457,20 @@ export default function AiAutomation() {
           {/* Platform Stats / Active Subscriptions */}
           {plans.stats && (plans.stats.total_firms > 0 || plans.stats.total_users > 0) && (
             <div className="mt-16 pt-16 border-t border-zinc-800/50">
-              <div className="flex flex-wrap justify-center gap-12 md:gap-24">
-                <div className="text-center">
+              <div className="flex flex-wrap justify-center gap-12 md:gap-24" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+                <div className="text-center" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
                   <div className="text-4xl font-bold text-white mb-1">
                     {plans.stats.total_firms < 10 ? `${plans.stats.total_firms}+` : plans.stats.total_firms.toLocaleString() + '+'}
                   </div>
                   <div className="text-zinc-500 uppercase tracking-widest text-xs font-bold">Active Firms</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">
                   <div className="text-4xl font-bold text-white mb-1">
                     {plans.stats.total_users < 100 ? `${plans.stats.total_users}+` : plans.stats.total_users.toLocaleString() + '+'}
                   </div>
                   <div className="text-zinc-500 uppercase tracking-widest text-xs font-bold">Tax Professionals</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="800">
                   <div className="text-4xl font-bold text-white mb-1">99.9%</div>
                   <div className="text-zinc-500 uppercase tracking-widest text-xs font-bold">Platform Uptime</div>
                 </div>
@@ -491,10 +491,10 @@ export default function AiAutomation() {
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-5xl mx-auto">
             {/* Why Switch Grid */}
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-12">Why Firms Switch to Us</h2>
-              <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">Unlike generic CRMs or form builders, this platform is built specifically for tax professionals.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center mb-16" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+              <h2 className="text-3xl md:text-4xl font-bold mb-12" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Why Firms Switch to Us</h2>
+              <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">Unlike generic CRMs or form builders, this platform is built specifically for tax professionals.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="800">
                 {[
                   {
                     title: "More Powerful",
@@ -513,7 +513,7 @@ export default function AiAutomation() {
                     desc: "From intake to e-file to funding, everything stays connected."
                   }
                 ].map((item, i) => (
-                  <div key={i} className="text-left p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-blue-500/50 transition-colors">
+                  <div key={i} className="text-left p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-blue-500/50 transition-colors" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay={`${500 + i * 100}`}>
                     <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
                     <p className="text-zinc-400 text-sm">{item.desc}</p>
                   </div>
@@ -522,14 +522,14 @@ export default function AiAutomation() {
             </div>
 
             {/* Final CTA */}
-            <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-3xl p-12 text-center relative overflow-hidden backdrop-blur-sm">
+            <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-3xl p-12 text-center relative overflow-hidden backdrop-blur-sm" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
               <div className="relative z-10">
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Modernize Your Tax Firm?</h2>
-                <p className="text-xl text-zinc-300 mb-8 max-w-2xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-bold mb-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Ready to Modernize Your Tax Firm?</h2>
+                <p className="text-xl text-zinc-300 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">
                   Join thousands of tax professionals who’ve replaced spreadsheets, emails, and disconnected tools with one intelligent system.
                 </p>
 
-                <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col items-center gap-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="800">
                   {isUserLoggedIn ? (
                     <button
                       onClick={handleDashboardClick}
@@ -544,15 +544,15 @@ export default function AiAutomation() {
                       </svg>
                     </button>
                   ) : (
-                    <button onClick={() => handleGetStarted()} className="bg-blue-600 hover:bg-blue-500 text-white text-lg font-semibold px-8 py-4 rounded-[10px] transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25">
+                    <button onClick={() => handleGetStarted()} className="bg-blue-600 hover:bg-blue-500 text-white text-lg font-semibold px-8 py-4 rounded-[10px] transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25" style={{ borderRadius: '10px' }}>
                       Start Today and Take Control
                     </button>
                   )}
 
-                  <div className="flex items-center gap-2 text-zinc-400 text-sm">
+                  <div className="flex items-center gap-2 text-zinc-400 text-sm" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="1000">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
-                        <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                        <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay={`${500 + i * 50}`}>
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       ))}
@@ -569,9 +569,9 @@ export default function AiAutomation() {
       {/* Section 7: FAQ */}
       <section className="py-24 bg-zinc-900 border-t border-zinc-800">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-lg text-zinc-400">Everything you need to know about our tax practice management platform.</p>
+          <div className="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Frequently Asked Questions</h2>
+            <p className="text-lg text-zinc-400" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">Everything you need to know about our tax practice management platform.</p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-12">
@@ -608,10 +608,10 @@ export default function AiAutomation() {
               </div>
             ))}
 
-            <div className="mt-16 text-center bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800">
-              <h3 className="text-xl font-bold mb-4">Still Have Questions?</h3>
-              <p className="text-zinc-400 mb-6">If you need help deciding which plan is right for your firm or want to see the platform in action, our team is happy to help.</p>
-              <div className="inline-flex">
+            <div className="mt-16 text-center bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
+              <h3 className="text-xl font-bold mb-4" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Still Have Questions?</h3>
+              <p className="text-zinc-400 mb-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="600">If you need help deciding which plan is right for your firm or want to see the platform in action, our team is happy to help.</p>
+              <div className="inline-flex" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="800">
                 <button
                   onClick={() => setIsReachOutOpen(true)}
                   className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-[10px] font-medium transition-colors"

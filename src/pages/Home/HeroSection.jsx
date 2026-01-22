@@ -74,12 +74,21 @@ export default function HeroSection() {
   );
 
   return (
-    <div className="">
+    <div className="" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic">
+      {/* Test element to verify AOS is working */}
+      <div 
+        data-aos="fade-down" 
+        data-aos-duration="1000" 
+        className="fixed top-4 left-4 bg-green-500 text-white px-3 py-1 rounded text-sm z-50 hidden md:block"
+        style={{ display: 'none' }}
+      >
+        AOS Working!
+      </div>
       <main className="flex-1 w-full px-2 sm:px-4 md:px-6 lg:px-10 xl:px-12 py-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-screen relative z-10">
           <div className="px-8 lg:px-16 xl:px-20 flex flex-col justify-center py-20 lg:py-0">
-            <div style={{ opacity: 1, transform: "none" }}>
-              <div className="backdrop-blur-xs py-4 rounded-xl border border-zinc-800/30 inline-block mb-6" style={{ opacity: 1 }}>
+            <div data-aos="fade-right" data-aos-duration="1200" data-aos-easing="ease-out-cubic" data-aos-delay="300">
+              <div className="backdrop-blur-xs py-4 rounded-xl border border-zinc-800/30 inline-block mb-6" data-aos="zoom-in" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="500">
                 <div className="flex items-center">
                   <svg className="h-8 fill-current text-stone-400 text-opacity-75 transition duration-300 group-hover:-translate-x-1 group-hover:scale-105 group-hover:text-[#fd9b61] group-hover:duration-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" aria-hidden="true">
                     <path d="M16.247 24.571c-.68-.058-1.523.13-2.098.48-.246.142-.28.364-.07.552.527.48 1.336.843 2.027.89.715.094 1.57-.129 2.145-.562.188-.13.2-.328.023-.492-.515-.48-1.324-.82-2.027-.868Zm2.461-3.96c-.375.574-.586 1.417-.562 2.097.046.715.375 1.535.832 2.04.152.175.34.175.492-.013.457-.539.703-1.394.633-2.12-.047-.68-.387-1.489-.856-2.028-.176-.21-.387-.2-.539.023Zm-5.765.785c-.645-.235-1.524-.258-2.18-.059-.258.082-.328.281-.188.516.387.597 1.078 1.148 1.723 1.382.656.27 1.547.27 2.215-.011.223-.082.281-.258.152-.469-.375-.598-1.066-1.137-1.722-1.36Zm3.374-3.188c-.503.457-.937 1.207-1.066 1.875-.152.703-.047 1.582.27 2.18.093.222.28.258.48.117.563-.41 1.02-1.172 1.137-1.898.14-.668.023-1.547-.293-2.18-.106-.258-.328-.293-.527-.094ZM8.01 16.86c.094.68.504 1.477 1.008 1.97.492.515 1.3.866 2.027.89.234.012.363-.14.328-.375-.117-.715-.527-1.477-1.031-1.934-.504-.48-1.277-.855-1.957-.937-.281-.035-.422.117-.375.386Zm6.715-1.007a3.872 3.872 0 0 0-1.735 1.289c-.421.55-.668 1.383-.644 2.11.023.222.176.339.41.304.703-.164 1.441-.668 1.816-1.278.387-.597.645-1.43.598-2.12 0-.282-.176-.4-.445-.305Zm-1.957-2.742c-.551.445-1.008 1.195-1.149 1.886-.035.211.082.375.305.387.726.023 1.559-.293 2.086-.762.527-.457.996-1.219 1.148-1.898.036-.258-.105-.434-.363-.422-.703.059-1.512.363-2.027.809ZM8.02 11.575a3.69 3.69 0 0 0 .492 2.157c.351.632 1.043 1.183 1.723 1.37.21.071.398-.046.421-.28.07-.669-.129-1.524-.504-2.133-.375-.586-1.043-1.149-1.664-1.395-.246-.105-.445 0-.468.281Zm5.39-2.402c-.668.234-1.36.762-1.734 1.371-.129.188-.059.387.152.48.668.27 1.547.27 2.215 0 .68-.257 1.383-.82 1.723-1.417.14-.211.07-.41-.188-.493-.668-.187-1.535-.175-2.168.059Zm-3.937-3.07c-.305.644-.422 1.511-.293 2.191.129.715.586 1.465 1.172 1.887.175.14.363.082.48-.13.305-.608.41-1.476.258-2.167-.14-.68-.586-1.43-1.078-1.899-.188-.164-.41-.117-.54.118Zm6.058-.305c-.691.129-1.453.574-1.886 1.113-.141.164-.106.364.082.492.62.364 1.5.48 2.191.293.691-.152 1.453-.609 1.898-1.125.176-.21.13-.421-.117-.527a3.795 3.795 0 0 0-2.168-.246Zm-3.457-3.61c-.398.598-.632 1.454-.586 2.133.012.715.364 1.524.88 2.04.175.164.374.14.503-.047.387-.598.621-1.454.563-2.133-.047-.668-.364-1.465-.809-2.016-.187-.21-.398-.187-.55.024Zm6.047-1.183c-.68.105-1.453.516-1.945.996s-.88 1.29-.961 1.969c-.023.234.105.375.34.363.715-.035 1.511-.41 2.004-.96.468-.493.855-1.278.96-1.981.024-.27-.117-.422-.398-.387Z"></path>
@@ -110,17 +119,18 @@ export default function HeroSection() {
                 </div>
               </div>
             </div>
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 leading-[1.1] text-white" style={{ opacity: 1, transform: "none" }}>
+            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 leading-[1.1] text-white" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="600">
               Run Your Entire Tax Office With AI-Powered Precision
             </h1>
-            <p className="mb-12 text-lg lg:text-xl text-zinc-300 max-w-xl leading-relaxed" style={{ opacity: 1, transform: "none" }}>
+            <p className="mb-12 text-lg lg:text-xl text-zinc-300 max-w-xl leading-relaxed" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="800">
               Experience the future of tax practice management. Our platform helps tax professionals organize, automate, and scale their firm with intelligent workflows, client management, and AI-driven efficiency.✨
             </p>
-            <div className="mb-16" style={{ opacity: 1, transform: "none" }}>
+            <div className="mb-16" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="1000">
               {isUserLoggedIn ? (
                 <button
                   onClick={handleDashboardClick}
                   className="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-white text-black hover:bg-zinc-100 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 transform hover:scale-110 group relative border-2 border-zinc-200"
+                  data-aos="zoom-in" data-aos-duration="800" data-aos-easing="ease-out-cubic" data-aos-delay="1200"
                 >
                   <div className="absolute inset-0 rounded-full border-2 border-blue-500/0 group-hover:border-blue-500/50 transition-all duration-300 scale-110 opacity-0 group-hover:opacity-100"></div>
                   <span className="text-2xl font-bold text-blue-600 mb-1">{getUserInitials()}</span>
@@ -134,6 +144,8 @@ export default function HeroSection() {
                 <button
                   onClick={() => navigate("/create-account")}
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-11 rounded-[10px] bg-white text-black hover:bg-zinc-100 px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  data-aos="zoom-in" data-aos-duration="800" data-aos-easing="ease-out-cubic" data-aos-delay="1200"
+                  style={{borderRadius: "10px"}}
                 >
                   Get Started
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-right ml-2">
@@ -143,16 +155,16 @@ export default function HeroSection() {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-8 max-w-xl" style={{ opacity: 1, transform: "none" }}>
-              <div className="group" style={{ opacity: 1, transform: "none" }}>
+            <div className="grid grid-cols-3 gap-8 max-w-xl" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="1400">
+              <div className="group" data-aos="fade-up" data-aos-duration="800" data-aos-easing="ease-out-cubic" data-aos-delay="1600">
                 <div className="text-2xl lg:text-3xl font-bold text-white group-hover:text-zinc-200 transition-colors duration-300">50M+</div>
                 <div className="text-sm text-zinc-400 mt-1">Client Actions Processed</div>
               </div>
-              <div className="group" style={{ opacity: 1, transform: "none" }}>
+              <div className="group" data-aos="fade-up" data-aos-duration="800" data-aos-easing="ease-out-cubic" data-aos-delay="1800">
                 <div className="text-2xl lg:text-3xl font-bold text-white group-hover:text-zinc-200 transition-colors duration-300">100K+</div>
                 <div className="text-sm text-zinc-400 mt-1">Tax Professionals Supported</div>
               </div>
-              <div className="group" style={{ opacity: 1, transform: "none" }}>
+              <div className="group" data-aos="fade-up" data-aos-duration="800" data-aos-easing="ease-out-cubic" data-aos-delay="2000">
                 <div className="text-2xl lg:text-3xl font-bold text-white group-hover:text-zinc-200 transition-colors duration-300">4.9/5</div>
                 <div className="text-sm text-zinc-400 mt-1">User Rating</div>
               </div>
