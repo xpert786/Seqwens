@@ -4,7 +4,7 @@ export default function FeatureCards() {
       <div className="container mx-auto px-6" data-aos="fade-up" data-aos-duration="500">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-12 text-white leading-tight" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Transform Your Tax Practice Into a Scalable Operation</h1>
+            <h2 className="text-5xl md:text-7xl font-bold tracking-tight mb-12 text-white leading-tight" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Transform Your Tax Practice Into a Scalable Operation</h2>
           </div>
           <div className="space-y-8 text-lg md:text-xl text-zinc-300 max-w-3xl mx-auto" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
             <p className="leading-relaxed" data-aos="fade-right" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">From Intake to Filing, All in One System

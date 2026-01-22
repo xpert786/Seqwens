@@ -246,14 +246,15 @@ export default function AiAutomation() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="800">
+          <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-8" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay="800">
             {features.map((feature, idx) => (
-              <div key={idx} className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-2xl hover:bg-zinc-900 transition-colors" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay={`${300 + idx * 100}`}>
-                <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6 border border-blue-500/20">
+              <div key={idx} className="bg-zinc-900/50  overflow-hidden group relative  operations-box  p-8 rounded-2xl hover:bg-zinc-900 transition-colors" data-aos="fade-up" data-aos-duration="1000" data-aos-easing="ease-out-cubic" data-aos-delay={`${300 + idx * 100}`}>
+                <div className="w-12 h-12   operations-box rounded-xl flex items-center justify-center bg-[#00000010] text-blue-400 mb-6 ">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-zinc-400">{feature.desc}</p>
+                <p className="text-zinc-400">{feature.desc}</p>   
+                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-zinc-700 group-hover:w-full transition-all duration-700"></div>  
               </div>
             ))}
           </div>
