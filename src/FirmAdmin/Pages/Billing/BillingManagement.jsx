@@ -4,6 +4,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import CreateInvoiceModal from "./CreateInvoiceModal";
+import SavedPaymentMethods from "./SavedPaymentMethods";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from "../../Context/FirmSettingsContext";
@@ -13,6 +14,7 @@ const API_BASE_URL = getApiBaseUrl();
 export default function BillingManagement() {
   const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("invoices"); // Add tab state
   const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState({
     outstanding_balance: 0,
@@ -417,11 +419,11 @@ export default function BillingManagement() {
             Billing & Invoicing
           </h4>
           <p className="text-base" style={{ color: '#6B7280' }}>
-            Manage invoices and track payments
+            Manage invoices, payments, and saved payment methods
           </p>
         </div>
         <div className="flex gap-3">
-          {!advancedReportingEnabled && (
+          {!advancedReportingEnabled && activeTab === "invoices" && (
             <button
               onClick={exportInvoicesToPDF}
               className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
@@ -432,65 +434,117 @@ export default function BillingManagement() {
               Export Report
             </button>
           )}
+          {activeTab === "invoices" && (
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-5 py-2 !rounded-lg flex items-center gap-2 text-white font-medium"
+              style={{ backgroundColor: '#F97316' }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Invoice
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6 border-b" style={{ borderColor: '#E5E7EB' }}>
+        <div className="flex gap-8">
           <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-5 py-2 !rounded-lg flex items-center gap-2 text-white font-medium"
-            style={{ backgroundColor: '#F97316' }}
+            onClick={() => setActiveTab("invoices")}
+            className={`pb-4 px-2 font-medium transition-colors ${
+              activeTab === "invoices"
+                ? "border-b-2 text-blue-600"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+            style={
+              activeTab === "invoices"
+                ? { borderColor: '#3B82F6', color: '#3B82F6' }
+                : {}
+            }
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Create Invoice
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Invoices
+            </span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("payment-methods")}
+            className={`pb-4 px-2 font-medium transition-colors ${
+              activeTab === "payment-methods"
+                ? "border-b-2 text-blue-600"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+            style={
+              activeTab === "payment-methods"
+                ? { borderColor: '#3B82F6', color: '#3B82F6' }
+                : {}
+            }
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h10m4 0a1 1 0 11-2 0 1 1 0 012 0zM7 6h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z" />
+              </svg>
+              Saved Cards
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Balance</h6>
-          <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
-            {formatCurrency(summary.outstanding_balance || 0)}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Paid This Year</h6>
-          <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
-            {formatCurrency(summary.paid_this_year || 0)}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Total Invoices</h6>
-          <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
-            {summary.total_invoices || invoices.length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Invoices</h6>
-          <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
-            {summary.outstanding_count || 0}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Overdue Invoices</h6>
-          <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
-            {summary.overdue_count || 0}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Next Due Date</h6>
-          <p className="text-lg font-semibold" style={{ color: '#1F2937' }}>
-            {summary.next_due_date || 'N/A'}
-          </p>
-        </div>
-      </div>
+      {/* Invoices Tab */}
+      {activeTab === "invoices" && (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Balance</h6>
+              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+                {formatCurrency(summary.outstanding_balance || 0)}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Paid This Year</h6>
+              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+                {formatCurrency(summary.paid_this_year || 0)}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Total Invoices</h6>
+              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+                {summary.total_invoices || invoices.length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Invoices</h6>
+              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+                {summary.outstanding_count || 0}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Overdue Invoices</h6>
+              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+                {summary.overdue_count || 0}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Next Due Date</h6>
+              <p className="text-lg font-semibold" style={{ color: '#1F2937' }}>
+                {summary.next_due_date || 'N/A'}
+              </p>
+            </div>
+          </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
       {/* Invoice List */}
       <div className="bg-white rounded-lg p-6">
@@ -683,6 +737,13 @@ export default function BillingManagement() {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {/* Payment Methods Tab */}
+      {activeTab === "payment-methods" && (
+        <SavedPaymentMethods />
+      )}
 
       {/* Create Invoice Modal */}
       {isCreateModalOpen && (

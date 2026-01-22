@@ -70,8 +70,8 @@ export const navigateToUrl = (path, navigate = null) => {
   if (navigate && typeof navigate === 'function') {
     // Use React Router navigate for internal navigation (respects basename)
     // Remove base path from navigate calls since basename handles it
-    const cleanPath = path.startsWith('/seqwens-frontend') 
-      ? path.replace('/seqwens-frontend', '') 
+    const cleanPath = path.startsWith('/seqwens-frontend')
+      ? path.replace('/seqwens-frontend', '')
       : path;
     navigate(cleanPath);
   } else {

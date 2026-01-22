@@ -15,9 +15,9 @@ export default function AuthRedirect({ children }) {
       // Get user type from storage
       const storage = getStorage();
       const userType = storage?.getItem("userType");
-      
+
       console.log('AuthRedirect - User type:', userType);
-      
+
       // Redirect based on user type
       // Note: basename="/seqwens-frontend" is set in main.jsx, so paths are relative
       if (userType === 'super_admin') {

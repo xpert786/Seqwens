@@ -457,8 +457,8 @@ const FinalizeSubscription = () => {
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${billingCycle === 'monthly'
-                  ? 'bg-[#3AD6F2] text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'bg-[#3AD6F2] text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >
               Monthly
@@ -466,8 +466,8 @@ const FinalizeSubscription = () => {
             <button
               onClick={() => setBillingCycle('yearly')}
               className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${billingCycle === 'yearly'
-                  ? 'bg-[#3AD6F2] text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'bg-[#3AD6F2] text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >
               Yearly
@@ -499,8 +499,8 @@ const FinalizeSubscription = () => {
                   key={plan.id}
                   onClick={() => handleSelectPlan(plan)}
                   className={`bg-white rounded-xl border-2 p-5 sm:p-6 lg:p-7 cursor-pointer transition-all duration-200 hover:shadow-xl active:scale-[0.98] relative flex flex-col h-full ${isSelected
-                      ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
-                      : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
+                    ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
+                    : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
                     } ${plan.most_popular ? 'ring-2 ring-orange-200 sm:ring-4 sm:ring-opacity-30' : ''}`}
                 >
                   {plan.most_popular && (
