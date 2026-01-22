@@ -10,6 +10,7 @@ import Billing from './Billing';
 import AdminControls from './AdminControls';
 import Security from './Security';
 import Automation from './Automation';
+import SavedPaymentMethods from '../Billing/SavedPaymentMethods';
 import UpgradePlanModal from './UpgradePlanModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import './SubscriptionManagement.css';
@@ -827,6 +828,9 @@ const SubscriptionManagement = () => {
                         </div>
 
                         {/* Payment Methods Section */}
+                        <div className="mt-8">
+                            <SavedPaymentMethods />
+                        </div>
 
                     </>
                 )}

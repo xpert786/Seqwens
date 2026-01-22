@@ -555,8 +555,8 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                             key={djangoMethodId}
                                                             onClick={() => setSelectedPaymentMethodId(djangoMethodId)}
                                                             className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${isSelected
-                                                                    ? 'border-[#3AD6F2] bg-blue-50'
-                                                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                                                ? 'border-[#3AD6F2] bg-blue-50'
+                                                                : 'border-gray-200 bg-white hover:border-gray-300'
                                                                 }`}
                                                         >
                                                             <div className="flex items-center justify-between">
@@ -637,8 +637,8 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     <button
                                         onClick={() => setBillingCycle('monthly')}
                                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'monthly'
-                                                ? 'bg-[#3AD6F2] text-white'
-                                                : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                                            ? 'bg-[#3AD6F2] text-white'
+                                            : 'bg-transparent text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
                                         Monthly
@@ -646,8 +646,8 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     <button
                                         onClick={() => setBillingCycle('yearly')}
                                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'yearly'
-                                                ? 'bg-[#3AD6F2] text-white'
-                                                : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                                            ? 'bg-[#3AD6F2] text-white'
+                                            : 'bg-transparent text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
                                         Yearly
@@ -694,12 +694,12 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 key={plan.id}
                                                 onClick={() => !isCurrent && setSelectedPlan(plan)}
                                                 className={`bg-white rounded-lg border p-5 relative cursor-pointer transition-all ${isCurrent
-                                                        ? 'border-2 border-[#3AD6F2] ring-2 ring-[#3AD6F2] ring-opacity-20 opacity-60 cursor-not-allowed'
-                                                        : isSelected
-                                                            ? 'border-2 border-[#F56D2D] ring-2 ring-[#F56D2D] ring-opacity-20 shadow-lg'
-                                                            : isMostPopular
-                                                                ? 'border-2 border-[#F56D2D] hover:border-[#F56D2D] hover:shadow-md'
-                                                                : 'border-[#E8F0FF] hover:border-[#F56D2D] hover:shadow-md'
+                                                    ? 'border-2 border-[#3AD6F2] ring-2 ring-[#3AD6F2] ring-opacity-20 opacity-60 cursor-not-allowed'
+                                                    : isSelected
+                                                        ? 'border-2 border-[#F56D2D] ring-2 ring-[#F56D2D] ring-opacity-20 shadow-lg'
+                                                        : isMostPopular
+                                                            ? 'border-2 border-[#F56D2D] hover:border-[#F56D2D] hover:shadow-md'
+                                                            : 'border-[#E8F0FF] hover:border-[#F56D2D] hover:shadow-md'
                                                     }`}
                                             >
                                                 {/* Selection Indicator */}

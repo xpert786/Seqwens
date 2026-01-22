@@ -609,6 +609,7 @@ export default function Subscriptions() {
                 ? 'bg-[#3AD6F2] text-white'
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
                 }`}
+              style={{ borderRadius: '7px' }}
             >
               Subscription Plans
             </button>
@@ -618,6 +619,7 @@ export default function Subscriptions() {
                 ? 'bg-[#3AD6F2] text-white'
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
                 }`}
+                style={{ borderRadius: '7px' }}
             >
               Addons
             </button>

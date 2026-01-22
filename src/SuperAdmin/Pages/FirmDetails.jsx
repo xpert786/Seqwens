@@ -168,10 +168,10 @@ export default function FirmDetails() {
 
     const systemHealth = useMemo(() => {
         return {
-            overall: firmDetails?.system_health?.overall || 0.91,
-            storageUsed: firmDetails?.system_health?.storageUsed || 48,
-            storageCapacity: firmDetails?.system_health?.storageCapacity || 200,
-            lastActive: firmDetails?.last_active || '2 hours ago'
+            overall: (firmDetails?.system_health?.score ?? 0) / 100, // Convert percentage to decimal
+            storageUsed: firmDetails?.storage_usage?.used_gb ?? 0,
+            storageCapacity: firmDetails?.storage_usage?.limit_gb ?? 0,
+            lastActive: firmDetails?.last_active ?? 'Not available'
         };
     }, [firmDetails]);
 
@@ -296,46 +296,22 @@ export default function FirmDetails() {
         if (Array.isArray(firmDetails?.subscription_history) && firmDetails.subscription_history.length > 0) {
             return firmDetails.subscription_history.map((entry, index) => ({
                 id: entry.id || index,
-                plan: entry.plan || 'Professional Plan',
-                period: entry.billing_period || entry.period || 'Not available',
-                amount: formatCurrency(entry.amount ?? entry.total ?? 0),
-                status: entry.status
-                    ? entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
+                plan: entry.subscription_plan__subscription_type
+                    ? entry.subscription_plan__subscription_type.charAt(0).toUpperCase() + entry.subscription_plan__subscription_type.slice(1) + ' Plan'
+                    : 'Professional Plan',
+                period: entry.period_start && entry.period_end
+                    ? `${formatDate(entry.period_start)} - ${formatDate(entry.period_end)}`
+                    : 'Not available',
+                amount: formatCurrency(entry.amount ?? 0),
+                status: entry.payment_status
+                    ? entry.payment_status.charAt(0).toUpperCase() + entry.payment_status.slice(1)
                     : 'Completed'
             }));
         }
 
-        return [
-            {
-                id: 'current',
-                plan: billingInfo.plan,
-                period: 'Oct 15, 2025 – Nov 15, 2025',
-                amount: billingInfo.monthlyCost,
-                status: billingInfo.status
-            },
-            {
-                id: 'basic',
-                plan: 'Basic Plan',
-                period: 'Oct 1, 2025 – Oct 31, 2025',
-                amount: '$29.99',
-                status: 'Completed'
-            },
-            {
-                id: 'premium',
-                plan: 'Premium Plan',
-                period: 'Nov 1, 2025 – Dec 1, 2025',
-                amount: '$99.99',
-                status: 'Completed'
-            },
-            {
-                id: 'student',
-                plan: 'Student Plan',
-                period: 'Sep 15, 2025 – Oct 15, 2025',
-                amount: '$19.99',
-                status: 'Completed'
-            }
-        ];
-    }, [billingInfo, firmDetails]);
+        // Return empty array if no subscription history available
+        return [];
+    }, [firmDetails]);
 
     const handleSettingsInputChange = (field, value) => {
         setSettingsForm(prev => ({
@@ -728,6 +704,13 @@ export default function FirmDetails() {
                                 loading={billingLoading}
                                 error={billingError}
                                 onRetry={fetchFirmBillingOverview}
+                                fallbackSubscription={{
+                                    plan: billingInfo.plan,
+                                    monthly_cost_display: billingInfo.monthlyCost,
+                                    next_billing_display: billingInfo.nextBilling,
+                                    status_display: billingInfo.status,
+                                    status: billingInfo.status
+                                }}
                             />
                         )}
 
@@ -1023,8 +1006,8 @@ const BillingOverviewTab = ({
     const historyCount = overview?.history_count ?? history.length ?? 0;
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="grid gap-6 lg:grid-cols-2">
+        <div className="flex flex-col">
+            <div className="grid gap-6 ">
                 <div className="rounded-xl bg-white p-6">
                     <div className="mb-5 flex items-start justify-between gap-3">
                         <div>
@@ -1097,40 +1080,7 @@ const BillingOverviewTab = ({
                     </div>
                 </div>
 
-                <div className="rounded-xl bg-white p-6">
-                    <h5 className="text-lg font-semibold text-[#1E293B]">Quick Actions</h5>
-                    <p className="mt-1 text-sm text-[#64748B]">Suggested management tasks for this firm.</p>
-                    <div className="mt-5 space-y-3">
-                        {quickActions.length > 0 ? quickActions.map(action => (
-                            <button
-                                key={action.key || action.id || action.label}
-                                type="button"
-                                disabled={action.enabled === false}
-                                className={`w-full rounded-lg border border-[#EFF4FF] px-4 py-3 text-left text-sm font-medium transition-colors ${action.enabled === false
-                                    ? 'cursor-not-allowed bg-gray-50 text-[#94A3B8]'
-                                    : 'bg-white text-[#1F2937] hover:bg-[#F8FAFC]'
-                                    }`}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-3">
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#3B4A66]">
-                                            {renderActionIcon(action.icon)}
-                                        </span>
-                                        {action.label || 'Action'}
-                                    </span>
-                                    {action.enabled === false && (
-                                        <span className="text-xs font-medium text-[#EA580C]">Disabled</span>
-                                    )}
-                                </div>
-                                {action.description && (
-                                    <p className="mt-2 text-xs text-[#64748B]">{action.description}</p>
-                                )}
-                            </button>
-                        )) : (
-                            <p className="text-sm text-[#94A3B8]">No quick actions available.</p>
-                        )}
-                    </div>
-                </div>
+                
             </div>
 
             <div className="rounded-xl bg-white p-6">

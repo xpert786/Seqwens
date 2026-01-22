@@ -33,6 +33,7 @@ import {
 import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { getStorage } from '../../ClientOnboarding/utils/userUtils';
+import { useTheme } from '../Context/ThemeContext';
 
 const SUBSCRIPTION_COLOR_MAP = {
   starter: '#10B981',
@@ -50,6 +51,7 @@ const FALLBACK_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#06B6D4', '#8B5CF6', 
 
 export default function SuperDashboardContent() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   // State management
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -748,18 +750,18 @@ export default function SuperDashboardContent() {
   }
 
   return (
-    <div className="w-full px-3 pt-4 pb-0 bg-[#F6F7FF]">
+    <div className="w-full px-3 pt-4 pb-0 bg-[#F6F7FF] dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="taxdashboardr-titler font-bold text-gray-900">Platform Overview</h1>
-          <p className="text-gray-600 mt-1">Monitor and manage the entire tax practice platform</p>
-          <p className="text-xs text-gray-500 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
+          <h1 className="taxdashboardr-titler font-bold text-gray-900 dark:text-white">Platform Overview</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage the entire tax practice platform</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="taxdashboardr-titler flex items-center gap-2 px-6 py-3 text-black bg-white rounded-3xl transition-colors disabled:opacity-50"
+          className="taxdashboardr-titler flex items-center gap-2 px-6 py-3 text-black dark:text-white bg-white dark:bg-gray-800 rounded-3xl transition-colors disabled:opacity-50 border border-transparent dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
           style={{ borderRadius: '7px' }}
         >
           <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -770,7 +772,7 @@ export default function SuperDashboardContent() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
         <div
-          className="bg-white h-auto rounded-xl border border-[#E8F0FF] p-7 relative cursor-pointer hover:shadow-md transition-shadow"
+          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-7 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowAllFirmsModal(true);
             setAllFirmsLoading(true);
@@ -792,20 +794,20 @@ export default function SuperDashboardContent() {
             }
           }}
         >
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
             <TotalFirmsIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Total Firms</p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Firms</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatNumber(dashboardData?.summary?.total_firms)}
             </p>
-            <p className="text-sm text-gray-500 mt-2">Firms onboarded</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Firms onboarded</p>
           </div>
         </div>
 
         <div
-          className="bg-white rounded-xl border border-[#E8F0FF] p-6 relative cursor-pointer hover:shadow-md transition-shadow"
+          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowActiveUsersModal(true);
             setActiveUsersLoading(true);
@@ -823,8 +825,13 @@ export default function SuperDashboardContent() {
                   firm_users: active_firms || [],
                   taxpayer_users: active_taxpayers || [],
                   taxpreparer_users: active_tax_preparers || [],
+                  super_admin_users: active_super_admins || [],
                   billing_users: active_super_admins?.filter(user => user.role?.toLowerCase().includes('billing')) || [],
-                  support_users: active_super_admins?.filter(user => user.role?.toLowerCase().includes('support')) || []
+                  support_users: active_super_admins?.filter(user => user.role?.toLowerCase().includes('support')) || [],
+                  general_admins: active_super_admins?.filter(user =>
+                    !user.role?.toLowerCase().includes('billing') &&
+                    !user.role?.toLowerCase().includes('support')
+                  ) || []
                 });
               } else {
                 throw new Error(overviewResponse.message || 'Failed to fetch overview data');
@@ -838,41 +845,41 @@ export default function SuperDashboardContent() {
             }
           }}
         >
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
             <ActiveUsersIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Active Users</p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Active Users</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatNumber(dashboardData?.summary?.active_users)}
             </p>
-            <p className="text-sm text-gray-500 mt-2">Across all firms</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Across all firms</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 relative">
-          <div className="absolute top-4 right-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 relative">
+          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
             <MonthlyRevenueIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Monthly Revenue</p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Monthly Revenue</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatCurrency(dashboardData?.summary?.monthly_revenue)}
             </p>
-            <p className="text-sm text-gray-500 mt-2">Recurring revenue</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Recurring revenue</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 relative">
-          <div className="absolute top-4 right-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 relative">
+          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">System Health</p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">System Health</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {`${formatNumber(dashboardData?.summary?.system_health_score)}%`}
             </p>
-            <p className="text-sm text-gray-500 mt-2">Overall stability</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Overall stability</p>
           </div>
         </div>
       </div>
@@ -880,19 +887,19 @@ export default function SuperDashboardContent() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* User Registration Trend */}
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
-              <p className="text-sm text-gray-600">Monthly recurring revenue and user growth</p>
+              <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 dark:text-white mb-1">Revenue Growth Trend</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly recurring revenue and user growth</p>
             </div>
             <div className="flex items-center gap-2">
-              <label htmlFor="revenue-month-select" className="text-sm text-gray-600">Filter by month:</label>
+              <label htmlFor="revenue-month-select" className="text-sm text-gray-600 dark:text-gray-400">Filter by month:</label>
               <select
                 id="revenue-month-select"
                 value={selectedRevenueMonth}
                 onChange={(e) => setSelectedRevenueMonth(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="all">All Months</option>
                 {last6Months.map((month) => (
@@ -928,14 +935,14 @@ export default function SuperDashboardContent() {
                     dataKey="month"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}
                     tickFormatter={(value) => formatMonthLabel(value)}
                   />
                   <YAxis
                     yAxisId="left"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}
                     domain={[0, revenueUpperBound]}
                   />
                   <YAxis
@@ -943,7 +950,7 @@ export default function SuperDashboardContent() {
                     orientation="right"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}
                     domain={[subscriberLowerBound, subscriberUpperBound]}
                     allowDecimals={false}
                   />
@@ -1035,8 +1042,8 @@ export default function SuperDashboardContent() {
                             <span className="text-sm font-medium text-gray-700">Revenue Growth</span>
                           </div>
                           <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${isRevenuePositive ? 'bg-green-200 text-green-800' :
-                              isRevenueNegative ? 'bg-red-200 text-red-800' :
-                                'bg-gray-200 text-gray-800'
+                            isRevenueNegative ? 'bg-red-200 text-red-800' :
+                              'bg-gray-200 text-gray-800'
                             }`}>
                             {isRevenuePositive ? (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1067,8 +1074,8 @@ export default function SuperDashboardContent() {
                             <span className="text-sm font-medium text-gray-700">Subscriber Growth</span>
                           </div>
                           <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${isSubscriberPositive ? 'bg-green-200 text-green-800' :
-                              isSubscriberNegative ? 'bg-red-200 text-red-800' :
-                                'bg-gray-200 text-gray-800'
+                            isSubscriberNegative ? 'bg-red-200 text-red-800' :
+                              'bg-gray-200 text-gray-800'
                             }`}>
                             {isSubscriberPositive ? (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1095,19 +1102,19 @@ export default function SuperDashboardContent() {
         </div>
 
         {/* User Role Distribution */}
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
-              <p className="text-sm text-gray-600">Revenue breakdown by plan type</p>
+              <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">Subscription Distribution</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Revenue breakdown by plan type</p>
             </div>
             <div className="flex items-center gap-2">
-              <label htmlFor="subscription-month-select" className="text-sm text-gray-600">Filter by month:</label>
+              <label htmlFor="subscription-month-select" className="text-sm text-gray-600 dark:text-gray-400">Filter by month:</label>
               <select
                 id="subscription-month-select"
                 value={selectedSubscriptionMonth}
                 onChange={(e) => setSelectedSubscriptionMonth(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="all">All Months</option>
                 {last6Months.map((month) => (
@@ -1150,7 +1157,7 @@ export default function SuperDashboardContent() {
 
           {/* Legend */}
           {subscriptionData.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300">
               {subscriptionData.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
@@ -1167,9 +1174,9 @@ export default function SuperDashboardContent() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Real-Time Activity */}
-          <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 h-100 flex flex-col">
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Recent Firm Registrations</h4>
-            <p className="text-sm text-gray-600 mb-4">Latest firms that joined the platform</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Recent Firm Registrations</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Latest firms that joined the platform</p>
 
             <div className="flex-1 h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -1208,7 +1215,7 @@ export default function SuperDashboardContent() {
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 text-sm text-gray-600">
+            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded"></div>
                 <span>Activity count</span>
@@ -1221,21 +1228,21 @@ export default function SuperDashboardContent() {
         {/* Middle Column */}
         <div className="space-y-6">
           {/* Performance Metrics */}
-          <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6 h-100 flex flex-col">
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Performance Metrics</h4>
-            <p className="text-sm text-gray-600 mb-4">System performance indicators</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Performance Metrics</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">System performance indicators</p>
             <div className="flex-1 space-y-4">
               {performanceData.map((metric, index) => (
                 <div key={index}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">{metric.metric}</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{metric.metric}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {formatNumber(metric.current)}
                       {metric.unit}
                       {metric.target ? ` / ${formatNumber(metric.target)}${metric.unit}` : ''}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
                       className="h-2 rounded-full"
                       style={{
@@ -1253,9 +1260,9 @@ export default function SuperDashboardContent() {
         {/* Right Column */}
         <div className="space-y-3">
           {/* Security Status */}
-          <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6 h-100 flex flex-col">
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Security Status</h4>
-            <p className="text-sm text-gray-600 mb-4">Platform security overview</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Security Status</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Platform security overview</p>
             <div className="flex-1 space-y-3">
               {securityLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -1264,7 +1271,7 @@ export default function SuperDashboardContent() {
               ) : (
                 securityItems.map((item, index) => {
                   const itemEnabled = Boolean(item.enabled);
-                  const backgroundClass = itemEnabled ? 'bg-green-50' : 'bg-yellow-50';
+                  const backgroundClass = itemEnabled ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20';
                   const StatusIcon = itemEnabled ? SecurityGreenIcon : SecurityYellowIcon;
                   const isUpdating = updatingSecuritySetting === item.key;
 
@@ -1276,9 +1283,9 @@ export default function SuperDashboardContent() {
                       <div className="flex items-center gap-2 flex-1">
                         <StatusIcon className="w-5 h-5 flex-shrink-0" />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-gray-700 block">{item.name}</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200 block">{item.name}</span>
                           {item.description && (
-                            <span className="text-xs text-gray-500 block mt-0.5">{item.description}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 block mt-0.5">{item.description}</span>
                           )}
                         </div>
                       </div>
@@ -1312,30 +1319,29 @@ export default function SuperDashboardContent() {
       {/* Bottom Row - Recent Firms and Quick Actions */}
       <div className={`grid grid-cols-1 ${showRecentFirmsSection ? 'lg:grid-cols-2' : ''} gap-2 mt-4 pb-0`}>
         {showRecentFirmsSection && (
-          <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 self-start">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 self-start transition-all">
             <div className="flex justify-between items-center">
-              <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Firm Registrations</h4>
               {totalFirms > FIRMS_PER_PAGE && (
                 <button
                   onClick={handleViewAll}
-                  className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
-                  style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                  className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors border border-[#E8F0FF] dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   {showAllFirms ? 'Show Less' : 'View All'}
                 </button>
               )}
             </div>
-            <p className="text-sm text-gray-500 mb-3">Latest firms that joined the platform</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Latest firms that joined the platform</p>
             <div className="space-y-2">
               {displayedFirms.map((firm, index) => (
-                <div key={index} className="border border-[#E8F0FF] flex items-center justify-between p-3 rounded-lg">
+                <div key={index} className="border border-[#E8F0FF] dark:border-gray-700 flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <div className="flex-1">
-                    <h6 className="font-medium text-gray-900">{firm.name}</h6>
-                    <p className="text-xs text-gray-600">
+                    <h6 className="font-medium text-gray-900 dark:text-white">{firm.name}</h6>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Joined: {firm.created_at_display || firm.created_at || 'N/A'} • Users: {formatNumber(firm.active_users)} • Monthly Fee: {formatCurrency(firm.monthly_fee)}
                     </p>
                   </div>
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                     {firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : 'None'}
                   </span>
                 </div>
@@ -1346,8 +1352,7 @@ export default function SuperDashboardContent() {
                 <button
                   onClick={() => handleFirmsPageChange(firmsCurrentPage - 1)}
                   disabled={firmsCurrentPage === 1}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{ borderRadius: '8px' }}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                 >
                   Previous
                 </button>
@@ -1359,8 +1364,7 @@ export default function SuperDashboardContent() {
                 <button
                   onClick={() => handleFirmsPageChange(firmsCurrentPage + 1)}
                   disabled={firmsCurrentPage === totalPages}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{ borderRadius: '8px' }}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                 >
                   Next
                 </button>
@@ -1370,9 +1374,9 @@ export default function SuperDashboardContent() {
         )}
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
-          <p className="text-sm text-gray-500 mb-3">Common administrative tasks</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Quick Actions</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Common administrative tasks</p>
           <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, index) => {
               const actionLabel = getActionLabelText(action).trim();
@@ -1380,10 +1384,10 @@ export default function SuperDashboardContent() {
 
               const cardContent = (
                 <>
-                  <div className={`mb-2 w-8 h-8 flex items-center justify-center ${targetRoute ? 'text-gray-600' : 'text-gray-400'}`}>
+                  <div className={`mb-2 w-8 h-8 flex items-center justify-center ${targetRoute ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-600'}`}>
                     {getQuickActionIcon(actionLabel)}
                   </div>
-                  <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight">
                     {action.label}
                   </span>
                 </>
@@ -1394,7 +1398,7 @@ export default function SuperDashboardContent() {
                   <Link
                     key={index}
                     to={targetRoute}
-                    className="flex flex-col items-center justify-center p-4 border border-[#E8F0FF] rounded-lg transition-all hover:border-[#3B4A66] hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                    className="flex flex-col items-center justify-center p-4 border border-[#E8F0FF] dark:border-gray-700 rounded-lg transition-all hover:border-[#3B4A66] dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm cursor-pointer"
                     style={{ borderRadius: '0.5rem', minHeight: '100px' }}
                   >
                     {cardContent}
@@ -1405,7 +1409,7 @@ export default function SuperDashboardContent() {
               return (
                 <div
                   key={index}
-                  className="flex flex-col items-center justify-center p-4 border border-dashed border-[#E5E7EB] rounded-lg text-gray-400 cursor-not-allowed"
+                  className="flex flex-col items-center justify-center p-4 border border-dashed border-[#E5E7EB] dark:border-gray-700 rounded-lg text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   style={{ borderRadius: '0.5rem', minHeight: '100px' }}
                   title="This action is not available."
                 >
@@ -1430,20 +1434,20 @@ export default function SuperDashboardContent() {
         centered
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
-        <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
-          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
+        <Modal.Header closeButton className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <Modal.Title className="text-gray-900 dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             Active Users Details
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: '0' }}>
           {/* Tabs */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="flex gap-0">
               <button
                 onClick={() => setActiveUsersTab('Firm')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Firm'
-                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
                 Firm ({activeUsersData?.firm_users?.length || 0})
@@ -1451,8 +1455,8 @@ export default function SuperDashboardContent() {
               <button
                 onClick={() => setActiveUsersTab('Taxpayer')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Taxpayer'
-                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
                 Taxpayer ({activeUsersData?.taxpayer_users?.length || 0})
@@ -1460,8 +1464,8 @@ export default function SuperDashboardContent() {
               <button
                 onClick={() => setActiveUsersTab('Taxpreparer')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Taxpreparer'
-                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
                 Tax Preparer ({activeUsersData?.taxpreparer_users?.length || 0})
@@ -1469,11 +1473,11 @@ export default function SuperDashboardContent() {
               <button
                 onClick={() => setActiveUsersTab('Superadmin')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Superadmin'
-                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
-                Super Admin ({(activeUsersData?.billing_users?.length || 0) + (activeUsersData?.support_users?.length || 0)})
+                Super Admin ({activeUsersData?.super_admin_users?.length || 0})
               </button>
             </div>
           </div>
@@ -1497,30 +1501,30 @@ export default function SuperDashboardContent() {
                     {activeUsersData.firm_users && activeUsersData.firm_users.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeUsersData.firm_users.map((firm, index) => (
-                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {firm.name?.charAt(0)?.toUpperCase() || 'F'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900">{firm.name || 'Unknown Firm'}</p>
-                                <p className="text-sm text-gray-500">{firm.email || 'No email'}</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{firm.name || 'Unknown Firm'}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{firm.email || 'No email'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
                               <p><span className="font-medium">Phone:</span> {firm.phone || 'N/A'}</p>
                               <p><span className="font-medium">Total Users:</span> {firm.total_users || 0}</p>
                               <p><span className="font-medium">Subscription:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${firm.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
+                                  'bg-gray-100 text-gray-800'
                                   }`}>
                                   {firm.subscription_status || 'Unknown'}
                                 </span>
                               </p>
                               <p><span className="font-medium">Status:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${firm.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    firm.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                                  firm.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
                                   }`}>
                                   {firm.status || 'Unknown'}
                                 </span>
@@ -1541,17 +1545,17 @@ export default function SuperDashboardContent() {
                     {activeUsersData.taxpayer_users && activeUsersData.taxpayer_users.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeUsersData.taxpayer_users.map((taxpayer, index) => (
-                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-400 transition-all">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {(taxpayer.first_name || taxpayer.last_name) ? `${taxpayer.first_name?.charAt(0) || ''}${taxpayer.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900">{`${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || 'Unknown User'}</p>
-                                <p className="text-sm text-gray-500">{taxpayer.email || 'No email'}</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{`${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || 'Unknown User'}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{taxpayer.email || 'No email'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
                               <p><span className="font-medium">Phone:</span> {taxpayer.phone || 'N/A'}</p>
                               <p><span className="font-medium">Firm:</span> {taxpayer.firm_name || 'N/A'}</p>
                               <p><span className="font-medium">Email Verified:</span>
@@ -1562,8 +1566,8 @@ export default function SuperDashboardContent() {
                               </p>
                               <p><span className="font-medium">Status:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${taxpayer.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    taxpayer.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                                  taxpayer.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
                                   }`}>
                                   {taxpayer.status || 'Unknown'}
                                 </span>
@@ -1584,17 +1588,17 @@ export default function SuperDashboardContent() {
                     {activeUsersData.taxpreparer_users && activeUsersData.taxpreparer_users.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeUsersData.taxpreparer_users.map((preparer, index) => (
-                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-400 transition-all">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {(preparer.first_name || preparer.last_name) ? `${preparer.first_name?.charAt(0) || ''}${preparer.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900">{`${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() || 'Unknown User'}</p>
-                                <p className="text-sm text-gray-500">{preparer.email || 'No email'}</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{`${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() || 'Unknown User'}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{preparer.email || 'No email'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
                               <p><span className="font-medium">Phone:</span> {preparer.phone || 'N/A'}</p>
                               <p><span className="font-medium">Role:</span> {preparer.role || 'Tax Preparer'}</p>
                               <p><span className="font-medium">Firm:</span> {preparer.firm_name || 'N/A'}</p>
@@ -1606,8 +1610,8 @@ export default function SuperDashboardContent() {
                               </p>
                               <p><span className="font-medium">Status:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${preparer.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    preparer.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                                  preparer.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
                                   }`}>
                                   {preparer.status || 'Unknown'}
                                 </span>
@@ -1624,22 +1628,70 @@ export default function SuperDashboardContent() {
 
                 {activeUsersTab === 'Superadmin' && (
                   <div className="space-y-6">
+                    {/* General Super Admins */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">System Super Admins ({activeUsersData.general_admins?.length || 0})</h4>
+                      {activeUsersData.general_admins && activeUsersData.general_admins.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {activeUsersData.general_admins.map((admin, index) => (
+                            <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-gray-400 transition-all">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-black dark:bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'S'}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">{admin.email || 'No email'}</p>
+                                </div>
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                                <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
+                                <p><span className="font-medium">Role:</span> {admin.role || 'Super Admin'}</p>
+                                <p><span className="font-medium">Email Verified:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
+                                    {admin.email_verified ? 'Yes' : 'No'}
+                                  </span>
+                                </p>
+                                <p><span className="font-medium">Super User:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                    {admin.is_superuser ? 'Yes' : 'No'}
+                                  </span>
+                                </p>
+                                <p><span className="font-medium">Status:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                    {admin.status || 'Unknown'}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">No system super admins found</p>
+                      )}
+                    </div>
+
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Billing Admins ({activeUsersData.billing_users?.length || 0})</h4>
                       {activeUsersData.billing_users && activeUsersData.billing_users.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeUsersData.billing_users.map((admin, index) => (
-                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-400 transition-all">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
+                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'S'}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-gray-900">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'Unknown Admin'}</p>
-                                  <p className="text-sm text-gray-500">{admin.email || 'No email'}</p>
+                                  <p className="font-medium text-gray-900 dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">{admin.email || 'No email'}</p>
                                 </div>
                               </div>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-gray-600 dark:text-gray-300">
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Billing Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
@@ -1656,8 +1708,8 @@ export default function SuperDashboardContent() {
                                 </p>
                                 <p><span className="font-medium">Status:</span>
                                   <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
-                                      admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                        'bg-gray-100 text-gray-800'
+                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
                                     }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
@@ -1676,17 +1728,17 @@ export default function SuperDashboardContent() {
                       {activeUsersData.support_users && activeUsersData.support_users.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeUsersData.support_users.map((admin, index) => (
-                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
+                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'S'}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-gray-900">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'Unknown Admin'}</p>
-                                  <p className="text-sm text-gray-500">{admin.email || 'No email'}</p>
+                                  <p className="font-medium text-gray-900 dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">{admin.email || 'No email'}</p>
                                 </div>
                               </div>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-gray-600 dark:text-gray-300">
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Support Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
@@ -1703,8 +1755,8 @@ export default function SuperDashboardContent() {
                                 </p>
                                 <p><span className="font-medium">Status:</span>
                                   <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
-                                      admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                        'bg-gray-100 text-gray-800'
+                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
                                     }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
@@ -1727,9 +1779,9 @@ export default function SuperDashboardContent() {
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <button
-            className="btn"
+            className="btn dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
             onClick={() => {
               setShowActiveUsersModal(false);
               setActiveUsersData(null);
@@ -1738,9 +1790,9 @@ export default function SuperDashboardContent() {
             }}
             style={{
               fontFamily: 'BasisGrotesquePro',
-              backgroundColor: '#F3F4F6',
-              color: '#3B4A66',
-              border: '1px solid #E5E7EB',
+              backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
+              color: isDarkMode ? '#F9FAFB' : '#3B4A66',
+              border: isDarkMode ? '1px solid #4B5563' : '1px solid #E5E7EB',
               fontWeight: '500',
               padding: '8px 16px',
               borderRadius: '6px'
@@ -1763,8 +1815,8 @@ export default function SuperDashboardContent() {
         centered
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
-        <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
-          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
+        <Modal.Header closeButton className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <Modal.Title className="text-gray-900 dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             All Firms ({allFirms.length})
           </Modal.Title>
         </Modal.Header>
@@ -1787,14 +1839,14 @@ export default function SuperDashboardContent() {
                 {allFirms.map((firm) => (
                   <div
                     key={firm.id}
-                    className="border border-[#E8F0FF] rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h5 className="text-lg font-semibold text-gray-900 mb-1">
+                        <h5 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                           {firm.name || firm.firm_name || 'Unnamed Firm'}
                         </h5>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
                           {firm.owner_name && (
                             <div>
                               <span className="font-medium">Owner:</span> {firm.owner_name}
@@ -1815,10 +1867,10 @@ export default function SuperDashboardContent() {
                               <span className="font-medium">Status:</span>{' '}
                               <span
                                 className={`px-2 py-1 rounded text-xs ${firm.status.toLowerCase() === 'active'
-                                    ? 'bg-green-100 text-green-800'
-                                    : firm.status.toLowerCase() === 'suspended'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-gray-100 text-gray-800'
+                                  ? 'bg-green-100 text-green-800'
+                                  : firm.status.toLowerCase() === 'suspended'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
                                   }`}
                               >
                                 {firm.status}
@@ -1834,7 +1886,7 @@ export default function SuperDashboardContent() {
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <button
             className="btn"
             onClick={() => {
@@ -1844,9 +1896,9 @@ export default function SuperDashboardContent() {
             }}
             style={{
               fontFamily: 'BasisGrotesquePro',
-              backgroundColor: '#F3F4F6',
-              color: '#3B4A66',
-              border: '1px solid #E5E7EB',
+              backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
+              color: isDarkMode ? '#F9FAFB' : '#3B4A66',
+              border: isDarkMode ? '1px solid #4B5563' : '1px solid #E5E7EB',
               fontWeight: '500',
               padding: '8px 16px',
               borderRadius: '6px'

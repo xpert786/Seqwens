@@ -2,26 +2,26 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 
 // Simple Error Boundary for AccountSwitcher
 class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    // Silently handle AccountSwitcher errors - component will not display
-    // No console logging needed
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || null;
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
     }
-    return this.props.children;
-  }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        // Silently handle AccountSwitcher errors - component will not display
+        // No console logging needed
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return this.props.fallback || null;
+        }
+        return this.props.children;
+    }
 }
 import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
@@ -344,28 +344,28 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     // Ensure logo always stays as Seqwens logo and prevent it from being changed
     useEffect(() => {
         if (!logoRef.current) return;
-        
+
         // Store the original logo path as a constant
         const originalLogoPath = logo;
         const img = logoRef.current;
         let isUpdating = false; // Flag to prevent recursive updates
-        
+
         // Set data attribute to mark this as Seqwens logo (immutable)
         img.setAttribute('data-seqwens-logo', 'true');
         img.setAttribute('data-original-src', originalLogoPath);
         img.setAttribute('data-immutable', 'true');
-        
+
         const ensureSeqwensLogo = () => {
             if (!img || !img.parentNode || isUpdating) return; // Check if element still exists and not updating
-            
+
             const currentSrc = img.src || img.getAttribute('src') || '';
-            
+
             // Check if src has been changed to a firm logo (backblazeb2, s3, etc.)
-            const isFirmLogo = currentSrc.includes('backblazeb2.com') || 
-                               currentSrc.includes('s3.us-') ||
-                               currentSrc.includes('s3.amazonaws.com') ||
-                               (currentSrc && currentSrc !== originalLogoPath && !currentSrc.includes('logo.png'));
-            
+            const isFirmLogo = currentSrc.includes('backblazeb2.com') ||
+                currentSrc.includes('s3.us-') ||
+                currentSrc.includes('s3.amazonaws.com') ||
+                (currentSrc && currentSrc !== originalLogoPath && !currentSrc.includes('logo.png'));
+
             if (isFirmLogo) {
                 isUpdating = true;
                 // Reset to Seqwens logo immediately
@@ -390,7 +390,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         const observer = new MutationObserver((mutations) => {
             // Only react if we're not currently updating
             if (isUpdating) return;
-            
+
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
                     // Check if the change was made by us (check old value)
@@ -416,7 +416,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         // Protect against any code that might query and change the logo via DOM
         const protectLogoFromDOMQueries = () => {
             if (isUpdating) return;
-            
+
             const logoImages = document.querySelectorAll('.firm-topbar-logo[data-seqwens-logo="true"]');
             logoImages.forEach((logoImg) => {
                 const src = logoImg.src || logoImg.getAttribute('src') || '';
@@ -542,7 +542,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                 <AccountSwitcher />
                             </ErrorBoundary>
                         </React.Suspense>
-                        
+
                         {/* Notification Bell */}
                         <div
                             ref={notificationButtonRef}
@@ -645,13 +645,12 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                             )}
                                             <button
                                                 type="button"
-                                                className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${
-                                                    item.isDanger
+                                                className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${item.isDanger
                                                         ? "text-danger"
                                                         : item.isPrimary
                                                             ? "text-primary fw-bold"
                                                             : "text-gray-700"
-                                                } hover:bg-gray-50 transition-colors`}
+                                                    } hover:bg-gray-50 transition-colors`}
                                                 onClick={() => handleMenuAction(item.action)}
                                                 role="menuitem"
                                                 style={{

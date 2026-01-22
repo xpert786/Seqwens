@@ -205,7 +205,7 @@ export default function Header() {
 
   return (
     <header data-aos="fade-down" data-aos-duration="800" data-aos-delay="400"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black/20 backdrop-blur-md border-b border-white/10}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black backdrop-blur-xs`}
       style={{ opacity: headerOpacity /*, transform: headerTransform*/ }}
     >
       <div className="max-w-7xl mx-auto px-6">

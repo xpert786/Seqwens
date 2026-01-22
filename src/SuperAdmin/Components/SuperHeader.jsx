@@ -51,7 +51,14 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
 
   return (
     <>
-      <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-3">
+      <nav 
+        className="navbar fixed-top custom-topbar px-3"
+        style={{
+          backgroundColor: 'var(--sa-bg-primary)',
+          borderBottom: '1px solid var(--sa-border-color)',
+          color: 'var(--sa-text-primary)'
+        }}
+      >
         <div className="container-fluid d-flex justify-content-between align-items-center">
 
           {/* Left Section */}
@@ -124,40 +131,120 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
               <div
                 className="theme-toggle-container"
                 onClick={toggleTheme}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleTheme();
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   backgroundColor: isDarkMode ? '#374151' : '#e5e7eb',
-                  borderRadius: '20px',
-                  padding: '4px',
+                  background: isDarkMode
+                    ? 'linear-gradient(135deg, #374151 0%, #1f2937 100%)'
+                    : 'linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%)',
+                  borderRadius: '24px',
+                  padding: '3px',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  width: '60px',
-                  height: '30px',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  width: '64px',
+                  height: '32px',
                   position: 'relative',
+                  boxShadow: isDarkMode
+                    ? '0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+                    : '0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)',
+                  border: '1px solid transparent',
                 }}
+                tabIndex={0}
+                role="button"
+                aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
+                {/* Background glow effect */}
                 <div
                   style={{
                     position: 'absolute',
-                    left: isDarkMode ? '32px' : '4px',
-                    width: '22px',
-                    height: '22px',
+                    top: '50%',
+                    left: isDarkMode ? '36px' : '8px',
+                    transform: 'translate(-50%, -50%)',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    backgroundColor: isDarkMode ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    opacity: 0.6,
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: isDarkMode ? '36px' : '4px',
+                    width: '24px',
+                    height: '24px',
                     borderRadius: '50%',
                     backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isDarkMode
+                      ? '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.1)'
+                      : '0 4px 12px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.8)',
+                    border: isDarkMode ? '1px solid #4b5563' : '1px solid #e5e7eb',
                   }}
                 >
-                  {isDarkMode ? (
-                    <FaMoon size={12} color="#fbbf24" />
-                  ) : (
-                    <FaSun size={12} color="#f59e0b" />
-                  )}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  >
+                    {isDarkMode ? (
+                      <FaMoon
+                        size={11}
+                        color="#fbbf24"
+                        style={{
+                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+                          animation: 'moonGlow 2s ease-in-out infinite alternate',
+                        }}
+                      />
+                    ) : (
+                      <FaSun
+                        size={11}
+                        color="#f59e0b"
+                        style={{
+                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+                          animation: 'sunGlow 2s ease-in-out infinite alternate',
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -87,7 +87,7 @@ export default function RoleSelectionScreen() {
       if (storage) {
         storage.setItem("userType", userType);
       }
-      
+
       // Navigate based on user type (same logic as Login.jsx)
       if (userType === 'super_admin') {
         navigate("/superadmin", { replace: true });
@@ -101,7 +101,7 @@ export default function RoleSelectionScreen() {
         const isEmailVerified = user.is_email_verified;
         const isPhoneVerified = user.is_phone_verified;
         const isCompleted = user.is_completed;
-        
+
         if (!isEmailVerified && !isPhoneVerified) {
           navigate("/two-auth", { replace: true });
         } else if (isCompleted) {
@@ -120,7 +120,7 @@ export default function RoleSelectionScreen() {
 
   const handleRoleSelection = (role) => {
     if (isNavigating) return;
-    
+
     setSelectedRole(role);
     setIsNavigating(true);
 
@@ -135,7 +135,7 @@ export default function RoleSelectionScreen() {
     if (role === 'staff') {
       userType = 'tax_preparer';
     }
-    
+
     // Map 'firm' role to 'admin' for routing
     if (role === 'firm') {
       userType = 'admin';

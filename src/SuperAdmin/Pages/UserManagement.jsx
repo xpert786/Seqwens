@@ -6,9 +6,11 @@ import { FiChevronDown, FiUpload, FiDownload, FiUsers } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { superToastOptions } from '../utils/toastConfig';
+import { useTheme } from '../Context/ThemeContext';
 
 export default function UserManagement() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [roleFilter, setRoleFilter] = useState('All Roles');
@@ -220,11 +222,11 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="p-6 bg-[#F6F7FF]">
+    <div className="p-6 bg-[#F6F7FF] dark:bg-gray-900 transition-colors duration-200">
       {/* Page Title and Description */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-        <p className="text-sm text-gray-600">Manage internal platform administrators and support staff</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">User Management</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Manage internal platform administrators and support staff</p>
       </div>
 
       {/* Action Buttons */}
@@ -244,20 +246,20 @@ export default function UserManagement() {
       {/* Summary Cards */}
       {!loading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-            <p className="text-sm text-gray-500">Internal Staff</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.total_internal_staff ?? 0}</p>
-            <p className="text-xs text-gray-500 mt-1">Total users with platform access</p>
+          <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Internal Staff</p>
+            <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.total_internal_staff ?? 0}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Total users with platform access</p>
           </div>
-          <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-            <p className="text-sm text-gray-500">Active</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.active ?? 0}</p>
-            <p className="text-xs text-gray-500 mt-1">Currently active accounts</p>
+          <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+            <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.active ?? 0}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Currently active accounts</p>
           </div>
-          <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-            <p className="text-sm text-gray-500">Suspended</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.suspended ?? 0}</p>
-            <p className="text-xs text-gray-500 mt-1">Accounts requiring review</p>
+          <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Suspended</p>
+            <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.suspended ?? 0}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Accounts requiring review</p>
           </div>
         </div>
       )}
@@ -272,7 +274,7 @@ export default function UserManagement() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="appearance-none bg-white border border-[#E8F0FF] rounded-lg px-3 py-1.5 pr-6 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px]"
+              className="appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px] transition-colors"
             >
               <option value="All Status">All Status</option>
               <option value="Active">Active</option>
@@ -289,7 +291,7 @@ export default function UserManagement() {
                 setRoleFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="appearance-none bg-white border border-[#E8F0FF] rounded-lg px-3 py-1.5 pr-6 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px]"
+              className="appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px] transition-colors"
             >
               <option value="All Roles">All Roles</option>
               <option value="Super Admin">Super Admin</option>
@@ -337,15 +339,15 @@ export default function UserManagement() {
 
       {/* Users Table */}
       {!loading && !error && users.length > 0 && (
-        <div className="bg-white rounded-lg border border-[#E8F0FF]">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-[#E8F0FF] dark:border-gray-700 transition-all">
           {/* Section Header */}
           <div className="p-2 border-[#E8F0FF]">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h6 className="text-xs font-semibold text-gray-800 mb-0 uppercase tracking-wide">
+                <h6 className="text-xs font-semibold text-gray-800 dark:text-white mb-0 uppercase tracking-wide">
                   Platform Users ({pagination.total_count})
                 </h6>
-                <p className="text-xs text-gray-600 mt-1" style={{ fontSize: '11px' }}>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1" style={{ fontSize: '11px' }}>
                   Internal administrators and support staff with access to the Seqwens platform.
                 </p>
               </div>
@@ -363,7 +365,7 @@ export default function UserManagement() {
 
           {/* Table Headers */}
           <div className="px-4 py-2 border-[#E8F0FF]">
-            <div className="flex items-center text-[#4B5563] uppercase tracking-wider text-[11px]">
+            <div className="flex items-center text-[#4B5563] dark:text-gray-400 uppercase tracking-wider text-[11px]">
               <div className="flex-1 text-left pr-4">User</div>
               <div className="w-48 text-left">Email</div>
               <div className="w-36 text-left">Role</div>
@@ -386,24 +388,24 @@ export default function UserManagement() {
                     navigate(`/superadmin/users-details/${user.id}`);
                   }
                 }}
-                className="border border-[#E8F0FF] rounded-lg p-2 transition-colors cursor-pointer hover:border-[#3B4A66] focus:outline-none focus:ring-2 focus:ring-[#3B4A66]"
+                className="border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-2 transition-colors cursor-pointer hover:border-[#3B4A66] dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3B4A66] bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
               >
                 <div className="flex items-center gap-3">
                   {/* Name Column */}
                   <div className="flex-1 min-w-0 pr-4">
-                    <span className="text-sm font-semibold text-gray-900 truncate hover:underline">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white truncate hover:underline">
                       {user.full_name || 'Unnamed User'}
                     </span>
-                    <p className="text-xs text-gray-500 mt-0.5">User ID: {user.id}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">User ID: {user.id}</p>
                   </div>
 
                   {/* Email Column */}
-                  <div className="w-48 text-sm text-gray-700 truncate">
+                  <div className="w-48 text-sm text-gray-700 dark:text-gray-300 truncate">
                     {user.email || '—'}
                   </div>
 
                   {/* Role Column */}
-                  <div className="w-36 text-sm text-gray-700">
+                  <div className="w-36 text-sm text-gray-700 dark:text-gray-300">
                     {user.role_display_name || user.role || '—'}
                   </div>
 
@@ -417,7 +419,7 @@ export default function UserManagement() {
                   </div>
 
                   {/* Last Login Column */}
-                  <div className="w-40 text-sm text-gray-600">
+                  <div className="w-40 text-sm text-gray-600 dark:text-gray-400">
                     {user.last_login_display || 'N/A'}
                   </div>
                 </div>
@@ -427,25 +429,23 @@ export default function UserManagement() {
 
           {/* Client-side Pagination Controls */}
           {shouldShowUserCardsPagination && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF]">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
               <button
                 onClick={() => handleUserCardsPageChange(userCardsCurrentPage - 1)}
                 disabled={userCardsCurrentPage === 1}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                style={{ borderRadius: '8px' }}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
               >
                 Previous
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   Page {userCardsCurrentPage} of {totalUserCardsPages}
                 </span>
               </div>
               <button
                 onClick={() => handleUserCardsPageChange(userCardsCurrentPage + 1)}
                 disabled={userCardsCurrentPage === totalUserCardsPages}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                style={{ borderRadius: '8px' }}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
               >
                 Next
               </button>
@@ -461,11 +461,11 @@ export default function UserManagement() {
             style={{ backgroundColor: 'var(--Color-overlay, #00000099)' }}
             onClick={closeAddAdminModal}
           ></div>
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-auto">
-            <div className="flex justify-between items-start p-6 border-b border-[#E8F0FF]">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-auto transition-all">
+            <div className="flex justify-between items-start p-6 border-b border-[#E8F0FF] dark:border-gray-700">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Add Super Admin User</h3>
-                <p className="text-sm text-gray-500 mt-1">Create a new super admin, billing admin, or support admin account.</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Super Admin User</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create a new super admin, billing admin, or support admin account.</p>
               </div>
               <button
                 onClick={closeAddAdminModal}
@@ -488,31 +488,31 @@ export default function UserManagement() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Full Name<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={newAdmin.fullName}
                     onChange={(e) => setNewAdmin((prev) => ({ ...prev, fullName: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Alex Doe"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Email<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     value={newAdmin.email}
                     onChange={(e) => setNewAdmin((prev) => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="alex.doe@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Phone Number<span className="text-red-500">*</span>
                   </label>
                   <PhoneInput
@@ -545,13 +545,13 @@ export default function UserManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Role<span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newAdmin.role}
                     onChange={(e) => setNewAdmin((prev) => ({ ...prev, role: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="super_admin">Super Admin</option>
                     <option value="billing_admin">Billing Admin</option>
@@ -561,7 +561,7 @@ export default function UserManagement() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Send welcome email with login details
                       </p>
 
@@ -572,7 +572,7 @@ export default function UserManagement() {
                       onClick={() =>
                         setNewAdmin((prev) => ({ ...prev, sendWelcomeEmail: !prev.sendWelcomeEmail }))
                       }
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${newAdmin.sendWelcomeEmail ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${newAdmin.sendWelcomeEmail ? 'bg-[#F56D2D]' : 'bg-gray-200 dark:bg-gray-600'
                         }`}
                     >
                       <span
@@ -584,8 +584,7 @@ export default function UserManagement() {
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={closeAddAdminModal}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-[#E8F0FF] hover:bg-gray-50 transition-colors"
-                      style={{ borderRadius: '8px' }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-[#E8F0FF] dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-lg"
                       disabled={creatingAdmin}
                     >
                       Cancel
