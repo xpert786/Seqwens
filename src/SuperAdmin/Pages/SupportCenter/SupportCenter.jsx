@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Overview from "./Overview";
 import IRSFAQs from "./IRSFAQs";
 import SeqwensTraining from "./SeqwensTraining";
+import ReachOutMessages from "./ReachOutMessages";
 
 export default function SupportCenter() {
     const [activeTab, setActiveTab] = useState("overview");
@@ -12,7 +13,8 @@ export default function SupportCenter() {
     const tabs = [
         { id: "overview", label: "Overview" },
         { id: "irsFAQs", label: "IRS FAQs" },
-        { id: "seqwensTraining", label: "Seqwens Training" }
+        { id: "seqwensTraining", label: "Seqwens Training" },
+        { id: "reachOutMessages", label: "Reach Out Messages" }
     ];
     const handleTicketDetailToggle = (isShowing) => {
         setShowTicketDetail(isShowing);
@@ -90,6 +92,7 @@ export default function SupportCenter() {
                 {activeTab === "overview" && <Overview showHeader={true} onTicketDetailToggle={handleTicketDetailToggle} />}
                 {activeTab === "irsFAQs" && <IRSFAQs onAddFAQModalToggle={handleAddFAQModalToggle} showAddFAQModal={showAddFAQModal} />}
                 {activeTab === "seqwensTraining" && <SeqwensTraining onAddTrainingModalToggle={handleAddTrainingModalToggle} showAddTrainingModal={showAddTrainingModal} />}
+                {activeTab === "reachOutMessages" && <ReachOutMessages />}
             </div>
         </div>
     );

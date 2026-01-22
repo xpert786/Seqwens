@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscriptionAPI, taxpayerPublicAPI, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
 import { isLoggedIn, getUserData, getStorage } from '../../ClientOnboarding/utils/userUtils';
+import ReachOutModal from '../../components/ReachOutModal';
 
 export default function AiAutomation() {
   const navigate = useNavigate();
@@ -12,6 +13,9 @@ export default function AiAutomation() {
   const [openFaq, setOpenFaq] = useState(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => isLoggedIn());
   const [userData, setUserData] = useState(() => (isLoggedIn() ? getUserData() : null));
+  const [isReachOutOpen, setIsReachOutOpen] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -69,7 +73,8 @@ export default function AiAutomation() {
         if (response.success) {
           setPlans({
             monthly: response.data.monthly_plans || [],
-            yearly: response.data.yearly_plans || []
+            yearly: response.data.yearly_plans || [],
+            stats: response.data.stats || { total_firms: 0, total_users: 0 }
           });
         }
       } catch (error) {
@@ -370,14 +375,14 @@ export default function AiAutomation() {
 
             {/* Toggle */}
             <div className="flex items-center justify-center gap-4 mb-8">
-              <span className={`text - sm font - semibold ${billingCycle === 'monthly' ? 'text-white' : 'text-zinc-500'} `}>Monthly</span>
+              <span className={`text-sm font-semibold ${billingCycle === 'monthly' ? 'text-white' : 'text-zinc-500'}`}>Monthly</span>
               <button
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
                 className="w-14 h-8 bg-zinc-800 rounded-full p-1 relative transition-colors duration-200"
               >
-                <div className={`w - 6 h - 6 bg - blue - 500 rounded - full transition - all duration - 200 transform ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'} `}></div>
+                <div className={`w-6 h-6 bg-blue-500 rounded-full transition-all duration-200 transform ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'}`}></div>
               </button>
-              <span className={`text - sm font - semibold ${billingCycle === 'yearly' ? 'text-white' : 'text-zinc-500'} `}>Yearly <span className="text-green-400 text-xs ml-1">Save up to 17%</span></span>
+              <span className={`text-sm font-semibold ${billingCycle === 'yearly' ? 'text-white' : 'text-zinc-500'}`}>Yearly <span className="text-green-400 text-xs ml-1">Save up to 17%</span></span>
             </div>
           </div>
 
@@ -391,14 +396,17 @@ export default function AiAutomation() {
               (billingCycle === 'monthly' ? plans.monthly : plans.yearly).map((plan) => {
                 const meta = getPlanMeta(plan.subscription_type);
                 const isPopular = plan.most_popular;
+                const isCurrent = plan.is_current;
                 const price = parseFloat(plan.price);
 
                 return (
-                  <div key={plan.id} className={`bg-zinc-900 border ${isPopular ? 'border-2 border-blue-500 shadow-xl shadow-blue-900/20 transform md:-translate-y-4 relative' : 'border-zinc-800 hover:border-zinc-700'} rounded-2xl p-6 flex flex-col transition-all`}>
-                    {isPopular && (
+                  <div key={plan.id} className={`bg-zinc-900 border ${isCurrent ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-900/20 transform md:-translate-y-4 relative' : isPopular ? 'border-2 border-blue-500 shadow-xl shadow-blue-900/20 transform md:-translate-y-4 relative' : 'border-zinc-800 hover:border-zinc-700'} rounded-2xl p-6 flex flex-col transition-all`}>
+                    {isCurrent ? (
+                      <div className="absolute top-0 right-0 left-0 bg-emerald-600 text-white text-xs font-bold text-center py-1 rounded-t-lg uppercase tracking-wider">Your Current Plan</div>
+                    ) : isPopular ? (
                       <div className="absolute top-0 right-0 left-0 bg-blue-600 text-white text-xs font-bold text-center py-1 rounded-t-lg">Most Popular</div>
-                    )}
-                    <h3 className={`text-xl font-bold text-white mb-2 ${isPopular ? 'mt-4' : ''}`}>{meta.title}</h3>
+                    ) : null}
+                    <h3 className={`text-xl font-bold text-white mb-2 ${isPopular || isCurrent ? 'mt-4' : ''}`}>{meta.title}</h3>
                     <div className="mb-4">
                       <span className="text-3xl font-bold">${Number.isInteger(price) ? price : price.toFixed(2)}</span>
                       <span className="text-zinc-500 text-sm"> / {billingCycle === 'monthly' ? 'month' : 'year'}</span>
@@ -407,23 +415,35 @@ export default function AiAutomation() {
                     <p className="text-sm text-zinc-400 mb-6">{meta.desc}</p>
                     <button
                       onClick={() => handleGetStarted(plan.subscription_type)}
-                      className={`w-full py-2 rounded-[10px] font-medium mb-6 transition-colors ${isPopular
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white'
-                        : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                      disabled={isCurrent}
+                      className={`w-full py-2 rounded-[10px] font-medium mb-6 transition-colors ${isCurrent
+                        ? 'bg-zinc-800 text-zinc-500 cursor-default'
+                        : isPopular
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white'
+                          : 'bg-zinc-800 hover:bg-zinc-700 text-white'
                         }`}
                     >
-                      Get Started
+                      {isCurrent ? 'Current Plan' : 'Get Started'}
                     </button>
                     <ul className="space-y-3 text-sm flex-1">
                       {(plan.features_list || []).map((feat, i) => (
                         <li key={i} className="flex gap-2 text-zinc-300">
-                          <svg className={`w-4 h-4 shrink-0 mt-0.5 ${isPopular ? 'text-blue-400' : 'text-green-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className={`w-4 h-4 shrink-0 mt-0.5 ${isCurrent ? 'text-emerald-400' : isPopular ? 'text-blue-400' : 'text-green-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                           <span>{feat}</span>
                         </li>
                       ))}
                     </ul>
+                    <button
+                      onClick={() => {
+                        setSelectedPlan(plan);
+                        setIsPlanModalOpen(true);
+                      }}
+                      className="mt-4 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider"
+                    >
+                      View All Details
+                    </button>
                   </div>
                 );
               })
@@ -433,6 +453,33 @@ export default function AiAutomation() {
               </div>
             )}
           </div>
+
+          {/* Platform Stats / Active Subscriptions */}
+          {plans.stats && (plans.stats.total_firms > 0 || plans.stats.total_users > 0) && (
+            <div className="mt-16 pt-16 border-t border-zinc-800/50">
+              <div className="flex flex-wrap justify-center gap-12 md:gap-24">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-white mb-1">
+                    {plans.stats.total_firms < 10 ? `${plans.stats.total_firms}+` : plans.stats.total_firms.toLocaleString() + '+'}
+                  </div>
+                  <div className="text-zinc-500 uppercase tracking-widest text-xs font-bold">Active Firms</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-white mb-1">
+                    {plans.stats.total_users < 100 ? `${plans.stats.total_users}+` : plans.stats.total_users.toLocaleString() + '+'}
+                  </div>
+                  <div className="text-zinc-500 uppercase tracking-widest text-xs font-bold">Tax Professionals</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-white mb-1">99.9%</div>
+                  <div className="text-zinc-500 uppercase tracking-widest text-xs font-bold">Platform Uptime</div>
+                </div>
+              </div>
+              <p className="text-center text-zinc-500 text-sm mt-8">
+                Across the entire platform, firms are managing thousands of clients with SeQwens.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -565,7 +612,10 @@ export default function AiAutomation() {
               <h3 className="text-xl font-bold mb-4">Still Have Questions?</h3>
               <p className="text-zinc-400 mb-6">If you need help deciding which plan is right for your firm or want to see the platform in action, our team is happy to help.</p>
               <div className="inline-flex">
-                <button className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-[10px] font-medium transition-colors">
+                <button
+                  onClick={() => setIsReachOutOpen(true)}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-[10px] font-medium transition-colors"
+                >
                   Reach out to Support
                 </button>
               </div>
@@ -573,6 +623,143 @@ export default function AiAutomation() {
           </div>
         </div>
       </section>
+
+      <ReachOutModal isOpen={isReachOutOpen} onClose={() => setIsReachOutOpen(false)} />
+
+      {/* Plan Details Modal */}
+      {isPlanModalOpen && selectedPlan && (() => {
+        const meta = getPlanMeta(selectedPlan.subscription_type);
+        return (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-[#121214] border border-zinc-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+              <div className="relative p-8">
+                <button
+                  onClick={() => setIsPlanModalOpen(false)}
+                  className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-500">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">{meta.title} Plan</h2>
+                    {selectedPlan.is_current && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mt-1">
+                        Active Subscription
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">Pricing Info</h3>
+                      <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Monthly Price</span>
+                          <span className="text-white font-bold">${parseFloat(selectedPlan.monthly_price).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Yearly Price</span>
+                          <span className="text-white font-bold">${parseFloat(selectedPlan.yearly_price || (selectedPlan.monthly_price * 12)).toFixed(2)}</span>
+                        </div>
+                        {selectedPlan.discount_percentage > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-emerald-400">Annual Savings</span>
+                            <span className="text-emerald-400 font-bold">{selectedPlan.discount_percentage}% OFF</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2 border-t border-zinc-800">
+                          <span className="text-zinc-400 uppercase text-[10px] font-bold">Billing Cycle</span>
+                          <span className="text-white font-bold capitalize">{selectedPlan.billing_cycle}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">Platform Limits</h3>
+                      <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Included Offices</span>
+                          <span className="text-white font-bold">{selectedPlan.included_offices}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Max Users</span>
+                          <span className="text-white font-bold">{selectedPlan.max_users_display}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Max Clients</span>
+                          <span className="text-white font-bold">{selectedPlan.max_clients_display}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Storage Limit</span>
+                          <span className="text-white font-bold">{selectedPlan.storage_display}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">E-Signatures</span>
+                          <span className="text-white font-bold">{selectedPlan.e_signatures_display} / mo</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Workflows</span>
+                          <span className="text-white font-bold">{selectedPlan.max_workflows_display}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">Available Add-ons</h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${selectedPlan.additional_storage_addon ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${selectedPlan.additional_storage_addon ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
+                          <span className="text-sm font-medium">Extra Storage Support</span>
+                          {selectedPlan.additional_storage_addon && <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${selectedPlan.additional_user_addon ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${selectedPlan.additional_user_addon ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
+                          <span className="text-sm font-medium">Extra Admin Slots</span>
+                          {selectedPlan.additional_user_addon && <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${selectedPlan.priority_support_addon ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${selectedPlan.priority_support_addon ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
+                          <span className="text-sm font-medium">Priority Support</span>
+                          {selectedPlan.priority_support_addon && <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${selectedPlan.custom_pricing === 'enabled' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${selectedPlan.custom_pricing === 'enabled' ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
+                          <span className="text-sm font-medium">Custom Enterprise Pricing</span>
+                          {selectedPlan.custom_pricing === 'enabled' && <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setIsPlanModalOpen(false);
+                        handleGetStarted(selectedPlan.subscription_type);
+                      }}
+                      disabled={selectedPlan.is_current}
+                      className={`w-full py-4 rounded-2xl font-bold transition-all ${selectedPlan.is_current
+                        ? 'bg-zinc-800 text-zinc-500 cursor-default'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/20'
+                        }`}
+                    >
+                      {selectedPlan.is_current ? 'Currently Subscribed' : 'Upgrade to this Plan'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

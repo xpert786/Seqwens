@@ -78,6 +78,24 @@ export default function Header() {
     }
   };
 
+  const handlePricingClick = (e) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      const element = document.getElementById("pricing");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      navigate("/#pricing");
+      setTimeout(() => {
+        const element = document.getElementById("pricing");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  };
+
   // Handle hash navigation on page load
   useEffect(() => {
     if (location.pathname === "/") {
@@ -225,18 +243,19 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-8">
             {/* Pricing */}
             <div style={{ opacity: 1, transform: "none" }}>
-              <Link
-                to="/pricing"
-                className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/pricing"
+              <a
+                href={location.pathname === "/" ? "#pricing" : "/#pricing"}
+                onClick={handlePricingClick}
+                className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/" && window.location.hash === "#pricing"
                   ? "text-white"
                   : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
                   }`}
               >
                 Pricing
-                <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/pricing" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/" && window.location.hash === "#pricing" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
                   }`}></span>
-              </Link>
+              </a>
             </div>
 
             {/* FAQ - Note: Your original has FAQ mapped to Client Portal */}
@@ -267,14 +286,13 @@ export default function Header() {
                   <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
                 </button>
               ) : (
-                <a
-                  href="#client-portal"
-                  onClick={handleClientPortalClick}
+                <Link
+                  to="/login"
                   className="text-sm font-medium transition-colors duration-200 relative group text-white hover:text-white"
                 >
                   Client Portal
                   <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
-                </a>
+                </Link>
               )}
             </div>
 
@@ -294,19 +312,18 @@ export default function Header() {
                     }`}></span>
                 </Link>
               ) : (
-                <a
-                  href="#get-started"
-                  onClick={handleGetStartedClick}
-                  className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/" && window.location.hash === "#get-started"
+                <Link
+                  to="/create-account"
+                  className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/create-account"
                     ? "text-white"
                     : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
                     }`}
                 >
                   Get Started
-                  <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/" && window.location.hash === "#get-started" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/create-account" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                     } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
                     }`}></span>
-                </a>
+                </Link>
               )}
             </div>
           </nav>
