@@ -1,0 +1,238 @@
+/* Global Theme Overrides for Super Admin */
+
+/* Base overrides */
+.dark-mode {
+    color-scheme: dark;
+}
+
+.dark-mode body {
+    background-color: var(--sa-bg-primary) !important;
+    color: var(--sa-text-primary) !important;
+}
+
+/* Background overrides */
+.dark-mode .bg-white,
+.dark-mode .bg-gray-50,
+.dark-mode .bg-slate-50,
+.dark-mode .bg-neutral-50 {
+    background-color: var(--sa-bg-card) !important;
+}
+
+.dark-mode .bg-\[\#F6F7FF\],
+.dark-mode .bg-\[\#F3F7FF\],
+.dark-mode .bg-gray-100,
+.dark-mode .active-tab-bg {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Specific background for the main dashboard container */
+.dark-mode div.w-full.bg-\[\#F6F7FF\],
+.dark-mode main.bg-\[rgb\(243\2C 247\2C 255\)\],
+.dark-mode .bg-\[rgb\(243\2C 247\2C 255\)\] {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Text overrides */
+.dark-mode .text-gray-900,
+.dark-mode .text-gray-800,
+.dark-mode .text-blue-900,
+.dark-mode .text-\[\#3B4A66\],
+.dark-mode .text-slate-900 {
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .text-gray-700,
+.dark-mode .text-gray-600,
+.dark-mode .text-gray-500,
+.dark-mode .text-slate-600,
+.dark-mode .text-slate-500 {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Border overrides */
+.dark-mode .border,
+.dark-mode .border-gray-100,
+.dark-mode .border-gray-200,
+.dark-mode .border-gray-300,
+.dark-mode .border-\[\#E8F0FF\],
+.dark-mode .border-\[\#E5E7EB\],
+.dark-mode .border-slate-200 {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* SVG Icon overrides */
+.dark-mode svg rect[fill="#E8F0FF"],
+.dark-mode svg rect[fill="#F3F7FF"],
+.dark-mode svg circle[fill="#E8F0FF"],
+.dark-mode svg circle[fill="#F3F7FF"] {
+    fill: var(--sa-bg-active) !important;
+}
+
+.dark-mode svg path[stroke="#3B4A66"],
+.dark-mode svg path[stroke="#1F2937"],
+.dark-mode svg path[stroke="#4B5563"] {
+    stroke: var(--sa-text-primary) !important;
+}
+
+.dark-mode svg path[fill="#3B4A66"],
+.dark-mode svg path[fill="#1F2937"],
+.dark-mode svg path[fill="#131323"] {
+    fill: var(--sa-text-primary) !important;
+}
+
+/* Modal specific overrides */
+.dark-mode .modal-content {
+    background-color: var(--sa-bg-card) !important;
+    color: var(--sa-text-primary) !important;
+    border: 1px solid var(--sa-border-color) !important;
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-footer {
+    border-color: var(--sa-border-color) !important;
+    background-color: var(--sa-bg-card) !important;
+}
+
+.dark-mode .modal-title {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Search and Input overrides */
+.dark-mode input.form-control,
+.dark-mode select,
+.dark-mode textarea {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+.dark-mode input::placeholder {
+    color: var(--sa-text-secondary) !important;
+    opacity: 0.6;
+}
+
+/* Card and Hover overrides */
+.dark-mode .hover\:bg-gray-50:hover,
+.dark-mode .hover\:bg-slate-50:hover,
+.dark-mode .hover\:bg-gray-100:hover {
+    background-color: var(--sa-bg-active) !important;
+}
+
+/* Sidebar specific overrides */
+.dark-mode .super-sidebar-container {
+    background-color: var(--sa-bg-sidebar) !important;
+}
+
+/* Stats specific overrides */
+.dark-mode .bg-green-50,
+.dark-mode .bg-blue-50,
+.dark-mode .bg-yellow-50,
+.dark-mode .bg-orange-50,
+.dark-mode .bg-indigo-50 {
+    background-color: var(--sa-bg-active) !important;
+    opacity: 0.9;
+}
+
+/* Chart Tooltip */
+.dark-mode .recharts-default-tooltip {
+    background-color: var(--sa-bg-card) !important;
+    border: 1px solid var(--sa-border-color) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-mode .recharts-tooltip-label {
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .recharts-tooltip-item {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Scrollbar theme */
+.dark-mode ::-webkit-scrollbar-track {
+    background: var(--sa-bg-primary);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+    background: var(--sa-border-color);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: var(--sa-text-secondary);
+}
+
+/* Enhanced Theme Toggle Button */
+.theme-toggle-container {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+    pointer-events: none;
+}
+
+.theme-toggle-container:active::before {
+    width: 100px;
+    height: 100px;
+}
+
+.theme-toggle-container:active {
+    transform: scale(0.95) !important;
+}
+
+.theme-toggle-container:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Smooth icon rotation on theme change */
+.theme-toggle-container svg {
+    transform-origin: center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.theme-toggle-container:hover svg {
+    transform: rotate(15deg);
+}
+
+/* Icon glow animations */
+@keyframes sunGlow {
+    0% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)) brightness(1); }
+    100% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)) brightness(1.2); }
+}
+
+@keyframes moonGlow {
+    0% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)) brightness(1); }
+    100% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)) brightness(1.1); }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .theme-toggle-container,
+    .theme-toggle-container svg,
+    .theme-toggle-container::before {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .theme-toggle-container:hover svg {
+        transform: none !important;
+    }
+}

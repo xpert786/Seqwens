@@ -456,6 +456,7 @@ const FinalizeSubscription = () => {
           <div className="bg-white rounded-lg p-1 border border-gray-200 inline-flex shadow-sm">
             <button
               onClick={() => setBillingCycle('monthly')}
+              style={{ borderRadius: '8px' }}
               className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${billingCycle === 'monthly'
                 ? 'bg-[#3AD6F2] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -465,6 +466,7 @@ const FinalizeSubscription = () => {
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
+              style={{ borderRadius: '8px' }}
               className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${billingCycle === 'yearly'
                 ? 'bg-[#3AD6F2] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -606,6 +608,7 @@ const FinalizeSubscription = () => {
           <button
             onClick={handleFinalizeSubscription}
             disabled={!selectedPlan || processing}
+            style={{ borderRadius: '8px' }}
             className="w-full sm:w-auto px-8 sm:px-10 lg:px-12 py-3 sm:py-3.5 lg:py-4 bg-[#F56D2D] text-white rounded-lg text-base sm:text-lg lg:text-xl font-semibold hover:bg-orange-600 active:bg-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] shadow-lg hover:shadow-xl disabled:shadow-none min-h-[48px] sm:min-h-[52px]"
           >
             {processing ? (

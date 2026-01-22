@@ -26,24 +26,32 @@ export const ThemeProvider = ({ children }) => {
 
         if (isDarkMode) {
             root.classList.add('dark-mode');
+            root.classList.add('dark'); // For Tailwind
             root.classList.remove('light-mode');
             // Set CSS variables for dark mode
-            root.style.setProperty('--sa-bg-primary', '#1a1a2e');
-            root.style.setProperty('--sa-bg-secondary', '#16213e');
-            root.style.setProperty('--sa-bg-card', '#1f2937');
-            root.style.setProperty('--sa-text-primary', '#ffffff');
-            root.style.setProperty('--sa-text-secondary', '#9ca3af');
-            root.style.setProperty('--sa-border-color', '#374151');
+            root.style.setProperty('--sa-bg-primary', '#0f172a');
+            root.style.setProperty('--sa-bg-secondary', '#1e293b');
+            root.style.setProperty('--sa-bg-card', '#1e293b');
+            root.style.setProperty('--sa-bg-sidebar', '#0f172a');
+            root.style.setProperty('--sa-bg-active', '#334155');
+            root.style.setProperty('--sa-text-primary', '#f8fafc');
+            root.style.setProperty('--sa-text-secondary', '#94a3b8');
+            root.style.setProperty('--sa-border-color', '#334155');
+            root.style.setProperty('--sa-accent', '#f56d2d');
         } else {
             root.classList.remove('dark-mode');
+            root.classList.remove('dark'); // For Tailwind
             root.classList.add('light-mode');
             // Set CSS variables for light mode
             root.style.setProperty('--sa-bg-primary', '#ffffff');
-            root.style.setProperty('--sa-bg-secondary', '#f3f4f6');
+            root.style.setProperty('--sa-bg-secondary', '#f3f7ff');
             root.style.setProperty('--sa-bg-card', '#ffffff');
-            root.style.setProperty('--sa-text-primary', '#1f2937');
-            root.style.setProperty('--sa-text-secondary', '#6b7280');
-            root.style.setProperty('--sa-border-color', '#e5e7eb');
+            root.style.setProperty('--sa-bg-sidebar', '#ffffff');
+            root.style.setProperty('--sa-bg-active', '#f1f5f9');
+            root.style.setProperty('--sa-text-primary', '#1e293b');
+            root.style.setProperty('--sa-text-secondary', '#64748b');
+            root.style.setProperty('--sa-border-color', '#e2e8f0');
+            root.style.setProperty('--sa-accent', '#f56d2d');
         }
 
         // Save to localStorage

@@ -597,6 +597,7 @@ const FirmSignup = () => {
                 type="submit"
                 className="btn create-firm-btn"
                 disabled={isLoading}
+                style={{ borderRadius: '7px' }}
               >
                 {isLoading ? 'Creating Firm Account...' : 'Create Firm Account'}
               </button>

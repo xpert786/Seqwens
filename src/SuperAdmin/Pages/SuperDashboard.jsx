@@ -4,6 +4,7 @@ import SuperHeader from '../Components/SuperHeader'
 import { Outlet } from 'react-router-dom'
 import { ModalProvider, useModal } from '../Context/ModalContext'
 import { ThemeProvider } from '../Context/ThemeContext'
+import '../style/ThemeExtras.css'
 
 function SuperDashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -60,10 +61,12 @@ function SuperDashboardContent() {
         <SuperHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <SuperSidebar isSidebarOpen={isSidebarOpen} />
         <main
-          className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto bg-[rgb(243,247,255)] p-2 transition-all duration-300"
+          className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
           style={{
             marginLeft: isSidebarOpen ? `${sidebarWidth}px` : '0',
-            width: isSidebarOpen ? `calc(100% - ${sidebarWidth}px)` : '100%'
+            width: isSidebarOpen ? `calc(100% - ${sidebarWidth}px)` : '100%',
+            backgroundColor: 'var(--sa-bg-secondary)',
+            color: 'var(--sa-text-primary)'
           }}
         >
           <Outlet />

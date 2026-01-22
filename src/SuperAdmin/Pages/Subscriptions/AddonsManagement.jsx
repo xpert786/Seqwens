@@ -262,7 +262,8 @@ export default function AddonsManagement() {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+              className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+            style={{ borderRadius: '7px' }}
           >
             + Add Addon
           </button>

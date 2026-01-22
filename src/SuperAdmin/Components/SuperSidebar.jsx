@@ -77,8 +77,8 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
 
   const linkClass = (path, matchChildren = false) =>
     `flex items-center justify-start px-0.5 py-1.5 rounded-lg my-0 text-xs font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${isActivePath(path, matchChildren)
-      ? "bg-[#F6F7FF] !text-[#3B4A66]"
-      : "!text-[#3B4A66] hover:bg-slate-50 hover:!text-[#3B4A66]"
+      ? "bg-[var(--sa-bg-active)] !text-[var(--sa-text-primary)]"
+      : "!text-[var(--sa-text-secondary)] hover:bg-[var(--sa-bg-active)] hover:!text-[var(--sa-text-primary)]"
     }`;
 
   const iconWrapperClass = (path, matchChildren = false) =>
@@ -91,8 +91,12 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
 
   return (
     <div
-      className={`super-sidebar-container w-[265px] h-[calc(100vh-70px)] fixed top-[70px] left-0 bg-white border-r border-gray-200 z-[1000] font-['BasisGrotesquePro'] flex flex-col justify-between overflow-hidden xl:w-[285px] lg:w-60 md:w-60 transition-transform duration-300`}
-      style={{ transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)' }}
+      className={`super-sidebar-container w-[265px] h-[calc(100vh-70px)] fixed top-[70px] left-0 z-[1000] font-['BasisGrotesquePro'] flex flex-col justify-between overflow-hidden xl:w-[285px] lg:w-60 md:w-60 transition-transform duration-300`}
+      style={{
+        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        backgroundColor: 'var(--sa-bg-sidebar)',
+        borderRight: '1px solid var(--sa-border-color)'
+      }}
       aria-hidden={!isSidebarOpen}
     >
       <div className="flex-1 pt-1 pb-1 overflow-y-auto overflow-x-hidden mr-1 ml-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-#3B4A66/10 [&::-webkit-scrollbar-thumb]:rounded">
@@ -236,7 +240,10 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
       </div>
 
       {/* Fixed Bottom Box */}
-      <div className="bg-[#F6F7FF] mx-2 my-3 mb-2 p-4 rounded-lg flex flex-col gap-2 shrink-0 ">
+      <div
+        className="mx-2 my-3 mb-2 p-4 rounded-lg flex flex-col gap-2 shrink-0"
+        style={{ backgroundColor: 'var(--sa-bg-active)' }}
+      >
         {/* <Link to="/superadmin/admin-settings" className={bottomLinkClass("/superadmin/admin-settings")}>
           <span className="inline-flex items-center justify-center mr-2 w-6 h-6">
             <AccountIcon />
