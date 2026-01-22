@@ -71,32 +71,36 @@ export default function FaqSection() {
   ];
 
   return (
-    <section id="faq" className="py-24 px-6">
+    <section id="faq" className="py-24 px-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic">
       <div className="max-w-4xl mx-auto">
-        <h6 className="text-center text-sm font-semibold text-gray-500 tracking-wide mb-2 uppercase">
+        <h6 className="text-center text-sm font-semibold text-white tracking-wide mb-2 uppercase" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="100">
           Help Center
         </h6>
 
-        <h2 className="text-center text-3xl md:text-5xl font-bold text-[#1C4E80] mb-6">
+        <h2 className="text-center text-3xl md:text-5xl font-bold text-white mb-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="200">
           Frequently Asked <span className="text-[#F49C2D]">Questions</span>
         </h2>
 
-        <p className="text-center text-gray-500 text-lg mb-12">
+        <p className="text-center text-gray-500 text-lg mb-12" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="300">
           Everything you need to know about our tax practice management platform.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-4" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
           {faqs.map((item, index) => (
             <div
               key={index}
-              className="rounded-[10px] bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+              className="rounded-[10px] bg-zinc-900 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+              data-aos="fade-up"
+              data-aos-duration="500"
+              data-aos-easing="ease-out-cubic"
+              data-aos-delay={`${100 + index * 50}`}
             >
               <button
                 className="w-full flex items-center justify-between p-6 text-left"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
 
-
+                <p className="text-white">{item.title}</p>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${openIndex === index ? "bg-[#00C0C6] text-white rotate-45" : "bg-gray-100 text-gray-400"}`}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -108,7 +112,7 @@ export default function FaqSection() {
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
                   }`}
               >
-                <div className="px-6 pb-6 text-gray-600 leading-relaxed border-t border-gray-50 pt-4">
+                <div className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-gray-50 pt-4">
                   {item.answer}
                 </div>
               </div>
@@ -116,10 +120,10 @@ export default function FaqSection() {
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <h3 className="text-xl font-bold text-white mb-2">Still Have Questions?</h3>
-          <p className="text-gray-500 mb-6">If you need help deciding which plan is right for your firm or want to see the platform in action, our team is happy to help.</p>
-          <button className="text-[#F49C2D] font-bold hover:underline">Reach out through the support form →</button>
+        <div className="text-center mt-12" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">
+          <h3 className="text-xl font-bold text-white mb-2" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Still Have Questions?</h3>
+          <p className="text-gray-500 mb-6" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">If you need help deciding which plan is right for your firm or want to see the platform in action, our team is happy to help.</p>
+          <button className="text-[#F49C2D] font-bold hover:underline" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="400">Reach out through the support form →</button>
         </div>
       </div>
     </section>

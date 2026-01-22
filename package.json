@@ -16,6 +16,7 @@
     "@mui/material": "^7.2.0",
     "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.6.0",
+    "aos": "^2.3.4",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.7",
     "chart.js": "^4.5.1",

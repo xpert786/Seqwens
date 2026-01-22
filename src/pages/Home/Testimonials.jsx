@@ -28,7 +28,7 @@ const getDisplayRole = (role) => {
 };
 
 // Get company display based on role
-const getCompanyDisplay = (userName, userRole) => {
+const getCompanyDisplay = (userName) => {
   const companies = [
     "Deloitte Tax",
     "PwC Tax Services",
@@ -76,8 +76,8 @@ const generateMetrics = (role) => {
 export default function Testimonials() {
   const scrollContainerRef = useRef(null);
   const [feedbacks, setFeedbacks] = useState([]);
-  const [averageRating, setAverageRating] = useState("4.9");
-  const [totalReviews, setTotalReviews] = useState("250+");
+  // const [averageRating, setAverageRating] = useState("4.9");
+  // const [totalReviews, setTotalReviews] = useState("250+");
 
   // Fetch Feedback List
   const fetchFeedbackList = async () => {
@@ -145,8 +145,8 @@ export default function Testimonials() {
       const res = await fetch(`${getApiBaseUrl()}/user/feedback/average/`);
       const data = await res.json();
       if (data.success) {
-        setAverageRating(data.average_stars.toFixed(1));
-        setTotalReviews(`${data.total_feedback}+`);
+        // setAverageRating(data.average_stars.toFixed(1));
+        // setTotalReviews(`${data.total_feedback}+`);
       }
     } catch (error) {
       console.log("Average rating error:", error);
@@ -179,26 +179,26 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-20">
+    <section className="py-20" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic">
       <div className="container mx-auto px-6">
         <div className="max-w-7xl mx-auto">
 
           {/* Header Section */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <div className="text-center mb-16" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="300">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="500">
               Trusted by Tax<br />
               <span className="text-white bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
                 Professionals Worldwide
               </span>
             </h2>
-            <p className="text-xl text-white max-w-3xl mx-auto">
+            <p className="text-xl text-white max-w-3xl mx-auto" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="700">
               See how CPAs, tax preparers, and accounting professionals are transforming
               their practices and delivering exceptional results with AI-powered tax solutions.
             </p>
           </div>
 
           {/* Testimonial Carousel */}
-          <div className="relative mb-20">
+          <div className="relative mb-20" data-aos="fade-up" data-aos-duration="500" data-aos-easing="ease-out-cubic" data-aos-delay="900">
             <div className="relative w-full" role="region" aria-roledescription="carousel">
               <div className="overflow-hidden">
                 <div
@@ -215,6 +215,10 @@ export default function Testimonials() {
                       <div
                         key={item.id}
                         className="min-w-[320px] md:min-w-[32%] flex-shrink-0"
+                        data-aos="fade-up"
+                        data-aos-duration="500"
+                        data-aos-easing="ease-out-cubic"
+                        data-aos-delay={`${1100 + (item.id - 1) * 200}`}
                       >
                         <div className="h-full">
                           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 h-full flex flex-col hover:border-zinc-700 transition-all duration-300 hover:shadow-lg hover:shadow-zinc-950/20">
