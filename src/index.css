@@ -1,9 +1,179 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 /* Global font: use BasisGrotesquePro from fonts.css, with sensible fallbacks */
 html, body, #root, button, input, select, textarea {
-  font-family: 'BasisGrotesquePro', 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
+  font-family: 'BasisGrotesquePro', 'Geist', 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
+}
+
+/* Enhanced typography for headings and body text to match ArchitectGPT style */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+text {
+  font-weight: 400;
+}
+
+p {
+  font-weight: 300;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* Homepage specific typography */
+.homepage h1 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.homepage h2 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.homepage h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.homepage p {
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* Hero section typography */
+.hero-section h1 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.hero-section h2 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* Feature cards typography */
+.feature-card h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.feature-card p {
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Testimonial typography */
+.testimonial blockquote {
+  font-weight: 300;
+  line-height: 1.6;
+  font-style: normal;
+}
+
+.testimonial-author {
+  font-weight: 500;
+}
+
+/* FAQ typography */
+.faq-item h3 {
+  font-weight: 500;
+}
+
+.faq-answer {
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* Why choose us typography */
+.why-choose-us h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.why-choose-us p {
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Button typography */
+.btn {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Navigation typography */
+.nav-link {
+  font-weight: 500;
+}
+
+/* Specific font weights for different text sizes */
+.text-sm {
+  font-weight: 400;
+}
+
+.text-base {
+  font-weight: 300;
+}
+
+.text-lg {
+  font-weight: 300;
+}
+
+.text-xl {
+  font-weight: 400;
+}
+
+.text-2xl {
+  font-weight: 500;
+}
+
+.text-3xl {
+  font-weight: 500;
+}
+
+.text-4xl {
+  font-weight: 600;
+}
+
+.text-5xl {
+  font-weight: 700;
+}
+
+.text-6xl {
+  font-weight: 700;
+}
+
+/* Specific font weights for bold text */
+.font-light {
+  font-weight: 300 !important;
+}
+
+.font-normal {
+  font-weight: 400 !important;
+}
+
+.font-medium {
+  font-weight: 500 !important;
+}
+
+.font-semibold {
+  font-weight: 600 !important;
+}
+
+.font-bold {
+  font-weight: 700 !important;
+}
+
+.font-extrabold {
+  font-weight: 800 !important;
+}
+
+.font-black {
+  font-weight: 900 !important;
 }
 /* Ensure all elements inherit the global font */
 *, *::before, *::after {

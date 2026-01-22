@@ -10,7 +10,6 @@ export default function Header() {
 
   // Initialize with actual login status
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => isLoggedIn());
-  const [isTransparent, setIsTransparent] = useState(true);
   const [headerOpacity, setHeaderOpacity] = useState(1);
   // const [headerTransform, setHeaderTransform] = useState("none");
   const [userData, setUserData] = useState(() => {
@@ -43,10 +42,8 @@ export default function Header() {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       if (scrollTop > 100) {
-        setIsTransparent(true);
         setHeaderOpacity(1);
       } else {
-        setIsTransparent(true);
         setHeaderOpacity(1);
       }
     };
@@ -208,7 +205,7 @@ export default function Header() {
 
   return (
     <header data-aos="fade-down" data-aos-duration="800" data-aos-delay="400"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black/20 backdrop-blur-xs€'}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black/20 backdrop-blur-md border-b border-white/10}`}
       style={{ opacity: headerOpacity /*, transform: headerTransform*/ }}
     >
       <div className="max-w-7xl mx-auto px-6">
@@ -246,15 +243,14 @@ export default function Header() {
               <a
                 href={location.pathname === "/" ? "#pricing" : "/#pricing"}
                 onClick={handlePricingClick}
-                className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/" && window.location.hash === "#pricing"
+                className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/" && window.location.hash === "#pricing"
                   ? "text-white"
-                  : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                  : "text-zinc-200 hover:text-white"
                   }`}
               >
                 Pricing
                 <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/" && window.location.hash === "#pricing" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
-                  }`}></span>
+                  } transition-transform duration-200 bg-white`}></span>
               </a>
             </div>
 
@@ -265,13 +261,12 @@ export default function Header() {
                 onClick={handleFAQClick}
                 className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/" && window.location.hash === "#faq"
                   ? "text-white"
-                  : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                  : "text-zinc-200 hover:text-white"
                   }`}
               >
                 FAQ
                 <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/" && window.location.hash === "#faq" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
-                  }`}></span>
+                  } transition-transform duration-200 bg-white`}></span>
               </a>
             </div>
 
@@ -303,26 +298,24 @@ export default function Header() {
                   to="/floor-plan-creator"
                   className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/floor-plan-creator"
                     ? "text-white"
-                    : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                    : "text-zinc-200 hover:text-white"
                     }`}
                 >
                   3D Floor Plan
                   <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/floor-plan-creator" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                    } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
-                    }`}></span>
+                    } transition-transform duration-200 bg-white`}></span>
                 </Link>
               ) : (
                 <Link
                   to="/create-account"
                   className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/create-account"
                     ? "text-white"
-                    : isTransparent ? "text-zinc-300 hover:text-white" : "text-gray-700 hover:text-black"
+                    : "text-zinc-200 hover:text-white"
                     }`}
                 >
                   Get Started
                   <span className={`absolute inset-x-0 -bottom-1 h-0.5 ${location.pathname === "/create-account" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                    } transition-transform duration-200 ${isTransparent ? "bg-white" : "bg-black"
-                    }`}></span>
+                    } transition-transform duration-200 bg-white`}></span>
                 </Link>
               )}
             </div>
@@ -341,10 +334,7 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className={`${isTransparent
-                  ? "bg-white text-black px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-zinc-100 transition-colors duration-200 shadow-lg"
-                  : "bg-[#FF7A2E] text-white px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-[#e66a25] transition-colors duration-200"
-                  }`}
+                className="bg-white/90 text-black px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-white transition-colors duration-200 shadow-lg backdrop-blur-sm"
               >
                 Sign In
               </Link>
