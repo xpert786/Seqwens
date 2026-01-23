@@ -4,7 +4,7 @@ import React from "react";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 // import Homepage from "./pages/Homepage";
-import Home from "./pages/Home/Home";
+// import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
 import ESignatureModal from './ClientOnboarding/components/ESignatureModal';
 import NotificationPanel from './ClientOnboarding/components/Notifications/NotificationPanel';
@@ -202,7 +202,7 @@ export default function App() {
       disableMutationObserver: false,
       debounceDelay: 50,
       throttleDelay: 99,
-      
+
       // Animation settings
       offset: 120,
       delay: 0,
@@ -212,9 +212,9 @@ export default function App() {
       mirror: false,
       anchorPlacement: 'top-bottom',
     });
-    
+
     console.log(' AOS initialized successfully');
-    
+
     // Test if AOS is working
     setTimeout(() => {
       if (window.AOS) {
@@ -223,22 +223,22 @@ export default function App() {
         console.log('❌ AOS is not available');
       }
     }, 1000);
-    
+
     // Refresh AOS when route changes
     const handleRouteChange = () => {
       AOS.refresh();
     };
-    
+
     // Listen for route changes
     window.addEventListener('load', handleRouteChange);
     window.addEventListener('popstate', handleRouteChange);
-    
+
     return () => {
       window.removeEventListener('load', handleRouteChange);
       window.removeEventListener('popstate', handleRouteChange);
     };
   }, []);
-  
+
   return (
     <FeedbackWrapper>
       <Routes>
@@ -259,7 +259,7 @@ export default function App() {
         {/* Tailwind test route */}
         <Route path="/tw-test" element={<TailwindTest />} />
         {/* Root path - Home page (public landing page) */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<RootAuthCheck />} />
 
         {/* Authenticated users redirect route */}
         <Route path="/home-redirect" element={<RootAuthCheck />} />

@@ -3,12 +3,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 /* Global font: use BasisGrotesquePro from fonts.css, with sensible fallbacks */
-html, body, #root, button, input, select, textarea {
+html,
+body,
+#root,
+button,
+input,
+select,
+textarea {
   font-family: 'BasisGrotesquePro', 'Geist', 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
 }
 
 /* Enhanced typography for headings and body text to match ArchitectGPT style */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -175,8 +186,11 @@ p {
 .font-black {
   font-weight: 900 !important;
 }
+
 /* Ensure all elements inherit the global font */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   font-family: inherit !important;
 }
 
@@ -247,7 +261,8 @@ button.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="bor
 .phone-input-container .react-phone-input-2 input {
   width: 100% !important;
   height: 38px !important;
-  padding-left: 52px !important; /* space for flag */
+  padding-left: 52px !important;
+  /* space for flag */
   border: 1px solid #d1d5db !important;
   border-radius: 6px !important;
   font-size: 14px;
@@ -298,6 +313,116 @@ button.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="bor
 
 .react-phone-input-2 .country-list {
   z-index: 9999;
+}
+
+/* Global Dark Mode Support for react-phone-input-2 */
+.dark .react-phone-input-2 .form-control,
+.dark .react-tel-input .form-control {
+  background-color: #374151 !important;
+  /* gray-700 */
+  color: #f3f4f6 !important;
+  /* gray-100 */
+  border-color: #4b5563 !important;
+  /* gray-600 */
+}
+
+.dark .react-phone-input-2 .flag-dropdown,
+.dark .react-tel-input .flag-dropdown {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .react-phone-input-2 .flag-dropdown.open .selected-flag,
+.dark .react-tel-input .flag-dropdown.open .selected-flag {
+  background-color: #4b5563 !important;
+}
+
+.dark .react-phone-input-2 .selected-flag:hover,
+.dark .react-phone-input-2 .selected-flag:focus,
+.dark .react-tel-input .selected-flag:hover,
+.dark .react-tel-input .selected-flag:focus {
+  background-color: #4b5563 !important;
+}
+
+.dark .react-phone-input-2 .country-list,
+.dark .react-tel-input .country-list {
+  background-color: #1f2937 !important;
+  /* gray-800 */
+  color: #e5e7eb !important;
+  /* gray-200 */
+  border: 1px solid #4b5563 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .react-phone-input-2 .country-list .search,
+.dark .react-tel-input .country-list .search {
+  background-color: #1f2937 !important;
+  padding: 10px !important;
+  border-bottom: 1px solid #4b5563 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
+}
+
+.dark .react-phone-input-2 .country-list .search-box,
+.dark .react-tel-input .country-list .search-box {
+  background-color: #374151 !important;
+  color: white !important;
+  border: 1px solid #4b5563 !important;
+  width: 100% !important;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  border-radius: 6px !important;
+}
+
+.dark .react-phone-input-2 .country-list .search-box::placeholder,
+.dark .react-tel-input .country-list .search-box::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark .react-phone-input-2 .country-list .country:hover,
+.dark .react-tel-input .country-list .country:hover {
+  background-color: #374151 !important;
+}
+
+.dark .react-phone-input-2 .country-list .country.highlight,
+.dark .react-tel-input .country-list .country.highlight {
+  background-color: #4b5563 !important;
+}
+
+.dark .react-phone-input-2 .country-list .country .dial-code,
+.dark .react-tel-input .country-list .country .dial-code {
+  color: #9ca3af !important;
+}
+
+/* Base layouts for countries search to fix improper padding/alignment */
+.react-phone-input-2 .country-list .search,
+.react-tel-input .country-list .search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #fff;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.react-phone-input-2 .country-list .search-box,
+.react-tel-input .country-list .search-box {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+}
+
+.react-phone-input-2 .country-list .country,
+.react-tel-input .country-list .country {
+  padding: 10px 12px !important;
 }
 
 .Toastify__toast {
@@ -382,8 +507,8 @@ button.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="bor
   opacity: 1 !important;
 }
 
-#thumbnails{
-  background-color: #EEEEEE!important;
+#thumbnails {
+  background-color: #EEEEEE !important;
 }
 
 /* React-PDF Styling */
@@ -487,6 +612,11 @@ div[style*="z-index"][style*="fixed"] {
 
 /* Spinner animation for loading states */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

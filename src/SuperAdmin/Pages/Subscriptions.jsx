@@ -11,7 +11,7 @@ import html2canvas from 'html2canvas';
 import '../style/Subscriptions.css';
 
 export default function Subscriptions() {
-  const [activeTab, setActiveTab] = useState('Plans'); // 'Plans' or 'Addons'
+  const [activeTab, setActiveTab] = useState('Plans'); // 'Plans', 'Addons', or 'Invoices'
   const [showPlanDetails, setShowPlanDetails] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
@@ -623,6 +623,16 @@ export default function Subscriptions() {
             >
               Addons
             </button>
+            <button
+              onClick={() => setActiveTab('Invoices')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Invoices'
+                ? 'bg-[#3AD6F2] text-white'
+                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                }`}
+                style={{ borderRadius: '7px' }}
+            >
+              Subscription Invoices
+            </button>
           </div>
         </div>
       </div>
@@ -630,6 +640,8 @@ export default function Subscriptions() {
       {/* Tab Content */}
       {activeTab === 'Addons' ? (
         <AddonsManagement />
+      ) : activeTab === 'Invoices' ? (
+        <SubscriptionInvoicesTab />
       ) : (
         <>
           {/* Metric Cards and main subscriptions content */}
@@ -1427,4 +1439,324 @@ export default function Subscriptions() {
       )}
     </div>
   );
-}
+};
+
+// Subscription Invoices Tab Component
+const SubscriptionInvoicesTab = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchInvoices = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 20,
+        search: searchTerm,
+        status: statusFilter,
+        invoice_type: typeFilter,
+      });
+
+      const response = await superAdminAPI.get(`/admin/subscription-invoices/?${params}`);
+      if (response.data.success) {
+        setInvoices(response.data.data.invoices);
+        setTotalPages(response.data.data.pagination.total_pages);
+        setTotalCount(response.data.data.pagination.total_count);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription invoices:', error);
+      toast.error('Failed to load subscription invoices');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, searchTerm, statusFilter, typeFilter]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await superAdminAPI.get('/admin/subscription-invoices/stats/');
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching invoice stats:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvoices();
+    if (Object.keys(stats).length === 0) {
+      fetchStats();
+    }
+  }, [fetchInvoices, fetchStats, stats]);
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handleTypeFilter = (type) => {
+    setTypeFilter(type);
+    setCurrentPage(1);
+  };
+
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      'paid': 'bg-green-100 text-green-800',
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'overdue': 'bg-red-100 text-red-800',
+      'cancelled': 'bg-gray-100 text-gray-800',
+    };
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatCurrency(stats.total_revenue || 0)}
+              </p>
+            </div>
+            <FaDollarSign className="h-8 w-8 text-green-500" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatCurrency(stats.monthly_revenue || 0)}
+              </p>
+            </div>
+            <FaClock className="h-8 w-8 text-blue-500" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Paid Invoices</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.status_counts?.find(s => s.status === 'paid')?.count || 0}
+              </p>
+            </div>
+            <FaUsers className="h-8 w-8 text-purple-500" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.status_counts?.find(s => s.status === 'pending')?.count || 0}
+              </p>
+            </div>
+            <FaExclamationTriangle className="h-8 w-8 text-yellow-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="Search by invoice number or firm name..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => handleStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => handleTypeFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">All Types</option>
+            <option value="subscription_purchase">Purchase</option>
+            <option value="subscription_renewal">Renewal</option>
+            <option value="subscription_upgrade">Upgrade</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Invoices Table */}
+      <div className="bg-white rounded-lg border border-[#E8F0FF] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Invoice
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Firm
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : invoices.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                    No subscription invoices found
+                  </td>
+                </tr>
+              ) : (
+                invoices.map((invoice) => (
+                  <tr key={invoice.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {invoice.invoice_number}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {invoice.firm.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {invoice.firm.email}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900 capitalize">
+                        {invoice.invoice_type.replace('subscription_', '').replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-medium text-gray-900">
+                        {formatCurrency(invoice.amount)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(invoice.status)}`}>
+                        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(invoice.created_at)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing page <span className="font-medium">{currentPage}</span> of{' '}
+                  <span className="font-medium">{totalPages}</span> ({totalCount} total invoices)
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <FaChevronUp className="h-5 w-5 rotate-90" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <FaChevronDown className="h-5 w-5 rotate-90" />
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

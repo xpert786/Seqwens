@@ -51,7 +51,7 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
 
   return (
     <>
-      <nav 
+      <nav
         className="navbar fixed-top custom-topbar px-3"
         style={{
           backgroundColor: 'var(--sa-bg-primary)',
@@ -194,6 +194,7 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
                     backgroundColor: isDarkMode ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
                     transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                     opacity: 0.6,
+                    display: 'none',
                   }}
                 />
 

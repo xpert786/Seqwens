@@ -12,11 +12,12 @@ export default function GeneralTab() {
     city: '',
     state: '',
     zip_code: '',
+    country: '',
     phone_number: '',
     email: '',
     website: ''
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -27,9 +28,9 @@ export default function GeneralTab() {
       try {
         setLoading(true);
         setError('');
-        
+
         const response = await firmAdminSettingsAPI.getGeneralInfo();
-        
+
         if (response.success && response.data) {
           setFormData({
             name: response.data.name || '',
@@ -40,6 +41,7 @@ export default function GeneralTab() {
             city: response.data.city || '',
             state: response.data.state || '',
             zip_code: response.data.zip_code || '',
+            country: response.data.country || '',
             phone_number: response.data.phone_number || '',
             email: response.data.email || '',
             website: response.data.website || ''
@@ -84,13 +86,14 @@ export default function GeneralTab() {
         city: formData.city,
         state: formData.state,
         zip_code: formData.zip_code,
+        country: formData.country,
         phone_number: formData.phone_number,
         email: formData.email
         // website is not stored in database, so we don't send it
       };
 
       const response = await firmAdminSettingsAPI.updateGeneralInfo(updateData, 'PATCH');
-      
+
       if (response.success && response.data) {
         // Update form data with response (including legal_name)
         setFormData(prev => ({
@@ -129,182 +132,195 @@ export default function GeneralTab() {
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Firm Information Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
-          <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-            Firm Information
-          </h3>
-          <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-            Basic information about your firm
-          </p>
+        {/* Firm Information Section */}
+        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
+              Firm Information
+            </h3>
+            <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+              Basic information about your firm
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Firm Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55]  focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Legal Name
+                </label>
+                <input
+                  type="text"
+                  name="legal_name"
+                  value={formData.legal_name}
+                  readOnly
+                  disabled
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro] bg-gray-50 cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                EIN (Tax ID)
+              </label>
+              <input
+                type="text"
+                name="ein"
+                value={formData.ein}
+                onChange={handleInputChange}
+                placeholder="12-3456789"
+                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                Description
+              </label>
+              <textarea
+                rows={3}
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Professional tax preparation and accounting services for individuals and businesses."
+                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Contact Information Section */}
+        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
+              Contact Information
+            </h3>
+            <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+              How clients can reach your firm
+            </p>
+          </div>
+
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Firm Name <span className="text-red-500">*</span>
+                Street Address
               </label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="address"
+                value={formData.address}
                 onChange={handleInputChange}
-                required
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55]  focus:outline-none  font-[BasisGrotesquePro]"
+                placeholder="123 Main Street, Suite 100"
+                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Legal Name
-              </label>
-              <input
-                type="text"
-                name="legal_name"
-                value={formData.legal_name}
-                readOnly
-                disabled
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro] bg-gray-50 cursor-not-allowed"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  City
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="New York"
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  State
+                </label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="New York"
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  ZIP Code
+                </label>
+                <input
+                  type="text"
+                  name="zip_code"
+                  value={formData.zip_code}
+                  onChange={handleInputChange}
+                  placeholder="10001"
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  placeholder="United States"
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              EIN (Tax ID)
-            </label>
-            <input
-              type="text"
-              name="ein"
-              value={formData.ein}
-              onChange={handleInputChange}
-              placeholder="12-3456789"
-              className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-            />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleInputChange}
+                  placeholder="(555) 123-4567"
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="info@taxpracticepro.com"
+                  className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
+                />
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Description
-            </label>
-            <textarea
-              rows={3}
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Professional tax preparation and accounting services for individuals and businesses."
-              className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-            />
           </div>
         </div>
       </div>
 
-      {/* Contact Information Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
-          <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-            Contact Information
-          </h3>
-          <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-            How clients can reach your firm
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Street Address
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              placeholder="123 Main Street, Suite 100"
-              className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                City
-              </label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                placeholder="New York"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                State
-              </label>
-              <input
-                type="text"
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
-                placeholder="New York"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                ZIP Code
-              </label>
-              <input
-                type="text"
-                name="zip_code"
-                value={formData.zip_code}
-                onChange={handleInputChange}
-                placeholder="10001"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Phone
-              </label>
-              <input
-                type="text"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleInputChange}
-                placeholder="(555) 123-4567"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                placeholder="info@taxpracticepro.com"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
-              />
-            </div>
-          </div>
-
-        </div>
-      </div>
-      </div>
-      
       {/* Save Button */}
       <div className="mt-6 flex justify-end">
         <button

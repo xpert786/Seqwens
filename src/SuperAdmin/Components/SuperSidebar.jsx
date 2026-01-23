@@ -208,8 +208,8 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
                     </Link>
                   </li>
                 )}
-                {/* Support Center - Only for super_admin and support_admin */}
-                {(userType === 'super_admin' || userType === 'support_admin') && (
+                {/* Support Center - Only for super_admin, support_admin and billing_admin */}
+                {(userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') && (
                   <li className="mb-2">
                     <Link to="/superadmin/support" className={linkClass("/superadmin/support")}>
                       <span className={iconWrapperClass("/superadmin/support")}>

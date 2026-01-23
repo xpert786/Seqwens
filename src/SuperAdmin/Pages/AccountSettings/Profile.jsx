@@ -31,7 +31,6 @@ const createDefaultFormState = () => ({
     },
     security_settings: {
         admin_2fa_required: false,
-        ip_whitelisting_enabled: false,
         audit_logging_enabled: false,
         max_login_attempts: 5,
     },
@@ -128,8 +127,6 @@ export default function Profile() {
                 security_settings: {
                     admin_2fa_required:
                         formState.security_settings.admin_2fa_required,
-                    ip_whitelisting_enabled:
-                        formState.security_settings.ip_whitelisting_enabled,
                     audit_logging_enabled:
                         formState.security_settings.audit_logging_enabled,
                     max_login_attempts: Number(

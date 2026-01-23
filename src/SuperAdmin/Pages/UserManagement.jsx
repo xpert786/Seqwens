@@ -26,7 +26,6 @@ export default function UserManagement() {
     total_count: 0,
     total_pages: 1,
   });
-  const [currentPage, setCurrentPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,7 +46,6 @@ export default function UserManagement() {
   const [showAllUserCards, setShowAllUserCards] = useState(false);
   const USER_CARDS_PER_PAGE = 3;
 
-  const pageSize = 10;
   const getStatusBadgeClass = (status) => {
     const normalized = (status || '').toLowerCase();
     if (normalized.includes('active')) return 'bg-green-500';
@@ -55,18 +53,9 @@ export default function UserManagement() {
     return 'bg-gray-400';
   };
 
-  const goToPage = (page) => {
-    if (page >= 1 && page <= (pagination.total_pages || 1)) {
-      setCurrentPage(page);
-    }
-  };
 
-  const startItem = pagination.total_count
-    ? (pagination.page - 1) * pagination.page_size + 1
-    : 0;
-  const endItem = pagination.total_count
-    ? Math.min(pagination.page * pagination.page_size, pagination.total_count)
-    : 0;
+  const startItem = pagination.total_count ? 1 : 0;
+  const endItem = pagination.total_count || 0;
 
   // Client-side pagination logic for user cards
   const totalUserCards = users.length;
@@ -103,8 +92,6 @@ export default function UserManagement() {
           status: statusParam,
           role: roleParam,
           search: searchTerm.trim(),
-          page: currentPage,
-          pageSize,
         });
 
         if (response.success && response.data) {
@@ -116,20 +103,13 @@ export default function UserManagement() {
             }
           );
           setUsers(response.data.users || []);
-          const incomingPagination =
-            response.data.pagination || {
-              page: currentPage,
-              page_size: pageSize,
-              total_count: response.data.users?.length || 0,
-              total_pages: 1,
-            };
-          setPagination(incomingPagination);
-          if (
-            incomingPagination.page &&
-            incomingPagination.page !== currentPage
-          ) {
-            setCurrentPage(incomingPagination.page);
-          }
+          // No pagination - set total count directly
+          setPagination({
+            page: 1,
+            page_size: response.data.total_count || response.data.users?.length || 0,
+            total_count: response.data.total_count || response.data.users?.length || 0,
+            total_pages: 1,
+          });
           // Reset client-side pagination when data changes
           setUserCardsCurrentPage(1);
           setShowAllUserCards(false);
@@ -151,7 +131,7 @@ export default function UserManagement() {
     };
 
     fetchUsers();
-  }, [searchTerm, statusFilter, roleFilter, currentPage, refreshKey]);
+  }, [searchTerm, statusFilter, roleFilter, refreshKey]);
 
   const resetAddAdminForm = () => {
     setNewAdmin({
@@ -207,7 +187,6 @@ export default function UserManagement() {
       if (response.success) {
         toast.success('Super admin user created successfully!', superToastOptions);
         closeAddAdminModal();
-        setCurrentPage(1);
         setRefreshKey((key) => key + 1);
       } else {
         throw new Error(response.message || 'Failed to create super admin user');
@@ -272,7 +251,6 @@ export default function UserManagement() {
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
-                setCurrentPage(1);
               }}
               className="appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px] transition-colors"
             >
@@ -289,7 +267,6 @@ export default function UserManagement() {
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
-                setCurrentPage(1);
               }}
               className="appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px] transition-colors"
             >
@@ -396,7 +373,6 @@ export default function UserManagement() {
                     <span className="text-sm font-semibold text-gray-900 dark:text-white truncate hover:underline">
                       {user.full_name || 'Unnamed User'}
                     </span>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">User ID: {user.id}</p>
                   </div>
 
                   {/* Email Column */}
@@ -530,17 +506,20 @@ export default function UserManagement() {
                       height: '38px',
                       fontSize: '14px',
                       border: '1px solid #E8F0FF',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      backgroundColor: 'white',
+                      color: '#374151'
                     }}
                     buttonStyle={{
                       border: '1px solid #E8F0FF',
                       borderRadius: '8px 0 0 8px',
                       backgroundColor: 'white'
                     }}
+                    inputClass="dark:!bg-gray-700 dark:!border-gray-600 dark:!text-white"
+                    buttonClass="dark:!bg-gray-700 dark:!border-gray-600"
                     containerClass="w-full"
                     enableSearch={true}
                     countryCodeEditable={false}
-                    prefix="+"
                     disableDropdown={false}
                   />
                 </div>
@@ -567,19 +546,26 @@ export default function UserManagement() {
 
                     </div>
                     <button
-                      id="sendWelcomeEmail"
                       type="button"
+                      role="switch"
+                      aria-checked={newAdmin.sendWelcomeEmail}
                       onClick={() =>
-                        setNewAdmin((prev) => ({ ...prev, sendWelcomeEmail: !prev.sendWelcomeEmail }))
+                        setNewAdmin((prev) => ({
+                          ...prev,
+                          sendWelcomeEmail: !prev.sendWelcomeEmail,
+                        }))
                       }
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${newAdmin.sendWelcomeEmail ? 'bg-[#F56D2D]' : 'bg-gray-200 dark:bg-gray-600'
-                        }`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
+    ${newAdmin.sendWelcomeEmail ? 'bg-[#F56D2D]' : 'bg-gray-200 dark:bg-gray-600'}`}
+                      style={{ borderRadius: '13px', padding: '0px'}}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${newAdmin.sendWelcomeEmail ? 'translate-x-5' : 'translate-x-0'
-                          }`}
+                        className={`absolute left-0.5 inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
+      ${newAdmin.sendWelcomeEmail ? 'translate-x-5' : 'translate-x-0'}`}
                       />
                     </button>
+
+
                   </div>
                   <div className="flex justify-end gap-3">
                     <button

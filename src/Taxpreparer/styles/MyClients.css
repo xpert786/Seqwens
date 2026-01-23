@@ -321,7 +321,7 @@ span.info-item {
 /* Responsive for screens 498px and below */
 @media (max-width: 458px) {
 
-  
+
   /* Main header wrapper */
   .header.d-flex.justify-content-between.align-items-center {
     flex-direction: column !important;
@@ -340,6 +340,7 @@ span.info-item {
     width: 100% !important;
     justify-content: center !important;
   }
+
   /* Stats Cards - Full width like client list card */
   .row.g-3.mb-3 {
     margin-left: 0 !important;
@@ -348,8 +349,8 @@ span.info-item {
     width: 100% !important;
   }
 
-  .row.g-3.mb-3 > .col-md-3,
-  .row.g-3.mb-3 > .col-sm-6 {
+  .row.g-3.mb-3>.col-md-3,
+  .row.g-3.mb-3>.col-sm-6 {
     padding-left: 0 !important;
     padding-right: 0 !important;
     margin-bottom: 0.75rem;
@@ -498,7 +499,7 @@ span.info-item {
     margin-bottom: 0.75rem !important;
   }
 
-  .client-list-card > div.mb-3 {
+  .client-list-card>div.mb-3 {
     font-size: 0.875rem;
     margin-bottom: 0.75rem !important;
   }
@@ -509,8 +510,8 @@ span.info-item {
     margin-right: 0 !important;
   }
 
-  .row.g-3 > .col-12,
-  .row.g-3 > .col-md-6 {
+  .row.g-3>.col-12,
+  .row.g-3>.col-md-6 {
     padding-left: 0 !important;
     padding-right: 0 !important;
     margin-bottom: 0.75rem;
@@ -523,7 +524,7 @@ span.info-item {
   }
 
   /* Client Card Layout */
-  .client-card > .d-flex.justify-content-between {
+  .client-card>.d-flex.justify-content-between {
     flex-direction: column;
     gap: 0.75rem;
   }
@@ -688,8 +689,14 @@ span.info-item {
   z-index: 2002 !important;
 }
 
-.invite-actions-phone-container .flag-dropdown { z-index: 2001 !important; }
-.invite-actions-phone-container .flag-dropdown.open { width: 100% !important; left: 0 !important; }
+.invite-actions-phone-container .flag-dropdown {
+  z-index: 2001 !important;
+}
+
+.invite-actions-phone-container .flag-dropdown.open {
+  width: 100% !important;
+  left: 0 !important;
+}
 
 /* Fix search bar positioning to prevent overlap with country list */
 .invite-actions-phone-container .country-list .search {
@@ -712,7 +719,8 @@ span.info-item {
 .invite-actions-phone-container .country-list .country {
   position: relative !important;
   z-index: 0 !important;
-  padding-left: 46px !important; /* reserve space for flag */
+  padding-left: 46px !important;
+  /* reserve space for flag */
 }
 
 /* Keep flag inside reserved gutter */
@@ -725,6 +733,7 @@ span.info-item {
 .invite-actions-phone-container .country-list .country-name {
   margin-right: 6px !important;
 }
+
 .invite-actions-phone-container .country-list .dial-code {
   color: #6B7280 !important;
 }

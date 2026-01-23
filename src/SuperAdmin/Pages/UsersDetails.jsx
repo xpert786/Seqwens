@@ -107,6 +107,8 @@ const UsersDetails = () => {
     const [showSuspendModal, setShowSuspendModal] = useState(false);
     const [suspensionReason, setSuspensionReason] = useState('Policy violation under review');
     const [reasonError, setReasonError] = useState('');
+    const [showAdminTypeModal, setShowAdminTypeModal] = useState(false);
+    const [selectedAdminType, setSelectedAdminType] = useState('');
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -238,6 +240,57 @@ const UsersDetails = () => {
         setShowSuspendModal(false);
         setReasonError('');
     };
+
+    const handleChangeAdminTypeClick = () => {
+        setSelectedAdminType(profile.role || '');
+        setShowAdminTypeModal(true);
+    };
+
+    const handleConfirmAdminTypeChange = async () => {
+        if (!userDetails || actionLoading || !selectedAdminType) {
+            return;
+        }
+
+        if (selectedAdminType === profile.role) {
+            toast.info('No changes made - same admin type selected.', superToastOptions);
+            setShowAdminTypeModal(false);
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            await superAdminAPI.updateUser(userId, { role: selectedAdminType });
+            toast.success('Admin type updated successfully.', superToastOptions);
+
+            // Update local state
+            setUserDetails(prev => ({
+                ...prev,
+                profile: {
+                    ...prev.profile,
+                    role: selectedAdminType,
+                    role_display_name: selectedAdminType.split('_').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')
+                }
+            }));
+
+            setShowAdminTypeModal(false);
+        } catch (err) {
+            const message = handleAPIError(err);
+            toast.error(message, superToastOptions);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCancelAdminTypeChange = () => {
+        if (actionLoading) {
+            return;
+        }
+        setShowAdminTypeModal(false);
+        setSelectedAdminType('');
+    };
+
     const avatarInitials =
         profile.avatar_initials ||
         (profile.first_name && profile.last_name
@@ -307,15 +360,29 @@ const UsersDetails = () => {
                         </div>
                     </div>
                     <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
-                        <button
-                            className={actionButtonClasses}
-                            style={{ borderRadius: '7px' }}
-                            disabled={!actions.can_suspend || actionLoading}
-                            onClick={isSuspended ? handleUnsuspend : handleSuspendClick}
-                            title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
-                        >
-                            {actionLoading ? 'Processing...' : actionButtonLabel}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                className={actionButtonClasses}
+                                style={{ borderRadius: '7px' }}
+                                disabled={!actions.can_suspend || actionLoading}
+                                onClick={isSuspended ? handleUnsuspend : handleSuspendClick}
+                                title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
+                            >
+                                {actionLoading ? 'Processing...' : actionButtonLabel}
+                            </button>
+                            {profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
+                                <button
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={actionLoading}
+                                onClick={handleChangeAdminTypeClick}
+                                title="Change admin type"
+                                style={{ borderRadius: '8px' }}
+                              >
+                                Change Admin Type
+                              </button>
+                              
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -405,6 +472,60 @@ const UsersDetails = () => {
                                 style={{ borderRadius: '7px' }}
                             >
                                 {actionLoading ? 'Processing...' : 'Confirm Suspension'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Admin Type Change Modal */}
+            {showAdminTypeModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    style={{ background: 'var(--Color-overlay, #00000099)' }}
+                >
+                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-semibold text-[#3B4A66]">Change Admin Type</h3>
+                            <p className="text-sm text-gray-600">
+                                Select a new admin type for this user. This will change their permissions and access level.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#3B4A66]" htmlFor="admin-type">
+                                Admin Type
+                            </label>
+                            <select
+                                id="admin-type"
+                                className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B21B6] bg-white"
+                                value={selectedAdminType}
+                                onChange={(e) => setSelectedAdminType(e.target.value)}
+                                disabled={actionLoading}
+                            >
+                                <option value="super_admin">Super Admin</option>
+                                <option value="support_admin">Support Admin</option>
+                                <option value="billing_admin">Billing Admin</option>
+                            </select>
+                            <p className="text-xs text-gray-500">
+                                Current: {profile.role_display_name || profile.role}
+                            </p>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                onClick={handleCancelAdminTypeChange}
+                                disabled={actionLoading}
+                                style={{ borderRadius: '7px' }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                onClick={handleConfirmAdminTypeChange}
+                                disabled={actionLoading || !selectedAdminType}
+                                style={{ borderRadius: '7px' }}
+                            >
+                                {actionLoading ? 'Updating...' : 'Update Admin Type'}
                             </button>
                         </div>
                     </div>

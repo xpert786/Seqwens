@@ -22,13 +22,13 @@ function SuperAdminProtectedRoute({ children }) {
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
   }
-  
+
   // Check user type
   const storage = getStorage();
   const userType = storage?.getItem("userType");
-  
+
   console.log('SuperAdmin Protected Route - User type:', userType);
-  
+
   // Allow super_admin, support_admin, and billing_admin access
   if (userType !== 'super_admin' && userType !== 'support_admin' && userType !== 'billing_admin') {
     console.warn('Unauthorized access attempt to Super Admin');
@@ -41,20 +41,20 @@ function SuperAdminProtectedRoute({ children }) {
       return <Navigate to="/login" replace />;
     }
   }
-  
+
   return children;
 }
 
-// Protected Route Component for Support Admin - Only allows support_admin and super_admin
+// Protected Route Component for Support Admin - Allow support_admin, billing_admin and super_admin
 function SupportAdminProtectedRoute({ children }) {
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
   }
-  
+
   const storage = getStorage();
   const userType = storage?.getItem("userType");
-  
-  if (userType !== 'support_admin' && userType !== 'super_admin') {
+
+  if (userType !== 'support_admin' && userType !== 'super_admin' && userType !== 'billing_admin') {
     console.warn('Unauthorized access attempt to Support Center');
     // Redirect to appropriate page based on role
     if (userType === 'billing_admin') {
@@ -65,7 +65,7 @@ function SupportAdminProtectedRoute({ children }) {
       return <Navigate to="/login" replace />;
     }
   }
-  
+
   return children;
 }
 
@@ -74,10 +74,10 @@ function BillingAdminProtectedRoute({ children }) {
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
   }
-  
+
   const storage = getStorage();
   const userType = storage?.getItem("userType");
-  
+
   if (userType !== 'billing_admin' && userType !== 'super_admin') {
     console.warn('Unauthorized access attempt to Subscriptions');
     // Redirect to appropriate page based on role
@@ -89,7 +89,7 @@ function BillingAdminProtectedRoute({ children }) {
       return <Navigate to="/login" replace />;
     }
   }
-  
+
   return children;
 }
 
@@ -98,12 +98,12 @@ function SuperAdminOnlyProtectedRoute({ children }) {
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
   }
-  
+
   const storage = getStorage();
   const userType = storage?.getItem("userType");
-  
+
   console.log('SuperAdminOnlyProtectedRoute - User type:', userType);
-  
+
   if (userType !== 'super_admin') {
     console.warn('Unauthorized access attempt - Super Admin only. User type:', userType);
     // Redirect to appropriate page based on role
@@ -117,7 +117,7 @@ function SuperAdminOnlyProtectedRoute({ children }) {
       return <Navigate to="/login" replace />;
     }
   }
-  
+
   console.log('SuperAdminOnlyProtectedRoute - Access granted, rendering children');
   return children;
 }
@@ -126,7 +126,7 @@ function SuperAdminOnlyProtectedRoute({ children }) {
 function RoleBasedRedirect() {
   const storage = getStorage();
   const userType = storage?.getItem("userType");
-  
+
   if (userType === 'support_admin') {
     return <Navigate to="/superadmin/support" replace />;
   } else if (userType === 'billing_admin') {
@@ -147,8 +147,16 @@ export default function SuperRoutes() {
           <SuperDashboard />
         </SuperAdminProtectedRoute>
       }>
-        <Route index element={<SuperDashboardContent />} />
-        <Route path="dashboard" element={<SuperDashboardContent />} />
+        <Route index element={
+          <SuperAdminOnlyProtectedRoute>
+            <SuperDashboardContent />
+          </SuperAdminOnlyProtectedRoute>
+        } />
+        <Route path="dashboard" element={
+          <SuperAdminOnlyProtectedRoute>
+            <SuperDashboardContent />
+          </SuperAdminOnlyProtectedRoute>
+        } />
         {/* Role Requests - Only for super_admin - Placed early to ensure proper matching */}
         <Route path="role-requests" element={
           <SuperAdminOnlyProtectedRoute>
@@ -215,14 +223,14 @@ export default function SuperRoutes() {
             <BlockedAccounts />
           </SuperAdminOnlyProtectedRoute>
         } />
-        
+
         {/* Add more routes here as needed */}
         {/* <Route path="reports" element={<ReportsPage />} /> */}
         {/* <Route path="messages" element={<MessagesPage />} /> */}
         {/* <Route path="logs" element={<LogsPage />} /> */}
         {/* <Route path="admin-settings" element={<AdminSettingsPage />} /> */}
         {/* <Route path="help" element={<HelpPage />} /> */}
-        
+
         {/* 404 - Not Found - Redirect based on role */}
         <Route path="*" element={<RoleBasedRedirect />} />
       </Route>

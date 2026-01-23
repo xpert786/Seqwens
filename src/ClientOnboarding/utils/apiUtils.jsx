@@ -4,12 +4,10 @@ import { getPathWithPrefix } from './urlUtils';
 
 // API Configuration
 const API_BASE_URL = getApiBaseUrl();
-const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYwNTkxMzQ5LCJpYXQiOjE3NjA1ODc3NDksImp0aSI6IjQ4NDlmOGNmY2MyNTQ4ZmNhZGRjZmMxYmYzMGIzODVmIiwidXNlcl9pZCI6IjMifQ.i2wpfckXFolye9W0mav1PxBQhg6tmCy31jAqeXQLHFY';
-
 // Common headers for API requests
 const getHeaders = () => {
   // Get token from appropriate storage
-  const token = getAccessToken() || AUTH_TOKEN;
+  const token = getAccessToken();
 
   return {
     'Content-Type': 'application/json',
@@ -1002,7 +1000,7 @@ export const dataIntakeAPI = {
   submitDataIntake: async (formData) => {
     try {
       // For FormData, we need to handle it differently
-      const token = getAccessToken() || AUTH_TOKEN;
+      const token = getAccessToken();
 
       const config = {
         method: 'POST',
@@ -1027,7 +1025,7 @@ export const dataIntakeAPI = {
 
           // Retry the original request with new token
           config.headers = {
-            'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+            'Authorization': `Bearer ${getAccessToken()}`,
           };
           const retryResponse = await fetchWithCors(`${API_BASE_URL}/taxpayer/data-intake/`, config);
 
@@ -1205,7 +1203,7 @@ export const profileAPI = {
 
   // Update profile picture
   updateProfilePicture: async (profilePictureFile) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
@@ -1247,7 +1245,7 @@ export const profileAPI = {
 
         // Retry the original request with new token
         config.headers = {
-          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+          'Authorization': `Bearer ${getAccessToken()}`,
         };
         response = await fetchWithCors(`${API_BASE_URL}/user/account/`, config);
 
@@ -1485,7 +1483,7 @@ export const taxPreparerProfileAPI = {
 
   // Update tax preparer profile picture
   updateTaxPreparerProfilePicture: async (profilePictureFile) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
@@ -1527,7 +1525,7 @@ export const taxPreparerProfileAPI = {
 
         // Retry the original request with new token
         config.headers = {
-          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+          'Authorization': `Bearer ${getAccessToken()}`,
         };
         response = await fetchWithCors(`${API_BASE_URL}/tax-preparer/account/`, config);
 
@@ -1759,7 +1757,7 @@ export const threadsAPI = {
   // Create a new chat thread (Taxpayer)
   // Supports both text-only (JSON) and with file attachment (FormData)
   createThread: async (threadData) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const hasFile = threadData.document || threadData.file;
 
     if (hasFile) {
@@ -1790,7 +1788,7 @@ export const threadsAPI = {
         try {
           await refreshAccessToken();
           config.headers = {
-            'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+            'Authorization': `Bearer ${getAccessToken()}`,
           };
           response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/create/`, config);
 
@@ -1838,7 +1836,7 @@ export const threadsAPI = {
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
   sendMessage: async (threadId, messageData) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const hasAttachment = messageData.attachment || messageData.file;
 
     let config;
@@ -1899,7 +1897,7 @@ export const threadsAPI = {
     if (response.status === 401) {
       try {
         await refreshAccessToken();
-        const newToken = getAccessToken() || AUTH_TOKEN;
+        const newToken = getAccessToken();
 
         if (hasAttachment) {
           config.headers = {
@@ -1943,7 +1941,7 @@ export const threadsAPI = {
   // Download message attachment
   // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
   downloadMessageAttachment: async (threadId, messageId) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     if (!token) {
       throw new Error('Authentication token not found');
@@ -2046,7 +2044,7 @@ export const taxPreparerSettingsAPI = {
 
   // Update profile picture
   updateProfilePicture: async (profilePictureFile) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
@@ -4118,7 +4116,7 @@ export const firmOfficeAPI = {
     if (hasFiles) {
       // Use FormData for multipart/form-data when files are present
       const formData = new FormData();
-      const token = getAccessToken() || AUTH_TOKEN;
+      const token = getAccessToken();
 
       // Add all form fields to FormData
       Object.keys(officeData).forEach(key => {
@@ -4355,7 +4353,7 @@ export const firmSignatureDocumentRequestsAPI = {
   // Create signature or document request
   createRequest: async (requestData) => {
     try {
-      const token = getAccessToken() || AUTH_TOKEN;
+      const token = getAccessToken();
       if (!token) {
         throw new Error('No authentication token found. Please login again.');
       }
@@ -4421,7 +4419,7 @@ export const firmSignatureDocumentRequestsAPI = {
 
           // Retry the original request with new token
           config.headers = {
-            'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+            'Authorization': `Bearer ${getAccessToken()}`,
           };
           response = await fetchWithCors(`${API_BASE_URL}/firm/signature-document-requests/create/`, config);
 
@@ -4743,7 +4741,7 @@ export const taxPreparerFirmSharedAPI = {
       if (categoryId) formData.append('category_id', categoryId);
       if (comment) formData.append('comment', comment);
 
-      const token = getAccessToken() || AUTH_TOKEN;
+      const token = getAccessToken();
 
       const config = {
         method: 'POST',
@@ -4768,7 +4766,7 @@ export const taxPreparerFirmSharedAPI = {
 
           // Retry the original request with new token
           config.headers = {
-            'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+            'Authorization': `Bearer ${getAccessToken()}`,
           };
           const retryResponse = await fetchWithCors(`${API_BASE_URL}/firm/tax-preparer/firm-shared-documents/`, config);
 
@@ -5587,7 +5585,7 @@ export const taxPreparerThreadsAPI = {
     const documentFile = threadData.document || threadData.attachment || null;
 
     if (documentFile) {
-      const token = getAccessToken() || AUTH_TOKEN;
+      const token = getAccessToken();
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -5632,7 +5630,7 @@ export const taxPreparerThreadsAPI = {
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
   sendMessage: async (threadId, messageData) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const hasAttachment = messageData.attachment || messageData.file;
 
     let config;
@@ -5694,7 +5692,7 @@ export const taxPreparerThreadsAPI = {
     if (response.status === 401) {
       try {
         await refreshAccessToken();
-        const newToken = getAccessToken() || AUTH_TOKEN;
+        const newToken = getAccessToken();
 
         if (hasAttachment) {
           config.headers = {
@@ -5786,7 +5784,7 @@ export const taxPreparerThreadsAPI = {
   // Download message attachment
   // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
   downloadMessageAttachment: async (threadId, messageId) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     if (!token) {
       throw new Error('Authentication token not found');
@@ -6320,7 +6318,7 @@ export const documentsAPI = {
 
   // Submit documents for a document request
   submitDocumentRequest: async (requestId, formData) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const API_BASE_URL = getApiBaseUrl();
 
     const config = {
@@ -6339,7 +6337,7 @@ export const documentsAPI = {
       try {
         await refreshAccessToken();
         config.headers = {
-          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+          'Authorization': `Bearer ${getAccessToken()}`,
         };
         response = await fetchWithCors(`${API_BASE_URL}/taxpayer/document-requests/${requestId}/submit/`, config);
 
@@ -6372,7 +6370,7 @@ export const documentsAPI = {
 
   // Upload a document
   uploadDocument: async (formData) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const config = {
       method: 'POST',
       headers: {
@@ -6389,7 +6387,7 @@ export const documentsAPI = {
       try {
         await refreshAccessToken();
         config.headers = {
-          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+          'Authorization': `Bearer ${getAccessToken()}`,
         };
         response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
 
@@ -6650,7 +6648,7 @@ export const firmAdminMessagingAPI = {
   // POST /taxpayer/firm-admin/messages/compose/
   // Accepts: { target_user_id }
   composeMessage: async (messageData) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     // Prepare JSON payload - only target_user_id is required
     const payload = {
@@ -6754,7 +6752,7 @@ export const firmAdminMessagingAPI = {
   // POST /taxpayer/chat-threads/{id}/send_message/
   // Accepts: { content, is_internal }
   sendMessage: async (threadId, messageData, attachment = null) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     if (attachment) {
       // Use FormData for multipart/form-data when attachment is present
@@ -6798,7 +6796,7 @@ export const firmAdminMessagingAPI = {
   // Download message attachment
   // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
   downloadMessageAttachment: async (threadId, messageId) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     if (!token) {
       throw new Error('Authentication token not found');
@@ -6866,7 +6864,7 @@ export const firmAdminSettingsAPI = {
 
   // Update firm branding information
   updateBrandingInfo: async (brandingData, files = {}) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const hasFiles = files.logo || files.favicon;
 
     if (hasFiles) {
@@ -6991,7 +6989,7 @@ export const firmAdminSettingsAPI = {
 
   // Update subdomain settings
   updateSubdomainSettings: async (subdomainData, files = {}) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const hasFiles = files.logo || files.favicon;
 
     if (hasFiles) {
@@ -7059,7 +7057,7 @@ export const firmAdminSettingsAPI = {
   // DELETE /firm/account/delete/
   // Accepts: { password, confirmation_text (optional) }
   deleteAccount: async (password, confirmationText = null) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
 
     const payload = {
       password: password
@@ -7619,7 +7617,7 @@ export const workflowAPI = {
 
   // Upload document for request
   uploadDocumentForRequest: async (requestId, file, onProgress) => {
-    const token = getAccessToken() || AUTH_TOKEN;
+    const token = getAccessToken();
     const formData = new FormData();
     formData.append('file', file);
 

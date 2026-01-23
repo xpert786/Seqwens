@@ -19,25 +19,27 @@ export const corsConfig = {
 
 // Alternative API base URL for development (using proxy)
 export const getApiBaseUrl = () => {
-  // Use server backend URL
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    // If we're developing locally, use the hardcoded server IP
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://168.231.121.7/seqwens/api';
+    }
+    // In production/deployment, use the current host dynamically
+    return `${protocol}//${hostname}/seqwens/api`;
+  }
   return 'http://168.231.121.7/seqwens/api';
-  
-  // Uncomment below to use proxy in development (if needed)
-  // if (import.meta.env.DEV) {
-  //   return '/api';
-  // }
-  // return 'http://168.231.121.7/seqwens/api';
 };
 
 // Fallback API base URL for when proxy fails
 export const getFallbackApiBaseUrl = () => {
   const isServer = import.meta.env.VITE_IS_SERVER === 'true';
-  
+
   if (import.meta.env.DEV) {
     // In development, use proxy
     return '/api';
   }
-  
+
   if (isServer) {
     return 'http://168.231.121.7/seqwens/api';
   } else {
@@ -47,9 +49,9 @@ export const getFallbackApiBaseUrl = () => {
 
 // CORS error handling
 export const handleCorsError = (error) => {
-  if (error.message.includes('CORS') || 
-      error.message.includes('Access-Control-Allow-Origin') ||
-      error.message.includes('Cross-Origin Request Blocked')) {
+  if (error.message.includes('CORS') ||
+    error.message.includes('Access-Control-Allow-Origin') ||
+    error.message.includes('Cross-Origin Request Blocked')) {
     return {
       isCorsError: true,
       message: 'CORS Error: Please ensure the server allows cross-origin requests or use a proxy.',

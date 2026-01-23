@@ -4,7 +4,7 @@ import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { setTokens, clearUserData } from '../../ClientOnboarding/utils/userUtils';
 import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
-import FirmAddonsTab from './FirmDetails/FirmAddonsTab';
+
 import '../style/FirmDetails.css';
 
 const formatCurrency = (amount) => {
@@ -243,7 +243,6 @@ export default function FirmDetails() {
     const tabs = useMemo(() => [
         { id: 'Overview', label: 'Overview' },
         { id: 'Billing', label: 'Billing' },
-        { id: 'Addons', label: 'Addons' },
         { id: 'Settings', label: 'Settings' }
     ], []);
 
@@ -476,37 +475,14 @@ export default function FirmDetails() {
     ];
 
     return (
-        <div className="min-h-screen bg-[rgb(243,247,255)] lg:px-4 sm:px-1 lg:py-6 md:py-4 sm:py-2 md:px-4 firmdetails-page">
+        <div className="min-h-screen bg-[rgb(243,247,255)] dark:bg-gray-900 lg:px-4 sm:px-1 lg:py-6 md:py-4 sm:py-2 md:px-4 firmdetails-page">
             <div className="mx-auto flex w-full flex-col gap-6 firmdetails-container">
                 <div className="flex flex-col items-start justify-between gap-3 rounded-2xl px-6 py-3 sm:flex-row sm:items-center firmdetails-header">
                     <div className="space-y-1">
-                        <h3 className="text-3xl font-bold text-gray-900">{firmName || 'Firm Details'}</h3>
-                        <p className="text-sm text-gray-500">Manage all firms registered on the platform</p>
+                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{firmName || 'Firm Details'}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Manage all firms registered on the platform</p>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-2 firmdetails-actions">
-                        
-                        <button
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                            style={{ borderRadius: '8px' }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Export Report
-                        </button>
-                        <button
-                            // onClick={handleAddFirm}
-                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
-                            style={{ borderRadius: '8px' }}
-                        >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Add Firm
-                        </button>
-                    </div>
                 </div>
 
                 {loading && (
@@ -568,7 +544,7 @@ export default function FirmDetails() {
                             ← Back to Firm Management
                         </button>
 
-                        <div className="rounded-lg bg-white px-4 py-2 firmdetails-tabs-card">
+                        <div className="rounded-lg bg-white px-4 py-2 firmdetails-tabs-card dark:bg-gray-800">
                             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between firmdetails-tabs-row">
                                 <div className="space-y-4">
                                     <div className="flex flex-wrap gap-2 p-2 firmdetails-tabs">
@@ -581,7 +557,7 @@ export default function FirmDetails() {
                                                     onClick={() => handleTabChange(tab.id)}
                                                     className={`px-5 py-2 text-sm font-medium transition-colors ${isActive
                                                         ? 'bg-[#3B4A66] text-white'
-                                                        : 'bg-white text-black hover:bg-[#DDE5FF]'
+                                                        : 'bg-white text-black hover:bg-[#DDE5FF] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                                                         }`}
                                                     style={{ borderRadius: '8px' }}
                                                 >
@@ -600,46 +576,43 @@ export default function FirmDetails() {
                                     {statCards.map(({ id, label, value, subtitle, icon }) => (
                                         <div
                                             key={id}
-                                            className="flex flex-col gap-2 rounded-xl bg-white p-4"
+                                            className="flex flex-col gap-2 rounded-xl bg-white p-4 dark:bg-gray-800"
                                         >
                                             <div className="flex items-center justify-between">
-                                                <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-gray-400">
                                                     {label}
                                                 </p>
-                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E6F7FB]">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E6F7FB] dark:bg-gray-700">
                                                     {icon}
                                                 </span>
                                             </div>
-                                            <p className="text-2xl font-semibold text-[#0F172A]">{value}</p>
-                                            <p className="text-xs text-[#94A3B8]">{subtitle}</p>
+                                            <p className="text-2xl font-semibold text-[#0F172A] dark:text-white">{value}</p>
+                                            <p className="text-xs text-[#94A3B8] dark:text-gray-500">{subtitle}</p>
                                         </div>
                                     ))}
                                 </div>
 
                                 <div className="grid gap-4 lg:grid-cols-2 xl:gap-6 firmdetails-overview-grid">
-                                    <div className="rounded-xl bg-white/90 p-6 ">
-                                        <h5 className="text-lg font-medium text-grey-600">Firm Information</h5>
+                                    <div className="rounded-xl bg-white/90 p-6 dark:bg-gray-800/90">
+                                        <h5 className="text-lg font-medium text-grey-600 dark:text-white">Firm Information</h5>
                                         <div className="mt-6 space-y-4 text-sm">
                                             {[
-                                                { label: 'Owner:', value: firmOwner },
-                                                { label: 'Email:', value: firmEmail },
-                                                { label: 'Phone:', value: firmPhone },
-                                                { label: 'Tax ID:', value: firmTaxId },
-                                                { label: 'Join Date:', value: formatDate(firmJoinDate) },
-                                                {
+                                                firmOwner !== 'Not provided' && { label: 'Owner:', value: firmOwner },
+                                                firmEmail !== 'Not provided' && { label: 'Email:', value: firmEmail },
+                                                firmPhone !== 'Not provided' && { label: 'Phone:', value: firmPhone },
+                                                firmDetails?.subscription_plan && {
                                                     label: 'Plan:',
-                                                    value: firmDetails?.subscription_plan
-                                                        ? firmDetails.subscription_plan.charAt(0).toUpperCase() +
-                                                        firmDetails.subscription_plan.slice(1)
-                                                        : 'None'
-                                                }
-                                            ].map(({ label, value }) => (
+                                                    value: firmDetails.subscription_plan.charAt(0).toUpperCase() +
+                                                    firmDetails.subscription_plan.slice(1)
+                                                },
+                                                firmJoinDate && { label: 'Join Date:', value: formatDate(firmJoinDate) }
+                                            ].filter(Boolean).map(({ label, value }) => (
                                                 <div
                                                     key={label}
                                                     className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
                                                 >
-                                                    <span className="text-sm font-medium text-[#64748B] sm:text-base">{label}</span>
-                                                    <span className="text-sm font-semibold text-grey-600 sm:text-right sm:text-base">
+                                                    <span className="text-sm font-medium text-[#64748B] sm:text-base dark:text-gray-400">{label}</span>
+                                                    <span className="text-sm font-semibold text-grey-600 sm:text-right sm:text-base dark:text-gray-200">
                                                         {value}
                                                     </span>
                                                 </div>
@@ -647,15 +620,15 @@ export default function FirmDetails() {
                                         </div>
                                     </div>
 
-                                    <div className="rounded-xl bg-white/90 p-6 ">
-                                        <h5 className="text-lg font-semibold text-[#1E293B]">System Health</h5>
+                                    <div className="rounded-xl bg-white/90 p-6 dark:bg-gray-800/90">
+                                        <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">System Health</h5>
                                         <div className="mt-6 space-y-6">
                                             <div className="space-y-2">
-                                                <div className="flex items-center justify-between text-xs font-medium text-[#475569]">
+                                                <div className="flex items-center justify-between text-xs font-medium text-[#475569] dark:text-gray-400">
                                                     <span>Overall Health</span>
                                                     <span>{Math.round(systemHealth.overall * 100)}%</span>
                                                 </div>
-                                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF]">
+                                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF] dark:bg-gray-700">
                                                     <div
                                                         className="h-full rounded-full bg-[#3B4A66]"
                                                         style={{ width: `${Math.min(100, Math.round(systemHealth.overall * 100))}%` }}
@@ -663,13 +636,13 @@ export default function FirmDetails() {
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <div className="flex items-center justify-between text-xs font-medium text-[#475569]">
+                                                <div className="flex items-center justify-between text-xs font-medium text-[#475569] dark:text-gray-400">
                                                     <span>Storage Used</span>
                                                     <span>
                                                         {systemHealth.storageUsed}GB / {systemHealth.storageCapacity}GB
                                                     </span>
                                                 </div>
-                                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF]">
+                                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF] dark:bg-gray-700">
                                                     <div
                                                         className="h-full rounded-full bg-[#3B4A66]"
                                                         style={{
@@ -683,12 +656,12 @@ export default function FirmDetails() {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs font-medium text-[#475569]">
+                                            <div className="flex items-center gap-2 text-xs font-medium text-[#475569] dark:text-gray-400">
                                                 <svg width="14" height="14" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M11.3333 0.5L6.72917 5.10417L4.02083 2.39583L0.5 5.91667" stroke="#22C55E" strokeLinecap="round" strokeLinejoin="round" />
                                                 </svg>
                                                 Last active:{' '}
-                                                <span className="font-semibold text-[#1F2937]">
+                                                <span className="font-semibold text-[#1F2937] dark:text-white">
                                                     {systemHealth.lastActive || 'Recently'}
                                                 </span>
                                             </div>
@@ -704,6 +677,7 @@ export default function FirmDetails() {
                                 loading={billingLoading}
                                 error={billingError}
                                 onRetry={fetchFirmBillingOverview}
+                                firmDetails={firmDetails}
                                 fallbackSubscription={{
                                     plan: billingInfo.plan,
                                     monthly_cost_display: billingInfo.monthlyCost,
@@ -714,19 +688,14 @@ export default function FirmDetails() {
                             />
                         )}
 
-                        {activeTab === 'Addons' && (
-                            <FirmAddonsTab 
-                                firmId={firmId} 
-                                firmName={firmDetails?.name || firmDetails?.firm_name || 'Firm'}
-                            />
-                        )}
+
 
                         {activeTab === 'Settings' && (
-                            <div className="rounded-xl bg-white/95 p-6">
+                            <div className="rounded-xl bg-white/95 dark:bg-gray-800/95 p-6">
                                 <div className="flex items-start justify-between gap-4 firmdetails-settings-header">
                                     <div>
-                                        <h5 className="text-xl font-semibold text-[#1E293B]">Firm Settings</h5>
-                                        <p className="mt-1 text-sm text-[#64748B]">
+                                        <h5 className="text-xl font-semibold text-[#1E293B] dark:text-white">Firm Settings</h5>
+                                        <p className="mt-1 text-sm text-[#64748B] dark:text-gray-400">
                                             Update firm contact details and address information.
                                         </p>
                                     </div>
@@ -734,7 +703,7 @@ export default function FirmDetails() {
                                         type="button"
                                         onClick={handleResetSettingsForm}
                                         disabled={settingsLoading || settingsSaving}
-                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6F8FE] text-[#94A3B8] transition-colors hover:bg-[#EEF3FF] hover:text-[#475569] disabled:opacity-50"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6F8FE] dark:bg-gray-700 text-[#94A3B8] dark:text-gray-400 transition-colors hover:bg-[#EEF3FF] dark:hover:bg-gray-600 hover:text-[#475569] dark:hover:text-gray-300 disabled:opacity-50"
                                         title="Reset changes"
                                     >
                                         <svg width="16" height="16" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -745,95 +714,96 @@ export default function FirmDetails() {
                                 </div>
 
                                 {settingsLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-10 text-[#64748B]">
-                                        <div className="mb-3 h-6 w-6 animate-spin rounded-full border-2 border-b-transparent border-[#F56D2D]" />
+                                    <div className="flex flex-col items-center justify-center py-10 text-[#64748B] dark:text-gray-400">
+                                        <div className="mb-3 h-6 w-6 animate-spin rounded-full border-2 border-b-transparent border-[#F56D2D] dark:border-orange-400" />
                                         Loading firm settings...
                                     </div>
                                 ) : (
                                     <form className="mt-6 space-y-6" onSubmit={(e) => { e.preventDefault(); handleSubmitSettings(); }}>
                                         {settingsError && (
-                                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                            <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-400">
                                                 {settingsError}
                                             </div>
                                         )}
 
                                         <div className="grid gap-4">
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">Firm Name</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">Firm Name</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.name}
                                                     onChange={(e) => handleSettingsInputChange('name', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="grid gap-4 md:grid-cols-2 firmdetails-settings-row">
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">Phone Number</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">Phone Number</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.phone_number}
                                                     onChange={(e) => handleSettingsInputChange('phone_number', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">Email Address</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">Email Address</label>
                                                 <input
                                                     type="email"
                                                     value={settingsForm.email}
-                                                    onChange={(e) => handleSettingsInputChange('email', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    readOnly
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-gray-400 bg-gray-50 dark:bg-gray-800 cursor-not-allowed shadow-sm"
+                                                    title="Email address cannot be changed"
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">Street Address</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">Street Address</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.address}
                                                     onChange={(e) => handleSettingsInputChange('address', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="grid gap-4 md:grid-cols-4 firmdetails-settings-row">
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">City</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">City</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.city}
                                                     onChange={(e) => handleSettingsInputChange('city', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">State</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">State</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.state}
                                                     onChange={(e) => handleSettingsInputChange('state', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">ZIP / Postal</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">ZIP / Postal</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.zip_code}
                                                     onChange={(e) => handleSettingsInputChange('zip_code', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <label className="text-sm font-medium text-[#475569]">Country</label>
+                                                <label className="text-sm font-medium text-[#475569] dark:text-gray-300">Country</label>
                                                 <input
                                                     type="text"
                                                     value={settingsForm.country}
                                                     onChange={(e) => handleSettingsInputChange('country', e.target.value)}
-                                                    className="w-full rounded-lg border border-[#E2E8F0] px-4 py-3 text-sm font-medium text-[#1F2937] shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF]"
+                                                    className="w-full rounded-lg border border-[#E2E8F0] dark:border-gray-600 px-4 py-3 text-sm font-medium text-[#1F2937] dark:text-white bg-white dark:bg-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#BFD4FF] dark:focus:ring-blue-500"
                                                 />
                                             </div>
                                         </div>
@@ -843,7 +813,7 @@ export default function FirmDetails() {
                                                 type="button"
                                                 onClick={handleResetSettingsForm}
                                                 disabled={settingsSaving}
-                                                className=" border border-[#E2E8F0]  inline-flex items-center justify-center rounded-lg bg-white px-5 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC] disabled:opacity-50"
+                                                className="border border-[#E2E8F0] dark:border-gray-600 inline-flex items-center justify-center rounded-lg bg-white dark:bg-gray-700 px-5 py-2 text-sm font-semibold text-[#475569] dark:text-gray-300 transition-colors hover:bg-[#F8FAFC] dark:hover:bg-gray-600 disabled:opacity-50"
                                                 style={{ borderRadius: '8px' }}
                                             >
                                                 Cancel
@@ -851,7 +821,7 @@ export default function FirmDetails() {
                                             <button
                                                 type="submit"
                                                 disabled={settingsSaving}
-                                                className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white bg-[#F56D2D] transition-colors hover:bg-orange-600 disabled:opacity-50"
+                                                className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white bg-[#F56D2D] dark:bg-orange-600 transition-colors hover:bg-orange-600 dark:hover:bg-orange-700 disabled:opacity-50"
                                                 style={{ borderRadius: '8px' }}
                                             >
                                                 {settingsSaving ? 'Saving...' : 'Save Changes'}
@@ -882,8 +852,8 @@ export default function FirmDetails() {
                             ) : (
                                 <>
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M6 2C4.89543 2 4 2.89543 4 4V6H2V14H10V6H8V4C8 2.89543 7.10457 2 6 2ZM6 3C6.55228 3 7 3.44772 7 4V6H5V4C5 3.44772 5.44772 3 6 3Z" fill="currentColor"/>
-                                        <path d="M11 5V7H13V13H11V15H14C14.5523 15 15 14.5523 15 14V6C15 5.44772 14.5523 5 14 5H11Z" fill="currentColor"/>
+                                        <path d="M6 2C4.89543 2 4 2.89543 4 4V6H2V14H10V6H8V4C8 2.89543 7.10457 2 6 2ZM6 3C6.55228 3 7 3.44772 7 4V6H5V4C5 3.44772 5.44772 3 6 3Z" fill="currentColor" />
+                                        <path d="M11 5V7H13V13H11V15H14C14.5523 15 15 14.5523 15 14V6C15 5.44772 14.5523 5 14 5H11Z" fill="currentColor" />
                                     </svg>
                                     Login
                                 </>
@@ -901,6 +871,7 @@ const BillingOverviewTab = ({
     loading,
     error,
     onRetry,
+    firmDetails,
     fallbackQuickActions = [],
     fallbackHistory = [],
     fallbackSubscription = {}
@@ -1000,6 +971,8 @@ const BillingOverviewTab = ({
 
     const history = Array.isArray(overview?.subscription_history) && overview.subscription_history.length > 0
         ? overview.subscription_history
+        : Array.isArray(firmDetails?.subscription_history) && firmDetails.subscription_history.length > 0
+        ? firmDetails.subscription_history
         : fallbackHistory;
 
     const metrics = overview?.metrics || {};
@@ -1039,6 +1012,9 @@ const BillingOverviewTab = ({
                             value: currentSubscription.status_display || currentSubscription.status_label || currentSubscription.status || '—',
                             status: currentSubscription.status || currentSubscription.status_display?.toLowerCase()
                         }, {
+                            label: 'Setup Fee',
+                            value: firmDetails?.setup_fee ? formatCurrency(firmDetails.setup_fee) : '$0.00'
+                        }, {
                             label: 'Trial Days Remaining',
                             value: currentSubscription.trial_days_remaining != null
                                 ? `${currentSubscription.trial_days_remaining} day${currentSubscription.trial_days_remaining === 1 ? '' : 's'}`
@@ -1061,7 +1037,86 @@ const BillingOverviewTab = ({
                         ))}
                     </div>
 
-                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    {/* Usage Limits Section */}
+                    <div className="mt-6">
+                        <h6 className="text-base font-semibold text-[#1E293B] mb-4">Usage Limits</h6>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {[{
+                                title: 'Max Users',
+                                value: firmDetails?.max_users ?? '—',
+                                subtitle: 'Staff members allowed'
+                            }, {
+                                title: 'Max Clients',
+                                value: firmDetails?.max_clients ?? '—',
+                                subtitle: 'Client accounts allowed'
+                            }, {
+                                title: 'Storage Limit',
+                                value: firmDetails?.storage_limit_gb ? `${firmDetails.storage_limit_gb}GB` : '—',
+                                subtitle: 'Total storage capacity'
+                            }].map(({ title, value, subtitle }) => (
+                                <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
+                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
+                                    <p className="mt-1 text-lg font-semibold text-[#1F2937]">{value}</p>
+                                    <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Subscription Dates Section */}
+                    <div className="mt-6">
+                        <h6 className="text-base font-semibold text-[#1E293B] mb-4">Subscription Dates</h6>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {[{
+                                title: 'Subscription Start',
+                                value: firmDetails?.subscription_start_date ? formatDate(firmDetails.subscription_start_date) : 'Not available',
+                                subtitle: 'When subscription began'
+                            }, {
+                                title: 'Subscription End',
+                                value: firmDetails?.subscription_end_date ? formatDate(firmDetails.subscription_end_date) : 'Not available',
+                                subtitle: 'When subscription expires'
+                            }, {
+                                title: 'Trial End Date',
+                                value: firmDetails?.trial_end_date ? formatDate(firmDetails.trial_end_date) : 'Not available',
+                                subtitle: 'Trial period expiration'
+                            }].map(({ title, value, subtitle }) => (
+                                <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
+                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
+                                    <p className="mt-1 text-sm font-semibold text-[#1F2937]">{value}</p>
+                                    <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Storage Usage Section */}
+                    <div className="mt-6">
+                        <h6 className="text-base font-semibold text-[#1E293B] mb-4">Storage Usage</h6>
+                        <div className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-medium text-[#475569]">Storage Used</span>
+                                    <span className="font-semibold text-[#1F2937]">
+                                        {firmDetails?.storage_usage?.used_gb ?? 0}GB / {firmDetails?.storage_usage?.limit_gb ?? 0}GB
+                                    </span>
+                                </div>
+                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF]">
+                                    <div
+                                        className="h-full rounded-full bg-[#3B4A66]"
+                                        style={{
+                                            width: `${Math.min(100, Math.round((firmDetails?.storage_usage?.used_gb ?? 0) / (firmDetails?.storage_usage?.limit_gb ?? 1) * 100))}%`
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-[#64748B]">
+                                    <span>{firmDetails?.storage_usage?.percent_used ?? 0}% used</span>
+                                    <span>{(firmDetails?.storage_usage?.limit_gb ?? 0) - (firmDetails?.storage_usage?.used_gb ?? 0)}GB remaining</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {[{
                             title: 'Total Invoices',
                             value: metrics.total_invoices ?? '—'
@@ -1071,6 +1126,9 @@ const BillingOverviewTab = ({
                         }, {
                             title: 'Total Paid Amount',
                             value: metrics.total_paid_amount_display || formatCurrency(metrics.total_paid_amount)
+                        }, {
+                            title: 'Total Revenue',
+                            value: firmDetails?.total_revenue ? formatCurrency(firmDetails.total_revenue) : '$0.00'
                         }].map(({ title, value }) => (
                             <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
                                 <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
@@ -1080,25 +1138,13 @@ const BillingOverviewTab = ({
                     </div>
                 </div>
 
-                
+
             </div>
 
             <div className="rounded-xl bg-white p-6">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h5 className="text-lg font-semibold text-[#1E293B]">Subscription History</h5>
-                        <p className="text-sm text-[#64748B]">{historyCount} records</p>
-                    </div>
-                    <button
-                        type="button"
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-                        style={{ borderRadius: '8px' }}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0.75 9.378V10.125C0.75 10.7217 0.987053 11.294 1.40901 11.716C1.83097 12.1379 2.40326 12.375 3 12.375H10.5C11.0967 12.375 11.669 12.1379 12.091 11.716C12.5129 11.294 12.75 10.7217 12.75 10.125V9.375M6.75 0.75V9M6.75 9L9.375 6.375M6.75 9L4.125 6.375" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        Export All Invoices
-                    </button>
+                <div className="mb-4">
+                    <h5 className="text-lg font-semibold text-[#1E293B]">Subscription History</h5>
+                    <p className="text-sm text-[#64748B]">{historyCount} records</p>
                 </div>
                 <div className="mt-6 overflow-x-auto">
                     <div className="min-w-[640px] rounded-2xl border border-[#EFF4FF] bg-[#F9FBFF]">

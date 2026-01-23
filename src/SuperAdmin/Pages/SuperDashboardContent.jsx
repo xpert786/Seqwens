@@ -235,7 +235,6 @@ export default function SuperDashboardContent() {
       const updateData = {
         admin_2fa_required: securitySettings?.admin_2fa_required?.enabled ?? false,
         password_complexity_enabled: securitySettings?.password_complexity_enabled?.enabled ?? false,
-        ip_whitelisting_enabled: securitySettings?.ip_whitelisting_enabled?.enabled ?? false,
         audit_logging_enabled: securitySettings?.audit_logging_enabled?.enabled ?? false,
         [settingKey]: newValue
       };
@@ -617,13 +616,6 @@ export default function SuperDashboardContent() {
       description: securitySettings?.password_complexity_enabled?.description ?? ''
     },
     {
-      name: 'IP Whitelisting',
-      key: 'ip_whitelisting_enabled',
-      enabled: securitySettings?.ip_whitelisting_enabled?.enabled ?? false,
-      status: securitySettings?.ip_whitelisting_enabled?.status ?? 'disabled',
-      description: securitySettings?.ip_whitelisting_enabled?.description ?? ''
-    },
-    {
       name: 'Audit Logging',
       key: 'audit_logging_enabled',
       enabled: securitySettings?.audit_logging_enabled?.enabled ?? false,
@@ -641,12 +633,6 @@ export default function SuperDashboardContent() {
       name: 'Password Complexity',
       key: 'password_complexity_enabled',
       enabled: securityStatus?.password_complexity_enabled ?? false,
-      status: 'loading'
-    },
-    {
-      name: 'IP Whitelisting',
-      key: 'ip_whitelisting_enabled',
-      enabled: securityStatus?.ip_whitelisting_enabled ?? false,
       status: 'loading'
     },
     {

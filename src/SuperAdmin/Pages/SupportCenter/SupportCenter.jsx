@@ -3,12 +3,21 @@ import Overview from "./Overview";
 import IRSFAQs from "./IRSFAQs";
 import SeqwensTraining from "./SeqwensTraining";
 import ReachOutMessages from "./ReachOutMessages";
+import { getStorage } from "../../../ClientOnboarding/utils/userUtils";
 
 export default function SupportCenter() {
     const [activeTab, setActiveTab] = useState("overview");
     const [showTicketDetail, setShowTicketDetail] = useState(false);
     const [showAddFAQModal, setShowAddFAQModal] = useState(false);
     const [showAddTrainingModal, setShowAddTrainingModal] = useState(false);
+    const [userType, setUserType] = useState(null);
+
+    useEffect(() => {
+        const storage = getStorage();
+        if (storage) {
+            setUserType(storage.getItem("userType"));
+        }
+    }, []);
 
     const tabs = [
         { id: "overview", label: "Overview" },
@@ -44,7 +53,7 @@ export default function SupportCenter() {
                     <h3 className="text-[#3B4A66] text-2xl font-semibold font-[BasisGrotesquePro] mb-2">
                         Support Center
                     </h3>
-                    <p className="text-[#6B7280] text-sm font-normal font-[BasisGrotesquePro]">
+                    <p className="text-gray-500 text-sm font-normal font-[BasisGrotesquePro]">
                         Manage customer support tickets and communications
                     </p>
                 </div>
@@ -71,8 +80,8 @@ export default function SupportCenter() {
                         ))}
                     </div>
 
-                    {/* Add New Button - only show for IRS FAQs and Training tabs */}
-                    {(activeTab === "irsFAQs" || activeTab === "seqwensTraining") && (
+                    {/* Add New Button - only show for IRS FAQs and Training tabs, and NOT for billing_admin */}
+                    {(activeTab === "irsFAQs" || activeTab === "seqwensTraining") && userType !== 'billing_admin' && (
                         <button
                             onClick={handleAddNew}
                             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center transition-colors"
@@ -89,10 +98,10 @@ export default function SupportCenter() {
 
             {/* Tab Content */}
             <div>
-                {activeTab === "overview" && <Overview showHeader={true} onTicketDetailToggle={handleTicketDetailToggle} />}
-                {activeTab === "irsFAQs" && <IRSFAQs onAddFAQModalToggle={handleAddFAQModalToggle} showAddFAQModal={showAddFAQModal} />}
-                {activeTab === "seqwensTraining" && <SeqwensTraining onAddTrainingModalToggle={handleAddTrainingModalToggle} showAddTrainingModal={showAddTrainingModal} />}
-                {activeTab === "reachOutMessages" && <ReachOutMessages />}
+                {activeTab === "overview" && <Overview showHeader={true} onTicketDetailToggle={handleTicketDetailToggle} userType={userType} />}
+                {activeTab === "irsFAQs" && <IRSFAQs onAddFAQModalToggle={handleAddFAQModalToggle} showAddFAQModal={showAddFAQModal} userType={userType} />}
+                {activeTab === "seqwensTraining" && <SeqwensTraining onAddTrainingModalToggle={handleAddTrainingModalToggle} showAddTrainingModal={showAddTrainingModal} userType={userType} />}
+                {activeTab === "reachOutMessages" && <ReachOutMessages userType={userType} />}
             </div>
         </div>
     );

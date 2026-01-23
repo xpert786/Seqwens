@@ -210,22 +210,22 @@ export const superAdminAPI = {
     if (search) params.append('search', search);
     if (role) params.append('role', role);
 
-    return await apiRequest(`/user/admin/users/?${params}`, 'GET');
+    return await apiRequest(`/accounts/user/admin/users/?${params}`, 'GET');
   },
 
   // Get user details by ID
   getUserById: async (userId) => {
-    return await apiRequest(`/user/admin/users/${userId}/`, 'GET');
+    return await apiRequest(`/accounts/user/admin/users/${userId}/`, 'GET');
   },
 
   // Update user
   updateUser: async (userId, userData) => {
-    return await apiRequest(`/user/admin/users/${userId}/`, 'PATCH', userData);
+    return await apiRequest(`/accounts/user/admin/users/${userId}/`, 'PATCH', userData);
   },
 
   // Delete user
   deleteUser: async (userId) => {
-    return await apiRequest(`/user/admin/users/${userId}/`, 'DELETE');
+    return await apiRequest(`/accounts/user/admin/users/${userId}/`, 'DELETE');
   },
 
   // Get subscription data
@@ -326,13 +326,11 @@ export const superAdminAPI = {
   },
 
   // Get platform users (internal staff)
-  getPlatformUsers: async ({ status = '', role = '', search = '', page = 1, pageSize = 10 } = {}) => {
+  getPlatformUsers: async ({ status = '', role = '', search = '' } = {}) => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (role) params.append('role', role);
     if (search) params.append('search', search);
-    params.append('page', page.toString());
-    params.append('page_size', pageSize.toString());
 
     const query = params.toString();
     return await apiRequest(`/user/superadmin/platform-users/${query ? `?${query}` : ''}`, 'GET');
@@ -505,7 +503,7 @@ export const superAdminAPI = {
   reactivateFirm: async (firmId, reason) => {
     const reactivateData = {
       reason: reason,
-      action: 'unsuspend'
+      status: 'unsuspend'
     };
     return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', reactivateData);
   },
