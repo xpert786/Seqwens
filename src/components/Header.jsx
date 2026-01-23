@@ -215,7 +215,7 @@ export default function Header() {
           {isUserLoggedIn ? (
             <button
               onClick={handleUserLogoClick}
-              className="flex items-center cursor-pointer flex-shrink-0 bg-transparent border-none p-0"
+              className="flex items-center cursor-pointer flex-shrink-0  bg-transparent border-none p-0"
             >
               <img
                 src={seqwensLogo}
@@ -226,7 +226,7 @@ export default function Header() {
           ) : (
             <Link
               to="/"
-              className="flex items-center cursor-pointer flex-shrink-0"
+              className="flex items-center cursor-pointer flex-shrink-0 "
             >
               <img
                 src={seqwensLogo}
@@ -243,7 +243,7 @@ export default function Header() {
               <a
                 href={location.pathname === "/" ? "#pricing" : "/#pricing"}
                 onClick={handlePricingClick}
-                className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/" && window.location.hash === "#pricing"
+                className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/" && window.location.hash === "#pricing"
                   ? "text-white"
                   : "text-zinc-200 hover:text-white"
                   }`}
@@ -308,7 +308,7 @@ export default function Header() {
               ) : (
                 <Link
                   to="/create-account"
-                  className={`text-sm font-medium transition-colors duration-200 relative group ${location.pathname === "/create-account"
+                  className={`text-sm font-medium transition-colors duration-200 relative group text-white ${location.pathname === "/create-account"
                     ? "text-white"
                     : "text-zinc-200 hover:text-white"
                     }`}
@@ -334,7 +334,7 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className="bg-white/90 text-black px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-white transition-colors duration-200 shadow-lg backdrop-blur-sm"
+                className="bg-white text-black px-6 py-2.5 rounded-[10px] font-semibold text-sm hover:bg-white transition-colors duration-200 shadow-lg backdrop-blur-sm"
               >
                 Sign In
               </Link>
