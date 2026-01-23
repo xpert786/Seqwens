@@ -73,7 +73,7 @@ export default function PlatformControl() {
                 filters.restrictionType = ipFilter;
             }
             const response = await superAdminAPI.getIPRestrictions(filters);
-            
+
             if (response.success && response.data) {
                 setIpRestrictions(Array.isArray(response.data) ? response.data : []);
             } else {
@@ -93,7 +93,7 @@ export default function PlatformControl() {
         try {
             setLoadingRetention(true);
             const response = await superAdminAPI.getRetentionRule();
-            
+
             if (response.success && response.data) {
                 setRetentionRule(response.data);
                 setRetentionFormData({
@@ -118,7 +118,7 @@ export default function PlatformControl() {
     // Handle create/update IP restriction
     const handleSaveIPRestriction = async () => {
         setIpFormErrors({});
-        
+
         // Validation
         if (!ipFormData.ip_address || !ipFormData.ip_address.trim()) {
             setIpFormErrors({ ip_address: "IP address is required" });
@@ -141,7 +141,7 @@ export default function PlatformControl() {
                 description: ipFormData.description.trim() || "",
                 is_active: ipFormData.is_active
             };
-            
+
             if (ipFormData.restriction_type === "firm") {
                 payload.firm = ipFormData.firm;
             } else {
@@ -172,7 +172,7 @@ export default function PlatformControl() {
             console.error('Error saving IP restriction:', err);
             const errorMsg = handleAPIError(err);
             toast.error(errorMsg, superToastOptions);
-            
+
             // Handle validation errors
             if (err.message && err.message.includes("errors")) {
                 try {
@@ -205,7 +205,7 @@ export default function PlatformControl() {
         try {
             setDeletingIP(true);
             const response = await superAdminAPI.deleteIPRestriction(ipToDelete);
-            
+
             if (response.success) {
                 toast.success(response.message || "IP restriction deleted successfully", superToastOptions);
                 fetchIPRestrictions();
@@ -227,7 +227,7 @@ export default function PlatformControl() {
                 ...restriction,
                 is_active: !restriction.is_active
             });
-            
+
             if (response.success) {
                 toast.success(`IP restriction ${!restriction.is_active ? "activated" : "deactivated"}`, superToastOptions);
                 fetchIPRestrictions();
@@ -251,13 +251,13 @@ export default function PlatformControl() {
                 enable_retention_rules: retentionFormData.enable_retention_rules,
                 years_to_keep: retentionFormData.years_to_keep
             };
-            
+
             if (retentionFormData.firm_id) {
                 payload.firm_id = retentionFormData.firm_id;
             }
 
             const response = await superAdminAPI.createOrUpdateRetentionRule(payload);
-            
+
             if (response.success) {
                 toast.success(response.message || "Retention rule updated successfully", superToastOptions);
                 fetchRetentionRule();
@@ -322,14 +322,14 @@ export default function PlatformControl() {
                 toast.error('Please select a valid image file (PNG, JPG, or SVG)', superToastOptions);
                 return;
             }
-            
+
             // Validate file size (2MB limit)
             const maxSize = 2 * 1024 * 1024; // 2MB
             if (file.size > maxSize) {
                 toast.error('Logo file size must be less than 2MB', superToastOptions);
                 return;
             }
-            
+
             setLogoFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -366,285 +366,8 @@ export default function PlatformControl() {
             </div>
 
             {/* Platform Controls */}
-            
 
-            {/* Global Branding */}
-            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
-                <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
-                    Global Branding
-                </h3>
-                <p className="text-[#4B5563] text-sm font-normal font-[BasisGrotesquePro] mb-6">
-                    White-label the platform for each firm or globally.
-                </p>
 
-                {/* Toggle for allowing firms to change branding */}
-                <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#E8F0FF]">
-                    <div>
-                        <div
-                            style={{
-                                color: "#3B4A66",
-                                fontSize: "16px",
-                                fontWeight: "500",
-                                fontFamily: "BasisGrotesquePro",
-                            }}
-                        >
-                            Allow Firms to Change Branding
-                        </div>
-                        <p
-                            style={{
-                                color: "#6B7280",
-                                fontSize: "14px",
-                                fontWeight: "400",
-                                fontFamily: "BasisGrotesquePro",
-                                margin: "4px 0 0 0",
-                            }}
-                        >
-                            Enable firms to customize their own color branding
-                        </p>
-                    </div>
-                    <div className="custom-toggle">
-                        <input
-                            type="checkbox"
-                            id="allowFirmsToChangeBranding"
-                            checked={allowFirmsToChangeBranding}
-                            onChange={() => setAllowFirmsToChangeBranding(!allowFirmsToChangeBranding)}
-                        />
-                        <label htmlFor="allowFirmsToChangeBranding"></label>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div>
-                        <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                            Platform Name
-                        </label>
-                        <input
-                            type="text"
-                            value={platformName}
-                            onChange={(e) => setPlatformName(e.target.value)}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
-                            style={{ backgroundColor: "white" }}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                            Primary Color
-                        </label>
-                        <div className="flex items-center gap-2">
-                            <div className="relative rounded-lg border border-[#E8F0FF] p-1 flex-shrink-0">
-                                <div
-                                    className="w-12 h-8 rounded-lg cursor-pointer"
-                                    style={{ backgroundColor: primaryColor }}
-                                />
-                                <input
-                                    type="color"
-                                    value={primaryColor}
-                                    onChange={(e) => setPrimaryColor(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                            </div>
-                            <input
-                                type="text"
-                                value={primaryColor}
-                                onChange={(e) => setPrimaryColor(e.target.value)}
-                                className="flex-1 px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
-                                style={{ backgroundColor: "white" }}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                            Secondary Color
-                        </label>
-                        <div className="flex items-center gap-2">
-                            <div className="relative rounded-lg border border-[#E8F0FF] p-1 flex-shrink-0">
-                                <div
-                                    className="w-12 h-8 rounded-lg cursor-pointer"
-                                    style={{ backgroundColor: secondaryColor }}
-                                />
-                                <input
-                                    type="color"
-                                    value={secondaryColor}
-                                    onChange={(e) => setSecondaryColor(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                            </div>
-                            <input
-                                type="text"
-                                value={secondaryColor}
-                                onChange={(e) => setSecondaryColor(e.target.value)}
-                                className="flex-1 px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
-                                style={{ backgroundColor: "white" }}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                            Accent Color
-                        </label>
-                        <div className="flex items-center gap-2">
-                            <div className="relative rounded-lg border border-[#E8F0FF] p-1 flex-shrink-0">
-                                <div
-                                    className="w-12 h-8 rounded-lg cursor-pointer"
-                                    style={{ backgroundColor: accentColor }}
-                                />
-                                <input
-                                    type="color"
-                                    value={accentColor}
-                                    onChange={(e) => setAccentColor(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                            </div>
-                            <input
-                                type="text"
-                                value={accentColor}
-                                onChange={(e) => setAccentColor(e.target.value)}
-                                className="flex-1 px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
-                                style={{ backgroundColor: "white" }}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Logo Upload */}
-                <div className="mb-6">
-                    <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                        Logo
-                    </label>
-                    <div className="flex items-start gap-4">
-                        {/* Logo Preview */}
-                        {logoPreview && (
-                            <div className="flex-shrink-0">
-                                <div className="w-24 h-24 border border-[#E8F0FF] rounded-lg p-2 bg-white flex items-center justify-center">
-                                    <img
-                                        src={logoPreview}
-                                        alt="Logo preview"
-                                        className="max-w-full max-h-full object-contain"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        <div className="flex-1 flex flex-col gap-2">
-                            <input
-                                ref={logoInputRef}
-                                type="file"
-                                accept="image/png,image/jpeg,image/jpg,image/svg+xml"
-                                onChange={handleLogoSelect}
-                                className="hidden"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => logoInputRef.current?.click()}
-                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center gap-2 w-fit"
-                            >
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M9.91683 4.66667L7.00016 1.75L4.0835 4.66667" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M7 1.75V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                                {logoFile ? logoFile.name : 'Upload Logo'}
-                            </button>
-                            <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">PNG, JPG, SVG up to 2MB</p>
-                            {logoFile && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setLogoFile(null);
-                                        setLogoPreview(null);
-                                        if (logoInputRef.current) {
-                                            logoInputRef.current.value = '';
-                                        }
-                                    }}
-                                    className="text-xs text-[#DC2626] hover:text-[#B91C1C] font-[BasisGrotesquePro] w-fit"
-                                >
-                                    Remove Logo
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Preview Button */}
-                <div className="mb-6">
-                    <button
-                        onClick={() => {
-                            setPreviewColors({
-                                primary: primaryColor,
-                                secondary: secondaryColor,
-                                accent: accentColor
-                            });
-                            setPreviewPlatformName(platformName);
-                            setPreviewLogo(logoPreview);
-                        }}
-                        className="w-full px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1F] transition font-[BasisGrotesquePro] flex items-center justify-center gap-2"
-                    >
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1.5 9C1.5 9 3.75 3.75 9 3.75C14.25 3.75 16.5 9 16.5 9C16.5 9 14.25 14.25 9 14.25C3.75 14.25 1.5 9 1.5 9Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M9 11.25C10.2426 11.25 11.25 10.2426 11.25 9C11.25 7.75736 10.2426 6.75 9 6.75C7.75736 6.75 6.75 7.75736 6.75 9C6.75 10.2426 7.75736 11.25 9 11.25Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        Preview Changes
-                    </button>
-                </div>
-
-                {/* Live Preview */}
-                <div>
-                    <label className="block text-[#4B5563] text-sm font-semibold font-[BasisGrotesquePro] mb-2">
-                        Live Preview
-                    </label>
-                    <div className="bg-[#F6F7FF] rounded-lg p-4 border border-[#E8F0FF]">
-                        <div className="flex flex-row items-center justify-start gap-3 mb-4">
-                            {previewLogo ? (
-                                <div className="w-16 h-10 flex items-center justify-center bg-white border border-[#E8F0FF] rounded-lg p-1">
-                                    <img
-                                        src={previewLogo}
-                                        alt="Logo preview"
-                                        className="max-w-full max-h-full object-contain"
-                                    />
-                                </div>
-                            ) : (
-                                <div
-                                    className="w-16 h-10 flex flex-col items-center justify-center text-white font-[BasisGrotesquePro] rounded-lg"
-                                    style={{ backgroundColor: previewColors.primary }}
-                                >
-                                </div>
-                            )}
-                            <div className="text-[#4B5563] text-sm font-[BasisGrotesquePro]">
-                                <p className="font-medium">{previewPlatformName}</p>
-                                <p className="text-xs text-[#6B7280]">firmsstaff.com</p>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="flex flex-col gap-2">
-                                <div
-                                    className="w-full h-12 rounded-lg flex items-center justify-center text-white text-xs font-[BasisGrotesquePro]"
-                                    style={{ backgroundColor: previewColors.primary }}
-                                >
-                                    Primary
-                                </div>
-                                <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] text-center">{previewColors.primary}</p>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <div
-                                    className="w-full h-12 rounded-lg flex items-center justify-center text-white text-xs font-[BasisGrotesquePro]"
-                                    style={{ backgroundColor: previewColors.secondary }}
-                                >
-                                    Secondary
-                                </div>
-                                <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] text-center">{previewColors.secondary}</p>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <div
-                                    className="w-full h-12 rounded-lg flex items-center justify-center text-white text-xs font-[BasisGrotesquePro]"
-                                    style={{ backgroundColor: previewColors.accent }}
-                                >
-                                    Accent
-                                </div>
-                                <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] text-center">{previewColors.accent}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* IP / Location Restrictions */}
@@ -704,18 +427,16 @@ export default function PlatformControl() {
                                                 {restriction.description || "No description"}
                                             </div>
                                             <div className="flex items-center gap-2 mt-2">
-                                                <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${
-                                                    restriction.restriction_type === "tenant" 
-                                                        ? "bg-blue-100 text-blue-800" 
+                                                <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${restriction.restriction_type === "tenant"
+                                                        ? "bg-blue-100 text-blue-800"
                                                         : "bg-purple-100 text-purple-800"
-                                                }`}>
+                                                    }`}>
                                                     {restriction.restriction_type === "tenant" ? "Tenant-Level" : "Firm-Level"}
                                                 </span>
-                                                <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${
-                                                    restriction.is_active 
-                                                        ? "bg-green-100 text-green-800" 
+                                                <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${restriction.is_active
+                                                        ? "bg-green-100 text-green-800"
                                                         : "bg-red-100 text-red-800"
-                                                }`}>
+                                                    }`}>
                                                     {restriction.is_active ? "Active" : "Inactive"}
                                                 </span>
                                                 {restriction.firm_name && (
@@ -827,7 +548,7 @@ export default function PlatformControl() {
                             {retentionRule && (
                                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                                     <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">
-                                        <strong>Current Setting:</strong> {retentionRule.enable_retention_rules 
+                                        <strong>Current Setting:</strong> {retentionRule.enable_retention_rules
                                             ? `Data will be kept for ${retentionRule.years_to_keep} years`
                                             : "Retention rules are disabled"}
                                     </p>
@@ -932,8 +653,8 @@ export default function PlatformControl() {
                     <Button variant="secondary" onClick={closeIPModal}>
                         Cancel
                     </Button>
-                    <Button 
-                        variant="primary" 
+                    <Button
+                        variant="primary"
                         onClick={handleSaveIPRestriction}
                         disabled={submittingIP}
                         style={{ backgroundColor: "#F56D2D", border: "none" }}
