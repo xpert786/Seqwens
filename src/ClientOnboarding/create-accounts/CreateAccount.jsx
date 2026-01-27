@@ -9,7 +9,6 @@ const CreateAccount = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
-    middleName: '',
     lastName: '',
     email: '',
     phoneNumber: '+1'
@@ -108,17 +107,6 @@ const CreateAccount = () => {
                   {errors.firstName && (
                     <div className="invalid-feedback">{errors.firstName}</div>
                   )}
-                </div>
-                <div className="col">
-                  <label className="custom-label">Middle Initial</label>
-                  <input
-                    type="text"
-                    name="middleName"
-                    className="form-control custom-input"
-                    placeholder="Enter middle initial"
-                    value={formData.middleName}
-                    onChange={handleInputChange}
-                  />
                 </div>
                 <div className="col">
                   <label className="custom-label">

@@ -17,7 +17,7 @@ import SlideSwitch from "../../components/SlideSwitch";
 import { formatDateForDisplay, formatDateForAPI, formatDateInput } from "../utils/dateUtils";
 import { formatSSN, isValidSSN } from "../utils/formatUtils";
 
-export default function DataIntakeForm() {
+export default function DataIntakeForm({ targetClientId }) {
   const [filingStatus, setFilingStatus] = useState([]);
   const [hasDependents, setHasDependents] = useState("no");
   const [dependents, setDependents] = useState([]);
@@ -440,9 +440,14 @@ export default function DataIntakeForm() {
 
         console.log("Checking for existing data intake data via Consolidated API...");
 
-        // Call Consolidated API
+        // Call Consolidated API or Firm Admin View
         const apiBaseUrl = getApiBaseUrl();
-        const response = await fetch(`${apiBaseUrl}/taxpayer/consolidated-data-intake/`, {
+        let url = `${apiBaseUrl}/taxpayer/consolidated-data-intake/`;
+        if (targetClientId) {
+          url = `${apiBaseUrl}/firm/clients/${targetClientId}/data-entry-form/`;
+        }
+
+        const response = await fetch(url, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -455,7 +460,19 @@ export default function DataIntakeForm() {
           console.log("Consolidated data found:", result);
 
           if (result.success && result.data) {
-            const data = result.data;
+            let data = result.data;
+
+            // Normalize data if coming from Firm Admin View
+            if (targetClientId) {
+              data = {
+                personal_info: result.data.personal_info,
+                bank_info: result.data.bank_info,
+                business_info: result.data.business_incomes, // Map business_incomes to business_info
+                rental_property_info: result.data.rental_properties, // Map rental_properties to rental_property_info
+                documents: [] // Documents not currently returned by this view
+              };
+            }
+
             const personalInfoData = data.personal_info || {};
             const bankInfoData = data.bank_info || {};
             const businessInfoData = data.business_info || [];
@@ -469,6 +486,9 @@ export default function DataIntakeForm() {
             // 1. Personal Info Population
             // ---------------------------------------------------------
             let phoneValue = personalInfoData.phone_number || "";
+            if (phoneValue && !phoneValue.startsWith('+')) {
+              if (phoneValue.startsWith('1')) phoneValue = '+' + phoneValue;
+            }
             setPersonalInfo({
               firstName: personalInfoData.first_name || "",
               middleInitial: personalInfoData.middle_initial || "",
@@ -488,11 +508,11 @@ export default function DataIntakeForm() {
 
             // Spouse Info
             const spouseData = personalInfoData.spouse_info || {};
-            let spousePhoneValue = "";
-            if (spouseData.spouse_phone_number) {
-              const phoneMatch = spouseData.spouse_phone_number.match(/^\+(\d{1,3})/);
-              if (phoneMatch) spousePhoneValue = `+${phoneMatch[1]}`;
+            let spousePhoneValue = spouseData.spouse_phone_number || "";
+            if (spousePhoneValue && !spousePhoneValue.startsWith("+")) {
+              if (spousePhoneValue.startsWith("1")) spousePhoneValue = "+" + spousePhoneValue;
             }
+
             setSpouseInfo({
               firstName: spouseData.spouse_first_name || "",
               middleInitial: spouseData.spouse_middle_name || "",
@@ -502,7 +522,10 @@ export default function DataIntakeForm() {
               email: spouseData.spouse_email || "",
               phone: spousePhoneValue,
             });
-            if (spousePhoneValue) setSpousePhoneCountrySelected(true);
+
+            if (spousePhoneValue) {
+              setSpousePhoneCountrySelected(true);
+            }
 
             // Other Info
             setOtherInfo({
@@ -830,12 +853,6 @@ export default function DataIntakeForm() {
       };
     }
 
-    if (date > maxDate) {
-      return {
-        valid: false,
-        error: 'Taxpayers must be at least 18 years old'
-      };
-    }
 
     return { valid: true };
   };
@@ -987,14 +1004,18 @@ export default function DataIntakeForm() {
 
       const parsed = JSON.parse(jsonStr);
 
-      // Convert to our error format
       const result = {};
       Object.entries(parsed).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          result[key] = value.map(item => String(item));
-        } else {
-          result[key] = [String(value)];
-        }
+        // Clean up messages - if it's an array with ErrorDetail strings, extract the message
+        let messages = Array.isArray(value) ? value : [value];
+        messages = messages.map(msg => {
+          if (typeof msg === 'string' && msg.includes('ErrorDetail')) {
+            const m = msg.match(/string=['"]([^'"]+)['"]/);
+            return m ? m[1] : msg;
+          }
+          return String(msg);
+        });
+        result[key] = messages;
       });
 
       return result;
@@ -1055,13 +1076,17 @@ export default function DataIntakeForm() {
           setUploadStatus(null);
           setUploadProgress(0);
           setUploadError(null);
+        } else {
+          // For other errors (like PDF only), show it in the upload error state
+          setUploadError(taxDocErrors[0]);
+          setUploadStatus('error');
         }
       }
 
       // Helper function to recursively parse nested error objects
       const parseNestedErrors = (errorObj, prefix = '') => {
         const formatFieldName = (key) => {
-           return key.split('_')
+          return key.split('_')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
         };
@@ -1112,7 +1137,7 @@ export default function DataIntakeForm() {
             const fieldPath = prefix ? `${prefix}.${key}` : key;
             const formFieldPath = mapApiFieldToFormField(fieldPath, source);
             errors[formFieldPath] = [value];
-            
+
             const formattedName = formatFieldName(key);
             generalErrorMessages.push(`${formattedName}: ${value}`);
           }
@@ -1593,16 +1618,23 @@ export default function DataIntakeForm() {
         return;
       }
 
-      const apiBaseUrl = getApiBaseUrl();
-      console.log(`Submitting to: ${apiBaseUrl}/taxpayer/consolidated-data-intake/`);
+      let submitUrl = `${apiBaseUrl}/taxpayer/consolidated-data-intake/`;
+      let submitMethod = hasExistingData ? "PATCH" : "POST";
+
+      if (targetClientId) {
+        submitUrl = `${apiBaseUrl}/firm/clients/${targetClientId}/fill-data-intake/`;
+        submitMethod = "POST";
+      }
+
+      console.log(`Submitting to: ${submitUrl}`);
 
       // Use Promise.all to handle both Data and File upload in parallel
       const [consolidatedResult, fileUploadResult] = await Promise.all([
         // API 1: Consolidated Data Intake
         // Logic: Use POST usually, or PATCH if updating. User says "both works".
         // Let's use POST by default or toggle based on hasExistingData if preferred.
-        fetch(`${apiBaseUrl}/taxpayer/consolidated-data-intake/`, {
-          method: hasExistingData ? "PATCH" : "POST",
+        fetch(submitUrl, {
+          method: submitMethod,
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -1615,7 +1647,9 @@ export default function DataIntakeForm() {
         // The previous code always ran it. Let's keep it consistent.
         // If we strictly only upload file when present, we might skip income types update if they are tied to this endpoint.
         // Assuming income types are also stored in consolidated, but keeping this for file.
-        hasFileToUpload ? (() => { // Only run if file upload is needed
+        // API 2: File Upload (if needed)
+        // Only run if we have a fil to upload AND we are acting as the client (not firm admin)
+        (!targetClientId && hasFileToUpload) ? (() => { // Only run if file upload is needed
           // ... Same XHR logic as before ...
           return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
@@ -1662,7 +1696,7 @@ export default function DataIntakeForm() {
         try {
           const errorData = await consolidatedResult.json();
           if (errorData.errors || errorData.message) {
-            parseAndSetFieldErrors(errorData, 'personal'); // Using 'personal' source map as fallback
+            parseAndSetFieldErrors(errorData, 'personal');
             return;
           }
         } catch (e) { }
@@ -1678,7 +1712,7 @@ export default function DataIntakeForm() {
         try {
           const errorText = await fileUploadResult.text();
           const errorData = JSON.parse(errorText);
-          if (errorData.errors) {
+          if (errorData.errors || errorData.message) {
             parseAndSetFieldErrors(errorData, 'file');
             return;
           }
@@ -1697,6 +1731,10 @@ export default function DataIntakeForm() {
       // ---------------------------------------------------------
       if (consolidatedResponse.success) {
         setHasExistingData(true);
+        // Update signature status from response (it might have been invalidated due to changes)
+        if (consolidatedResponse.data && consolidatedResponse.data.personal_info) {
+          setIsSigned(consolidatedResponse.data.personal_info.is_signed || false);
+        }
       }
 
       toast.success("Information saved successfully!", {
@@ -2045,7 +2083,7 @@ export default function DataIntakeForm() {
           }}>
             Your basic personal and contact information
           </p>
-          
+
         </div>
         <div className="row g-3">
           <div className="col-md-5">
@@ -4343,7 +4381,7 @@ export default function DataIntakeForm() {
       </div>
 
       {/* Signature Section - Show after form is submitted */}
-      {hasExistingData && (
+      {hasExistingData && !targetClientId && (
         <div className=" p-4 rounded-lg border" style={{
           borderColor: '#E8F0FF',
           backgroundColor: '#F3F7FF',

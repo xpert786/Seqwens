@@ -646,10 +646,10 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                             <button
                                                 type="button"
                                                 className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${item.isDanger
-                                                        ? "text-danger"
-                                                        : item.isPrimary
-                                                            ? "text-primary fw-bold"
-                                                            : "text-gray-700"
+                                                    ? "text-danger"
+                                                    : item.isPrimary
+                                                        ? "text-primary fw-bold"
+                                                        : "text-gray-700"
                                                     } hover:bg-gray-50 transition-colors`}
                                                 onClick={() => handleMenuAction(item.action)}
                                                 role="menuitem"

@@ -233,7 +233,7 @@ const Messages = () => {
               const attachmentObj = msg.attachment || null;
               const attachmentUrl = attachmentObj?.url || null;
               const attachmentName = attachmentObj?.name || msg.attachment_name || null;
-              
+
               return {
                 id: msg.id,
                 content: msg.content || msg.message || '',
@@ -273,7 +273,7 @@ const Messages = () => {
                   const attachmentObj = msg.attachment || null;
                   const attachmentUrl = attachmentObj?.url || null;
                   const attachmentName = attachmentObj?.name || msg.attachment_name || null;
-                  
+
                   return {
                     id: msg.id,
                     content: msg.content || msg.message,
@@ -537,16 +537,14 @@ const Messages = () => {
     try {
       setSending(true);
 
-      // Convert userId to number for target_user_id
-      // Backend expects: { target_user_id: 123 }
       const targetUserId = Number(userId);
-      const messageData = {
-        target_user_id: targetUserId
-      };
-
-      console.log('Sending compose message data:', messageData);
-
-      const response = await firmAdminMessagingAPI.composeMessage(messageData);
+      // Use unified chatService to create chat with opening message and metadata
+      const response = await chatService.createTaxPreparerChat(targetUserId, {
+        opening_message: message.trim(),
+        subject: '', // Can be added to form later if needed
+        category: 'Client',
+        priority: 'Medium'
+      });
 
       if (response.success) {
         toast.success('Message sent successfully');
@@ -683,7 +681,7 @@ const Messages = () => {
 
       if (response.success) {
         toast.success('Message sent successfully');
-        
+
         // Save attachment state before clearing it
         const hadAttachment = !!threadAttachment;
         setThreadAttachment(null);
@@ -716,7 +714,7 @@ const Messages = () => {
                   const attachmentObj = msg.attachment || null;
                   const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
                   const attachmentName = attachmentObj?.name || msg.attachment_name || null;
-                  
+
                   return {
                     id: msg.id,
                     content: msg.content || msg.message || '',
@@ -731,7 +729,7 @@ const Messages = () => {
                     hasAttachment: !!(attachmentObj || attachmentUrl),
                   };
                 }));
-                
+
                 // Scroll to bottom
                 setTimeout(() => {
                   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -772,15 +770,15 @@ const Messages = () => {
                 const attachmentObj = msg.attachment || null;
                 const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
                 const attachmentName = attachmentObj?.name || msg.attachment_name || null;
-                
+
                 return {
-                id: msg.id,
+                  id: msg.id,
                   content: msg.content || msg.message || '',
-                sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                sender_role: msg.sender?.role || msg.sender_role || '',
-                sender_id: msg.sender?.id || msg.sender_id || null,
-                created_at: msg.created_at,
-                is_read: msg.is_read || false,
+                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                  sender_role: msg.sender?.role || msg.sender_role || '',
+                  sender_id: msg.sender?.id || msg.sender_id || null,
+                  created_at: msg.created_at,
+                  is_read: msg.is_read || false,
                   attachment: attachmentUrl,
                   attachmentObj: attachmentObj,
                   attachment_name: attachmentName,
@@ -803,15 +801,15 @@ const Messages = () => {
                     const attachmentObj = msg.attachment || null;
                     const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
                     const attachmentName = attachmentObj?.name || msg.attachment_name || null;
-                    
+
                     return {
-                    id: msg.id,
+                      id: msg.id,
                       content: msg.content || msg.message || '',
-                    sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                    sender_role: msg.sender?.role || msg.sender_role || '',
-                    sender_id: msg.sender?.id || msg.sender_id || null,
-                    created_at: msg.created_at,
-                    is_read: msg.is_read || false,
+                      sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                      sender_role: msg.sender?.role || msg.sender_role || '',
+                      sender_id: msg.sender?.id || msg.sender_id || null,
+                      created_at: msg.created_at,
+                      is_read: msg.is_read || false,
                       attachment: attachmentUrl,
                       attachmentObj: attachmentObj,
                       attachment_name: attachmentName,
@@ -888,7 +886,7 @@ const Messages = () => {
 
     try {
       setDeleting(true);
-      
+
       // Try chatService first, fallback to firmAdminMessagingAPI
       try {
         await chatService.deleteThread(threadToDelete);
@@ -900,7 +898,7 @@ const Messages = () => {
 
       // Remove from conversations list
       setConversations(prev => prev.filter(conv => conv.id !== threadToDelete));
-      
+
       // If deleted conversation was active, clear it
       if (selectedThreadId === threadToDelete) {
         setSelectedThreadId(null);
@@ -1435,22 +1433,22 @@ const Messages = () => {
               {/* Select User (Client, Staff, or Admin) */}
               <div className="compose-modal-section">
                 <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Select User</label>
-                
+
                 {/* Role Filter */}
                 <div className="mb-2 compose-modal-role-filter">
-                      <select
+                  <select
                     value={userRoleFilter}
                     onChange={(e) => {
                       setUserRoleFilter(e.target.value);
                       setShowUserDropdown(true);
                     }}
                     className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-2 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] cursor-pointer"
-                      >
+                  >
                     <option value="">All Users</option>
                     <option value="client">Clients Only</option>
                     <option value="staff">Staff Only</option>
                     <option value="admin">Admins Only</option>
-                      </select>
+                  </select>
                 </div>
 
                 {/* User Search Input */}
@@ -1467,12 +1465,12 @@ const Messages = () => {
                     className="w-full px-3 py-2 !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
                   />
                   {activeUsersLoading && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </div>
+                      </svg>
+                    </div>
                   )}
 
                   {/* User Dropdown */}
@@ -1481,7 +1479,7 @@ const Messages = () => {
                       {activeUsers.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
                           {activeUsersLoading ? 'Loading...' : 'No users found'}
-                </div>
+                        </div>
                       ) : (
                         activeUsers.map((user) => {
                           const isSelected = selectedUserId === user.id;
@@ -1489,9 +1487,8 @@ const Messages = () => {
                             <div
                               key={user.id}
                               onClick={() => handleUserSelect(user)}
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                isSelected ? 'bg-[#FFF4E6]' : ''
-                              }`}
+                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-[#FFF4E6]' : ''
+                                }`}
                             >
                               <div className="flex items-center gap-3">
                                 {/* Avatar */}
@@ -1551,7 +1548,15 @@ const Messages = () => {
               </div>
 
               {/* Message */}
-              
+              <div className="compose-modal-section">
+                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Opening Message</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type your message here..."
+                  className="w-full h-32 px-3 py-2 !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] resize-none"
+                />
+              </div>
             </div>
 
             {/* Modal Footer */}

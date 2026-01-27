@@ -4,21 +4,67 @@ import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { toast } from 'react-toastify';
 
-const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, assignedPreparerId = null }) => {
+/**
+ * StartWorkflowModal - Enhanced modal for starting a workflow
+ * Supports:
+ * - Starting workflow for a specific client (when clientId is provided)
+ * - Selecting a client from a list (when clientId is not provided)
+ * - Pre-selecting a template (when preselectedTemplate is provided)
+ */
+const StartWorkflowModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  clientId = null,
+  clientName = null,
+  assignedPreparerId = null,
+  templates: externalTemplates = null,
+  preselectedTemplate = null
+}) => {
   const [templates, setTemplates] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [loadingClients, setLoadingClients] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState(clientId || '');
   const [selectedPreparerId, setSelectedPreparerId] = useState(assignedPreparerId || '');
   const [preparers, setPreparers] = useState([]);
   const [loadingPreparers, setLoadingPreparers] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      fetchTemplates();
+      // Use external templates if provided, otherwise fetch
+      if (externalTemplates && externalTemplates.length > 0) {
+        setTemplates(externalTemplates);
+      } else {
+        fetchTemplates();
+      }
+
+      // If no clientId provided, fetch clients list
+      if (!clientId) {
+        fetchClients();
+      }
+
       fetchPreparers();
+
+      // Pre-select template if provided
+      if (preselectedTemplate) {
+        setSelectedTemplateId(preselectedTemplate.id?.toString() || '');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, clientId, externalTemplates, preselectedTemplate]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedTemplateId('');
+      setSelectedClientId(clientId || '');
+      setSelectedPreparerId(assignedPreparerId || '');
+      setSearchTerm('');
+    }
+  }, [isOpen, clientId, assignedPreparerId]);
 
   const fetchTemplates = async () => {
     try {
@@ -35,6 +81,38 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
     }
   };
 
+  const fetchClients = async () => {
+    try {
+      setLoadingClients(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      const response = await fetchWithCors(
+        `${API_BASE_URL}/firm/clients/list/?page_size=1000`, // Get more clients, don't restrict to 'active' status logic for selection
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Flatten clients from different possible response structures
+          const clientsData = result.data.clients || (Array.isArray(result.data) ? result.data : []);
+          setClients(clientsData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
+
   const fetchPreparers = async () => {
     try {
       setLoadingPreparers(true);
@@ -45,7 +123,6 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
         throw new Error('No authentication token found');
       }
 
-      // Use firm admin tax preparers endpoint
       const response = await fetchWithCors(
         `${API_BASE_URL}/user/firm-admin/staff/tax-preparers/?status=active&role=all`,
         {
@@ -61,42 +138,20 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
         const result = await response.json();
 
         if (result.success && result.data) {
-          const staffMembers = result.data.staff_members || [];
+          const staffMembers = result.data.staff_members || (Array.isArray(result.data) ? result.data : []);
 
-          // Filter for active tax preparers with valid roles (same logic as CreateTaskModal)
+          // Simplified filtering: only filter for active status, backend already filtered roles
           const filteredPreparers = staffMembers.filter((staff) => {
-            const rolePrimary = staff.role?.primary?.toLowerCase() || '';
-            const roleType = staff.role?.role_type?.toLowerCase() || '';
-            const role =
-              rolePrimary ||
-              roleType ||
-              staff.role?.toLowerCase() ||
-              staff.user_role?.toLowerCase() ||
-              '';
-            const isActive =
-              staff.status?.value === 'active' ||
-              staff.status?.is_active === true ||
+            const isActive = staff.status?.value === 'active' ||
+              staff.status === 'active' ||
               staff.is_active === true;
-            const validRoles = ['staff', 'accountant', 'bookkeeper', 'assistant', 'tax_preparer'];
-            const isValidRole = validRoles.includes(role) || roleType === 'tax_preparer';
-            return isActive && isValidRole;
+            return isActive;
           });
-
           setPreparers(filteredPreparers);
-        } else {
-          console.error('Tax preparers API response not successful:', result);
-          toast.error(result.message || 'Failed to load tax preparers');
-          setPreparers([]);
         }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Tax preparers API error response:', errorData);
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error('Error fetching preparers:', error);
-      const msg = error.message || handleAPIError(error) || 'Failed to load tax preparers';
-      toast.error(msg);
       setPreparers([]);
     } finally {
       setLoadingPreparers(false);
@@ -104,13 +159,15 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
   };
 
   const handleStartWorkflow = async () => {
+    const targetClientId = clientId || selectedClientId;
+
     if (!selectedTemplateId) {
       toast.error('Please select a workflow template');
       return;
     }
 
-    if (!clientId) {
-      toast.error('Client ID is required');
+    if (!targetClientId) {
+      toast.error('Please select a client');
       return;
     }
 
@@ -118,7 +175,7 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
       setStarting(true);
       const workflowData = {
         template_id: parseInt(selectedTemplateId),
-        tax_case_id: parseInt(clientId),
+        tax_case_id: parseInt(targetClientId),
         ...(selectedPreparerId ? { assigned_preparer_id: parseInt(selectedPreparerId) } : {})
       };
 
@@ -147,20 +204,38 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
 
   const handleClose = () => {
     setSelectedTemplateId('');
+    setSelectedClientId(clientId || '');
     setSelectedPreparerId(assignedPreparerId || '');
+    setSearchTerm('');
     onClose();
   };
+
+  // Filter clients by search term
+  const filteredClients = clients.filter(client => {
+    if (!searchTerm) return true;
+    const name = `${client.first_name || ''} ${client.last_name || ''}`.toLowerCase();
+    const email = (client.email || '').toLowerCase();
+    return name.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
+  });
+
+  // Get selected template details
+  const selectedTemplate = templates.find(t => t.id?.toString() === selectedTemplateId);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
+      <div className="bg-white !rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
-          <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-            Start Workflow
-          </h3>
+        <div className="flex items-center justify-between p-5 border-b border-[#E8F0FF]">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+              Start Workflow
+            </h3>
+            <p className="text-sm text-gray-500 mt-1 font-[BasisGrotesquePro]">
+              Begin an automated process for a client
+            </p>
+          </div>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -174,12 +249,47 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
-          {/* Client Info */}
-          {clientName && (
-            <div className="bg-[#F9FAFB] border border-[#E8F0FF] rounded-lg p-3">
-              <p className="text-xs text-gray-600 mb-1 font-[BasisGrotesquePro]">Client</p>
-              <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">{clientName}</p>
+        <div className="p-5 space-y-5 overflow-y-auto max-h-[60vh]">
+          {/* Client Selection or Display */}
+          {clientId && clientName ? (
+            <div className="bg-[#FFF4E6] !border border-[#F56D2D] border-opacity-30 !rounded-lg p-4">
+              <p className="text-xs text-[#F56D2D] mb-1 font-[BasisGrotesquePro] uppercase tracking-wide">Client</p>
+              <p className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">{clientName}</p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
+                Select Client <span className="text-red-500">*</span>
+              </label>
+              {loadingClients ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3AD6F2] mx-auto"></div>
+                  <p className="text-xs text-gray-500 mt-2 font-[BasisGrotesquePro]">Loading clients...</p>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search clients..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] mb-2"
+                  />
+                  <select
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white"
+                    disabled={starting}
+                  >
+                    <option value="">Select a client</option>
+                    {filteredClients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.first_name} {client.last_name} - {client.email}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           )}
 
@@ -190,16 +300,14 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
             </label>
             {loadingTemplates ? (
               <div className="text-center py-4">
-                <div className="spinner-border spinner-border-sm text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500 mx-auto"></div>
                 <p className="text-xs text-gray-500 mt-2 font-[BasisGrotesquePro]">Loading templates...</p>
               </div>
             ) : (
               <select
                 value={selectedTemplateId}
                 onChange={(e) => setSelectedTemplateId(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
                 disabled={starting}
               >
                 <option value="">Select a workflow template</option>
@@ -210,38 +318,103 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
                 ))}
               </select>
             )}
+
+            {/* Template preview */}
+            {selectedTemplate && (
+              <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">{selectedTemplate.description || 'No description'}</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="text-xs text-gray-600 font-[BasisGrotesquePro]">
+                    📊 {selectedTemplate.stages?.length || 0} stages
+                  </span>
+                  {selectedTemplate.tax_form_type && (
+                    <span className="text-xs text-gray-600 font-[BasisGrotesquePro]">
+                      📋 {selectedTemplate.tax_form_type}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {templates.length === 0 && !loadingTemplates && (
-              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-                No active workflow templates available. Please create a template first.
+              <p className="text-xs text-amber-600 mt-2 font-[BasisGrotesquePro]">
+                ⚠️ No active workflow templates available. Please create a template first.
               </p>
             )}
           </div>
 
+          {/* Assigned Preparer (Optional) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
+              Assigned Tax Preparer <span className="text-gray-400">(Optional)</span>
+            </label>
+            {loadingPreparers ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500 mx-auto"></div>
+              </div>
+            ) : (
+              <select
+                value={selectedPreparerId}
+                onChange={(e) => setSelectedPreparerId(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
+                disabled={starting}
+              >
+                <option value="">Auto-assign based on rules</option>
+                {preparers.map((preparer) => (
+                  <option key={preparer.id} value={preparer.id}>
+                    {preparer.staff_member?.name ||
+                      preparer.full_name ||
+                      `${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() ||
+                      preparer.contact?.email ||
+                      preparer.email}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
           {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-800 font-[BasisGrotesquePro]">
-              <strong>Note:</strong> Starting a workflow will create a new workflow instance for this client. 
-              The workflow will begin with the first stage and execute any configured actions.
-            </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">💡</span>
+              <div>
+                <p className="text-sm font-medium text-blue-800 font-[BasisGrotesquePro]">What happens next?</p>
+                <p className="text-xs text-blue-700 mt-1 font-[BasisGrotesquePro]">
+                  The workflow will begin with the first stage and automatically execute any configured actions like sending emails, creating tasks, or requesting documents.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+        <div className="flex justify-end gap-3 p-5 border-t border-[#E8F0FF]">
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
             disabled={starting}
           >
             Cancel
           </button>
           <button
             onClick={handleStartWorkflow}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={starting || !selectedTemplateId || loadingTemplates}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={starting || !selectedTemplateId || (!clientId && !selectedClientId) || loadingTemplates}
           >
-            {starting ? 'Starting...' : 'Start Workflow'}
+            {starting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Starting...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Start Workflow
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -250,5 +423,3 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
 };
 
 export default StartWorkflowModal;
-
-

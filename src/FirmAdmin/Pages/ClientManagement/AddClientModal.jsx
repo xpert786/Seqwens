@@ -51,7 +51,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setLoading(false);
       setError('');
       setSuccess('');
-      
+
       // Reset invite modal state
       setShowInviteActionsModal(false);
       setActiveInviteDetails(null);
@@ -88,7 +88,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     } else {
       setEditedInviteEmail('');
     }
-    
+
     // If invite link is missing, try to fetch it (same as tax preparer)
     if (!inviteData.invite_link && (inviteData.id || inviteData.invite_id || inviteData.client_id)) {
       try {
@@ -98,7 +98,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         } else if (inviteData.client_id) {
           params.client_id = inviteData.client_id;
         }
-        
+
         const linkResponse = await firmAdminClientsAPI.getInviteLink(params);
         if (linkResponse.success) {
           const inviteLink = linkResponse.invite_link || linkResponse.data?.invite_link;
@@ -131,7 +131,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
     // Remove all non-digit characters
     const digitsOnly = phoneValue.replace(/\D/g, '');
-    
+
     // Country code (ISO) to dial code mapping
     const countryToDialCode = {
       'us': '1', 'ca': '1', 'do': '1', 'pr': '1', 'vi': '1', 'gu': '1', 'as': '1',
@@ -157,8 +157,11 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     };
 
     const dialCode = countryToDialCode[countryCode.toLowerCase()] || '1';
-    
-    // If the phone number starts with the dial code, remove it
+
+    // List of common country dial codes to check for if the number doesn't start with the selected dialCode
+    const commonDialCodes = ['91', '44', '61', '1', '81', '82', '86', '33', '49', '39', '34', '7'];
+
+    // First, check if it starts with the currently selected dial code
     if (digitsOnly.startsWith(dialCode)) {
       const phoneNumber = digitsOnly.substring(dialCode.length);
       return {
@@ -166,8 +169,18 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         phone_number: phoneNumber
       };
     }
-    
-    // Otherwise, return the full number as phone_number and dial code as country_code
+
+    // If not, check if it starts with any other common dial code
+    for (const code of commonDialCodes) {
+      if (digitsOnly.startsWith(code) && digitsOnly.length > code.length + 5) {
+        return {
+          country_code: `+${code}`,
+          phone_number: digitsOnly.substring(code.length)
+        };
+      }
+    }
+
+    // Fallback: return the full number as phone_number and dial code as country_code
     return {
       country_code: `+${dialCode}`,
       phone_number: digitsOnly
@@ -242,7 +255,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
   const handleSendInviteNotifications = async (methods, options = {}) => {
     if (!methods?.length) return;
-    
+
     try {
       setInviteActionLoading(true);
       setInviteActionMethod(methods.join(","));
@@ -311,7 +324,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       if (!inviteLink) {
         // Create invite if it doesn't exist
         const inviteId = await ensureInviteExists();
-        
+
         // Get the invite link
         if (activeInviteDetails?.invite_link) {
           inviteLink = activeInviteDetails.invite_link;
@@ -349,10 +362,10 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
   const handleRefreshInviteLink = async () => {
     if (!activeInviteDetails) return;
-    
+
     try {
       setInviteLinkRefreshing(true);
-      
+
       // Regenerate invite link using POST method
       const payload = {};
       if (activeInviteDetails.id || activeInviteDetails.invite_id) {
@@ -363,9 +376,9 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         throw new Error("No invite ID or client ID available");
       }
       payload.regenerate = true;
-      
+
       const response = await firmAdminClientsAPI.generateInviteLink(payload);
-      
+
       if (response.success) {
         const newLink = response.data?.invite_link || response.invite_link;
         if (newLink) {
@@ -374,7 +387,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
             invite_link: newLink,
             expires_at: response.data?.expires_at || prev.expires_at
           }));
-          
+
           toast.success("Invite link regenerated successfully.", getToastOptions());
         } else {
           throw new Error("No invite link in response");
@@ -410,7 +423,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
   const handleDeleteInvite = () => {
     const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
-    
+
     if (!inviteId) {
       toast.error("No invite found to delete.", getToastOptions());
       return;
@@ -422,7 +435,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
   const confirmDeleteInvite = async () => {
     const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
-    
+
     if (!inviteId) {
       toast.error("No invite found to delete.", getToastOptions());
       setShowDeleteInviteConfirmModal(false);
@@ -432,13 +445,13 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     try {
       setDeletingInvite(true);
       setShowDeleteInviteConfirmModal(false);
-      
+
       const response = await firmAdminClientsAPI.deleteInvite(inviteId);
 
       if (response.success) {
         toast.success(response.message || "Invitation deleted successfully.", getToastOptions());
         closeInviteActionsModal();
-        
+
         // Trigger refresh callback if provided
         if (onClientCreated) {
           onClientCreated();
@@ -454,7 +467,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     }
   };
 
-  const inviteExpiresOn = activeInviteDetails?.expires_at 
+  const inviteExpiresOn = activeInviteDetails?.expires_at
     ? new Date(activeInviteDetails.expires_at).toLocaleDateString()
     : null;
 
@@ -525,7 +538,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
       if (result.success && result.data) {
         const clientId = result.data.id || result.data.client_id;
-        
+
         // Reset loading state
         setLoading(false);
 
@@ -564,12 +577,12 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               status: inviteResponse.data?.status || 'pending',
               firm_name: result.data.firm?.name || null
             };
-            
+
             // Small delay to ensure Add Client modal is closed first
             setTimeout(() => {
               openInviteActionsModal(inviteData);
             }, 100);
-            
+
             toast.info("Invite link created. Share or send it below.", getToastOptions());
           } else {
             throw new Error(inviteResponse.message || "Failed to create invite");
@@ -603,139 +616,139 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
           onClick={onClose}
           style={{ zIndex: 9999 }}
         >
-      <div
-        className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: '90vh', overflowY: 'auto' }}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Add New Client</h5>
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-              Create a new client profile
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center !rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 transition-colors"
+          <div
+            className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '90vh', overflowY: 'auto' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Error/Success Messages */}
-        {error && (
-          <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-3 bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-md text-sm">
-            {success}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* First and Last Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.first_name}
-                onChange={(e) => handleInputChange('first_name', e.target.value)}
-                placeholder="Enter first name"
-                className="w-full !border border-gray-300 !rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
-                required
-              />
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Add New Client</h5>
+                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                  Create a new client profile
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center !rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.last_name}
-                onChange={(e) => handleInputChange('last_name', e.target.value)}
-                placeholder="Enter last name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
-                required
-              />
-            </div>
-          </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="abc@gmail.com"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
-              required
-            />
-          </div>
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="mb-3 bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-md text-sm">
+                {success}
+              </div>
+            )}
 
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-              Phone
-            </label>
-            <PhoneInput
-              country={phoneCountry}
-              value={formData.phone_number || ''}
-              onChange={(phone) => handleInputChange('phone_number', phone)}
-              onCountryChange={(countryCode) => {
-                setPhoneCountry(countryCode.toLowerCase());
-              }}
-              inputClass="form-control"
-              containerClass="w-100 phone-input-container"
-              inputStyle={{
-                height: '45px',
-                paddingLeft: '48px',
-                paddingRight: '12px',
-                paddingTop: '6px',
-                paddingBottom: '6px',
-                width: '100%',
-                fontSize: '1rem',
-                border: '1px solid #ced4da',
-                borderRadius: '0.375rem',
-                backgroundColor: '#fff'
-              }}
-              enableSearch={true}
-              countryCodeEditable={false}
-            />
-          </div>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* First and Last Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    placeholder="Enter first name"
+                    className="w-full !border border-gray-300 !rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    placeholder="Enter last name"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+                    required
+                  />
+                </div>
+              </div>
 
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
-              style={{ borderRadius: '8px' }}
-            >
-              {loading ? 'Creating...' : 'Add Client'}
-            </button>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="abc@gmail.com"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+                  required
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                  Phone
+                </label>
+                <PhoneInput
+                  country={phoneCountry}
+                  value={formData.phone_number || ''}
+                  onChange={(phone) => handleInputChange('phone_number', phone)}
+                  onCountryChange={(countryCode) => {
+                    setPhoneCountry(countryCode.toLowerCase());
+                  }}
+                  inputClass="form-control"
+                  containerClass="w-100 phone-input-container"
+                  inputStyle={{
+                    height: '45px',
+                    paddingLeft: '48px',
+                    paddingRight: '12px',
+                    paddingTop: '6px',
+                    paddingBottom: '6px',
+                    width: '100%',
+                    fontSize: '1rem',
+                    border: '1px solid #ced4da',
+                    borderRadius: '0.375rem',
+                    backgroundColor: '#fff'
+                  }}
+                  enableSearch={true}
+                  countryCodeEditable={false}
+                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
+                  style={{ borderRadius: '8px' }}
+                >
+                  {loading ? 'Creating...' : 'Add Client'}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-        </div>
         </div>
       )}
 
@@ -837,7 +850,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                     <FaSms size={14} /> Send SMS Invite
                   </label>
                   <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll text the invite link to the phone number you provide1111.
+                    We'll text the invite link to the phone number you provide.
                   </p>
                   <div className="d-flex gap-2 mb-2">
                     <PhoneInput
@@ -873,9 +886,9 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               </div>
               <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
                 {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
-                  <button 
-                    className="btn btn-outline-danger d-flex align-items-center" 
-                    style={{ borderRadius: '8px' }} 
+                  <button
+                    className="btn btn-outline-danger d-flex align-items-center"
+                    style={{ borderRadius: '8px' }}
                     onClick={handleDeleteInvite}
                     disabled={deletingInvite}
                   >

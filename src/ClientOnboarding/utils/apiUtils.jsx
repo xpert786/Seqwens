@@ -746,8 +746,13 @@ export const handleAPIError = (error) => {
     return 'Authentication failed. Please try again.';
   }
 
-  // Handle bad request errors
+  // Handle bad request errors - check for specific validation messages first
   if (error.message.includes('400')) {
+    // If the error message has more detail than just "HTTP error! status: 400", use that
+    // Otherwise fall back to generic message
+    if (error.message.length > 25 && !error.message.includes('HTTP error')) {
+      return error.message;
+    }
     return 'Invalid data provided. Please check your information and try again.';
   }
 
@@ -775,7 +780,10 @@ export const handleAPIError = (error) => {
 
   // Extract clean error messages from ErrorDetail structures
   // Handle formats like: "An error occurred: {'has_spouse': ErrorDetail(string='Spouse details not found for taxpayer.', code='invalid')}"
-  if (typeof errorMessage === 'string' && errorMessage.includes('ErrorDetail')) {
+  if (typeof errorMessage === 'string' && (errorMessage.includes('ErrorDetail') || errorMessage.includes('An error occurred during'))) {
+    // Strip technical prefixes like "An error occurred during income data intake update: "
+    errorMessage = errorMessage.replace(/^An error occurred during [\w\s]+: /, '');
+
     try {
       // Extract string values from ErrorDetail objects
       // Match pattern: ErrorDetail(string='message', code='...')
@@ -2250,7 +2258,9 @@ export const firmAdminTasksAPI = {
     formData.append('task_type', taskData.task_type);
     formData.append('task_title', taskData.task_title);
     formData.append('tax_preparer_id', taskData.tax_preparer_id);
-    formData.append('folder_id', taskData.folder_id);
+    if (taskData.folder_id) {
+      formData.append('folder_id', taskData.folder_id);
+    }
     formData.append('due_date', taskData.due_date);
 
     // Add client_ids as JSON array string (e.g., "[6]" or "[6,7,8]")
@@ -7596,7 +7606,9 @@ export const workflowAPI = {
   },
 
   // Delete workflow instance
-
+  deleteWorkflowInstance: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'DELETE');
+  },
 
   // Taxpayer Workflow APIs
   // Get taxpayer workflow
@@ -7690,11 +7702,6 @@ export const workflowAPI = {
   // Get storage usage
   getStorageUsage: async () => {
     return await apiRequest('/accounts/storage/usage/', 'GET');
-  },
-
-  // Delete workflow instance
-  deleteWorkflowInstance: async (instanceId) => {
-    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'DELETE');
   },
 
   // Tax Preparer Workflows

@@ -171,7 +171,7 @@ export default function StaffManagement() {
             avg_performance: avgPerformance,
             training_pending: prev.training_pending || 0 // Preserve existing value
           }));
-          
+
           // Mark as initialized only after we have the staff data
           isSummaryInitializedRef.current = true;
         }
@@ -215,7 +215,7 @@ export default function StaffManagement() {
 
       // Get the blob from response
       const blob = await response.blob();
-      
+
       // Create a download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -223,7 +223,7 @@ export default function StaffManagement() {
       a.download = `performance_report_${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
-      
+
       // Cleanup
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
@@ -247,7 +247,7 @@ export default function StaffManagement() {
     try {
       setProcessingStatus(true);
       const response = await firmAdminStaffAPI.setInactive(staffId);
-      
+
       if (response?.success) {
         toast.success(response.message || 'Staff member has been set as inactive', {
           position: "top-right",
@@ -278,7 +278,7 @@ export default function StaffManagement() {
     try {
       setProcessingStatus(true);
       const response = await firmAdminStaffAPI.reactivateStaff(staffId);
-      
+
       if (response?.success) {
         toast.success(response.message || 'Staff member has been reactivated', {
           position: "top-right",
@@ -412,7 +412,7 @@ export default function StaffManagement() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
-        
+
         // Parse array format error messages
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage[0] || errorMessage;
@@ -426,7 +426,7 @@ export default function StaffManagement() {
             // Keep original if parsing fails
           }
         }
-        
+
         // Also check errorData.errors or errorData.error fields
         if (errorData.errors) {
           if (Array.isArray(errorData.errors)) {
@@ -435,7 +435,7 @@ export default function StaffManagement() {
             errorMessage = errorData.errors;
           }
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -450,12 +450,12 @@ export default function StaffManagement() {
         return result;
       } else {
         let errorMsg = result.message || 'Failed to resend invitation';
-        
+
         // Parse array format error messages
         if (Array.isArray(errorMsg)) {
           errorMsg = errorMsg[0] || errorMsg;
         }
-        
+
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -554,9 +554,9 @@ export default function StaffManagement() {
     if (!inviteToCancel) {
       return;
     }
-    
+
     const inviteId = inviteToCancel;
-    
+
     try {
       setProcessingInviteId(inviteId);
       setShowDropdown(null); // Close dropdown
@@ -847,12 +847,12 @@ export default function StaffManagement() {
 
   const inviteExpiresOn = activeInviteDetails?.expires_at || activeInviteDetails?.expires_at_formatted
     ? new Date(activeInviteDetails.expires_at || activeInviteDetails.expires_at_formatted).toLocaleString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      })
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    })
     : null;
 
   // Export Staff List to PDF
@@ -869,7 +869,7 @@ export default function StaffManagement() {
       // Fetch all staff members (not just current page)
       const token = getAccessToken();
       const queryParams = new URLSearchParams();
-      
+
       if (activeFilter && activeFilter !== 'all') {
         queryParams.append('status', activeFilter);
       } else {
@@ -1085,7 +1085,7 @@ export default function StaffManagement() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 staff-actions-container">
             {/* Top Row - 3 buttons */}
             <div className="flex flex-wrap items-center gap-2 staff-actions-top-row">
-              <button 
+              <button
                 onClick={handleDownloadPerformanceReport}
                 className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
               >
@@ -1093,14 +1093,14 @@ export default function StaffManagement() {
                 Performance Report
               </button>
               {!advancedReportingEnabled && (
-                
-                  <button
-                    onClick={() => setIsBulkTaxPreparerImportModalOpen(true)}
-                    className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
-                  >
-                    <UpperDownsIcon />
-                    Bulk Import Tax Preparers
-                  </button>
+
+                <button
+                  onClick={() => setIsBulkTaxPreparerImportModalOpen(true)}
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
+                >
+                  <UpperDownsIcon />
+                  Bulk Import Tax Preparers
+                </button>
               )}
               <button
                 onClick={() => setIsAddStaffModalOpen(true)}
@@ -1134,9 +1134,9 @@ export default function StaffManagement() {
             <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
               <div className="flex justify-between items-start mb-4">
                 <div className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] staff-metric-label">Active Staff</div>
-          </div>
+              </div>
               <h5 className="text-3xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro] staff-metric-value">{summary.active_staff}</h5>
-          </div>
+            </div>
           </div>
           <div className="w-full h-full">
             <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
@@ -1184,11 +1184,11 @@ export default function StaffManagement() {
         {/* Team Members Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 staff-team-section">
           <div className="p-4 lg:p-6 border-b border-gray-200 staff-team-header">
-            <h2 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] staff-team-title">
+            <h4 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] staff-team-title">
               {activeFilter === 'pending_invites'
                 ? `Pending Invites (${pendingInvites.length})`
                 : `Team Members (${staffData.length})`}
-            </h2>
+            </h4>
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1 staff-team-subtitle">
               {activeFilter === 'pending_invites'
                 ? 'Staff members who have been invited but not yet accepted'
@@ -1272,7 +1272,7 @@ export default function StaffManagement() {
                             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.email}</div>
                           </div>
                         </td>
-                        
+
                         <td className="px-4 py-4">
                           <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.invited_by || 'N/A'}</div>
                         </td>
@@ -1478,7 +1478,7 @@ export default function StaffManagement() {
                               </div>
                             </td>
 
-                            
+
 
                             {/* Status */}
                             <td className="px-4 py-4">
@@ -1496,7 +1496,7 @@ export default function StaffManagement() {
                             <td className="px-4 py-4">
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <TwouserIcon /> 
+                                  <TwouserIcon />
                                 </div>
                                 <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.clients}</span>
                               </div>
@@ -1586,26 +1586,26 @@ export default function StaffManagement() {
                 Reassign Clients
               </button> */}
               {(() => {
-                  const staff = staffData.find(s => {
-                    const mapped = mapStaffData(s);
-                    return mapped.id === showDropdown;
-                  });
+                const staff = staffData.find(s => {
+                  const mapped = mapStaffData(s);
+                  return mapped.id === showDropdown;
+                });
                 if (!staff) return null;
                 const mappedStaff = mapStaffData(staff);
                 const isActive = mappedStaff.isActive || mappedStaff.statusValue === 'active';
-                
+
                 if (isActive) {
                   return (
                     <button
                       onClick={() => {
                         setSelectedStaffForAction(staff.id);
                         setShowInactiveConfirmModal(true);
-                    setShowDropdown(null);
-                }}
+                        setShowDropdown(null);
+                      }}
                       className="block w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-              >
+                    >
                       Set Inactive
-              </button>
+                    </button>
                   );
                 } else {
                   return (

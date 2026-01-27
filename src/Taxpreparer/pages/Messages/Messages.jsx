@@ -335,27 +335,27 @@ export default function MessagePage() {
 
             // Get current user to compare with sender - check multiple possible locations
             const currentUser = getUserData();
-            const currentUserId = currentUser?.id || 
-                                 currentUser?.user_id || 
-                                 currentUser?.userId ||
-                                 currentUser?.profile?.id ||
-                                 currentUser?.profile_id ||
-                                 null;
+            const currentUserId = currentUser?.id ||
+              currentUser?.user_id ||
+              currentUser?.userId ||
+              currentUser?.profile?.id ||
+              currentUser?.profile_id ||
+              null;
 
             // Determine if message is sent by current user (tax preparer) or received from client
             let isSentByCurrentUser = false;
-            
+
             // PRIORITY 1: Check sender role first - if it's tax_preparer, it's ALWAYS from current user (right side)
             const senderRoleLower = String(senderRole).toLowerCase();
-            const isTaxPreparerRole = senderRoleLower === "tax_preparer" || 
-                                     senderRoleLower === "taxpreparer" ||
-                                     senderRoleLower === "team_member" ||
-                                     senderRoleLower === "teammember" ||
-                                     senderRoleLower === "staff";
-            
-            const isClientRole = senderRoleLower === "client" || 
-                               senderRoleLower === "taxpayer";
-            
+            const isTaxPreparerRole = senderRoleLower === "tax_preparer" ||
+              senderRoleLower === "taxpreparer" ||
+              senderRoleLower === "team_member" ||
+              senderRoleLower === "teammember" ||
+              senderRoleLower === "staff";
+
+            const isClientRole = senderRoleLower === "client" ||
+              senderRoleLower === "taxpayer";
+
             if (isTaxPreparerRole) {
               // Tax preparer messages always go to RIGHT side
               isSentByCurrentUser = true;
@@ -371,7 +371,7 @@ export default function MessagePage() {
               // PRIORITY 3: Default fallback - since we're in tax preparer pane, assume right side
               isSentByCurrentUser = true;
             }
-            
+
             // Debug logging
             console.log('🔍 Message alignment:', {
               messageId: msg.id,
@@ -388,10 +388,10 @@ export default function MessagePage() {
             // Tax preparer's sent messages appear on RIGHT (type: "user")
             // Client's received messages appear on LEFT (type: "admin")
             const messageType = isSentByCurrentUser ? "user" : "admin";
-            
+
             // Show "You" for messages sent by current user, otherwise show sender name
-            const senderName = isSentByCurrentUser 
-              ? "You" 
+            const senderName = isSentByCurrentUser
+              ? "You"
               : (sender.name || msg.sender_name || sender.email || 'Unknown');
 
             // Handle attachment object from API
@@ -494,27 +494,27 @@ export default function MessagePage() {
 
           // Get current user to compare with sender - check multiple possible locations
           const currentUser = getUserData();
-          const currentUserId = currentUser?.id || 
-                               currentUser?.user_id || 
-                               currentUser?.userId ||
-                               currentUser?.profile?.id ||
-                               currentUser?.profile_id ||
-                               null;
+          const currentUserId = currentUser?.id ||
+            currentUser?.user_id ||
+            currentUser?.userId ||
+            currentUser?.profile?.id ||
+            currentUser?.profile_id ||
+            null;
 
           // Determine if message is sent by current user (tax preparer) or received from client
           let isSentByCurrentUser = false;
-          
+
           // PRIORITY 1: Check sender role first - if it's tax_preparer, it's ALWAYS from current user (right side)
           const senderRoleLower = String(senderRole).toLowerCase();
-          const isTaxPreparerRole = senderRoleLower === "tax_preparer" || 
-                                   senderRoleLower === "taxpreparer" ||
-                                   senderRoleLower === "team_member" ||
-                                   senderRoleLower === "teammember" ||
-                                   senderRoleLower === "staff";
-          
-          const isClientRole = senderRoleLower === "client" || 
-                             senderRoleLower === "taxpayer";
-          
+          const isTaxPreparerRole = senderRoleLower === "tax_preparer" ||
+            senderRoleLower === "taxpreparer" ||
+            senderRoleLower === "team_member" ||
+            senderRoleLower === "teammember" ||
+            senderRoleLower === "staff";
+
+          const isClientRole = senderRoleLower === "client" ||
+            senderRoleLower === "taxpayer";
+
           if (isTaxPreparerRole) {
             // Tax preparer messages always go to RIGHT side
             isSentByCurrentUser = true;
@@ -534,10 +534,10 @@ export default function MessagePage() {
           // Tax preparer's sent messages appear on RIGHT (type: "user")
           // Client's received messages appear on LEFT (type: "admin")
           let messageType = isSentByCurrentUser ? "user" : "admin";
-          
+
           // Show "You" for messages sent by current user, otherwise show sender name
-          const senderName = isSentByCurrentUser 
-            ? "You" 
+          const senderName = isSentByCurrentUser
+            ? "You"
             : (sender.name || msg.sender_name || sender.email || 'Unknown');
 
           return {
@@ -751,27 +751,27 @@ export default function MessagePage() {
 
         // Get current user to compare with sender - check multiple possible locations
         const currentUser = getUserData();
-        const currentUserId = currentUser?.id || 
-                             currentUser?.user_id || 
-                             currentUser?.userId ||
-                             currentUser?.profile?.id ||
-                             currentUser?.profile_id ||
-                             null;
+        const currentUserId = currentUser?.id ||
+          currentUser?.user_id ||
+          currentUser?.userId ||
+          currentUser?.profile?.id ||
+          currentUser?.profile_id ||
+          null;
 
         // Determine if message is sent by current user (tax preparer) or received from client
         let isSentByCurrentUser = false;
-        
+
         // PRIORITY 1: Check sender role first - if it's tax_preparer, it's ALWAYS from current user (right side)
         const senderRoleLower = String(senderRole).toLowerCase();
-        const isTaxPreparerRole = senderRoleLower === "tax_preparer" || 
-                                 senderRoleLower === "taxpreparer" ||
-                                 senderRoleLower === "team_member" ||
-                                 senderRoleLower === "teammember" ||
-                                 senderRoleLower === "staff";
-        
-        const isClientRole = senderRoleLower === "client" || 
-                           senderRoleLower === "taxpayer";
-        
+        const isTaxPreparerRole = senderRoleLower === "tax_preparer" ||
+          senderRoleLower === "taxpreparer" ||
+          senderRoleLower === "team_member" ||
+          senderRoleLower === "teammember" ||
+          senderRoleLower === "staff";
+
+        const isClientRole = senderRoleLower === "client" ||
+          senderRoleLower === "taxpayer";
+
         if (isTaxPreparerRole) {
           // Tax preparer messages always go to RIGHT side
           isSentByCurrentUser = true;
@@ -802,8 +802,8 @@ export default function MessagePage() {
           : response.data?.attachment_size_display || null;
 
         // Show "You" for messages sent by current user, otherwise show sender name
-        const senderName = isSentByCurrentUser 
-          ? "You" 
+        const senderName = isSentByCurrentUser
+          ? "You"
           : (sender.name || response.data?.sender_name || 'Unknown');
 
         const realMsg = {
@@ -852,26 +852,26 @@ export default function MessagePage() {
 
                   // Get current user to compare with sender - check multiple possible locations
                   const currentUser = getUserData();
-                  const currentUserId = currentUser?.id || 
-                                       currentUser?.user_id || 
-                                       currentUser?.userId ||
-                                       currentUser?.profile?.id ||
-                                       currentUser?.profile_id ||
-                                       null;
+                  const currentUserId = currentUser?.id ||
+                    currentUser?.user_id ||
+                    currentUser?.userId ||
+                    currentUser?.profile?.id ||
+                    currentUser?.profile_id ||
+                    null;
 
                   let isSentByCurrentUser = false;
-                  
+
                   // PRIORITY 1: Check sender role first - if it's tax_preparer, it's ALWAYS from current user (right side)
                   const senderRoleLower = String(senderRole).toLowerCase();
-                  const isTaxPreparerRole = senderRoleLower === "tax_preparer" || 
-                                           senderRoleLower === "taxpreparer" ||
-                                           senderRoleLower === "team_member" ||
-                                           senderRoleLower === "teammember" ||
-                                           senderRoleLower === "staff";
-                  
-                  const isClientRole = senderRoleLower === "client" || 
-                                     senderRoleLower === "taxpayer";
-                  
+                  const isTaxPreparerRole = senderRoleLower === "tax_preparer" ||
+                    senderRoleLower === "taxpreparer" ||
+                    senderRoleLower === "team_member" ||
+                    senderRoleLower === "teammember" ||
+                    senderRoleLower === "staff";
+
+                  const isClientRole = senderRoleLower === "client" ||
+                    senderRoleLower === "taxpayer";
+
                   if (isTaxPreparerRole) {
                     // Tax preparer messages always go to RIGHT side
                     isSentByCurrentUser = true;
@@ -891,10 +891,10 @@ export default function MessagePage() {
                   // Tax preparer's sent messages appear on RIGHT (type: "user")
                   // Client's received messages appear on LEFT (type: "admin")
                   const messageType = isSentByCurrentUser ? "user" : "admin";
-                  
+
                   // Show "You" for messages sent by current user, otherwise show sender name
-                  const senderName = isSentByCurrentUser 
-                    ? "You" 
+                  const senderName = isSentByCurrentUser
+                    ? "You"
                     : (sender.name || msg.sender_name || sender.email || 'Unknown');
 
                   const msgAttachmentObj = msg.attachment || null;
@@ -1562,7 +1562,7 @@ export default function MessagePage() {
 
       {/* Compose Message Modal */}
       {showComposeModal && (
-        <div  className="compose-modal-wrapper" style={{
+        <div className="compose-modal-wrapper" style={{
           position: "fixed",
           top: 0,
           left: 0,
@@ -1598,7 +1598,7 @@ export default function MessagePage() {
               marginBottom: "32px"
             }}>
               <div>
-                <h2 style={{
+                <h4 style={{
                   fontSize: "28px",
                   fontWeight: "700",
                   color: "#1A202C",
@@ -1606,7 +1606,7 @@ export default function MessagePage() {
                   lineHeight: "1.2"
                 }}>
                   Compose Message
-                </h2>
+                </h4>
                 <p style={{
                   fontSize: "16px",
                   color: "#718096",
@@ -1715,36 +1715,7 @@ export default function MessagePage() {
                 </div>
               </div>
 
-              {/* Additional Staff */}
-              <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: "#2D3748",
-                  marginBottom: "12px"
-                }}>
-                  Additional Staff IDs (optional)
-                </label>
-                <input
-                  type="text"
-                  value={composeForm.assignedStaffText}
-                  onChange={(e) => setComposeForm({ ...composeForm, assignedStaffText: e.target.value })}
-                  placeholder="e.g., 305, 410"
-                  style={{
-                    width: "100%",
-                    padding: "16px",
-                    border: "1px solid #E2E8F0",
-                    borderRadius: "12px",
-                    fontSize: "16px",
-                    outline: "none",
-                    backgroundColor: "#FAFAFA"
-                  }}
-                />
-                <p style={{ fontSize: "13px", color: "#718096", marginTop: "8px" }}>
-                  Separate multiple staff IDs with commas to loop teammates into the chat.
-                </p>
-              </div>
+
 
               {/* Subject */}
               <div>
@@ -1845,7 +1816,7 @@ export default function MessagePage() {
                   color: "#2D3748",
                   marginBottom: "12px"
                 }}>
-                  Message
+                  Opening Message
                 </label>
                 <textarea
                   placeholder="Enter your message"
@@ -1916,8 +1887,13 @@ export default function MessagePage() {
                       return;
                     }
 
-                    // Use the new chat/create endpoint
-                    const response = await chatService.createTaxPreparerChat(clientIdNumber);
+                    // Use the new chat/create endpoint with all fields for backend enforcement
+                    const response = await chatService.createTaxPreparerChat(clientIdNumber, {
+                      subject: composeForm.subject,
+                      category: composeForm.category,
+                      priority: composeForm.priority,
+                      opening_message: composeForm.message.trim()
+                    });
 
                     // Handle response - could be success/data format or direct data
                     const chatData = response.success ? response.data : response;
@@ -1929,20 +1905,6 @@ export default function MessagePage() {
                     const chatId = chatData.id || chatData.chat_id || chatData.thread_id;
                     if (!chatId) {
                       throw new Error('Chat ID not found in response');
-                    }
-
-                    // Send initial message if provided
-                    if (composeForm.message && composeForm.message.trim()) {
-                      try {
-                        await taxPreparerThreadsAPI.sendMessage(chatId, {
-                          content: composeForm.message.trim(),
-                          message_type: 'text',
-                          is_internal: false
-                        });
-                      } catch (msgError) {
-                        console.warn('Failed to send initial message:', msgError);
-                        // Continue even if message sending fails
-                      }
                     }
 
                     // Set the active conversation to the new chat

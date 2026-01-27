@@ -57,7 +57,7 @@ export default function PendingInviteDetails() {
         const inviteData = response.data;
         setInvite(inviteData);
         setCanEdit(response.can_edit !== false && !response.is_expired);
-        
+
         const initialFormData = {
           first_name: inviteData.first_name || '',
           last_name: inviteData.last_name || '',
@@ -68,7 +68,7 @@ export default function PendingInviteDetails() {
         setOriginalFormData(initialFormData);
         setEditedInviteEmail(inviteData.email || '');
         setSmsPhoneOverride(inviteData.phone_number || '');
-        
+
         // If invite link is missing, try to fetch it
         if (!inviteData.invite_link && inviteData.id) {
           try {
@@ -122,9 +122,9 @@ export default function PendingInviteDetails() {
 
     try {
       setSaving(true);
-      
+
       const inviteId = invite.id;
-      
+
       const updatePayload = {
         first_name: editFormData.first_name,
         last_name: editFormData.last_name,
@@ -170,7 +170,7 @@ export default function PendingInviteDetails() {
       setInviteLinkRefreshing(true);
       const inviteId = invite.invite_id || invite.id;
       const clientId = invite.id || invite.client_id;
-      
+
       const payload = {};
       if (inviteId) {
         payload.invite_id = inviteId;
@@ -180,7 +180,7 @@ export default function PendingInviteDetails() {
         throw new Error("No invite ID or client ID available");
       }
       payload.regenerate = true;
-      
+
       const response = await firmAdminClientsAPI.generateInviteLink(payload);
       if (response.success) {
         const newLink = response.data?.invite_link || response.invite_link;
@@ -205,15 +205,15 @@ export default function PendingInviteDetails() {
   const handleSendEmailInviteNow = async () => {
     const inviteId = invite?.invite_id || invite?.id;
     if (!inviteId || !editedInviteEmail) return;
-    
+
     try {
       setInviteActionLoading(true);
       setInviteActionMethod("email");
-      const payload = { 
+      const payload = {
         methods: ['email'],
         email: editedInviteEmail
       };
-      
+
       const response = await firmAdminClientsAPI.sendInvite(inviteId, payload);
       if (response.success && response.data) {
         setInvite(prev => ({
@@ -237,11 +237,11 @@ export default function PendingInviteDetails() {
   const handleSendSmsInviteNow = async () => {
     const inviteId = invite?.invite_id || invite?.id;
     if (!inviteId || !smsPhoneOverride) return;
-    
+
     try {
       setInviteActionLoading(true);
       setInviteActionMethod("sms");
-      
+
       const parsePhoneNumber = (phoneValue, countryCode = 'us') => {
         if (!phoneValue || !phoneValue.trim()) {
           return { country_code: null, phone_number: null };
@@ -265,17 +265,17 @@ export default function PendingInviteDetails() {
       };
 
       const phoneData = parsePhoneNumber(smsPhoneOverride, smsPhoneCountry);
-      const payload = { 
+      const payload = {
         methods: ['sms']
       };
-      
+
       if (phoneData.country_code && phoneData.phone_number) {
         payload.country_code = phoneData.country_code.replace(/^\+/, '');
         payload.phone_number = phoneData.phone_number;
       } else {
         payload.phone_number = smsPhoneOverride;
       }
-      
+
       const response = await firmAdminClientsAPI.sendInvite(inviteId, payload);
       if (response.success && response.data) {
         setInvite(prev => ({
@@ -301,12 +301,12 @@ export default function PendingInviteDetails() {
   // Handle delete invite
   const handleDeleteInvite = async () => {
     if (!invite) return;
-    
+
     try {
       setDeletingInvite(true);
       const inviteId = invite.invite_id || invite.id;
       const response = await firmAdminClientsAPI.deleteInvite(inviteId);
-      
+
       if (response.success) {
         toast.success("Invite deleted successfully.", getToastOptions());
         navigate('/firmadmin/clients?tab=pending-invites');
@@ -322,11 +322,11 @@ export default function PendingInviteDetails() {
     }
   };
 
-  const inviteExpiresOn = invite?.expires_at 
+  const inviteExpiresOn = invite?.expires_at
     ? new Date(invite.expires_at).toLocaleDateString()
     : null;
 
-  const initials = invite 
+  const initials = invite
     ? `${invite.first_name?.[0]?.toUpperCase() || ''}${invite.last_name?.[0]?.toUpperCase() || ''}`
     : '';
 
@@ -418,11 +418,10 @@ export default function PendingInviteDetails() {
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro] break-words">
                   {invite.first_name} {invite.last_name}
                 </h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap ${
-                  invite.is_expired 
-                    ? 'bg-red-100 text-red-700' 
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap ${invite.is_expired
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-yellow-100 text-yellow-700'
+                  }`}>
                   {invite.is_expired ? 'Expired' : 'Pending'}
                 </span>
               </div>
@@ -493,7 +492,7 @@ export default function PendingInviteDetails() {
         {/* Details Card */}
         <div className="bg-white rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 !border border-[#E8F0FF]">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Taxpayer Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* First Name */}
             <div>
@@ -563,6 +562,7 @@ export default function PendingInviteDetails() {
                   inputClass="form-control"
                   containerClass="phone-input-container"
                   inputStyle={{ width: '100%', borderRadius: '7px', border: '1px solid #E8F0FF' }}
+                  dropdownStyle={{ zIndex: 1000 }}
                 />
               ) : (
                 <p className="text-gray-900 font-[BasisGrotesquePro]">{invite.phone_number || 'N/A'}</p>
@@ -574,7 +574,7 @@ export default function PendingInviteDetails() {
         {/* Invite Information */}
         <div className="bg-white rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 !border border-[#E8F0FF]">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Invite Information</h3>
-          
+
           <div className="space-y-4">
             {/* Invite Link */}
             <div>
@@ -617,11 +617,10 @@ export default function PendingInviteDetails() {
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                   Status
                 </label>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-[BasisGrotesquePro] ${
-                  invite.is_expired 
-                    ? 'bg-red-100 text-red-700' 
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
+                <span className={`inline-block px-3 py-1 rounded-full text-sm font-[BasisGrotesquePro] ${invite.is_expired
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-yellow-100 text-yellow-700'
+                  }`}>
                   {invite.is_expired ? 'Expired' : 'Pending'}
                 </span>
               </div>
@@ -666,7 +665,7 @@ export default function PendingInviteDetails() {
         {/* Actions */}
         <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Send Invite</h3>
-          
+
           <div className="space-y-4 sm:space-y-6">
             {/* Email Invite */}
             <div>
@@ -707,6 +706,7 @@ export default function PendingInviteDetails() {
                   inputClass="form-control"
                   containerClass="phone-input-container flex-1"
                   inputStyle={{ width: '100%', borderRadius: '7px', border: '1px solid #E8F0FF' }}
+                  dropdownStyle={{ zIndex: 1000 }}
                 />
                 <button
                   onClick={handleSendSmsInviteNow}

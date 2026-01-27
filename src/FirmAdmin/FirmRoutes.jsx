@@ -18,6 +18,7 @@ import ClientManage from './Pages/ClientManagement/ClientManage';
 import ClientDetails from './Pages/ClientManagement/ClientDetails';
 import SecurityTabPage from './Pages/ClientManagement/ClientTabs/SecurityTabPage';
 import PendingInviteDetails from './Pages/ClientManagement/PendingInviteDetails';
+import FirmAdminDataIntakePage from './Pages/ClientManagement/FirmAdminDataIntakePage';
 import Analytics from './Pages/Analytics/Analytics';
 import DocumentManagement from './Pages/DocumentManagement';
 import FolderContents from './Pages/DocumentManagement/FolderContents';
@@ -141,6 +142,7 @@ export default function FirmRoutes() {
             <Route path="tasks/:id" element={<TaskDetails />} />
 
             {/* Client Management routes */}
+            <Route path="clients/:id/data-intake" element={<FirmAdminDataIntakePage />} />
             <Route path="calendar" element={<SchedulingCalendar />} />
             <Route path="calendar/appointments" element={<Appointments />} />
             <Route path="calendar/features" element={<Feature />} />

@@ -85,7 +85,7 @@ export default function TasksPage() {
     files: [],
     spouse_signature_required: false
   });
-  
+
   // Document upload state for document requests
   const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
   const [uploadFiles, setUploadFiles] = useState([]);
@@ -93,7 +93,7 @@ export default function TasksPage() {
   const [documentCategories, setDocumentCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
-  
+
   // Preview, approve, re-request state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
@@ -101,7 +101,7 @@ export default function TasksPage() {
   const [showReRequestModal, setShowReRequestModal] = useState(false);
   const [reRequestComments, setReRequestComments] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
-  
+
   const [tasks, setTasks] = useState({
     pending: [],
     inprogress: [],
@@ -849,7 +849,7 @@ export default function TasksPage() {
         if (pair[0].includes('spouse')) {
           console.log('  ', pair[0] + ':', pair[1]);
         }
-      }   
+      }
     }
 
     // Append files (can be multiple files)
@@ -903,12 +903,12 @@ export default function TasksPage() {
       const response = await fetchWithCors(apiUrl, config);
 
       const result = await response.json();
-      
+
       // Check if API returned success: false with errors
       if (!response.ok || (result.success === false && result.errors)) {
         // Extract all error messages from the errors object
         const errorMessages = [];
-        
+
         if (result.errors && typeof result.errors === 'object') {
           Object.keys(result.errors).forEach(field => {
             const fieldErrors = result.errors[field];
@@ -919,7 +919,7 @@ export default function TasksPage() {
             }
           });
         }
-        
+
         // Show all error messages in toast notifications
         if (errorMessages.length > 0) {
           errorMessages.forEach(msg => {
@@ -929,7 +929,7 @@ export default function TasksPage() {
           // Fallback to general error message
           toast.error(result.message || result.detail || 'Failed to update task. Please try again.', { position: "top-right", autoClose: 5000 });
         }
-        
+
         // Mark that errors have been shown and throw
         const error = new Error(result.message || result.detail || `HTTP error! status: ${response.status}`);
         error.errorsShown = true;
@@ -1030,12 +1030,12 @@ export default function TasksPage() {
       const response = await fetchWithCors(apiUrl, config);
 
       const result = await response.json();
-      
+
       // Check if API returned success: false with errors
       if (!response.ok || (result.success === false && result.errors)) {
         // Extract all error messages from the errors object
         const errorMessages = [];
-        
+
         if (result.errors && typeof result.errors === 'object') {
           Object.keys(result.errors).forEach(field => {
             const fieldErrors = result.errors[field];
@@ -1046,7 +1046,7 @@ export default function TasksPage() {
             }
           });
         }
-        
+
         // Show all error messages in toast notifications
         if (errorMessages.length > 0) {
           errorMessages.forEach(msg => {
@@ -1056,7 +1056,7 @@ export default function TasksPage() {
           // Fallback to general error message
           toast.error(result.message || result.detail || 'Failed to create task. Please try again.', { position: "top-right", autoClose: 5000 });
         }
-        
+
         // Mark that errors have been shown and throw
         const error = new Error(result.message || result.detail || `HTTP error! status: ${response.status}`);
         error.errorsShown = true;
@@ -1165,15 +1165,15 @@ export default function TasksPage() {
       }
 
       const formData = new FormData();
-      
+
       // Get client ID from task
       const clientId = selectedTask.clients_info[0]?.id;
       if (!clientId) {
         throw new Error('Client ID is missing');
       }
-      
+
       formData.append('client_id', clientId.toString());
-      
+
       // Add all files
       uploadFiles.forEach(file => {
         formData.append('files', file);
@@ -1204,7 +1204,7 @@ export default function TasksPage() {
       if (!response.ok || (result.success === false && result.errors)) {
         // Extract all error messages from the errors object
         const errorMessages = [];
-        
+
         if (result.errors && typeof result.errors === 'object') {
           Object.keys(result.errors).forEach(field => {
             const fieldErrors = result.errors[field];
@@ -1215,7 +1215,7 @@ export default function TasksPage() {
             }
           });
         }
-        
+
         // Show all error messages in toast notifications
         if (errorMessages.length > 0) {
           errorMessages.forEach(msg => {
@@ -1648,53 +1648,53 @@ export default function TasksPage() {
 
           {/* Kanban Board */}
           {!tasksLoading && !tasksError && (
-           <div className="tasks-container d-flex justify-content-center">
-           <div className="tasks-grid mt-3 w-100">
-             {order.map((k) => (
-               <div key={k} className="task-column">
-                 <div className="task-column-card" style={{ background: bgForCol(k) }}>
-                   <div className="task-column-body">
-                     <h6 className="fw-semibold d-flex align-items-center task-column-title">
-                       {iconFor(k)} {titleFor(k)} ({tasks[k].length})
-                     </h6>
-                     {tasks[k].length > 0 ? (
-                       tasks[k].slice(0, 5).map((t) => (
-                         <div key={t.id} className="card task-item" onClick={() => setSelectedTask(t)}>
-                           <div className="card-body position-relative">
-                             <div className="priority-badge">
-                               {t.priority.toUpperCase()}
-                             </div>
-                             <div className="task-item-content d-flex align-items-start">
-                               <span className="icon-circle"><Doc /></span>
-                               <div className="task-text">
-                                 <div className="task-title">{t.title}</div>
-                                 <div className="task-meta d-flex align-items-center justify-content-between">
-                                   <span className="client-info d-flex align-items-center">
-                                     <MiniContact /> <span className="client-name">{t.client}</span>
-                                     <span className="ms-3 due-date">{t.due}</span>
-                                   </span>
-                                   <button className="btn btn-sm btn-light more-btn" onClick={(e) => { e.stopPropagation(); setSelectedTask(t); }}>
-                                     <Dot />
-                                   </button>
-                                 </div>
-                                 <div className="task-note">{t.note}</div>
-                               </div>
-                             </div>
-                           </div>
-                         </div>
-                       ))
-                     ) : (
-                       <div className="text-center text-muted small no-tasks">
-                         No {titleFor(k).toLowerCase()} tasks
-                       </div>
-                     )}
-                   </div>
-                 </div>
-               </div>
-             ))}
-           </div>
-         </div>
-         
+            <div className="tasks-container d-flex justify-content-center">
+              <div className="tasks-grid mt-3 w-100">
+                {order.map((k) => (
+                  <div key={k} className="task-column">
+                    <div className="task-column-card" style={{ background: bgForCol(k) }}>
+                      <div className="task-column-body">
+                        <h6 className="fw-semibold d-flex align-items-center task-column-title">
+                          {iconFor(k)} {titleFor(k)} ({tasks[k].length})
+                        </h6>
+                        {tasks[k].length > 0 ? (
+                          tasks[k].slice(0, 5).map((t) => (
+                            <div key={t.id} className="card task-item" onClick={() => setSelectedTask(t)}>
+                              <div className="card-body position-relative">
+                                <div className="priority-badge">
+                                  {t.priority.toUpperCase()}
+                                </div>
+                                <div className="task-item-content d-flex align-items-start">
+                                  <span className="icon-circle"><Doc /></span>
+                                  <div className="task-text">
+                                    <div className="task-title">{t.title}</div>
+                                    <div className="task-meta d-flex align-items-center justify-content-between">
+                                      <span className="client-info d-flex align-items-center">
+                                        <MiniContact /> <span className="client-name">{t.client}</span>
+                                        <span className="ms-3 due-date">{t.due}</span>
+                                      </span>
+                                      <button className="btn btn-sm btn-light more-btn" onClick={(e) => { e.stopPropagation(); setSelectedTask(t); }}>
+                                        <Dot />
+                                      </button>
+                                    </div>
+                                    <div className="task-note">{t.note}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center text-muted small no-tasks">
+                            No {titleFor(k).toLowerCase()} tasks
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           )}
 
           {/* Pagination */}
@@ -1734,10 +1734,10 @@ export default function TasksPage() {
 
       {/* Task Details Modal */}
       {selectedTask && (
-        <div 
-          className="modal" 
-          style={{ 
-            display: 'block', 
+        <div
+          className="modal"
+          style={{
+            display: 'block',
             backgroundColor: 'rgba(0,0,0,0.5)',
             position: 'fixed',
             top: 0,
@@ -1750,7 +1750,7 @@ export default function TasksPage() {
           }}
           onClick={() => setSelectedTask(null)}
         >
-          <div 
+          <div
             className="modal-dialog modal-dialog-centered"
             style={{
               maxWidth: '600px',
@@ -1806,6 +1806,24 @@ export default function TasksPage() {
                     </div>
                   </div>
 
+                  {/* Task Instructions */}
+                  <div className="mt-3">
+                    <h6 className="fw-medium mb-2" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Instructions:</h6>
+                    <div className="p-3" style={{ backgroundColor: '#EEF2FF', borderRadius: '8px', fontSize: '0.875rem', color: '#3B4A66', border: '1px solid #C7D2FE' }}>
+                      {selectedTask.instructions || (() => {
+                        const instructionsMap = {
+                          'client_onboarding': "Verify client personal information and review the completed questionnaire.",
+                          'amendment_filing': "Review the original tax return and collect necessary amendment documents.",
+                          'document_collection': "Upload or request all required documents from the client.",
+                          'document_review': "Review submitted documents for accuracy and completeness.",
+                          'document_request': "Wait for the client to upload the requested documents or follow up.",
+                          'signature_request': "Ensure the document is signed by the client (and spouse if applicable).",
+                        };
+                        return instructionsMap[selectedTask.task_type] || "Complete the task requirements.";
+                      })()}
+                    </div>
+                  </div>
+
                   {/* Status Badge */}
                   <div className="mt-3">
                     <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
@@ -1815,12 +1833,12 @@ export default function TasksPage() {
                         style={{
                           backgroundColor: selectedTask.status === 'completed' ? '#D1FAE5' :
                             selectedTask.status === 'submitted' ? '#DBEAFE' :
-                            selectedTask.status === 'in_progress' ? '#FEF3C7' :
-                            selectedTask.status === 'pending' ? '#FEE2E2' : '#F3F4F6',
+                              selectedTask.status === 'in_progress' ? '#FEF3C7' :
+                                selectedTask.status === 'pending' ? '#FEE2E2' : '#F3F4F6',
                           color: selectedTask.status === 'completed' ? '#065F46' :
                             selectedTask.status === 'submitted' ? '#1E40AF' :
-                            selectedTask.status === 'in_progress' ? '#92400E' :
-                            selectedTask.status === 'pending' ? '#B91C1C' : '#4B5563',
+                              selectedTask.status === 'in_progress' ? '#92400E' :
+                                selectedTask.status === 'pending' ? '#B91C1C' : '#4B5563',
                           borderRadius: '12px',
                           padding: '4px 12px',
                           fontSize: '0.75rem',
@@ -1840,95 +1858,95 @@ export default function TasksPage() {
                       {selectedTask.task_type === 'document_request' && selectedTask.files && selectedTask.files.length > 0 && (
                         <>
                           <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Submitted Documents:</h6>
-                      <div className="d-flex flex-column gap-2" style={{ maxWidth: '100%' }}>
-                        {selectedTask.files.map((file, index) => (
-                          <div
-                            key={file.id || index}
-                            className="d-flex align-items-center justify-content-between p-3"
-                            style={{ 
-                              backgroundColor: '#F9FAFB', 
-                              borderRadius: '8px', 
-                              border: '1px solid #E5E7EB',
-                              flexWrap: 'wrap',
-                              gap: '0.75rem'
-                            }}
-                          >
-                            <div className="d-flex align-items-center gap-2" style={{ flex: 1, minWidth: 0 }}>
-                              <FaFilePdf style={{ color: '#EF4444', fontSize: '20px', flexShrink: 0 }} />
-                              <div style={{ minWidth: 0, flex: 1 }}>
-                                <div style={{ 
-                                  fontWeight: '500', 
-                                  color: '#3B4A66',
-                                  fontSize: '0.875rem',
-                                  wordBreak: 'break-word',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis'
-                                }}>
-                                  {file.file_name || file.name || `Document ${index + 1}`}
+                          <div className="d-flex flex-column gap-2" style={{ maxWidth: '100%' }}>
+                            {selectedTask.files.map((file, index) => (
+                              <div
+                                key={file.id || index}
+                                className="d-flex align-items-center justify-content-between p-3"
+                                style={{
+                                  backgroundColor: '#F9FAFB',
+                                  borderRadius: '8px',
+                                  border: '1px solid #E5E7EB',
+                                  flexWrap: 'wrap',
+                                  gap: '0.75rem'
+                                }}
+                              >
+                                <div className="d-flex align-items-center gap-2" style={{ flex: 1, minWidth: 0 }}>
+                                  <FaFilePdf style={{ color: '#EF4444', fontSize: '20px', flexShrink: 0 }} />
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{
+                                      fontWeight: '500',
+                                      color: '#3B4A66',
+                                      fontSize: '0.875rem',
+                                      wordBreak: 'break-word',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis'
+                                    }}>
+                                      {file.file_name || file.name || `Document ${index + 1}`}
+                                    </div>
+                                    {file.file_size && (
+                                      <small style={{ color: '#6B7280', fontSize: '0.75rem' }}>
+                                        {(file.file_size / 1024).toFixed(2)} KB
+                                      </small>
+                                    )}
+                                  </div>
                                 </div>
-                                {file.file_size && (
-                                  <small style={{ color: '#6B7280', fontSize: '0.75rem' }}>
-                                    {(file.file_size / 1024).toFixed(2)} KB
-                                  </small>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+                                  onClick={() => handlePreviewFile(file)}
+                                  style={{
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    padding: '0.375rem 0.75rem',
+                                    whiteSpace: 'nowrap',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  <FaEye />
+                                  Preview
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Submission Info */}
+                          {selectedTask.submission_info && (
+                            <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
+                              <div className="d-flex flex-column gap-2" style={{ fontSize: '0.875rem' }}>
+                                {selectedTask.submission_info.submitted_by && (
+                                  <div>
+                                    <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted by: </span>
+                                    <span style={{ color: '#3B4A66' }}>
+                                      {selectedTask.submission_info.submitted_by.name || selectedTask.submission_info.submitted_by.email}
+                                    </span>
+                                  </div>
+                                )}
+                                {selectedTask.submission_info.submitted_at && (
+                                  <div>
+                                    <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted at: </span>
+                                    <span style={{ color: '#3B4A66' }}>
+                                      {new Date(selectedTask.submission_info.submitted_at).toLocaleString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                )}
+                                {selectedTask.submission_info.file_count !== undefined && (
+                                  <div>
+                                    <span style={{ color: '#6B7280', fontWeight: '500' }}>Files submitted: </span>
+                                    <span style={{ color: '#3B4A66' }}>{selectedTask.submission_info.file_count}</span>
+                                  </div>
                                 )}
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
-                              onClick={() => handlePreviewFile(file)}
-                              style={{ 
-                                borderRadius: '6px',
-                                fontSize: '0.75rem',
-                                padding: '0.375rem 0.75rem',
-                                whiteSpace: 'nowrap',
-                                flexShrink: 0
-                              }}
-                            >
-                              <FaEye />
-                              Preview
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Submission Info */}
-                      {selectedTask.submission_info && (
-                        <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
-                          <div className="d-flex flex-column gap-2" style={{ fontSize: '0.875rem' }}>
-                            {selectedTask.submission_info.submitted_by && (
-                              <div>
-                                <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted by: </span>
-                                <span style={{ color: '#3B4A66' }}>
-                                  {selectedTask.submission_info.submitted_by.name || selectedTask.submission_info.submitted_by.email}
-                                </span>
-                              </div>
-                            )}
-                            {selectedTask.submission_info.submitted_at && (
-                              <div>
-                                <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted at: </span>
-                                <span style={{ color: '#3B4A66' }}>
-                                  {new Date(selectedTask.submission_info.submitted_at).toLocaleString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                            )}
-                            {selectedTask.submission_info.file_count !== undefined && (
-                              <div>
-                                <span style={{ color: '#6B7280', fontWeight: '500' }}>Files submitted: </span>
-                                <span style={{ color: '#3B4A66' }}>{selectedTask.submission_info.file_count}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                          )}
 
-                      </>
+                        </>
                       )}
 
                       {/* Show completed at info for all completed tasks */}
@@ -1958,9 +1976,9 @@ export default function TasksPage() {
                               <div
                                 key={comment.id || index}
                                 className="p-3"
-                                style={{ 
-                                  backgroundColor: '#F9FAFB', 
-                                  borderRadius: '8px', 
+                                style={{
+                                  backgroundColor: '#F9FAFB',
+                                  borderRadius: '8px',
                                   border: '1px solid #E5E7EB',
                                   fontSize: '0.875rem'
                                 }}
@@ -1993,7 +2011,7 @@ export default function TasksPage() {
                       )}
                     </div>
                   )}
-                  
+
                   {/* Submitted Documents Section for Submitted Document Request Tasks */}
                   {selectedTask.task_type === 'document_request' && selectedTask.status === 'submitted' && selectedTask.files && selectedTask.files.length > 0 && (
                     <div className="mt-4">
@@ -2030,7 +2048,7 @@ export default function TasksPage() {
                           </div>
                         ))}
                       </div>
-                      
+
                       <div className="mt-4 d-flex gap-2 flex-wrap">
                         <button
                           type="button"
@@ -2055,7 +2073,7 @@ export default function TasksPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Upload Documents Section for Document Request Tasks (non-submitted, non-completed) */}
                   {selectedTask.task_type === 'document_request' && selectedTask.status !== 'submitted' && selectedTask.status !== 'completed' && (
                     <div className="mt-4 d-flex gap-2 flex-wrap">
@@ -2096,7 +2114,7 @@ export default function TasksPage() {
                   )}
                 </div>
               </div>
-              <div 
+              <div
                 className="modal-footer border-0"
                 style={{
                   padding: '1rem 1.5rem',
@@ -2110,8 +2128,8 @@ export default function TasksPage() {
                 <button
                   type="button"
                   className="btn btn-light"
-                  style={{ 
-                    border: '1px solid #E5E7EB', 
+                  style={{
+                    border: '1px solid #E5E7EB',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     padding: '0.5rem 1rem',
@@ -2129,9 +2147,9 @@ export default function TasksPage() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    style={{ 
-                      backgroundColor: '#FF7A2F', 
-                      borderColor: '#FF7A2F', 
+                    style={{
+                      backgroundColor: '#FF7A2F',
+                      borderColor: '#FF7A2F',
                       borderRadius: '8px',
                       fontSize: '0.875rem',
                       padding: '0.5rem 1rem',
@@ -2143,7 +2161,7 @@ export default function TasksPage() {
                         const taskClientIds = selectedTask.clients_info && selectedTask.clients_info.length > 0
                           ? selectedTask.clients_info.map(c => c.id.toString())
                           : [];
-                        
+
                         setFormData({
                           task_type: selectedTask.task_type || 'signature_request',
                           task_title: selectedTask.title || '',
@@ -2155,7 +2173,7 @@ export default function TasksPage() {
                           files: [],
                           spouse_signature_required: selectedTask.signature_requests_info?.some(sr => sr.spouse_signature_required) || false
                         });
-                        
+
                         setSelectedFolderPath(selectedTask.folder_info?.title || selectedTask.folder_info?.name || '');
                         setEditingTaskId(selectedTask.id);
                         setIsEditMode(true);
@@ -3053,7 +3071,7 @@ export default function TasksPage() {
                   <p className="text-muted small mb-3">
                     Upload documents for this document request. Files will be associated with the client and folder from the task.
                   </p>
-                  
+
                   {/* File Upload Area */}
                   <div className="mb-3">
                     <label className="form-label fw-medium mb-2" style={{ color: '#4B5563' }}>
@@ -3061,8 +3079,8 @@ export default function TasksPage() {
                     </label>
                     <div
                       className="border border-dashed rounded p-4 text-center"
-                      style={{ 
-                        borderColor: '#E8F0FF', 
+                      style={{
+                        borderColor: '#E8F0FF',
                         cursor: 'pointer',
                         backgroundColor: '#F9FAFB',
                         transition: 'all 0.2s'
@@ -3184,11 +3202,11 @@ export default function TasksPage() {
 
       {/* Preview Modal */}
       {showPreviewModal && previewFile && (
-        <div 
-          className="modal" 
-          style={{ 
-            display: 'block', 
-            backgroundColor: 'rgba(0,0,0,0.7)', 
+        <div
+          className="modal"
+          style={{
+            display: 'block',
+            backgroundColor: 'rgba(0,0,0,0.7)',
             zIndex: 1060,
             position: 'fixed',
             top: 0,
@@ -3202,7 +3220,7 @@ export default function TasksPage() {
             setPreviewFile(null);
           }}
         >
-          <div 
+          <div
             className="modal-dialog modal-dialog-centered"
             style={{
               maxWidth: '95vw',
@@ -3214,9 +3232,9 @@ export default function TasksPage() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div 
-              className="modal-content" 
-              style={{ 
+            <div
+              className="modal-content"
+              style={{
                 borderRadius: '16px',
                 height: '100%',
                 display: 'flex',
@@ -3224,7 +3242,7 @@ export default function TasksPage() {
                 maxHeight: '100%'
               }}
             >
-              <div 
+              <div
                 className="modal-header"
                 style={{
                   flexShrink: 0,
@@ -3246,9 +3264,9 @@ export default function TasksPage() {
                   style={{ fontSize: '1.25rem' }}
                 ></button>
               </div>
-              <div 
-                className="modal-body" 
-                style={{ 
+              <div
+                className="modal-body"
+                style={{
                   padding: 0,
                   flex: 1,
                   overflow: 'hidden',
@@ -3268,7 +3286,7 @@ export default function TasksPage() {
                   title="Document Preview"
                 />
               </div>
-              <div 
+              <div
                 className="modal-footer border-0"
                 style={{
                   flexShrink: 0,
@@ -3283,8 +3301,8 @@ export default function TasksPage() {
                 <button
                   type="button"
                   className="btn btn-light"
-                  style={{ 
-                    border: '1px solid #E5E7EB', 
+                  style={{
+                    border: '1px solid #E5E7EB',
                     borderRadius: '8px',
                     padding: '0.5rem 1rem',
                     fontSize: '0.875rem',
@@ -3302,9 +3320,9 @@ export default function TasksPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
-                  style={{ 
-                    backgroundColor: '#FF7A2F', 
-                    borderColor: '#FF7A2F', 
+                  style={{
+                    backgroundColor: '#FF7A2F',
+                    borderColor: '#FF7A2F',
                     borderRadius: '8px',
                     padding: '0.5rem 1rem',
                     fontSize: '0.875rem',
@@ -3326,11 +3344,11 @@ export default function TasksPage() {
 
       {/* Approve Modal */}
       {showApproveModal && selectedTask && (
-        <div 
-          className="modal" 
-          style={{ 
-            display: 'block', 
-            backgroundColor: 'rgba(0,0,0,0.5)', 
+        <div
+          className="modal"
+          style={{
+            display: 'block',
+            backgroundColor: 'rgba(0,0,0,0.5)',
             zIndex: 1060,
             position: 'fixed',
             top: 0,
@@ -3342,7 +3360,7 @@ export default function TasksPage() {
           }}
           onClick={() => setShowApproveModal(false)}
         >
-          <div 
+          <div
             className="modal-dialog modal-dialog-centered"
             style={{
               maxWidth: '500px',
@@ -3367,7 +3385,7 @@ export default function TasksPage() {
                 <p style={{ fontSize: '0.875rem', color: '#3B4A66', marginBottom: '0.5rem' }}>Are you sure you want to approve this document request task?</p>
                 <p className="text-muted" style={{ fontSize: '0.75rem', margin: 0 }}>This will mark the task as completed.</p>
               </div>
-              <div 
+              <div
                 className="modal-footer border-0"
                 style={{
                   padding: '1rem 1.5rem',
@@ -3381,8 +3399,8 @@ export default function TasksPage() {
                 <button
                   type="button"
                   className="btn btn-light"
-                  style={{ 
-                    border: '1px solid #E5E7EB', 
+                  style={{
+                    border: '1px solid #E5E7EB',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     padding: '0.5rem 1rem',
@@ -3396,9 +3414,9 @@ export default function TasksPage() {
                 <button
                   type="button"
                   className="btn btn-success"
-                  style={{ 
-                    backgroundColor: '#32B582', 
-                    borderColor: '#32B582', 
+                  style={{
+                    backgroundColor: '#32B582',
+                    borderColor: '#32B582',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     padding: '0.5rem 1rem',
@@ -3427,11 +3445,11 @@ export default function TasksPage() {
 
       {/* Re-request Modal */}
       {showReRequestModal && selectedTask && (
-        <div 
-          className="modal" 
-          style={{ 
-            display: 'block', 
-            backgroundColor: 'rgba(0,0,0,0.5)', 
+        <div
+          className="modal"
+          style={{
+            display: 'block',
+            backgroundColor: 'rgba(0,0,0,0.5)',
             zIndex: 1060,
             position: 'fixed',
             top: 0,
@@ -3446,7 +3464,7 @@ export default function TasksPage() {
             setReRequestComments('');
           }}
         >
-          <div 
+          <div
             className="modal-dialog modal-dialog-centered"
             style={{
               maxWidth: '500px',
@@ -3489,7 +3507,7 @@ export default function TasksPage() {
                   }}
                 />
               </div>
-              <div 
+              <div
                 className="modal-footer border-0"
                 style={{
                   padding: '1rem 1.5rem',
@@ -3503,8 +3521,8 @@ export default function TasksPage() {
                 <button
                   type="button"
                   className="btn btn-light"
-                  style={{ 
-                    border: '1px solid #E5E7EB', 
+                  style={{
+                    border: '1px solid #E5E7EB',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     padding: '0.5rem 1rem',
@@ -3521,10 +3539,10 @@ export default function TasksPage() {
                 <button
                   type="button"
                   className="btn btn-warning"
-                  style={{ 
-                    backgroundColor: '#F59E0B', 
-                    borderColor: '#F59E0B', 
-                    color: 'white', 
+                  style={{
+                    backgroundColor: '#F59E0B',
+                    borderColor: '#F59E0B',
+                    color: 'white',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     padding: '0.5rem 1rem',

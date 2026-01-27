@@ -9,7 +9,7 @@ const FixedLayout = ({ children }) => {
         <img src={logo} alt="Logo" />
       </div>
 
- 
+
       <div className=".content-rap">
         {children}
       </div>

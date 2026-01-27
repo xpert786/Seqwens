@@ -1184,6 +1184,11 @@ export default function ESignatureDashboard() {
               const clientName = request.taxpayer_name || request.client_name || request.client?.full_name || 'Unknown Client';
               const documentName = request.document_name || request.document?.name || 'No Document';
 
+              const userData = getUserData();
+              const currentUserId = userData?.id || userData?.user?.id;
+              const isCreator = currentUserId === request.requested_by;
+              const isAssignedPreparer = request.assigned_preparer_ids?.includes(currentUserId);
+
               return (
                 <div
                   key={`${request.id}-${index}`}
@@ -1295,7 +1300,8 @@ export default function ESignatureDashboard() {
                         {/* Annotate & Sign for Preparer Button - Show when taxpayer and spouse (if required) have signed */}
                         {areTaxpayerAndSpouseSigned(request) &&
                           request.preparer_must_sign === true &&
-                          request.preparer_signed === false && (
+                          request.preparer_signed === false &&
+                          (isAssignedPreparer || !request.assigned_preparer_ids?.length) && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1367,7 +1373,8 @@ export default function ESignatureDashboard() {
 
                             {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
                             {request.status?.toLowerCase() !== 'completed' &&
-                              request.status?.toLowerCase() !== 'processed' && (
+                              request.status?.toLowerCase() !== 'processed' &&
+                              isCreator && (
                                 <>
                                   {/* Mark as Completed Button */}
                                   <button

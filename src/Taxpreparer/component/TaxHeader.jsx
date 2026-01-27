@@ -35,7 +35,7 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function Topbar({
-  onToggleSidebar = () => {},
+  onToggleSidebar = () => { },
   isSidebarOpen = true,
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -319,9 +319,8 @@ export default function Topbar({
               style={{ background: "transparent", border: "none" }}
             >
               <span
-                className={`sidebar-toggle-icon ${
-                  isSidebarOpen ? "" : "collapsed"
-                }`}
+                className={`sidebar-toggle-icon ${isSidebarOpen ? "" : "collapsed"
+                  }`}
               >
                 <LogoIcond />
               </span>
@@ -341,7 +340,7 @@ export default function Topbar({
                     <AccountSwitcher />
                   </ErrorBoundary>
                 </React.Suspense>
-                
+
                 <button
                   ref={notificationButtonRef}
                   type="button"
@@ -368,9 +367,9 @@ export default function Topbar({
                     aria-controls="tax-header-profile-menu"
                   >
                     {profilePicture ? (
-                      <img 
-                        src={profilePicture} 
-                        alt={`${profileName} avatar`} 
+                      <img
+                        src={profilePicture}
+                        alt={`${profileName} avatar`}
                         className="topbar-user-avatar"
                         key={profilePicture}
                         onError={(e) => {

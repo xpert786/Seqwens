@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import SimplePDFViewer from '../../components/SimplePDFViewer';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
-import { firmAdminClientsAPI, firmAdminDocumentsAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
+import { firmAdminClientsAPI, firmAdminStaffAPI, firmAdminDocumentsAPI, taxPreparerClientAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getUserData } from '../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 
 export default function ESignatureManagement() {
   const [activeTab, setActiveTab] = useState('Signature Request');
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedEsignRequest, setSelectedEsignRequest] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Settings state
   const [defaultExpiry, setDefaultExpiry] = useState('7');
@@ -34,6 +36,12 @@ export default function ESignatureManagement() {
   const [priority, setPriority] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [preparerSign, setPreparerSign] = useState(false);
+  const [selectedPreparerIds, setSelectedPreparerIds] = useState([]);
+  const [preparers, setPreparers] = useState([]);
+  const [loadingPreparers, setLoadingPreparers] = useState(false);
+  const [showPreparerDropdown, setShowPreparerDropdown] = useState(false);
+  const preparerDropdownRef = useRef(null);
 
   // Client and folder selection state
   const [clients, setClients] = useState([]);
@@ -258,6 +266,9 @@ export default function ESignatureManagement() {
     setShowFolderDropdown(false);
     setExpandedFolders(new Set());
     setSignatureType('signature_request');
+    setPreparerSign(false);
+    setSelectedPreparerIds([]);
+    setShowPreparerDropdown(false);
 
     // Clear any text selection
     window.getSelection().removeAllRanges();
@@ -367,6 +378,49 @@ export default function ESignatureManagement() {
     setPageNumber(selectedPage + 1);
   }, [selectedPage]);
 
+  // Fetch preparers
+  const fetchPreparers = useCallback(async () => {
+    try {
+      setLoadingPreparers(true);
+      const token = getAccessToken();
+      const response = await firmAdminStaffAPI.listTaxPreparers({ page_size: 100 });
+
+      let dataArray = [];
+      if (response.success) {
+        if (response.data) {
+          if (Array.isArray(response.data.results)) {
+            dataArray = response.data.results;
+          } else if (Array.isArray(response.data)) {
+            dataArray = response.data;
+          } else if (Array.isArray(response.data.data)) {
+            dataArray = response.data.data;
+          }
+        } else if (Array.isArray(response.results)) {
+          dataArray = response.results;
+        }
+      }
+
+      if (dataArray.length > 0) {
+        const transformedData = dataArray.map(item => ({
+          id: item.id,
+          name: item.full_name || `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown',
+          email: item.email || ''
+        }));
+        setPreparers(transformedData);
+      }
+    } catch (err) {
+      console.error('Error fetching preparers:', err);
+    } finally {
+      setLoadingPreparers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showCreateModal && preparers.length === 0 && !loadingPreparers) {
+      fetchPreparers();
+    }
+  }, [showCreateModal, fetchPreparers]);
+
   // Handle click outside for dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -375,6 +429,9 @@ export default function ESignatureManagement() {
       }
       if (showFolderDropdown && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
         setShowFolderDropdown(false);
+      }
+      if (showPreparerDropdown && preparerDropdownRef.current && !preparerDropdownRef.current.contains(event.target)) {
+        setShowPreparerDropdown(false);
       }
     };
 
@@ -410,7 +467,7 @@ export default function ESignatureManagement() {
     if (showCreateModal && clients.length === 0 && !loadingClients) {
       fetchClients();
     }
-  }, [showCreateModal, clients.length, loadingClients, fetchClients]);
+  }, [showCreateModal, fetchClients]);
 
   // Fetch root folders from API
   useEffect(() => {
@@ -543,6 +600,60 @@ export default function ESignatureManagement() {
     });
   };
 
+  // Handle marking e-sign request as completed
+  const handleCompleteRequest = async (requestId, e) => {
+    if (e) e.stopPropagation();
+
+    try {
+      setEsignLoading(true);
+      const response = await taxPreparerClientAPI.completeSignatureRequest(requestId);
+
+      if (response.success) {
+        toast.success('E-Sign Request marked as completed successfully!', {
+          position: "top-right",
+          autoClose: 3000
+        });
+        // Refresh the list
+        fetchEsignRequests();
+        setShowDetailModal(false);
+      } else {
+        throw new Error(response.message || 'Failed to complete request');
+      }
+    } catch (error) {
+      console.error('Error completing signature request:', error);
+      toast.error(handleAPIError(error) || 'Failed to complete request');
+    } finally {
+      setEsignLoading(false);
+    }
+  };
+
+  // Handle re-requesting e-sign
+  const handleRerequestSignature = async (requestId, e) => {
+    if (e) e.stopPropagation();
+
+    try {
+      setEsignLoading(true);
+      const response = await taxPreparerClientAPI.rerequestSignature(requestId);
+
+      if (response.success) {
+        toast.success('E-Sign Request re-sent successfully!', {
+          position: "top-right",
+          autoClose: 3000
+        });
+        // Refresh the list
+        fetchEsignRequests();
+        setShowDetailModal(false);
+      } else {
+        throw new Error(response.message || 'Failed to re-request signature');
+      }
+    } catch (error) {
+      console.error('Error re-requesting signature:', error);
+      toast.error(handleAPIError(error) || 'Failed to re-request signature');
+    } finally {
+      setEsignLoading(false);
+    }
+  };
+
   // Fetch e-signature requests
   const fetchEsignRequests = useCallback(async () => {
     try {
@@ -551,9 +662,6 @@ export default function ESignatureManagement() {
 
       const token = getAccessToken();
       const queryParams = new URLSearchParams();
-
-      queryParams.append('page', esignCurrentPage.toString());
-      queryParams.append('page_size', '10');
 
       if (esignFilters.status) {
         queryParams.append('status', esignFilters.status);
@@ -574,7 +682,7 @@ export default function ESignatureManagement() {
         queryParams.append('end_date', esignFilters.end_date);
       }
 
-      const response = await fetchWithCors(`${getApiBaseUrl()}/firm/esign-requests/?${queryParams.toString()}`, {
+      const response = await fetchWithCors(`${getApiBaseUrl()}/firm/esign-requests/${queryParams.toString() ? '?' + queryParams.toString() : ''}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -705,8 +813,14 @@ export default function ESignatureManagement() {
         formData.append('task_title', requestData.task_title);
         formData.append('client_id', requestData.client_id.toString());
 
-        // spouse_sign field - always send, default to false if not provided
+        // spouse_sign and preparer_sign fields - always send, default to false if not provided
         formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
+        formData.append('tax_preparer_sign', preparerSign === true ? 'true' : 'false');
+
+        // Add tax_preparer_ids if applicable
+        if (preparerSign && selectedPreparerIds.length > 0) {
+          formData.append('tax_preparer_ids', JSON.stringify(selectedPreparerIds));
+        }
 
         // Add files (multiple files)
         if (requestData.files && Array.isArray(requestData.files)) {
@@ -1441,8 +1555,8 @@ export default function ESignatureManagement() {
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending</div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.signed}</div>
-              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Signed</div>
+              <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.completed}</div>
+              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Completed</div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-red-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.expired}</div>
@@ -1518,7 +1632,12 @@ export default function ESignatureManagement() {
                       const progress = `${request.completed_fields || 0}/${request.total_fields || 0}`;
 
                       return (
-                        <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <tr key={request.id}
+                          onClick={() => {
+                            setSelectedEsignRequest(request);
+                            setShowDetailModal(true);
+                          }}
+                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
                           <td className="py-4 px-4">
                             <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
                               #{request.id}
@@ -1565,7 +1684,8 @@ export default function ESignatureManagement() {
                               )}
                               {request.document_url && (
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     const link = document.createElement('a');
                                     link.href = request.document_url;
                                     link.download = request.document_name || 'document.pdf';
@@ -1576,6 +1696,18 @@ export default function ESignatureManagement() {
                                 >
                                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                              )}
+                              {request.status === 'signed' && (
+                                <button
+                                  onClick={(e) => handleCompleteRequest(request.id, e)}
+                                  className="p-1.5 hover:bg-green-50 text-green-600 rounded transition-colors"
+                                  title="Mark as Completed"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
                                   </svg>
                                 </button>
                               )}
@@ -1624,8 +1756,8 @@ export default function ESignatureManagement() {
                         key={pageNum}
                         onClick={() => setEsignCurrentPage(pageNum)}
                         className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${esignCurrentPage === pageNum
-                            ? 'bg-[#F56D2D] text-white'
-                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          ? 'bg-[#F56D2D] text-white'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
                       >
                         {pageNum}
@@ -1850,56 +1982,196 @@ export default function ESignatureManagement() {
                 </div>
               </div>
 
-              {/* Spouse Signature Toggle - Only for signature requests */}
+              {/* Spouse and Tax Preparer Signature Toggles - Only for signature requests */}
               {signatureType === 'signature_request' && (
-                <div>
-                  <label style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    justifyContent: 'space-between',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#3B4A66',
-                    opacity: loading ? 0.6 : 1,
-                    fontFamily: 'BasisGrotesquePro'
-                  }}>
-                    <span>Spouse's signature required</span>
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <input
-                        type="checkbox"
-                        checked={spouseAlso}
-                        onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
-                        disabled={loading}
-                        style={{
-                          width: '44px',
-                          height: '24px',
-                          appearance: 'none',
-                          backgroundColor: spouseAlso ? '#00C0C6' : '#D1D5DB',
-                          borderRadius: '12px',
-                          position: 'relative',
-                          cursor: loading ? 'not-allowed' : 'pointer',
-                          transition: 'background-color 0.2s',
-                          outline: 'none'
-                        }}
-                      />
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '2px',
-                          left: spouseAlso ? '22px' : '2px',
-                          width: '20px',
-                          height: '20px',
-                          backgroundColor: 'white',
-                          borderRadius: '50%',
-                          transition: 'left 0.2s',
-                          pointerEvents: 'none',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                      />
+                <div className="space-y-6">
+                  <div>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      justifyContent: 'space-between',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#3B4A66',
+                      opacity: loading ? 0.6 : 1,
+                      fontFamily: 'BasisGrotesquePro'
+                    }}>
+                      <span>Spouse's signature required</span>
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="checkbox"
+                          checked={spouseAlso}
+                          onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
+                          disabled={loading}
+                          style={{
+                            width: '44px',
+                            height: '24px',
+                            appearance: 'none',
+                            backgroundColor: spouseAlso ? '#00C0C6' : '#D1D5DB',
+                            borderRadius: '12px',
+                            position: 'relative',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            transition: 'background-color 0.2s',
+                            outline: 'none'
+                          }}
+                        />
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            left: spouseAlso ? '22px' : '2px',
+                            width: '20px',
+                            height: '20px',
+                            backgroundColor: 'white',
+                            borderRadius: '50%',
+                            transition: 'left 0.2s',
+                            pointerEvents: 'none',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        />
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Tax Preparer Signature Toggle */}
+                  <div>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      justifyContent: 'space-between',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#3B4A66',
+                      opacity: loading ? 0.6 : 1,
+                      fontFamily: 'BasisGrotesquePro'
+                    }}>
+                      <span>Tax preparer has to sign</span>
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="checkbox"
+                          checked={preparerSign}
+                          onChange={(e) => setPreparerSign(e.target.checked)}
+                          disabled={loading}
+                          style={{
+                            width: '44px',
+                            height: '24px',
+                            appearance: 'none',
+                            backgroundColor: preparerSign ? '#00C0C6' : '#D1D5DB',
+                            borderRadius: '12px',
+                            position: 'relative',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            transition: 'background-color 0.2s',
+                            outline: 'none'
+                          }}
+                        />
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            left: preparerSign ? '22px' : '2px',
+                            width: '20px',
+                            height: '20px',
+                            backgroundColor: 'white',
+                            borderRadius: '50%',
+                            transition: 'left 0.2s',
+                            pointerEvents: 'none',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        />
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Tax Preparer Multi-Select - Only shown if preparerSign is enabled */}
+                  {preparerSign && (
+                    <div className="mt-4">
+                      <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        Select Tax Preparers <span className="text-red-500">*</span>
+                      </label>
+                      <div ref={preparerDropdownRef} className="relative">
+                        <div
+                          onClick={() => setShowPreparerDropdown(!showPreparerDropdown)}
+                          className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg bg-white min-h-[42px] cursor-pointer"
+                        >
+                          {selectedPreparerIds.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 flex-1">
+                              {selectedPreparerIds.map((preparerId) => {
+                                const preparer = preparers.find(p => p.id?.toString() === preparerId.toString());
+                                if (!preparer) return null;
+                                return (
+                                  <div key={preparerId} className="flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                                    <span style={{ fontFamily: 'BasisGrotesquePro' }}>{preparer.name}</span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedPreparerIds(prev => prev.filter(id => id !== preparerId));
+                                      }}
+                                      className="text-blue-700 hover:text-blue-900 ml-1"
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                              {loadingPreparers ? 'Loading preparers...' : 'Select one or more preparers'}
+                            </span>
+                          )}
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Preparer Dropdown Menu */}
+                        {showPreparerDropdown && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {loadingPreparers ? (
+                              <div className="p-4 text-center text-sm text-gray-500">Loading preparers...</div>
+                            ) : preparers.length === 0 ? (
+                              <div className="p-4 text-center text-sm text-gray-500">No preparers available</div>
+                            ) : (
+                              preparers.map((preparer) => {
+                                const isSelected = selectedPreparerIds.includes(preparer.id?.toString());
+                                return (
+                                  <div
+                                    key={preparer.id}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setSelectedPreparerIds(prev => prev.filter(id => id !== preparer.id.toString()));
+                                      } else {
+                                        setSelectedPreparerIds(prev => [...prev, preparer.id.toString()]);
+                                      }
+                                    }}
+                                    className={`p-3 cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${isSelected ? 'bg-blue-50' : ''}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => { }}
+                                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                      {preparer.name}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </label>
+                  )}
                 </div>
               )}
 
@@ -2110,8 +2382,8 @@ export default function ESignatureManagement() {
                 onClick={createSignatureRequest}
                 disabled={loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0}
                 className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0
-                    ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
-                    : 'text-white bg-orange-500 hover:bg-orange-600'
+                  ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                  : 'text-white bg-orange-500 hover:bg-orange-600'
                   }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
@@ -3107,6 +3379,111 @@ export default function ESignatureManagement() {
               >
                 {deletingTemplate ? 'Deleting...' : 'Delete'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* E-Signature Request Detail Modal */}
+      {showDetailModal && selectedEsignRequest && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+          onClick={() => setShowDetailModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    {selectedEsignRequest.title || selectedEsignRequest.document_name}
+                  </h3>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold text-white`}
+                    style={{
+                      backgroundColor:
+                        selectedEsignRequest.status === 'completed' ? '#22C55E' :
+                          selectedEsignRequest.status === 'signed' ? '#8B5CF6' :
+                            '#FBBF24'
+                    }}>
+                    {selectedEsignRequest.status_display}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  Requested for {selectedEsignRequest.client_name} • Progress: {selectedEsignRequest.completed_fields}/{selectedEsignRequest.total_fields}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content - PDF Viewer */}
+            <div className="flex-1 overflow-hidden bg-gray-50 relative">
+              <SimplePDFViewer
+                pdfUrl={selectedEsignRequest.annotated_pdf_url || selectedEsignRequest.document_url}
+                className="h-full"
+              />
+            </div>
+
+            {/* Modal Footer - Actions */}
+            <div className="p-6 border-t border-gray-100 flex justify-between items-center bg-white">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = selectedEsignRequest.signed_document_url || selectedEsignRequest.annotated_pdf_url || selectedEsignRequest.document_url;
+                    link.download = selectedEsignRequest.document_name || 'signed_document.pdf';
+                    link.click();
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  Download
+                </button>
+              </div>
+
+              <div className="flex gap-3">
+                {selectedEsignRequest.status === 'signed' && (
+                  <>
+                    <button
+                      onClick={(e) => handleRerequestSignature(selectedEsignRequest.id, e)}
+                      className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                    >
+                      Re-Request
+                    </button>
+                    <button
+                      onClick={(e) => handleCompleteRequest(selectedEsignRequest.id, e)}
+                      className="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      Mark as Completed
+                    </button>
+                  </>
+                )}
+                {selectedEsignRequest.status === 'completed' && (
+                  <span className="text-sm font-medium text-green-600 flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Request Completed
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

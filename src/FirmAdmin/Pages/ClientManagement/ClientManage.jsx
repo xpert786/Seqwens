@@ -418,9 +418,16 @@ export default function ClientManage() {
                 email: profile.email || client.email || '',
                 phone: profile.phone || profile.phone_formatted || client.phone_number || client.phone || '',
                 status: client.status || profile.account_status?.toLowerCase() || 'new',
-                lastActivity: client.next_due_date || 'N/A',
-                lastActivityType: 'N/A',
-                lastActivityIcon: 'DocumentIcon',
+                lastActivity: client.last_activity?.last_active_relative || client.next_due_date || 'N/A',
+                lastActivityType: client.last_activity?.activity_title || 'N/A',
+                lastActivityIcon: (() => {
+                  const type = client.last_activity?.activity_type;
+                  if (type === 'document_upload' || type === 'form_submission') return 'DocumentIcon';
+                  if (type === 'appointment_scheduled') return 'AppointmentIcon';
+                  if (type === 'message_sent') return 'MsgIcon';
+                  if (type === 'login' || type === 'profile_update') return 'CustomerIcon';
+                  return 'DocumentIcon';
+                })(),
                 totalBilled: '$0', // Can be calculated from invoices if available
                 compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
                 pendingTasks: client.pending_tasks_count || 0,
@@ -939,9 +946,16 @@ export default function ClientManage() {
               email: profile.email || client.email || '',
               phone: profile.phone || profile.phone_formatted || client.phone_number || client.phone || '',
               status: client.status || profile.account_status?.toLowerCase() || 'new',
-              lastActivity: client.next_due_date || 'N/A',
-              lastActivityType: 'N/A',
-              lastActivityIcon: 'DocumentIcon',
+              lastActivity: client.last_activity?.last_active_relative || client.next_due_date || 'N/A',
+              lastActivityType: client.last_activity?.activity_title || 'N/A',
+              lastActivityIcon: (() => {
+                const type = client.last_activity?.activity_type;
+                if (type === 'document_upload' || type === 'form_submission') return 'DocumentIcon';
+                if (type === 'appointment_scheduled') return 'AppointmentIcon';
+                if (type === 'message_sent') return 'MsgIcon';
+                if (type === 'login' || type === 'profile_update') return 'CustomerIcon';
+                return 'DocumentIcon';
+              })(),
               totalBilled: '$0',
               compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
               pendingTasks: client.pending_tasks_count || 0,
@@ -1164,7 +1178,7 @@ export default function ClientManage() {
               email: profile.email || client.email || '',
               phone: profile.phone || profile.phone_formatted || client.phone_number || client.phone || '',
               status: client.status || profile.account_status?.toLowerCase() || 'new',
-              lastActivity: client.next_due_date || 'N/A',
+              lastActivity: client.last_activity?.last_active_display || client.next_due_date || 'N/A',
               totalBilled: '$0',
               compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
               assignedStaff: client.assigned_staff || [],

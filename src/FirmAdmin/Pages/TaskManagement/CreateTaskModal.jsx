@@ -322,7 +322,13 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     if (!formData.task_title.trim()) newErrors.task_title = 'Task title is required';
     if (!formData.tax_preparer_id) newErrors.tax_preparer_id = 'Tax preparer is required';
     if (!formData.client_ids || formData.client_ids.length === 0) newErrors.client_ids = 'At least one client is required';
-    if (!formData.folder_id) newErrors.folder_id = 'Folder is required';
+    
+    // Folder validation conditional based on task type
+    const folderRequiredTypes = ['document_collection', 'document_review', 'document_request', 'signature_request'];
+    if (folderRequiredTypes.includes(formData.task_type) && !formData.folder_id) {
+      newErrors.folder_id = 'Folder is required for this task type';
+    }
+    
     if (!formData.due_date) newErrors.due_date = 'Due date is required';
     else {
       const dueDate = new Date(formData.due_date);
@@ -347,7 +353,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     e.stopPropagation();
 
     console.log('Form submitted, validating...');
-    
+
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
@@ -370,7 +376,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
         task_title: formData.task_title.trim(),
         tax_preparer_id: parseInt(formData.tax_preparer_id),
         client_ids: formData.client_ids.map(id => parseInt(id)),
-        folder_id: parseInt(formData.folder_id),
+        folder_id: formData.folder_id ? parseInt(formData.folder_id) : null,
         due_date: formData.due_date,
         priority: formData.priority || 'medium',
         description: formData.description.trim() || '',
@@ -392,10 +398,10 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
       }
     } catch (error) {
       console.error('Error creating task:', error);
-      
+
       // Parse API validation errors
       let apiErrors = {};
-      
+
       // Check if error has fieldErrors property (from API utility)
       if (error.fieldErrors && typeof error.fieldErrors === 'object') {
         // Convert API errors object to our errors format
@@ -514,6 +520,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                   <option value="amendment_filing">Amendment Filing</option>
                   <option value="document_collection">Document Collection</option>
                   <option value="document_review">Document Review</option>
+                  <option value="document_request">Document Request</option>
+                  <option value="signature_request">Signature Request</option>
                 </select>
                 {errors.task_type && <div className="invalid-feedback">{errors.task_type}</div>}
               </div>
@@ -600,18 +608,18 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                               <div
                                 key={tp.id}
                                 className="p-2 cursor-pointer hover-bg-light"
-                      onClick={() => {
-                                    setFormData(prev => ({ ...prev, tax_preparer_id: tp.id.toString() }));
-                                    setShowTaxPreparerDropdown(false);
-                                    if (errors.tax_preparer_id) {
-                                      setErrors(prev => {
-                                        const newErrors = { ...prev };
-                                        delete newErrors.tax_preparer_id;
-                                        return newErrors;
-                                        
-                                      });
-                                    }
-                                  }}
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, tax_preparer_id: tp.id.toString() }));
+                                  setShowTaxPreparerDropdown(false);
+                                  if (errors.tax_preparer_id) {
+                                    setErrors(prev => {
+                                      const newErrors = { ...prev };
+                                      delete newErrors.tax_preparer_id;
+                                      return newErrors;
+
+                                    });
+                                  }
+                                }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                               >
@@ -669,19 +677,19 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                           <div
                             key={client.id}
                             className="p-2 cursor-pointer d-flex align-items-center gap-2"
-                                  onClick={() => {
-                                    const newClientIds = isSelected
-                                      ? formData.client_ids.filter(id => id !== client.id.toString())
-                                      : [...formData.client_ids, client.id.toString()];
-                                    setFormData(prev => ({ ...prev, client_ids: newClientIds }));
-                                    if (errors.client_ids) {
-                                      setErrors(prev => {
-                                        const newErrors = { ...prev };
-                                        delete newErrors.client_ids;
-                                        return newErrors;
-                                      });
-                                    }
-                                  }}
+                            onClick={() => {
+                              const newClientIds = isSelected
+                                ? formData.client_ids.filter(id => id !== client.id.toString())
+                                : [...formData.client_ids, client.id.toString()];
+                              setFormData(prev => ({ ...prev, client_ids: newClientIds }));
+                              if (errors.client_ids) {
+                                setErrors(prev => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors.client_ids;
+                                  return newErrors;
+                                });
+                              }
+                            }}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
@@ -730,7 +738,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
               <div className="row g-2 mb-3">
                 <div className="col-md-6">
                   <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Folder <span className="text-danger">*</span>
+                    Folder {['document_collection', 'document_review', 'document_request', 'signature_request'].includes(formData.task_type) && <span className="text-danger">*</span>}
                   </label>
                   <div className="position-relative" ref={folderDropdownRef}>
                     <button

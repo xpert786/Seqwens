@@ -22,9 +22,9 @@ export const chatService = {
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    
+
     // Prepare request body - empty if no targetUserId provided
-    const requestBody = targetUserId 
+    const requestBody = targetUserId
       ? { target_user_id: targetUserId }
       : {};
 
@@ -180,17 +180,21 @@ export const chatService = {
    * @param {number} clientUserId - The ID of the client user to chat with
    * @returns {Promise<Object>} Response with chat data
    */
-  createTaxPreparerChat: async (clientUserId) => {
+  createTaxPreparerChat: async (clientUserId, chatData = {}) => {
     const token = getAccessToken();
     if (!token) {
       throw new Error('No authentication token found');
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    
+
     const requestBody = {
       participant2: clientUserId,
-      chat_type: 'tax_preparer_client'
+      chat_type: 'tax_preparer_client',
+      subject: chatData.subject || '',
+      category: chatData.category || 'Client',
+      priority: chatData.priority || 'Medium',
+      opening_message: chatData.opening_message || ''
     };
 
     const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat/create/`, {
@@ -228,7 +232,7 @@ export const chatService = {
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    
+
     const requestBody = messageId ? { message_id: messageId } : {};
 
     const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat-threads/${threadId}/mark-read/`, {
@@ -262,7 +266,7 @@ export const chatService = {
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    
+
     const requestBody = messageId ? { message_id: messageId } : {};
 
     const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat/${chatId}/mark-read/`, {
@@ -312,7 +316,7 @@ export const chatService = {
 
     // Check if we have a file attachment (multipart/form-data)
     const hasFileAttachment = messageData.attachment && messageData.attachment instanceof File || messageData.attachment instanceof Blob;
-    
+
     // Check if we have base64 encoded file
     const hasBase64File = messageData.file || messageData.attachment_base64;
 
@@ -411,7 +415,7 @@ export const chatService = {
         const { refreshAccessToken } = await import('./apiUtils');
         await refreshAccessToken();
         const newToken = getAccessToken();
-        
+
         if (!newToken) {
           throw new Error('Token refresh failed');
         }
