@@ -68,7 +68,7 @@ export default function FirmAdminDashboard() {
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshEnabled, setRefreshEnabled] = useState(true);
   const [dateRange, setDateRange] = useState('Last 30 days');
   const [selectedDateRange, setSelectedDateRange] = useState('Last 30 days');
@@ -105,59 +105,71 @@ export default function FirmAdminDashboard() {
   };
 
   // Fetch dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Map date range to API format
-        const dateRangeMap = {
-          'Last 7 days': '7d',
-          'Last 30 days': '30d',
-          'Last 90 days': '90d',
-          'Last 6 months': '6m',
-          'Last year': '1y'
-        };
+  const fetchDashboardData = React.useCallback(async (signal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Map date range to API format
+      const dateRangeMap = {
+        'Last 7 days': '7d',
+        'Last 30 days': '30d',
+        'Last 90 days': '90d',
+        'Last 6 months': '6m',
+        'Last year': '1y'
+      };
 
-        const apiDateRange = dateRangeMap[dateRange] || '30d';
-        const response = await firmAdminDashboardAPI.getDashboard({
-          date_range: apiDateRange,
-          period: 'monthly',
-          recent_clients_limit: 10
-        });
+      const apiDateRange = dateRangeMap[dateRange] || '30d';
+      
+      // Pass abort signal to API if supported, or just check it before state update
+      const response = await firmAdminDashboardAPI.getDashboard({
+        date_range: apiDateRange,
+        period: 'monthly',
+        recent_clients_limit: 10
+      });
+
+      if (!signal?.aborted) {
         // Extract data from response if it's wrapped in a 'data' property
         setDashboardData(response?.data || response);
-      } catch (err) {
+      }
+    } catch (err) {
+      if (!signal?.aborted) {
         console.error('Error fetching dashboard data:', err);
-        setError(handleAPIError(err));
-        toast.error(handleAPIError(err));
-      } finally {
+        const errorMsg = handleAPIError(err);
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
+    } finally {
+      if (!signal?.aborted) {
         setLoading(false);
       }
-    };
-
-    fetchDashboardData();
+    }
   }, [dateRange]);
 
-  // Handle subscription success redirect - use ref to prevent infinite loops
+  // Initial fetch on mount and dateRange change
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchDashboardData(controller.signal);
+    return () => controller.abort();
+  }, [fetchDashboardData]);
+
+  // Handle subscription success redirect
   const subscriptionHandledRef = useRef(false);
 
   useEffect(() => {
     const subscriptionSuccess = searchParams.get('subscription_success');
     const subscriptionCancelled = searchParams.get('subscription_cancelled');
 
-    // Prevent handling the same subscription event multiple times
+    // Prevent handling the same subscription event multiple times if ref persists
     if (subscriptionHandledRef.current) {
+      if (!subscriptionSuccess && !subscriptionCancelled) {
+        // Reset ref if params are gone (so future params work)
+        subscriptionHandledRef.current = false;
+      }
       return;
     }
 
     if (subscriptionSuccess === 'true') {
       subscriptionHandledRef.current = true;
-
-      // Remove the query parameter first to prevent infinite loop
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('subscription_success');
-      setSearchParams(newSearchParams, { replace: true });
 
       // Show success message
       toast.success('Subscription activated successfully! Welcome to your dashboard.', {
@@ -186,14 +198,10 @@ export default function FirmAdminDashboard() {
                   const userData = result.data;
                   storage.setItem("userData", JSON.stringify(userData));
                   sessionStorage.setItem("userData", JSON.stringify(userData));
-                  // Refetch dashboard data instead of full page reload
-                  // This prevents infinite reload loops
-                  setDashboardData(null);
-                  // Trigger refetch by updating dateRange
-                  setDateRange(prev => prev === 'Last 30 days' ? 'Last 7 days' : 'Last 30 days');
-                  setTimeout(() => {
-                    setDateRange('Last 30 days');
-                  }, 100);
+                  
+                  // Refetch dashboard data directly
+                  const controller = new AbortController();
+                  fetchDashboardData(controller.signal);
                 }
               })
               .catch(err => {
@@ -204,6 +212,12 @@ export default function FirmAdminDashboard() {
           console.error('Error updating user data:', error);
         }
       }
+      
+      // Remove query parameter
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('subscription_success');
+      setSearchParams(newSearchParams, { replace: true });
+
     } else if (subscriptionCancelled === 'true') {
       subscriptionHandledRef.current = true;
 
@@ -212,13 +226,14 @@ export default function FirmAdminDashboard() {
         position: 'top-right',
         autoClose: 5000,
       });
-      // Remove parameter and redirect to finalize subscription
+      
+      // Remove parameter and redirect
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete('subscription_cancelled');
       setSearchParams(newSearchParams, { replace: true });
       navigate('/firmadmin/finalize-subscription', { replace: true });
     }
-  }, [searchParams, setSearchParams, navigate]);
+  }, [searchParams, setSearchParams, navigate, fetchDashboardData]);
 
   // Export Dashboard Report to PDF
   const exportDashboardToPDF = async () => {

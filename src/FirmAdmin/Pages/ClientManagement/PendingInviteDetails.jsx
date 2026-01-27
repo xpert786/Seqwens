@@ -271,9 +271,12 @@ export default function PendingInviteDetails() {
 
       if (phoneData.country_code && phoneData.phone_number) {
         payload.country_code = phoneData.country_code.replace(/^\+/, '');
-        payload.phone_number = phoneData.phone_number;
+        // Ensure phone number starts with + if it's being sent as a full number
+        payload.phone_number = `+${payload.country_code}${phoneData.phone_number}`;
       } else {
-        payload.phone_number = smsPhoneOverride;
+        // Checking if it already has a +, if not add it
+        const formattedPhone = smsPhoneOverride.startsWith('+') ? smsPhoneOverride : `+${smsPhoneOverride}`;
+        payload.phone_number = formattedPhone;
       }
 
       const response = await firmAdminClientsAPI.sendInvite(inviteId, payload);
@@ -559,6 +562,8 @@ export default function PendingInviteDetails() {
                   value={editFormData.phone_number}
                   onChange={(phone) => setEditFormData(prev => ({ ...prev, phone_number: phone }))}
                   onCountryChange={(countryCode) => setPhoneCountry(countryCode.toLowerCase())}
+                  disableDropdown={true}
+                  countryCodeEditable={false}
                   inputClass="form-control"
                   containerClass="phone-input-container"
                   inputStyle={{ width: '100%', borderRadius: '7px', border: '1px solid #E8F0FF' }}
@@ -703,6 +708,8 @@ export default function PendingInviteDetails() {
                   value={smsPhoneOverride}
                   onChange={(phone) => setSmsPhoneOverride(phone)}
                   onCountryChange={(countryCode) => setSmsPhoneCountry(countryCode.toLowerCase())}
+                  disableDropdown={true}
+                  countryCodeEditable={false}
                   inputClass="form-control"
                   containerClass="phone-input-container flex-1"
                   inputStyle={{ width: '100%', borderRadius: '7px', border: '1px solid #E8F0FF' }}
