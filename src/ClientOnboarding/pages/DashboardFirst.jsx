@@ -306,31 +306,39 @@ export default function DashboardFirst() {
             const buttonText = getButtonText(task);
             const buttonClass = getButtonClass(task);
             return (
-              <li
+              <div
                 key={idx}
-                className={`border-0 px-0 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer transition-colors ${status !== "complete" ? "hover:bg-gray-50" : ""
+                className={`border-0 px-0 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer transition-colors ${status !== "complete" ? "hover:bg-gray-50" : ""
                   } ${idx !== setupTasks.length - 1 ? "border-b border-gray-200" : ""}`}
                 onClick={() => handleTaskClick(task)}
               >
-                <div className="flex gap-3 flex-grow-1 w-full sm:w-auto">
+                {/* LEFT SIDE */}
+                <div className="flex gap-3 flex-1 w-full sm:w-auto">
                   <div className="flex-shrink-0">
                     {getTaskIcon(task.title)}
                   </div>
-                  <div className="flex-grow-1 min-w-0">
+
+                  <div className="min-w-0">
                     <h6 className="mb-1 text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro]">
                       {task.title}
                     </h6>
-                    <small className="text-[#3B4A66] text-xs sm:text-sm font-[BasisGrotesquePro]">{task.description}</small>
+                    <small className="text-[#3B4A66] text-xs sm:text-sm font-[BasisGrotesquePro]">
+                      {task.description}
+                    </small>
                   </div>
                 </div>
-                <button
-                  className={`${buttonClass} min-w-[100px] sm:min-w-[120px] font-medium font-[BasisGrotesquePro] flex-shrink-0`}
-                  onClick={(e) => handleButtonClick(e, task)}
-                  disabled={status === "complete"}
-                >
-                  {buttonText}
-                </button>
-              </li>
+
+                {/* RIGHT SIDE */}
+                <div className="flex justify-end w-full sm:w-auto">
+                  <button
+                    className={`${buttonClass} w-24 sm:w-32`}
+                    onClick={(e) => handleButtonClick(e, task)}
+                    disabled={status === "complete"}
+                  >
+                    {buttonText}
+                  </button>
+                </div>
+              </div>
             );
           })}
         </ul>

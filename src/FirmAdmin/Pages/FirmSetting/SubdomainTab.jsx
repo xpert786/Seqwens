@@ -335,117 +335,7 @@ export default function SubdomainTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subdomain Configuration */}
-        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-          <div className="mb-5">
-            <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-              Subdomain Configuration
-            </h3>
-            <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-              Configure your client portal subdomain
-            </p>
-          </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Subdomain
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  name="subdomain"
-                  value={formData.subdomain}
-                  onChange={handleInputChange}
-                  placeholder="acme"
-                  className="flex-1 rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
-                />
-                <button
-                  onClick={handleCheckAvailability}
-                  disabled={checkingAvailability || !formData.subdomain.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] !rounded-lg hover:bg-[#2BC5E0] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {checkingAvailability ? (
-                    <>
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Checking...</span>
-                    </>
-                  ) : (
-                    <span>Check</span>
-                  )}
-                </button>
-              </div>
-              {availabilityStatus && (
-                <p className={`text-xs mt-2 font-[BasisGrotesquePro] ${availabilityStatus.available ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                  {availabilityStatus.message}
-                </p>
-              )}
-              {portalUrl && (
-                <p className="text-xs text-[#4B5563] mt-2 font-[BasisGrotesquePro]">
-                  Portal URL: <span className="text-[#1F2A55] font-medium">{portalUrl}</span>
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="portal_enabled"
-                checked={formData.portal_enabled}
-                onChange={handleInputChange}
-                className="w-5 h-4 !rounded-lg !border border-[#3AD6F2] bg-white focus:outline-none"
-              />
-              <label className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro] cursor-pointer">
-                Enable Client Portal
-              </label>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Portal Title
-              </label>
-              <input
-                type="text"
-                name="portal_title"
-                value={formData.portal_title}
-                onChange={handleInputChange}
-                placeholder="Acme Tax Services Portal"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Portal Description
-              </label>
-              <textarea
-                rows={3}
-                name="portal_description"
-                value={formData.portal_description}
-                onChange={handleInputChange}
-                placeholder="Welcome to Acme Tax Services"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                Support Email
-              </label>
-              <input
-                type="email"
-                name="support_email"
-                value={formData.support_email}
-                onChange={handleInputChange}
-                placeholder="support@example.com"
-                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
-              />
-              <p className="text-xs text-[#4B5563] mt-1 font-regular font-[BasisGrotesquePro]">
-                Email address for client support inquiries
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Color Scheme */}
         <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
@@ -539,167 +429,149 @@ export default function SubdomainTab() {
             </button>
           </div>
         </div>
+        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
+              Portal Assets
+            </h3>
+            <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+              Upload logo and favicon for your portal
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Logo */}
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                Logo
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center">
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        console.warn('Failed to load logo preview from B2');
+                        // Keep showing broken image or could set to null
+                      }}
+                    />
+                  ) : (
+                    <svg width="80" height="80" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="0.5" y="0.5" width="69" height="69" rx="9.5" fill="#E8F0FF" />
+                      <rect x="0.5" y="0.5" width="69" height="69" rx="9.5" stroke="#E8F0FF" />
+                      <path d="M26.5 49.1693V23.6693C26.5 22.9178 26.7985 22.1972 27.3299 21.6658C27.8612 21.1344 28.5819 20.8359 29.3333 20.8359H40.6667C41.4181 20.8359 42.1388 21.1344 42.6701 21.6658C43.2015 22.1972 43.5 22.9178 43.5 23.6693V49.1693H26.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    onChange={handleLogoSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => logoInputRef.current?.click()}
+                    className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9.91683 4.66667L7.00016 1.75L4.0835 4.66667" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M7 1.75V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {logoFile ? logoFile.name : 'Upload Logo'}
+                  </button>
+                  <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">PNG, JPG up to 2MB</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Favicon */}
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                Favicon
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center">
+                  {faviconPreview ? (
+                    <img
+                      src={faviconPreview}
+                      alt="Favicon preview"
+                      className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        console.warn('Failed to load favicon preview from B2');
+                        // Keep showing broken image or could set to null
+                      }}
+                    />
+                  ) : (
+                    <svg width="50" height="50" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="0.5" y="0.5" width="29" height="29" rx="14.5" fill="#E8F0FF" />
+                      <rect x="0.5" y="0.5" width="29" height="29" rx="14.5" stroke="#E8F0FF" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={faviconInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/x-icon,image/vnd.microsoft.icon"
+                    onChange={handleFaviconSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => faviconInputRef.current?.click()}
+                    className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center gap-2"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9.91683 4.66667L7.00016 1.75L4.0835 4.66667" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M7 1.75V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {faviconFile ? faviconFile.name : 'Upload Favicon'}
+                  </button>
+                  <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">PNG, ICO up to 500KB</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Apply Button */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleApplyAssets}
+                disabled={savingAssets || (!logoFile && !faviconFile)}
+                className="mt-4 px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {savingAssets ? (
+                  <>
+                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Applying...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Apply</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+
 
       {/* Logo & Favicon */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
-          <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-            Portal Assets
-          </h3>
-          <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-            Upload logo and favicon for your portal
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Logo */}
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Logo
-            </label>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center">
-                {logoPreview ? (
-                  <img
-                    src={logoPreview}
-                    alt="Logo preview"
-                    className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
-                    crossOrigin="anonymous"
-                    onError={(e) => {
-                      console.warn('Failed to load logo preview from B2');
-                      // Keep showing broken image or could set to null
-                    }}
-                  />
-                ) : (
-                  <svg width="80" height="80" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="0.5" y="0.5" width="69" height="69" rx="9.5" fill="#E8F0FF" />
-                    <rect x="0.5" y="0.5" width="69" height="69" rx="9.5" stroke="#E8F0FF" />
-                    <path d="M26.5 49.1693V23.6693C26.5 22.9178 26.7985 22.1972 27.3299 21.6658C27.8612 21.1344 28.5819 20.8359 29.3333 20.8359H40.6667C41.4181 20.8359 42.1388 21.1344 42.6701 21.6658C43.2015 22.1972 43.5 22.9178 43.5 23.6693V49.1693H26.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg"
-                  onChange={handleLogoSelect}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => logoInputRef.current?.click()}
-                  className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] font-[BasisGrotesquePro] flex items-center gap-2"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M9.91683 4.66667L7.00016 1.75L4.0835 4.66667" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M7 1.75V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {logoFile ? logoFile.name : 'Upload Logo'}
-                </button>
-                <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">PNG, JPG up to 2MB</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Favicon */}
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Favicon
-            </label>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center">
-                {faviconPreview ? (
-                  <img
-                    src={faviconPreview}
-                    alt="Favicon preview"
-                    className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
-                    crossOrigin="anonymous"
-                    onError={(e) => {
-                      console.warn('Failed to load favicon preview from B2');
-                      // Keep showing broken image or could set to null
-                    }}
-                  />
-                ) : (
-                  <svg width="50" height="50" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="0.5" y="0.5" width="29" height="29" rx="14.5" fill="#E8F0FF" />
-                    <rect x="0.5" y="0.5" width="29" height="29" rx="14.5" stroke="#E8F0FF" />
-                  </svg>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <input
-                  ref={faviconInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/x-icon,image/vnd.microsoft.icon"
-                  onChange={handleFaviconSelect}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => faviconInputRef.current?.click()}
-                  className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center gap-2"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M9.91683 4.66667L7.00016 1.75L4.0835 4.66667" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M7 1.75V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {faviconFile ? faviconFile.name : 'Upload Favicon'}
-                </button>
-                <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">PNG, ICO up to 500KB</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Apply Button */}
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleApplyAssets}
-              disabled={savingAssets || (!logoFile && !faviconFile)}
-              className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {savingAssets ? (
-                <>
-                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Applying...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Apply</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving || !formData.subdomain.trim()}
-          className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {saving ? (
-            <>
-              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Saving...</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Save Changes</span>
-            </>
-          )}
-        </button>
-      </div>
+
     </div>
   );
 }
-

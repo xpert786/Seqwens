@@ -118,13 +118,13 @@ export default function Security() {
 
         try {
             const response = await userAPI.disable2FA(disablePassword);
-            
+
             if (response.success) {
                 setTwoFactor(false);
                 setTwoFactorEnabledAt(null);
                 setShowDisable2FA(false);
                 setDisablePassword('');
-                
+
                 toast.success("2FA disabled successfully", {
                     position: "top-right",
                     autoClose: 3000,
@@ -330,7 +330,7 @@ export default function Security() {
                             <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro", marginBottom: "16px" }}>
                                 For security reasons, please enter your current password to disable 2FA.
                             </p>
-                            
+
                             <div className="mb-3">
                                 <label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>
                                     Current Password

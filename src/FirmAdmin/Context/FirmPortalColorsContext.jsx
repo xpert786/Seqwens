@@ -35,12 +35,13 @@ export const FirmPortalColorsProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      // Check if user is authenticated as firm admin
+      // Check if user is authenticated
       const storage = getStorage();
       const userType = storage?.getItem('userType');
+      const isLoggedIn = storage?.getItem('isLoggedIn') === 'true';
 
-      if (userType !== 'firm') {
-        // Not a firm admin, use default colors
+      if (!isLoggedIn) {
+        // Not logged in, use default colors
         setLoading(false);
         return;
       }
@@ -91,7 +92,6 @@ export const FirmPortalColorsProvider = ({ children }) => {
   };
 
   // Apply logo and favicon to document head
-  // Note: Logo is always Seqwens logo and should not be replaced
   const applyLogoAndFavicon = (logoUrl, faviconUrl) => {
     // Update favicon
     let faviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
@@ -147,11 +147,11 @@ export const FirmPortalColorsProvider = ({ children }) => {
     // Also check periodically in case colors are updated in another tab
     const interval = setInterval(() => {
       const storage = getStorage();
-      const userType = storage?.getItem('userType');
-      if (userType === 'admin' || userType === 'firm') {
+      const isLoggedIn = storage?.getItem('isLoggedIn') === 'true';
+      if (isLoggedIn) {
         fetchPortalColors();
       }
-    }, 30000); // Check every 30 seconds
+    }, 60000); // Check every 60 seconds
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);

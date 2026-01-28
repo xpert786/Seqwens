@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
+import { FiInfo, FiX } from "react-icons/fi";
 
 export default function IntegrationsTab() {
   const { advancedReportingEnabled, updateAdvancedReporting } = useFirmSettings();
@@ -13,13 +14,14 @@ export default function IntegrationsTab() {
   });
 
   const [dataManagement, setDataManagement] = useState({
-    data_retention_years: 7,
-    backup_frequency: 'Daily'
+    data_retention_years: 12,
+    backup_frequency: 'Never'
   });
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   // Fetch integrations information on mount
   useEffect(() => {
@@ -27,9 +29,9 @@ export default function IntegrationsTab() {
       try {
         setLoading(true);
         setError('');
-        
+
         const response = await firmAdminSettingsAPI.getIntegrationsInfo();
-        
+
         if (response.success && response.data) {
           const advancedValue = response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true;
           setPreferences({
@@ -40,8 +42,8 @@ export default function IntegrationsTab() {
           });
           updateAdvancedReporting(advancedValue);
           setDataManagement({
-            data_retention_years: response.data.data_retention_years || 7,
-            backup_frequency: response.data.backup_frequency || 'Daily'
+            data_retention_years: response.data.data_retention_years || 12,
+            backup_frequency: response.data.backup_frequency || 'Never'
           });
         } else {
           throw new Error(response.message || 'Failed to load integrations information');
@@ -79,6 +81,14 @@ export default function IntegrationsTab() {
     }));
   };
 
+  const handleExport = () => {
+    toast.info('Data export requested. This may take a few minutes depending on your firm size.');
+  };
+
+  const handleImport = () => {
+    toast.info('Please select a valid data export file to import.');
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -91,7 +101,7 @@ export default function IntegrationsTab() {
       };
 
       const response = await firmAdminSettingsAPI.updateIntegrationsInfo(integrationsData, 'POST');
-      
+
       if (response.success) {
         toast.success('Integrations settings updated successfully');
         // Update with response data if needed
@@ -105,8 +115,8 @@ export default function IntegrationsTab() {
           });
           updateAdvancedReporting(advancedValue);
           setDataManagement({
-            data_retention_years: response.data.data_retention_years || 7,
-            backup_frequency: response.data.backup_frequency || 'Daily'
+            data_retention_years: response.data.data_retention_years || 12,
+            backup_frequency: response.data.backup_frequency || 'Never'
           });
         }
       } else {
@@ -141,191 +151,204 @@ export default function IntegrationsTab() {
         </div>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* System Preferences */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
-          <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-            System Preferences
-          </h5>
-          <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-            Configure system-wide settings
-          </p>
+        {/* System Preferences */}
+        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
+          <div className="mb-5">
+            <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
+              System Preferences
+            </h5>
+            <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+              Configure system-wide settings
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                  Client Portal Access
+                </h5>
+                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                  Allow clients to access their portal
+                </p>
+              </div>
+              <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={preferences.client_portal_access}
+                  onChange={() => togglePreference('client_portal_access')}
+                />
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.client_portal_access ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                  }`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.client_portal_access ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                  Email Notifications
+                </h5>
+                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                  Send automated email notifications
+                </p>
+              </div>
+              <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={preferences.email_notifications}
+                  onChange={() => togglePreference('email_notifications')}
+                />
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.email_notifications ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                  }`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.email_notifications ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                  Workflow Automation
+                </h5>
+                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                  Enable automated workflows
+                </p>
+              </div>
+              <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={preferences.workflow_automation}
+                  onChange={() => togglePreference('workflow_automation')}
+                />
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.workflow_automation ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                  }`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.workflow_automation ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                  Advanced Reporting
+                </h5>
+                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                  Generate detailed reports
+                </p>
+              </div>
+              <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={preferences.advanced_reporting}
+                  onChange={() => togglePreference('advanced_reporting')}
+                />
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.advanced_reporting ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                  }`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.advanced_reporting ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
-                Client Portal Access
-              </h5>
-              <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
-                Allow clients to access their portal
-              </p>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
-              <input
-                type="checkbox"
-                className="peer sr-only"
-                checked={preferences.client_portal_access}
-                onChange={() => togglePreference('client_portal_access')}
-              />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.client_portal_access ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.client_portal_access ? 'translate-x-5' : 'translate-x-0'
-                  }`} />
-              </div>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
-                Email Notifications
-              </h5>
-              <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
-                Send automated email notifications
-              </p>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
-              <input
-                type="checkbox"
-                className="peer sr-only"
-                checked={preferences.email_notifications}
-                onChange={() => togglePreference('email_notifications')}
-              />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.email_notifications ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.email_notifications ? 'translate-x-5' : 'translate-x-0'
-                  }`} />
-              </div>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
-                Workflow Automation
-              </h5>
-              <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
-                Enable automated workflows
-              </p>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
-              <input
-                type="checkbox"
-                className="peer sr-only"
-                checked={preferences.workflow_automation}
-                onChange={() => togglePreference('workflow_automation')}
-              />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.workflow_automation ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.workflow_automation ? 'translate-x-5' : 'translate-x-0'
-                  }`} />
-              </div>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
-                Advanced Reporting
-              </h5>
-              <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
-                Generate detailed reports
-              </p>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
-              <input
-                type="checkbox"
-                className="peer sr-only"
-                checked={preferences.advanced_reporting}
-                onChange={() => togglePreference('advanced_reporting')}
-              />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.advanced_reporting ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.advanced_reporting ? 'translate-x-5' : 'translate-x-0'
-                  }`} />
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Data Management */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
-          <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-            Data Management
-          </h5>
-          <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-            Configure data retention and backup settings
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Data Retention (years)
-            </label>
-            <select 
-              value={dataManagement.data_retention_years}
-              onChange={(e) => handleDataManagementChange('data_retention_years', parseInt(e.target.value, 10))}
-              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
-            >
-              {Array.from({ length: 100 }, (_, i) => {
-                const year = i + 1;
-                return (
-                  <option key={year} value={year}>{year} {year === 1 ? 'year' : 'years'}</option>
-                );
-              })}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Backup Frequency
-            </label>
-            <select 
-              value={dataManagement.backup_frequency}
-              onChange={(e) => handleDataManagementChange('backup_frequency', e.target.value)}
-              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
-            >
-              <option value="Daily">Daily</option>
-              <option value="Weekly">Weekly</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Quarterly">Quarterly</option>
-              <option value="Yearly">Yearly</option>
-              <option value="Never">Never</option>
-            </select>
-          </div>
-
-          {!advancedReportingEnabled && (
-            <div className="space-y-3 pt-2">
-              <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-
-                Download Data Export
+        {/* Data Management */}
+        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
+          <div className="mb-5">
+            <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1 flex items-center gap-2">
+              Data Management
+              <button
+                onClick={() => setShowInfoModal(true)}
+                className="text-[#3AD6F2] hover:text-[#2bb8d1] transition-colors focus:outline-none"
+                title="Learn about Data Retention"
+              >
+                <FiInfo size={16} />
               </button>
-              <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2 mt-3">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M12.75 6L9 2.25L5.25 6" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M9 2.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+            </h5>
+            <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+              Configure data retention and backup settings
+            </p>
+          </div>
 
-                Import Data
-              </button>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                Data Retention (years)
+              </label>
+              <select
+                value={dataManagement.data_retention_years}
+                onChange={(e) => handleDataManagementChange('data_retention_years', parseInt(e.target.value, 10))}
+                className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+              >
+                {Array.from({ length: 100 }, (_, i) => {
+                  const year = i + 1;
+                  return (
+                    <option key={year} value={year}>{year} {year === 1 ? 'year' : 'years'}</option>
+                  );
+                })}
+              </select>
             </div>
-          )}
+
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                Backup Frequency
+              </label>
+              <select
+                value={dataManagement.backup_frequency}
+                onChange={(e) => handleDataManagementChange('backup_frequency', e.target.value)}
+                className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+              >
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Quarterly">Quarterly</option>
+                <option value="Yearly">Yearly</option>
+                <option value="Never">Never</option>
+              </select>
+            </div>
+
+            {!advancedReportingEnabled && (
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={handleExport}
+                  className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2"
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+
+                  Download Data Export
+                </button>
+                <button
+                  onClick={handleImport}
+                  className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2 mt-3"
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12.75 6L9 2.25L5.25 6" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M9 2.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+
+                  Import Data
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      </div>
-      
+
       {/* Save Button */}
       <div className="flex justify-end">
-        <button 
+        <button
           onClick={handleSave}
           disabled={saving}
           className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -345,6 +368,99 @@ export default function IntegrationsTab() {
           )}
         </button>
       </div>
+
+
+      {/* Data Retention Info Modal */}
+      {showInfoModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E8F0FF]">
+            <div className="sticky top-0 bg-white border-b border-[#E8F0FF] p-6 flex justify-between items-center z-10">
+              <h3 className="text-xl font-semibold text-[#1F2A55] font-[BasisGrotesquePro]">
+                Data Retention Policy
+              </h3>
+              <button
+                onClick={() => setShowInfoModal(false)}
+                className="text-[#7B8AB2] hover:text-[#1F2A55] transition-colors"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="bg-[#EFF5FF] p-4 rounded-lg border border-[#3AD6F2]/30">
+                <p className="text-[#0369A1] font-medium font-[BasisGrotesquePro]">
+                  Data retention in this system does not mean "silent deletion."
+                  Especially in tax and compliance-driven environments, we ensure data integrity and accessibility while managing lifecycle.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-semibold text-[#1F2A55] mb-3 font-[BasisGrotesquePro]">
+                  Data Lifecycle Stages
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center font-bold flex-shrink-0">1</div>
+                    <div>
+                      <h5 className="font-semibold text-[#1F2A55] mb-1">Active Data</h5>
+                      <p className="text-sm text-[#4B5563]">Fully accessible, Indexed, Searchable, Editable. This is your day-to-day working data.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center font-bold flex-shrink-0">2</div>
+                    <div>
+                      <h5 className="font-semibold text-[#1F2A55] mb-1">Archived Data</h5>
+                      <p className="text-sm text-[#4B5563]">Read-only, Still retrievable, Moved to lower-cost storage, Not included in default searches to improve performance.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-[#FEE2E2] text-[#DC2626] flex items-center justify-center font-bold flex-shrink-0">3</div>
+                    <div>
+                      <h5 className="font-semibold text-[#1F2A55] mb-1">Permanently Deleted Data</h5>
+                      <p className="text-sm text-[#4B5563]">Only after explicit confirmation, Logged and auditable. Typically irreversible.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-[#E8F0FF] pt-4">
+                <h4 className="text-lg font-semibold text-[#1F2A55] mb-2 font-[BasisGrotesquePro]">
+                  Storage Impact
+                </h4>
+                <p className="text-sm text-[#4B5563] mb-3">
+                  Data is <strong>NOT</strong> immediately deleted. Instead:
+                </p>
+                <ul className="list-disc pl-5 text-sm text-[#4B5563] space-y-1">
+                  <li>Files may be compressed and moved to storage tiers</li>
+                  <li>Detached from real-time indexing</li>
+                  <li>Flagged as "archived"</li>
+                </ul>
+                <p className="text-sm text-[#4B5563] mt-3 italic">
+                  This reduces server load, keeps compliance intact, and preserves recovery options.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="text-md font-semibold text-[#1F2A55] mb-2 font-[BasisGrotesquePro]">
+                  Example Scenario
+                </h4>
+                <p className="text-sm text-[#4B5563]">
+                  If you select <strong>4 years</strong>: Records older than 4 years are automatically archived, removed from active dashboards, and moved to secure storage. Metadata remains so the system knows the data exists.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 rounded-b-2xl flex justify-end">
+              <button
+                onClick={() => setShowInfoModal(false)}
+                className="px-6 py-2 bg-white border border-[#E8F0FF] rounded-lg text-[#3B4A66] hover:bg-gray-50 font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

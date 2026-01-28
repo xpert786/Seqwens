@@ -150,13 +150,13 @@ export default function AdvancedTab() {
               <div>
                 <label className="block text-sm font-medium text-[#3B4A66] mb-2">Enter Your Password <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <input 
-                    type={showDeletePassword ? "text" : "password"} 
-                    value={deletePassword} 
-                    onChange={(e) => setDeletePassword(e.target.value)} 
-                    placeholder="Enter your password to confirm" 
-                    className="w-full px-3 py-2 pr-10 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444]" 
-                    disabled={deleting} 
+                  <input
+                    type={showDeletePassword ? "text" : "password"}
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="Enter your password to confirm"
+                    className="w-full px-3 py-2 pr-10 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444]"
+                    disabled={deleting}
                   />
                   <button
                     type="button"

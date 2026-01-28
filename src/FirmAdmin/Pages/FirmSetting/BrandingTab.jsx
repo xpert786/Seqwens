@@ -15,7 +15,7 @@ export default function BrandingTab() {
     branding_login_url: '',
     favicon_url: ''
   });
-  
+
   const [logoPreview, setLogoPreview] = useState(null);
   const [faviconPreview, setFaviconPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
@@ -25,7 +25,7 @@ export default function BrandingTab() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showPreviewPassword, setShowPreviewPassword] = useState(false);
-  
+
   const logoInputRef = useRef(null);
   const faviconInputRef = useRef(null);
 
@@ -35,9 +35,9 @@ export default function BrandingTab() {
       try {
         setLoading(true);
         setError('');
-        
+
         const response = await firmAdminSettingsAPI.getBrandingInfo();
-        
+
         if (response.success && response.data) {
           setFormData({
             primary_color: response.data.primary_color || '#1E40AF',
@@ -49,7 +49,7 @@ export default function BrandingTab() {
             branding_login_url: response.data.branding_login_url || '',
             favicon_url: response.data.favicon_url || ''
           });
-          
+
           // Set logo and favicon previews if URLs exist
           if (response.data.logo_url) {
             setLogoPreview(getMediaUrl(response.data.logo_url));
@@ -133,7 +133,7 @@ export default function BrandingTab() {
       if (faviconFile) files.favicon = faviconFile;
 
       const response = await firmAdminSettingsAPI.updateBrandingInfo(brandingData, files);
-      
+
       if (response.success && response.data) {
         toast.success('Branding information updated successfully');
         // Update previews if new URLs are returned
@@ -178,7 +178,7 @@ export default function BrandingTab() {
       };
 
       const response = await firmAdminSettingsAPI.updateBrandingInfo(defaultData);
-      
+
       if (response.success) {
         setFormData({
           ...formData,
@@ -236,9 +236,9 @@ export default function BrandingTab() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center">
                   {logoPreview ? (
-                    <img 
-                      src={logoPreview} 
-                      alt="Logo preview" 
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
                       className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
                     />
                   ) : (
@@ -263,7 +263,7 @@ export default function BrandingTab() {
                     onChange={handleLogoSelect}
                     className="hidden"
                   />
-                  <button 
+                  <button
                     onClick={() => logoInputRef.current?.click()}
                     className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] font-[BasisGrotesquePro] flex items-center gap-2"
                   >
@@ -287,9 +287,9 @@ export default function BrandingTab() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center">
                   {faviconPreview ? (
-                    <img 
-                      src={faviconPreview} 
-                      alt="Favicon preview" 
+                    <img
+                      src={faviconPreview}
+                      alt="Favicon preview"
                       className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
                     />
                   ) : (
@@ -315,7 +315,7 @@ export default function BrandingTab() {
                     onChange={handleFaviconSelect}
                     className="hidden"
                   />
-                  <button 
+                  <button
                     onClick={() => faviconInputRef.current?.click()}
                     className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center gap-2"
                   >
@@ -441,7 +441,7 @@ export default function BrandingTab() {
               <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                 Font Family
               </label>
-              <select 
+              <select
                 name="font_family"
                 value={formData.font_family}
                 onChange={handleInputChange}
@@ -477,9 +477,9 @@ export default function BrandingTab() {
             {/* Logo Preview */}
             <div className="flex justify-center mb-6">
               {logoPreview ? (
-                <img 
-                  src={logoPreview} 
-                  alt="Logo preview" 
+                <img
+                  src={logoPreview}
+                  alt="Logo preview"
                   className="max-h-20 object-contain"
                 />
               ) : (
@@ -526,7 +526,7 @@ export default function BrandingTab() {
                 <option>Email</option>
               </select>
               <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <input
@@ -545,7 +545,7 @@ export default function BrandingTab() {
                 <option>Password</option>
               </select>
               <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <input
@@ -589,12 +589,12 @@ export default function BrandingTab() {
           </h5>
 
           <label className="flex items-center gap-3 cursor-pointer">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               name="white_label_enabled"
               checked={formData.white_label_enabled}
               onChange={handleInputChange}
-              className="w-5 h-4 !rounded-lg !border border-[#3AD6F2] bg-white focus:outline-none" 
+              className="w-5 h-4 !rounded-lg !border border-[#3AD6F2] bg-white focus:outline-none"
             />
             <span className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro] ml-3">
               Enable White-Label for multi-office use
@@ -605,14 +605,14 @@ export default function BrandingTab() {
 
       {/* Action Buttons */}
       <div className="flex justify-start gap-3">
-        <button 
+        <button
           onClick={handleResetBranding}
           disabled={saving}
           className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Reset Branding
         </button>
-        <button 
+        <button
           onClick={handleSave}
           disabled={saving}
           className="px-4 py-2 text-sm font-medium text-white !bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

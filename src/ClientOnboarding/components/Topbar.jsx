@@ -10,6 +10,7 @@ import { profileAPI, userAPI, clientNotificationAPI } from "../utils/apiUtils";
 import { clearUserData, getUserData } from "../utils/userUtils";
 import { useNotificationWebSocket } from "../utils/useNotificationWebSocket";
 import { getApiBaseUrl } from "../utils/corsConfig";
+import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 import "../styles/Topbar.css";
 
 const CLIENT_AVATAR_KEY = "clientProfileImageUrl";
@@ -18,6 +19,7 @@ export default function Topbar({
     onToggleSidebar = () => { },
     isSidebarOpen = true,
 }) {
+    const { logoUrl } = useFirmPortalColors();
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -360,7 +362,7 @@ export default function Topbar({
 
                     <div className="d-flex align-items-center gap-3 flex-grow-1">
                         <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-                            <img src={logo} alt="Logo" className="topbar-logo" />
+                            <img src={logoUrl || logo} alt="Logo" className="topbar-logo" />
                         </Link>
                         <button
                             type="button"

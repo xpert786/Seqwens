@@ -8,6 +8,7 @@ import NotificationPanel from "../../ClientOnboarding/components/Notifications/N
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
+import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 import "../styles/topbar.css";
 
 // Simple Error Boundary for AccountSwitcher
@@ -38,6 +39,7 @@ export default function Topbar({
   onToggleSidebar = () => { },
   isSidebarOpen = true,
 }) {
+  const { logoUrl } = useFirmPortalColors();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -309,7 +311,7 @@ export default function Topbar({
         <div className="container-fluid d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center gap-3 flex-grow-1">
             <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-              <img src={logo} alt="Logo" className="topbar-logo" />
+              <img src={logoUrl || logo} alt="Logo" className="topbar-logo" />
             </Link>
             <button
               type="button"
