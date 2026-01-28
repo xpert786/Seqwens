@@ -141,7 +141,7 @@ export default function GeneralTab() {
               Firm Information
             </h3>
             <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-              Basic information about your firm
+              Manage your firm's identity and primary contact details
             </p>
           </div>
 
@@ -157,13 +157,17 @@ export default function GeneralTab() {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
+                  placeholder="e.g. Victor Salmon Tax Services"
                   className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55]  focus:outline-none  font-[BasisGrotesquePro]"
                 />
+                <p className="text-xs text-[#7B8AB2] mt-1 font-[BasisGrotesquePro]">
+                  This is the name shown to clients and used throughout the platform. You can update this at any time.
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                  Legal Name
+                  Contact Name
                 </label>
                 <input
                   type="text"
@@ -173,6 +177,9 @@ export default function GeneralTab() {
                   disabled
                   className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro] bg-gray-50 cursor-not-allowed"
                 />
+                <p className="text-xs text-[#7B8AB2] mt-1 font-[BasisGrotesquePro]">
+                  This is the primary contact (account owner) associated with the firm. To update this, go to Account Settings.
+                </p>
               </div>
             </div>
 

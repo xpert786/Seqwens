@@ -3,6 +3,8 @@ import { Outlet } from "react-router-dom";
 import FirmHeader from './FirmHeader';
 import FirmSidebar from './FirmSidebar';
 import MaintenanceMode from '../../ClientOnboarding/components/MaintenanceMode';
+import { SubscriptionStatusProvider } from '../Context/SubscriptionStatusContext';
+import SubscriptionStatusBanner from './SubscriptionStatusBanner';
 import '../styles/FirmPortalColors.css';
 
 export default function FirmDashboardLayout() {
@@ -332,20 +334,23 @@ export default function FirmDashboardLayout() {
   };
 
   return (
-    <div className="firm-dashboard-layout">
-      <MaintenanceMode />
-      <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-      <FirmSidebar isSidebarOpen={isSidebarOpen} />
-      <main
-        className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
-        style={{
-          marginLeft: isSidebarOpen ? sidebarWidth : '0',
-          width: isSidebarOpen ? `calc(100% - ${sidebarWidth})` : '100%',
-          backgroundColor: 'var(--firm-secondary-color, #F3F7FF)'
-        }}
-      >
-        <Outlet />
-      </main>
-    </div>
+    <SubscriptionStatusProvider>
+      <div className="firm-dashboard-layout">
+        <MaintenanceMode />
+        <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+        <SubscriptionStatusBanner />
+        <FirmSidebar isSidebarOpen={isSidebarOpen} />
+        <main
+          className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
+          style={{
+            marginLeft: isSidebarOpen ? sidebarWidth : '0',
+            width: isSidebarOpen ? `calc(100% - ${sidebarWidth})` : '100%',
+            backgroundColor: 'var(--firm-secondary-color, #F3F7FF)'
+          }}
+        >
+          <Outlet />
+        </main>
+      </div>
+    </SubscriptionStatusProvider>
   );
 }

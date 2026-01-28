@@ -6957,6 +6957,21 @@ export const firmAdminSettingsAPI = {
     return await apiRequest('/firm/services/', method, servicesData);
   },
 
+  // Add individual custom service
+  addService: async (serviceData) => {
+    return await apiRequest('/firm/services/pricing/create/', 'POST', serviceData);
+  },
+
+  // Update individual custom service
+  updateService: async (serviceId, serviceData) => {
+    return await apiRequest(`/firm/services/pricing/${serviceId}/`, 'PATCH', serviceData);
+  },
+
+  // Delete individual custom service
+  deleteService: async (serviceId) => {
+    return await apiRequest(`/firm/services/pricing/${serviceId}/delete/`, 'DELETE');
+  },
+
   // Get firm integrations information
   getIntegrationsInfo: async () => {
     return await apiRequest('/user/firm-admin/settings/integrations/', 'GET');
@@ -7343,6 +7358,14 @@ export const firmAdminSubscriptionAPI = {
   // Update auto-renewal settings
   updateAutoRenewalSettings: async (settings) => {
     return await apiRequest('/user/firm-admin/settings/auto-renewal/', 'PATCH', settings);
+  },
+  // Get subscription status (trial, active, pending payment, etc.)
+  getSubscriptionStatus: async () => {
+    return await apiRequest('/user/firm-admin/subscription/status/', 'GET');
+  },
+  // Get subscription overview
+  getSubscriptionOverview: async () => {
+    return await apiRequest('/user/firm-admin/subscription/overview/', 'GET');
   },
 };
 
