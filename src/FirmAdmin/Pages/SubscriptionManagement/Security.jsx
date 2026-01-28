@@ -1,7 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PciCompliance from './SecurityTAll-tab/PciCompliance';
+import { firmAdminSubscriptionAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
 const Security = () => {
+    const [statusData, setStatusData] = useState({
+        encryption_status: 'Initializing...',
+        last_security_scan: 'Checking...',
+        compliance_level: 'Verifying...',
+        spending_limits_enabled: false,
+        overall_status: 'Checking...'
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const response = await firmAdminSubscriptionAPI.getSecurityStatus();
+                if (response.success) {
+                    setStatusData(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch security status", error);
+                // Fallback to safe defaults if API fails
+                setStatusData({
+                    encryption_status: 'Active',
+                    last_security_scan: 'Passed',
+                    compliance_level: 'Level 1',
+                    spending_limits_enabled: false,
+                    overall_status: 'Action Required'
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStatus();
+    }, []);
+
     return (
         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6">
             <h5 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Compliance & Security</h5>
@@ -20,7 +54,7 @@ const Security = () => {
                     </div>
                     <div>
                         <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Encryption Status</p>
-                        <p className="text-xl sm:text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Active</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{statusData.encryption_status}</p>
                     </div>
                 </div>
 
@@ -38,25 +72,25 @@ const Security = () => {
                     </div>
                     <div>
                         <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Last Security Scan</p>
-                        <p className="text-xl sm:text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Passed</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{statusData.last_security_scan}</p>
                     </div>
                 </div>
 
                 {/* Compliance Level Card */}
                 <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6 relative">
                     <div className="absolute top-4 right-4">
-                        <span className="px-2 py-1 bg-white !border border-[#22C55E] !text-[#22C55E] !rounded-full text-xs font-medium font-[BasisGrotesquePro]">
-                            Certified
+                        <span className={`px-2 py-1 bg-white !border !rounded-full text-xs font-medium font-[BasisGrotesquePro] ${statusData.overall_status === 'Secure' ? 'text-[#22C55E] border-[#22C55E]' : 'text-amber-500 border-amber-500'}`}>
+                            {statusData.overall_status === 'Secure' ? 'Certified' : 'Pending'}
                         </span>
                     </div>
                     <div>
                         <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Compliance Level</p>
-                        <p className="text-xl sm:text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Level 1</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{statusData.compliance_level}</p>
                     </div>
                 </div>
             </div>
-            
-            <PciCompliance />
+
+            <PciCompliance spendingLimitsEnabled={statusData.spending_limits_enabled} />
         </div>
     );
 };

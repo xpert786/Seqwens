@@ -1106,17 +1106,17 @@ export default function FirmManagement() {
                                         </div>
                                     </div>
 
-                                    {/* System Health */}
+                                    {/* System Metrics */}
                                     <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-xl p-5">
-                                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Health</h4>
+                                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Metrics</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">Overall Health Status</p>
-                                                <p className="text-xl font-semibold text-gray-900 dark:text-white mt-1">
-                                                    {selectedFirm.system_health?.overall_health?.status || 'N/A'}
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Active Users</p>
+                                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                                    {selectedFirm.system_health?.overall_health?.score ?? '—'}
                                                 </p>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                    Score: {selectedFirm.system_health?.overall_health?.score ?? '—'} / 100
+                                                <p className="text-xs text-gray-400 mt-1 italic">
+                                                    Includes staff and clients
                                                 </p>
                                             </div>
                                             <div>

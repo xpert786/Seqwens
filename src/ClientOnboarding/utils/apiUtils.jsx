@@ -6616,6 +6616,12 @@ export const clientInviteAPI = {
       payload.selected_categories = selectedCategories;
     }
 
+    // If user is logged in (has access token), use authenticated request to prove identity
+    // This allows existing users to accept invites without password
+    if (getAccessToken()) {
+      return await apiRequest('/user/client-invite/accept/', 'POST', payload);
+    }
+
     return await publicApiRequest('/user/client-invite/accept/', 'POST', payload);
   }
 };
@@ -7358,6 +7364,10 @@ export const firmAdminSubscriptionAPI = {
   // Update auto-renewal settings
   updateAutoRenewalSettings: async (settings) => {
     return await apiRequest('/user/firm-admin/settings/auto-renewal/', 'PATCH', settings);
+  },
+  // Get security status
+  getSecurityStatus: async () => {
+    return await apiRequest('/user/firm-admin/settings/security/', 'GET');
   },
   // Get subscription status (trial, active, pending payment, etc.)
   getSubscriptionStatus: async () => {

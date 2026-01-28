@@ -168,7 +168,8 @@ export default function FirmDetails() {
 
     const systemHealth = useMemo(() => {
         return {
-            overall: (firmDetails?.system_health?.score ?? 0) / 100, // Convert percentage to decimal
+            totalUsers: firmDetails?.system_health?.score ?? 0,
+            maxUsers: firmDetails?.max_users ?? 0,
             storageUsed: firmDetails?.storage_usage?.used_gb ?? 0,
             storageCapacity: firmDetails?.storage_usage?.limit_gb ?? 0,
             lastActive: firmDetails?.last_active ?? 'Not available'
@@ -603,7 +604,7 @@ export default function FirmDetails() {
                                                 firmDetails?.subscription_plan && {
                                                     label: 'Plan:',
                                                     value: firmDetails.subscription_plan.charAt(0).toUpperCase() +
-                                                    firmDetails.subscription_plan.slice(1)
+                                                        firmDetails.subscription_plan.slice(1)
                                                 },
                                                 firmJoinDate && { label: 'Join Date:', value: formatDate(firmJoinDate) }
                                             ].filter(Boolean).map(({ label, value }) => (
@@ -625,15 +626,25 @@ export default function FirmDetails() {
                                         <div className="mt-6 space-y-6">
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-xs font-medium text-[#475569] dark:text-gray-400">
-                                                    <span>Overall Health</span>
-                                                    <span>{Math.round(systemHealth.overall * 100)}%</span>
+                                                    <span>Total Users</span>
+                                                    <span>
+                                                        {systemHealth.totalUsers}
+                                                        {systemHealth.maxUsers ? ` / ${systemHealth.maxUsers}` : ''}
+                                                    </span>
                                                 </div>
-                                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF] dark:bg-gray-700">
-                                                    <div
-                                                        className="h-full rounded-full bg-[#3B4A66]"
-                                                        style={{ width: `${Math.min(100, Math.round(systemHealth.overall * 100))}%` }}
-                                                    />
-                                                </div>
+                                                {systemHealth.maxUsers > 0 && (
+                                                    <div className="h-2.5 w-full rounded-full bg-[#EEF4FF] dark:bg-gray-700">
+                                                        <div
+                                                            className="h-full rounded-full bg-[#3B4A66]"
+                                                            style={{
+                                                                width: `${Math.min(
+                                                                    100,
+                                                                    Math.round((systemHealth.totalUsers / systemHealth.maxUsers) * 100)
+                                                                )}%`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-xs font-medium text-[#475569] dark:text-gray-400">
@@ -972,8 +983,8 @@ const BillingOverviewTab = ({
     const history = Array.isArray(overview?.subscription_history) && overview.subscription_history.length > 0
         ? overview.subscription_history
         : Array.isArray(firmDetails?.subscription_history) && firmDetails.subscription_history.length > 0
-        ? firmDetails.subscription_history
-        : fallbackHistory;
+            ? firmDetails.subscription_history
+            : fallbackHistory;
 
     const metrics = overview?.metrics || {};
     const historyCount = overview?.history_count ?? history.length ?? 0;

@@ -48,7 +48,7 @@ export default function AcceptInvite() {
             try {
                 setIsLoading(true);
                 setErrors({});
-                
+
                 // Try client invite validation first (since client invites are more common for taxpayers)
                 console.log('Validating client invitation with token:', token);
                 let response;
@@ -70,7 +70,7 @@ export default function AcceptInvite() {
 
                 if (response.success && response.is_valid && response.data) {
                     setInvitationData(response.data);
-                    
+
                     // Check for existing grant (client invites only)
                     if (isClient && response.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.existing_grant);
@@ -82,7 +82,7 @@ export default function AcceptInvite() {
                     const validationErrors = response.validation_errors || [];
 
                     // Check if this is an existing email scenario
-                    const isExistingEmail = validationErrors.some(err => 
+                    const isExistingEmail = validationErrors.some(err =>
                         err.toLowerCase().includes('account already exists') ||
                         err.toLowerCase().includes('please sign in')
                     ) || errorMessage.toLowerCase().includes('account already exists');
@@ -140,28 +140,29 @@ export default function AcceptInvite() {
         // Clear previous errors
         const newErrors = {};
 
-        // Validate password
-        if (!password) {
-            newErrors.password = "Password is required.";
-        } else {
-            const passwordValidation = validatePassword(password);
-            if (!passwordValidation.isValid) {
-                const requirements = [];
-                if (!passwordValidation.minLength) requirements.push("at least 8 characters");
-                if (!passwordValidation.hasNumber) requirements.push("a number");
-                if (!passwordValidation.hasUpperLower) requirements.push("uppercase and lowercase letters");
-                if (!passwordValidation.hasSpecialChar) requirements.push("a special character");
-                newErrors.password = `Password must contain ${requirements.join(", ")}.`;
+        // Validate password only if user creates a new account
+        if (!invitationData?.user_exists) {
+            if (!password) {
+                newErrors.password = "Password is required.";
+            } else {
+                const passwordValidation = validatePassword(password);
+                if (!passwordValidation.isValid) {
+                    const requirements = [];
+                    if (!passwordValidation.minLength) requirements.push("at least 8 characters");
+                    if (!passwordValidation.hasNumber) requirements.push("a number");
+                    if (!passwordValidation.hasUpperLower) requirements.push("uppercase and lowercase letters");
+                    if (!passwordValidation.hasSpecialChar) requirements.push("a special character");
+                    newErrors.password = `Password must contain ${requirements.join(", ")}.`;
+                }
+            }
+
+            // Validate password confirmation
+            if (!passwordConfirm) {
+                newErrors.passwordConfirm = "Please confirm your password.";
+            } else if (password !== passwordConfirm) {
+                newErrors.passwordConfirm = "Passwords do not match.";
             }
         }
-
-        // Validate password confirmation
-        if (!passwordConfirm) {
-            newErrors.passwordConfirm = "Please confirm your password.";
-        } else if (password !== passwordConfirm) {
-            newErrors.passwordConfirm = "Passwords do not match.";
-        }
-
 
         // If there are validation errors, set them and return
         if (Object.keys(newErrors).length > 0) {
@@ -172,6 +173,9 @@ export default function AcceptInvite() {
         // Proceed with acceptance
         await performAcceptInvitation(dataSharingDecision);
     };
+
+
+
 
     // Handle data sharing decision confirmation
     const handleDataSharingConfirm = async (decision) => {
@@ -188,7 +192,7 @@ export default function AcceptInvite() {
 
         try {
             let response;
-            
+
             if (isClientInvite) {
                 // Use client invite API
                 response = await clientInviteAPI.acceptClientInvite(
@@ -243,26 +247,26 @@ export default function AcceptInvite() {
                     localStorage.setItem("userData", JSON.stringify(user));
 
                     const roles = user.role; // Array of roles from API response
-                        const customRole = user.custom_role; // Custom role object if exists
-                        
-                        // Check if user has custom role and role is tax_preparer
-                        // If custom_role exists, user should use tax preparer dashboard
-                        if (customRole && roles && Array.isArray(roles) && roles.includes('tax_preparer')) {
-                            // Store custom role data
-                            localStorage.setItem("userType", 'tax_preparer');
-                            localStorage.setItem("customRole", JSON.stringify(customRole));
-                            
-                            toast.success(response.message || "Account created successfully! Welcome to the team!", {
-                                position: "top-right",
-                                autoClose: 3000,
-                            });
-                            
-                            setTimeout(() => {
-                                navigate("/taxdashboard", { replace: true });
-                            }, 2000);
-                            return;
-                        }
-                    
+                    const customRole = user.custom_role; // Custom role object if exists
+
+                    // Check if user has custom role and role is tax_preparer
+                    // If custom_role exists, user should use tax preparer dashboard
+                    if (customRole && roles && Array.isArray(roles) && roles.includes('tax_preparer')) {
+                        // Store custom role data
+                        localStorage.setItem("userType", 'tax_preparer');
+                        localStorage.setItem("customRole", JSON.stringify(customRole));
+
+                        toast.success(response.message || "Account created successfully! Welcome to the team!", {
+                            position: "top-right",
+                            autoClose: 3000,
+                        });
+
+                        setTimeout(() => {
+                            navigate("/taxdashboard", { replace: true });
+                        }, 2000);
+                        return;
+                    }
+
                     // Check if user has multiple roles
                     if (roles && Array.isArray(roles) && roles.length > 1) {
                         // User has multiple roles, show role selection screen
@@ -271,9 +275,9 @@ export default function AcceptInvite() {
                             autoClose: 3000,
                         });
                         setTimeout(() => {
-                            navigate("/select-role", { 
+                            navigate("/select-role", {
                                 state: { userData: user },
-                                replace: true 
+                                replace: true
                             });
                         }, 2000);
                         return;
@@ -330,7 +334,7 @@ export default function AcceptInvite() {
                         if (redirectPath === "/login") {
                             window.location.href = getPathWithPrefix("/login");
                         } else {
-                        navigate(redirectPath);
+                            navigate(redirectPath);
                         }
                     }, 2000);
                 } else {
@@ -347,10 +351,10 @@ export default function AcceptInvite() {
                 // Check for duplicate invite error
                 const errorMessage = response.message || "Failed to accept invitation.";
                 const isDuplicateInvite = errorMessage.toLowerCase().includes('already has access') ||
-                                         errorMessage.toLowerCase().includes('already exists');
-                
+                    errorMessage.toLowerCase().includes('already exists');
+
                 if (isDuplicateInvite) {
-                    setErrors({ 
+                    setErrors({
                         general: errorMessage,
                         duplicateInvite: true
                     });
@@ -364,83 +368,83 @@ export default function AcceptInvite() {
             // Check for duplicate invite in error message
             const errorMessage = handleAPIError(error);
             const isDuplicateInvite = errorMessage.toLowerCase().includes('already has access') ||
-                                     errorMessage.toLowerCase().includes('already exists');
-            
+                errorMessage.toLowerCase().includes('already exists');
+
             if (isDuplicateInvite) {
-                setErrors({ 
+                setErrors({
                     general: errorMessage,
                     duplicateInvite: true
                 });
             } else {
-            // Handle API error response
-            const fieldErrors = {};
+                // Handle API error response
+                const fieldErrors = {};
                 const parsedErrorMessage = error.message || handleAPIError(error);
 
-            // Parse error message to extract field-specific errors
-            // Error format from publicApiRequest: "Validation failed. password: error1, error2; phone_number: error3"
+                // Parse error message to extract field-specific errors
+                // Error format from publicApiRequest: "Validation failed. password: error1, error2; phone_number: error3"
                 if (parsedErrorMessage.includes(':')) {
-                // Try to extract field errors from the message
+                    // Try to extract field errors from the message
                     const parts = parsedErrorMessage.split(';');
-                let generalMessage = '';
+                    let generalMessage = '';
 
-                parts.forEach(part => {
-                    const trimmed = part.trim();
-                    if (trimmed.includes(':')) {
-                        const [field, ...errorParts] = trimmed.split(':');
-                        const fieldName = field.trim();
-                        const errorText = errorParts.join(':').trim();
+                    parts.forEach(part => {
+                        const trimmed = part.trim();
+                        if (trimmed.includes(':')) {
+                            const [field, ...errorParts] = trimmed.split(':');
+                            const fieldName = field.trim();
+                            const errorText = errorParts.join(':').trim();
 
-                        // Map API field names to form field names
-                        if (fieldName === 'password') {
-                            if (errorText.toLowerCase().includes('match')) {
+                            // Map API field names to form field names
+                            if (fieldName === 'password') {
+                                if (errorText.toLowerCase().includes('match')) {
+                                    fieldErrors.passwordConfirm = errorText;
+                                } else {
+                                    fieldErrors.password = errorText;
+                                }
+                            } else if (fieldName === 'password_confirm') {
                                 fieldErrors.passwordConfirm = errorText;
+                            } else if (fieldName === 'phone_number') {
+                                fieldErrors.phoneNumber = errorText;
+                            } else if (fieldName === 'token') {
+                                fieldErrors.general = errorText;
                             } else {
-                                fieldErrors.password = errorText;
+                                // Keep as general error if field not recognized
+                                if (!generalMessage) {
+                                    generalMessage = errorText;
+                                }
                             }
-                        } else if (fieldName === 'password_confirm') {
-                            fieldErrors.passwordConfirm = errorText;
-                        } else if (fieldName === 'phone_number') {
-                            fieldErrors.phoneNumber = errorText;
-                        } else if (fieldName === 'token') {
-                            fieldErrors.general = errorText;
-                        } else {
-                            // Keep as general error if field not recognized
-                            if (!generalMessage) {
-                                generalMessage = errorText;
+                        } else if (trimmed && !trimmed.includes(':')) {
+                            // This might be the main error message
+                            if (!generalMessage && !trimmed.toLowerCase().includes('validation failed')) {
+                                generalMessage = trimmed;
                             }
                         }
-                    } else if (trimmed && !trimmed.includes(':')) {
-                        // This might be the main error message
-                        if (!generalMessage && !trimmed.toLowerCase().includes('validation failed')) {
-                            generalMessage = trimmed;
-                        }
+                    });
+
+                    // If we have field errors but no general message, use the original message
+                    if (Object.keys(fieldErrors).length === 0) {
+                        fieldErrors.general = parsedErrorMessage;
+                    } else if (generalMessage && !fieldErrors.general) {
+                        fieldErrors.general = generalMessage;
                     }
-                });
-
-                // If we have field errors but no general message, use the original message
-                if (Object.keys(fieldErrors).length === 0) {
-                        fieldErrors.general = parsedErrorMessage;
-                } else if (generalMessage && !fieldErrors.general) {
-                    fieldErrors.general = generalMessage;
-                }
-            } else {
-                // Simple error message without field structure
-                // Try to detect field from message content
-                    const errorLower = parsedErrorMessage.toLowerCase();
-                if (errorLower.includes('password') && errorLower.includes('match')) {
-                        fieldErrors.passwordConfirm = parsedErrorMessage;
-                } else if (errorLower.includes('password')) {
-                        fieldErrors.password = parsedErrorMessage;
-                } else if (errorLower.includes('phone')) {
-                        fieldErrors.phoneNumber = parsedErrorMessage;
-                } else if (errorLower.includes('token')) {
-                        fieldErrors.general = parsedErrorMessage;
                 } else {
+                    // Simple error message without field structure
+                    // Try to detect field from message content
+                    const errorLower = parsedErrorMessage.toLowerCase();
+                    if (errorLower.includes('password') && errorLower.includes('match')) {
+                        fieldErrors.passwordConfirm = parsedErrorMessage;
+                    } else if (errorLower.includes('password')) {
+                        fieldErrors.password = parsedErrorMessage;
+                    } else if (errorLower.includes('phone')) {
+                        fieldErrors.phoneNumber = parsedErrorMessage;
+                    } else if (errorLower.includes('token')) {
                         fieldErrors.general = parsedErrorMessage;
+                    } else {
+                        fieldErrors.general = parsedErrorMessage;
+                    }
                 }
-            }
 
-            setErrors(fieldErrors);
+                setErrors(fieldErrors);
             }
         } finally {
             setIsAccepting(false);
@@ -546,20 +550,22 @@ export default function AcceptInvite() {
         );
     }
 
-    // Handle existing email scenario
-    if (errors.existingEmail && invitationData) {
+    // Handle existing email scenario or existing user not logged in
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+    if ((errors.existingEmail || (invitationData?.user_exists && !isLoggedIn)) && invitationData) {
         return (
             <FixedLayout>
                 <div className="accept-invite-page">
                     <div className="accept-invite-card">
                         <div className="accept-invite-header">
                             <h5 className="accept-invite-title">Invitation from {invitationData?.firm_name || "Firm"}</h5>
-                        <p className="accept-invite-subtitle">
+                            <p className="accept-invite-subtitle">
                                 You've been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
                                 <strong>{invitationData?.role_display || invitationData?.role || "Member"}</strong>
-                        </p>
-                    </div>
-                        <div className="alert alert-warning" role="alert" style={{ 
+                            </p>
+                        </div>
+                        <div className="alert alert-warning" role="alert" style={{
                             margin: '1.5rem 0',
                             padding: '1rem',
                             backgroundColor: '#FFF3CD',
@@ -570,35 +576,35 @@ export default function AcceptInvite() {
                             <strong>⚠️ {errors.general || "An account already exists for this email."}</strong>
                             <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px' }}>
                                 Please sign in to accept the invite.
-                        </p>
-                    </div>
+                            </p>
+                        </div>
                         <div className="invitation-actions" style={{ marginTop: '1.5rem' }}>
-                                        <button
+                            <button
                                 className="accept-invite-btn accept-btn"
-                                onClick={() => navigate("/login", { 
-                                    state: { 
+                                onClick={() => navigate("/login", {
+                                    state: {
                                         returnTo: `/accept-invite?token=${token}`,
                                         message: "Please sign in to accept the invitation"
-                                    } 
+                                    }
                                 })}
-                                        >
+                            >
                                 Sign In
-                                        </button>
-                                        <button
+                            </button>
+                            <button
                                 className="accept-invite-btn deny-btn"
-                                onClick={() => navigate("/login", { 
-                                    state: { 
+                                onClick={() => navigate("/login", {
+                                    state: {
                                         forgotPassword: true,
-                                        email: invitationData?.email 
-                                    } 
+                                        email: invitationData?.email
+                                    }
                                 })}
                                 style={{ marginTop: '0.5rem' }}
-                                        >
+                            >
                                 Forgot Password?
-                                        </button>
-                                    </div>
-                                        </div>
-                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </FixedLayout>
         );
     }
@@ -611,17 +617,17 @@ export default function AcceptInvite() {
                         <div className="accept-invite-header">
                             <h5 className="accept-invite-title">Invalid Invitation</h5>
                             <p className="accept-invite-subtitle">{errors.general}</p>
-                                    <button
+                            <button
                                 className="accept-invite-btn"
-                                    onClick={() => navigate("/login")}
-                                >
-                                    Go to Login
-                                </button>
+                                onClick={() => navigate("/login")}
+                            >
+                                Go to Login
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </FixedLayout>
-    );
+            </FixedLayout>
+        );
     }
 
     // Main return with Data Sharing Modal
@@ -749,9 +755,16 @@ export default function AcceptInvite() {
                                     </p>
                                 )}
 
-                                <p className="invitation-instruction">
-                                    Please create your account password to accept this invitation:
-                                </p>
+                                {!invitationData?.user_exists && (
+                                    <p className="invitation-instruction">
+                                        Please create your account password to accept this invitation:
+                                    </p>
+                                )}
+                                {invitationData?.user_exists && (
+                                    <p className="invitation-instruction">
+                                        Please confirm that you would like to connect your account to this firm:
+                                    </p>
+                                )}
                             </div>
 
                             <form onSubmit={handleAcceptInvitation}>
@@ -759,128 +772,133 @@ export default function AcceptInvite() {
                                 {invitationData && invitationData.is_valid !== false && !errors.token ? (
                                     <>
                                         {/* Password Field */}
-                                        <div className="form-group mb-3">
-                                            <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
-                                                Password
-                                            </label>
-                                            <div style={{ position: "relative" }}>
-                                                <input
-                                                    type={showPassword ? "text" : "password"}
-                                                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                                                    placeholder="Enter your password"
-                                                    value={password}
-                                                    onChange={(e) => {
-                                                        setPassword(e.target.value);
-                                                        if (errors.password) {
-                                                            setErrors(prev => ({ ...prev, password: '' }));
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        width: "100%",
-                                                        padding: "10px 40px 10px 12px",
-                                                        borderRadius: "5px",
-                                                        border: errors.password ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
-                                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                                        color: "#ffffff",
-                                                        fontSize: "14px"
-                                                    }}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    style={{
-                                                        position: "absolute",
-                                                        right: "10px",
-                                                        top: "50%",
-                                                        transform: "translateY(-50%)",
-                                                        background: "none",
-                                                        border: "none",
-                                                        color: "#ffffff",
-                                                        cursor: "pointer",
-                                                        fontSize: "16px"
-                                                    }}
-                                                >
-                                                    {showPassword ? "👁️" : "👁️‍🗨️"}
-                                                </button>
-                                            </div>
-                                            {errors.password && (
-                                                <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
-                                                    {errors.password}
+                                        {!invitationData.user_exists && (
+                                            <>
+                                                <div className="form-group mb-3">
+                                                    <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
+                                                        Password
+                                                    </label>
+                                                    <div style={{ position: "relative" }}>
+                                                        <input
+                                                            type={showPassword ? "text" : "password"}
+                                                            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                                            placeholder="Enter your password"
+                                                            value={password}
+                                                            onChange={(e) => {
+                                                                setPassword(e.target.value);
+                                                                if (errors.password) {
+                                                                    setErrors(prev => ({ ...prev, password: '' }));
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                width: "100%",
+                                                                padding: "10px 40px 10px 12px",
+                                                                borderRadius: "5px",
+                                                                border: errors.password ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
+                                                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                                color: "#ffffff",
+                                                                fontSize: "14px"
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPassword(!showPassword)}
+                                                            style={{
+                                                                position: "absolute",
+                                                                right: "10px",
+                                                                top: "50%",
+                                                                transform: "translateY(-50%)",
+                                                                background: "none",
+                                                                border: "none",
+                                                                color: "#ffffff",
+                                                                cursor: "pointer",
+                                                                fontSize: "16px"
+                                                            }}
+                                                        >
+                                                            {showPassword ? "👁️" : "👁️‍🗨️"}
+                                                        </button>
+                                                    </div>
+                                                    {errors.password && (
+                                                        <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+                                                            {errors.password}
+                                                        </div>
+                                                    )}
+                                                    <div style={{ color: "#ffffff", fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
+                                                        Must contain: 8+ characters, uppercase, lowercase, number, special character
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div style={{ color: "#ffffff", fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
-                                                Must contain: 8+ characters, uppercase, lowercase, number, special character
-                                            </div>
-                                        </div>
 
-                                        {/* Confirm Password Field */}
-                                        <div className="form-group mb-3">
-                                            <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
-                                                Confirm Password
-                                            </label>
-                                            <div style={{ position: "relative" }}>
-                                                <input
-                                                    type={showPasswordConfirm ? "text" : "password"}
-                                                    className={`form-control ${errors.passwordConfirm ? 'is-invalid' : ''}`}
-                                                    placeholder="Confirm your password"
-                                                    value={passwordConfirm}
-                                                    onChange={(e) => {
-                                                        setPasswordConfirm(e.target.value);
-                                                        if (errors.passwordConfirm) {
-                                                            setErrors(prev => ({ ...prev, passwordConfirm: '' }));
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        width: "100%",
-                                                        padding: "10px 40px 10px 12px",
-                                                        borderRadius: "5px",
-                                                        border: errors.passwordConfirm ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
-                                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                                        color: "#ffffff",
-                                                        fontSize: "14px"
-                                                    }}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                                                    style={{
-                                                        position: "absolute",
-                                                        right: "10px",
-                                                        top: "50%",
-                                                        transform: "translateY(-50%)",
-                                                        background: "none",
-                                                        border: "none",
-                                                        color: "#ffffff",
-                                                        cursor: "pointer",
-                                                        fontSize: "16px"
-                                                    }}
-                                                >
-                                                    {showPasswordConfirm ? "👁️" : "👁️‍🗨️"}
-                                                </button>
-                                            </div>
-                                            {errors.passwordConfirm && (
-                                                <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
-                                                    {errors.passwordConfirm}
+                                                {/* Confirm Password Field */}
+                                                <div className="form-group mb-4">
+                                                    <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
+                                                        Confirm Password
+                                                    </label>
+                                                    <div style={{ position: "relative" }}>
+                                                        <input
+                                                            type={showPasswordConfirm ? "text" : "password"}
+                                                            className={`form-control ${errors.passwordConfirm ? 'is-invalid' : ''}`}
+                                                            placeholder="Confirm your password"
+                                                            value={passwordConfirm}
+                                                            onChange={(e) => {
+                                                                setPasswordConfirm(e.target.value);
+                                                                if (errors.passwordConfirm) {
+                                                                    setErrors(prev => ({ ...prev, passwordConfirm: '' }));
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                width: "100%",
+                                                                padding: "10px 40px 10px 12px",
+                                                                borderRadius: "5px",
+                                                                border: errors.passwordConfirm ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
+                                                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                                color: "#ffffff",
+                                                                fontSize: "14px"
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                                                            style={{
+                                                                position: "absolute",
+                                                                right: "10px",
+                                                                top: "50%",
+                                                                transform: "translateY(-50%)",
+                                                                background: "none",
+                                                                border: "none",
+                                                                color: "#ffffff",
+                                                                cursor: "pointer",
+                                                                fontSize: "16px"
+                                                            }}
+                                                        >
+                                                            {showPasswordConfirm ? "👁️" : "👁️‍🗨️"}
+                                                        </button>
+                                                    </div>
+                                                    {errors.passwordConfirm && (
+                                                        <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+                                                            {errors.passwordConfirm}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
+                                            </>
+                                        )}
 
 
-                                        <div className="invitation-actions">
+                                        <div className="d-grid gap-2">
                                             <button
                                                 type="submit"
-                                                className="accept-invite-btn accept-btn"
-                                                disabled={isAccepting || isDenying || (invitationData && invitationData.is_valid === false)}
+                                                className="accept-invite-btn"
+                                                disabled={isAccepting}
                                             >
-                                                {isAccepting ? "Creating Account..." : "Accept Invitation & Create Account"}
+                                                {isAccepting ? "Processing..." : (invitationData.user_exists ? "Accept & Connect" : "Accept Invitation")}
                                             </button>
+
                                             <button
                                                 type="button"
                                                 className="accept-invite-btn deny-btn"
                                                 onClick={handleDenyInvitation}
-                                                disabled={isAccepting || isDenying || (invitationData && invitationData.is_valid === false)}
+                                                disabled={isDenying || isAccepting}
                                             >
-                                                {isDenying ? "Declining..." : "Deny Invitation"}
+                                                {isDenying ? "Declining..." : "Decline Invitation"}
                                             </button>
                                         </div>
                                     </>

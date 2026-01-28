@@ -17,7 +17,7 @@ const AutoRenewal = () => {
             setLoading(true);
             setError('');
             const response = await firmAdminSubscriptionAPI.getAutoRenewalSettings();
-            
+
             if (response.success && response.data) {
                 setEnableAutoRenewal(response.data.enable_auto_renewal || false);
                 setRequireApprovalOver(response.data.require_approval_over || '50.00');
@@ -46,7 +46,7 @@ const AutoRenewal = () => {
         try {
             setSaving(true);
             setError('');
-            
+
             const settings = {
                 enable_auto_renewal: enableAutoRenewal,
                 require_approval_over: requireApprovalOver,
@@ -55,7 +55,7 @@ const AutoRenewal = () => {
             };
 
             const response = await firmAdminSubscriptionAPI.updateAutoRenewalSettings(settings);
-            
+
             if (response.success) {
                 toast.success(response.message || 'Auto-renewal settings saved successfully!', {
                     position: 'top-right',
@@ -112,14 +112,12 @@ const AutoRenewal = () => {
                         <div className="flex-shrink-0">
                             <button
                                 onClick={() => setEnableAutoRenewal(!enableAutoRenewal)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                    enableAutoRenewal ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                }`}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableAutoRenewal ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
                             >
                                 <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                        enableAutoRenewal ? 'translate-x-6' : 'translate-x-1'
-                                    }`}
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableAutoRenewal ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
                                 />
                             </button>
                         </div>
@@ -176,7 +174,7 @@ const AutoRenewal = () => {
 
                 {/* Save Button */}
                 <div className="flex justify-start">
-                    <button 
+                    <button
                         onClick={handleSaveSettings}
                         disabled={saving}
                         className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#EA580C] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -192,7 +190,7 @@ const AutoRenewal = () => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

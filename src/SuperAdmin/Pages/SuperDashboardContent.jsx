@@ -861,11 +861,11 @@ export default function SuperDashboardContent() {
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">System Health</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Documents</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {`${formatNumber(dashboardData?.summary?.system_health_score)}%`}
+              {formatNumber(dashboardData?.summary?.system_health_score)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Overall stability</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Across all firms</p>
           </div>
         </div>
       </div>
