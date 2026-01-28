@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getApiBaseUrl } from '../../../ClientOnboarding/utils/corsConfig';
+import { superAdminAPI, handleAPIError } from '../../utils/superAdminAPI';
 
 const ReachOutMessages = () => {
-    const API_BASE_URL = getApiBaseUrl();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -16,19 +14,14 @@ const ReachOutMessages = () => {
 
     const fetchMessages = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            // Ensure we use the direct route that matches seqwens_backend/urls.py
-            const response = await axios.get(`${API_BASE_URL}/admin/reach-out-messages/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            if (response.data.success) {
-                setMessages(response.data.data);
+            setLoading(true);
+            const response = await superAdminAPI.getReachOutMessages();
+            if (response.success) {
+                setMessages(response.data);
             }
         } catch (err) {
-            setError('Failed to fetch messages');
             console.error(err);
+            setError(handleAPIError(err));
         } finally {
             setLoading(false);
         }
@@ -53,6 +46,12 @@ const ReachOutMessages = () => {
                     View and manage contact requests from the landing page.
                 </p>
             </div>
+
+            {error && (
+                <div className="mb-6 rounded-lg bg-red-50 p-4 border border-red-200 text-red-700 text-sm">
+                    {error}
+                </div>
+            )}
 
             <div className="bg-white border border-[#E8F0FF] rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">

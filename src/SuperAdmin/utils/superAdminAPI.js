@@ -179,17 +179,17 @@ export const superAdminAPI = {
   getAdminDashboard: async (params = {}) => {
     const { revenue_month, revenue_year, distribution_month, distribution_year } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (revenue_month !== undefined && revenue_year !== undefined) {
       queryParams.append('revenue_month', revenue_month.toString());
       queryParams.append('revenue_year', revenue_year.toString());
     }
-    
+
     if (distribution_month !== undefined && distribution_year !== undefined) {
       queryParams.append('distribution_month', distribution_month.toString());
       queryParams.append('distribution_year', distribution_year.toString());
     }
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/user/admin/platform-overview/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
@@ -258,17 +258,17 @@ export const superAdminAPI = {
   getSuperadminPlanPerformance: async (params = {}) => {
     const { mrr_month, mrr_year, churn_month, churn_year } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (mrr_month !== undefined && mrr_year !== undefined) {
       queryParams.append('mrr_month', mrr_month.toString());
       queryParams.append('mrr_year', mrr_year.toString());
     }
-    
+
     if (churn_month !== undefined && churn_year !== undefined) {
       queryParams.append('churn_month', churn_month.toString());
       queryParams.append('churn_year', churn_year.toString());
     }
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/user/superadmin/subscriptions/plan-performance/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
@@ -506,6 +506,11 @@ export const superAdminAPI = {
       status: 'unsuspend'
     };
     return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', reactivateData);
+  },
+
+  // Get Reach Out Messages
+  getReachOutMessages: async () => {
+    return await apiRequest('/admin/reach-out-messages/', 'GET');
   },
 
   // FAQs API functions
@@ -820,7 +825,7 @@ export const superAdminAPI = {
     if (status) params.append('status', status);
     if (search) params.append('search', search);
     if (currentOnly) params.append('current_only', 'true');
-    
+
     const query = params.toString();
     return await apiRequest(`/user/admin/system/api-keys/${query ? `?${query}` : ''}`, 'GET');
   },
@@ -862,7 +867,7 @@ export const superAdminAPI = {
     if (restrictionType) params.append('restriction_type', restrictionType);
     if (firmId) params.append('firm_id', firmId);
     if (isActive !== '') params.append('is_active', isActive.toString());
-    
+
     const query = params.toString();
     return await apiRequest(`/user/admin/ip-restrictions/${query ? `?${query}` : ''}`, 'GET');
   },
@@ -892,7 +897,7 @@ export const superAdminAPI = {
   getRetentionRule: async (firmId = null) => {
     const params = new URLSearchParams();
     if (firmId) params.append('firm_id', firmId);
-    
+
     const query = params.toString();
     return await apiRequest(`/user/admin/retention-rules/${query ? `?${query}` : ''}`, 'GET');
   },
@@ -913,12 +918,12 @@ export const superAdminAPI = {
   getPlatformAnalytics: async (params = {}) => {
     const { month, year } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (month !== undefined && year !== undefined) {
       queryParams.append('month', month.toString());
       queryParams.append('year', year.toString());
     }
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/user/admin/platform-analytics/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
@@ -1057,7 +1062,7 @@ export const superAdminAPI = {
 
       // Get file blob
       const blob = await response.blob();
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
