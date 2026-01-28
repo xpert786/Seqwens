@@ -17,7 +17,8 @@ const ReachOutMessages = () => {
     const fetchMessages = async () => {
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await axios.get(`${API_BASE_URL}/accounts/admin/reach-out-messages/`, {
+            // Ensure we use the direct route that matches seqwens_backend/urls.py
+            const response = await axios.get(`${API_BASE_URL}/admin/reach-out-messages/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
