@@ -57,12 +57,12 @@ const PERMISSION_CATEGORIES = {
   }
 };
 
-export default function TaxPreparerPermissionsModal({ 
-  isOpen, 
-  onClose, 
+export default function TaxPreparerPermissionsModal({
+  isOpen,
+  onClose,
   preparerId,
   preparerName,
-  preparerEmail 
+  preparerEmail
 }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -82,12 +82,12 @@ export default function TaxPreparerPermissionsModal({
     try {
       setLoading(true);
       const response = await firmAdminStaffAPI.getTaxPreparerPermissions(preparerId);
-      
+
       if (response.success && response.data) {
         // Handle new API response structure
         const permissionsList = response.data.permissions || [];
         const choicesList = response.data.permission_choices || [];
-        
+
         // Debug: Check if task management permissions are in the response
         const taskPermissions = choicesList.filter(p => {
           const code = typeof p === 'string' ? p : p.code;
@@ -99,11 +99,11 @@ export default function TaxPreparerPermissionsModal({
           console.warn('Task Management permissions NOT found in permission_choices');
           console.log('Available permission codes:', choicesList.map(p => typeof p === 'string' ? p : p.code));
         }
-        
+
         setPermissions(permissionsList);
         setPermissionChoices(choicesList);
         setSelectedPermissions(permissionsList);
-        
+
         // Update user info from API response if available
         if (response.data.user_name || response.data.user_email) {
           setUserInfo({
@@ -138,17 +138,17 @@ export default function TaxPreparerPermissionsModal({
         return prev.includes('view_all_firm_clients')
           ? [...prev.filter(p => p !== 'view_all_firm_clients'), code]
           : prev.includes(code)
-          ? prev.filter(p => p !== code)
-          : [...prev, code];
+            ? prev.filter(p => p !== code)
+            : [...prev, code];
       }
       if (code === 'view_all_firm_clients') {
         return prev.includes('view_assigned_clients_only')
           ? [...prev.filter(p => p !== 'view_assigned_clients_only'), code]
           : prev.includes(code)
-          ? prev.filter(p => p !== code)
-          : [...prev, code];
+            ? prev.filter(p => p !== code)
+            : [...prev, code];
       }
-      
+
       // Regular toggle
       return prev.includes(code)
         ? prev.filter(p => p !== code)
@@ -159,7 +159,7 @@ export default function TaxPreparerPermissionsModal({
   const handleCategoryToggle = (categoryCodes, allSelected) => {
     if (allSelected) {
       // Deselect all in category
-      setSelectedPermissions(prev => 
+      setSelectedPermissions(prev =>
         prev.filter(p => !categoryCodes.includes(p))
       );
     } else {
@@ -222,7 +222,7 @@ export default function TaxPreparerPermissionsModal({
       return categoryCodes.includes(code);
     });
   };
-  
+
   // Get permission label - handle both formats
   const getPermissionLabel = (permission) => {
     if (typeof permission === 'string') {
@@ -232,7 +232,7 @@ export default function TaxPreparerPermissionsModal({
     }
     return permission.label || permission.code;
   };
-  
+
   // Get permission code - handle both formats
   const getPermissionCode = (permission) => {
     return typeof permission === 'string' ? permission : permission.code;
@@ -256,8 +256,8 @@ export default function TaxPreparerPermissionsModal({
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4"
       style={{ zIndex: 9999 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -265,7 +265,7 @@ export default function TaxPreparerPermissionsModal({
         }
       }}
     >
-      <div 
+      <div
         className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl relative max-h-[95vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -286,7 +286,7 @@ export default function TaxPreparerPermissionsModal({
                   </p>
                 </div>
               </div>
-              
+
               {/* User Info Card */}
               <div className="mt-4 bg-[rgb(243,247,255)] rounded-lg p-4 border border-[#E8F0FF]">
                 <div className="flex items-center gap-3">
@@ -370,8 +370,8 @@ export default function TaxPreparerPermissionsModal({
                 const categoryCodes = categoryData.codes;
 
                 return (
-                  <div 
-                    key={category} 
+                  <div
+                    key={category}
                     className="bg-white border border-[#E8F0FF] rounded-lg p-5 hover:border-[#3AD6F2] transition-all shadow-sm"
                   >
                     {/* Category Header */}
@@ -388,11 +388,10 @@ export default function TaxPreparerPermissionsModal({
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(categoryCodes, allSelected)}
-                        className={`px-4 py-1.5 rounded-lg font-[BasisGrotesquePro] text-sm font-medium transition-colors ${
-                          allSelected
+                        className={`px-4 py-1.5 rounded-lg font-[BasisGrotesquePro] text-sm font-medium transition-colors ${allSelected
                             ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                             : 'bg-[#3AD6F2]/10 text-[#3AD6F2] hover:bg-[#3AD6F2]/20 border border-[#3AD6F2]/30'
-                        }`}
+                          }`}
                       >
                         {allSelected ? 'Deselect All' : 'Select All'}
                       </button>
@@ -408,36 +407,31 @@ export default function TaxPreparerPermissionsModal({
                           <div
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
-                            className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${
-                              isAllowed
+                            className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
                                 ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
                                 : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
-                            }`}
+                              }`}
                           >
                             {/* Toggle Switch */}
-                            <div className={`relative w-12 h-6 rounded-full transition-colors ${
-                              isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
-                            }`}>
-                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
-                                isAllowed ? 'translate-x-6' : 'translate-x-0'
-                              }`}></div>
+                            <div className={`relative w-12 h-6 rounded-full transition-colors ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
+                              }`}>
+                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-6' : 'translate-x-0'
+                                }`}></div>
                             </div>
 
                             {/* Permission Label */}
                             <div className="flex-1">
-                              <p className={`text-sm font-medium font-[BasisGrotesquePro] ${
-                                isAllowed ? 'text-gray-900' : 'text-gray-600'
-                              }`}>
+                              <p className={`text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
+                                }`}>
                                 {permissionLabel}
                               </p>
                             </div>
 
                             {/* Status Badge */}
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${
-                              isAllowed
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
                                 ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
                                 : 'bg-gray-100 text-gray-600 border-gray-300'
-                            }`}>
+                              }`}>
                               {isAllowed ? (
                                 <>
                                   <FiCheck size={14} />
@@ -457,7 +451,7 @@ export default function TaxPreparerPermissionsModal({
                   </div>
                 );
               })}
-              
+
               {/* Uncategorized Permissions (if any) */}
               {(() => {
                 const allCategorizedCodes = Object.values(PERMISSION_CATEGORIES).flatMap(cat => cat.codes);
@@ -465,9 +459,9 @@ export default function TaxPreparerPermissionsModal({
                   const code = getPermissionCode(p);
                   return !allCategorizedCodes.includes(code);
                 });
-                
+
                 if (uncategorizedPermissions.length === 0) return null;
-                
+
                 return (
                   <div className="bg-white border border-[#E8F0FF] rounded-lg p-5 hover:border-[#3AD6F2] transition-all shadow-sm">
                     <div className="flex justify-between items-center mb-4">
@@ -481,7 +475,7 @@ export default function TaxPreparerPermissionsModal({
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       {uncategorizedPermissions.map((permission) => {
                         const permissionCode = getPermissionCode(permission);
@@ -491,31 +485,26 @@ export default function TaxPreparerPermissionsModal({
                           <div
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
-                            className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${
-                              isAllowed
+                            className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
                                 ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
                                 : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
-                            }`}
+                              }`}
                           >
-                            <div className={`relative w-12 h-6 rounded-full transition-colors ${
-                              isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
-                            }`}>
-                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
-                                isAllowed ? 'translate-x-6' : 'translate-x-0'
-                              }`}></div>
+                            <div className={`relative w-12 h-6 rounded-full transition-colors ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
+                              }`}>
+                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-6' : 'translate-x-0'
+                                }`}></div>
                             </div>
                             <div className="flex-1">
-                              <p className={`text-sm font-medium font-[BasisGrotesquePro] ${
-                                isAllowed ? 'text-gray-900' : 'text-gray-600'
-                              }`}>
+                              <p className={`text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
+                                }`}>
                                 {permissionLabel}
                               </p>
                             </div>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${
-                              isAllowed
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
                                 ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
                                 : 'bg-gray-100 text-gray-600 border-gray-300'
-                            }`}>
+                              }`}>
                               {isAllowed ? (
                                 <>
                                   <FiCheck size={14} />

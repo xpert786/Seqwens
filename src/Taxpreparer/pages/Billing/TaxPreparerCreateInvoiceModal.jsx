@@ -77,23 +77,23 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   // Fetch active service pricing when modal opens
   useEffect(() => {
     const fetchServices = async () => {
-    try {
-      setLoadingServices(true);
+      try {
+        setLoadingServices(true);
         const response = await firmAdminMessagingAPI.getActiveServicePricing();
 
-      if (response.success && response.data && response.data.services) {
-        setServices(response.data.services || []);
+        if (response.success && response.data && response.data.services) {
+          setServices(response.data.services || []);
           console.log('Services loaded:', response.data.services);
-      } else {
-        setServices([]);
-      }
-    } catch (err) {
+        } else {
+          setServices([]);
+        }
+      } catch (err) {
         console.error('Error fetching services:', err);
-      setServices([]);
-    } finally {
-      setLoadingServices(false);
-    }
-  };
+        setServices([]);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
 
     fetchServices();
   }, []);
@@ -101,7 +101,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   // Debounced search for services
   useEffect(() => {
     let searchTimeout;
-    
+
     if (serviceSearchQuery && serviceSearchQuery.trim()) {
       searchTimeout = setTimeout(async () => {
         try {
@@ -157,7 +157,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
     } else {
       setInvoiceData(prev => ({ ...prev, [field]: value }));
     }
-    
+
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
       setFieldErrors(prev => {
@@ -171,7 +171,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   const handleDateChange = (field, e) => {
     const formattedValue = e.target.value;
     setInvoiceData(prev => ({ ...prev, [field]: formattedValue }));
-    
+
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
       setFieldErrors(prev => {
@@ -195,7 +195,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
       value: service.base_price.toString(),
       service_id: service.id
     };
-    setInvoiceItems([newItem,...invoiceItems]);
+    setInvoiceItems([newItem, ...invoiceItems]);
     setShowServiceDropdown(false);
     setServiceSearchQuery('');
   };
@@ -272,7 +272,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
     }
 
     // Filter out empty items (items with no description and no value)
-    const validItems = invoiceItems.filter(item => 
+    const validItems = invoiceItems.filter(item =>
       item.description && item.description.trim() && item.value && item.value.toString().trim()
     );
 
@@ -338,7 +338,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
             }
           });
           setFieldErrors(errors);
-          
+
           // Set general error message if available
           if (result.message) {
             setError(result.message);
@@ -375,10 +375,10 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 invoice-modal-mobile" 
-      onClick={onClose} 
-      style={{ 
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4 invoice-modal-mobile"
+      onClick={onClose}
+      style={{
         zIndex: 9999,
         top: 0,
         left: 0,
@@ -498,11 +498,10 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
                   value={invoiceData.due_date}
                   onChange={(e) => handleDateChange('due_date', e)}
                   placeholder="mm/dd/yyyy"
-                  className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
-                    fieldErrors.due_date 
-                      ? 'border-red-300 focus:ring-red-500' 
+                  className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${fieldErrors.due_date
+                      ? 'border-red-300 focus:ring-red-500'
                       : 'border-[#E8F0FF] focus:ring-blue-500'
-                  }`}
+                    }`}
                   required
                 />
                 {fieldErrors.due_date && (
@@ -521,7 +520,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
                 Invoice Items
               </h5>
             </div>
-            
+
             {/* Single Service Selection Dropdown */}
             <div className="relative mb-4" ref={serviceDropdownRef}>
               <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>

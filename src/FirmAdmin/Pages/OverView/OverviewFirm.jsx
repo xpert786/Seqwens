@@ -119,7 +119,7 @@ export default function FirmAdminDashboard() {
       };
 
       const apiDateRange = dateRangeMap[dateRange] || '30d';
-      
+
       // Pass abort signal to API if supported, or just check it before state update
       const response = await firmAdminDashboardAPI.getDashboard({
         date_range: apiDateRange,
@@ -198,7 +198,7 @@ export default function FirmAdminDashboard() {
                   const userData = result.data;
                   storage.setItem("userData", JSON.stringify(userData));
                   sessionStorage.setItem("userData", JSON.stringify(userData));
-                  
+
                   // Refetch dashboard data directly
                   const controller = new AbortController();
                   fetchDashboardData(controller.signal);
@@ -212,7 +212,7 @@ export default function FirmAdminDashboard() {
           console.error('Error updating user data:', error);
         }
       }
-      
+
       // Remove query parameter
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete('subscription_success');
@@ -226,7 +226,7 @@ export default function FirmAdminDashboard() {
         position: 'top-right',
         autoClose: 5000,
       });
-      
+
       // Remove parameter and redirect
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete('subscription_cancelled');
@@ -637,7 +637,7 @@ export default function FirmAdminDashboard() {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-32">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-[1070] p-4 pt-32">
         <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[70vh] overflow-y-auto mt-[100px]">
 
           {/* Modal Content */}
@@ -879,7 +879,7 @@ export default function FirmAdminDashboard() {
     if (!isScheduleModalOpen) return null;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
           {/* Modal Header */}
           <div className="p-6 border-b border-gray-200">
@@ -977,7 +977,7 @@ export default function FirmAdminDashboard() {
     if (!isRevenueModalOpen) return null;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
           {/* Modal Header */}
           <div className="p-6 border-b border-gray-200 flex-shrink-0">
@@ -1663,6 +1663,7 @@ export default function FirmAdminDashboard() {
               <button
                 onClick={() => navigate('/firmadmin/subscription')}
                 className="px-4 py-2 bg-white border border-[#dee2e6] text-[#343a40] rounded text-sm font-[BasisGrotesquePro] hover:bg-gray-50"
+                style={{ borderRadius: '8px' }}
               >
                 Manage Subscription
               </button>

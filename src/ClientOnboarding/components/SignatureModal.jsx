@@ -48,7 +48,7 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative" style={{ maxHeight: '90vh', overflowY: 'auto', border: '1px solid #E8F0FF' }}>
         {/* Header */}
         <div className="flex justify-between items-start mb-6">

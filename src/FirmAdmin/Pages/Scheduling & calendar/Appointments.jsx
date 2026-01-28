@@ -597,7 +597,7 @@ const Appointments = () => {
 
             {/* Add Calendar Event Modal */}
             {isAddEventModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
                     <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[75vh] flex flex-col">
                         {/* Modal Header */}
                         <div className="flex items-start justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0">

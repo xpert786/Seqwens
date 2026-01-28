@@ -77,23 +77,23 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   // Fetch active service pricing when modal opens
   useEffect(() => {
     const fetchServices = async () => {
-    try {
-      setLoadingServices(true);
+      try {
+        setLoadingServices(true);
         const response = await firmAdminMessagingAPI.getActiveServicePricing();
 
-      if (response.success && response.data && response.data.services) {
-        setServices(response.data.services || []);
+        if (response.success && response.data && response.data.services) {
+          setServices(response.data.services || []);
           console.log('Services loaded:', response.data.services);
-      } else {
-        setServices([]);
-      }
-    } catch (err) {
+        } else {
+          setServices([]);
+        }
+      } catch (err) {
         console.error('Error fetching services:', err);
-      setServices([]);
-    } finally {
-      setLoadingServices(false);
-    }
-  };
+        setServices([]);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
 
     fetchServices();
   }, []);
@@ -101,7 +101,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   // Debounced search for services
   useEffect(() => {
     const searchTimeouts = {};
-    
+
     Object.keys(serviceSearchQueries).forEach((index) => {
       const query = serviceSearchQueries[index];
       if (query && query.trim()) {
@@ -114,7 +114,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
           } catch (err) {
             console.error('Error searching services:', err);
           }
-    }, 300);
+        }, 300);
       }
     });
 
@@ -149,7 +149,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
     } else {
       setInvoiceData(prev => ({ ...prev, [field]: value }));
     }
-    
+
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
       setFieldErrors(prev => {
@@ -163,7 +163,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   const handleDateChange = (field, e) => {
     const formattedValue = e.target.value;
     setInvoiceData(prev => ({ ...prev, [field]: formattedValue }));
-    
+
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
       setFieldErrors(prev => {
@@ -197,7 +197,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   const handleServiceSearchChange = (index, value) => {
     setServiceSearchQueries(prev => ({ ...prev, [index]: value }));
     setShowServiceDropdowns(prev => ({ ...prev, [index]: true }));
-    
+
     const updatedItems = [...invoiceItems];
     updatedItems[index].service_search = value;
     // Clear service_id if user is typing manually
@@ -348,7 +348,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
             }
           });
           setFieldErrors(errors);
-          
+
           // Set general error message if available
           if (result.message) {
             setError(result.message);
@@ -385,7 +385,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
@@ -495,11 +495,10 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                   value={invoiceData.due_date}
                   onChange={(e) => handleDateChange('due_date', e)}
                   placeholder="mm/dd/yyyy"
-                  className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
-                    fieldErrors.due_date 
-                      ? 'border-red-300 focus:ring-red-500' 
+                  className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${fieldErrors.due_date
+                      ? 'border-red-300 focus:ring-red-500'
                       : 'border-[#E8F0FF] focus:ring-blue-500'
-                  }`}
+                    }`}
                   required
                 />
                 {fieldErrors.due_date && (
@@ -563,20 +562,19 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                           ) : (
                             filteredServices.map((service) => {
                               const isSelected = item.service_id === service.id;
-                                return (
+                              return (
                                 <div
                                   key={service.id}
                                   onClick={() => handleServiceSelect(index, service)}
-                                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    isSelected ? 'bg-[#FFF4E6]' : ''
-                                  }`}
+                                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-[#FFF4E6]' : ''
+                                    }`}
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2">
-                                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
-                                        {service.name}
-                                      </p>
+                                        <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
+                                          {service.name}
+                                        </p>
                                         {isSelected && (
                                           <svg className="w-4 h-4 text-[#F56D2D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -617,26 +615,26 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                           className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
-                  </div>
-                  <div className="col-span-12 md:col-span-4">
-                    <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                      </div>
+                      <div className="col-span-12 md:col-span-4">
+                        <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
                           Amount ($) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.value}
-                      onChange={(e) => handleItemChange(index, 'value', e.target.value)}
-                      placeholder="0.00"
-                      className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="col-span-12 md:col-span-3">
-                    {invoiceItems.length > 1 && (
-                      <button
-                        type="button"
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.value}
+                          onChange={(e) => handleItemChange(index, 'value', e.target.value)}
+                          placeholder="0.00"
+                          className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <div className="col-span-12 md:col-span-3">
+                        {invoiceItems.length > 1 && (
+                          <button
+                            type="button"
                             onClick={() => {
                               handleRemoveItem(index);
                               // Clean up refs and state for removed item
@@ -652,13 +650,13 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                                 return newDropdowns;
                               });
                             }}
-                        className="w-full px-3 py-2 text-red-600 !rounded-lg text-sm font-medium !border border-red-200 hover:bg-red-50 transition"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                </div>
+                            className="w-full px-3 py-2 text-red-600 !rounded-lg text-sm font-medium !border border-red-200 hover:bg-red-50 transition"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               })}

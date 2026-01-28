@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import AllPlans from './AllPlans';
 import AddOns from './AddOns';
 import Billing from './Billing';
+import BillingEnhanced from './BillingEnhanced';
 import AdminControls from './AdminControls';
 import Security from './Security';
 import Automation from './Automation';
@@ -635,7 +636,7 @@ const SubscriptionManagement = () => {
                 {activeTab === 'Add-ons' && <AddOns />}
 
                 {/* Billing Tab Content */}
-                {activeTab === 'Billing' && <Billing />}
+                {activeTab === 'Billing' && <BillingEnhanced />}
 
                 {/* Admin Tab Content */}
                 {activeTab === 'Admin' && <AdminControls />}
@@ -719,6 +720,7 @@ const SubscriptionManagement = () => {
                                     <button
                                         onClick={() => setIsUpgradePlanModalOpen(true)}
                                         className="flex-1 px-4 py-2.5 bg-[#F56D2D] text-white rounded-lg hover:bg-[#EA580C] transition-all shadow-sm hover:shadow-md font-bold text-sm"
+                                        style={{ borderRadius: '8px' }}
                                     >
                                         Manage Subscription
                                     </button>
@@ -726,6 +728,7 @@ const SubscriptionManagement = () => {
                                         onClick={handleCancelSubscriptionClick}
                                         disabled={cancellingSubscription}
                                         className="px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all font-bold text-sm disabled:opacity-50"
+                                        style={{ borderRadius: '8px' }}
                                     >
                                         {cancellingSubscription ? 'Processing...' : 'Cancel Plan'}
                                     </button>
@@ -792,17 +795,31 @@ const SubscriptionManagement = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             {/* Storage */}
                                             <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
                                                 <p className="text-xs text-gray-500 font-bold uppercase mb-1">Storage</p>
                                                 <p className="text-lg font-bold text-gray-900">
-                                                    {subscriptionOverview.overview.usage.storage_gb.used}
-                                                    <span className="text-sm text-gray-400 font-normal ml-1">GB Used</span>
+                                                    {(() => {
+                                                        const bytes = subscriptionOverview.overview.usage.storage_gb.used_bytes;
+                                                        const used = subscriptionOverview.overview.usage.storage_gb.used;
+                                                        if (bytes !== undefined && bytes !== null) {
+                                                            if (bytes === 0) return "0 KB";
+                                                            const k = 1024;
+                                                            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                                                            const i = Math.floor(Math.log(bytes) / Math.log(k));
+                                                            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                                                        }
+                                                        return used + ' GB';
+                                                    })()}
+                                                    <span className="text-sm text-gray-400 font-normal ml-1">Used</span>
                                                 </p>
                                                 <div className="w-full bg-gray-200 h-1.5 rounded-full mt-2">
                                                     <div className="bg-[#3AD6F2] h-full rounded-full" style={{ width: `${Math.min((subscriptionOverview.overview.usage.storage_gb.used / subscriptionOverview.overview.usage.storage_gb.limit) * 100, 100)}%` }}></div>
                                                 </div>
+                                                <p className="text-xs text-gray-500 mt-1 text-right">
+                                                    of {subscriptionOverview.overview.usage.storage_gb.limit} GB
+                                                </p>
                                             </div>
 
                                             {/* Workflows */}
@@ -810,10 +827,46 @@ const SubscriptionManagement = () => {
                                                 <p className="text-xs text-gray-500 font-bold uppercase mb-1">Workflows</p>
                                                 <p className="text-lg font-bold text-gray-900">
                                                     {subscriptionOverview.overview.usage.workflows.used}
-                                                    <span className="text-sm text-gray-400 font-normal ml-1">Active</span>
+                                                    <span className="text-sm text-gray-400 font-normal ml-1">
+                                                        / {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' ? '∞' : subscriptionOverview.overview.usage.workflows.limit}
+                                                    </span>
                                                 </p>
                                                 <div className="w-full bg-green-200 h-1.5 rounded-full mt-2">
-                                                    <div className="bg-green-500 h-full rounded-full" style={{ width: '100%' }}></div>
+                                                    <div
+                                                        className="bg-green-500 h-full rounded-full"
+                                                        style={{
+                                                            width: subscriptionOverview.overview.usage.workflows.limit === 'Unlimited'
+                                                                ? '5%'
+                                                                : `${Math.min((subscriptionOverview.overview.usage.workflows.used / subscriptionOverview.overview.usage.workflows.limit) * 100, 100)}%`
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1 text-right">
+                                                    {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' ? 'Unlimited' : `${subscriptionOverview.overview.usage.workflows.limit} Limit`}
+                                                </div>
+                                            </div>
+
+                                            {/* E-Signatures */}
+                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
+                                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">E-Signatures</p>
+                                                <p className="text-lg font-bold text-gray-900">
+                                                    {subscriptionOverview.overview.usage.esignatures?.used || 0}
+                                                    <span className="text-sm text-gray-400 font-normal ml-1">
+                                                        / {subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' ? '∞' : (subscriptionOverview.overview.usage.esignatures?.limit || 0)}
+                                                    </span>
+                                                </p>
+                                                <div className="w-full bg-purple-200 h-1.5 rounded-full mt-2">
+                                                    <div
+                                                        className="bg-purple-500 h-full rounded-full"
+                                                        style={{
+                                                            width: (!subscriptionOverview.overview.usage.esignatures?.limit || subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited')
+                                                                ? '5%'
+                                                                : `${Math.min(((subscriptionOverview.overview.usage.esignatures?.used || 0) / subscriptionOverview.overview.usage.esignatures.limit) * 100, 100)}%`
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1 text-right">
+                                                    Monthly Limit
                                                 </div>
                                             </div>
                                         </div>

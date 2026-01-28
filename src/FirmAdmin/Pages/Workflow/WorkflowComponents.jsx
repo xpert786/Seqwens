@@ -153,7 +153,7 @@ const WorkflowExecutionLogViewer = ({ instanceId, isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-6">
+        <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-40 p-6">
             <div className="bg-white !rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-[#E8F0FF] flex-shrink-0">
@@ -324,8 +324,8 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
                             {template.name}
                         </h5>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${template.is_active
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-600'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
                             }`}>
                             {template.is_active ? 'Active' : 'Inactive'}
                         </span>

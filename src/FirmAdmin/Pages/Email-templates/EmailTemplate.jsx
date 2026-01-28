@@ -226,105 +226,105 @@ export default function EmailTemplate() {
 
     return (
         <>
-        <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
-            <div className="mx-auto space-y-6">
-                <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <h4 className="text-2xl font-semibold text-[#1F2A55]">
-                            Email Templates
-                        </h4>
-                        <p className="mt-1 text-sm text-[#6E7DAE]">
-                            Create and manage email templates for client communication
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button 
-                            onClick={() => openEditor(null)}
-                            className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#3AD6F2] px-4 font-semibold text-white hover:bg-[#2BC5E0] transition-colors"
-                        >
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 3.75V14.25M3.75 9H14.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Create Template
-                        </button>
-                       
-                    </div>
-                </header>
+            <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
+                <div className="mx-auto space-y-6">
+                    <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h4 className="text-2xl font-semibold text-[#1F2A55]">
+                                Email Templates
+                            </h4>
+                            <p className="mt-1 text-sm text-[#6E7DAE]">
+                                Create and manage email templates for client communication
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => openEditor(null)}
+                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#3AD6F2] px-4 font-semibold text-white hover:bg-[#2BC5E0] transition-colors"
+                            >
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 3.75V14.25M3.75 9H14.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                Create Template
+                            </button>
 
-                <TabNavigation
-                    className="w-fit bg-white p-1"
-                    tabs={tabs}
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    tabClassName="px-4 sm:px-6 py-2 text-xs sm:text-sm md:text-base font-medium text-[#1F2A55]"
-                    activeTabClassName="bg-[#3AD6F2] text-white shadow"
-                    inactiveTabClassName="text-[#4A5673]"
-                />
+                        </div>
+                    </header>
 
-                <section className="space-y-6">
-                    {activeTab === 'Email Templates' && (
-                        <TemplatesView 
-                            templates={templates} 
-                            statusClasses={statusClasses}
-                            loading={loading}
-                            error={error}
-                            onRefresh={fetchTemplates}
-                            onDelete={handleDeleteTemplate}
-                            onDuplicate={handleDuplicateTemplate}
-                            onSend={handleSendEmail}
-                            onGetTemplate={firmAdminEmailTemplatesAPI.getTemplate}
-                            onRequestEdit={openEditor}
-                            onRequestCreate={() => openEditor(null)}
-                        />
-                    )}
-                    {activeTab === 'Analytics' && <AnalyticsView />}
-                    {activeTab === 'Email Settings' && <EmailSettingsView />}
-                    {!['Email Templates', 'Analytics', 'Email Settings'].includes(activeTab) && (
-                        <EmptyTabState tab={activeTab} />
-                    )}
-                </section>
-            </div>
+                    <TabNavigation
+                        className="w-fit bg-white p-1"
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        tabClassName="px-4 sm:px-6 py-2 text-xs sm:text-sm md:text-base font-medium text-[#1F2A55]"
+                        activeTabClassName="bg-[#3AD6F2] text-white shadow"
+                        inactiveTabClassName="text-[#4A5673]"
+                    />
 
-            {/* Template Editor Modal */}
-            {showEditorModal && (
-                <TemplateFormModal
-                    template={editorTemplate}
-                    onClose={closeEditor}
-                    onSubmit={async (templatePayload) => {
-                        if (editorTemplate?.id) {
-                            const success = await handleUpdateTemplate(editorTemplate.id, templatePayload);
+                    <section className="space-y-6">
+                        {activeTab === 'Email Templates' && (
+                            <TemplatesView
+                                templates={templates}
+                                statusClasses={statusClasses}
+                                loading={loading}
+                                error={error}
+                                onRefresh={fetchTemplates}
+                                onDelete={handleDeleteTemplate}
+                                onDuplicate={handleDuplicateTemplate}
+                                onSend={handleSendEmail}
+                                onGetTemplate={firmAdminEmailTemplatesAPI.getTemplate}
+                                onRequestEdit={openEditor}
+                                onRequestCreate={() => openEditor(null)}
+                            />
+                        )}
+                        {activeTab === 'Analytics' && <AnalyticsView />}
+                        {activeTab === 'Email Settings' && <EmailSettingsView />}
+                        {!['Email Templates', 'Analytics', 'Email Settings'].includes(activeTab) && (
+                            <EmptyTabState tab={activeTab} />
+                        )}
+                    </section>
+                </div>
+
+                {/* Template Editor Modal */}
+                {showEditorModal && (
+                    <TemplateFormModal
+                        template={editorTemplate}
+                        onClose={closeEditor}
+                        onSubmit={async (templatePayload) => {
+                            if (editorTemplate?.id) {
+                                const success = await handleUpdateTemplate(editorTemplate.id, templatePayload);
+                                if (success) {
+                                    closeEditor();
+                                }
+                                return success;
+                            }
+                            const success = await handleCreateTemplate(templatePayload);
                             if (success) {
                                 closeEditor();
                             }
                             return success;
-                        }
-                        const success = await handleCreateTemplate(templatePayload);
-                        if (success) {
-                            closeEditor();
-                        }
-                        return success;
-                    }}
-                />
-            )}
-        </div>
+                        }}
+                    />
+                )}
+            </div>
 
-        {/* Delete Template Confirmation Modal */}
-        <ConfirmationModal
-            isOpen={showDeleteTemplateConfirm}
-            onClose={() => {
-                if (!deletingTemplate) {
-                    setShowDeleteTemplateConfirm(false);
-                    setTemplateToDelete(null);
-                }
-            }}
-            onConfirm={confirmDeleteTemplate}
-            title="Delete Template"
-            message="Are you sure you want to delete this template?"
-            confirmText="Delete"
-            cancelText="Cancel"
-            isLoading={deletingTemplate}
-            isDestructive={true}
-        />
+            {/* Delete Template Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteTemplateConfirm}
+                onClose={() => {
+                    if (!deletingTemplate) {
+                        setShowDeleteTemplateConfirm(false);
+                        setTemplateToDelete(null);
+                    }
+                }}
+                onConfirm={confirmDeleteTemplate}
+                title="Delete Template"
+                message="Are you sure you want to delete this template?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deletingTemplate}
+                isDestructive={true}
+            />
         </>
     );
 }
@@ -342,9 +342,9 @@ const IconButton = ({ children, ariaLabel, onClick }) => (
 // Simple Modal Components
 const DuplicateModal = ({ template, onClose, onSubmit }) => {
     const [newName, setNewName] = useState(template?.name ? `${template.name} (Copy)` : '');
-    
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full">
                 <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Duplicate Template</h3>
                 <div className="mb-4">
@@ -458,9 +458,9 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
             setSending(false);
         }
     };
-    
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 send-email-modal">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4 send-email-modal">
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto send-email-modal-box">
                 <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Send Email</h3>
                 <div className="space-y-4">
@@ -567,7 +567,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
 
 const PreviewModal = ({ template, onClose }) => {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-[#1F2A55]">Template Preview</h3>
@@ -584,7 +584,7 @@ const PreviewModal = ({ template, onClose }) => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-[#3B4A66] mb-1">Body</label>
-                        <div 
+                        <div
                             className="text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg p-4 bg-gray-50"
                             dangerouslySetInnerHTML={{ __html: template.body_html || template.body || '<p>No content</p>' }}
                         />
@@ -1146,11 +1146,11 @@ const transformTemplateData = (template) => {
     };
 };
 
-function TemplatesView({ 
-    templates, 
-    statusClasses, 
-    loading, 
-    error, 
+function TemplatesView({
+    templates,
+    statusClasses,
+    loading,
+    error,
     onRefresh,
     onDelete,
     onDuplicate,
@@ -1167,7 +1167,7 @@ function TemplatesView({
     const itemsPerPage = 10;
 
     const transformedTemplates = templates.map(transformTemplateData);
-    
+
     // Pagination calculations
     const totalItems = transformedTemplates.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -1242,7 +1242,7 @@ function TemplatesView({
         return (
             <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF] p-8 text-center">
                 <p className="text-red-600 mb-4">{error}</p>
-                <button 
+                <button
                     onClick={onRefresh}
                     className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0]"
                 >
@@ -1254,205 +1254,205 @@ function TemplatesView({
 
     return (
         <>
-        <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF]">
-            <div className="border-b border-[#E8F0FF] px-5 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
-                <div>
-                    <h3 className="text-lg font-semibold text-[#1F2A55]">Email Templates</h3>
-                    <p className="mt-1 text-sm text-[#7B8AB2]">Manage your email templates and their usage</p>
+            <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF]">
+                <div className="border-b border-[#E8F0FF] px-5 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
+                    <div>
+                        <h3 className="text-lg font-semibold text-[#1F2A55]">Email Templates</h3>
+                        <p className="mt-1 text-sm text-[#7B8AB2]">Manage your email templates and their usage</p>
+                    </div>
                 </div>
-            </div>
 
-            <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 text-sm font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8">
-                <span>Template</span>
-                <span>Category</span>
-                <span className="ml-3">Subject</span>
-                <span>Usage</span>
-                <span>Last Used</span>
-                <span>Status</span>
-                <span className="text-right">Actions</span>
-            </div>
-            {transformedTemplates.length === 0 ? (
-                <div className="p-8 text-center text-[#7B8AB2]">
-                    <p>No templates found. Create your first template to get started.</p>
+                <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 text-sm font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8">
+                    <span>Template</span>
+                    <span>Category</span>
+                    <span className="ml-3">Subject</span>
+                    <span>Usage</span>
+                    <span>Last Used</span>
+                    <span>Status</span>
+                    <span className="text-right">Actions</span>
                 </div>
-            ) : (
-                <>
-                    <div className="hidden xl:block">
-                        {paginatedTemplates.map((template, index) => (
-                            <div
-                                key={template.id}
-                                className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-6 sm:px-6 lg:px-8 text-sm ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
-                            >
-                                <div>
-                                    <p className="font-semibold text-[#1F2A55]">{template.title}</p>
-                                    <p className="mt-1 text-xs font-medium text-[#7B8AB2]">{template.description}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="flex h-8 w-8 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
-                                        {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
-                                    </span>
+                {transformedTemplates.length === 0 ? (
+                    <div className="p-8 text-center text-[#7B8AB2]">
+                        <p>No templates found. Create your first template to get started.</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="hidden xl:block">
+                            {paginatedTemplates.map((template, index) => (
+                                <div
+                                    key={template.id}
+                                    className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-6 sm:px-6 lg:px-8 text-sm ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
+                                >
+                                    <div>
+                                        <p className="font-semibold text-[#1F2A55]">{template.title}</p>
+                                        <p className="mt-1 text-xs font-medium text-[#7B8AB2]">{template.description}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="flex h-8 w-8 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
+                                            {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
+                                        </span>
+                                        <span
+                                            className={`inline-flex items-center gap-1.5 !rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
+                                        >
+                                            <span>{template.category.label}</span>
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-medium text-[#3D4C70]">{template.subject}</p>
+                                    <p className="font-medium text-[#1F2A55]">{template.usage}</p>
+                                    <p className="ml-3 text-[#3D4C70] font-medium">{template.lastUsed}</p>
                                     <span
-                                        className={`inline-flex items-center gap-1.5 !rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
+                                        className={`inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
                                     >
-                                        <span>{template.category.label}</span>
+                                        {template.status.label}
                                     </span>
+                                    <div className="flex items-center justify-end gap-2 text-[#5061A4]">
+                                        <IconButton ariaLabel="Preview template" onClick={() => handlePreview(template)}>
+                                            <EyeIcon />
+                                        </IconButton>
+                                        <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
+                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
+                                                <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
+                                                <path d="M8.70947 4.03906H4.62614C4.31672 4.03906 4.01997 4.16198 3.80118 4.38077C3.58239 4.59956 3.45947 4.89631 3.45947 5.20573V13.3724C3.45947 13.6818 3.58239 13.9786 3.80118 14.1974C4.01997 14.4161 4.31672 14.5391 4.62614 14.5391H12.7928C13.1022 14.5391 13.399 14.4161 13.6178 14.1974C13.8366 13.9786 13.9595 13.6818 13.9595 13.3724V9.28906" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                                <path d="M12.4284 3.82337C12.6605 3.59131 12.9753 3.46094 13.3034 3.46094C13.6316 3.46094 13.9464 3.59131 14.1784 3.82337C14.4105 4.05544 14.5409 4.37019 14.5409 4.69837C14.5409 5.02656 14.4105 5.34131 14.1784 5.57337L8.92086 10.8315C8.78234 10.9699 8.61123 11.0712 8.42327 11.1261L6.74736 11.6161C6.69716 11.6308 6.64395 11.6316 6.5933 11.6187C6.54265 11.6057 6.49642 11.5793 6.45945 11.5424C6.42248 11.5054 6.39613 11.4592 6.38315 11.4085C6.37017 11.3579 6.37105 11.3047 6.38569 11.2545L6.87569 9.57854C6.93083 9.39074 7.03234 9.21982 7.17086 9.08154L12.4284 3.82337Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </IconButton>
+                                        <IconButton ariaLabel="Duplicate template" onClick={() => handleDuplicate(template)}>
+                                            <DuplicateIcon />
+                                        </IconButton>
+                                        <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
+                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
+                                                <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
+                                                <path d="M13.9582 4.03906L4.0415 7.2474L7.83317 8.9974L11.9165 6.08073L8.99984 10.1641L10.7498 13.9557L13.9582 4.03906Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </IconButton>
+                                        <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
+                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+                                            </svg>
+                                        </IconButton>
+                                    </div>
                                 </div>
-                                <p className="text-sm font-medium text-[#3D4C70]">{template.subject}</p>
-                                <p className="font-medium text-[#1F2A55]">{template.usage}</p>
-                                <p className="ml-3 text-[#3D4C70] font-medium">{template.lastUsed}</p>
-                                <span
-                                    className={`inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
-                                >
-                                    {template.status.label}
-                                </span>
-                                <div className="flex items-center justify-end gap-2 text-[#5061A4]">
-                                    <IconButton ariaLabel="Preview template" onClick={() => handlePreview(template)}>
-                                        <EyeIcon />
-                                    </IconButton>
-                                    <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
-                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
-                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
-                                            <path d="M8.70947 4.03906H4.62614C4.31672 4.03906 4.01997 4.16198 3.80118 4.38077C3.58239 4.59956 3.45947 4.89631 3.45947 5.20573V13.3724C3.45947 13.6818 3.58239 13.9786 3.80118 14.1974C4.01997 14.4161 4.31672 14.5391 4.62614 14.5391H12.7928C13.1022 14.5391 13.399 14.4161 13.6178 14.1974C13.8366 13.9786 13.9595 13.6818 13.9595 13.3724V9.28906" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                            <path d="M12.4284 3.82337C12.6605 3.59131 12.9753 3.46094 13.3034 3.46094C13.6316 3.46094 13.9464 3.59131 14.1784 3.82337C14.4105 4.05544 14.5409 4.37019 14.5409 4.69837C14.5409 5.02656 14.4105 5.34131 14.1784 5.57337L8.92086 10.8315C8.78234 10.9699 8.61123 11.0712 8.42327 11.1261L6.74736 11.6161C6.69716 11.6308 6.64395 11.6316 6.5933 11.6187C6.54265 11.6057 6.49642 11.5793 6.45945 11.5424C6.42248 11.5054 6.39613 11.4592 6.38315 11.4085C6.37017 11.3579 6.37105 11.3047 6.38569 11.2545L6.87569 9.57854C6.93083 9.39074 7.03234 9.21982 7.17086 9.08154L12.4284 3.82337Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </IconButton>
-                                    <IconButton ariaLabel="Duplicate template" onClick={() => handleDuplicate(template)}>
-                                        <DuplicateIcon />
-                                    </IconButton>
-                                    <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
-                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
-                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
-                                            <path d="M13.9582 4.03906L4.0415 7.2474L7.83317 8.9974L11.9165 6.08073L8.99984 10.1641L10.7498 13.9557L13.9582 4.03906Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </IconButton>
-                                    <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
-                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
-                                        </svg>
-                                    </IconButton>
+                            ))}
+                        </div>
+
+                        <div className="divide-y divide-[#E8F0FF] xl:hidden">
+                            {paginatedTemplates.map((template) => (
+                                <div key={template.id} className="space-y-4 px-5 py-6 sm:px-6">
+                                    <div className="space-y-2">
+                                        <div>
+                                            <p className="font-semibold text-[#1F2A55]">{template.title}</p>
+                                            <p className="text-xs text-[#7B8AB2]">{template.description}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="flex h-8 w-8 items-center justify-center !rounded-full !border border-[#F56D2D] bg-white text-[#32406B]">
+                                                {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
+                                            </span>
+                                            <span
+                                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
+                                            >
+                                                <span>{template.category.label}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                                        <InfoStack label="Subject" value={template.subject} />
+                                        <InfoStack label="Usage" value={template.usage} />
+                                        <InfoStack label="Last Used" value={template.lastUsed} />
+                                        <div>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">Status</p>
+                                            <span
+                                                className={`mt-2 inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
+                                            >
+                                                {template.status.label}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between border-t border-[#E8F0FF] pt-4">
+                                        <span className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">Actions</span>
+                                        <div className="flex items-center gap-2 text-[#5061A4]">
+                                            <IconButton ariaLabel="Preview template" onClick={() => handlePreview(template)}>
+                                                <EyeIcon />
+                                            </IconButton>
+                                            <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton ariaLabel="Duplicate template" onClick={() => handleDuplicate(template)}>
+                                                <DuplicateIcon />
+                                            </IconButton>
+                                            <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
+                                                <SendIcon />
+                                            </IconButton>
+                                            <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
+                                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+                                                </svg>
+                                            </IconButton>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    <div className="divide-y divide-[#E8F0FF] xl:hidden">
-                        {paginatedTemplates.map((template) => (
-                    <div key={template.id} className="space-y-4 px-5 py-6 sm:px-6">
-                        <div className="space-y-2">
-                            <div>
-                                <p className="font-semibold text-[#1F2A55]">{template.title}</p>
-                                <p className="text-xs text-[#7B8AB2]">{template.description}</p>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="px-5 py-4 sm:px-6 lg:px-8 border-t border-[#E8F0FF]">
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    totalItems={totalItems}
+                                    itemsPerPage={itemsPerPage}
+                                    startIndex={startIndex}
+                                    endIndex={endIndex}
+                                />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="flex h-8 w-8 items-center justify-center !rounded-full !border border-[#F56D2D] bg-white text-[#32406B]">
-                                    {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
-                                </span>
-                                <span
-                                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
-                                >
-                                    <span>{template.category.label}</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                            <InfoStack label="Subject" value={template.subject} />
-                            <InfoStack label="Usage" value={template.usage} />
-                            <InfoStack label="Last Used" value={template.lastUsed} />
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">Status</p>
-                                <span
-                                    className={`mt-2 inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
-                                >
-                                    {template.status.label}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between border-t border-[#E8F0FF] pt-4">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">Actions</span>
-                            <div className="flex items-center gap-2 text-[#5061A4]">
-                                <IconButton ariaLabel="Preview template" onClick={() => handlePreview(template)}>
-                                    <EyeIcon />
-                                </IconButton>
-                                <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton ariaLabel="Duplicate template" onClick={() => handleDuplicate(template)}>
-                                    <DuplicateIcon />
-                                </IconButton>
-                                <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
-                                    <SendIcon />
-                                </IconButton>
-                                <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
-                                    </svg>
-                                </IconButton>
-                            </div>
-                        </div>
-                    </div>
-                        ))}
-                    </div>
-                    
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="px-5 py-4 sm:px-6 lg:px-8 border-t border-[#E8F0FF]">
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                                totalItems={totalItems}
-                                itemsPerPage={itemsPerPage}
-                                startIndex={startIndex}
-                                endIndex={endIndex}
-                            />
-                        </div>
-                    )}
-                </>
-            )}
+                        )}
+                    </>
+                )}
 
-            {/* Duplicate Modal */}
-            {showDuplicateModal && (
-                <DuplicateModal
-                    template={selectedTemplate}
-                    onClose={() => {
-                        setShowDuplicateModal(false);
-                        setSelectedTemplate(null);
-                    }}
-                    onSubmit={handleDuplicateSubmit}
-                />
-            )}
+                {/* Duplicate Modal */}
+                {showDuplicateModal && (
+                    <DuplicateModal
+                        template={selectedTemplate}
+                        onClose={() => {
+                            setShowDuplicateModal(false);
+                            setSelectedTemplate(null);
+                        }}
+                        onSubmit={handleDuplicateSubmit}
+                    />
+                )}
 
-            {/* Send Email Modal */}
-            {showSendModal && selectedTemplate && (
-                <SendEmailModal
-                    template={selectedTemplate}
-                    onClose={() => {
-                        setShowSendModal(false);
-                        setSelectedTemplate(null);
-                    }}
-                    onSend={async (emailData) => {
-                        const success = await onSend(selectedTemplate.id, emailData);
-                        if (success) {
+                {/* Send Email Modal */}
+                {showSendModal && selectedTemplate && (
+                    <SendEmailModal
+                        template={selectedTemplate}
+                        onClose={() => {
                             setShowSendModal(false);
                             setSelectedTemplate(null);
-                        }
-                    }}
-                />
-            )}
+                        }}
+                        onSend={async (emailData) => {
+                            const success = await onSend(selectedTemplate.id, emailData);
+                            if (success) {
+                                setShowSendModal(false);
+                                setSelectedTemplate(null);
+                            }
+                        }}
+                    />
+                )}
 
-            {/* Preview Modal */}
-            {showPreviewModal && selectedTemplate && (
-                <PreviewModal
-                    template={selectedTemplate}
-                    onClose={() => {
-                        setShowPreviewModal(false);
-                        setSelectedTemplate(null);
-                    }}
-                />
-            )}
-        </div>
+                {/* Preview Modal */}
+                {showPreviewModal && selectedTemplate && (
+                    <PreviewModal
+                        template={selectedTemplate}
+                        onClose={() => {
+                            setShowPreviewModal(false);
+                            setSelectedTemplate(null);
+                        }}
+                    />
+                )}
+            </div>
         </>
     );
 }

@@ -115,23 +115,23 @@ export default function CalendarPage() {
   // Convert 24-hour time to 12-hour AM/PM format
   const convertTo12HourFormat = (timeStr) => {
     if (!timeStr) return '';
-    
+
     // If already in 12-hour format (contains AM/PM), return as is
     if (timeStr.includes('AM') || timeStr.includes('PM')) {
       return timeStr;
     }
-    
+
     // Extract hours and minutes from 24-hour format (HH:MM:SS or HH:MM)
     const timeParts = timeStr.split(':');
     if (timeParts.length < 2) return timeStr;
-    
+
     let hours = parseInt(timeParts[0], 10);
     const minutes = timeParts[1];
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    
+
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
-    
+
     const formattedMinutes = minutes.padStart(2, '0');
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
@@ -157,13 +157,13 @@ export default function CalendarPage() {
 
     // Convert start time to AM/PM format
     const startTime = convertTo12HourFormat(appointment.appointment_time || '00:00:00');
-    
+
     // Use end_time from API if available (check if already in AM/PM format)
     let endTime;
     if (appointment.end_time) {
       // If end_time already contains AM/PM, use it directly; otherwise convert
-      endTime = appointment.end_time.includes('AM') || appointment.end_time.includes('PM') 
-        ? appointment.end_time 
+      endTime = appointment.end_time.includes('AM') || appointment.end_time.includes('PM')
+        ? appointment.end_time
         : convertTo12HourFormat(appointment.end_time);
     } else {
       // Calculate end time based on duration
@@ -173,14 +173,14 @@ export default function CalendarPage() {
       const endMins = totalMinutes % 60;
       endTime = convertTo12HourFormat(`${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`);
     }
-    
+
     const timeDisplay = `${startTime} - ${endTime}`;
 
     return {
       id: appointment.id,
       title: appointment.subject || `${appointment.type_display || 'Appointment'}`,
       date: appointmentDate,
-       dateKey: formatDateKey(appointmentDate),
+      dateKey: formatDateKey(appointmentDate),
       time: timeDisplay,
       timeSort: hours * 60 + minutes, // For sorting purposes
       type: appointment.appointment_type,
@@ -299,7 +299,7 @@ export default function CalendarPage() {
   const updateAppointmentStatus = async (appointmentId, action, reason = null) => {
     try {
       setUpdatingStatus(prev => ({ ...prev, [appointmentId]: true }));
-      
+
       const API_BASE_URL = getApiBaseUrl();
       const token = getAccessToken();
 
@@ -341,14 +341,14 @@ export default function CalendarPage() {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         const actionText = action === 'approve' ? 'approved' : 'cancelled';
         toast.success(`Appointment ${actionText} successfully`, {
           position: "top-right",
           autoClose: 3000,
         });
-        
+
         // Refresh calendar data
         await fetchCalendarData();
       } else {
@@ -383,7 +383,7 @@ export default function CalendarPage() {
     const reason = window.prompt(
       `Are you sure you want to cancel "${event.title}"?\n\nPlease provide a reason (optional):`
     );
-    
+
     if (reason !== null) {
       // User clicked OK (even if they didn't enter a reason)
       await updateAppointmentStatus(event.id, 'cancel', reason || null);
@@ -448,8 +448,8 @@ export default function CalendarPage() {
           <button
             onClick={() => setIsSetAvailabilityModalOpen(true)}
             className="btn dashboard-btn d-flex align-items-center gap-2"
-            style={{ 
-              background: "white", 
+            style={{
+              background: "white",
               border: "1px solid #E8F0FF",
               color: "#3B4A66"
             }}
@@ -491,8 +491,8 @@ export default function CalendarPage() {
             key={period}
             onClick={() => setSelectedPeriod(period)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedPeriod === period
-                ? 'bg-orange-500 text-white'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+              ? 'bg-orange-500 text-white'
+              : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
               }`} style={{ borderRadius: '7px' }}
           >
             {period}
@@ -773,7 +773,7 @@ export default function CalendarPage() {
 
       {/* Pending Meetings Modal */}
       {showPendingMeetingsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="p-6 border-b border-gray-200">

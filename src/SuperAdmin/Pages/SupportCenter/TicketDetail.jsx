@@ -548,7 +548,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                                         </div>
 
                                         {isAssignModalOpen && (
-                                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+                                            <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-50 px-4">
                                                 <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
                                                     <button
                                                         type="button"
@@ -737,7 +737,7 @@ export default function TicketDetail({ ticketId, onBack }) {
             </div>
 
             {isAssignModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+                <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-50 px-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
                         <button
                             type="button"

@@ -42,7 +42,7 @@ export default function RoleRequests() {
       setLoading(true);
       setError(null);
       const response = await superAdminAPI.getRoleRequests(statusFilter === 'all' ? null : statusFilter);
-      
+
       if (response.success && response.data) {
         // Handle new response structure with requests and counts
         if (response.data.requests && Array.isArray(response.data.requests)) {
@@ -53,7 +53,7 @@ export default function RoleRequests() {
         } else {
           setRequests([]);
         }
-        
+
         // Set counts if provided
         if (response.data.counts) {
           setStatusCounts({
@@ -87,7 +87,7 @@ export default function RoleRequests() {
     const userName = request.user?.full_name || request.user?.email || '';
     const firmName = request.firm?.name || request.firm_name || '';
     const roleName = request.requested_role_display || request.requested_role || '';
-    
+
     return (
       userName.toLowerCase().includes(searchLower) ||
       firmName.toLowerCase().includes(searchLower) ||
@@ -101,17 +101,17 @@ export default function RoleRequests() {
     try {
       setProcessingRequest(requestId);
       let response;
-      
+
       if (action === 'approve') {
         response = await superAdminAPI.approveRoleRequest(requestId, notes || null);
       } else {
         response = await superAdminAPI.rejectRoleRequest(requestId, notes || null);
       }
-      
+
       if (response.success) {
         toast.success(
-          action === 'approve' 
-            ? 'Role request approved successfully' 
+          action === 'approve'
+            ? 'Role request approved successfully'
             : 'Role request rejected',
           superToastOptions
         );
@@ -270,8 +270,8 @@ export default function RoleRequests() {
           <FiUser className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-lg font-semibold text-gray-800 mb-2">No Role Requests Found</h3>
           <p className="text-gray-600">
-            {searchTerm || statusFilter !== 'all' 
-              ? 'No requests match your current filters.' 
+            {searchTerm || statusFilter !== 'all'
+              ? 'No requests match your current filters.'
               : 'There are no role requests at this time.'}
           </p>
         </div>
@@ -314,7 +314,7 @@ export default function RoleRequests() {
                     </div>
                     <div className="ml-6 text-sm text-gray-600">
                       <span className="font-medium">Current Roles: </span>
-                      {request.user?.current_roles?.length > 0 
+                      {request.user?.current_roles?.length > 0
                         ? request.user.current_roles.map(role => ROLE_DISPLAY_NAMES[role] || role).join(', ')
                         : 'None'}
                     </div>
@@ -346,11 +346,11 @@ export default function RoleRequests() {
                   {/* Message */}
                   {request.message && (
                     <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
-                    <p className="text-sm text-gray-700">
-                      <span className="font-medium">Message: </span>
-                      {request.message}
-                    </p>
-                  </div>
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Message: </span>
+                        {request.message}
+                      </p>
+                    </div>
                   )}
 
                   {/* Review Notes */}
@@ -398,12 +398,12 @@ export default function RoleRequests() {
 
       {/* Review Modal */}
       {showReviewModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {actionType === 'approve' ? 'Approve' : 'Reject'} Role Request
             </h3>
-            
+
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
                 <span className="font-medium">User:</span> {selectedRequest.user?.full_name || selectedRequest.user?.email}
@@ -440,11 +440,10 @@ export default function RoleRequests() {
               <button
                 onClick={() => handleAction(selectedRequest.id, actionType, reviewNotes)}
                 disabled={processingRequest === selectedRequest.id}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                  actionType === 'approve'
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${actionType === 'approve'
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-red-600 hover:bg-red-700'
-                }`}
+                  }`}
               >
                 {processingRequest === selectedRequest.id ? 'Processing...' : actionType === 'approve' ? 'Approve' : 'Reject'}
               </button>

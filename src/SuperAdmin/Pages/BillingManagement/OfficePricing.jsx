@@ -54,7 +54,7 @@ export default function OfficePricing() {
         params.firm_id = firmFilter;
       }
       const response = await superAdminBillingAPI.listOfficePricing(params);
-      
+
       if (response.success) {
         setPricingList(Array.isArray(response.data) ? response.data : []);
       } else {
@@ -116,7 +116,7 @@ export default function OfficePricing() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.firm_id || !formData.price_per_office) {
       toast.error('Please fill in all required fields', {
         position: 'top-right',
@@ -255,11 +255,10 @@ export default function OfficePricing() {
                       ${parseFloat(pricing.price_per_office || 0).toFixed(2)}/month
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        pricing.is_active
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${pricing.is_active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-100 text-gray-700'
-                      } font-[BasisGrotesquePro]`}>
+                        } font-[BasisGrotesquePro]`}>
                         {pricing.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -281,7 +280,7 @@ export default function OfficePricing() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
           <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
             <div className="flex justify-between items-start mb-6">
               <div>

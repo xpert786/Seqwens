@@ -16,12 +16,12 @@ export default function FirmAddonsTab({ firmId, firmName }) {
   // Fetch firm addons
   const fetchFirmAddons = useCallback(async () => {
     if (!firmId) return;
-    
+
     try {
       setLoading(true);
       setError('');
       const response = await superAdminAddonsAPI.getFirmAddons(firmId);
-      
+
       if (response.success && response.data) {
         setFirmAddons(response.data.addons || []);
       } else {
@@ -41,7 +41,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
   const fetchAvailableAddons = useCallback(async () => {
     try {
       const response = await superAdminAddonsAPI.listAddons();
-      
+
       if (response.success && response.data) {
         // Filter to only show active addons that aren't already added
         const activeAddons = (response.data.addons || []).filter(addon => addon.is_active);
@@ -76,14 +76,14 @@ export default function FirmAddonsTab({ firmId, firmName }) {
         position: 'top-right',
         autoClose: 2000
       });
-      
+
       // TODO: Implement super admin endpoint to add addon to firm
       // For now, show a message that this needs backend support
       toast.warning('Super admin add addon endpoint needs to be implemented', {
         position: 'top-right',
         autoClose: 3000
       });
-      
+
       // After implementation, refresh the list
       // await fetchFirmAddons();
     } catch (err) {
@@ -114,14 +114,14 @@ export default function FirmAddonsTab({ firmId, firmName }) {
         position: 'top-right',
         autoClose: 3000
       });
-      
+
       // After implementation:
       // const response = await superAdminAddonsAPI.removeAddonFromFirm(firmId, addonToRemove.id);
       // if (response.success) {
       //   toast.success(response.message || 'Addon removed successfully');
       //   fetchFirmAddons();
       // }
-      
+
       setShowRemoveConfirm(false);
       setAddonToRemove(null);
     } catch (err) {
@@ -229,11 +229,10 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                       <h6 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
                         {addon.name || 'Unknown Addon'}
                       </h6>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full font-[BasisGrotesquePro] ${
-                        firmAddon.is_active
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full font-[BasisGrotesquePro] ${firmAddon.is_active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-100 text-gray-700'
-                      }`}>
+                        }`}>
                         {firmAddon.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
@@ -292,7 +291,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
 
       {/* Add Addon Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
           <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -367,7 +366,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
 
       {/* Remove Confirmation Modal */}
       {showRemoveConfirm && addonToRemove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 10000 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 10000 }}>
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
             <h4 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
               Remove Addon

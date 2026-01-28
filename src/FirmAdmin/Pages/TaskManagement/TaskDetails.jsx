@@ -27,7 +27,7 @@ const TaskDetails = () => {
             setLoading(true);
             setError(null);
             const response = await taskDetailAPI.getTaskDetails(id);
-            
+
             if (response.success && response.data) {
                 setTaskData(response.data);
             } else {
@@ -104,7 +104,7 @@ const TaskDetails = () => {
         try {
             setUpdatingStatus(true);
             const response = await taskDetailAPI.updateTaskStatus(id, newStatus);
-            
+
             if (response.success) {
                 toast.success(response.message || 'Task status updated successfully');
                 fetchTaskDetails(); // Refresh task data
@@ -127,7 +127,7 @@ const TaskDetails = () => {
         try {
             setTimeTrackingLoading(true);
             const response = await taskDetailAPI.startTimeTracking(id);
-            
+
             if (response.success) {
                 toast.success(response.message || 'Time tracking started');
                 fetchTaskDetails(); // Refresh to get updated status
@@ -151,7 +151,7 @@ const TaskDetails = () => {
         try {
             setTimeTrackingLoading(true);
             const response = await taskDetailAPI.pauseTimeTracking(id);
-            
+
             if (response.success) {
                 toast.success(response.message || 'Time tracking stopped');
                 fetchTaskDetails(); // Refresh task data
@@ -180,7 +180,7 @@ const TaskDetails = () => {
         try {
             setTimeTrackingLoading(true);
             const response = await taskDetailAPI.resetTimeTracking(id);
-            
+
             if (response.success) {
                 toast.success(response.message || 'Time tracking reset successfully');
                 fetchTaskDetails(); // Refresh task data
@@ -662,7 +662,7 @@ const TaskDetails = () => {
             {/* Edit Task Modal */}
             {showEditModal && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center taskdetails-edit-modal"
+                    className="fixed inset-0 bg-black bg-opacity-50 z-[1070] flex items-center justify-center taskdetails-edit-modal"
                     onClick={() => setShowEditModal(false)}
                 >
                     <div

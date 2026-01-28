@@ -372,15 +372,15 @@ const UsersDetails = () => {
                             </button>
                             {profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
                                 <button
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={actionLoading}
-                                onClick={handleChangeAdminTypeClick}
-                                title="Change admin type"
-                                style={{ borderRadius: '8px' }}
-                              >
-                                Change Admin Type
-                              </button>
-                              
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={actionLoading}
+                                    onClick={handleChangeAdminTypeClick}
+                                    title="Change admin type"
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Change Admin Type
+                                </button>
+
                             )}
                         </div>
                     </div>
@@ -427,7 +427,7 @@ const UsersDetails = () => {
             </div>
             {showSuspendModal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
                     style={{ background: 'var(--Color-overlay, #00000099)' }}
                 >
                     <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
@@ -481,7 +481,7 @@ const UsersDetails = () => {
             {/* Admin Type Change Modal */}
             {showAdminTypeModal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
                     style={{ background: 'var(--Color-overlay, #00000099)' }}
                 >
                     <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">

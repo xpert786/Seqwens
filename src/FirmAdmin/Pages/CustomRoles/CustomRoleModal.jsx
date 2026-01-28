@@ -111,7 +111,7 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
   const handlePermissionToggle = (code) => {
     setFormData(prev => {
       let newPermissions = [...prev.permissions];
-      
+
       // Handle mutual exclusivity for view permissions
       if (code === 'view_assigned_clients_only') {
         if (newPermissions.includes('view_all_firm_clients')) {
@@ -139,10 +139,10 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
           newPermissions.push(code);
         }
       }
-      
+
       return { ...prev, permissions: newPermissions };
     });
-    
+
     // Clear permissions error
     if (errors.permissions) {
       setErrors(prev => {
@@ -234,7 +234,7 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4"
       onClick={onClose}
       style={{ zIndex: 9999 }}
     >

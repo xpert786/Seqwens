@@ -1407,7 +1407,7 @@ const Messages = () => {
 
       {/* Compose Message Modal */}
       {isComposeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 ml-40 mt-20 compose-modal-overlay">
+        <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black/40 p-6 compose-modal-overlay">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[85vh] compose-modal-container">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0 compose-modal-header">
@@ -1614,7 +1614,7 @@ const Messages = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-6">
+        <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-50 p-6">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <h4 className="text-lg font-bold text-gray-900 mb-3 font-[BasisGrotesquePro]">Delete Thread</h4>

@@ -210,7 +210,7 @@ export default function RolePrivilegesManager({ show, onClose, role, onUpdate })
             position: "top-right",
             autoClose: 5000,
           });
-          
+
           // Log skipped and errors for debugging
           if (skipped.length > 0) {
             console.log('Skipped privileges (already exist):', skipped);
@@ -361,7 +361,7 @@ export default function RolePrivilegesManager({ show, onClose, role, onUpdate })
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center z-50 p-3"
+        className="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center z-[1070] p-3"
         onClick={onClose}
         style={{ zIndex: 1050 }}
       >
@@ -566,7 +566,7 @@ export default function RolePrivilegesManager({ show, onClose, role, onUpdate })
       {/* Add Privilege Modal */}
       {showAddModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center z-50 p-3"
+          className="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center z-[1070] p-3"
           onClick={() => !saving && setShowAddModal(false)}
           style={{ zIndex: 1060 }}
         >

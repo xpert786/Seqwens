@@ -176,7 +176,7 @@ const SavedPaymentMethods = () => {
       {/* Header */}
       <div className="spm-header">
         <div>
-          <h2 className="spm-title">Saved Payment Methods</h2>
+          <h4 className="spm-title">Saved Payment Methods</h4>
           <p className="spm-subtitle">
             Manage your saved cards for automatic subscription renewals
           </p>

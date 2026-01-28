@@ -612,7 +612,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       {/* Add Client Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4"
           onClick={onClose}
           style={{ zIndex: 9999 }}
         >

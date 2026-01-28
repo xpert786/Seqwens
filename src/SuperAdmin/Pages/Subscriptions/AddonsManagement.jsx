@@ -30,7 +30,7 @@ export default function AddonsManagement() {
       setLoading(true);
       setError('');
       const response = await superAdminAddonsAPI.listAddons();
-      
+
       if (response.success && response.data) {
         setAddons(Array.isArray(response.data.addons) ? response.data.addons : []);
       } else {
@@ -55,7 +55,7 @@ export default function AddonsManagement() {
     try {
       setLoadingSimpleAddons(true);
       const response = await superAdminAddonsAPI.listAddons();
-      
+
       if (response.success && response.data && response.data.addons) {
         // Extract addon types from the full list
         const addonTypes = response.data.addons.map(addon => ({
@@ -162,7 +162,7 @@ export default function AddonsManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.addon_type || !formData.price) {
       toast.error('Please fill in all required fields', {
         position: 'top-right',
@@ -262,7 +262,7 @@ export default function AddonsManagement() {
           </div>
           <button
             onClick={handleOpenAddModal}
-              className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
             style={{ borderRadius: '7px' }}
           >
             + Add Addon
@@ -331,11 +331,10 @@ export default function AddonsManagement() {
                       <span className="capitalize">{addon.billing_frequency || 'one_time'}</span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        addon.is_active
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${addon.is_active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-100 text-gray-700'
-                      } font-[BasisGrotesquePro]`}>
+                        } font-[BasisGrotesquePro]`}>
                         {addon.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -376,7 +375,7 @@ export default function AddonsManagement() {
 
       {/* Add/Edit Modal */}
       {(showAddModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
           <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>

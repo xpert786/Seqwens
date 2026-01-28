@@ -460,7 +460,7 @@ export default function Reports() {
       setPlatformReportFileUrl(null);
       setPlatformReportDetails(null);
       setFeedback(null);
-      
+
       const requestData = {
         report_type: platformReportForm.report_type,
         time_period: platformReportForm.time_period,
@@ -478,14 +478,14 @@ export default function Reports() {
         requestData.custom_start_date = platformReportForm.custom_start_date;
         requestData.custom_end_date = platformReportForm.custom_end_date;
       }
-      
+
       const response = await superAdminAPI.generateReport(requestData);
-      
+
       if (response?.task_id) {
         setPlatformReportTaskId(response.task_id);
         setFeedback({ type: 'info', message: 'Report generation started. Please wait...' });
         toast.info('Report generation started. Checking status...', superToastOptions);
-        
+
         // Start polling for status with exponential backoff
         let pollCount = 0;
         const pollInterval = setInterval(async () => {
@@ -524,14 +524,14 @@ export default function Reports() {
       const payload = {
         ...scheduleFormData
       };
-      
+
       // Convert first_delivery to ISO string if provided
       if (scheduleFormData.first_delivery) {
         payload.first_delivery = new Date(scheduleFormData.first_delivery).toISOString();
       }
-      
+
       const response = await superAdminAPI.scheduleReport(payload);
-      
+
       if (response?.success) {
         toast.success(response.message || 'Report scheduled successfully', superToastOptions);
         setShowScheduleModal(false);
@@ -718,21 +718,21 @@ export default function Reports() {
   return (
     <div className="space-y-8 mb-8">
       {/* Platform Reports Section */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Platform Reports</h3>
-          <p className="text-sm" style={{color: '#3B4A66'}}>Generate platform-wide reports for firms, staff, or clients.</p>
+          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Platform Reports</h3>
+          <p className="text-sm" style={{ color: '#3B4A66' }}>Generate platform-wide reports for firms, staff, or clients.</p>
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Type *</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Type *</label>
               <select
                 value={platformReportForm.report_type}
                 onChange={handlePlatformReportFormChange('report_type')}
                 className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 disabled={platformReportLoading}
               >
                 {/* Custom Reports */}
@@ -752,12 +752,12 @@ export default function Reports() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Time Period *</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Time Period *</label>
               <select
                 value={platformReportForm.time_period}
                 onChange={handlePlatformReportFormChange('time_period')}
                 className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 disabled={platformReportLoading}
               >
                 <option value="last_7_days">Last 7 Days</option>
@@ -772,12 +772,12 @@ export default function Reports() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format *</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Format *</label>
               <select
                 value={platformReportForm.format}
                 onChange={handlePlatformReportFormChange('format')}
                 className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 disabled={platformReportLoading}
               >
                 {(() => {
@@ -796,24 +796,24 @@ export default function Reports() {
           {platformReportForm.time_period === 'custom' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Start Date *</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Start Date *</label>
                 <input
                   type="date"
                   value={platformReportForm.custom_start_date}
                   onChange={handlePlatformReportFormChange('custom_start_date')}
                   className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   disabled={platformReportLoading}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>End Date *</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>End Date *</label>
                 <input
                   type="date"
                   value={platformReportForm.custom_end_date}
                   onChange={handlePlatformReportFormChange('custom_end_date')}
                   className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   disabled={platformReportLoading}
                 />
               </div>
@@ -830,7 +830,7 @@ export default function Reports() {
               disabled={platformReportLoading}
               className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
             />
-            <label htmlFor="detailed-breakdowns" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+            <label htmlFor="detailed-breakdowns" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
               Include detailed breakdowns
             </label>
           </div>
@@ -849,13 +849,13 @@ export default function Reports() {
                 {/* Firm Filter */}
                 {config.showFirmFilter && (
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Firm Filter</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Firm Filter</label>
                     <select
                       value={platformReportForm.firm_filter}
                       onChange={handlePlatformReportFormChange('firm_filter')}
                       disabled={platformReportLoading}
                       className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                      style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                     >
                       <option value="all">All Firms</option>
                       <option value="active">Active Firms Only</option>
@@ -867,13 +867,13 @@ export default function Reports() {
                 {/* User Type Filter */}
                 {config.showUserTypeFilter && (
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>User Type Filter</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>User Type Filter</label>
                     <select
                       value={platformReportForm.user_type_filter}
                       onChange={handlePlatformReportFormChange('user_type_filter')}
                       disabled={platformReportLoading}
                       className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                      style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                     >
                       <option value="all">All Users</option>
                       <option value="admin">Admins Only</option>
@@ -894,7 +894,7 @@ export default function Reports() {
                       disabled={platformReportLoading}
                       className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
                     />
-                    <label htmlFor="include-charts" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                    <label htmlFor="include-charts" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
                       Include charts and visualizations
                     </label>
                   </div>
@@ -911,7 +911,7 @@ export default function Reports() {
                       disabled={platformReportLoading}
                       className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
                     />
-                    <label htmlFor="include-raw-data" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                    <label htmlFor="include-raw-data" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
                       Include raw data export
                     </label>
                   </div>
@@ -922,11 +922,10 @@ export default function Reports() {
 
           {/* Status indicator */}
           {platformReportStatus && (
-            <div className={`p-3 rounded-lg border ${
-              platformReportStatus === 'SUCCESS' ? 'bg-green-50 border-green-200' :
-              platformReportStatus === 'FAILED' ? 'bg-red-50 border-red-200' :
-              'bg-blue-50 border-blue-200'
-            }`}>
+            <div className={`p-3 rounded-lg border ${platformReportStatus === 'SUCCESS' ? 'bg-green-50 border-green-200' :
+                platformReportStatus === 'FAILED' ? 'bg-red-50 border-red-200' :
+                  'bg-blue-50 border-blue-200'
+              }`}>
               <div className="flex items-center gap-2">
                 {platformReportStatus === 'SUCCESS' && (
                   <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -944,13 +943,12 @@ export default function Reports() {
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 )}
-                <span className={`text-sm font-medium ${
-                  platformReportStatus === 'SUCCESS' ? 'text-green-800' :
-                  platformReportStatus === 'FAILED' ? 'text-red-800' :
-                  platformReportStatus === 'TIMEOUT' ? 'text-red-800' :
-                  platformReportStatus === 'PROGRESS' ? 'text-orange-800' :
-                  'text-blue-800'
-                }`}>
+                <span className={`text-sm font-medium ${platformReportStatus === 'SUCCESS' ? 'text-green-800' :
+                    platformReportStatus === 'FAILED' ? 'text-red-800' :
+                      platformReportStatus === 'TIMEOUT' ? 'text-red-800' :
+                        platformReportStatus === 'PROGRESS' ? 'text-orange-800' :
+                          'text-blue-800'
+                  }`}>
                   {platformReportStatus === 'SUCCESS' && 'Report Ready'}
                   {platformReportStatus === 'PENDING' && 'Report queued for processing...'}
                   {platformReportStatus === 'STARTED' && 'Initializing report generation...'}
@@ -993,12 +991,12 @@ export default function Reports() {
               onClick={handleGeneratePlatformReport}
               disabled={platformReportLoading}
               className="flex items-center justify-center gap-2 px-6 py-2 text-white font-medium transition-colors disabled:opacity-60"
-              style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
+              style={{ backgroundColor: '#F56D2D', borderRadius: '7px' }}
             >
               <FaDownload className="text-sm" />
               {platformReportLoading ? 'Generating...' : 'Generate Report'}
             </button>
-            
+
             {platformReportFileUrl && (
               <a
                 href={platformReportFileUrl}
@@ -1006,7 +1004,7 @@ export default function Reports() {
                 rel="noopener noreferrer"
                 download
                 className="flex items-center justify-center gap-2 px-6 py-2 text-white font-medium transition-colors hover:opacity-90"
-                style={{backgroundColor: '#22C55E', borderRadius: '7px'}}
+                style={{ backgroundColor: '#22C55E', borderRadius: '7px' }}
               >
                 <FaDownload className="text-sm" />
                 Download Report
@@ -1016,7 +1014,7 @@ export default function Reports() {
             <button
               onClick={() => setShowScheduleModal(true)}
               className="flex items-center justify-center gap-2 px-6 py-2 bg-white border font-medium transition-colors"
-              style={{border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px'}}
+              style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
             >
               <FaBell className="text-sm" />
               Schedule Report
@@ -1026,10 +1024,10 @@ export default function Reports() {
       </div>
 
       {/* Generated Reports History */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-4">
-          <h4 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Generated Reports History</h4>
-          <p className="text-sm" style={{color: '#3B4A66'}}>Recent reports generated on the platform</p>
+          <h4 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Generated Reports History</h4>
+          <p className="text-sm" style={{ color: '#3B4A66' }}>Recent reports generated on the platform</p>
         </div>
 
         {generatedReportsLoading ? (
@@ -1041,20 +1039,20 @@ export default function Reports() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E8F0FF]">
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Report Type</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Period</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Format</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Status</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Created</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>S3 Folder</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Details</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Actions</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Report Type</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Period</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Format</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Status</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Created</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>S3 Folder</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Details</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {generatedReportsHistory.slice(0, 10).map((report) => (
                   <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-2 px-3" style={{color: '#3B4A66'}}>
+                    <td className="py-2 px-3" style={{ color: '#3B4A66' }}>
                       {report.report_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                     </td>
                     <td className="py-2 px-3 text-gray-600">
@@ -1066,12 +1064,11 @@ export default function Reports() {
                       </span>
                     </td>
                     <td className="py-2 px-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                        report.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        report.status === 'failed' ? 'bg-red-100 text-red-800' :
-                        report.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${report.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          report.status === 'failed' ? 'bg-red-100 text-red-800' :
+                            report.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                        }`}>
                         {report.status === 'completed' && (
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -1130,10 +1127,10 @@ export default function Reports() {
       </div>
 
       {/* Scheduled Reports Section */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h4 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>All Scheduled Reports</h4>
-          <p className="text-sm" style={{color: '#3B4A66'}}>Automated reports that will be delivered to stakeholders.</p>
+          <h4 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>All Scheduled Reports</h4>
+          <p className="text-sm" style={{ color: '#3B4A66' }}>Automated reports that will be delivered to stakeholders.</p>
         </div>
 
         {platformScheduledLoading || schedulesLoading ? (
@@ -1149,7 +1146,7 @@ export default function Reports() {
             {/* All Scheduled Reports */}
             {platformScheduledReports && platformScheduledReports.length > 0 ? (
               <div className="mb-6">
-                <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
+                <h5 className="text-sm font-semibold mb-3" style={{ color: '#3B4A66' }}>
                   Scheduled Reports ({platformScheduledReports.length})
                 </h5>
                 <div className="space-y-3">
@@ -1157,18 +1154,18 @@ export default function Reports() {
                     <div
                       key={schedule.id}
                       className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
-                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
+                      style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
                     >
                       <div className="flex-1">
-                        <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
+                        <h6 className="text-sm font-semibold mb-1" style={{ color: '#3B4A66' }}>
                           {schedule.name || schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                         </h6>
-                        <p className="text-xs" style={{color: '#6B7280'}}>
+                        <p className="text-xs" style={{ color: '#6B7280' }}>
                           {schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {schedule.time_period?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {schedule.format?.toUpperCase()}
                         </p>
-                        <p className="text-xs mt-1" style={{color: '#6B7280'}}>
-                          {schedule.last_run 
-                            ? `Last run: ${new Date(schedule.last_run).toLocaleString()}` 
+                        <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                          {schedule.last_run
+                            ? `Last run: ${new Date(schedule.last_run).toLocaleString()}`
                             : 'Never run'}
                           {schedule.next_run && (
                             <span className="ml-2">• Next: {new Date(schedule.next_run).toLocaleString()}</span>
@@ -1176,16 +1173,15 @@ export default function Reports() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
+                        <span className="text-xs font-medium px-2 py-1" style={{ border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66' }}>
                           {schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                         </span>
                         <button
                           onClick={() => handleToggleScheduledReport(schedule.id, schedule.is_active)}
-                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                            schedule.is_active 
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${schedule.is_active
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                          }`}
+                            }`}
                         >
                           {schedule.is_active ? 'Active' : 'Paused'}
                         </button>
@@ -1220,10 +1216,10 @@ export default function Reports() {
 
       {/* Schedule Report Modal */}
       {showScheduleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold" style={{color: '#3B4A66'}}>Schedule Recurring Report</h3>
+              <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Schedule Recurring Report</h3>
               <button
                 onClick={() => setShowScheduleModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -1236,25 +1232,25 @@ export default function Reports() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Name *</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Name *</label>
                 <input
                   type="text"
                   value={scheduleFormData.name}
-                  onChange={(e) => setScheduleFormData(prev => ({...prev, name: e.target.value}))}
+                  onChange={(e) => setScheduleFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Monthly Revenue Report"
                   className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Type *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Type *</label>
                   <select
                     value={scheduleFormData.report_type}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, report_type: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, report_type: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     {/* Custom Reports */}
                     <optgroup label="Custom Reports">
@@ -1273,12 +1269,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Time Period *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Time Period *</label>
                   <select
                     value={scheduleFormData.time_period}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, time_period: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, time_period: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     <option value="last_7_days">Last 7 Days</option>
                     <option value="last_30_days">Last 30 Days</option>
@@ -1294,12 +1290,12 @@ export default function Reports() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Format *</label>
                   <select
                     value={scheduleFormData.format}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, format: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, format: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     {(() => {
                       const config = getReportTypeConfig(scheduleFormData.report_type);
@@ -1313,12 +1309,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Frequency *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Frequency *</label>
                   <select
                     value={scheduleFormData.frequency}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, frequency: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, frequency: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     <option value="once">Run Once</option>
                     <option value="daily">Daily</option>
@@ -1329,13 +1325,13 @@ export default function Reports() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>First Delivery *</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>First Delivery *</label>
                 <input
                   type="datetime-local"
                   value={scheduleFormData.first_delivery}
-                  onChange={(e) => setScheduleFormData(prev => ({...prev, first_delivery: e.target.value}))}
+                  onChange={(e) => setScheduleFormData(prev => ({ ...prev, first_delivery: e.target.value }))}
                   className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 />
               </div>
 
@@ -1350,7 +1346,7 @@ export default function Reports() {
                   }))}
                   className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="schedule-detailed" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                <label htmlFor="schedule-detailed" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
                   Include detailed breakdowns
                 </label>
               </div>
@@ -1366,7 +1362,7 @@ export default function Reports() {
                   }))}
                   className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="schedule-active" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                <label htmlFor="schedule-active" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
                   Activate immediately
                 </label>
               </div>
@@ -1376,14 +1372,14 @@ export default function Reports() {
               <button
                 onClick={() => setShowScheduleModal(false)}
                 className="px-4 py-2 bg-white border font-medium transition-colors"
-                style={{border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px'}}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleScheduleNewReport}
                 className="px-4 py-2 text-white font-medium transition-colors"
-                style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
+                style={{ backgroundColor: '#F56D2D', borderRadius: '7px' }}
               >
                 Schedule Report
               </button>
@@ -1394,10 +1390,10 @@ export default function Reports() {
 
       {/* Edit Scheduled Report Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold" style={{color: '#3B4A66'}}>Edit Scheduled Report</h3>
+              <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Edit Scheduled Report</h3>
               <button
                 onClick={() => {
                   setShowEditModal(false);
@@ -1413,25 +1409,25 @@ export default function Reports() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Name *</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Name *</label>
                 <input
                   type="text"
                   value={scheduleFormData.name}
-                  onChange={(e) => setScheduleFormData(prev => ({...prev, name: e.target.value}))}
+                  onChange={(e) => setScheduleFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Monthly Revenue Report"
                   className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Type *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Type *</label>
                   <select
                     value={scheduleFormData.report_type}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, report_type: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, report_type: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     {/* Custom Reports */}
                     <optgroup label="Custom Reports">
@@ -1450,12 +1446,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Time Period *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Time Period *</label>
                   <select
                     value={scheduleFormData.time_period}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, time_period: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, time_period: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     <option value="last_7_days">Last 7 Days</option>
                     <option value="last_30_days">Last 30 Days</option>
@@ -1471,12 +1467,12 @@ export default function Reports() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Format *</label>
                   <select
                     value={scheduleFormData.format}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, format: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, format: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     <option value="csv">CSV</option>
                     <option value="pdf">PDF</option>
@@ -1485,12 +1481,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Frequency *</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Frequency *</label>
                   <select
                     value={scheduleFormData.frequency}
-                    onChange={(e) => setScheduleFormData(prev => ({...prev, frequency: e.target.value}))}
+                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, frequency: e.target.value }))}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   >
                     <option value="once">Run Once</option>
                     <option value="daily">Daily</option>
@@ -1501,13 +1497,13 @@ export default function Reports() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>First Delivery *</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>First Delivery *</label>
                 <input
                   type="datetime-local"
                   value={scheduleFormData.first_delivery}
-                  onChange={(e) => setScheduleFormData(prev => ({...prev, first_delivery: e.target.value}))}
+                  onChange={(e) => setScheduleFormData(prev => ({ ...prev, first_delivery: e.target.value }))}
                   className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 />
               </div>
 
@@ -1522,7 +1518,7 @@ export default function Reports() {
                   }))}
                   className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="edit-detailed" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                <label htmlFor="edit-detailed" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
                   Include detailed breakdowns
                 </label>
               </div>
@@ -1538,7 +1534,7 @@ export default function Reports() {
                   }))}
                   className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="edit-active" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                <label htmlFor="edit-active" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
                   Activate immediately
                 </label>
               </div>
@@ -1551,14 +1547,14 @@ export default function Reports() {
                   setEditingSchedule(null);
                 }}
                 className="px-4 py-2 bg-white border font-medium transition-colors"
-                style={{border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px'}}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEditedReport}
                 className="px-4 py-2 text-white font-medium transition-colors"
-                style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
+                style={{ backgroundColor: '#F56D2D', borderRadius: '7px' }}
               >
                 Save Changes
               </button>
@@ -1569,7 +1565,7 @@ export default function Reports() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingSchedule && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -1578,7 +1574,7 @@ export default function Reports() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold" style={{color: '#3B4A66'}}>Delete Scheduled Report</h3>
+                <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Delete Scheduled Report</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Are you sure you want to delete this scheduled report? This action cannot be undone.
                 </p>
@@ -1586,7 +1582,7 @@ export default function Reports() {
             </div>
 
             <div className="bg-gray-50 p-3 rounded-lg mb-4">
-              <h4 className="font-medium text-sm" style={{color: '#3B4A66'}}>
+              <h4 className="font-medium text-sm" style={{ color: '#3B4A66' }}>
                 {deletingSchedule.name || deletingSchedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
               </h4>
               <p className="text-xs text-gray-600 mt-1">
@@ -1601,14 +1597,14 @@ export default function Reports() {
                   setDeletingSchedule(null);
                 }}
                 className="px-4 py-2 bg-white border font-medium transition-colors"
-                style={{border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px'}}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteScheduledReport}
                 className="px-4 py-2 text-white font-medium transition-colors"
-                style={{backgroundColor: '#DC2626', borderRadius: '7px'}}
+                style={{ backgroundColor: '#DC2626', borderRadius: '7px' }}
               >
                 Delete Report
               </button>

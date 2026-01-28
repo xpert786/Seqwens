@@ -320,7 +320,7 @@ const LicenseManagement = () => {
             <div className="p-4 sm:p-6">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                <h6 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Staff License Assignment</h6>
+                        <h6 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Staff License Assignment</h6>
                         <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Manage who has access to advanced features</p>
                     </div>
                     <button
@@ -342,54 +342,53 @@ const LicenseManagement = () => {
                     </div>
                 ) : (
                     <>
-                {/* Table Header */}
+                        {/* Table Header */}
                         <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
-                    <div className="font-regular text-gray-600 text-xs sm:text-sm font-[BasisGrotesquePro]">Staff Member</div>
-                    <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Role</div>
-                    <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Status</div>
-                    <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Actions</div>
-                </div>
+                            <div className="font-regular text-gray-600 text-xs sm:text-sm font-[BasisGrotesquePro]">Staff Member</div>
+                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Role</div>
+                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Status</div>
+                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Actions</div>
+                        </div>
 
-                {/* Staff Rows */}
-                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                        {/* Staff Rows */}
+                        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                             {staffLicenseAssignments.map((staff) => (
                                 <div key={staff.staff_id} className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4 items-center p-2 sm:p-3 lg:p-4 !border border-[#E8F0FF] rounded-lg">
-                            {/* Staff Member Column */}
-                            <div>
+                                    {/* Staff Member Column */}
+                                    <div>
                                         <p className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro] mb-0.5 sm:mb-1">{staff.staff_name}</p>
                                         <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">{staff.staff_email}</p>
-                            </div>
+                                    </div>
 
-                            {/* Role Column */}
-                            <div className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                                {staff.role}
-                            </div>
+                                    {/* Role Column */}
+                                    <div className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                        {staff.role}
+                                    </div>
 
-                            {/* Status Column */}
-                            <div>
-                                <div className="flex flex-wrap gap-2">
+                                    {/* Status Column */}
+                                    <div>
+                                        <div className="flex flex-wrap gap-2">
                                             {staff.status && staff.status.length > 0 ? (
                                                 staff.status.map((statusItem, index) => (
-                                                    <span 
-                                                        key={index} 
-                                                        className={`px-3 py-1 !border !rounded-full text-xs font-[BasisGrotesquePro] ${
-                                                            statusItem === 'No licenses'
+                                                    <span
+                                                        key={index}
+                                                        className={`px-3 py-1 !border !rounded-full text-xs font-[BasisGrotesquePro] ${statusItem === 'No licenses'
                                                                 ? 'bg-gray-100 border-gray-300 text-gray-600'
                                                                 : 'bg-white border-gray-300 text-gray-700'
-                                                        }`}
+                                                            }`}
                                                     >
-                                            {statusItem}
-                                        </span>
+                                                        {statusItem}
+                                                    </span>
                                                 ))
                                             ) : (
                                                 <span className="px-3 py-1 bg-gray-100 border border-gray-300 text-gray-600 !rounded-full text-xs font-[BasisGrotesquePro]">
                                                     No licenses
                                                 </span>
                                             )}
-                                </div>
-                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Actions Column */}
+                                    {/* Actions Column */}
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => openAssignModal(staff, false)}
@@ -415,7 +414,7 @@ const LicenseManagement = () => {
 
             {/* Assign/Update License Modal */}
             {showAssignModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => !assigning && setShowAssignModal(false)}>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4" onClick={() => !assigning && setShowAssignModal(false)}>
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Header */}
                         <div className="flex justify-between items-start p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
@@ -424,11 +423,11 @@ const LicenseManagement = () => {
                                     {selectedStaff ? 'Update Licenses' : isBulkMode ? 'Bulk Assign Licenses' : 'Assign Licenses'}
                                 </h4>
                                 <p className="text-sm font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                                    {selectedStaff 
+                                    {selectedStaff
                                         ? `Manage licenses for ${selectedStaff.staff_name}`
                                         : isBulkMode
-                                        ? 'Select staff members and assign licenses'
-                                        : 'Select license features to assign'}
+                                            ? 'Select staff members and assign licenses'
+                                            : 'Select license features to assign'}
                                 </p>
                             </div>
                             <button
@@ -439,7 +438,7 @@ const LicenseManagement = () => {
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                </button>
+                            </button>
                         </div>
 
                         {/* Body */}
@@ -530,11 +529,11 @@ const LicenseManagement = () => {
                                 disabled={assigning || selectedFeatureIds.length === 0 || (isBulkMode && selectedStaffIds.length === 0)}
                                 className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
                             >
-                                {assigning 
-                                    ? 'Processing...' 
-                                    : selectedStaff 
-                                    ? 'Update Licenses' 
-                                    : 'Assign Licenses'}
+                                {assigning
+                                    ? 'Processing...'
+                                    : selectedStaff
+                                        ? 'Update Licenses'
+                                        : 'Assign Licenses'}
                             </button>
                         </div>
                     </div>
@@ -552,7 +551,7 @@ const LicenseManagement = () => {
                 }}
                 onConfirm={confirmRemoveLicenses}
                 title="Remove License"
-                message={licenseToRemove?.featureId 
+                message={licenseToRemove?.featureId
                     ? "Are you sure you want to remove this license?"
                     : "Are you sure you want to remove all licenses from this staff member?"}
                 confirmText="Remove"

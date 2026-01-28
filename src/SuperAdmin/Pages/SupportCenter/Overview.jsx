@@ -1278,7 +1278,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
             </div>
 
             {assignModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6" data-ticket-action-menu="true">
+                <div className="fixed inset-0 z-[1070] flex items-center justify-center px-4 py-6" data-ticket-action-menu="true">
                     <div
                         className="absolute inset-0"
                         style={{ background: 'var(--Color-overlay, #00000099)' }}

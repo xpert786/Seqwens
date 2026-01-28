@@ -743,7 +743,7 @@ export default function PendingInviteDetails() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteInviteConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-6">
+        <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-50 p-6">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md !border border-[#E8F0FF]">
             <div className="p-6">
               <h4 className="text-lg font-bold text-gray-900 mb-3 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Delete Invite</h4>

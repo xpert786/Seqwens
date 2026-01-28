@@ -618,13 +618,13 @@ const SchedulingCalendar = () => {
                 // Validation error - format user-friendly messages
                 const errors = response.errors || {};
                 let userFriendlyMessage = response.message || 'Please check your input and try again.';
-                
+
                 // Handle non_field_errors (general errors)
                 if (errors.non_field_errors) {
-                    const nonFieldErrors = Array.isArray(errors.non_field_errors) 
-                        ? errors.non_field_errors 
+                    const nonFieldErrors = Array.isArray(errors.non_field_errors)
+                        ? errors.non_field_errors
                         : [errors.non_field_errors];
-                    
+
                     // Format non-field errors in user-friendly way
                     const formattedNonFieldErrors = nonFieldErrors.map(err => {
                         // Handle specific error messages
@@ -635,10 +635,10 @@ const SchedulingCalendar = () => {
                                 .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
                                     // Format date nicely
                                     const dateObj = new Date(date);
-                                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric' 
+                                    const formattedDate = dateObj.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
                                     });
                                     return `The selected staff member is not available on ${formattedDate}`;
                                 });
@@ -646,7 +646,7 @@ const SchedulingCalendar = () => {
                         }
                         return err;
                     });
-                    
+
                     userFriendlyMessage = formattedNonFieldErrors.join('. ');
                 } else {
                     // Handle field-specific errors
@@ -660,7 +660,7 @@ const SchedulingCalendar = () => {
                                 .replace(/\b\w/g, l => l.toUpperCase());
                             return `${fieldLabel}: ${messages.join(', ')}`;
                         });
-                    
+
                     if (fieldErrors.length > 0) {
                         userFriendlyMessage = fieldErrors.join('. ');
                     }
@@ -679,38 +679,38 @@ const SchedulingCalendar = () => {
             }
         } catch (error) {
             console.error('Error creating meeting:', error);
-            
+
             // Try to extract user-friendly error from error response
             let errorMessage = 'Failed to create meeting';
-            
+
             if (error.response) {
                 const errorData = error.response.data || error.response;
                 if (errorData.errors) {
                     const errors = errorData.errors;
-                    
+
                     // Handle non_field_errors
                     if (errors.non_field_errors) {
-                        const nonFieldErrors = Array.isArray(errors.non_field_errors) 
-                            ? errors.non_field_errors 
+                        const nonFieldErrors = Array.isArray(errors.non_field_errors)
+                            ? errors.non_field_errors
                             : [errors.non_field_errors];
-                        
+
                         const formattedErrors = nonFieldErrors.map(err => {
                             if (typeof err === 'string') {
                                 return err
                                     .replace(/^non_field_errors:\s*/i, '')
                                     .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
                                         const dateObj = new Date(date);
-                                        const formattedDate = dateObj.toLocaleDateString('en-US', { 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
+                                        const formattedDate = dateObj.toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
                                         });
                                         return `The selected staff member is not available on ${formattedDate}`;
                                     });
                             }
                             return err;
                         });
-                        
+
                         errorMessage = formattedErrors.join('. ');
                     } else if (errorData.message) {
                         errorMessage = errorData.message;
@@ -721,7 +721,7 @@ const SchedulingCalendar = () => {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             toast.error(errorMessage, {
                 position: 'top-right',
                 autoClose: 5000
@@ -765,32 +765,32 @@ const SchedulingCalendar = () => {
                 // Handle validation errors in overwrite response
                 const errors = response.errors || {};
                 let errorMessage = response.message || 'Failed to create meeting';
-                
+
                 if (errors.non_field_errors) {
-                    const nonFieldErrors = Array.isArray(errors.non_field_errors) 
-                        ? errors.non_field_errors 
+                    const nonFieldErrors = Array.isArray(errors.non_field_errors)
+                        ? errors.non_field_errors
                         : [errors.non_field_errors];
-                    
+
                     const formattedErrors = nonFieldErrors.map(err => {
                         if (typeof err === 'string') {
                             return err
                                 .replace(/^non_field_errors:\s*/i, '')
                                 .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
                                     const dateObj = new Date(date);
-                                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric' 
+                                    const formattedDate = dateObj.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
                                     });
                                     return `The selected staff member is not available on ${formattedDate}`;
                                 });
                         }
                         return err;
                     });
-                    
+
                     errorMessage = formattedErrors.join('. ');
                 }
-                
+
                 toast.error(errorMessage, {
                     position: 'top-right',
                     autoClose: 5000
@@ -798,34 +798,34 @@ const SchedulingCalendar = () => {
             }
         } catch (error) {
             console.error('Error confirming overwrite:', error);
-            
+
             // Try to extract user-friendly error from error response
             let errorMessage = 'Failed to create meeting';
-            
+
             if (error.response) {
                 const errorData = error.response.data || error.response;
                 if (errorData.errors?.non_field_errors) {
-                    const nonFieldErrors = Array.isArray(errorData.errors.non_field_errors) 
-                        ? errorData.errors.non_field_errors 
+                    const nonFieldErrors = Array.isArray(errorData.errors.non_field_errors)
+                        ? errorData.errors.non_field_errors
                         : [errorData.errors.non_field_errors];
-                    
+
                     const formattedErrors = nonFieldErrors.map(err => {
                         if (typeof err === 'string') {
                             return err
                                 .replace(/^non_field_errors:\s*/i, '')
                                 .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
                                     const dateObj = new Date(date);
-                                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric' 
+                                    const formattedDate = dateObj.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
                                     });
                                     return `The selected staff member is not available on ${formattedDate}`;
                                 });
                         }
                         return err;
                     });
-                    
+
                     errorMessage = formattedErrors.join('. ');
                 } else if (errorData.message) {
                     errorMessage = errorData.message;
@@ -833,7 +833,7 @@ const SchedulingCalendar = () => {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             toast.error(errorMessage, {
                 position: 'top-right',
                 autoClose: 5000
@@ -1047,16 +1047,15 @@ const SchedulingCalendar = () => {
                             <div className="flex gap-2">
                                 {navTabs.map((tab) => {
                                     const tabPath = tab === 'Calendar' ? '/firmadmin/calendar' : `/firmadmin/calendar/${tab.toLowerCase()}`;
-                                    
+
                                     return (
                                         <Link
                                             key={tab}
                                             to={tabPath}
-                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${
-                                                activeTab === tab
+                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${activeTab === tab
                                                     ? 'bg-[#3AD6F2] !text-white font-semibold'
                                                     : 'bg-transparent hover:bg-gray-50 !text-black'
-                                            }`}
+                                                }`}
                                         >
                                             {tab}
                                         </Link>
@@ -1623,7 +1622,7 @@ const SchedulingCalendar = () => {
 
             {/* Overlap Warning Modal */}
             {showOverlapModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ml-10 mt-6">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
                     <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-2xl max-h-[80vh] flex flex-col">
                         {/* Modal Header */}
                         <div className="flex items-start justify-between p-4 border-b border-[#E8F0FF] flex-shrink-0">

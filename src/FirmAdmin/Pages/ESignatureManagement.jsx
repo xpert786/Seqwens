@@ -3231,7 +3231,7 @@ export default function ESignatureManagement() {
       {/* Create Template Modal */}
       {showCreateTemplateModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4"
           onClick={() => !creatingTemplate && setShowCreateTemplateModal(false)}
         >
           <div
@@ -3337,7 +3337,7 @@ export default function ESignatureManagement() {
       {/* Delete Template Confirmation Modal */}
       {showDeleteTemplateModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4"
           onClick={() => !deletingTemplate && setShowDeleteTemplateModal(false)}
         >
           <div

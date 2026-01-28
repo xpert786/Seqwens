@@ -78,7 +78,7 @@ const StaffPermissions = () => {
     // Handle toggle purchase permission
     const handleTogglePurchasePermission = async (staff) => {
         const newValue = !staff.can_purchase_addons;
-        
+
         try {
             setSaving(true);
             const token = getAccessToken();
@@ -248,14 +248,12 @@ const StaffPermissions = () => {
                                     <button
                                         onClick={() => handleTogglePurchasePermission(staff)}
                                         disabled={saving}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                            staff.can_purchase_addons ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                        } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${staff.can_purchase_addons ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                staff.can_purchase_addons ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${staff.can_purchase_addons ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
                                         />
                                     </button>
                                 </div>
@@ -284,7 +282,7 @@ const StaffPermissions = () => {
 
             {/* Configure Modal */}
             {showConfigModal && selectedStaff && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => !saving && setShowConfigModal(false)}>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4" onClick={() => !saving && setShowConfigModal(false)}>
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Header */}
                         <div className="flex justify-between items-start p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
@@ -321,14 +319,12 @@ const StaffPermissions = () => {
                                     <button
                                         onClick={() => setConfigData({ ...configData, can_purchase_addons: !configData.can_purchase_addons })}
                                         disabled={saving}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                            configData.can_purchase_addons ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                        } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${configData.can_purchase_addons ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                configData.can_purchase_addons ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${configData.can_purchase_addons ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
                                         />
                                     </button>
                                 </div>
@@ -351,9 +347,8 @@ const StaffPermissions = () => {
                                         value={configData.monthly_spend_limit}
                                         onChange={(e) => setConfigData({ ...configData, monthly_spend_limit: e.target.value })}
                                         disabled={saving || !configData.can_purchase_addons}
-                                        className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] ${
-                                            saving || !configData.can_purchase_addons ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                                        }`}
+                                        className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] ${saving || !configData.can_purchase_addons ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                                            }`}
                                         placeholder="0.00"
                                     />
                                 </div>

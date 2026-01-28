@@ -24,7 +24,7 @@ import { addPaymentMethod, getStripeSetupIntent } from "../../../utils/paymentMe
 const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }) => {
   const stripe = useStripe();
   const elements = useElements();
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -46,9 +46,9 @@ const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await getStripeSetupIntent();
-      
+
       if (response.success) {
         setClientSecret(response.data.client_secret);
         setSetupIntentId(response.data.setup_intent_id);
@@ -68,7 +68,7 @@ const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!stripe || !elements) {
       setError('Stripe is not initialized');
       return;
@@ -110,7 +110,7 @@ const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }
 
       if (response.success) {
         setSuccess('Card added successfully!');
-        
+
         // Clear form
         elements.getElement(CardElement).clear();
         setClientSecret('');
@@ -157,7 +157,7 @@ const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4"
       onClick={handleClose}
       style={{ zIndex: 9999 }}
     >

@@ -103,7 +103,7 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
         availabilityData.staff_id = parseInt(selectedStaffId);
       }
 
-      const response = isTaxpayer 
+      const response = isTaxpayer
         ? await taxpayerFirmAPI.setAvailability(availabilityData)
         : await firmAdminCalendarAPI.setAvailability(availabilityData);
 
@@ -124,7 +124,7 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
       }
     } catch (error) {
       console.error('Error setting availability:', error);
-      
+
       // Handle validation errors
       if (error.response) {
         const errorData = error.response.data || error.response;
@@ -137,7 +137,7 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
           setErrors(apiErrors);
         }
       }
-      
+
       toast.error(handleAPIError(error) || 'Failed to set availability', {
         position: 'top-right',
         autoClose: 3000,
@@ -154,7 +154,7 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -196,9 +196,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
                       });
                     }
                   }}
-                  className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
-                    errors.staff_id ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${errors.staff_id ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   required
                 >
                   <option value="">Select staff member</option>
@@ -243,9 +242,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
                   }
                 }}
                 min={today}
-                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
-                  errors.start_date ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${errors.start_date ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 required
               />
               {errors.start_date && (
@@ -271,9 +269,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
                   }
                 }}
                 min={startDate || today}
-                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
-                  errors.end_date ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${errors.end_date ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 required
               />
               {errors.end_date && (
@@ -305,9 +302,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
                     setEndTime('');
                   }
                 }}
-                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
-                  errors.start_time ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${errors.start_time ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 required
               />
               {errors.start_time && (
@@ -333,9 +329,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
                   }
                 }}
                 min={startTime || '00:00'}
-                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
-                  errors.end_time ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${errors.end_time ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 required
               />
               {errors.end_time && (
@@ -361,9 +356,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
                   });
                 }
               }}
-              className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
-                errors.slot_duration ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${errors.slot_duration ? 'border-red-300' : 'border-gray-300'
+                }`}
               required
             >
               <option value="15">15 minutes</option>

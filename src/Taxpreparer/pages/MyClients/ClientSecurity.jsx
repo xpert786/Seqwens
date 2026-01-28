@@ -351,7 +351,7 @@ const ClientSecurity = () => {
                                     <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Status</div>
                                     <div className="flex items-center gap-2">
                                         <span className={`inline-block w-2 h-2 rounded-full ${clientData?.status === 'active' ? 'bg-green-500' :
-                                                clientData?.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                                            clientData?.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
                                             }`}></span>
                                         <span className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] capitalize">
                                             {clientData?.status || 'Unknown'}
@@ -373,7 +373,7 @@ const ClientSecurity = () => {
 
             {/* Password Reset Dialog */}
             {showConfirmDialog && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">

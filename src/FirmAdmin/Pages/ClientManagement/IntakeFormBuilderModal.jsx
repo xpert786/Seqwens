@@ -46,7 +46,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070]"
       style={{ zIndex: 9999 }}
       onClick={onClose}
     >
@@ -64,7 +64,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            
+
           </button>
         </div>
 

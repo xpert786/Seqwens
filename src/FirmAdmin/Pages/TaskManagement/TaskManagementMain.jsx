@@ -104,7 +104,7 @@ const TaskManagementMain = () => {
           let assignedToName = 'Unassigned';
           let assignedToInitials = 'NA';
           let assignedToId = null;
-          
+
           if (task.assigned_to && typeof task.assigned_to === 'object') {
             // assigned_to is an object with name, initials, id
             assignedToName = task.assigned_to.name || 'Unassigned';
@@ -116,7 +116,7 @@ const TaskManagementMain = () => {
             assignedToName = task.assigned_to_name || 'Unassigned';
             assignedToInitials = task.assigned_to_initials || (assignedToName !== 'Unassigned' ? assignedToName.split(' ').map(n => n[0]).join('').toUpperCase() : 'NA');
           }
-          
+
           // Get client info from API response
           // API can return client as an ID with separate client_name, or clients_info array
           let clientName = 'No Client';
@@ -125,7 +125,7 @@ const TaskManagementMain = () => {
           } else if (task.clients_info && task.clients_info.length > 0) {
             clientName = task.clients_info[0].name || 'No Client';
           }
-          
+
           // Format hours display
           let hoursDisplay = '';
           if (task.hours_spent !== undefined && task.hours_spent !== null) {
@@ -139,7 +139,7 @@ const TaskManagementMain = () => {
           } else if (task.hours_display) {
             hoursDisplay = task.hours_display;
           }
-          
+
           return {
             id: task.id,
             task: task.task_title || '',
@@ -762,7 +762,7 @@ const TaskManagementMain = () => {
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]"
             onClick={(e) => {
               if (e.target === e.currentTarget && !deleting) {
                 setShowDeleteConfirm(false);

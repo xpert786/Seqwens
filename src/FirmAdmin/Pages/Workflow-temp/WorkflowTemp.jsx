@@ -348,7 +348,7 @@ const WorkflowTemp = () => {
 
             {/* Create New Workflow Modal */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 mt-20">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-3 sm:p-4">
                     <div className="bg-white rounded-xl max-w-xl w-full max-h-[85vh] flex flex-col">
                         {/* Modal Header */}
                         <div className="flex justify-between items-start p-3 border-b border-gray-200 flex-shrink-0">

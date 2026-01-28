@@ -98,7 +98,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
           <div className="text-gray-400 text-6xl mb-4">📝</div>
           <p className="text-gray-500 text-lg">No workflow templates found</p>
           <p className="text-gray-400 text-sm mt-2">
-            {searchTerm 
+            {searchTerm
               ? 'Try adjusting your search'
               : 'Create your first workflow template to get started'}
           </p>
@@ -128,11 +128,10 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
                     {template.description || 'No description'}
                   </p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  template.is_active 
-                    ? 'bg-green-100 text-green-700' 
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${template.is_active
+                    ? 'bg-green-100 text-green-700'
                     : 'bg-gray-100 text-gray-700'
-                }`}>
+                  }`}>
                   {template.is_active ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -205,7 +204,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6" style={{ borderRadius: '12px' }}>
             <h3 className="text-lg font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
               Delete Workflow Template

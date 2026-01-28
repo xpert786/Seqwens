@@ -4,12 +4,12 @@ export default function DownloadModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4">Download CSV Template</h3>
           <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">Your CSV template is ready for download. This template includes all required and optional fields with sample data.</p>
-          
+
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -24,7 +24,7 @@ export default function DownloadModal({ isOpen, onClose }) {
             </div>
           </div>
         </div>
-        
+
         <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
           <button
             onClick={onClose}

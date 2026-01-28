@@ -5,7 +5,7 @@ import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 
 export default function NotesTab({ client }) {
   const API_BASE_URL = getApiBaseUrl();
-  
+
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,11 +36,11 @@ export default function NotesTab({ client }) {
 
       const token = getAccessToken();
       const queryParams = new URLSearchParams();
-      
+
       if (visibilityFilter !== 'all') {
         queryParams.append('visibility', visibilityFilter);
       }
-      
+
       if (debouncedSearchQuery.trim()) {
         queryParams.append('search', debouncedSearchQuery.trim());
       }
@@ -181,7 +181,7 @@ export default function NotesTab({ client }) {
         </div>
 
         {/* Add Note Button */}
-        <button 
+        <button
           onClick={() => setShowAddNoteModal(true)}
           className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition flex items-center gap-2 font-[BasisGrotesquePro] text-sm font-medium whitespace-nowrap"
         >
@@ -210,8 +210,8 @@ export default function NotesTab({ client }) {
           {notes.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-gray-500 font-[BasisGrotesquePro]">
-                {debouncedSearchQuery || visibilityFilter !== 'all' 
-                  ? 'No notes found matching your filters.' 
+                {debouncedSearchQuery || visibilityFilter !== 'all'
+                  ? 'No notes found matching your filters.'
                   : 'No notes yet. Add your first note above.'}
               </div>
             </div>
@@ -243,8 +243,8 @@ export default function NotesTab({ client }) {
 
       {/* Add Note Modal */}
       {showAddNoteModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ml-30"
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]"
           onClick={() => {
             setShowAddNoteModal(false);
             setNoteContent('');
@@ -252,7 +252,7 @@ export default function NotesTab({ client }) {
             setError('');
           }}
         >
-          <div 
+          <div
             className="bg-white !rounded-lg p-6 w-full max-w-2xl mx-4 !border border-[#E8F0FF]"
             onClick={(e) => e.stopPropagation()}
           >

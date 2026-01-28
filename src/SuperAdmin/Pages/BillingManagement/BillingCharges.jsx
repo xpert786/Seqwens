@@ -62,7 +62,7 @@ export default function BillingCharges() {
         params.status = statusFilter;
       }
       const response = await superAdminBillingAPI.listBillingCharges(params);
-      
+
       if (response.success) {
         setCharges(Array.isArray(response.data) ? response.data : []);
       } else {
@@ -319,7 +319,7 @@ export default function BillingCharges() {
 
       {/* Approve Confirmation Modal */}
       {showApproveModal && chargeToApprove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
           <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
             <div className="flex justify-between items-start mb-6">
               <div>

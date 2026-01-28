@@ -18,12 +18,12 @@ export default function FeedbackModal({ isOpen, onClose, onSubmitted }) {
     console.log('FeedbackModal: isOpen is false, not rendering');
     return null;
   }
-  
+
   console.log('FeedbackModal: Rendering modal');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (stars === 0) {
       toast.error('Please select a rating');
       return;
@@ -31,11 +31,11 @@ export default function FeedbackModal({ isOpen, onClose, onSubmitted }) {
 
     try {
       setSubmitting(true);
-      
+
       // Get user role from storage
       const storage = getStorage();
       const userRole = storage?.getItem("userType") || '';
-      
+
       const response = await firmAdminMessagingAPI.submitFeedback({
         stars: stars.toString(),
         comment: comment.trim(),
@@ -68,7 +68,7 @@ export default function FeedbackModal({ isOpen, onClose, onSubmitted }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
@@ -104,11 +104,10 @@ export default function FeedbackModal({ isOpen, onClose, onSubmitted }) {
                   disabled={submitting}
                 >
                   <svg
-                    className={`w-10 h-10 transition-colors ${
-                      star <= (hoveredStar || stars)
+                    className={`w-10 h-10 transition-colors ${star <= (hoveredStar || stars)
                         ? 'text-[#F56D2D]'
                         : 'text-gray-300'
-                    }`}
+                      }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

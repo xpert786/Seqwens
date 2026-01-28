@@ -137,7 +137,7 @@ export default function AdvancedTab() {
       </div>
 
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 border border-[#E8F0FF]" style={{ borderRadius: '12px' }}>
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-[#EF4444] mb-2">Delete Firm Account</h3>

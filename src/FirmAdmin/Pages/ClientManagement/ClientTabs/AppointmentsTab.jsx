@@ -12,7 +12,7 @@ export default function AppointmentsTab({ client }) {
   const [error, setError] = useState('');
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
+
   // Schedule appointment form state
   const [scheduleForm, setScheduleForm] = useState({
     event_title: '',
@@ -140,22 +140,22 @@ export default function AppointmentsTab({ client }) {
     const isAM = timeString.toUpperCase().includes('AM');
     let time = timeString.replace(/\s*(AM|PM)\s*/i, '').trim();
     const parts = time.split(':');
-    
+
     if (parts.length >= 2) {
       let hours = parseInt(parts[0], 10);
       const minutes = parts[1] || '00';
-      
+
       if (isPM && hours !== 12) hours += 12;
       if (isAM && hours === 12) hours = 0;
-      
+
       return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
     }
-    
+
     // If already in HH:MM format, add :00 seconds
     if (timeString.match(/^\d{2}:\d{2}$/)) {
       return `${timeString}:00`;
     }
-    
+
     return timeString;
   };
 
@@ -198,7 +198,7 @@ export default function AppointmentsTab({ client }) {
           position: 'top-right',
           autoClose: 3000
         });
-        
+
         // Reset form and close modal
         setScheduleForm({
           event_title: '',
@@ -209,7 +209,7 @@ export default function AppointmentsTab({ client }) {
           meeting_type: 'zoom'
         });
         setShowScheduleModal(false);
-        
+
         // Refresh appointments list
         fetchAppointments();
       } else if (response.status === 409 && response.has_overlap) {
@@ -262,45 +262,45 @@ export default function AppointmentsTab({ client }) {
   const getIcon = (appointment) => {
     const iconType = appointment.icon || 'calendar';
     const statusValue = appointment.status?.value || '';
-    
+
     // Use icon from API if available, otherwise use status-based icon
     if (iconType === 'check-circle' || statusValue === 'completed') {
       return (
         <svg width="40" height="40" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="27" height="27" rx="8" fill="#E8F0FF"/>
+          <rect width="27" height="27" rx="8" fill="#E8F0FF" />
           <g clipPath="url(#clip0_2277_7952)">
-            <path d="M19.75 12.9247V13.4997C19.7492 14.8474 19.3128 16.1588 18.5058 17.2383C17.6989 18.3178 16.5646 19.1075 15.2721 19.4896C13.9796 19.8717 12.5983 19.8259 11.334 19.3588C10.0698 18.8917 8.99041 18.0285 8.25685 16.8978C7.52329 15.7672 7.17487 14.4297 7.26355 13.0849C7.35223 11.74 7.87325 10.4599 8.74892 9.43534C9.6246 8.41081 10.808 7.69679 12.1226 7.39976C13.4372 7.10274 14.8127 7.23863 16.0438 7.78717M11.625 12.8747L13.5 14.7497L19.75 8.49967" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M19.75 12.9247V13.4997C19.7492 14.8474 19.3128 16.1588 18.5058 17.2383C17.6989 18.3178 16.5646 19.1075 15.2721 19.4896C13.9796 19.8717 12.5983 19.8259 11.334 19.3588C10.0698 18.8917 8.99041 18.0285 8.25685 16.8978C7.52329 15.7672 7.17487 14.4297 7.26355 13.0849C7.35223 11.74 7.87325 10.4599 8.74892 9.43534C9.6246 8.41081 10.808 7.69679 12.1226 7.39976C13.4372 7.10274 14.8127 7.23863 16.0438 7.78717M11.625 12.8747L13.5 14.7497L19.75 8.49967" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round" />
           </g>
           <defs>
             <clipPath id="clip0_2277_7952">
-              <rect width="15" height="15" fill="white" transform="translate(6 6)"/>
+              <rect width="15" height="15" fill="white" transform="translate(6 6)" />
             </clipPath>
           </defs>
         </svg>
       );
     }
-    
+
     if (statusValue === 'pending' || iconType === 'info') {
       return (
         <svg width="40" height="40" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="27" height="27" rx="8" fill="#E8F0FF"/>
+          <rect width="27" height="27" rx="8" fill="#E8F0FF" />
           <g clipPath="url(#clip0_2277_7959)">
-            <path d="M13.5 11V13.5M13.5 16H13.5063M19.75 13.5C19.75 16.9518 16.9518 19.75 13.5 19.75C10.0482 19.75 7.25 16.9518 7.25 13.5C7.25 10.0482 10.0482 7.25 13.5 7.25C16.9518 7.25 19.75 10.0482 19.75 13.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M13.5 11V13.5M13.5 16H13.5063M19.75 13.5C19.75 16.9518 16.9518 19.75 13.5 19.75C10.0482 19.75 7.25 16.9518 7.25 13.5C7.25 10.0482 10.0482 7.25 13.5 7.25C16.9518 7.25 19.75 10.0482 19.75 13.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round" />
           </g>
           <defs>
             <clipPath id="clip0_2277_7959">
-              <rect width="15" height="15" fill="white" transform="translate(6 6)"/>
+              <rect width="15" height="15" fill="white" transform="translate(6 6)" />
             </clipPath>
           </defs>
         </svg>
       );
     }
-    
+
     // Default calendar icon
     return (
       <svg width="40" height="40" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="27" height="27" rx="8" fill="#E8F0FF"/>
-        <path d="M11 7.25V9.75M16 7.25V9.75M7.875 12.25H19.125M9.125 8.5H17.875C18.5654 8.5 19.125 9.05964 19.125 9.75V18.5C19.125 19.1904 18.5654 19.75 17.875 19.75H9.125C8.43464 19.75 7.875 19.1904 7.875 18.5V9.75C7.875 9.05964 8.43464 8.5 9.125 8.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect width="27" height="27" rx="8" fill="#E8F0FF" />
+        <path d="M11 7.25V9.75M16 7.25V9.75M7.875 12.25H19.125M9.125 8.5H17.875C18.5654 8.5 19.125 9.05964 19.125 9.75V18.5C19.125 19.1904 18.5654 19.75 17.875 19.75H9.125C8.43464 19.75 7.875 19.1904 7.875 18.5V9.75C7.875 9.05964 8.43464 8.5 9.125 8.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   };
@@ -486,11 +486,10 @@ export default function AppointmentsTab({ client }) {
                               <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${
-                                  currentPage === page
+                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${currentPage === page
                                     ? 'bg-[#F56D2D] text-white'
                                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                }`}
+                                  }`}
                               >
                                 {page}
                               </button>
@@ -523,8 +522,8 @@ export default function AppointmentsTab({ client }) {
 
       {/* Schedule Appointment Modal */}
       {showScheduleModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowScheduleModal(false);
