@@ -740,7 +740,7 @@ export default function SuperDashboardContent() {
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="taxdashboardr-titler font-bold text-gray-900 dark:text-white">Platform Overview</h1>
+          <h4 className=" font-bold text-gray-900 dark:text-white">Platform Overview</h4>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage the entire tax practice platform</p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
         </div>
@@ -861,11 +861,11 @@ export default function SuperDashboardContent() {
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Documents</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">System Health</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatNumber(dashboardData?.summary?.system_health_score)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Across all firms</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Health Score</p>
           </div>
         </div>
       </div>

@@ -337,7 +337,7 @@ export default function FirmDashboardLayout() {
     <SubscriptionStatusProvider>
       <div className="firm-dashboard-layout">
         <MaintenanceMode />
-        <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+        <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} sidebarWidth={sidebarWidth} />
         <SubscriptionStatusBanner />
         <FirmSidebar isSidebarOpen={isSidebarOpen} />
         <main

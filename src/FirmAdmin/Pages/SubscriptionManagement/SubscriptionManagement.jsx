@@ -652,86 +652,116 @@ const SubscriptionManagement = () => {
                     <>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
                             {/* Plan Card */}
-                            <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6 sm:p-8 relative shadow-sm">
-                                {subscriptionOverview?.overview?.plan ? (
-                                    <>
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div>
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <h5 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                        {subscriptionOverview.overview.plan.name || 'Current'} Plan
-                                                    </h5>
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider ${subscriptionOverview.overview.plan.status === 'active'
-                                                        ? 'bg-green-100 text-green-700 border border-green-200'
-                                                        : 'bg-red-100 text-red-700 border border-red-200'
-                                                        }`}>
-                                                        {subscriptionOverview.overview.plan.status || 'Active'}
-                                                    </span>
-                                                </div>
-                                                <p className="text-2xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
-                                                    ${subscriptionOverview.overview.plan.current_price?.toFixed(2) || '0.00'}
-                                                    <span className="text-sm font-normal text-gray-500 ml-1">
-                                                        /{subscriptionOverview.overview.plan.billing_cycle || 'month'}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-gray-400 font-[BasisGrotesquePro] uppercase tracking-tighter mb-1">
-                                                    {subscriptionOverview.overview.plan.expiry_date ? 'Renews On' : 'Status'}
-                                                </p>
-                                                <p className={`text-sm font-bold font-[BasisGrotesquePro] ${!subscriptionOverview.overview.plan.expiry_date ? 'text-red-500' : 'text-gray-700'}`}>
-                                                    {subscriptionOverview.overview.plan.expiry_date
-                                                        ? new Date(subscriptionOverview.overview.plan.expiry_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                                                        : 'Expired'}
-                                                </p>
-                                            </div>
-                                        </div>
+                            <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6 sm:p-8 relative shadow-sm overflow-hidden">
+                                {/* Premium Background Accent */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#F3F7FF] rounded-bl-full -mr-16 -mt-16 opacity-50 z-0"></div>
 
-                                        <div className="mb-8 p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
-                                            <h6 className="text-sm font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] flex items-center gap-2">
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M14 4L6.66667 11.3333L3 7.66667" stroke="#F56D2D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                                Plan Features
-                                            </h6>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                                                {subscriptionOverview.overview.plan.features &&
-                                                    subscriptionOverview.overview.plan.features.length > 0 ? (
-                                                    subscriptionOverview.overview.plan.features.map((feature, index) => (
-                                                        <div key={index} className="flex items-center gap-2">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#3AD6F2]"></div>
-                                                            <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">{feature}</span>
+                                <div className="relative z-10">
+                                    {subscriptionOverview?.overview?.plan ? (
+                                        <>
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <h5 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                            {subscriptionOverview.overview.plan.name || 'Current'} Plan
+                                                        </h5>
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider ${subscriptionOverview.overview.plan.status === 'active'
+                                                                ? 'bg-green-100 text-green-700 border border-green-200'
+                                                                : 'bg-red-100 text-red-700 border border-red-200'
+                                                                }`}>
+                                                                {subscriptionOverview.overview.plan.status || 'Active'}
+                                                            </span>
+                                                            {subscriptionOverview.overview.plan.billing_cycle && (
+                                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                                                    {subscriptionOverview.overview.plan.billing_cycle}
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Standard features included</p>
-                                                )}
+                                                    </div>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <p className="text-3xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
+                                                            ${subscriptionOverview.overview.plan.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                                        </p>
+                                                        <span className="text-sm font-medium text-gray-500 font-[BasisGrotesquePro]">
+                                                            /{subscriptionOverview.overview.plan.billing_cycle === 'yearly' ? 'year' : 'month'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs text-gray-400 font-[BasisGrotesquePro] uppercase tracking-tighter mb-1">
+                                                        {subscriptionOverview.overview.plan.expiry_date ? (subscriptionOverview.overview.plan.status === 'active' ? 'Next Billing' : 'Expires On') : 'Status'}
+                                                    </p>
+                                                    <p className={`text-sm font-bold font-[BasisGrotesquePro] ${!subscriptionOverview.overview.plan.expiry_date ? 'text-red-500' : 'text-gray-700'}`}>
+                                                        {subscriptionOverview.overview.plan.expiry_date
+                                                            ? new Date(subscriptionOverview.overview.plan.expiry_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                                            : 'N/A'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="text-center py-12">
-                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#F56D2D]"></div>
-                                        <p className="mt-4 text-sm text-gray-600">Syncing plan details...</p>
-                                    </div>
-                                )}
 
-                                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-                                    <button
-                                        onClick={() => setIsUpgradePlanModalOpen(true)}
-                                        className="flex-1 px-4 py-2.5 bg-[#F56D2D] text-white rounded-lg hover:bg-[#EA580C] transition-all shadow-sm hover:shadow-md font-bold text-sm"
-                                        style={{ borderRadius: '8px' }}
-                                    >
-                                        Manage Subscription
-                                    </button>
-                                    <button
-                                        onClick={handleCancelSubscriptionClick}
-                                        disabled={cancellingSubscription}
-                                        className="px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all font-bold text-sm disabled:opacity-50"
-                                        style={{ borderRadius: '8px' }}
-                                    >
-                                        {cancellingSubscription ? 'Processing...' : 'Cancel Plan'}
-                                    </button>
+                                            <div className="mb-8 p-5 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
+                                                <h6 className="text-sm font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] flex items-center gap-2">
+                                                    <div className="p-1 bg-orange-100 rounded-md">
+                                                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M14 4L6.66667 11.3333L3 7.66667" stroke="#F56D2D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                    </div>
+                                                    Plan Privileges
+                                                </h6>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                                                    {subscriptionOverview.overview.plan.features &&
+                                                        subscriptionOverview.overview.plan.features.length > 0 ? (
+                                                        subscriptionOverview.overview.plan.features.map((feature, index) => (
+                                                            <div key={index} className="flex items-center gap-2.5">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-[#3AD6F2]"></div>
+                                                                <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro] leading-tight">{feature}</span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Standard platform features included</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#F56D2D]"></div>
+                                            <p className="mt-4 text-sm text-gray-600">Syncing plan details...</p>
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 mt-auto">
+                                        <button
+                                            onClick={() => setIsUpgradePlanModalOpen(true)}
+                                            className="flex-1 px-4 py-3 bg-[#F56D2D] text-white rounded-lg hover:bg-[#EA580C] transition-all shadow-sm hover:shadow-md font-bold text-sm"
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            Modify Subscription
+                                        </button>
+                                        <button
+                                            onClick={handleCancelSubscriptionClick}
+                                            disabled={cancellingSubscription}
+                                            className="px-4 py-3 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all font-bold text-sm disabled:opacity-50"
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            {cancellingSubscription ? 'Processing...' : 'Cancel Service'}
+                                        </button>
+                                    </div>
+
+                                    {/* Additional Info Row */}
+                                    <div className="mt-6 grid grid-cols-2 gap-4">
+                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                                            <div className={`w-2 h-2 rounded-full ${subscriptionOverview?.overview?.automatic_payment_failover ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Failover: {subscriptionOverview?.overview?.automatic_payment_failover ? 'Active' : 'Disabled'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M6 2V10M2 6H10" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Add-ons: {subscriptionOverview?.overview?.addons?.count || 0} (${subscriptionOverview?.overview?.addons?.total_monthly_cost || 0}/mo)</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -739,10 +769,10 @@ const SubscriptionManagement = () => {
                             <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6 sm:p-8 relative shadow-sm">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Usage Overview</h5>
-                                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Current consumption vs limits</p>
+                                        <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Resource Usage</h5>
+                                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Real-time tracking of your active limits</p>
                                     </div>
-                                    <div className="p-2 bg-[#F3F7FF] rounded-lg">
+                                    <div className="p-2.5 bg-[#F3F7FF] rounded-xl border border-[#E8F0FF]">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 20V10" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                             <path d="M18 20V4" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -752,121 +782,128 @@ const SubscriptionManagement = () => {
                                 </div>
 
                                 {subscriptionOverview?.overview?.usage ? (
-                                    <div className="space-y-6">
-                                        {/* Clients */}
-                                        <div>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">Active Clients</span>
-                                                </div>
-                                                <span className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                    {subscriptionOverview.overview.usage.clients.used}
-                                                    <span className="text-gray-400 font-normal">/{subscriptionOverview.overview.usage.clients.limit}</span>
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                                                <div
-                                                    className="bg-[#3AD6F2] h-full rounded-full transition-all duration-500"
-                                                    style={{
-                                                        width: `${Math.min((subscriptionOverview.overview.usage.clients.used / subscriptionOverview.overview.usage.clients.limit) * 100, 100)}%`
-                                                    }}
-                                                ></div>
-                                            </div>
-                                        </div>
+                                    <div className="space-y-7">
+                                        {/* Helper for Unlimited Display */}
+                                        {(() => {
+                                            const isUnlimited = (val) => val === null || val === 'Unlimited' || val === 'unlimited';
+                                            const renderUsageBar = (title, used, limit, colorClass = 'bg-[#3AD6F2]') => {
+                                                const unlimited = isUnlimited(limit);
+                                                const percentage = unlimited ? 0 : Math.min((used / limit) * 100, 100);
 
-                                        {/* Staff Users */}
-                                        <div>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">Staff Seats</span>
-                                                <span className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                    {subscriptionOverview.overview.usage.staff_users.used}
-                                                    <span className="text-gray-400 font-normal">/
-                                                        {['Unlimited', 'unlimited'].includes(subscriptionOverview.overview.usage.staff_users.limit) ? '∞' : subscriptionOverview.overview.usage.staff_users.limit}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-500 ${['Unlimited', 'unlimited'].includes(subscriptionOverview.overview.usage.staff_users.limit) ? 'bg-green-400' : 'bg-[#3AD6F2]'}`}
-                                                    style={{
-                                                        width: ['Unlimited', 'unlimited'].includes(subscriptionOverview.overview.usage.staff_users.limit) ? '100%' : `${Math.min((subscriptionOverview.overview.usage.staff_users.used / subscriptionOverview.overview.usage.staff_users.limit) * 100, 100)}%`
-                                                    }}
-                                                ></div>
-                                            </div>
-                                        </div>
+                                                return (
+                                                    <div>
+                                                        <div className="flex justify-between items-center mb-2">
+                                                            <span className="text-sm font-bold text-gray-700 font-[BasisGrotesquePro]">{title}</span>
+                                                            <span className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                                {used} <span className="text-gray-400 font-medium">/{unlimited ? '∞' : limit}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-[#F3F7FF] rounded-full h-2.5 overflow-hidden border border-[#E8F0FF]">
+                                                            <div
+                                                                className={`${unlimited ? 'bg-gradient-to-r from-[#3AD6F2] to-[#BEEAF2]' : colorClass} h-full rounded-full transition-all duration-700 ease-out`}
+                                                                style={{ width: unlimited ? '100%' : `${percentage}%`, opacity: unlimited ? 0.4 : 1 }}
+                                                            ></div>
+                                                        </div>
+                                                        {unlimited && <p className="text-[10px] text-gray-400 mt-1 font-medium italic font-[BasisGrotesquePro]">Unlimited capacity with your current plan</p>}
+                                                    </div>
+                                                );
+                                            };
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            return (
+                                                <>
+                                                    {renderUsageBar('Active Clients', subscriptionOverview.overview.usage.clients.used, subscriptionOverview.overview.usage.clients.limit)}
+                                                    {renderUsageBar('Staff Members', subscriptionOverview.overview.usage.staff_users.used, subscriptionOverview.overview.usage.staff_users.limit, 'bg-indigo-500')}
+                                                </>
+                                            );
+                                        })()}
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                                             {/* Storage */}
-                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
-                                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">Storage</p>
-                                                <p className="text-lg font-bold text-gray-900">
-                                                    {(() => {
-                                                        const bytes = subscriptionOverview.overview.usage.storage_gb.used_bytes;
-                                                        const used = subscriptionOverview.overview.usage.storage_gb.used;
-                                                        if (bytes !== undefined && bytes !== null) {
-                                                            if (bytes === 0) return "0 KB";
-                                                            const k = 1024;
-                                                            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-                                                            const i = Math.floor(Math.log(bytes) / Math.log(k));
-                                                            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-                                                        }
-                                                        return used + ' GB';
-                                                    })()}
-                                                    <span className="text-sm text-gray-400 font-normal ml-1">Used</span>
-                                                </p>
-                                                <div className="w-full bg-gray-200 h-1.5 rounded-full mt-2">
-                                                    <div className="bg-[#3AD6F2] h-full rounded-full" style={{ width: `${Math.min((subscriptionOverview.overview.usage.storage_gb.used / subscriptionOverview.overview.usage.storage_gb.limit) * 100, 100)}%` }}></div>
+                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF] flex flex-col justify-between">
+                                                <div>
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">Cloud Storage</p>
+                                                    <p className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                        {(() => {
+                                                            const bytes = subscriptionOverview.overview.usage.storage_gb.used_bytes;
+                                                            if (bytes !== undefined && bytes !== null) {
+                                                                if (bytes === 0) return "0 KB";
+                                                                const k = 1024;
+                                                                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                                                                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                                                                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                                                            }
+                                                            return subscriptionOverview.overview.usage.storage_gb.used + ' GB';
+                                                        })()}
+                                                    </p>
                                                 </div>
-                                                <p className="text-xs text-gray-500 mt-1 text-right">
-                                                    of {subscriptionOverview.overview.usage.storage_gb.limit} GB
-                                                </p>
+                                                <div className="mt-3">
+                                                    <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="bg-[#3AD6F2] h-full rounded-full"
+                                                            style={{ width: `${Math.min((subscriptionOverview.overview.usage.storage_gb.used / subscriptionOverview.overview.usage.storage_gb.limit) * 100, 100)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium font-[BasisGrotesquePro]">
+                                                        of {subscriptionOverview.overview.usage.storage_gb.limit} GB total
+                                                    </p>
+                                                </div>
                                             </div>
 
                                             {/* Workflows */}
-                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
-                                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">Workflows</p>
-                                                <p className="text-lg font-bold text-gray-900">
-                                                    {subscriptionOverview.overview.usage.workflows.used}
-                                                    <span className="text-sm text-gray-400 font-normal ml-1">
-                                                        / {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' ? '∞' : subscriptionOverview.overview.usage.workflows.limit}
-                                                    </span>
-                                                </p>
-                                                <div className="w-full bg-green-200 h-1.5 rounded-full mt-2">
-                                                    <div
-                                                        className="bg-green-500 h-full rounded-full"
-                                                        style={{
-                                                            width: subscriptionOverview.overview.usage.workflows.limit === 'Unlimited'
-                                                                ? '5%'
-                                                                : `${Math.min((subscriptionOverview.overview.usage.workflows.used / subscriptionOverview.overview.usage.workflows.limit) * 100, 100)}%`
-                                                        }}
-                                                    ></div>
+                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF] flex flex-col justify-between">
+                                                <div>
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">Workflows</p>
+                                                    <p className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                        {subscriptionOverview.overview.usage.workflows.used}
+                                                        <span className="text-gray-400 font-medium text-sm ml-1">
+                                                            / {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null ? '∞' : subscriptionOverview.overview.usage.workflows.limit}
+                                                        </span>
+                                                    </p>
                                                 </div>
-                                                <div className="text-xs text-gray-500 mt-1 text-right">
-                                                    {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' ? 'Unlimited' : `${subscriptionOverview.overview.usage.workflows.limit} Limit`}
+                                                <div className="mt-3">
+                                                    <div className="w-full bg-green-100 h-1.5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="bg-green-500 h-full rounded-full"
+                                                            style={{
+                                                                width: (subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null)
+                                                                    ? '100%'
+                                                                    : `${Math.min((subscriptionOverview.overview.usage.workflows.used / subscriptionOverview.overview.usage.workflows.limit) * 100, 100)}%`,
+                                                                opacity: (subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null) ? 0.3 : 1
+                                                            }}
+                                                        ></div>
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium font-[BasisGrotesquePro]">
+                                                        {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null ? 'Unlimited Access' : 'Monthly quota'}
+                                                    </p>
                                                 </div>
                                             </div>
 
                                             {/* E-Signatures */}
-                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
-                                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">E-Signatures</p>
-                                                <p className="text-lg font-bold text-gray-900">
-                                                    {subscriptionOverview.overview.usage.esignatures?.used || 0}
-                                                    <span className="text-sm text-gray-400 font-normal ml-1">
-                                                        / {subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' ? '∞' : (subscriptionOverview.overview.usage.esignatures?.limit || 0)}
-                                                    </span>
-                                                </p>
-                                                <div className="w-full bg-purple-200 h-1.5 rounded-full mt-2">
-                                                    <div
-                                                        className="bg-purple-500 h-full rounded-full"
-                                                        style={{
-                                                            width: (!subscriptionOverview.overview.usage.esignatures?.limit || subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited')
-                                                                ? '5%'
-                                                                : `${Math.min(((subscriptionOverview.overview.usage.esignatures?.used || 0) / subscriptionOverview.overview.usage.esignatures.limit) * 100, 100)}%`
-                                                        }}
-                                                    ></div>
+                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF] flex flex-col justify-between">
+                                                <div>
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">E-Signatures</p>
+                                                    <p className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                        {subscriptionOverview.overview.usage.esignatures?.used || 0}
+                                                        <span className="text-gray-400 font-medium text-sm ml-1">
+                                                            / {subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null ? '∞' : (subscriptionOverview.overview.usage.esignatures?.limit || 0)}
+                                                        </span>
+                                                    </p>
                                                 </div>
-                                                <div className="text-xs text-gray-500 mt-1 text-right">
-                                                    Monthly Limit
+                                                <div className="mt-3">
+                                                    <div className="w-full bg-purple-100 h-1.5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="bg-purple-500 h-full rounded-full"
+                                                            style={{
+                                                                width: (subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null)
+                                                                    ? '100%'
+                                                                    : `${Math.min(((subscriptionOverview.overview.usage.esignatures?.used || 0) / (subscriptionOverview.overview.usage.esignatures?.limit || 1)) * 100, 100)}%`,
+                                                                opacity: (subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null) ? 0.3 : 1
+                                                            }}
+                                                        ></div>
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium font-[BasisGrotesquePro]">
+                                                        {subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null ? 'Unlimited Requesting' : 'Monthly quota'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -874,7 +911,7 @@ const SubscriptionManagement = () => {
                                 ) : (
                                     <div className="text-center py-12">
                                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3AD6F2]"></div>
-                                        <p className="mt-4 text-sm text-gray-600">Calculating usage...</p>
+                                        <p className="mt-4 text-sm text-gray-600">Calculating your usage metrics...</p>
                                     </div>
                                 )}
                             </div>

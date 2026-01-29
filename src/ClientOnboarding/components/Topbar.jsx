@@ -1,4 +1,27 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+
+// Simple Error Boundary for AccountSwitcher
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        // Silently handle AccountSwitcher errors
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return this.props.fallback || null;
+        }
+        return this.props.children;
+    }
+}
 import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
@@ -6,6 +29,7 @@ import logo from "../../assets/logo.png";
 import { LogoIcon } from "./icons";
 import image from "../../assets/image.png";
 import NotificationPanel from "./Notifications/NotificationPanel";
+import AccountSwitcher from "./AccountSwitcher";
 import { profileAPI, userAPI, clientNotificationAPI } from "../utils/apiUtils";
 import { clearUserData, getUserData } from "../utils/userUtils";
 import { useNotificationWebSocket } from "../utils/useNotificationWebSocket";
@@ -389,6 +413,13 @@ export default function Topbar({
 
 
                     <div className="d-flex align-items-center gap-3">
+                        {/* Account Switcher - For users with multiple roles */}
+                        <React.Suspense fallback={null}>
+                            <ErrorBoundary fallback={null}>
+                                <AccountSwitcher />
+                            </ErrorBoundary>
+                        </React.Suspense>
+
                         <button
                             type="button"
                             className="notification-bell border-0 p-0"

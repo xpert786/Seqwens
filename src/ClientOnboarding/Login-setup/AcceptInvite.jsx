@@ -689,7 +689,7 @@ export default function AcceptInvite() {
                     <div className="accept-invite-page">
                         <div className="accept-invite-card">
                             <div className="accept-invite-header">
-                                <h5 className="accept-invite-title">You've Been Invited to Join Firm!</h5>
+                                <h5 className="accept-invite-title">You've Been Invited to Join {invitationData?.firm_name || "a Firm"}!</h5>
                                 <p className="accept-invite-subtitle">
                                     Hello {invitationData?.first_name ? `${invitationData.first_name} ${invitationData.last_name || ''}`.trim() : invitationData?.email || "Staff"},
                                 </p>

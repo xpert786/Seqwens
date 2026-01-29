@@ -225,15 +225,15 @@ const StartWorkflowModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
-      <div className="bg-white !rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl">
+      <div className="bg-white !rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#E8F0FF]">
+        <div className="flex items-center justify-between p-5 border-b border-[#E8F0FF] flex-shrink-0">
           <div>
             <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
               Start Workflow
             </h3>
             <p className="text-sm text-gray-500 mt-1 font-[BasisGrotesquePro]">
-              Begin an automated process for a client
+              Start a tracking workflow for a client
             </p>
           </div>
           <button
@@ -249,7 +249,7 @@ const StartWorkflowModal = ({
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-5 overflow-y-auto max-h-[60vh]">
+        <div className="p-5 space-y-5 overflow-y-auto flex-1">
           {/* Client Selection or Display */}
           {clientId && clientName ? (
             <div className="bg-[#FFF4E6] !border border-[#F56D2D] border-opacity-30 !rounded-lg p-4">
@@ -380,7 +380,7 @@ const StartWorkflowModal = ({
               <div>
                 <p className="text-sm font-medium text-blue-800 font-[BasisGrotesquePro]">What happens next?</p>
                 <p className="text-xs text-blue-700 mt-1 font-[BasisGrotesquePro]">
-                  The workflow will begin with the first stage and automatically execute any configured actions like sending emails, creating tasks, or requesting documents.
+                  The workflow will begin with the first stage. You can then track progress, assign tasks, and manage document requests for this client.
                 </p>
               </div>
             </div>
@@ -388,7 +388,7 @@ const StartWorkflowModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-[#E8F0FF]">
+        <div className="flex justify-end gap-3 p-5 border-t border-[#E8F0FF] flex-shrink-0">
           <button
             onClick={handleClose}
             className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"

@@ -1,8 +1,32 @@
-@media (max-width: 400px) {
-  .super-topbar-logo {
-    max-height: 22px !important;
-    width: auto !important;
+:root {
+  --sa-sidebar-width: 265px;
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --sa-sidebar-width: 285px;
   }
 }
 
+@media (max-width: 1024px) {
+  :root {
+    --sa-sidebar-width: 240px;
+  }
+}
 
+@media (max-width: 768px) {
+  :root {
+    --sa-sidebar-width: 240px;
+  }
+}
+
+.super-topbar-logo {
+  max-height: 35px;
+  width: auto;
+}
+
+@media (max-width: 400px) {
+  .super-topbar-logo {
+    max-height: 22px !important;
+  }
+}

@@ -307,33 +307,41 @@ export default function Topbar({
 
   return (
     <>
-      <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-0">
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-3 flex-grow-1">
-            <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-              <img src={logoUrl || logo} alt="Logo" className="topbar-logo" />
-            </Link>
+      <nav className="navbar bg-white fixed-top border-bottom custom-topbar p-0">
+        <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
+          <div className="d-flex align-items-center h-full flex-grow-1">
+            <div
+              className="d-flex align-items-center px-4 border-end"
+              style={{
+                width: 'var(--td-sidebar-width, 280px)',
+                height: '100%',
+                transition: 'width 0.3s ease'
+              }}
+            >
+              <Link to="/" className="navbar-brand d-flex align-items-center m-0">
+                <img src={logoUrl || logo} alt="Logo" className="topbar-logo" style={{ maxHeight: '35px', width: 'auto' }} />
+              </Link>
+            </div>
+
             <button
               type="button"
               onClick={onToggleSidebar}
-              className="sidebar-toggle-btn"
+              className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors border-end"
               aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-              style={{ background: "transparent", border: "none" }}
+              style={{ background: "transparent", border: "none", width: '60px' }}
             >
               <span
                 className={`sidebar-toggle-icon ${isSidebarOpen ? "" : "collapsed"
                   }`}
+                style={{
+                  transition: "transform 0.3s ease",
+                  transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
+                }}
               >
                 <LogoIcond />
               </span>
             </button>
-            <div className="sd">
-              {/* Search */}
-              <div className="topbar-search">
-                <i className="bi bi-search"></i>
-                <input type="text" className="form-control" placeholder="Search..." />
-              </div>
-
+            <div className="sd ms-3">
               {/* Right side */}
               <div className="d-flex align-items-center gap-3">
                 {/* Account Switcher - Wrapped in error boundary to prevent blocking */}
@@ -434,5 +442,6 @@ export default function Topbar({
       )}
     </>
   );
+
 }
 

@@ -33,7 +33,7 @@ const WorkflowManagement = () => {
 
   // Data state
   const [templates, setTemplates] = useState([]);
-  const [instances, setInstances] = useState([]);
+  // const [instances, setInstances] = useState([]); // Removed unused state
   const [allInstances, setAllInstances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -58,12 +58,49 @@ const WorkflowManagement = () => {
     completion_rate: 0
   });
 
-  // Fetch data on mount and tab changes
-  useEffect(() => {
-    if (viewMode === 'dashboard') {
-      fetchAllData();
+  const fetchTemplates = useCallback(async () => {
+    try {
+      const response = await workflowAPI.listTemplates();
+      if (response.success) {
+        setTemplates(response.data?.results || response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      toast.error(handleAPIError(error) || 'Failed to load workflow templates');
     }
-  }, [viewMode]);
+  }, []);
+
+  const fetchInstances = useCallback(async () => {
+    try {
+      // Fetch all instances for pipeline view
+      const response = await workflowAPI.listInstances({});
+      if (response.success) {
+        setAllInstances(response.data?.results || response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching instances:', error);
+    }
+  }, []);
+
+  const fetchStatistics = useCallback(async () => {
+    try {
+      const response = await workflowAPI.getWorkflowStatistics();
+      if (response.success && response.data) {
+        // Map API response to our statistics format
+        const apiStats = response.data;
+        setStatistics({
+          total_templates: apiStats.total_workflows?.value || apiStats.total_templates || 0,
+          active_workflows: apiStats.active_workflows?.value || apiStats.active_instances || 0,
+          paused_workflows: apiStats.paused_workflows?.value || apiStats.paused_instances || 0,
+          completed_workflows: apiStats.completed_workflows?.value || apiStats.completed_instances || 0,
+          avg_completion_days: apiStats.avg_completion_time?.value_days || null,
+          completion_rate: apiStats.success_rate?.value_percentage || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+    }
+  }, []);
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -81,62 +118,25 @@ const WorkflowManagement = () => {
       setLoading(false);
       setStatsLoading(false);
     }
-  }, []);
+  }, [fetchTemplates, fetchInstances, fetchStatistics]);
 
-  const fetchTemplates = async () => {
-    try {
-      const response = await workflowAPI.listTemplates();
-      if (response.success) {
-        setTemplates(response.data || []);
-        // Auto-select first template for pipeline view if none selected
-        if (!selectedPipelineTemplate && response.data?.length > 0) {
-          setSelectedPipelineTemplate(response.data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      toast.error(handleAPIError(error) || 'Failed to load workflow templates');
+  // Fetch data on mount and view changes
+  useEffect(() => {
+    if (viewMode === 'dashboard') {
+      fetchAllData();
     }
-  };
+  }, [viewMode, fetchAllData]);
 
-  const fetchInstances = async () => {
-    try {
-      // Fetch all instances for pipeline view
-      const response = await workflowAPI.listInstances({});
-      if (response.success) {
-        setAllInstances(response.data || []);
-        // Also filter to active for dashboard
-        setInstances((response.data || []).filter(i => i.status === 'active'));
-      }
-    } catch (error) {
-      console.error('Error fetching instances:', error);
+  // Auto-select first template for pipeline view if none selected
+  useEffect(() => {
+    if (!selectedPipelineTemplate && templates.length > 0) {
+      setSelectedPipelineTemplate(templates[0].id);
     }
-  };
+  }, [templates, selectedPipelineTemplate]);
 
-  const fetchStatistics = async () => {
-    try {
-      const response = await workflowAPI.getWorkflowStatistics();
-      if (response.success && response.data) {
-        // Map API response to our statistics format
-        const apiStats = response.data;
-        setStatistics({
-          total_templates: apiStats.total_workflows?.value || apiStats.total_templates || templates.length,
-          active_workflows: apiStats.active_workflows?.value || apiStats.active_instances || 0,
-          paused_workflows: apiStats.paused_workflows?.value || apiStats.paused_instances || 0,
-          completed_workflows: apiStats.completed_workflows?.value || apiStats.completed_instances || 0,
-          avg_completion_days: apiStats.avg_completion_time?.value_days || null,
-          completion_rate: apiStats.success_rate?.value_percentage || 0
-        });
-      } else {
-        // Calculate from local data
-        calculateLocalStats();
-      }
-    } catch (error) {
-      console.error('Error fetching statistics:', error);
-      calculateLocalStats();
-    }
-  };
-
+  // Handler for local stats calculation (if needed in fallback cases)
+  // Currently unused to avoid dependency loops, relying on API
+  /*
   const calculateLocalStats = () => {
     const active = allInstances.filter(i => i.status === 'active').length;
     const paused = allInstances.filter(i => i.status === 'paused').length;
@@ -152,6 +152,7 @@ const WorkflowManagement = () => {
       completion_rate: total > 0 ? Math.round((completed / total) * 100) : 0
     });
   };
+  */
 
   // Handlers
   const handleCreateTemplate = () => {
@@ -277,7 +278,7 @@ const WorkflowManagement = () => {
               Workflow Management
             </h4>
             <p className="text-gray-600 font-[BasisGrotesquePro]">
-              Create, manage, and track automated workflows for your clients
+              Create, manage, and track standard workflows for your clients
             </p>
           </div>
           <div className="flex gap-3">
@@ -367,7 +368,7 @@ const WorkflowManagement = () => {
                       Workflow Templates
                     </h3>
                     <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">
-                      Reusable workflow blueprints to automate client processes
+                      Reusable workflow blueprints to standardize client processes
                     </p>
                   </div>
                   <button

@@ -39,8 +39,12 @@ const FinalizeSubscription = () => {
       try {
         const userData = JSON.parse(userDataStr);
 
-        // First check localStorage - if subscription_plan is set, user has subscription
-        if (userData.subscription_plan !== null && userData.subscription_plan !== undefined) {
+        // Check billing status from userData in storage
+        const billingStatus = userData.billing_status;
+        const hasActiveSub = userData.subscription_plan &&
+          !['expired', 'pending_payment', 'inactive', 'suspended'].includes(billingStatus);
+
+        if (hasActiveSub) {
           navigate('/firmadmin', { replace: true });
           return;
         }
@@ -61,14 +65,28 @@ const FinalizeSubscription = () => {
             if (statusResponse.ok) {
               const statusResult = await statusResponse.json();
 
-              // Check if subscription is active - subscription is at top level in response
-              if (statusResult.success && statusResult.subscription && statusResult.subscription.status === 'active') {
+              // Check if subscription is active - use has_active_subscription or status === 'active'
+              const isSubActive = statusResult.subscription && (
+                statusResult.subscription.has_active_subscription === true ||
+                statusResult.subscription.status === 'active'
+              );
+
+              if (statusResult.success && isSubActive) {
                 // Update userData with subscription info
-                userData.subscription_plan = statusResult.subscription.plan_name || statusResult.subscription.plan_type || statusResult.subscription.subscription_type || 'active';
+                userData.subscription_plan = statusResult.subscription.plan_name ||
+                  statusResult.subscription.plan_type ||
+                  userData.subscription_plan ||
+                  'active';
+                userData.billing_status = statusResult.subscription.status || 'active';
+                userData.firm_status = statusResult.firm_status || 'active';
+
                 storage.setItem("userData", JSON.stringify(userData));
+                // Sync with sessionStorage too
                 sessionStorage.setItem("userData", JSON.stringify(userData));
 
                 console.log('Active subscription found, redirecting to firmadmin');
+                toast.success('Your subscription is active. Welcome back!');
+
                 // Redirect to firm admin dashboard
                 navigate('/firmadmin', { replace: true });
                 return;

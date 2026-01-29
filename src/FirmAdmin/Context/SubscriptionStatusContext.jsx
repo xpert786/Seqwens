@@ -24,6 +24,22 @@ export const SubscriptionStatusProvider = ({ children }) => {
 
             if (result.success && result.data) {
                 setSubscriptionStatus(result.data);
+
+                // Sync with localStorage userData to ensure ProtectedRoute stays in sync
+                const userDataStr = localStorage.getItem("userData") || sessionStorage.getItem("userData");
+                if (userDataStr) {
+                    try {
+                        const userData = JSON.parse(userDataStr);
+                        userData.subscription_plan = result.data.current_plan_type || result.data.current_plan || userData.subscription_plan;
+                        userData.billing_status = result.data.status;
+                        userData.billing_status_display = result.data.status_display;
+
+                        localStorage.setItem("userData", JSON.stringify(userData));
+                        sessionStorage.setItem("userData", JSON.stringify(userData));
+                    } catch (e) {
+                        console.error('Error syncing userData from subscription status:', e);
+                    }
+                }
             } else if (result.status) {
                 // Handle direct status response
                 setSubscriptionStatus(result);

@@ -495,8 +495,8 @@ export default function DataIntakeForm({ targetClientId }) {
               lastName: personalInfoData.last_name || "",
               dateOfBirth: personalInfoData.dateOfBirth || "",
               ssn: personalInfoData.ssn || "",
-              email: personalInfoData.email || "",
-              phone: phoneValue,
+              email: personalInfoData.email || data.taxpayer_email || "",
+              phone: phoneValue || data.taxpayer_phone || "",
               address: personalInfoData.address || "",
               city: personalInfoData.city || "",
               state: personalInfoData.state || "",
@@ -764,18 +764,7 @@ export default function DataIntakeForm({ targetClientId }) {
     checkExistingData();
   }, []);
 
-  // Initialize phone fields - keep empty initially, only show code when country selected
-  useEffect(() => {
-    // Don't set any initial value - field should be empty
-    if (!personalInfo.phone) {
-      handlePersonalInfoChange('phone', '');
-      setPersonalPhoneCountrySelected(false);
-    }
-    if (!spouseInfo.phone) {
-      handleSpouseInfoChange('phone', '');
-      setSpousePhoneCountrySelected(false);
-    }
-  }, []);
+
 
   // Format date to YYYY-MM-DD format
   const formatDateToYYYYMMDD = (dateValue) => {

@@ -106,13 +106,16 @@ export default function ClientManage() {
   const [linkStatusFilter, setLinkStatusFilter] = useState('all'); // 'all', 'linked', 'unlinked'
 
   // Tab state
-  const [activeTab, setActiveTab] = useState('clients'); // 'clients', 'pending-invites', or 'unlinked-taxpayers'
+  const [activeTab, setActiveTab] = useState('clients'); // 'clients' or 'pending-requests'
 
   // Handle URL parameter for tab
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['clients', 'pending-invites', 'unlinked-taxpayers'].includes(tabParam)) {
+    if (tabParam && ['clients', 'pending-requests'].includes(tabParam)) {
       setActiveTab(tabParam);
+    } else if (tabParam === 'pending-invites' || tabParam === 'unlinked-taxpayers') {
+      // Backward compatibility/redirect
+      setActiveTab('pending-requests');
     }
   }, [searchParams]);
 
@@ -542,9 +545,9 @@ export default function ClientManage() {
     }
   }, [debouncedSearchTerm]);
 
-  // Fetch unlinked taxpayers when tab is switched to unlinked taxpayers or search changes
+  // Fetch unlinked taxpayers when tab is switched to pending-requests or search changes
   useEffect(() => {
-    if (activeTab === 'unlinked-taxpayers') {
+    if (activeTab === 'pending-requests') {
       fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size);
     }
   }, [activeTab, debouncedSearchTerm, fetchUnlinkedTaxpayers]);
@@ -584,9 +587,9 @@ export default function ClientManage() {
     }
   }, [debouncedSearchTerm, pendingInvitesPagination.page_size]);
 
-  // Fetch pending invites when tab is switched to pending invites or search changes
+  // Fetch pending invites when tab is switched to pending-requests or search changes
   useEffect(() => {
-    if (activeTab === 'pending-invites') {
+    if (activeTab === 'pending-requests') {
       fetchPendingInvites(1);
     }
   }, [activeTab, debouncedSearchTerm, fetchPendingInvites]);
@@ -1459,427 +1462,360 @@ export default function ClientManage() {
         </button>
         <button
           className={`btn border-0 position-relative`}
-          onClick={() => handleTabChange('pending-invites')}
+          onClick={() => handleTabChange('pending-requests')}
           style={{
             borderRadius: '8px 8px 0 0',
-            borderBottom: activeTab === 'pending-invites' ? '3px solid #00C0C6' : '3px solid transparent',
+            borderBottom: activeTab === 'pending-requests' ? '3px solid #00C0C6' : '3px solid transparent',
             marginBottom: '-2px',
-            fontWeight: activeTab === 'pending-invites' ? '600' : '500',
+            fontWeight: activeTab === 'pending-requests' ? '600' : '500',
             padding: '10px 20px',
             fontSize: '14px',
-            color: activeTab === 'pending-invites' ? '#00C0C6' : '#6B7280',
-            backgroundColor: activeTab === 'pending-invites' ? '#F0FDFF' : 'transparent',
+            color: activeTab === 'pending-requests' ? '#00C0C6' : '#6B7280',
+            backgroundColor: activeTab === 'pending-requests' ? '#F0FDFF' : 'transparent',
             transition: 'all 0.2s ease'
           }}
         >
-          Pending Invites
-          {(pendingInvites.length > 0 || pendingInvitesPagination.total_count > 0) && (
+          Pending & Unlinked
+          {(pendingInvitesPagination.total_count + unlinkedTaxpayersPagination.total_count > 0) && (
             <span className="badge bg-danger text-white ms-2" style={{
               fontSize: '10px',
               padding: '2px 6px',
               borderRadius: '10px',
               color: '#ffffff'
             }}>
-              {pendingInvitesPagination.total_count > 0 ? pendingInvitesPagination.total_count : pendingInvites.length}
-            </span>
-          )}
-        </button>
-        <button
-          className={`btn border-0 position-relative`}
-          onClick={() => handleTabChange('unlinked-taxpayers')}
-          style={{
-            borderRadius: '8px 8px 0 0',
-            borderBottom: activeTab === 'unlinked-taxpayers' ? '3px solid #00C0C6' : '3px solid transparent',
-            marginBottom: '-2px',
-            fontWeight: activeTab === 'unlinked-taxpayers' ? '600' : '500',
-            padding: '10px 20px',
-            fontSize: '14px',
-            color: activeTab === 'unlinked-taxpayers' ? '#00C0C6' : '#6B7280',
-            backgroundColor: activeTab === 'unlinked-taxpayers' ? '#F0FDFF' : 'transparent',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Unlinked Taxpayers
-          {(unlinkedTaxpayers.length > 0 || unlinkedTaxpayersPagination.total_count > 0) && (
-            <span className="badge bg-warning ms-2" style={{
-              fontSize: '10px',
-              padding: '2px 6px',
-              borderRadius: '10px'
-            }}>
-              {unlinkedTaxpayersPagination.total_count > 0 ? unlinkedTaxpayersPagination.total_count : unlinkedTaxpayers.length}
+              {pendingInvitesPagination.total_count + unlinkedTaxpayersPagination.total_count}
             </span>
           )}
         </button>
       </div>
 
-      {/* Unlinked Taxpayers Section - Only show for unlinked taxpayers tab */}
-      {activeTab === 'unlinked-taxpayers' && (
-        <div className="card client-list-card p-3" style={{
-          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-        }}>
-          {unlinkedTaxpayersLoading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
+      {/* Pending & Unlinked Section - Only show for pending-requests tab */}
+      {activeTab === 'pending-requests' && (
+        <div className="flex flex-col gap-6">
+          {/* Unlinked Taxpayers Section */}
+          <div className="card client-list-card p-4" style={{
+            border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+            backgroundColor: 'white',
+            borderRadius: '12px'
+          }}>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Unlinked Taxpayers</h6>
+                <p className="text-muted small mb-0">Users not yet assigned to a specific tax preparer</p>
               </div>
-              <p className="mt-3 text-muted">Loading unlinked taxpayers...</p>
+              <span className="badge bg-warning px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
+                {unlinkedTaxpayersPagination.total_count} Unlinked
+              </span>
             </div>
-          ) : unlinkedTaxpayersError ? (
-            <div className="alert alert-danger" role="alert">
-              <strong>Error:</strong> {unlinkedTaxpayersError}
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
-                Retry
-              </button>
-            </div>
-          ) : unlinkedTaxpayers.length === 0 ? (
-            <div className="text-center py-5">
-              <p className="text-muted">No unlinked taxpayers found</p>
-            </div>
-          ) : (
-            <>
-              <div className="row g-3">
-                {unlinkedTaxpayers.map((taxpayer) => (
-                  <div key={taxpayer.id} className="col-md-6 col-12">
-                    <div
-                      className="card client-card"
-                      style={{
-                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                        padding: '16px',
-                      }}
-                    >
-                      <div className="d-flex justify-content-between align-items-start" style={{ gap: '12px' }}>
-                        <div
-                          className="d-flex gap-3 flex-grow-1"
-                          onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <div
-                            className="client-initials"
-                            style={{
-                              width: "48px",
-                              height: "48px",
-                              borderRadius: "50%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "#00C0C6",
-                              color: "white",
-                              fontWeight: "600",
-                              fontSize: "16px",
-                              flexShrink: 0
-                            }}
-                          >
-                            {taxpayer.first_name?.[0]?.toUpperCase() || ''}{taxpayer.last_name?.[0]?.toUpperCase() || ''}
-                          </div>
-                          <div className="flex-grow-1">
-                            <div className="fw-semibold mb-1">
-                              {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
-                            </div>
-                            {taxpayer.email && (
-                              <div className="text-muted small mb-2">
-                                <FaEnvelope className="me-1" size={12} />
-                                {taxpayer.email}
-                              </div>
-                            )}
-                            {taxpayer.phone_number && (
-                              <div className="text-muted small mb-2">
-                                <FaPhone className="me-1" size={12} />
-                                {taxpayer.phone_number}
-                              </div>
-                            )}
-                            <div className="d-flex flex-wrap gap-2 mt-2">
-                              {taxpayer.is_active ? (
-                                <span className="badge bg-success" style={{ fontSize: '10px', color: "#ffffff !important" }}>
-                                  Active
-                                </span>
-                              ) : (
-                                <span className="badge bg-secondary" style={{ fontSize: '10px', color: "white" }}>
-                                  Inactive
-                                </span>
-                              )}
-                              {taxpayer.is_email_verified && (
-                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
-                                  Email Verified
-                                </span>
-                              )}
-                              {taxpayer.is_phone_verified && (
-                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
-                                  Phone Verified
-                                </span>
-                              )}
-                              {taxpayer.is_suspended && (
-                                <span className="badge bg-danger text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
-                                  Suspended
-                                </span>
-                              )}
-                            </div>
-                            {(taxpayer.last_login || taxpayer.last_login_formatted) && (
-                              <div className="text-muted small mt-2">
-                                Last login: {taxpayer.last_login || taxpayer.last_login_formatted}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
-                          <span className="badge bg-warning" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                            Unlinked
-                          </span>
-                          <button
-                            className="btn btn-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedClientForReassign(taxpayer.id);
-                              setIsAssignMode(true);
-                              setShowReassignStaffModal(true);
-                            }}
-                            style={{
-                              backgroundColor: '#F56D2D',
-                              color: 'white',
-                              border: 'none',
-                              fontSize: '13px',
-                              fontWeight: '500',
-                              padding: '6px 16px',
-                              borderRadius: '7px',
-                              whiteSpace: 'nowrap',
-                              fontFamily: 'BasisGrotesquePro, sans-serif',
-                              transition: 'background-color 0.2s ease',
-                              cursor: 'pointer'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#E55A1D';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#F56D2D';
-                            }}
-                          >
-                            Assign
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
 
-              {/* Pagination for unlinked taxpayers */}
-              {unlinkedTaxpayersPagination.total_pages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-4">
-                  <div className="text-muted small">
-                    Showing {((unlinkedTaxpayersPagination.page - 1) * unlinkedTaxpayersPagination.page_size) + 1} to{' '}
-                    {Math.min(unlinkedTaxpayersPagination.page * unlinkedTaxpayersPagination.page_size, unlinkedTaxpayersPagination.total_count)} of{' '}
-                    {unlinkedTaxpayersPagination.total_count} taxpayers
-                  </div>
-                  <div className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page - 1, unlinkedTaxpayersPagination.page_size)}
-                      disabled={unlinkedTaxpayersPagination.page === 1 || unlinkedTaxpayersLoading}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page + 1, unlinkedTaxpayersPagination.page_size)}
-                      disabled={unlinkedTaxpayersPagination.page >= unlinkedTaxpayersPagination.total_pages || unlinkedTaxpayersLoading}
-                    >
-                      Next
-                    </button>
-                  </div>
+            {unlinkedTaxpayersLoading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-
-      {/* Pending Invites Section - Only show for pending invites tab */}
-      {activeTab === 'pending-invites' && (
-        <div className="card client-list-card p-3" style={{
-          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-        }}>
-          <h6 className="fw-semibold mb-3">Pending Invites</h6>
-          <div className="mb-3">Client invites awaiting acceptance</div>
-
-          {pendingInvitesLoading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
+                <p className="mt-3 text-muted">Loading unlinked taxpayers...</p>
               </div>
-              <p className="mt-3 text-muted">Loading pending invites...</p>
-            </div>
-          ) : pendingInvitesError ? (
-            <div className="alert alert-danger" role="alert">
-              <strong>Error:</strong> {pendingInvitesError}
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
-                Retry
-              </button>
-            </div>
-          ) : pendingInvites.length === 0 ? (
-            <div className="text-center py-5">
-              <p className="text-muted">No pending invites found</p>
-            </div>
-          ) : (
-            <>
-              <div className="row g-3">
-                {pendingInvites.map((invite) => (
-                  <div key={invite.id} className="">
-                    <div
-                      className="card client-card"
-                      onClick={() => navigate(`/firmadmin/pending-invites/${invite.id || invite.invite_id || invite.client_id}`)}
-                      style={{
-                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <div className="d-flex justify-content-between align-items-start p-6">
-                        <div className="d-flex gap-3">
+            ) : unlinkedTaxpayersError ? (
+              <div className="alert alert-danger" role="alert">
+                <strong>Error:</strong> {unlinkedTaxpayersError}
+                <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
+                  Retry
+                </button>
+              </div>
+            ) : unlinkedTaxpayers.length === 0 ? (
+              <div className="text-center py-5 bg-light rounded-3">
+                <p className="text-muted mb-0">No unlinked taxpayers found</p>
+              </div>
+            ) : (
+              <>
+                <div className="row g-3">
+                  {unlinkedTaxpayers.map((taxpayer) => (
+                    <div key={taxpayer.id} className="col-md-6 col-12">
+                      <div
+                        className="card client-card h-100"
+                        style={{
+                          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                          padding: '16px',
+                          borderRadius: '10px',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div className="d-flex justify-content-between align-items-start" style={{ gap: '12px' }}>
                           <div
-                            className="client-initials"
-                            style={{
-                              width: "48px",
-                              height: "48px",
-                              borderRadius: "50%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "#00C0C6",
-                              color: "white",
-                              fontWeight: "600",
-                              fontSize: "16px",
-                              flexShrink: 0
-                            }}
+                            className="d-flex gap-3 flex-grow-1"
+                            onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
+                            style={{ cursor: "pointer" }}
                           >
-                            {invite.first_name?.[0]?.toUpperCase() || ''}{invite.last_name?.[0]?.toUpperCase() || ''}
-                          </div>
-                          <div>
-                            <div className="fw-semibold mb-1">
-                              {invite.first_name} {invite.last_name}
+                            <div
+                              className="client-initials"
+                              style={{
+                                width: "48px",
+                                height: "48px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#00C0C6",
+                                color: "white",
+                                fontWeight: "600",
+                                fontSize: "16px",
+                                flexShrink: 0
+                              }}
+                            >
+                              {taxpayer.first_name?.[0]?.toUpperCase() || ''}{taxpayer.last_name?.[0]?.toUpperCase() || ''}
                             </div>
-                            <div className="text-muted small mb-2 d-flex align-items-center gap-1">
-                              <FaEnvelope className="me-1" size={12} />
-                              {invite.email}
-                            </div>
-                            {invite.phone_number && (
-                              <div className="text-muted small mb-2 d-flex align-items-center gap-1">
-                                <FaPhone className="me-1" size={12} />
-                                {invite.phone_number}
+                            <div className="flex-grow-1">
+                              <div className="fw-semibold mb-1" style={{ color: '#131323' }}>
+                                {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
                               </div>
-                            )}
-                            <div className="text-muted small mt-2">
-                              <div>Invited: {invite.invited_at_formatted || (invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A')}</div>
-                              {invite.expires_at && (
-                                <div>
-                                  Expires: {invite.expires_at_formatted || new Date(invite.expires_at).toLocaleDateString()}
-                                  {invite.days_until_expiry !== undefined && (
-                                    <span className="ms-1">({invite.days_until_expiry} days left)</span>
-                                  )}
+                              {taxpayer.email && (
+                                <div className="text-muted small mb-2 d-flex align-items-center gap-1">
+                                  <FaEnvelope className="text-info" size={12} />
+                                  {taxpayer.email}
                                 </div>
                               )}
-                              {invite.invited_by?.name && (
-                                <div>
-                                  Invited by: {invite.invited_by.name}
+                              {taxpayer.phone_number && (
+                                <div className="text-muted small mb-2 d-flex align-items-center gap-1">
+                                  <FaPhone className="text-info" size={12} />
+                                  {taxpayer.phone_number}
                                 </div>
                               )}
+                              <div className="d-flex flex-wrap gap-2 mt-2">
+                                {taxpayer.is_active ? (
+                                  <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: '10px' }}>
+                                    Active
+                                  </span>
+                                ) : (
+                                  <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style={{ fontSize: '10px' }}>
+                                    Inactive
+                                  </span>
+                                )}
+                                {taxpayer.is_email_verified && (
+                                  <span className="badge bg-info-subtle text-info border border-info-subtle" style={{ fontSize: '10px' }}>
+                                    Email Verified
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
-                          <span className="badge bg-warning" style={{ fontSize: '10px' }}>
-                            Pending
-                          </span>
-                          <button
-                            className="btn btn-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const clientId = invite.client_id || invite.taxpayer_id || invite.id;
-                              if (clientId) {
-                                setSelectedClientForReassign(clientId);
+                          <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
+                            <button
+                              className="btn btn-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClientForReassign(taxpayer.id);
                                 setIsAssignMode(true);
                                 setShowReassignStaffModal(true);
-                              } else {
-                                toast.error('Unable to assign preparer: Client ID not found', getToastOptions());
-                              }
-                            }}
-                            style={{
-                              backgroundColor: '#F56D2D',
-                              color: 'white',
-                              border: 'none',
-                              fontSize: '13px',
-                              fontWeight: '500',
-                              padding: '6px 16px',
-                              borderRadius: '7px',
-                              whiteSpace: 'nowrap',
-                              fontFamily: 'BasisGrotesquePro, sans-serif',
-                              transition: 'background-color 0.2s ease',
-                              cursor: 'pointer'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#E55A1D';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#F56D2D';
-                            }}
-                          >
-                            Assign
-                          </button>
-                          <button
-                            className="btn btn-sm d-flex align-items-center justify-content-center gap-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openInviteActionsModal(invite);
-                            }}
-                            title="Share Taxpayer Invite"
-                            style={{
-                              backgroundColor: '#00C0C6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '6px 12px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              whiteSpace: 'nowrap',
-                              display: 'inline-flex' // Ensures the button behaves correctly if not in a flex container
-                            }}
-                          >
-                            <FaLink size={11} />
-                            <span>Share Invite</span>
-                          </button>
+                              }}
+                              style={{
+                                backgroundColor: '#F56D2D',
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Assign
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Pagination for invites */}
-              {pendingInvitesPagination.total_pages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-4">
-                  <div className="text-muted small">
-                    Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to{' '}
-                    {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of{' '}
-                    {pendingInvitesPagination.total_count} invites
-                  </div>
-                  <div className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => fetchPendingInvites(pendingInvitesPagination.page - 1)}
-                      disabled={pendingInvitesPagination.page === 1 || pendingInvitesLoading}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => fetchPendingInvites(pendingInvitesPagination.page + 1)}
-                      disabled={pendingInvitesPagination.page >= pendingInvitesPagination.total_pages || pendingInvitesLoading}
-                    >
-                      Next
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
+
+                {/* Pagination for unlinked taxpayers */}
+                {unlinkedTaxpayersPagination.total_pages > 1 && (
+                  <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div className="text-muted small">
+                      Showing {((unlinkedTaxpayersPagination.page - 1) * unlinkedTaxpayersPagination.page_size) + 1} to{' '}
+                      {Math.min(unlinkedTaxpayersPagination.page * unlinkedTaxpayersPagination.page_size, unlinkedTaxpayersPagination.total_count)} of{' '}
+                      {unlinkedTaxpayersPagination.total_count}
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-xs btn-outline-secondary px-3"
+                        onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page - 1, unlinkedTaxpayersPagination.page_size)}
+                        disabled={unlinkedTaxpayersPagination.page === 1 || unlinkedTaxpayersLoading}
+                      >
+                        Prev
+                      </button>
+                      <button
+                        className="btn btn-xs btn-outline-secondary px-3"
+                        onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page + 1, unlinkedTaxpayersPagination.page_size)}
+                        disabled={unlinkedTaxpayersPagination.page >= unlinkedTaxpayersPagination.total_pages || unlinkedTaxpayersLoading}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Pending Invites Section */}
+          <div className="card client-list-card p-4" style={{
+            border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+            backgroundColor: 'white',
+            borderRadius: '12px'
+          }}>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Pending Invites</h6>
+                <p className="text-muted small mb-0">Client invites awaiting acceptance</p>
+              </div>
+              <span className="badge bg-danger text-white px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
+                {pendingInvitesPagination.total_count} Pending
+              </span>
+            </div>
+
+            {pendingInvitesLoading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-3 text-muted">Loading pending invites...</p>
+              </div>
+            ) : pendingInvitesError ? (
+              <div className="alert alert-danger" role="alert">
+                <strong>Error:</strong> {pendingInvitesError}
+                <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+                  Retry
+                </button>
+              </div>
+            ) : pendingInvites.length === 0 ? (
+              <div className="text-center py-5 bg-light rounded-3">
+                <p className="text-muted mb-0">No pending invites found</p>
+              </div>
+            ) : (
+              <>
+                <div className="row g-3">
+                  {pendingInvites.map((invite) => (
+                    <div key={invite.id} className="col-md-6 col-12">
+                      <div
+                        className="card client-card h-100"
+                        onClick={() => navigate(`/firmadmin/pending-invites/${invite.id || invite.invite_id || invite.client_id}`)}
+                        style={{
+                          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                          cursor: "pointer",
+                          padding: '16px',
+                          borderRadius: '10px'
+                        }}
+                      >
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div className="d-flex gap-3">
+                            <div
+                              className="client-initials"
+                              style={{
+                                width: "48px",
+                                height: "48px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#00C0C6",
+                                color: "white",
+                                fontWeight: "600",
+                                fontSize: "16px",
+                                flexShrink: 0
+                              }}
+                            >
+                              {invite.first_name?.[0]?.toUpperCase() || ''}{invite.last_name?.[0]?.toUpperCase() || ''}
+                            </div>
+                            <div>
+                              <div className="fw-semibold mb-1" style={{ color: '#131323' }}>
+                                {invite.first_name} {invite.last_name}
+                              </div>
+                              <div className="text-muted small mb-1 d-flex align-items-center gap-1">
+                                <FaEnvelope className="text-info" size={12} />
+                                {invite.email}
+                              </div>
+                              <div className="text-muted small italic">
+                                Invited: {invite.invited_at_formatted || (invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A')}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
+                            <button
+                              className="btn btn-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const clientId = invite.client_id || invite.taxpayer_id || invite.id;
+                                if (clientId) {
+                                  setSelectedClientForReassign(clientId);
+                                  setIsAssignMode(true);
+                                  setShowReassignStaffModal(true);
+                                }
+                              }}
+                              style={{
+                                backgroundColor: '#F56D2D',
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                padding: '4px 10px',
+                                borderRadius: '5px'
+                              }}
+                            >
+                              Assign
+                            </button>
+                            <button
+                              className="btn btn-sm d-flex align-items-center justify-content-center gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openInviteActionsModal(invite);
+                              }}
+                              style={{
+                                backgroundColor: '#00C0C6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '5px',
+                                padding: '4px 10px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              <FaLink size={10} />
+                              <span>Invite</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination for invites */}
+                {pendingInvitesPagination.total_pages > 1 && (
+                  <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div className="text-muted small">
+                      Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of {pendingInvitesPagination.total_count}
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-xs btn-outline-secondary px-3"
+                        onClick={() => fetchPendingInvites(pendingInvitesPagination.page - 1)}
+                        disabled={pendingInvitesPagination.page === 1 || pendingInvitesLoading}
+                      >
+                        Prev
+                      </button>
+                      <button
+                        className="btn btn-xs btn-outline-secondary px-3"
+                        onClick={() => fetchPendingInvites(pendingInvitesPagination.page + 1)}
+                        disabled={pendingInvitesPagination.page >= pendingInvitesPagination.total_pages || pendingInvitesLoading}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
 

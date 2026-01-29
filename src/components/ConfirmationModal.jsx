@@ -35,9 +35,9 @@ const ConfirmationModal = ({
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
-          <h2 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+          <h4 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
             {title}
-          </h2>
+          </h4>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"

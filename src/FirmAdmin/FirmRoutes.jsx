@@ -92,8 +92,22 @@ function FirmAdminProtectedRoute({ children }) {
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr);
-        if (userData.subscription_plan === null || userData.subscription_plan === undefined) {
-          // Redirect to subscription finalization page
+        const billingStatus = userData.billing_status;
+        const subPlan = userData.subscription_plan;
+        const firmStatus = userData.firm_status || userData.status;
+
+        // Comprehensive check:
+        // 1. If we have an active billing status, they are definitely allowed
+        // 2. If billing_status is missing but firmStatus is 'active' and we have a plan, treat as allowed
+        // 3. Otherwise, if they belong to any "blocked" states, they must finalize
+
+        const isActuallyActive = (billingStatus === 'active') ||
+          (subPlan && firmStatus === 'active' && !billingStatus);
+
+        const isBlockedStatus = ['expired', 'pending_payment', 'inactive', 'suspended'].includes(billingStatus);
+
+        if (!isActuallyActive && (!subPlan || isBlockedStatus)) {
+          console.warn('Subscription required or payment pending, redirecting to finalize page');
           return <Navigate to="/firmadmin/finalize-subscription" replace />;
         }
       } catch (error) {

@@ -28,6 +28,7 @@ export default function PendingInviteDetails() {
   const [showDeleteInviteConfirmModal, setShowDeleteInviteConfirmModal] = useState(false);
   const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
   const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
+  const [smsPhoneDialCode, setSmsPhoneDialCode] = useState('1'); // Track dial code
   const [editedInviteEmail, setEditedInviteEmail] = useState('');
 
   const [editFormData, setEditFormData] = useState({
@@ -54,6 +55,13 @@ export default function PendingInviteDetails() {
       const response = await firmAdminClientsAPI.getPendingInviteDetails(id);
 
       if (response.success && response.data) {
+        // If we have a client_id (placeholder user created), redirect to the main Client Details page
+        // This ensures pending clients have the exact same interface as active clients
+        if (response.data.client_id) {
+          navigate(`/firmadmin/clients/${response.data.client_id}`);
+          return;
+        }
+
         const inviteData = response.data;
         setInvite(inviteData);
         setCanEdit(response.can_edit !== false && !response.is_expired);
@@ -242,42 +250,21 @@ export default function PendingInviteDetails() {
       setInviteActionLoading(true);
       setInviteActionMethod("sms");
 
-      const parsePhoneNumber = (phoneValue, countryCode = 'us') => {
-        if (!phoneValue || !phoneValue.trim()) {
-          return { country_code: null, phone_number: null };
-        }
-        const digitsOnly = phoneValue.replace(/\D/g, '');
-        const countryToDialCode = {
-          'us': '1', 'ca': '1', 'gb': '44', 'au': '61', 'in': '91'
-        };
-        const dialCode = countryToDialCode[countryCode.toLowerCase()] || '1';
-        if (digitsOnly.startsWith(dialCode)) {
-          const phoneNumber = digitsOnly.substring(dialCode.length);
-          return {
-            country_code: `+${dialCode}`,
-            phone_number: phoneNumber
-          };
-        }
-        return {
-          country_code: `+${dialCode}`,
-          phone_number: digitsOnly
-        };
-      };
-
-      const phoneData = parsePhoneNumber(smsPhoneOverride, smsPhoneCountry);
       const payload = {
         methods: ['sms']
       };
 
-      if (phoneData.country_code && phoneData.phone_number) {
-        payload.country_code = phoneData.country_code.replace(/^\+/, '');
-        // Ensure phone number starts with + if it's being sent as a full number
-        payload.phone_number = `+${payload.country_code}${phoneData.phone_number}`;
-      } else {
-        // Checking if it already has a +, if not add it
-        const formattedPhone = smsPhoneOverride.startsWith('+') ? smsPhoneOverride : `+${smsPhoneOverride}`;
-        payload.phone_number = formattedPhone;
+      // react-phone-input-2 returns the full number string (digits only) in smsPhoneOverride
+      // We also track the dial code in smsPhoneDialCode state
+      // Send digits only to let the backend handle the country code logic correctly
+      const digitsOnly = smsPhoneOverride.replace(/\D/g, '');
+      payload.phone_number = digitsOnly;
+
+      if (smsPhoneDialCode) {
+        payload.country_code = smsPhoneDialCode;
       }
+
+      console.log('Sending SMS invite with payload:', payload);
 
       const response = await firmAdminClientsAPI.sendInvite(inviteId, payload);
       if (response.success && response.data) {
@@ -448,14 +435,14 @@ export default function PendingInviteDetails() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
               {!isEditMode ? (
                 <>
-                  <button
+                  {/* <button
                     onClick={() => setShowInviteActionsModal(true)}
                     className="px-4 py-2 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00A8AE] transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro]"
                     style={{ borderRadius: '7px' }}
                   >
                     <FaLink size={14} />
-                    Share Invite
-                  </button>
+                    Share Invite1111
+                  </button> */}
                   <button
                     onClick={handleEditToggle}
                     disabled={!canEdit}
@@ -698,44 +685,70 @@ export default function PendingInviteDetails() {
             </div>
 
             {/* SMS Invite */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] flex items-center gap-2" style={{ color: '#3B4A66' }}>
-                <FaSms /> Send SMS Invite
+            <div className="pb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3 font-[BasisGrotesquePro] flex items-center gap-2" style={{ color: '#3B4A66' }}>
+                <FaSms className="text-[#00C0C6]" /> Send SMS Invite
               </label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <PhoneInput
-                  country={smsPhoneCountry}
-                  value={smsPhoneOverride}
-                  onChange={(phone) => setSmsPhoneOverride(phone)}
-                  onCountryChange={(countryCode) => setSmsPhoneCountry(countryCode.toLowerCase())}
-                  disableDropdown={true}
-                  countryCodeEditable={false}
-                  inputClass="form-control"
-                  containerClass="phone-input-container flex-1"
-                  inputStyle={{ width: '100%', borderRadius: '7px', border: '1px solid #E8F0FF' }}
-                  dropdownStyle={{ zIndex: 1000 }}
-                />
-                <button
-                  onClick={handleSendSmsInviteNow}
-                  disabled={inviteActionLoading || !smsPhoneOverride}
-                  className="px-4 py-2 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00A8AE] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
-                  style={{ borderRadius: '7px' }}
-                >
-                  {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
-                </button>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                <div className="md:col-span-9 relative">
+                  <PhoneInput
+                    country={smsPhoneCountry}
+                    value={smsPhoneOverride}
+                    onChange={(phone, data) => {
+                      setSmsPhoneOverride(phone);
+                      if (data && data.dialCode) {
+                        setSmsPhoneDialCode(data.dialCode);
+                      }
+                    }}
+                    onCountryChange={(countryCode) => setSmsPhoneCountry(countryCode.toLowerCase())}
+                    enableSearch={true}
+                    disableDropdown={false}
+                    inputClass="!w-full !h-[44px] !text-base !font-[BasisGrotesquePro] !border-[#E8F0FF] !rounded-lg focus:!ring-2 focus:!ring-[#00C0C6] focus:!border-transparent"
+                    containerClass="!w-full"
+                    buttonClass="!border-[#E8F0FF] !bg-white !rounded-l-lg hover:!bg-gray-50"
+                    dropdownClass="!font-[BasisGrotesquePro] !text-sm"
+                    inputStyle={{ width: '100%' }}
+                    dropdownStyle={{ zIndex: 9999, width: 'max-content', minWidth: '300px' }}
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <button
+                    onClick={handleSendSmsInviteNow}
+                    disabled={inviteActionLoading || !smsPhoneOverride}
+                    className="w-full h-[44px] px-6 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00A8AE] transition-all flex items-center justify-center gap-2 font-[BasisGrotesquePro] font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.98]"
+                    style={{ borderRadius: '7px' }}
+                  >
+                    {inviteActionLoading && inviteActionMethod === "sms" ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Sending...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <FaSms />
+                        <span>Send SMS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Delete Button */}
-            <div className="pt-4 border-t border-[#E8F0FF]">
-              <button
-                onClick={() => setShowDeleteInviteConfirmModal(true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
-                style={{ borderRadius: '7px' }}
-              >
-                <FaTrash size={14} />
-                Delete Invite
-              </button>
+            <div className="pt-8 mt-6 border-t border-[#E8F0FF]">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  Need to cancel this invitation? This will invalidate the existing link.
+                </p>
+                <button
+                  onClick={() => setShowDeleteInviteConfirmModal(true)}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-white border-2 border-red-100 text-red-600 rounded-lg hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center gap-2 font-[BasisGrotesquePro] font-bold shadow-sm active:scale-95"
+                  style={{ borderRadius: '7px' }}
+                >
+                  <FaTrash size={14} />
+                  Delete Invite
+                </button>
+              </div>
             </div>
           </div>
         </div>

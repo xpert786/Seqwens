@@ -19,7 +19,15 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
   const [workflowName, setWorkflowName] = useState('');
   const [description, setDescription] = useState('');
   const [taxFormType, setTaxFormType] = useState('');
+  const [triggerEvent, setTriggerEvent] = useState('manual');
   const [isActive, setIsActive] = useState(true);
+
+  const TRIGGER_OPTIONS = [
+    { value: 'manual', label: 'Manual Start (Default)' },
+    { value: 'client_created', label: 'Start when New Client is Created' },
+    { value: 'client_invite_accepted', label: 'Start when Client Accepts Invite' },
+    { value: 'intake_completed', label: 'Start when Intake Form is Completed' }
+  ];
 
   // Stages
   const [stages, setStages] = useState([]);
@@ -49,6 +57,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       setDescription(template.description || '');
       setTaxFormType(template.tax_form_type || '');
       setIsActive(template.is_active !== undefined ? template.is_active : true);
+      setTriggerEvent(template.trigger_event || 'manual');
       setStages(template.stages || []);
     }
   }, [template]);
@@ -158,6 +167,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
         description: description,
         tax_form_type: taxFormType,
         is_active: isActive,
+        trigger_event: triggerEvent,
         stages: stages.map((stage, index) => ({
           ...stage,
           stage_order: index,
@@ -203,9 +213,9 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-5 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+              <h4 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
                 {template?.id ? 'Edit Workflow' : 'Create New Workflow'}
-              </h2>
+              </h4>
               <p className="text-sm text-gray-500 mt-1 font-[BasisGrotesquePro]">
                 Build a step-by-step process for your tax preparation services
               </p>
@@ -310,6 +320,26 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                 Active (can be assigned to clients)
               </label>
             </div>
+
+            <div className="pt-2 border-t border-[#E8F0FF]">
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                Automation Trigger
+              </label>
+              <select
+                value={triggerEvent}
+                onChange={(e) => setTriggerEvent(e.target.value)}
+                className="w-full px-4 py-2.5 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent font-[BasisGrotesquePro] bg-white"
+              >
+                {TRIGGER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
+                When selected event occurs, this workflow will start automatically for the client.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -333,8 +363,8 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                   onClick={() => !isAdded && addStageFromTemplate(stage)}
                   disabled={isAdded}
                   className={`p-3 text-left !rounded-lg !border transition-all ${isAdded
-                      ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-                      : 'border-[#E8F0FF] hover:border-[#3AD6F2] hover:shadow-md'
+                    ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                    : 'border-[#E8F0FF] hover:border-[#3AD6F2] hover:shadow-md'
                     }`}
                 >
                   <div className="flex items-start gap-2 mb-2">

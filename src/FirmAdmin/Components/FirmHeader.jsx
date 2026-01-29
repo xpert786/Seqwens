@@ -36,14 +36,16 @@ import { clearUserData, setTokens } from "../../ClientOnboarding/utils/userUtils
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
-export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
+import { useSubscriptionStatus } from "../Context/SubscriptionStatusContext";
+
+export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidth = '320px' }) {
     const { logoUrl } = useFirmPortalColors();
+    const { status, statusDisplay, isTrialActive, trialDaysRemaining } = useSubscriptionStatus();
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
-    const [showSearch, setShowSearch] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
     const [profileName, setProfileName] = useState("User");
     const [profileInitials, setProfileInitials] = useState("FA");
@@ -347,71 +349,52 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
     return (
         <>
-            <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-3">
-                <div className="container-fluid d-flex justify-content-between align-items-center">
+            <nav className="navbar bg-white fixed-top border-bottom custom-topbar p-0">
+                <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
 
                     {/* Left Section */}
-                    <div className="d-flex align-items-center gap-3 flex-grow-1">
-                        <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
-                            <img
-                                ref={logoRef}
-                                src={logoUrl || logo}
-                                alt="Logo"
-                                className="firm-topbar-logo"
-                                style={{ maxHeight: "40px", width: "auto" }}
-                            />
-                        </Link>
+                    <div className="d-flex align-items-center h-full">
+                        <div
+                            className="d-flex align-items-center px-4 border-end"
+                            style={{
+                                width: sidebarWidth,
+                                height: '100%',
+                                transition: 'width 0.3s ease'
+                            }}
+                        >
+                            <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
+                                <img
+                                    ref={logoRef}
+                                    src={logoUrl || logo}
+                                    alt="Logo"
+                                    className="firm-topbar-logo"
+                                    style={{ maxHeight: "35px", width: "auto" }}
+                                />
+                            </Link>
+                        </div>
 
                         {/* Sidebar Toggle */}
                         <div
                             onClick={onToggleSidebar}
+                            className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors border-end"
                             style={{
-                                cursor: "pointer",
-                                transition: "transform 0.3s ease",
-                                transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
+                                width: '60px'
                             }}
-                            className="d-flex align-items-center"
                         >
-                            <LogoIcon />
-                        </div>
-
-                        {/* Search Box - Desktop */}
-                        <div
-                            className="firm-topbar-search d-none d-md-flex align-items-center position-relative flex-grow-1"
-                            style={{ maxWidth: "300px", minWidth: "180px" }}
-                        >
-                            <i className="bi bi-search position-absolute ms-2 text-muted"></i>
-                            <input
-                                type="text"
-                                className="form-control ps-4"
-                                placeholder="Search..."
+                            <div
                                 style={{
-                                    fontSize: "0.9rem",
-                                    borderRadius: "8px",
+                                    transition: "transform 0.3s ease",
+                                    transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
                                 }}
-                            />
-                        </div>
-
-                        {/* Search Icon - Mobile (Toggle) */}
-                        <div
-                            className="d-md-none d-sm-none d-flex align-items-center justify-content-center"
-                            onClick={() => setShowSearch(!showSearch)}
-                            style={{
-                                width: "34px",
-                                height: "34px",
-                                borderRadius: "50%",
-                                backgroundColor: "#f3f4f6",
-                                cursor: "pointer",
-                                flexShrink: 0,
-                            }}
-                        >
-                            <i className="bi bi-search text-muted" style={{ fontSize: "16px" }}></i>
+                            >
+                                <LogoIcon />
+                            </div>
                         </div>
                     </div>
 
                     {/* Right Section */}
                     <div
-                        className="d-flex align-items-center gap-3"
+                        className="d-flex align-items-center gap-3 pe-4"
                         style={{ minWidth: "fit-content" }}
                     >
                         {/* Account Switcher - Wrapped in error boundary to prevent blocking */}
@@ -420,6 +403,49 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                 <AccountSwitcher />
                             </ErrorBoundary>
                         </React.Suspense>
+
+                        {/* Subscription Status Badge */}
+                        <div className="d-none d-lg-flex align-items-center me-2">
+                            <Link
+                                to="/firmadmin/subscription"
+                                className="text-decoration-none d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill transition-all duration-200"
+                                style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    backgroundColor:
+                                        status === 'active' ? '#ECFDF5' :
+                                            status === 'trial' ? '#EFF6FF' :
+                                                status === 'pending_payment' ? '#FFFBEB' :
+                                                    status === 'inactive' ? '#F3F4F6' :
+                                                        '#FEF2F2',
+                                    color:
+                                        status === 'active' ? '#059669' :
+                                            status === 'trial' ? '#2563EB' :
+                                                status === 'pending_payment' ? '#D97706' :
+                                                    status === 'inactive' ? '#4B5563' :
+                                                        '#DC2626',
+                                    border: `1px solid ${status === 'active' ? '#A7F3D0' :
+                                        status === 'trial' ? '#BFDBFE' :
+                                            status === 'pending_payment' ? '#FDE68A' :
+                                                status === 'inactive' ? '#D1D5DB' :
+                                                    '#FECACA'
+                                        }`
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'currentColor'
+                                    }}
+                                    className={status === 'active' ? 'animate-pulse' : ''}
+                                />
+                                {statusDisplay}
+                            </Link>
+                        </div>
 
                         {/* Notification Bell */}
                         <div
@@ -550,34 +576,6 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                         </div>
                     </div>
                 </div>
-
-                {/* Mobile Search Bar - Expandable */}
-                {showSearch && (
-                    <div ref={searchRef} className="d-md-none w-100 px-2 pb-2">
-                        <div className="firm-topbar-search d-flex align-items-center position-relative w-100">
-                            <i className="bi bi-search position-absolute ms-2 text-muted"></i>
-                            <input
-                                type="text"
-                                className="form-control ps-4 w-100"
-                                placeholder="Search..."
-                                style={{
-                                    fontSize: "0.9rem",
-                                    borderRadius: "8px",
-                                    height: "40px",
-                                }}
-                                autoFocus
-                            />
-                            <button
-                                onClick={() => setShowSearch(false)}
-                                className="btn btn-link text-muted p-0 ms-2"
-                                style={{ border: "none", background: "none" }}
-                                aria-label="Close search"
-                            >
-                                <i className="bi bi-x-lg"></i>
-                            </button>
-                        </div>
-                    </div>
-                )}
             </nav>
 
             {/* Notification Panel */}
@@ -610,4 +608,5 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
             )}
         </>
     );
+
 }
