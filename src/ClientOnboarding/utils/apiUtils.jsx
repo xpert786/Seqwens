@@ -255,7 +255,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
                   .split('_')
                   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                   .join(' ');
-                
+
                 return `${friendlyField}: ${errorMessages}`;
               })
               .filter(Boolean) // Remove null entries
