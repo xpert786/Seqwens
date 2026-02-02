@@ -17,7 +17,7 @@ function ClientDashboard({ clientId }) {
       {/* Existing dashboard content */}
 
       <div className="business-info-section">
-        <h3>Business Information</h3>
+        <h4>Business Information</h4>
         <p>Manage your business details, income, and rental properties</p>
 
         <button
