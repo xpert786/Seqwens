@@ -520,7 +520,12 @@ export default function FirmManagement() {
         console.log(`${action} for firm ${firmId}`);
         setActiveDropdown(null);
 
-        if (action === 'Edit User') {
+        if (action === 'View Details') {
+            navigate(`/superadmin/firms/${firmId}`);
+        } else if (action === 'Login as Firm') {
+            // Navigate to firm details page and trigger login
+            navigate(`/superadmin/firms/${firmId}?action=login`);
+        } else if (action === 'Edit User') {
             navigate(`/superadmin/firms/${firmId}?tab=Settings`);
         } else if (action === 'Send Message') {
             // TODO: Implement message functionality
@@ -889,32 +894,71 @@ export default function FirmManagement() {
 
                                             {/* Dropdown Menu */}
                                             {activeDropdown === firm.id && (
-                                                <div className="absolute right-0 top-8 z-50 bg-white dark:bg-gray-800 rounded-lg border border-[#E8F0FF] dark:border-gray-700 py-2 min-w-[160px] shadow-lg">
+                                                <div className="absolute right-0 top-8 z-50 bg-white dark:bg-gray-800 rounded-lg border border-[#E8F0FF] dark:border-gray-700 py-2 min-w-[180px] shadow-lg">
+                                                    <button
+                                                        onClick={() => handleAction('View Details', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            <path d="M2.04883 10C3.11049 6.61917 6.26716 4.16667 10.0005 4.16667C13.7338 4.16667 16.8905 6.61917 17.9522 10C16.8905 13.3808 13.7338 15.8333 10.0005 15.8333C6.26716 15.8333 3.11049 13.3808 2.04883 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        View Details
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => handleAction('Login as Firm', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M15.8333 9.16667V5.83333C15.8333 5.39131 15.6577 4.96738 15.345 4.65482C15.0325 4.34226 14.6085 4.16667 14.1667 4.16667H5.83333C5.39131 4.16667 4.96738 4.34226 4.65482 4.65482C4.34226 4.96738 4.16667 5.39131 4.16667 5.83333V14.1667C4.16667 14.6087 4.34226 15.0326 4.65482 15.3452C4.96738 15.6577 5.39131 15.8333 5.83333 15.8333H14.1667C14.6085 15.8333 15.0325 15.6577 15.345 15.3452C15.6577 15.0326 15.8333 14.6087 15.8333 14.1667V10.8333M12.5 10H18.3333M18.3333 10L16.25 7.91667M18.3333 10L16.25 12.0833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        Login as Firm
+                                                    </button>
+
+                                                    <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+
                                                     <button
                                                         onClick={() => handleAction('Edit User', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                                                     >
-                                                        Edit User
+                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M14.1667 2.5C14.3856 2.28113 14.6454 2.10752 14.9314 1.98906C15.2173 1.87061 15.5238 1.80969 15.8334 1.80969C16.1429 1.80969 16.4494 1.87061 16.7353 1.98906C17.0213 2.10752 17.2811 2.28113 17.5 2.5C17.7189 2.71887 17.8925 2.97871 18.011 3.26466C18.1294 3.55061 18.1903 3.85706 18.1903 4.16667C18.1903 4.47627 18.1294 4.78272 18.011 5.06867C17.8925 5.35462 17.7189 5.61446 17.5 5.83333L6.25004 17.0833L1.66671 18.3333L2.91671 13.75L14.1667 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        Edit Firm
                                                     </button>
 
                                                     <button
                                                         onClick={() => handleAction('Assign Clients', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                                                     >
+                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M14.1667 17.5V15.8333C14.1667 14.9493 13.8155 14.1014 13.1904 13.4763C12.5653 12.8512 11.7174 12.5 10.8334 12.5H4.16671C3.28265 12.5 2.43481 12.8512 1.80968 13.4763C1.18456 14.1014 0.833374 14.9493 0.833374 15.8333V17.5M19.1667 17.5V15.8333C19.1662 15.0948 18.9204 14.3773 18.4679 13.7936C18.0154 13.2099 17.3819 12.793 16.6667 12.6083M13.3334 2.60833C14.0503 2.79192 14.6858 3.20892 15.1396 3.79359C15.5935 4.37827 15.8399 5.09736 15.8399 5.8375C15.8399 6.57764 15.5935 7.29673 15.1396 7.88141C14.6858 8.46608 14.0503 8.88308 13.3334 9.06667M11.6667 5.83333C11.6667 7.67428 10.1743 9.16667 8.33337 9.16667C6.49242 9.16667 5.00004 7.67428 5.00004 5.83333C5.00004 3.99238 6.49242 2.5 8.33337 2.5C10.1743 2.5 11.6667 3.99238 11.6667 5.83333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
                                                         Assign Clients
                                                     </button>
-                                                    <button
 
+                                                    <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+
+                                                    <button
                                                         onClick={() => handleAction(firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                                                     >
+                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M10 1.66667V5M10 15V18.3333M3.57501 3.575L5.83334 5.83333M14.1667 14.1667L16.425 16.425M1.66667 10H5M15 10H18.3333M3.57501 16.425L5.83334 14.1667M14.1667 5.83333L16.425 3.575" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
                                                         {firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm'}
                                                     </button>
+
                                                     <button
                                                         onClick={() => handleAction('Delete', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center"
+                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
                                                     >
-                                                        Delete
+                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M2.5 5H4.16667H17.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            <path d="M6.66663 5.00001V3.33334C6.66663 2.89131 6.84222 2.46739 7.15478 2.15483C7.46734 1.84227 7.89127 1.66667 8.33329 1.66667H11.6666C12.1087 1.66667 12.5326 1.84227 12.8451 2.15483C13.1577 2.46739 13.3333 2.89131 13.3333 3.33334V5.00001M15.8333 5.00001V16.6667C15.8333 17.1087 15.6577 17.5326 15.3451 17.8452C15.0326 18.1577 14.6087 18.3333 14.1666 18.3333H5.83329C5.39127 18.3333 4.96734 18.1577 4.65478 17.8452C4.34222 17.5326 4.16663 17.1087 4.16663 16.6667V5.00001H15.8333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        Delete Firm
                                                     </button>
                                                 </div>
                                             )}

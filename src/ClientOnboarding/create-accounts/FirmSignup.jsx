@@ -30,10 +30,10 @@ const FirmSignup = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Auto-lowercase email
     const processedValue = name === 'email' ? value.toLowerCase() : value;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: processedValue
@@ -160,7 +160,7 @@ const FirmSignup = () => {
         localStorage.setItem("userData", JSON.stringify(loginResponse.user));
         localStorage.setItem("userType", loginResponse.user.user_type || 'firm');
         localStorage.setItem("rememberedEmail", signupData.email);
-        
+
         // Store firms data from login response for AccountSwitcher
         if (loginResponse.firms && Array.isArray(loginResponse.firms)) {
           localStorage.setItem("firmsData", JSON.stringify(loginResponse.firms));
@@ -195,7 +195,7 @@ const FirmSignup = () => {
       }
     } catch (error) {
       console.error('Firm signup error:', error);
-      
+
       const fieldErrors = {};
 
       // Try to extract structured errors from error.responseData (if available)
@@ -206,8 +206,8 @@ const FirmSignup = () => {
           const errorMessages = Array.isArray(errors) ? errors : [errors];
           // Take the first error message for each field
           if (errorMessages.length > 0) {
-            const errorMessage = typeof errorMessages[0] === 'string' 
-              ? errorMessages[0] 
+            const errorMessage = typeof errorMessages[0] === 'string'
+              ? errorMessages[0]
               : String(errorMessages[0]);
             fieldErrors[field] = errorMessage;
           }
@@ -221,7 +221,7 @@ const FirmSignup = () => {
             if (colonIndex > 0) {
               const field = part.substring(0, colonIndex).trim();
               const message = part.substring(colonIndex + 1).trim();
-              
+
               // Map API field names to form field names
               const fieldMap = {
                 'email': 'email',
@@ -241,7 +241,7 @@ const FirmSignup = () => {
                   .replace(/^["']/, '')
                   .replace(/["']$/, '')
                   .trim();
-                
+
                 fieldErrors[fieldMap[field]] = cleanMessage;
               }
             }
@@ -386,7 +386,7 @@ const FirmSignup = () => {
 
               {/* Phone Number */}
               <div className="mb-3">
-                <label className="custom-label">  
+                <label className="custom-label">
                   Phone Number (Optional)test
                 </label>
                 <PhoneInput
@@ -481,7 +481,12 @@ const FirmSignup = () => {
               {/* Password Strength Indicator */}
               {formData.password && (
                 <div className="password-strength mb-3">
-                  <PasswordStrengthBar />
+                  <PasswordStrengthBar
+                    v1={validateLength}
+                    v2={validateUpperLower}
+                    v3={validateNumber}
+                    v4={validateSpecialChar}
+                  />
                   <div className="criteria">
                     <div className={`criteria-item ${validateLength ? "valid" : "invalid"}`}>
                       {validateLength ? "✔" : "✘"} 8+ characters

@@ -38,7 +38,8 @@ export function Message2Icon() {
 }
 
 
-export function PasswordStrengthBar() {
+export function PasswordStrengthBar({ v1, v2, v3, v4 }) {
+  const getFill = (isValid) => (isValid ? "#22C55E" : "#E8F0FF");
   return (
     <svg
       width="100%"
@@ -47,11 +48,10 @@ export function PasswordStrengthBar() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect width="122.25" height="6" rx="3" fill="#E8F0FF" />
-      <rect width="28.0001" height="6" rx="3" fill="#00C0C6" />
-      <rect x="137.25" width="122.25" height="6" rx="3" fill="#E8F0FF" />
-      <rect x="274.5" width="122.25" height="6" rx="3" fill="#E8F0FF" />
-      <rect x="411.75" width="122.25" height="6" rx="3" fill="#E8F0FF" />
+      <rect width="122.25" height="6" rx="3" fill={getFill(v1)} />
+      <rect x="137.25" width="122.25" height="6" rx="3" fill={getFill(v2)} />
+      <rect x="274.5" width="122.25" height="6" rx="3" fill={getFill(v3)} />
+      <rect x="411.75" width="122.25" height="6" rx="3" fill={getFill(v4)} />
     </svg>
   );
 }

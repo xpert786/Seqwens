@@ -52,44 +52,258 @@ const EMAIL_TEMPLATE_STATUSES = [
     { value: 'archived', label: 'Archived' }
 ];
 
-const ESSENTIAL_VARIABLES = [
-    {
-        key: 'Firm Name',
-        label: 'Firm Name',
-        description: 'Your firm name',
-        placeholder: '[Firm Name]'
+const VARIABLE_GROUPS = {
+    client: {
+        label: 'Client Information',
+        icon: '👤',
+        variables: [
+            {
+                key: 'FirstName',
+                label: 'First Name',
+                description: 'Client first name',
+                placeholder: '[FirstName]',
+                example: 'John'
+            },
+            {
+                key: 'LastName',
+                label: 'Last Name',
+                description: 'Client last name',
+                placeholder: '[LastName]',
+                example: 'Smith'
+            },
+            {
+                key: 'FullName',
+                label: 'Full Name',
+                description: 'Client full name',
+                placeholder: '[FullName]',
+                example: 'John Smith'
+            },
+            {
+                key: 'Email',
+                label: 'Email',
+                description: 'Client email address',
+                placeholder: '[Email]',
+                example: 'john.smith@example.com'
+            },
+            {
+                key: 'Phone',
+                label: 'Phone',
+                description: 'Client phone number',
+                placeholder: '[Phone]',
+                example: '(555) 123-4567'
+            },
+            {
+                key: 'Address',
+                label: 'Street Address',
+                description: 'Client street address',
+                placeholder: '[Address]',
+                example: '123 Main Street'
+            },
+            {
+                key: 'City',
+                label: 'City',
+                description: 'Client city',
+                placeholder: '[City]',
+                example: 'New York'
+            },
+            {
+                key: 'State',
+                label: 'State',
+                description: 'Client state',
+                placeholder: '[State]',
+                example: 'NY'
+            },
+            {
+                key: 'ZipCode',
+                label: 'ZIP Code',
+                description: 'Client ZIP/postal code',
+                placeholder: '[ZipCode]',
+                example: '10001'
+            }
+        ]
     },
-    {
-        key: 'First Name',
-        label: 'First Name',
-        description: 'Recipient first name',
-        placeholder: '[First Name]'
+    spouse: {
+        label: 'Spouse Information',
+        icon: '💑',
+        variables: [
+            {
+                key: 'SpouseFirstName',
+                label: 'Spouse First Name',
+                description: 'Spouse first name',
+                placeholder: '[SpouseFirstName]',
+                example: 'Jane'
+            },
+            {
+                key: 'SpouseLastName',
+                label: 'Spouse Last Name',
+                description: 'Spouse last name',
+                placeholder: '[SpouseLastName]',
+                example: 'Smith'
+            },
+            {
+                key: 'SpouseFullName',
+                label: 'Spouse Full Name',
+                description: 'Spouse full name',
+                placeholder: '[SpouseFullName]',
+                example: 'Jane Smith'
+            },
+            {
+                key: 'SpouseEmail',
+                label: 'Spouse Email',
+                description: 'Spouse email address',
+                placeholder: '[SpouseEmail]',
+                example: 'jane.smith@example.com'
+            }
+        ]
     },
-    {
-        key: 'Last Name',
-        label: 'Last Name',
-        description: 'Recipient last name',
-        placeholder: '[Last Name]'
+    firm: {
+        label: 'Firm Information',
+        icon: '🏢',
+        variables: [
+            {
+                key: 'FirmName',
+                label: 'Firm Name',
+                description: 'Your firm name',
+                placeholder: '[FirmName]',
+                example: 'ABC Tax Services'
+            },
+            {
+                key: 'FirmPhone',
+                label: 'Firm Phone',
+                description: 'Your firm phone number',
+                placeholder: '[FirmPhone]',
+                example: '(555) 987-6543'
+            },
+            {
+                key: 'FirmEmail',
+                label: 'Firm Email',
+                description: 'Your firm email address',
+                placeholder: '[FirmEmail]',
+                example: 'contact@abctax.com'
+            },
+            {
+                key: 'FirmWebsite',
+                label: 'Firm Website',
+                description: 'Your firm website URL',
+                placeholder: '[FirmWebsite]',
+                example: 'https://www.abctax.com'
+            },
+            {
+                key: 'AssignedPreparerName',
+                label: 'Assigned Preparer Name',
+                description: 'Name of assigned tax preparer',
+                placeholder: '[AssignedPreparerName]',
+                example: 'Robert Johnson, CPA'
+            },
+            {
+                key: 'AssignedPreparerEmail',
+                label: 'Assigned Preparer Email',
+                description: 'Email of assigned tax preparer',
+                placeholder: '[AssignedPreparerEmail]',
+                example: 'robert.johnson@abctax.com'
+            }
+        ]
     },
-    {
-        key: 'Invite Link',
-        label: 'Invite Link',
-        description: 'Invitation link',
-        placeholder: '[Invite Link]'
+    subscription: {
+        label: 'Subscription & Invites',
+        icon: '📧',
+        variables: [
+            {
+                key: 'InviteLink',
+                label: 'Invite Link',
+                description: 'Invitation link URL',
+                placeholder: '[InviteLink]',
+                example: 'https://app.seqwens.com/invite/abc123'
+            },
+            {
+                key: 'ExpirationDate',
+                label: 'Expiration Date',
+                description: 'Invitation expiration date',
+                placeholder: '[ExpirationDate]',
+                example: 'December 31, 2026'
+            },
+            {
+                key: 'SubscriptionPlan',
+                label: 'Subscription Plan',
+                description: 'Current subscription plan name',
+                placeholder: '[SubscriptionPlan]',
+                example: 'Professional Plan'
+            },
+            {
+                key: 'RenewalDate',
+                label: 'Renewal Date',
+                description: 'Subscription renewal date',
+                placeholder: '[RenewalDate]',
+                example: 'January 1, 2027'
+            },
+            {
+                key: 'Role',
+                label: 'User Role',
+                description: 'Recipient role in the system',
+                placeholder: '[Role]',
+                example: 'Client'
+            }
+        ]
     },
-    {
-        key: 'Expiry Date',
-        label: 'Expiry Date',
-        description: 'Invitation expiry date',
-        placeholder: '[Expiry Date]'
+    tax: {
+        label: 'Tax Information',
+        icon: '📊',
+        variables: [
+            {
+                key: 'TaxYear',
+                label: 'Tax Year',
+                description: 'Current tax year',
+                placeholder: '[TaxYear]',
+                example: '2024'
+            },
+            {
+                key: 'FilingStatus',
+                label: 'Filing Status',
+                description: 'Tax filing status',
+                placeholder: '[FilingStatus]',
+                example: 'Married Filing Jointly'
+            },
+            {
+                key: 'DueDate',
+                label: 'Filing Due Date',
+                description: 'Tax return due date',
+                placeholder: '[DueDate]',
+                example: 'April 15, 2025'
+            },
+            {
+                key: 'ExtensionDate',
+                label: 'Extension Date',
+                description: 'Extended filing deadline',
+                placeholder: '[ExtensionDate]',
+                example: 'October 15, 2025'
+            }
+        ]
     },
-    {
-        key: 'Role',
-        label: 'Role',
-        description: 'Recipient role',
-        placeholder: '[Role]'
+    system: {
+        label: 'System & Dates',
+        icon: '🗓️',
+        variables: [
+            {
+                key: 'CurrentDate',
+                label: 'Current Date',
+                description: 'Today\'s date',
+                placeholder: '[CurrentDate]',
+                example: 'February 2, 2026'
+            },
+            {
+                key: 'CurrentYear',
+                label: 'Current Year',
+                description: 'Current year',
+                placeholder: '[CurrentYear]',
+                example: '2026'
+            }
+        ]
     }
-];
+};
+
+// Flatten all variables for backward compatibility
+const ESSENTIAL_VARIABLES = Object.values(VARIABLE_GROUPS)
+    .flatMap(group => group.variables);
 
 const extractTemplatesFromResponse = (payload) => {
     if (!payload) return [];
@@ -290,6 +504,10 @@ export default function EmailTemplate() {
                     <TemplateFormModal
                         template={editorTemplate}
                         onClose={closeEditor}
+                        onRevert={() => {
+                            fetchTemplates();
+                            closeEditor();
+                        }}
                         onSubmit={async (templatePayload) => {
                             if (editorTemplate?.id) {
                                 const success = await handleUpdateTemplate(editorTemplate.id, templatePayload);
@@ -629,7 +847,7 @@ const getInitialFormState = (template) => ({
     is_active: template?.is_active ?? false
 });
 
-const TemplateFormModal = ({ template, onClose, onSubmit }) => {
+const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
     const isEdit = Boolean(template?.id);
     const [formData, setFormData] = useState(getInitialFormState(template));
     const [lastFocusedField, setLastFocusedField] = useState('body_html');
@@ -797,21 +1015,47 @@ const TemplateFormModal = ({ template, onClose, onSubmit }) => {
         }
     };
 
+    const handleRevert = async () => {
+        if (!window.confirm('Are you sure you want to revert this template to system defaults? All your customizations will be lost.')) {
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            await firmAdminEmailTemplatesAPI.revertTemplate(template.id);
+            toast.success('Template reverted to system default');
+            if (onRevert) {
+                onRevert();
+            } else {
+                onClose();
+            }
+        } catch (error) {
+            toast.error(handleAPIError(error));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const fieldLabel = VARIABLE_FIELD_LABELS[lastFocusedField] || 'selected field';
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1200]">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 className="text-lg font-semibold text-[#1F2A55]">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="flex-1">
+                        <h3 className="text-xl font-bold text-[#1F2A55]">
                             {isEdit ? 'Edit Email Template' : 'Create Email Template'}
                         </h3>
-                        <p className="text-sm text-[#6B7280]">
-                            Use placeholders like Firm Name, First Name, etc. in your content
-                        </p>
+                        <div className="mt-2 space-y-1">
+                            <p className="text-sm text-[#6B7280]">
+                                ✨ <strong>No HTML knowledge required!</strong> Type your message naturally, and we'll handle the formatting.
+                            </p>
+                            <p className="text-xs text-[#94A3B8]">
+                                Use the variables on the right to personalize emails for each recipient
+                            </p>
+                        </div>
                     </div>
-                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55]">
+                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55] p-1">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
@@ -993,48 +1237,117 @@ const TemplateFormModal = ({ template, onClose, onSubmit }) => {
                         )}
                     </div>
 
+                    {/* Enhanced Variable Picker - Grouped by Category */}
                     <div className="mt-6 lg:mt-0">
                         <div className="border border-dashed border-[#C8D5FF] rounded-lg p-4 bg-[#F9FBFF] lg:sticky lg:top-6">
-                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                                <div>
-                                    <p className="text-sm font-semibold text-[#1F2A55]">
-                                        Available Variables ({formData.email_type || 'general'})
-                                    </p>
-                                    <p className="text-xs text-[#6B7280]">
-                                        Click or drag to insert into the {fieldLabel.toLowerCase()}
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-semibold text-[#1F2A55] inline-flex items-center gap-2">
+                                            📝 Available Variables
+                                        </p>
+                                        <p className="text-xs text-[#6B7280] mt-1">
+                                            Click to insert into {fieldLabel.toLowerCase()}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={loadVariables}
+                                        className="text-xs text-[#3AD6F2] hover:underline"
+                                    >
+                                        Refresh
+                                    </button>
+                                </div>
+
+                                {/* Helpful Info Banner */}
+                                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <p className="text-xs text-blue-900 leading-relaxed">
+                                        💡 <strong>Tip:</strong> Variables are automatically replaced with real data when emails are sent.
+                                        Example: <code className="bg-blue-100 px-1 rounded">[FirstName]</code> becomes "John"
                                     </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={loadVariables}
-                                    className="mt-2 inline-flex items-center justify-center rounded-md border border-[#E8F0FF] px-3 py-1.5 text-xs font-semibold text-[#1F2A55] hover:bg-white md:mt-0"
-                                >
-                                    Refresh
-                                </button>
                             </div>
-                            <div className="mt-3 max-h-64 overflow-y-auto space-y-2 pr-1">
+
+                            <div className="mt-4 max-h-96 overflow-y-auto space-y-3 pr-1">
                                 {variablesLoading ? (
                                     <p className="text-sm text-[#7B8AB2]">Loading variables...</p>
                                 ) : variablesError ? (
-                                    <p className="text-sm text-red-500">{variablesError}</p>
-                                ) : variables.length === 0 ? (
-                                    <p className="text-sm text-[#7B8AB2]">No variables configured for this email type.</p>
+                                    <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                                        <p className="font-semibold">⚠️ Using default variables</p>
+                                        <p className="text-xs mt-1">{variablesError}</p>
+                                    </div>
                                 ) : (
-                                    variables.map((variable) => (
-                                        <button
-                                            key={variable.key}
-                                            type="button"
-                                            draggable
-                                            onDragStart={(event) => handleVariableDragStart(event, variable.placeholder)}
-                                            onClick={() => handleInsertVariable(variable.placeholder)}
-                                            className="w-full text-left rounded-md border border-[#E8F0FF] bg-white/80 px-3 py-2 text-xs font-semibold text-[#1F2A55] hover:bg-[#EBFCFF]"
-                                        >
-                                            <span className="block text-sm">{variable.label}</span>
-                                            <span className="text-[#6B7280]">{variable.description}</span>
-                                            <span className="text-[#94A3B8]">Placeholder: {variable.placeholder}</span>
-                                        </button>
+                                    // Render grouped variables
+                                    Object.entries(VARIABLE_GROUPS).map(([groupKey, group]) => (
+                                        <div key={groupKey} className="border border-[#E8F0FF] rounded-lg bg-white p-3">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-lg">{group.icon}</span>
+                                                <p className="text-xs font-bold uppercase text-[#1F2A55] tracking-wide">
+                                                    {group.label}
+                                                </p>
+                                                <span className="text-xs text-[#94A3B8] ml-auto">
+                                                    {group.variables.length}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                {group.variables.map((variable) => (
+                                                    <button
+                                                        key={variable.key}
+                                                        type="button"
+                                                        draggable
+                                                        onDragStart={(event) => handleVariableDragStart(event, variable.placeholder)}
+                                                        onClick={() => handleInsertVariable(variable.placeholder)}
+                                                        className="w-full text-left rounded-md border border-[#E8F0FF] bg-gray-50 px-2.5 py-2 text-xs hover:bg-[#EBFCFF] hover:border-[#3AD6F2] transition-all group"
+                                                    >
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex-1">
+                                                                <p className="font-semibold text-[#1F2A55] text-sm">
+                                                                    {variable.label}
+                                                                </p>
+                                                                <p className="text-[#6B7280] mt-0.5">
+                                                                    {variable.description}
+                                                                </p>
+                                                                <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                                                                    <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">
+                                                                        {variable.placeholder}
+                                                                    </code>
+                                                                    {variable.example && (
+                                                                        <>
+                                                                            <span className="text-[#94A3B8]">→</span>
+                                                                            <span className="text-xs text-green-600 font-medium">
+                                                                                "{variable.example}"
+                                                                            </span>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-[#3AD6F2]">
+                                                                    <path d="M12 8H4M8 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))
                                 )}
+                            </div>
+
+                            {/* Help Footer */}
+                            <div className="mt-4 pt-3 border-t border-[#E8F0FF]">
+                                <p className="text-xs text-[#7B8AB2] mb-2">📚 Need help?</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        className="text-xs px-2 py-1.5 bg-white border border-[#E8F0FF] rounded hover:bg-gray-50 text-[#1F2A55]"
+                                        onClick={() => window.open('https://seqwens-s3.s3.us-east-1.amazonaws.com/docs/email_templates_guide.pdf', '_blank')}
+                                    >
+                                        📖 View Docs
+                                    </button>
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1052,6 +1365,16 @@ const TemplateFormModal = ({ template, onClose, onSubmit }) => {
                         </button>
                     </div>
                     <div className="flex gap-3 sm:justify-end">
+                        {isEdit && formData.email_type !== 'custom' && (
+                            <button
+                                type="button"
+                                onClick={handleRevert}
+                                disabled={submitting}
+                                className="px-4 py-2 text-sm text-[#F56D2D] bg-[#FFF5F2] border border-[#F56D2D] rounded-lg hover:bg-[#FFE0D4] disabled:opacity-50"
+                            >
+                                Reset to Default
+                            </button>
+                        )}
                         <button
                             onClick={onClose}
                             className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"

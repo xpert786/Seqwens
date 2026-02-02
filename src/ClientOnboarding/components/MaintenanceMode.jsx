@@ -7,7 +7,16 @@ const MaintenanceMode = () => {
   const navigate = useNavigate();
   // Check path for subscription bypass
   const location = useLocation();
-  
+
+  // IMPERSONATION CHECK: Completely bypass maintenance mode UI if impersonating
+  const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+  const isImpersonating = !!impersonationData;
+
+  if (isImpersonating) {
+    console.log('[MAINTENANCE_MODE] Super Admin impersonation detected - completely bypassing MaintenanceMode component UI');
+    return null;
+  }
+
   const [loading, setLoading] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
@@ -24,9 +33,15 @@ const MaintenanceMode = () => {
     // Check if user is superadmin - don't show maintenance mode for superadmin
     const storage = getStorage();
     const userType = storage?.getItem("userType");
-    
+
+    // The top-level isImpersonating check already handles the bypass for the entire component.
+    // This check here is for consistency with super_admin and to prevent further API calls
+    // if the component somehow rendered despite the top-level check (e.g., state change).
     if (userType === 'super_admin') {
+      console.log('[MAINTENANCE_MODE] Super Admin detected - bypassing all checks');
       setLoading(false);
+      setMaintenanceMode(false);
+      setSubscriptionExpired(false);
       return;
     }
 
@@ -47,7 +62,7 @@ const MaintenanceMode = () => {
       } finally {
         // Clear user data
         clearUserData();
-        
+
         // Redirect to login page using React Router (respects basename)
         navigate('/login', { replace: true });
       }
@@ -57,26 +72,26 @@ const MaintenanceMode = () => {
       try {
         setLoading(true);
         const response = await maintenanceModeAPI.getMaintenanceStatus();
-        
+
         if (response.success) {
           setMaintenanceMode(response.maintenance_mode || false);
           setMaintenanceMessage(response.maintenance_message || 'The platform is currently undergoing maintenance. Please try again later.');
-          
+
           // Check for termination - log out immediately if true
           if (response.termination === true) {
             setSessionExpired(true);
             setSessionTimeoutMessage(response.session_timeout_message || 'Your session has been terminated. Please log in again.');
-            
+
             // Call session timeout logout
             await handleSessionTimeoutLogout();
             return; // Exit early to prevent further processing
           }
-          
+
           // Check for session expiration
           if (response.session_expired === true) {
             setSessionExpired(true);
             setSessionTimeoutMessage(response.session_timeout_message || 'Your session has expired. Please log in again.');
-            
+
             // Call session timeout logout
             await handleSessionTimeoutLogout();
             return;
@@ -86,21 +101,30 @@ const MaintenanceMode = () => {
 
           // Check for Subscription Expiration or Missing Subscription (Firm Admin only)
           if ((userType === 'firm' || userType === 'admin') && response.subscription) {
-            const subStatus = response.subscription.status;
-            if (subStatus === 'expired' || subStatus === 'none') {
-               // Allow access to subscription management pages
-               const isSubscriptionPage = location.pathname.includes('/firmadmin/subscription') || 
-                                          location.pathname.includes('/firmadmin/finalize-subscription') ||
-                                          location.pathname.includes('/firmadmin/billing');
-               
-               if (!isSubscriptionPage) {
-                   setSubscriptionExpired(true);
-                   setSubscriptionData(response.subscription);
-               } else {
-                   setSubscriptionExpired(false);
-               }
+            // IMPERSONATION CHECK: If Super Admin is impersonating, bypass subscription checks
+            const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+            const isImpersonating = !!impersonationData;
+
+            if (isImpersonating) {
+              console.log('[MAINTENANCE_MODE] Super Admin impersonation detected - bypassing subscription modal');
+              setSubscriptionExpired(false);
             } else {
+              const subStatus = response.subscription.status;
+              if (subStatus === 'expired' || subStatus === 'none') {
+                // Allow access to subscription management pages
+                const isSubscriptionPage = location.pathname.includes('/firmadmin/subscription') ||
+                  location.pathname.includes('/firmadmin/finalize-subscription') ||
+                  location.pathname.includes('/firmadmin/billing');
+
+                if (!isSubscriptionPage) {
+                  setSubscriptionExpired(true);
+                  setSubscriptionData(response.subscription);
+                } else {
+                  setSubscriptionExpired(false);
+                }
+              } else {
                 setSubscriptionExpired(false);
+              }
             }
           }
         }
@@ -115,10 +139,10 @@ const MaintenanceMode = () => {
     };
 
     checkMaintenanceMode();
-    
+
     // Check maintenance mode every 30 seconds
     const interval = setInterval(checkMaintenanceMode, 30000);
-    
+
     return () => clearInterval(interval);
   }, [navigate, location.pathname]);
 
@@ -199,7 +223,7 @@ const MaintenanceMode = () => {
 
   // Show Subscription Expired Modal
   if (subscriptionExpired) {
-      return (
+    return (
       <div
         style={{
           position: 'fixed',
@@ -228,23 +252,23 @@ const MaintenanceMode = () => {
             border: '1px solid #E5E7EB'
           }}
         >
-          <div style={{ 
-              width: '64px', 
-              height: '64px', 
-              backgroundColor: '#FEF2F2', 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 24px auto'
+          <div style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#FEF2F2',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px auto'
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 9V14" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 21.41H5.41C4.52 21.41 4.07 20.33 4.7 19.7L19.7 4.7C20.33 4.07 21.41 4.52 21.41 5.41V12" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 17.41H12.01" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 9V14" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 21.41H5.41C4.52 21.41 4.07 20.33 4.7 19.7L19.7 4.7C20.33 4.07 21.41 4.52 21.41 5.41V12" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 17.41H12.01" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          
+
           <h2
             style={{
               fontSize: '28px',
@@ -256,7 +280,7 @@ const MaintenanceMode = () => {
           >
             {subscriptionData?.status === 'none' ? 'No Active Subscription' : 'Subscription Expired'}
           </h2>
-          
+
           <p
             style={{
               fontSize: '16px',
@@ -269,58 +293,58 @@ const MaintenanceMode = () => {
             {subscriptionData?.status === 'none' ? (
               <>
                 Your firm does not have an active subscription plan.
-                <br/>
+                <br />
                 To start using the platform and manage your clients, please select and purchase a subscription plan.
               </>
             ) : (
               <>
-                Your firm's subscription expired on <span style={{ fontWeight: '600', color: '#111827' }}>{subscriptionData?.expires_at ? new Date(subscriptionData.expires_at).toLocaleDateString() : 'Unknown date'}</span>. 
-                <br/>
+                Your firm's subscription expired on <span style={{ fontWeight: '600', color: '#111827' }}>{subscriptionData?.expires_at ? new Date(subscriptionData.expires_at).toLocaleDateString() : 'Unknown date'}</span>.
+                <br />
                 To continue accessing the platform and managing your clients, please renew your subscription securely.
               </>
             )}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <button
-                onClick={handleRenewSubscription}
-                style={{
-                  backgroundColor: '#F56D2D', 
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '16px 24px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                  width: '100%',
-                  boxShadow: '0 4px 6px -1px rgba(245, 109, 45, 0.1), 0 2px 4px -1px rgba(245, 109, 45, 0.06)'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#e05d1f'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#F56D2D'}
-              >
-                {subscriptionData?.status === 'none' ? 'Purchase Subscription Now' : 'Renew Subscription Now'}
-              </button>
-              
-              <button
-                 onClick={() => {
-                     clearUserData();
-                     navigate('/login', { replace: true });
-                 }}
-                 style={{
-                     backgroundColor: 'transparent',
-                     color: '#6B7280',
-                     border: 'none',
-                     padding: '12px',
-                     fontSize: '14px',
-                     fontWeight: '500',
-                     cursor: 'pointer',
-                     textDecoration: 'underline'
-                 }}
-              >
-                  Log out and contact support
-              </button>
+            <button
+              onClick={handleRenewSubscription}
+              style={{
+                backgroundColor: '#F56D2D',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '16px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                width: '100%',
+                boxShadow: '0 4px 6px -1px rgba(245, 109, 45, 0.1), 0 2px 4px -1px rgba(245, 109, 45, 0.06)'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#e05d1f'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#F56D2D'}
+            >
+              {subscriptionData?.status === 'none' ? 'Purchase Subscription Now' : 'Renew Subscription Now'}
+            </button>
+
+            <button
+              onClick={() => {
+                clearUserData();
+                navigate('/login', { replace: true });
+              }}
+              style={{
+                backgroundColor: 'transparent',
+                color: '#6B7280',
+                border: 'none',
+                padding: '12px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Log out and contact support
+            </button>
           </div>
         </div>
       </div>

@@ -86,6 +86,25 @@ export default function FirmDetails() {
         }
     }, [firmId]);
 
+    // Handle automatic login when action=login query parameter is present
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const action = params.get('action');
+
+        if (action === 'login' && firmId && !loggingIn && firmDetails) {
+            // Remove the action parameter from URL
+            params.delete('action');
+            const newSearch = params.toString();
+            navigate({
+                pathname: location.pathname,
+                search: newSearch ? `?${newSearch}` : ''
+            }, { replace: true });
+
+            // Trigger login
+            handleFirmLogin();
+        }
+    }, [location.search, firmId, firmDetails, loggingIn]);
+
     useEffect(() => {
         settingsLoadedRef.current = false;
         setSettingsData(null);
@@ -168,7 +187,7 @@ export default function FirmDetails() {
 
     const systemHealth = useMemo(() => {
         return {
-            totalUsers: firmDetails?.system_health?.score ?? 0,
+            totalUsers: firmDetails?.staff_count ?? 0,
             maxUsers: firmDetails?.max_users ?? 0,
             storageUsed: firmDetails?.storage_usage?.used_gb ?? 0,
             storageCapacity: firmDetails?.storage_usage?.limit_gb ?? 0,
@@ -206,7 +225,7 @@ export default function FirmDetails() {
                 id: 'clients',
                 label: 'Clients',
                 value: stats.clients,
-                subtitle: 'Staff members with access',
+                subtitle: 'Total client accounts',
                 icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M6 22V4C6 3.46957 6.21071 2.96086 6.58579 2.58579C6.96086 2.21071 7.46957 2 8 2H16C16.5304 2 17.0391 2.21071 17.4142 2.58579C17.7893 2.96086 18 3.46957 18 4V22H6Z" stroke="#3AD6F2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -368,10 +387,25 @@ export default function FirmDetails() {
 
         try {
             setLoggingIn(true);
+
+            console.log('[IMPERSONATION_START] Initiating firm login', {
+                timestamp: new Date().toISOString(),
+                firmId: firmId,
+                currentUserType: localStorage.getItem('userType') || sessionStorage.getItem('userType'),
+                currentRoute: window.location.pathname,
+            });
+
             const response = await superAdminAPI.generateFirmLogin(firmId);
 
             if (response.success && response.data) {
                 const { access_token, refresh_token, user, firm } = response.data;
+
+                console.log('[IMPERSONATION_START] Received firm credentials', {
+                    hasFirmData: !!firm,
+                    firmName: firm?.name,
+                    targetUserType: user?.user_type,
+                    targetUserEmail: user?.email,
+                });
 
                 // STEP 1: Store original Super Admin session data for revert functionality
                 const originalSessionData = {
@@ -390,6 +424,13 @@ export default function FirmDetails() {
                     timestamp: Date.now()
                 };
 
+                console.log('[IMPERSONATION_START] Stored original session data', {
+                    hasAccessToken: !!originalSessionData.accessToken,
+                    hasRefreshToken: !!originalSessionData.refreshToken,
+                    originalUserType: originalSessionData.userType,
+                    sessionTimestamp: originalSessionData.timestamp,
+                });
+
                 // Store in sessionStorage so it's cleared when browser tab closes
                 sessionStorage.setItem('superAdminImpersonationData', JSON.stringify(originalSessionData));
 
@@ -401,7 +442,10 @@ export default function FirmDetails() {
                 };
                 sessionStorage.setItem('impersonationInfo', JSON.stringify(impersonationInfo));
 
+                console.log('[IMPERSONATION_START] Stored impersonation info', impersonationInfo);
+
                 // STEP 2: Completely clear all superadmin session data using utility function
+                console.log('[IMPERSONATION_START] Clearing Super Admin context');
                 clearUserData();
 
                 // Also clear any additional superadmin-specific data
@@ -409,6 +453,8 @@ export default function FirmDetails() {
                 sessionStorage.removeItem('firmLoginData');
 
                 // STEP 3: Set new firm admin tokens and user data
+                console.log('[IMPERSONATION_START] Setting firm admin session');
+
                 // Use setTokens to properly set tokens
                 setTokens(access_token, refresh_token, true);
 
@@ -425,6 +471,13 @@ export default function FirmDetails() {
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('rememberMe', 'true');
 
+                console.log('[IMPERSONATION_START] Firm admin session established', {
+                    newUserType: user.user_type,
+                    newUserEmail: user.email,
+                    firmId: firm?.id,
+                    firmName: firm?.name,
+                });
+
                 toast.success(response.message || 'Login successful. Redirecting to firm dashboard...', {
                     position: "top-right",
                     autoClose: 2000,
@@ -432,14 +485,19 @@ export default function FirmDetails() {
 
                 // STEP 4: Navigate to firm admin dashboard with a small delay to ensure state is cleared
                 // Use window.location.href for a hard navigation to ensure clean state and prevent loops
+                console.log('[IMPERSONATION_START] Preparing navigation to firm dashboard');
                 setTimeout(() => {
-                    window.location.href = getPathWithPrefix('/firmadmin');
+                    const targetUrl = getPathWithPrefix('/firmadmin');
+                    console.log('[IMPERSONATION_START] Navigating to:', targetUrl);
+                    window.location.href = targetUrl;
                 }, 300);
             } else {
                 throw new Error(response.message || 'Failed to generate login credentials');
             }
         } catch (err) {
-            console.error('Error generating firm login:', err);
+            console.error('[IMPERSONATION_START] Error during firm login:', err);
+            console.error('[IMPERSONATION_START] Error stack:', err.stack);
+
             toast.error(handleAPIError(err), {
                 position: "top-right",
                 autoClose: 3000,
@@ -567,6 +625,29 @@ export default function FirmDetails() {
                                             );
                                         })}
                                     </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleFirmLogin}
+                                        disabled={loggingIn}
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        {loggingIn ? (
+                                            <>
+                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent border-white"></div>
+                                                Logging in...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M15.8333 9.16667V5.83333C15.8333 5.39131 15.6577 4.96738 15.345 4.65482C15.0325 4.34226 14.6085 4.16667 14.1667 4.16667H5.83333C5.39131 4.16667 4.96738 4.34226 4.65482 4.65482C4.34226 4.96738 4.16667 5.39131 4.16667 5.83333V14.1667C4.16667 14.6087 4.34226 15.0326 4.65482 15.3452C4.96738 15.6577 5.39131 15.8333 5.83333 15.8333H14.1667C14.6085 15.8333 15.0325 15.6577 15.345 15.3452C15.6577 15.0326 15.8333 14.6087 15.8333 14.1667V10.8333M12.5 10H18.3333M18.3333 10L16.25 7.91667M18.3333 10L16.25 12.0833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Login as Firm
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         </div>

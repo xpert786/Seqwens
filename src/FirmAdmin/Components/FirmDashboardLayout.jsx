@@ -5,7 +5,9 @@ import FirmSidebar from './FirmSidebar';
 import MaintenanceMode from '../../ClientOnboarding/components/MaintenanceMode';
 import { SubscriptionStatusProvider } from '../Context/SubscriptionStatusContext';
 import SubscriptionStatusBanner from './SubscriptionStatusBanner';
+import ImpersonationBanner from './ImpersonationBanner';
 import '../styles/FirmPortalColors.css';
+import ForcedPasswordChangeModal from '../../components/ForcedPasswordChangeModal';
 
 export default function FirmDashboardLayout() {
   const [sidebarWidth, setSidebarWidth] = useState('320px');
@@ -337,6 +339,8 @@ export default function FirmDashboardLayout() {
     <SubscriptionStatusProvider>
       <div className="firm-dashboard-layout">
         <MaintenanceMode />
+        <ForcedPasswordChangeModal />
+        <ImpersonationBanner />
         <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} sidebarWidth={sidebarWidth} />
         <SubscriptionStatusBanner />
         <FirmSidebar isSidebarOpen={isSidebarOpen} />

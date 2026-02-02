@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/SetNewPassword.css";
 import { PasswordStrengthBar } from "../components/icons";
 import FixedLayout from "../components/FixedLayout";
@@ -14,45 +14,56 @@ export default function SetNewPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [isForced, setIsForced] = useState(false);
+  const [tempPassword, setTempPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
+    // Check for forced password reset from login
+    if (location.state?.forced && location.state?.email && location.state?.tempPassword) {
+      setEmail(location.state.email);
+      setTempPassword(location.state.tempPassword);
+      setIsForced(true);
+      return;
+    }
+
     // Get email and OTP from localStorage
     const storedEmail = localStorage.getItem('resetEmail');
     const storedOtp = localStorage.getItem('resetOtp');
-    
+
     if (!storedEmail || !storedOtp) {
       // If no email or OTP, redirect back to forgot password
       navigate('/forgot-password');
       return;
     }
-    
+
     setEmail(storedEmail);
     setOtp(storedOtp);
-  }, [navigate]);
+  }, [navigate, location]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   const handleResetPassword = async () => {
     // Clear previous errors
     setErrors({});
-    
+
     // Validate passwords
     if (!password.trim()) {
       setErrors({ password: 'Password is required' });
       return;
     }
-    
+
     if (!confirmPassword.trim()) {
       setErrors({ confirmPassword: 'Please confirm your password' });
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
-    
+
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       setErrors({ password: 'Password does not meet requirements' });
@@ -60,20 +71,26 @@ export default function SetNewPassword() {
     }
 
     setIsLoading(true);
-    
+
     try {
-      const response = await userAPI.verifyOtpAndResetPassword(email, otp, password, confirmPassword);
-      
-      // Clear stored data
-      localStorage.removeItem('resetEmail');
-      localStorage.removeItem('resetOtp');
-      
-      // Navigate to login page using conditional URL
-      navigateToLogin(navigate);
+      if (isForced) {
+        await userAPI.forceChangePassword(email, tempPassword, password, confirmPassword);
+        // Navigate to login with success message
+        navigate('/login', { state: { message: "Password updated successfully. Please login with your new password." } });
+      } else {
+        const response = await userAPI.verifyOtpAndResetPassword(email, otp, password, confirmPassword);
+
+        // Clear stored data
+        localStorage.removeItem('resetEmail');
+        localStorage.removeItem('resetOtp');
+
+        // Navigate to login page using conditional URL
+        navigateToLogin(navigate);
+      }
     } catch (error) {
       console.error('Password reset error:', error);
-      setErrors({ 
-        general: handleAPIError(error) 
+      setErrors({
+        general: handleAPIError(error)
       });
     } finally {
       setIsLoading(false);
@@ -115,13 +132,13 @@ export default function SetNewPassword() {
                   }
                 }}
               />
-               <button
-                    type="button"
-                    className="toggle-visibility-btn mt-2"
-                    onClick={togglePasswordVisibility}
-                  >
-                    <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </button>
+              <button
+                type="button"
+                className="toggle-visibility-btn mt-2"
+                onClick={togglePasswordVisibility}
+              >
+                <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+              </button>
             </div>
             {errors.password && (
               <div className="invalid-feedback">{errors.password}</div>
@@ -129,7 +146,12 @@ export default function SetNewPassword() {
 
             <div className="password-strength-box">
               <div className="d-flex align-items-start mb-2">
-                <PasswordStrengthBar />
+                <PasswordStrengthBar
+                  v1={validateLength}
+                  v2={validateNumber}
+                  v3={validateUpperLower}
+                  v4={validateSpecialChar}
+                />
               </div>
               <div className="d-flex flex-wrap gap-4 mb-2 password-criteria">
                 <div className={`small ${validateLength ? 'text-success' : 'text-danger'}`}>
@@ -165,8 +187,8 @@ export default function SetNewPassword() {
             <div className="invalid-feedback">{errors.confirmPassword}</div>
           )}
 
-          <button 
-            className="reset-button" 
+          <button
+            className="reset-button"
             onClick={handleResetPassword}
             disabled={isLoading}
           >

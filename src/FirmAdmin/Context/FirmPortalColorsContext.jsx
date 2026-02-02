@@ -46,6 +46,15 @@ export const FirmPortalColorsProvider = ({ children }) => {
         return;
       }
 
+      // Don't fetch for Super Admin or Admin as they don't have subdomain settings
+      // and this avoids 403 Forbidden errors in those panels
+      const adminTypes = ['super_admin', 'support_admin', 'billing_admin'];
+      if (adminTypes.includes(userType)) {
+        console.log('Skipping portal colors fetch for admin type:', userType);
+        setLoading(false);
+        return;
+      }
+
       const response = await firmAdminSettingsAPI.getSubdomainSettings();
 
       if (response.success && response.data) {

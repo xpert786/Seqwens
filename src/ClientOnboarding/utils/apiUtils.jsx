@@ -250,13 +250,21 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
                 // Skip non_field_errors as it's handled above
                 if (field === 'non_field_errors') return null;
                 const errorMessages = Array.isArray(errors) ? errors.join(', ') : errors;
-                return `${field}: ${errorMessages}`;
+                // Format field name: replace underscores with spaces and capitalize
+                const friendlyField = field
+                  .split('_')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+                
+                return `${friendlyField}: ${errorMessages}`;
               })
               .filter(Boolean) // Remove null entries
               .join('; ');
 
             if (fieldErrors) {
-              errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+              const msg = errorData.message || 'Validation failed';
+              // Don't prefix with "Validation failed" if we have specific field errors, it's redundant
+              errorMessage = msg === 'Validation failed' ? fieldErrors : `${msg}. ${fieldErrors}`;
             } else {
               errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
             }
@@ -528,6 +536,30 @@ export const userAPI = {
     };
 
     return await publicApiRequest('/user/forgot-password/', 'POST', payload);
+  },
+
+
+  // Force change password (for temporary password reset)
+  forceChangePassword: async (email, currentPassword, newPassword, confirmPassword) => {
+    const payload = {
+      email: email,
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    };
+
+    return await publicApiRequest('/user/force-change-password/', 'POST', payload);
+  },
+
+  // Authenticated change password
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
+    const payload = {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    };
+
+    return await apiRequest('/user/change-password/', 'POST', payload);
   },
 
   // Verify OTP and reset password (public endpoint, no auth required)
@@ -3806,6 +3838,18 @@ export const firmAdminEmailTemplatesAPI = {
     const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/`, 'DELETE');
     ensureEmailTemplateSuccess(response, 'Failed to delete email template');
     return true;
+  },
+
+  // Revert to system default
+  revertTemplate: async (templateId) => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/revert-to-default/`, 'POST');
+    return ensureEmailTemplateSuccess(response, 'Failed to revert email template');
+  },
+
+  // Get system defaults
+  getSystemDefaults: async () => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/system-defaults/`, 'GET');
+    return ensureEmailTemplateSuccess(response, 'Failed to fetch system defaults');
   },
 
   // Duplicate template

@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { superToastOptions } from '../utils/toastConfig';
 import { useTheme } from '../Context/ThemeContext';
+import { getUserData } from '../../ClientOnboarding/utils/userUtils';
 
 export default function UserManagement() {
   const navigate = useNavigate();
@@ -20,18 +21,25 @@ export default function UserManagement() {
     active: 0,
     suspended: 0,
   });
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = localStorage.getItem('user_mgmt_page_size');
+    return saved ? parseInt(saved) : 25;
+  });
+  const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
-    page: 1,
-    page_size: 10,
     total_count: 0,
     total_pages: 1,
   });
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
   const [creatingAdmin, setCreatingAdmin] = useState(false);
   const [createAdminError, setCreateAdminError] = useState(null);
+
+  const loggedInUser = getUserData();
+  const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
   const [newAdmin, setNewAdmin] = useState({
     fullName: '',
     email: '',
@@ -41,11 +49,6 @@ export default function UserManagement() {
   });
   const [phoneCountry, setPhoneCountry] = useState('us');
 
-  // Client-side pagination for displaying user cards
-  const [userCardsCurrentPage, setUserCardsCurrentPage] = useState(1);
-  const [showAllUserCards, setShowAllUserCards] = useState(false);
-  const USER_CARDS_PER_PAGE = 3;
-
   const getStatusBadgeClass = (status) => {
     const normalized = (status || '').toLowerCase();
     if (normalized.includes('active')) return 'bg-green-500';
@@ -54,28 +57,8 @@ export default function UserManagement() {
   };
 
 
-  const startItem = pagination.total_count ? 1 : 0;
-  const endItem = pagination.total_count || 0;
-
-  // Client-side pagination logic for user cards
-  const totalUserCards = users.length;
-  const totalUserCardsPages = Math.ceil(totalUserCards / USER_CARDS_PER_PAGE);
-  const shouldShowUserCardsPagination = totalUserCards > USER_CARDS_PER_PAGE && !showAllUserCards;
-  const displayedUserCards = showAllUserCards
-    ? users
-    : users.slice((userCardsCurrentPage - 1) * USER_CARDS_PER_PAGE, userCardsCurrentPage * USER_CARDS_PER_PAGE);
-
-  const handleViewAllUserCards = (e) => {
-    e.preventDefault();
-    setShowAllUserCards(!showAllUserCards);
-    if (showAllUserCards) {
-      setUserCardsCurrentPage(1);
-    }
-  };
-
-  const handleUserCardsPageChange = (newPage) => {
-    setUserCardsCurrentPage(newPage);
-  };
+  const startItem = pagination.total_count ? (currentPage - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(currentPage * pageSize, pagination.total_count);
 
   // Fetch users from API
   useEffect(() => {
@@ -92,6 +75,8 @@ export default function UserManagement() {
           status: statusParam,
           role: roleParam,
           search: searchTerm.trim(),
+          page: currentPage,
+          limit: pageSize,
         });
 
         if (response.success && response.data) {
@@ -103,16 +88,11 @@ export default function UserManagement() {
             }
           );
           setUsers(response.data.users || []);
-          // No pagination - set total count directly
           setPagination({
-            page: 1,
-            page_size: response.data.total_count || response.data.users?.length || 0,
-            total_count: response.data.total_count || response.data.users?.length || 0,
-            total_pages: 1,
+            total_count: response.data.total_count || 0,
+            total_pages: response.data.total_pages || 1,
           });
-          // Reset client-side pagination when data changes
-          setUserCardsCurrentPage(1);
-          setShowAllUserCards(false);
+          setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         } else {
           throw new Error(response.message || 'Failed to fetch platform users');
         }
@@ -131,7 +111,13 @@ export default function UserManagement() {
     };
 
     fetchUsers();
-  }, [searchTerm, statusFilter, roleFilter, refreshKey]);
+  }, [searchTerm, statusFilter, roleFilter, refreshKey, currentPage, pageSize]);
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+    localStorage.setItem('user_mgmt_page_size', newSize.toString());
+  };
 
   const resetAddAdminForm = () => {
     setNewAdmin({
@@ -211,35 +197,101 @@ export default function UserManagement() {
       {/* Action Buttons */}
       <div className="flex justify-end gap-3 mb-6">
 
-        <button
-          onClick={() => setShowAddAdminModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#F56D2D] text-white hover:bg-[#e45622] transition-colors"
-          style={{ borderRadius: '7px' }}
-        >
-          + Add Super Admin
-        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setShowAddAdminModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#F56D2D] text-white hover:bg-[#e45622] transition-colors"
+            style={{ borderRadius: '7px' }}
+          >
+            + Add Super Admin
+          </button>
+        )}
       </div>
 
 
 
       {/* Summary Cards */}
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Internal Staff</p>
-            <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.total_internal_staff ?? 0}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Total users with platform access</p>
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+            <div
+              onClick={() => {
+                setStatusFilter('All Status');
+                setRoleFilter('All Roles');
+              }}
+              className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group"
+              title="Click to view all platform users"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#3B4A66] dark:group-hover:text-white transition-colors">Internal Staff</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.total_internal_staff ?? 0}</p>
+                </div>
+                <FiUsers className="text-gray-300 group-hover:text-[#3B4A66] transition-colors" size={24} />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Total users with platform access</p>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[11px] font-medium text-[#3B4A66] dark:text-blue-400">View all staff</span>
+                {isSuperAdmin && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAddAdminModal(true);
+                    }}
+                    className="text-[11px] font-medium text-[#F56D2D] hover:underline"
+                  >
+                    + Add Admin
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div
+              onClick={() => setStatusFilter('Active')}
+              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Active' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
+              title="Click to filter by active users"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#3B4A66] dark:group-hover:text-white transition-colors">Active</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.active ?? 0}</p>
+                </div>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500 mt-1.5 shadow-sm shadow-green-200"></div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Currently active accounts</p>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[11px] font-medium text-[#3B4A66] dark:text-blue-400">View active users</span>
+              </div>
+            </div>
+
+            <div
+              onClick={() => setStatusFilter('Suspended')}
+              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Suspended' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
+              title="Click to filter by suspended users"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#3B4A66] dark:group-hover:text-white transition-colors">Suspended</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.suspended ?? 0}</p>
+                </div>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 mt-1.5 shadow-sm shadow-red-200"></div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                {summary.suspended > 0
+                  ? `${summary.suspended} users require review`
+                  : 'No accounts requiring review'}
+              </p>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[11px] font-medium text-[#3B4A66] dark:text-blue-400">Review accounts</span>
+              </div>
+            </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-            <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.active ?? 0}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Currently active accounts</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Suspended</p>
-            <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.suspended ?? 0}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Accounts requiring review</p>
-          </div>
+
+          {lastUpdated && (
+            <div className="flex items-center gap-1.5 px-1">
+              <p className="text-[15px] font-medium">Last updated: {lastUpdated}</p>
+            </div>
+          )}
         </div>
       )}
       {/* Filters Bar */}
@@ -317,26 +369,30 @@ export default function UserManagement() {
       {/* Users Table */}
       {!loading && !error && users.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-[#E8F0FF] dark:border-gray-700 transition-all">
-          {/* Section Header */}
-          <div className="p-2 border-[#E8F0FF]">
-            <div className="flex justify-between items-start mb-2">
+          <div className="p-4 border-b border-[#E8F0FF] dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
-                <h6 className="text-xs font-semibold text-gray-800 dark:text-white mb-0 uppercase tracking-wide">
+                <h6 className="text-sm font-semibold text-gray-800 dark:text-white mb-0 uppercase tracking-wide">
                   Platform Users ({pagination.total_count})
                 </h6>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1" style={{ fontSize: '11px' }}>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Internal administrators and support staff with access to the Seqwens platform.
                 </p>
               </div>
-              {totalUserCards > USER_CARDS_PER_PAGE && (
-                <button
-                  onClick={handleViewAllUserCards}
-                  className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
-                  style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                  className="text-xs border border-[#E8F0FF] dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
                 >
-                  {showAllUserCards ? 'Show Less' : 'View All'}
-                </button>
-              )}
+                  {[25, 50, 100, 250].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -353,7 +409,7 @@ export default function UserManagement() {
 
           {/* Users List */}
           <div className="space-y-2 p-2">
-            {displayedUserCards.map((user) => (
+            {users.map((user) => (
               <div
                 key={user.id}
                 role="button"
@@ -403,30 +459,38 @@ export default function UserManagement() {
             ))}
           </div>
 
-          {/* Client-side Pagination Controls */}
-          {shouldShowUserCardsPagination && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+          {/* Server-side Pagination Controls */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-gray-900 dark:text-white">{pagination.total_count}</span> users
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => handleUserCardsPageChange(userCardsCurrentPage - 1)}
-                disabled={userCardsCurrentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1 || loading}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
               >
                 Previous
               </button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {userCardsCurrentPage} of {totalUserCardsPages}
+              
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium text-gray-900 dark:text-white px-2">
+                  Page {currentPage} of {pagination.total_pages}
                 </span>
               </div>
+
               <button
-                onClick={() => handleUserCardsPageChange(userCardsCurrentPage + 1)}
-                disabled={userCardsCurrentPage === totalUserCardsPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
+                disabled={currentPage === pagination.total_pages || loading}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
               >
                 Next
               </button>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -557,7 +621,7 @@ export default function UserManagement() {
                       }
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
     ${newAdmin.sendWelcomeEmail ? 'bg-[#F56D2D]' : 'bg-gray-200 dark:bg-gray-600'}`}
-                      style={{ borderRadius: '13px', padding: '0px'}}
+                      style={{ borderRadius: '13px', padding: '0px' }}
                     >
                       <span
                         className={`absolute left-0.5 inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out

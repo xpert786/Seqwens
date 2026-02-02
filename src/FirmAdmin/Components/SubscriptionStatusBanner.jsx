@@ -32,6 +32,12 @@ const SubscriptionStatusBanner = () => {
         return null;
     }
 
+    // IMPERSONATION CHECK: Don't show banner if impersonating
+    const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+    if (impersonationData) {
+        return null;
+    }
+
     // Determine banner style based on status
     const getBannerStyle = () => {
         switch (status) {
@@ -134,8 +140,8 @@ const SubscriptionStatusBanner = () => {
                         <button
                             onClick={handleCtaClick}
                             className={`btn btn-sm fw-semibold px-3 py-1.5 rounded-pill shadow-sm ${status === 'pending_payment'
-                                    ? 'btn-dark'
-                                    : 'btn-light'
+                                ? 'btn-dark'
+                                : 'btn-light'
                                 }`}
                             style={{
                                 fontSize: '13px',

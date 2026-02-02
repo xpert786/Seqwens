@@ -4,6 +4,7 @@ import Topbar from "./Topbar";
 import { Outlet } from "react-router-dom";
 import MaintenanceMode from "./MaintenanceMode";
 import "../styles/DashboardLayout.css";
+import ForcedPasswordChangeModal from "../../components/ForcedPasswordChangeModal";
 
 export default function DashboardLayout() {
   // Check if screen is mobile (less than 768px) and close sidebar by default on mobile
@@ -34,7 +35,7 @@ export default function DashboardLayout() {
       const handleClickOutside = (event) => {
         const sidebar = document.querySelector('.client-sidebar-container');
         const toggleButton = document.querySelector('.sidebar-toggle-btn');
-        
+
         if (
           sidebar &&
           !sidebar.contains(event.target) &&
@@ -55,6 +56,7 @@ export default function DashboardLayout() {
       className={`dashboard-layout ${isSidebarOpen ? "" : "dashboard-collapsed"}`}
     >
       <MaintenanceMode />
+      <ForcedPasswordChangeModal />
       <Topbar
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -77,8 +79,8 @@ export default function DashboardLayout() {
           }}
         />
       )}
-      <Sidebar 
-        isSidebarOpen={isSidebarOpen} 
+      <Sidebar
+        isSidebarOpen={isSidebarOpen}
         onLinkClick={() => setIsSidebarOpen(false)}
       />
       <main className="dashboard-main">

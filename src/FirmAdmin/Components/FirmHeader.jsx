@@ -154,9 +154,27 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
         try {
             setIsReverting(true);
 
+            // LOGGING: Capture impersonation_end event
+            const impersonationStartTime = sessionStorage.getItem('superAdminImpersonationData');
+            let impersonationData = null;
+
+            try {
+                impersonationData = impersonationStartTime ? JSON.parse(impersonationStartTime) : null;
+            } catch (e) {
+                console.error('[IMPERSONATION_REVERT] Failed to parse impersonation data:', e);
+            }
+
+            console.log('[IMPERSONATION_REVERT] Starting revert process', {
+                timestamp: new Date().toISOString(),
+                hasImpersonationData: !!impersonationData,
+                currentUserType: localStorage.getItem('userType') || sessionStorage.getItem('userType'),
+                currentRoute: window.location.pathname,
+            });
+
             // Get stored Super Admin session data
-            const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
-            if (!impersonationData) {
+            const impersonationDataStr = sessionStorage.getItem('superAdminImpersonationData');
+            if (!impersonationDataStr) {
+                console.error('[IMPERSONATION_REVERT] Original session data not found');
                 toast.error("Unable to revert: Original session data not found", {
                     position: "top-right",
                     autoClose: 3000,
@@ -164,53 +182,129 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                 return;
             }
 
-            const sessionData = JSON.parse(impersonationData);
+            const sessionData = JSON.parse(impersonationDataStr);
 
-            // Clear current firm admin session
-            clearUserData();
+            console.log('[IMPERSONATION_REVERT] Retrieved session data', {
+                hasAccessToken: !!sessionData.accessToken,
+                hasRefreshToken: !!sessionData.refreshToken,
+                hasUserData: !!sessionData.userData,
+                originalUserType: sessionData.userType,
+                sessionTimestamp: sessionData.timestamp,
+            });
+
+            // STEP 1: Hard reset - Clear ALL current context (firm admin, client, taxpayer, etc.)
+            console.log('[IMPERSONATION_REVERT] Step 1: Clearing all current context');
+            clearUserData(); // Now clears ALL context including client/taxpayer
+
+            // Additional explicit clearing of impersonation-specific data
             localStorage.removeItem('firmLoginData');
             sessionStorage.removeItem('firmLoginData');
 
-            // Restore Super Admin session data
-            if (sessionData.accessToken) localStorage.setItem('accessToken', sessionData.accessToken);
-            if (sessionData.refreshToken) localStorage.setItem('refreshToken', sessionData.refreshToken);
-            if (sessionData.userData) localStorage.setItem('userData', sessionData.userData);
-            if (sessionData.userType) localStorage.setItem('userType', sessionData.userType);
-            if (sessionData.isLoggedIn) localStorage.setItem('isLoggedIn', sessionData.isLoggedIn);
-            if (sessionData.rememberMe) localStorage.setItem('rememberMe', sessionData.rememberMe);
+            // STEP 2: Restore Super Admin session data
+            console.log('[IMPERSONATION_REVERT] Step 2: Restoring Super Admin session');
+
+            // Clear everything first to ensure clean slate
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Restore only Super Admin data
+            if (sessionData.accessToken) {
+                localStorage.setItem('accessToken', sessionData.accessToken);
+                console.log('[IMPERSONATION_REVERT] Restored accessToken to localStorage');
+            }
+            if (sessionData.refreshToken) {
+                localStorage.setItem('refreshToken', sessionData.refreshToken);
+                console.log('[IMPERSONATION_REVERT] Restored refreshToken to localStorage');
+            }
+            if (sessionData.userData) {
+                localStorage.setItem('userData', sessionData.userData);
+                // Parse and validate the user type
+                try {
+                    const userData = JSON.parse(sessionData.userData);
+                    console.log('[IMPERSONATION_REVERT] Restored userData:', {
+                        userType: userData.user_type,
+                        email: userData.email,
+                        role: userData.role,
+                    });
+                } catch (e) {
+                    console.error('[IMPERSONATION_REVERT] Failed to parse restored userData:', e);
+                }
+            }
+            if (sessionData.userType) {
+                localStorage.setItem('userType', sessionData.userType);
+                console.log('[IMPERSONATION_REVERT] Restored userType:', sessionData.userType);
+            }
+            if (sessionData.isLoggedIn) {
+                localStorage.setItem('isLoggedIn', sessionData.isLoggedIn);
+            }
+            if (sessionData.rememberMe) {
+                localStorage.setItem('rememberMe', sessionData.rememberMe);
+            }
 
             // Restore session storage data
-            if (sessionData.sessionAccessToken) sessionStorage.setItem('accessToken', sessionData.sessionAccessToken);
-            if (sessionData.sessionRefreshToken) sessionStorage.setItem('refreshToken', sessionData.sessionRefreshToken);
-            if (sessionData.sessionUserData) sessionStorage.setItem('userData', sessionData.sessionUserData);
-            if (sessionData.sessionUserType) sessionStorage.setItem('userType', sessionData.sessionUserType);
-            if (sessionData.sessionIsLoggedIn) sessionStorage.setItem('isLoggedIn', sessionData.sessionIsLoggedIn);
-            if (sessionData.sessionRememberMe) sessionStorage.setItem('rememberMe', sessionData.sessionRememberMe);
+            if (sessionData.sessionAccessToken) {
+                sessionStorage.setItem('accessToken', sessionData.sessionAccessToken);
+            }
+            if (sessionData.sessionRefreshToken) {
+                sessionStorage.setItem('refreshToken', sessionData.sessionRefreshToken);
+            }
+            if (sessionData.sessionUserData) {
+                sessionStorage.setItem('userData', sessionData.sessionUserData);
+            }
+            if (sessionData.sessionUserType) {
+                sessionStorage.setItem('userType', sessionData.sessionUserType);
+            }
+            if (sessionData.sessionIsLoggedIn) {
+                sessionStorage.setItem('isLoggedIn', sessionData.sessionIsLoggedIn);
+            }
+            if (sessionData.sessionRememberMe) {
+                sessionStorage.setItem('rememberMe', sessionData.sessionRememberMe);
+            }
 
-            // Clear impersonation data
+            // STEP 3: Clear impersonation data (must be after restore)
+            console.log('[IMPERSONATION_REVERT] Step 3: Clearing impersonation markers');
             sessionStorage.removeItem('superAdminImpersonationData');
             sessionStorage.removeItem('impersonationInfo');
 
-            // Set tokens properly
+            // STEP 4: Set tokens properly using utility
+            console.log('[IMPERSONATION_REVERT] Step 4: Setting tokens');
             if (sessionData.accessToken && sessionData.refreshToken) {
                 setTokens(sessionData.accessToken, sessionData.refreshToken, false);
             }
+
+            // STEP 5: Log completion and prepare for navigation
+            const finalUserType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
+            console.log('[IMPERSONATION_REVERT] Revert complete', {
+                timestamp: new Date().toISOString(),
+                restoredUserType: finalUserType,
+                targetRoute: '/seqwens-frontend/superadmin',
+                tokens: {
+                    hasAccessToken: !!localStorage.getItem('accessToken'),
+                    hasRefreshToken: !!localStorage.getItem('refreshToken'),
+                },
+            });
 
             toast.success("Successfully reverted to Super Admin account", {
                 position: "top-right",
                 autoClose: 2000,
             });
 
-            // Navigate back to Super Admin dashboard
+            // STEP 6: Force hard navigation to Super Admin dashboard
+            // Do NOT restore "last visited route" - always go to Super Admin home
+            console.log('[IMPERSONATION_REVERT] Step 6: Forcing navigation to Super Admin dashboard');
             setTimeout(() => {
-                window.location.href = '/seqwens-frontend/superadmin';
+                const targetUrl = '/seqwens-frontend/superadmin';
+                console.log('[IMPERSONATION_REVERT] Navigating to:', targetUrl);
+                window.location.href = targetUrl;
             }, 500);
 
         } catch (error) {
-            console.error("Error reverting to Super Admin:", error);
-            toast.error("Failed to revert to Super Admin account", {
+            console.error("[IMPERSONATION_REVERT] Error during revert:", error);
+            console.error("[IMPERSONATION_REVERT] Error stack:", error.stack);
+
+            toast.error("Failed to revert to Super Admin account. Please refresh the page and try again.", {
                 position: "top-right",
-                autoClose: 3000,
+                autoClose: 5000,
             });
         } finally {
             setIsReverting(false);

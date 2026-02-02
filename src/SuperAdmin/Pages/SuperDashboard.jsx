@@ -5,6 +5,7 @@ import { Outlet } from 'react-router-dom'
 import { ModalProvider, useModal } from '../Context/ModalContext'
 import { ThemeProvider } from '../Context/ThemeContext'
 import '../style/ThemeExtras.css'
+import ForcedPasswordChangeModal from '../../components/ForcedPasswordChangeModal'
 
 function SuperDashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -57,6 +58,7 @@ function SuperDashboardContent() {
 
   return (
     <>
+      <ForcedPasswordChangeModal />
       <div className="flex">
         <SuperHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <SuperSidebar isSidebarOpen={isSidebarOpen} />

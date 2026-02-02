@@ -125,9 +125,19 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         if (errorData.errors) {
           console.error('SuperAdmin Field Validation Errors:', errorData.errors);
           const fieldErrors = Object.entries(errorData.errors)
-            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .map(([field, errors]) => {
+              const errorMessages = Array.isArray(errors) ? errors.join(', ') : errors;
+              // Format field name: replace underscores with spaces and capitalize
+              const friendlyField = field
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+              return `${friendlyField}: ${errorMessages}`;
+            })
             .join('; ');
-          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+
+          const msg = errorData.message || 'Validation failed';
+          errorMessage = msg === 'Validation failed' ? fieldErrors : `${msg}. ${fieldErrors}`;
         } else {
           errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
         }
@@ -239,11 +249,13 @@ export const superAdminAPI = {
   },
 
   // Get superadmin subscription management data
-  getSuperadminSubscriptions: async ({ search = '', status = '', plan = '' } = {}) => {
+  getSuperadminSubscriptions: async ({ search = '', status = '', plan = '', page = 1, limit = 25 } = {}) => {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status) params.append('status', status);
     if (plan) params.append('plan', plan);
+    params.append('page', page);
+    params.append('limit', limit);
     const query = params.toString();
     return await apiRequest(`/user/superadmin/subscriptions/${query ? `?${query}` : ''}`, 'GET');
   },
@@ -326,11 +338,13 @@ export const superAdminAPI = {
   },
 
   // Get platform users (internal staff)
-  getPlatformUsers: async ({ status = '', role = '', search = '' } = {}) => {
+  getPlatformUsers: async ({ status = '', role = '', search = '', page = 1, limit = 25 } = {}) => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (role) params.append('role', role);
     if (search) params.append('search', search);
+    params.append('page', page);
+    params.append('limit', limit);
 
     const query = params.toString();
     return await apiRequest(`/user/superadmin/platform-users/${query ? `?${query}` : ''}`, 'GET');

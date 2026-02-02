@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import MaintenanceMode from "../../ClientOnboarding/components/MaintenanceMode";
 import "../styles/taxdashboardlayout.css";
 import TaxSidebar from "./TaxSidebar";
+import ForcedPasswordChangeModal from "../../components/ForcedPasswordChangeModal";
 
 export default function TaxDashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -52,14 +53,15 @@ export default function TaxDashboardLayout() {
   return (
     <div className={`tdl-layout ${isSidebarOpen ? "" : "tdl-collapsed"}`}>
       <MaintenanceMode />
+      <ForcedPasswordChangeModal />
       <TaxHeader
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isSidebarOpen}
       />
       {/* Overlay for mobile/tablet */}
       {isMobile && isSidebarOpen && (
-        <div 
-          className="tsb-overlay show" 
+        <div
+          className="tsb-overlay show"
           onClick={handleCloseSidebar}
           aria-hidden="true"
         />

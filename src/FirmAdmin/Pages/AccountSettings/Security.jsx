@@ -152,6 +152,10 @@ export default function Security() {
     };
 
     const handlePasswordChange = async () => {
+        if (!currentPassword) {
+            setPasswordError("Please enter your current password");
+            return;
+        }
         if (newPassword !== confirmPassword) {
             setPasswordError("New passwords do not match");
             return;
@@ -164,11 +168,8 @@ export default function Security() {
         setPasswordSaving(true);
         setPasswordError(null);
         try {
-            // TODO: Replace with actual FirmAdmin API call
-            // await firmAdminDashboardAPI.changePassword({
-            //     current_password: currentPassword,
-            //     new_password: newPassword,
-            // });
+            await userAPI.changePassword(currentPassword, newPassword, confirmPassword);
+
             toast.success("Password changed successfully!", {
                 position: "top-right",
                 autoClose: 3000,
@@ -177,9 +178,10 @@ export default function Security() {
             setNewPassword('');
             setConfirmPassword('');
         } catch (err) {
+            console.error('Error changing password:', err);
             const errorMessage = handleAPIError(err);
             setPasswordError(errorMessage);
-            toast.error(errorMessage, {
+            toast.error(errorMessage || "Failed to change password", {
                 position: "top-right",
                 autoClose: 3000,
             });

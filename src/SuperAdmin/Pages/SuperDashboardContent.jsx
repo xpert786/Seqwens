@@ -1853,10 +1853,10 @@ export default function SuperDashboardContent() {
                               <span className="font-medium">Status:</span>{' '}
                               <span
                                 className={`px-2 py-1 rounded text-xs ${firm.status.toLowerCase() === 'active'
-                                  ? 'bg-green-100 text-green-800'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                   : firm.status.toLowerCase() === 'suspended'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                                   }`}
                               >
                                 {firm.status}
@@ -1864,6 +1864,33 @@ export default function SuperDashboardContent() {
                             </div>
                           )}
                         </div>
+                      </div>
+                      <div className="flex gap-2 mt-3 sm:mt-0">
+                        <button
+                          onClick={() => {
+                            setShowAllFirmsModal(false);
+                            navigate(`/superadmin/firms/${firm.id}`);
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M2.04883 10C3.11049 6.61917 6.26716 4.16667 10.0005 4.16667C13.7338 4.16667 16.8905 6.61917 17.9522 10C16.8905 13.3808 13.7338 15.8333 10.0005 15.8333C6.26716 15.8333 3.11049 13.3808 2.04883 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          View
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAllFirmsModal(false);
+                            navigate(`/superadmin/firms/${firm.id}?action=login`);
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-1.5"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.8333 9.16667V5.83333C15.8333 5.39131 15.6577 4.96738 15.345 4.65482C15.0325 4.34226 14.6085 4.16667 14.1667 4.16667H5.83333C5.39131 4.16667 4.96738 4.34226 4.65482 4.65482C4.34226 4.96738 4.16667 5.39131 4.16667 5.83333V14.1667C4.16667 14.6087 4.34226 15.0326 4.65482 15.3452C4.96738 15.6577 5.39131 15.8333 5.83333 15.8333H14.1667C14.6085 15.8333 15.0325 15.6577 15.345 15.3452C15.6577 15.0326 15.8333 15.0326 15.8333 14.1667V10.8333M12.5 10H18.3333M18.3333 10L16.25 7.91667M18.3333 10L16.25 12.0833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          Login
+                        </button>
                       </div>
                     </div>
                   </div>

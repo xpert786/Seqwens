@@ -4,6 +4,7 @@ import "../styles/PersonalInfo.css";
 import { PasswordStrengthBar } from "../components/icons";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validatePassword, handleAPIError } from "../utils/apiUtils";
+import { setTokens } from "../utils/userUtils";
 import { getPathWithPrefix } from "../utils/urlUtils";
 
 const PersonalInfo = () => {
@@ -54,11 +55,55 @@ const PersonalInfo = () => {
       // Clear stored registration data
       localStorage.removeItem('userRegistrationData');
 
-      // Set login status and navigate
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userData", JSON.stringify(response));
+      // Step 2: Automatically log in the user
+      try {
+        const loginResponse = await userAPI.login({
+          email: completeUserData.email,
+          password: completeUserData.password
+        });
 
-      window.location.href = getPathWithPrefix("/login");
+        // Store tokens
+        const accessToken = loginResponse.access_token || loginResponse.data?.access;
+        const refreshToken = loginResponse.refresh_token || loginResponse.data?.refresh;
+        setTokens(accessToken, refreshToken, true);
+
+        // Store user data
+        localStorage.setItem("isLoggedIn", "true");
+        const user = loginResponse.user || loginResponse.data?.user;
+        localStorage.setItem("userData", JSON.stringify(user));
+        localStorage.setItem("userType", user.user_type || 'firm');
+        localStorage.setItem("rememberedEmail", completeUserData.email);
+
+        // Store firms data from login response for AccountSwitcher
+        const firms = loginResponse.firms || loginResponse.data?.firms;
+        if (firms && Array.isArray(firms)) {
+          localStorage.setItem("firmsData", JSON.stringify(firms));
+        }
+
+        const userType = user.user_type;
+
+        // Redirect based on user type
+        if (userType === 'admin' || userType === 'firm') {
+          if (user.subscription_plan === null || user.subscription_plan === undefined) {
+            navigate("/firmadmin/finalize-subscription", { replace: true });
+          } else {
+            navigate("/firmadmin", { replace: true });
+          }
+        } else if (userType === 'tax_preparer') {
+          navigate("/taxdashboard", { replace: true });
+        } else {
+          // Check completion status for clients
+          if (user.is_completed) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/dashboard-first", { replace: true });
+          }
+        }
+      } catch (loginError) {
+        console.error('Auto-login error:', loginError);
+        // Fallback to manual login
+        window.location.href = getPathWithPrefix("/login");
+      }
     } catch (error) {
       console.error('Registration completion error:', error);
       setErrors({
@@ -166,7 +211,12 @@ const PersonalInfo = () => {
 
               {/* Strength Meter */}
               <div className="password-strength">
-                <PasswordStrengthBar />
+                <PasswordStrengthBar
+                  v1={validateLength}
+                  v2={validateNumber}
+                  v3={validateUpperLower}
+                  v4={validateSpecialChar}
+                />
                 <div className="criteria">
                   <div
                     className={`criteria-item ${validateLength ? "valid" : "invalid"

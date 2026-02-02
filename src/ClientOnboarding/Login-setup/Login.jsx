@@ -5,7 +5,7 @@ import "../styles/Login.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validateEmail, handleAPIError } from "../utils/apiUtils";
-import { setTokens, getStorage } from "../utils/userUtils";
+import { setTokens, getStorage, clearUserData } from "../utils/userUtils";
 import TwoFactorCodeInput from "../components/TwoFactorCodeInput";
 
 export default function Login() {
@@ -103,6 +103,9 @@ export default function Login() {
       await completeLogin(response);
     } catch (error) {
       console.error('Login error:', error);
+
+
+
       setErrors({
         general: handleAPIError(error)
       });
@@ -112,6 +115,9 @@ export default function Login() {
   };
 
   const completeLogin = async (response) => {
+    // Clear any previous session data (including impersonation markers)
+    clearUserData();
+
     // Choose storage based on Remember Me selection
     const storage = rememberMe ? localStorage : sessionStorage;
 

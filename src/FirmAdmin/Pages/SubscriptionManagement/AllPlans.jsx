@@ -178,7 +178,9 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                 'pro': 'professional',
                 'professional': 'pro',
                 'elite': 'enterprise',
-                'enterprise': 'elite'
+                'enterprise': 'elite',
+                'starter': 'solo',
+                'solo': 'starter'
             };
             if (mappings[planType] === currentPlan) nameMatch = true;
         }

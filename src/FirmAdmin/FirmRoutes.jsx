@@ -88,6 +88,16 @@ function FirmAdminProtectedRoute({ children }) {
   const isFinalizeSubscription = pathname.includes('/finalize-subscription');
 
   if (!isFinalizeSubscription) {
+    // IMPERSONATION CHECK: If Super Admin is impersonating, bypass all subscription checks
+    const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+    const isImpersonating = !!impersonationData;
+
+    if (isImpersonating) {
+      console.log('[FIRM_ROUTES] Super Admin impersonation detected - bypassing subscription checks');
+      // Allow full access - Super Admin can do anything
+      return children;
+    }
+
     const userDataStr = storage?.getItem("userData");
     if (userDataStr) {
       try {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SaveIcon, EyeIcon, RefreshIcon, TrashIcon, EyeOffIcon, RefreshIcon1, TrashIcon1 } from "../../Components/icons";
 import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
+import { userAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import { Modal, Button, Form } from "react-bootstrap";
 import { superToastOptions } from "../../utils/toastConfig";
@@ -38,6 +39,13 @@ export default function Security() {
     const [formErrors, setFormErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
 
+    // Password Change State
+    const [pwCurrent, setPwCurrent] = useState("");
+    const [pwNew, setPwNew] = useState("");
+    const [pwConfirm, setPwConfirm] = useState("");
+    const [pwError, setPwError] = useState("");
+    const [pwLoading, setPwLoading] = useState(false);
+
     // Supported services for filtering
     const supportedServices = [
         { value: "stripe", label: "Stripe Integration" },
@@ -48,6 +56,34 @@ export default function Security() {
         { value: "zoom_client_id", label: "Zoom Client ID" },
         { value: "zoom_client_secret", label: "Zoom Client Secret" }
     ];
+
+    // Handle Password Change
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPwError("");
+        if (pwNew !== pwConfirm) {
+            setPwError("New passwords do not match");
+            return;
+        }
+        if (pwNew.length < 8) {
+            setPwError("Password must be at least 8 characters");
+            return;
+        }
+
+        setPwLoading(true);
+        try {
+            await userAPI.changePassword(pwCurrent, pwNew, pwConfirm);
+            toast.success("Password changed successfully", superToastOptions);
+            setPwCurrent("");
+            setPwNew("");
+            setPwConfirm("");
+        } catch (err) {
+            setPwError(handleAPIError(err));
+            toast.error(handleAPIError(err), superToastOptions);
+        } finally {
+            setPwLoading(false);
+        }
+    };
 
     // Fetch API keys
     const fetchAPIKeys = async () => {
@@ -109,7 +145,7 @@ export default function Security() {
     // Handle update API key
     const handleUpdate = async () => {
         if (!selectedKey || !selectedKey.service) return;
-        
+
         if (selectedKey.service === 'undefined') {
             toast.error('Invalid API key identifier. Please provide a valid service name.', superToastOptions);
             return;
@@ -129,7 +165,7 @@ export default function Security() {
             const updateData = {
                 key: formData.key.trim()
             };
-            
+
             const response = await superAdminAPI.updateAPIKey(selectedKey.service, updateData);
 
             if (response.success) {
@@ -143,7 +179,7 @@ export default function Security() {
             // Don't log full error details that might contain API keys
             const errorMsg = handleAPIError(err);
             console.error('Error updating API key');
-            
+
             // Handle specific error cases
             if (err.message?.includes('404') || err.message?.toLowerCase().includes('not found')) {
                 toast.error('API key not found. Only keys configured in backend settings are available.', superToastOptions);
@@ -163,7 +199,7 @@ export default function Security() {
             toast.error('Invalid service name', superToastOptions);
             return;
         }
-        
+
         try {
             const response = await superAdminAPI.revealAPIKey(serviceName);
 
@@ -185,7 +221,7 @@ export default function Security() {
             toast.error('Invalid API key identifier', superToastOptions);
             return;
         }
-        
+
         const newStatus = apiKey.status === "active" ? "inactive" : "active";
 
         try {
@@ -229,7 +265,7 @@ export default function Security() {
                 marginBottom: "24px"
             }}>
                 {/* Header */}
-                {/* <div style={{ marginBottom: "24px" }}>
+                <div style={{ marginBottom: "24px" }}>
                     <h5
                         style={{
                             color: "#3B4A66",
@@ -239,16 +275,71 @@ export default function Security() {
                             margin: "0 0 8px 0"
                         }}
                     >
-                        Security Configuration
+                        Change Password
                     </h5>
-                    
-                </div> */}
+                    <p style={{ color: "#6B7280", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+                        Update your account password.
+                    </p>
+                </div>
+
+                <form onSubmit={handlePasswordChange}>
+                    {pwError && <div className="text-danger mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>{pwError}</div>}
+
+                    <div className="row mb-3">
+                        <div className="col-md-4">
+                            <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#3B4A66" }}>Current Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                value={pwCurrent}
+                                onChange={(e) => setPwCurrent(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#3B4A66" }}>New Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                value={pwNew}
+                                onChange={(e) => setPwNew(e.target.value)}
+                                minLength={8}
+                                required
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#3B4A66" }}>Confirm New Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                value={pwConfirm}
+                                onChange={(e) => setPwConfirm(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end">
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={pwLoading}
+                            style={{
+                                backgroundColor: "#2563EB",
+                                border: "none",
+                                fontFamily: "BasisGrotesquePro"
+                            }}
+                        >
+                            {pwLoading ? "Updating..." : "Update Password"}
+                        </button>
+                    </div>
+                </form>
 
                 {/* Security Settings */}
-                
+
 
                 {/* Session Timeout and Max Login Attempts */}
-                
+
             </div>
 
             {/* API Keys Management Card */}

@@ -22,8 +22,8 @@ function HeroSection() {
 
         <div className="video-preview mt-5">
           <img
-            src="/images/hero-video-preview.jpg"
-            alt="Video Preview"
+            src="/images/seqwens-high.webp"
+            alt="Hero Preview"
             className="img-fluid rounded video-image"
           />
           <div className="play-button">

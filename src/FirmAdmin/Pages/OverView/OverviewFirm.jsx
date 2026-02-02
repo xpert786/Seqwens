@@ -221,6 +221,19 @@ export default function FirmAdminDashboard() {
     } else if (subscriptionCancelled === 'true') {
       subscriptionHandledRef.current = true;
 
+      // IMPERSONATION CHECK: If Super Admin is impersonating, don't redirect
+      const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+      const isImpersonating = !!impersonationData;
+
+      if (isImpersonating) {
+        console.log('[OVERVIEW] Super Admin impersonation detected - skipping finalize-subscription redirect');
+        // Just clear the parameter, don't redirect
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('subscription_cancelled');
+        setSearchParams(newSearchParams, { replace: true });
+        return;
+      }
+
       // Show cancellation message
       toast.info('Subscription setup was cancelled. Please complete your subscription to access all features.', {
         position: 'top-right',

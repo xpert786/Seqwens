@@ -29,18 +29,18 @@ export const getUserData = () => {
     if (userData) {
       return JSON.parse(userData);
     }
-    
+
     // Fallback: check both storages if not found in primary storage
     const localUserData = localStorage.getItem("userData");
     if (localUserData) {
       return JSON.parse(localUserData);
     }
-    
+
     const sessionUserData = sessionStorage.getItem("userData");
     if (sessionUserData) {
       return JSON.parse(sessionUserData);
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error parsing user data:", error);
@@ -58,8 +58,10 @@ export const setUserData = (userData) => {
 
 /**
  * Clear user data from localStorage
+ * Enhanced to clear ALL context including client/taxpayer context and firm-specific data
  */
 export const clearUserData = () => {
+  // Core authentication data
   localStorage.removeItem("userData");
   localStorage.removeItem("userStatus");
   localStorage.removeItem("userType");
@@ -72,7 +74,33 @@ export const clearUserData = () => {
   localStorage.removeItem("userRegistrationData");
   localStorage.removeItem("resetEmail");
   localStorage.removeItem("resetOtp");
-  
+
+  // Firm-specific context
+  localStorage.removeItem("firmLoginData");
+  localStorage.removeItem("firmId");
+  localStorage.removeItem("activeFirm");
+  localStorage.removeItem("currentFirm");
+
+  // Client/Taxpayer context that could cause navigation issues
+  localStorage.removeItem("activeClient");
+  localStorage.removeItem("selectedClient");
+  localStorage.removeItem("currentClient");
+  localStorage.removeItem("activeTaxpayer");
+  localStorage.removeItem("selectedTaxpayer");
+  localStorage.removeItem("currentTaxpayer");
+  localStorage.removeItem("clientId");
+  localStorage.removeItem("taxpayerId");
+
+  // Role-specific context
+  localStorage.removeItem("activeRole");
+  localStorage.removeItem("currentRole");
+  localStorage.removeItem("userRole");
+
+  // Navigation/routing context
+  localStorage.removeItem("lastRoute");
+  localStorage.removeItem("previousRoute");
+  localStorage.removeItem("redirectUrl");
+
   // Also clear from sessionStorage
   sessionStorage.removeItem("userData");
   sessionStorage.removeItem("userType");
@@ -82,6 +110,32 @@ export const clearUserData = () => {
   sessionStorage.removeItem("refreshToken");
   sessionStorage.removeItem("rememberMe");
   sessionStorage.removeItem("rememberedEmail");
+
+  // Session storage - firm/client/taxpayer context
+  sessionStorage.removeItem("firmLoginData");
+  sessionStorage.removeItem("firmId");
+  sessionStorage.removeItem("activeFirm");
+  sessionStorage.removeItem("currentFirm");
+  sessionStorage.removeItem("activeClient");
+  sessionStorage.removeItem("selectedClient");
+  sessionStorage.removeItem("currentClient");
+  sessionStorage.removeItem("activeTaxpayer");
+  sessionStorage.removeItem("selectedTaxpayer");
+  sessionStorage.removeItem("currentTaxpayer");
+  sessionStorage.removeItem("clientId");
+  sessionStorage.removeItem("taxpayerId");
+  sessionStorage.removeItem("activeRole");
+  sessionStorage.removeItem("currentRole");
+  sessionStorage.removeItem("userRole");
+  sessionStorage.removeItem("lastRoute");
+  sessionStorage.removeItem("previousRoute");
+  sessionStorage.removeItem("redirectUrl");
+
+  // Impersonation context
+  localStorage.removeItem("impersonationInfo");
+  localStorage.removeItem("superAdminImpersonationData");
+  sessionStorage.removeItem("impersonationInfo");
+  sessionStorage.removeItem("superAdminImpersonationData");
 };
 
 /**
@@ -93,12 +147,12 @@ export const isLoggedIn = () => {
   if (sessionStorage.getItem("isLoggedIn") === "true") {
     return true;
   }
-  
+
   // Check localStorage (persistent sessions)
   if (localStorage.getItem("isLoggedIn") === "true") {
     return true;
   }
-  
+
   return false;
 };
 
@@ -112,7 +166,7 @@ export const getStorage = () => {
   if (sessionRememberMe !== null) {
     return sessionRememberMe === "true" ? localStorage : sessionStorage;
   }
-  
+
   // Fallback to localStorage if no session preference
   const localRememberMe = localStorage.getItem("rememberMe");
   return localRememberMe === "true" ? localStorage : sessionStorage;
@@ -144,7 +198,7 @@ export const getRefreshToken = () => {
  */
 export const setTokens = (accessToken, refreshToken, rememberMe) => {
   const storage = rememberMe ? localStorage : sessionStorage;
-  
+
   // Clear tokens from both storages first
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -152,7 +206,7 @@ export const setTokens = (accessToken, refreshToken, rememberMe) => {
   sessionStorage.removeItem("accessToken");
   sessionStorage.removeItem("refreshToken");
   sessionStorage.removeItem("rememberMe");
-  
+
   // Set tokens in appropriate storage
   storage.setItem("accessToken", accessToken);
   storage.setItem("refreshToken", refreshToken);
@@ -166,7 +220,7 @@ export const setTokens = (accessToken, refreshToken, rememberMe) => {
 export const isTokenExpired = () => {
   const token = getAccessToken();
   if (!token) return true;
-  
+
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Math.floor(Date.now() / 1000);

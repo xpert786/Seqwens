@@ -25,6 +25,21 @@ const FinalizeSubscription = () => {
       const userDataStr = storage?.getItem("userData");
       const userType = storage?.getItem("userType");
 
+      // IMPERSONATION CHECK: If Super Admin is impersonating, allow full access
+      const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+      const isImpersonating = !!impersonationData;
+      
+      if (isImpersonating) {
+        console.log('[FINALIZE_SUBSCRIPTION] Super Admin impersonation detected - bypassing subscription checks');
+        toast.info('Super Admin Mode: Full access granted', {
+          position: 'top-right',
+          autoClose: 2000,
+        });
+        // Redirect to firm admin dashboard - Super Admin can do anything
+        navigate('/firmadmin', { replace: true });
+        return;
+      }
+
       // Check user type first
       if (userType !== 'admin' && userType !== 'firm') {
         navigate('/firmadmin', { replace: true });
@@ -256,6 +271,7 @@ const FinalizeSubscription = () => {
   // Get plan description
   const getPlanDescription = (type) => {
     const descriptions = {
+      trial: 'Try all features free for 14 days. No credit card required.',
       starter: 'Perfect for individual tax preparers',
       growth: 'Ideal for small firms',
       pro: 'Best for growing teams',
@@ -304,6 +320,16 @@ const FinalizeSubscription = () => {
       }
       // Default features based on plan type
       const defaultFeatures = {
+        trial: [
+          '1 User',
+          '10 Client Accounts',
+          '5 GB Storage',
+          '5 E-Signature Requests/month',
+          '1 Office Location',
+          '14 Days Free Trial',
+          'No Credit Card Required',
+          'Full Feature Access'
+        ],
         starter: [
           'Up to 1 User',
           '150 Client Accounts',
@@ -514,16 +540,27 @@ const FinalizeSubscription = () => {
               // Get plan features
               const features = getPlanFeatures(plan);
 
+              const isTrial = plan.subscription_type?.toLowerCase() === 'trial';
+
               return (
                 <div
                   key={plan.id}
                   onClick={() => handleSelectPlan(plan)}
                   className={`bg-white rounded-xl border-2 p-5 sm:p-6 lg:p-7 cursor-pointer transition-all duration-200 hover:shadow-xl active:scale-[0.98] relative flex flex-col h-full ${isSelected
-                    ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
-                    : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
+                      ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
+                      : isTrial
+                        ? 'border-green-300 hover:border-green-400 hover:shadow-md ring-2 ring-green-100'
+                        : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
                     } ${plan.most_popular ? 'ring-2 ring-orange-200 sm:ring-4 sm:ring-opacity-30' : ''}`}
                 >
-                  {plan.most_popular && (
+                  {isTrial && (
+                    <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-10">
+                      <span className="bg-green-500 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold font-[BasisGrotesquePro] whitespace-nowrap shadow-md">
+                        🎉 Free Trial
+                      </span>
+                    </div>
+                  )}
+                  {!isTrial && plan.most_popular && (
                     <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-10">
                       <span className="bg-[#F56D2D] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold font-[BasisGrotesquePro] whitespace-nowrap shadow-md">
                         Most Popular

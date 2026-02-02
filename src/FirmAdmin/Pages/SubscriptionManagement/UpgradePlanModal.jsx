@@ -185,9 +185,25 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         if (!currentPlanName || !userBillingCycle) return false;
 
         // Check if plan type matches
-        const planType = formatPlanType(plan.subscription_type).toLowerCase();
-        const currentPlan = currentPlanName.toLowerCase();
-        const planTypeMatches = planType === currentPlan;
+        const planType = (plan.subscription_type || '').toLowerCase();
+        const currentPlan = currentPlanName.toLowerCase().trim();
+
+        let planTypeMatches = planType === currentPlan;
+
+        // Handle legacy mappings
+        if (!planTypeMatches) {
+            const mappings = {
+                'growth': 'team',
+                'team': 'growth',
+                'pro': 'professional',
+                'professional': 'pro',
+                'elite': 'enterprise',
+                'enterprise': 'elite',
+                'starter': 'solo',
+                'solo': 'starter'
+            };
+            if (mappings[planType] === currentPlan) planTypeMatches = true;
+        }
 
         // Check if billing cycle matches (compare against user's actual billing cycle, not the toggle state)
         // A plan is current only if it matches the user's billing cycle

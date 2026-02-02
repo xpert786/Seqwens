@@ -52,10 +52,16 @@ export default function Subscriptions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Client-side pagination for displaying subscription cards
-  const [subscriptionCardsCurrentPage, setSubscriptionCardsCurrentPage] = useState(1);
-  const [showAllSubscriptionCards, setShowAllSubscriptionCards] = useState(false);
-  const SUBSCRIPTION_CARDS_PER_PAGE = 3;
+  // Pagination for subscriptions
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = localStorage.getItem('subscriptions_page_size');
+    return saved ? parseInt(saved) : 25;
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total_count: 0,
+    total_pages: 1,
+  });
 
   const PLAN_CONFIG = [
     { key: 'starter', label: 'Starter' },
@@ -238,7 +244,7 @@ export default function Subscriptions() {
   };
 
   const fetchSubscriptionsData = useCallback(
-    async ({ search = '', status = '', plan = '' } = {}) => {
+    async ({ search = '', status = '', plan = '', page = 1, limit = 25 } = {}) => {
       setTableLoading(true);
       setTableError(null);
 
@@ -246,7 +252,9 @@ export default function Subscriptions() {
         const response = await superAdminAPI.getSuperadminSubscriptions({
           search: search?.trim?.() ?? '',
           status,
-          plan
+          plan,
+          page,
+          limit
         });
         const data = response?.data || {};
         setSubscriptions(data.subscriptions || []);
@@ -256,18 +264,12 @@ export default function Subscriptions() {
         if (Array.isArray(data.filters?.plan_options)) {
           setPlanOptions(data.filters.plan_options);
         }
-        const notificationSettings = data.notification_settings;
-        if (notificationSettings) {
-          setEmailNotifications(Boolean(notificationSettings.subscription_email_updates_enabled));
-          setSmsAlerts(Boolean(notificationSettings.subscription_sms_updates_enabled));
-        }
-        // Store metrics from API response
-        if (data.metrics) {
-          setMetrics(data.metrics);
-        }
-        // Reset client-side pagination when data changes
-        setSubscriptionCardsCurrentPage(1);
-        setShowAllSubscriptionCards(false);
+
+        // Update pagination metadata from API
+        setPagination({
+          total_count: data.total_count || 0,
+          total_pages: data.total_pages || 1
+        });
       } catch (err) {
         console.error('Error fetching subscriptions:', err);
         setTableError(handleAPIError(err));
@@ -348,7 +350,7 @@ export default function Subscriptions() {
         setChartData(chartsResponse.data);
         setPlanPerformance(planPerformanceResponse.data || null);
         setRevenueInsights(revenueInsightsResponse.data || null);
-        await fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
+        await fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter, page: currentPage, limit: pageSize });
         setFiltersInitialized(true);
       } catch (err) {
         console.error('Error fetching subscription data:', err);
@@ -359,7 +361,13 @@ export default function Subscriptions() {
     };
 
     fetchData();
-  }, [fetchSubscriptionsData, searchTerm, statusFilter, planFilter]);
+  }, [fetchSubscriptionsData, searchTerm, statusFilter, planFilter, currentPage, pageSize, appliedFilterMonth, appliedFilterYear]);
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+    localStorage.setItem('subscriptions_page_size', newSize.toString());
+  };
 
   // Fetch plan performance when applied filters change
   useEffect(() => {
@@ -409,8 +417,8 @@ export default function Subscriptions() {
       filtersEffectInitializedRef.current = true;
       return;
     }
-    fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
-  }, [statusFilter, planFilter, filtersInitialized, fetchSubscriptionsData]);
+    fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter, page: currentPage, limit: pageSize });
+  }, [statusFilter, planFilter, filtersInitialized, fetchSubscriptionsData, currentPage, pageSize, searchTerm]);
 
   useEffect(() => {
     if (!filtersInitialized) return;
@@ -422,14 +430,14 @@ export default function Subscriptions() {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
+      fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter, page: currentPage, limit: pageSize });
     }, 400);
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [searchTerm, filtersInitialized, fetchSubscriptionsData]);
+  }, [searchTerm, filtersInitialized, fetchSubscriptionsData, currentPage, pageSize, statusFilter, planFilter]);
 
   // If edit plan is open, show the edit plan screen (moved after all hooks)
   if (showEditPlan) {
@@ -461,25 +469,8 @@ export default function Subscriptions() {
   const churnMax = churnValues.length ? Math.max(...churnValues) : 0;
   const distributionMax = planDistributionData.reduce((max, item) => Math.max(max, item?.firms ?? 0), 0);
 
-  // Client-side pagination logic for subscription cards
-  const totalSubscriptionCards = subscriptions.length;
-  const totalSubscriptionCardsPages = Math.ceil(totalSubscriptionCards / SUBSCRIPTION_CARDS_PER_PAGE);
-  const shouldShowSubscriptionCardsPagination = totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && !showAllSubscriptionCards;
-  const displayedSubscriptionCards = showAllSubscriptionCards
-    ? subscriptions
-    : subscriptions.slice((subscriptionCardsCurrentPage - 1) * SUBSCRIPTION_CARDS_PER_PAGE, subscriptionCardsCurrentPage * SUBSCRIPTION_CARDS_PER_PAGE);
-
-  const handleViewAllSubscriptionCards = (e) => {
-    e.preventDefault();
-    setShowAllSubscriptionCards(!showAllSubscriptionCards);
-    if (showAllSubscriptionCards) {
-      setSubscriptionCardsCurrentPage(1);
-    }
-  };
-
-  const handleSubscriptionCardsPageChange = (newPage) => {
-    setSubscriptionCardsCurrentPage(newPage);
-  };
+  const startItem = pagination.total_count ? (currentPage - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(currentPage * pageSize, pagination.total_count);
 
   // Loading state
   if (loading) {
@@ -619,7 +610,7 @@ export default function Subscriptions() {
                 ? 'bg-[#3AD6F2] text-white'
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
                 }`}
-                style={{ borderRadius: '7px' }}
+              style={{ borderRadius: '7px' }}
             >
               Addons
             </button>
@@ -629,7 +620,7 @@ export default function Subscriptions() {
                 ? 'bg-[#3AD6F2] text-white'
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
                 }`}
-                style={{ borderRadius: '7px' }}
+              style={{ borderRadius: '7px' }}
             >
               Subscription Invoices
             </button>
@@ -1306,17 +1297,22 @@ export default function Subscriptions() {
               <div className="flex justify-between items-center mb-6 subscriptions-table-card-header">
                 <div>
                   <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
-                  <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed view of all platform subscriptions</p>
+                  <p className="text-sm text-gray-500 mt-1">Showing {startItem}-{endItem} of {pagination.total_count} subscriptions</p>
                 </div>
-                {totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && (
-                  <button
-                    onClick={handleViewAllSubscriptionCards}
-                    className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
-                    style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-500">Rows per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                    className="text-xs border border-[#E8F0FF] bg-white text-gray-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
                   >
-                    {showAllSubscriptionCards ? 'Show Less' : 'View All'}
-                  </button>
-                )}
+                    {[25, 50, 100, 250].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {tableError && (
@@ -1325,20 +1321,7 @@ export default function Subscriptions() {
                 </div>
               )}
 
-              {/* Table Header */}
-              <div className=" px-6 py-3 mb-2 subscriptions-table-header">
-                <div className="grid grid-cols-6 gap-4 text-sm font-medium subscriptions-table-header-grid" style={{ color: '#3B4A66' }}>
-                  <div>Firm</div>
-                  <div>Plan</div>
-                  <div>Amount</div>
-                  <div>Status</div>
-                  <div>Next Billing</div>
-                  <div>Total Paid</div>
-                  {/* <div>Actions</div> */}
-                </div>
-              </div>
-
-              {/* Table */}
+              {/* Table Body */}
               <div className="space-y-4 subscriptions-table-list">
                 {tableLoading ? (
                   <div className="flex justify-center items-center py-8">
@@ -1347,92 +1330,102 @@ export default function Subscriptions() {
                       Loading subscriptions...
                     </div>
                   </div>
-                ) : displayedSubscriptionCards.length > 0 ? (
-                  displayedSubscriptionCards.map((subscription) => {
-                    const planStyles = getPlanBadgeStyles(subscription.plan);
-                    const statusClasses = getStatusBadgeClasses(subscription.status);
-                    return (
-                      <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
-                        <div className="grid grid-cols-6 gap-4 items-center subscriptions-table-row-grid">
-                          <div>
-                            <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
-                              {subscription.firm_name || '—'}
-                            </p>
-                            <p className="text-xs" style={{ color: '#6C757D' }}>
-                              {subscription.firm_owner || '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <span
-                              className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
-                              style={{ borderRadius: '12px' }}
-                            >
-                              {subscription.plan_label || subscription.plan || '—'}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
-                              {subscription.amount_formatted || formatCurrency(subscription.amount)}
-                            </p>
-                            <p className="text-xs" style={{ color: '#6C757D', fontWeight: 600 }}>
-                              {subscription.billing_frequency || '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <span
-                              className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusClasses}`}
-                              style={{ borderRadius: '12px' }}
-                            >
-                              {subscription.status_label || subscription.status || '—'}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-sm" style={{ color: '#3B4A66' }}>
-                              {formatDateDisplay(subscription.next_billing_date)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
-                              {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
-                            </p>
+                ) : subscriptions.length > 0 ? (
+                  <>
+                    {/* Header for list view */}
+                    <div className="px-6 py-3 mb-2 subscriptions-table-header">
+                      <div className="grid grid-cols-6 gap-4 text-xs font-bold uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        <div>Firm</div>
+                        <div>Plan</div>
+                        <div>Amount</div>
+                        <div>Status</div>
+                        <div>Next Billing</div>
+                        <div>Total Paid</div>
+                      </div>
+                    </div>
+
+                    {subscriptions.map((subscription) => {
+                      const planStyles = getPlanBadgeStyles(subscription.plan);
+                      const statusClasses = getStatusBadgeClasses(subscription.status);
+                      return (
+                        <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+                          <div className="grid grid-cols-6 gap-4 items-center subscriptions-table-row-grid">
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                                {subscription.firm_name || '—'}
+                              </p>
+                              <p className="text-xs" style={{ color: '#6C757D' }}>
+                                {subscription.firm_owner || '—'}
+                              </p>
+                            </div>
+                            <div>
+                              <span
+                                className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
+                                style={{ borderRadius: '12px' }}
+                              >
+                                {subscription.plan_label || subscription.plan || '—'}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                                {subscription.amount_formatted || formatCurrency(subscription.amount)}
+                              </p>
+                              <p className="text-xs" style={{ color: '#6C757D', fontWeight: 600 }}>
+                                {subscription.billing_frequency || '—'}
+                              </p>
+                            </div>
+                            <div>
+                              <span
+                                className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusClasses}`}
+                                style={{ borderRadius: '12px' }}
+                              >
+                                {subscription.status_label || subscription.status || '—'}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm" style={{ color: '#3B4A66' }}>
+                                {formatDateDisplay(subscription.next_billing_date)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                                {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
+                              </p>
+                            </div>
                           </div>
                         </div>
+                      );
+                    })}
+
+                    {/* Pagination Footer */}
+                    <div className="flex items-center justify-between px-2 py-4 border-t border-[#E8F0FF] mt-4">
+                      <span className="text-xs font-medium text-gray-500">
+                        Page {currentPage} of {pagination.total_pages}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1 || tableLoading}
+                          className="px-4 py-2 text-xs font-bold text-white bg-[#3AD6F2] hover:bg-[#32c0db] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg shadow-sm"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
+                          disabled={currentPage === pagination.total_pages || tableLoading}
+                          className="px-4 py-2 text-xs font-bold text-white bg-[#3AD6F2] hover:bg-[#32c0db] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg shadow-sm"
+                        >
+                          Next
+                        </button>
                       </div>
-                    );
-                  })
+                    </div>
+                  </>
                 ) : (
-                  <div className="text-center py-8 text-sm text-gray-500">
-                    No subscriptions found for the selected filters.
+                  <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <p className="text-sm text-gray-500">No subscriptions found for the selected filters.</p>
                   </div>
                 )}
               </div>
-
-              {/* Client-side Pagination Controls */}
-              {shouldShowSubscriptionCardsPagination && (
-                <div className="flex items-center justify-between px-4 py-3 mt-4 border-t border-[#E8F0FF]">
-                  <button
-                    onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage - 1)}
-                    disabled={subscriptionCardsCurrentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ borderRadius: '8px' }}
-                  >
-                    Previous
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      Page {subscriptionCardsCurrentPage} of {totalSubscriptionCardsPages}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage + 1)}
-                    disabled={subscriptionCardsCurrentPage === totalSubscriptionCardsPages}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ borderRadius: '8px' }}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </>

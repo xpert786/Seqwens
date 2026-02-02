@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { superToastOptions } from '../utils/toastConfig';
+import { getUserData } from '../../ClientOnboarding/utils/userUtils';
 
 const roleBadgeStyles = {
     support_admin: 'bg-[#E0F2FE] text-[#0369A1]',
@@ -109,6 +110,9 @@ const UsersDetails = () => {
     const [reasonError, setReasonError] = useState('');
     const [showAdminTypeModal, setShowAdminTypeModal] = useState(false);
     const [selectedAdminType, setSelectedAdminType] = useState('');
+
+    const loggedInUser = getUserData();
+    const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -361,16 +365,18 @@ const UsersDetails = () => {
                     </div>
                     <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <button
-                                className={actionButtonClasses}
-                                style={{ borderRadius: '7px' }}
-                                disabled={!actions.can_suspend || actionLoading}
-                                onClick={isSuspended ? handleUnsuspend : handleSuspendClick}
-                                title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
-                            >
-                                {actionLoading ? 'Processing...' : actionButtonLabel}
-                            </button>
-                            {profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
+                            {isSuperAdmin && (
+                                <button
+                                    className={actionButtonClasses}
+                                    style={{ borderRadius: '7px' }}
+                                    disabled={!actions.can_suspend || actionLoading}
+                                    onClick={isSuspended ? handleUnsuspend : handleSuspendClick}
+                                    title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
+                                >
+                                    {actionLoading ? 'Processing...' : actionButtonLabel}
+                                </button>
+                            )}
+                            {isSuperAdmin && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
                                 <button
                                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={actionLoading}
@@ -380,7 +386,6 @@ const UsersDetails = () => {
                                 >
                                     Change Admin Type
                                 </button>
-
                             )}
                         </div>
                     </div>
@@ -388,7 +393,7 @@ const UsersDetails = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white border border-[#E8F0FF] rounded-xl p-6">
-                        <h3 className="text-base font-semibold text-[#3B4A66] mb-4">Account Information</h3>
+                        <h4 className="text-base font-semibold text-[#3B4A66] mb-4">Account Information</h4>
                         <div className="space-y-4 text-sm text-[#3B4A66]">
                             <div className="flex justify-between">
                                 <span className="font-medium">Phone:</span>
