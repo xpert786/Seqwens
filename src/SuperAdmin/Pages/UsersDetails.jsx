@@ -110,6 +110,10 @@ const UsersDetails = () => {
     const [reasonError, setReasonError] = useState('');
     const [showAdminTypeModal, setShowAdminTypeModal] = useState(false);
     const [selectedAdminType, setSelectedAdminType] = useState('');
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordMode, setPasswordMode] = useState('generate'); // 'generate' or 'manual'
+    const [manualPassword, setManualPassword] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState(null);
 
     const loggedInUser = getUserData();
     const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
@@ -295,6 +299,54 @@ const UsersDetails = () => {
         setSelectedAdminType('');
     };
 
+    const handlePasswordAction = async () => {
+        if (actionLoading) return;
+
+        if (passwordMode === 'manual' && !manualPassword) {
+            toast.error("Please enter a password", superToastOptions);
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            const payload = passwordMode === 'manual' ? { new_password: manualPassword } : {};
+            const response = await superAdminAPI.resetUserPassword(userId, payload);
+
+            if (response.success) {
+                const msg = passwordMode === 'manual'
+                    ? "Password updated successfully."
+                    : "Password reset email sent successfully.";
+                toast.success(msg, superToastOptions);
+                setPasswordSuccess(response.data?.new_password || "Reset link sent");
+                if (passwordMode === 'manual') {
+                    // Start closing process or show success state
+                    setTimeout(() => {
+                        setShowPasswordModal(false);
+                        setPasswordSuccess(null);
+                        setManualPassword('');
+                    }, 2000);
+                } else {
+                    setShowPasswordModal(false);
+                    setPasswordSuccess(null);
+                }
+            } else {
+                throw new Error(response.message || "Failed to reset password");
+            }
+        } catch (err) {
+            const message = handleAPIError(err);
+            toast.error(message, superToastOptions);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const closePasswordModal = () => {
+        setShowPasswordModal(false);
+        setManualPassword('');
+        setPasswordSuccess(null);
+        setPasswordMode('generate');
+    };
+
     const avatarInitials =
         profile.avatar_initials ||
         (profile.first_name && profile.last_name
@@ -348,7 +400,7 @@ const UsersDetails = () => {
                         </div>
                         <div className="space-y-2">
                             <div>
-                                <h2 className="text-2xl font-semibold text-[#3B4A66]">{fullName}</h2>
+                                <h4 className="text-2xl font-semibold text-[#3B4A66]">{fullName}</h4>
                                 <p className="text-sm text-gray-500">
                                     {profile.firm_name || 'Comprehensive user information and account management'}
                                 </p>
@@ -374,6 +426,16 @@ const UsersDetails = () => {
                                     title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
                                 >
                                     {actionLoading ? 'Processing...' : actionButtonLabel}
+                                </button>
+                            )}
+                            {isSuperAdmin && (
+                                <button
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
+                                    onClick={() => setShowPasswordModal(true)}
+                                    disabled={actionLoading}
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Password Options
                                 </button>
                             )}
                             {isSuperAdmin && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
@@ -477,6 +539,82 @@ const UsersDetails = () => {
                                 style={{ borderRadius: '7px' }}
                             >
                                 {actionLoading ? 'Processing...' : 'Confirm Suspension'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
+            {showPasswordModal && (
+                <div
+                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                    style={{ background: 'var(--Color-overlay, #00000099)' }}
+                >
+                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-semibold text-[#3B4A66]">Password Management</h3>
+                            <p className="text-sm text-gray-600">
+                                Choose how you want to reset the user's password.
+                            </p>
+                        </div>
+
+                        <div className="flex p-1 bg-gray-100 rounded-lg">
+                            <button
+                                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'generate' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
+                                onClick={() => setPasswordMode('generate')}
+                            >
+                                Generate & Email
+                            </button>
+                            <button
+                                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'manual' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
+                                onClick={() => setPasswordMode('manual')}
+                            >
+                                Set Manually
+                            </button>
+                        </div>
+
+                        {passwordMode === 'generate' ? (
+                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-700">
+                                <p>Clicking "Confirm" will generate a secure random password and email it to <strong>{profile.email}</strong>.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[#3B4A66]">New Password</label>
+                                <input
+                                    type="text" // Visible text as requested for manual management, or password? usually admin setting password manually implies they know it. Using text for clarity or password for security? "Manually update... with audit logging". I'll use type="text" so admin sees what they type, or a toggle. Let's use type="text" for simplicity of admin tools often.
+                                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B21B6] bg-white"
+                                    placeholder="Enter new password"
+                                    value={manualPassword}
+                                    onChange={(e) => setManualPassword(e.target.value)}
+                                />
+                                <p className="text-xs text-gray-500">The user will be emailed this new password.</p>
+                            </div>
+                        )}
+
+                        {passwordSuccess && (
+                            <div className="bg-green-50 border border-green-100 text-green-700 px-3 py-2 rounded-lg text-sm">
+                                {passwordMode === 'manual' ? "Password changed!" : "Reset email sent!"}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                onClick={closePasswordModal}
+                                disabled={actionLoading}
+                                style={{ borderRadius: '7px' }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                onClick={handlePasswordAction}
+                                disabled={actionLoading || (passwordMode === 'manual' && !manualPassword)}
+                                style={{ borderRadius: '7px' }}
+                            >
+                                {actionLoading ? 'Processing...' : 'Confirm Update'}
                             </button>
                         </div>
                     </div>

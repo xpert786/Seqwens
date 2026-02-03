@@ -338,11 +338,12 @@ export const superAdminAPI = {
   },
 
   // Get platform users (internal staff)
-  getPlatformUsers: async ({ status = '', role = '', search = '', page = 1, limit = 25 } = {}) => {
+  getPlatformUsers: async ({ status = '', role = '', search = '', page = 1, limit = 25, lookup = false } = {}) => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (role) params.append('role', role);
     if (search) params.append('search', search);
+    if (lookup) params.append('lookup', 'true');
     params.append('page', page);
     params.append('limit', limit);
 
@@ -368,6 +369,11 @@ export const superAdminAPI = {
   // Update admin user suspension status
   updateAdminUserSuspension: async (userId, payload) => {
     return await apiRequest(`/user/superadmin/users/${userId}/suspend/`, 'POST', payload);
+  },
+
+  // Reset user password (auto-generated or manual)
+  resetUserPassword: async (userId, payload = {}) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/reset-password/`, 'POST', payload);
   },
 
   // Get revenue insights analytics

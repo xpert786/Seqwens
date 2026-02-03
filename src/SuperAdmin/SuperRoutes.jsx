@@ -15,6 +15,7 @@ import FirmDetails from './Pages/FirmDetails';
 import Notifications from './Pages/AccountSettings/Notifications';
 import RoleRequests from './Pages/RoleRequests';
 import BlockedAccounts from './Pages/BlockedAccounts';
+import GlobalUserLookup from './Pages/GlobalUserLookup';
 
 // Protected Route Component for Super Admin
 function SuperAdminProtectedRoute({ children }) {
@@ -174,10 +175,18 @@ export default function SuperRoutes() {
             <UserDetail />
           </SuperAdminOnlyProtectedRoute>
         } />
+
         <Route path="users-details/:userId" element={
-          <SuperAdminOnlyProtectedRoute>
+          <SuperAdminProtectedRoute>
             <UsersDetails />
-          </SuperAdminOnlyProtectedRoute>
+          </SuperAdminProtectedRoute>
+        } />
+
+        {/* Global User Lookup - Accessible by Super Admin and Support Admin */}
+        <Route path="user-lookup" element={
+          <SuperAdminProtectedRoute>
+            <GlobalUserLookup />
+          </SuperAdminProtectedRoute>
         } />
         {/* Billing Admin and Super Admin Routes */}
         <Route path="subscriptions" element={

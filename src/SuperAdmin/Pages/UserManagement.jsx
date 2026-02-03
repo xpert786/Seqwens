@@ -466,7 +466,7 @@ export default function UserManagement() {
                 Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-gray-900 dark:text-white">{pagination.total_count}</span> users
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -475,7 +475,7 @@ export default function UserManagement() {
               >
                 Previous
               </button>
-              
+
               <div className="flex items-center gap-1">
                 <span className="text-sm font-medium text-gray-900 dark:text-white px-2">
                   Page {currentPage} of {pagination.total_pages}
