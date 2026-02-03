@@ -6480,6 +6480,16 @@ export const documentsAPI = {
     }
 
     return await response.json();
+  },
+
+  // Rename a document
+  renameDocument: async (documentId, newName) => {
+    return await apiRequest(`/taxpayer/documents/${documentId}/`, 'PATCH', { name: newName });
+  },
+
+  // Delete a document
+  deleteDocument: async (documentId) => {
+    return await apiRequest(`/taxpayer/documents/${documentId}/`, 'DELETE');
   }
 };
 

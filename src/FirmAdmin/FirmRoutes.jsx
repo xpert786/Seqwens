@@ -36,7 +36,6 @@ import InvoiceDetails from './Pages/Billing/InvoiceDetails';
 import SchedulingCalendar from './Pages/Scheduling & calendar/SchedulingCalendar';
 import Appointments from './Pages/Scheduling & calendar/Appointments';
 import Staff from './Pages/Scheduling & calendar/Staff';
-import Feature from './Pages/Scheduling & calendar/Feature';
 import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import WorkflowManagement from './Pages/Workflow/WorkflowManagement';
 import WorkflowInstanceView from './Pages/Workflow/WorkflowInstanceView';
@@ -168,7 +167,7 @@ export default function FirmRoutes() {
           <Route path="clients/:id/data-intake" element={<FirmAdminDataIntakePage />} />
           <Route path="calendar" element={<SchedulingCalendar />} />
           <Route path="calendar/appointments" element={<Appointments />} />
-          <Route path="calendar/features" element={<Feature />} />
+
           <Route path="calendar/staff" element={<Staff />} />
           <Route path="documents" element={<DocumentManagement />}>
             <Route path="folder/:folderId" element={<FolderContents />}>

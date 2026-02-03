@@ -149,11 +149,11 @@ export default function BlockedAccounts() {
     <div className="p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <FiShield className="text-[#3B4A66]" size={28} />
-          <h2 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+        <div className="flex items-center gap-3 ">
+          <FiShield className="text-[#3B4A66] mb-3" size={28} />
+          <h3 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
             Blocked Accounts
-          </h2>
+          </h3>
         </div>
         <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
           View and manage blocked user accounts
@@ -342,11 +342,10 @@ export default function BlockedAccounts() {
                       <button
                         key={pageNum}
                         onClick={() => goToPage(pageNum)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === pageNum
-                            ? 'bg-[#3AD6F2] text-white'
-                            : 'border border-[#E8F0FF] text-[#3B4A66] hover:bg-gray-50'
-                        }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
+                          ? 'bg-[#3AD6F2] text-white'
+                          : 'border border-[#E8F0FF] text-[#3B4A66] hover:bg-gray-50'
+                          }`}
                         style={{ fontFamily: 'BasisGrotesquePro' }}
                       >
                         {pageNum}

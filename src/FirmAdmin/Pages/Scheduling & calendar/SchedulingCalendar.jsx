@@ -9,8 +9,7 @@ const SchedulingCalendar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const activeTab = location.pathname.includes('/appointments') ? 'Appointments' :
-        location.pathname.includes('/features') ? 'Features' :
-            location.pathname.includes('/staff') ? 'Staff' : 'Calendar';
+        location.pathname.includes('/staff') ? 'Staff' : 'Calendar';
     const [viewMode, setViewMode] = useState('Monthly');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [eventId, setEventId] = useState('');
@@ -891,7 +890,7 @@ const SchedulingCalendar = () => {
     ];
 
     // Navigation tabs
-    const navTabs = ['Calendar', 'Appointments', 'Features', 'Staff'];
+    const navTabs = ['Calendar', 'Appointments', 'Staff'];
 
     // View mode tabs
     const viewTabs = ['Day', 'Week', 'Monthly', 'Years', 'Agenda'];
@@ -1053,8 +1052,8 @@ const SchedulingCalendar = () => {
                                             key={tab}
                                             to={tabPath}
                                             className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${activeTab === tab
-                                                    ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                    : 'bg-transparent hover:bg-gray-50 !text-black'
+                                                ? 'bg-[#3AD6F2] !text-white font-semibold'
+                                                : 'bg-transparent hover:bg-gray-50 !text-black'
                                                 }`}
                                         >
                                             {tab}

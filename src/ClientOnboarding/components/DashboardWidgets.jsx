@@ -75,7 +75,7 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       <div className="dashboard-header lg:px-4 md:px-2 px-1 dashboard-header-responsive">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
-            <h2 className="dashboard-title">Dashboard</h2>
+            <h4 className="dashboard-title">Dashboard</h4>
             <h5 className="dashboard-subtitle">Welcome back, {userName}</h5>
           </div>
 

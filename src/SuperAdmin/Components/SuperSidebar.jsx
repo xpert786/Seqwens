@@ -170,7 +170,7 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
                   </li>
                 )}
                 {/* Role Requests - Only for super_admin */}
-                {userType === 'super_admin' && (
+                {/* {userType === 'super_admin' && (
                   <li className="mb-2">
                     <Link to="/superadmin/role-requests" className={linkClass("/superadmin/role-requests")}>
                       <span className={iconWrapperClass("/superadmin/role-requests")}>
@@ -179,7 +179,7 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
                       Role Requests
                     </Link>
                   </li>
-                )}
+                )} */}
               </ul>
             )}
           </li>
