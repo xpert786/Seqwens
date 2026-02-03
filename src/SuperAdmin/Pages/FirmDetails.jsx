@@ -691,10 +691,10 @@ export default function FirmDetails() {
                                             ].filter(Boolean).map(({ label, value }) => (
                                                 <div
                                                     key={label}
-                                                    className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
+                                                    className="grid grid-cols-1 gap-1 sm:grid-cols-[140px_1fr] sm:items-center border-b border-gray-100 last:border-0 pb-3 last:pb-0 dark:border-gray-700"
                                                 >
                                                     <span className="text-sm font-medium text-[#64748B] sm:text-base dark:text-gray-400">{label}</span>
-                                                    <span className="text-sm font-semibold text-grey-600 sm:text-right sm:text-base dark:text-gray-200">
+                                                    <span className="text-sm font-semibold text-[#0F172A] sm:text-left sm:text-base dark:text-white truncate">
                                                         {value}
                                                     </span>
                                                 </div>
