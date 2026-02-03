@@ -320,15 +320,17 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     const newErrors = {};
 
     if (!formData.task_title.trim()) newErrors.task_title = 'Task title is required';
-    if (!formData.tax_preparer_id) newErrors.tax_preparer_id = 'Tax preparer is required';
-    if (!formData.client_ids || formData.client_ids.length === 0) newErrors.client_ids = 'At least one client is required';
-    
+    if (!formData.task_title.trim()) newErrors.task_title = 'Task title is required';
+
+    // Assignment fields are now optional in backend, so we reflect that here.
+    // However, we can add a check if needed, but per requirements, they are optional.
+
     // Folder validation conditional based on task type
     const folderRequiredTypes = ['document_collection', 'document_review', 'document_request', 'signature_request'];
     if (folderRequiredTypes.includes(formData.task_type) && !formData.folder_id) {
       newErrors.folder_id = 'Folder is required for this task type';
     }
-    
+
     if (!formData.due_date) newErrors.due_date = 'Due date is required';
     else {
       const dueDate = new Date(formData.due_date);
@@ -374,7 +376,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
       const taskData = {
         task_type: formData.task_type,
         task_title: formData.task_title.trim(),
-        tax_preparer_id: parseInt(formData.tax_preparer_id),
+        task_preparer_id: formData.tax_preparer_id ? parseInt(formData.tax_preparer_id) : null,
         client_ids: formData.client_ids.map(id => parseInt(id)),
         folder_id: formData.folder_id ? parseInt(formData.folder_id) : null,
         due_date: formData.due_date,
@@ -522,6 +524,16 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                   <option value="document_review">Document Review</option>
                   <option value="document_request">Document Request</option>
                   <option value="signature_request">Signature Request</option>
+                  <option value="internal_review">Internal Review</option>
+                  <option value="general_inquiry">General Inquiry</option>
+                  <option value="compliance_check">Compliance Check</option>
+                  <option value="payment_followup">Payment Follow-up</option>
+                  <option value="meeting_scheduled">Meeting Scheduled</option>
+                  <option value="missing_information">Missing Information</option>
+                  <option value="tax_plan_analysis">Tax Plan Analysis</option>
+                  <option value="final_review">Final Review</option>
+                  <option value="archive_documents">Archive Documents</option>
+                  <option value="other">Other</option>
                 </select>
                 {errors.task_type && <div className="invalid-feedback">{errors.task_type}</div>}
               </div>
@@ -581,22 +593,49 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
               <div className="row g-2 mb-3">
                 <div className="col-md-6">
                   <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Tax Preparer <span className="text-danger">*</span>
+                    Tax Preparer <span className="text-muted" style={{ fontWeight: 400 }}>(Optional)</span>
                   </label>
                   <div className="position-relative" ref={taxPreparerDropdownRef}>
-                    <button
-                      type="button"
-                      className={`form-select form-select-sm text-start ${errors.tax_preparer_id ? 'is-invalid' : ''}`}
-                      onClick={() => setShowTaxPreparerDropdown(!showTaxPreparerDropdown)}
-                      style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer' }}
-                    >
-                      {loadingTaxPreparers ? 'Loading...' : selectedTaxPreparerName}
-                    </button>
+                    <div className="d-flex align-items-center gap-2">
+                      <button
+                        type="button"
+                        className={`form-select form-select-sm text-start ${errors.tax_preparer_id ? 'is-invalid' : ''}`}
+                        onClick={() => setShowTaxPreparerDropdown(!showTaxPreparerDropdown)}
+                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
+                      >
+                        {loadingTaxPreparers ? 'Loading...' : (formData.tax_preparer_id ? selectedTaxPreparerName : 'Self (Firm Admin)')}
+                      </button>
+                      {formData.tax_preparer_id && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-light border"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
+                            setShowTaxPreparerDropdown(false);
+                          }}
+                          title="Assign to Self"
+                        >
+                          <FaTimes size={10} color="#EF4444" />
+                        </button>
+                      )}
+                    </div>
                     {showTaxPreparerDropdown && (
                       <div
                         className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
                         style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
                       >
+                        <div
+                          className="p-2 cursor-pointer border-bottom bg-slate-50 fw-medium"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
+                            setShowTaxPreparerDropdown(false);
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                          style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
+                        >
+                          Assign to Self (Firm Admin)
+                        </div>
                         {taxPreparers.length > 0 ? (
                           taxPreparers.map((tp) => {
                             const displayName = tp.staff_member?.name ||
@@ -616,19 +655,19 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                                       const newErrors = { ...prev };
                                       delete newErrors.tax_preparer_id;
                                       return newErrors;
-
                                     });
                                   }
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
                               >
                                 {displayName}
                               </div>
                             );
                           })
                         ) : (
-                          <div className="p-2 text-muted">No tax preparers available</div>
+                          <div className="p-2 text-muted" style={{ fontSize: '12px' }}>No staff available</div>
                         )}
                       </div>
                     )}
@@ -655,22 +694,49 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
               {/* Client */}
               <div className="mb-3">
                 <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Client(s) <span className="text-danger">*</span>
+                  Client(s) <span className="text-muted" style={{ fontWeight: 400 }}>(Optional)</span>
                 </label>
                 <div className="position-relative" ref={clientDropdownRef}>
-                  <button
-                    type="button"
-                    className={`form-select form-select-sm text-start ${errors.client_ids ? 'is-invalid' : ''}`}
-                    onClick={() => setShowClientDropdown(!showClientDropdown)}
-                    style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer' }}
-                  >
-                    {loadingClients ? 'Loading...' : selectedClientsNames || 'Select Client(s)'}
-                  </button>
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      type="button"
+                      className={`form-select form-select-sm text-start ${errors.client_ids ? 'is-invalid' : ''}`}
+                      onClick={() => setShowClientDropdown(!showClientDropdown)}
+                      style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
+                    >
+                      {loadingClients ? 'Loading...' : (formData.client_ids.length > 0 ? `${formData.client_ids.length} Client(s) Selected` : 'Internal Only (No Client)')}
+                    </button>
+                    {formData.client_ids.length > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-light border"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, client_ids: [] }));
+                          setShowClientDropdown(false);
+                        }}
+                        title="Clear Clients"
+                      >
+                        <FaTimes size={10} color="#EF4444" />
+                      </button>
+                    )}
+                  </div>
                   {showClientDropdown && (
                     <div
                       className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
-                      style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                      style={{ maxHeight: '250px', overflowY: 'auto', zIndex: 1000 }}
                     >
+                      <div
+                        className="p-2 cursor-pointer border-bottom bg-slate-50 fw-medium"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, client_ids: [] }));
+                          setShowClientDropdown(false);
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
+                      >
+                        Internal (No Client Assigned)
+                      </div>
                       {clients.map((client) => {
                         const isSelected = formData.client_ids.includes(client.id.toString());
                         return (
@@ -692,11 +758,12 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
                           >
                             <input
                               type="checkbox"
                               checked={isSelected}
-                              onChange={() => { }}
+                              readOnly
                               style={{ cursor: 'pointer' }}
                             />
                             {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
@@ -715,17 +782,27 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                         return (
                           <span
                             key={id}
-                            className="badge"
+                            className="badge d-flex align-items-center gap-2"
                             style={{
                               backgroundColor: '#FFFFFF',
                               color: '#3B4A66',
                               border: '1px solid #E8F0FF',
-                              fontSize: '12px',
+                              fontSize: '11px',
                               padding: '4px 10px',
                               fontFamily: 'BasisGrotesquePro'
                             }}
                           >
                             {displayName}
+                            <FaTimes
+                              size={8}
+                              className="cursor-pointer"
+                              onClick={() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  client_ids: prev.client_ids.filter(cid => cid !== id)
+                                }));
+                              }}
+                            />
                           </span>
                         );
                       })}
@@ -741,14 +818,29 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                     Folder {['document_collection', 'document_review', 'document_request', 'signature_request'].includes(formData.task_type) && <span className="text-danger">*</span>}
                   </label>
                   <div className="position-relative" ref={folderDropdownRef}>
-                    <button
-                      type="button"
-                      className={`form-select form-select-sm text-start ${errors.folder_id ? 'is-invalid' : ''}`}
-                      onClick={() => setShowFolderDropdown(!showFolderDropdown)}
-                      style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer' }}
-                    >
-                      {loadingFolders ? 'Loading...' : selectedFolderName}
-                    </button>
+                    <div className="d-flex align-items-center gap-2">
+                      <button
+                        type="button"
+                        className={`form-select form-select-sm text-start ${errors.folder_id ? 'is-invalid' : ''}`}
+                        onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
+                      >
+                        {loadingFolders ? 'Loading...' : selectedFolderName}
+                      </button>
+                      {formData.folder_id && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-light border"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, folder_id: '' }));
+                            setShowFolderDropdown(false);
+                          }}
+                          title="Clear Folder"
+                        >
+                          <FaTimes size={10} color="#EF4444" />
+                        </button>
+                      )}
+                    </div>
                     {showFolderDropdown && (
                       <div
                         className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"

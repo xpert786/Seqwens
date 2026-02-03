@@ -61,7 +61,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
 
       try {
         setLoading(true);
-        
+
         // Fetch document details
         const docResponse = await firmAdminClientsAPI.getClientDocumentDetails(clientId, documentId);
         if (docResponse.success && docResponse.data) {
@@ -80,8 +80,8 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
         setLoadingComments(true);
         const commentsResponse = await firmAdminDocumentsAPI.getComments(documentId);
         if (commentsResponse.success && commentsResponse.data) {
-          const commentsList = Array.isArray(commentsResponse.data) 
-            ? commentsResponse.data 
+          const commentsList = Array.isArray(commentsResponse.data)
+            ? commentsResponse.data
             : (commentsResponse.data.comments || []);
           setComments(commentsList);
         }
@@ -105,9 +105,9 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
     if (!dateString) return 'N/A';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
@@ -132,10 +132,10 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
       if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
       if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
       if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-      
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
+
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
       });
     } catch {
@@ -239,7 +239,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
         status: editForm.status || null,
         category_id: editForm.category_id || null,
         folder_id: editForm.folder_id || null,
-        tags: editForm.tags.trim() 
+        tags: editForm.tags.trim()
           ? editForm.tags.split(',').map(t => t.trim()).filter(t => t)
           : []
       };
@@ -287,7 +287,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
           Document Details
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className="p-0">
+      <Modal.Body className="p-0 overflow-y-auto max-h-[75vh] custom-scrollbar">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -299,8 +299,8 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
               <div className="flex items-start gap-4 mb-4">
                 <div className="flex-shrink-0">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M14 2V8H20" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    <path d="M14 2V8H20" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -343,8 +343,8 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
                       className="px-3 py-1.5 text-sm font-medium text-[#F56D2D] bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors font-[BasisGrotesquePro] flex items-center gap-2"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M18.5 2.5C18.8978 2.10218 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10218 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10218 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M18.5 2.5C18.8978 2.10218 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10218 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10218 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       Edit
                     </button>
@@ -559,7 +559,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
                           title="Delete comment"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
                       </div>

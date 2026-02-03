@@ -76,10 +76,12 @@ const TaskDetails = () => {
             const interval = setInterval(() => {
                 const startTime = new Date(timeTrackingStatus.active_tracking.started_at).getTime();
                 const now = Date.now();
-                const elapsed = Math.floor((now - startTime) / 1000);
-                const hours = Math.floor(elapsed / 3600);
-                const minutes = Math.floor((elapsed % 3600) / 60);
-                const seconds = elapsed % 60;
+                const currentSessionSeconds = Math.floor((now - startTime) / 1000);
+                const totalSeconds = (timeTrackingStatus.total_time_seconds || 0) + currentSessionSeconds;
+
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
                 setCurrentTime(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
             }, 1000);
 

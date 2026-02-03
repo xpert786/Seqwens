@@ -2289,18 +2289,24 @@ export const firmAdminTasksAPI = {
     // Required fields
     formData.append('task_type', taskData.task_type);
     formData.append('task_title', taskData.task_title);
-    formData.append('tax_preparer_id', taskData.tax_preparer_id);
+
+    // Optional assignment fields - don't append if null to avoid sending "null" string
+    if (taskData.tax_preparer_id) {
+      formData.append('tax_preparer_id', taskData.tax_preparer_id);
+    }
+
+    if (taskData.client_ids && taskData.client_ids.length > 0) {
+      // Send as JSON array string
+      formData.append('client_ids', JSON.stringify(taskData.client_ids));
+    } else {
+      // Send empty list explicitly
+      formData.append('client_ids', JSON.stringify([]));
+    }
+
     if (taskData.folder_id) {
       formData.append('folder_id', taskData.folder_id);
     }
     formData.append('due_date', taskData.due_date);
-
-    // Add client_ids as JSON array string (e.g., "[6]" or "[6,7,8]")
-    if (Array.isArray(taskData.client_ids) && taskData.client_ids.length > 0) {
-      formData.append('client_ids', JSON.stringify(taskData.client_ids));
-    } else {
-      throw new Error('At least one client is required');
-    }
 
     // Optional fields
     if (taskData.priority) {
@@ -3712,6 +3718,10 @@ export const firmAdminClientsAPI = {
       } else if (typeof tags === 'string') {
         formData.append('tags', tags);
       }
+    }
+
+    if (uploadData.mark_for_esign) {
+      formData.append('mark_for_esign', 'true');
     }
 
     const url = `${API_BASE_URL}/firm/clients/${clientId}/documents/upload/`;

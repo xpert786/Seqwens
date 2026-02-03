@@ -6,10 +6,12 @@
   margin-bottom: 0px !important;
   line-height: 1.2;
 }
+
 .upload-modal .modal-body {
-  max-height: calc(100vh - 100px) !important; 
+  max-height: calc(100vh - 100px) !important;
   overflow-y: auto !important;
 }
+
 .upload-subheading {
   font-size: 14px !important;
   font-weight: 400 !important;
@@ -26,7 +28,7 @@
 }
 
 .btn-cancel-custom:hover {
-  background-color: #f8faff !important; 
+  background-color: #f8faff !important;
 }
 
 .btn-upload-custom {
@@ -36,7 +38,7 @@
 }
 
 .btn-upload-custom:hover {
-  background-color: #e65c1d !important; 
+  background-color: #e65c1d !important;
 }
 
 
@@ -67,8 +69,9 @@
   font-weight: 500;
   font-family: 'BasisGrotesquePro';
 }
+
 .custom-select {
-  font-family: 'BasisGrotesquePro'!important;
+  font-family: 'BasisGrotesquePro' !important;
   font-size: 14px !important;
   color: #3B4A66 !important;
 }
@@ -170,7 +173,7 @@
 }
 
 .doc-item.active {
-  border:none;
+  border: none;
   background-color: #F3F7FF;
 }
 
@@ -186,7 +189,7 @@
 .doc-btn {
   padding: 2px 8px !important;
   font-size: 10px !important;
-  font-family: 'BasisGrotesquePro'!important;
+  font-family: 'BasisGrotesquePro' !important;
   border-radius: 4px !important;
   border: 1px solid transparent !important;
 }
@@ -414,9 +417,9 @@
 
 
 .config-scroll {
-  overflow-y: auto ;
+  overflow-y: auto;
   padding-right: 6px;
-  max-height: calc(100vh - 260px); 
+  max-height: calc(100vh - 260px);
 }
 
 
@@ -431,7 +434,7 @@
 
 
 .folder-dropdown-content {
- 
+
   overflow-y: auto;
   max-height: 250px;
   padding: 15px;
@@ -457,6 +460,7 @@
   .config-scroll {
     max-height: calc(100vh - 230px);
   }
+
   .doc-scroll {
     max-height: calc(100vh - 220px);
   }
@@ -467,6 +471,7 @@
   .config-scroll {
     max-height: calc(100vh - 210px);
   }
+
   .doc-scroll {
     max-height: calc(100vh - 200px);
   }
@@ -477,10 +482,46 @@
   .config-scroll {
     max-height: calc(100vh - 190px);
   }
+
   .doc-scroll {
     max-height: calc(100vh - 180px);
   }
+
   .folder-dropdown-content {
     max-height: 150px;
   }
+}
+
+/* Premium Upload Modal Specific Styles */
+.client-upload-premium-modal .modal-content {
+  border: none !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  overflow: hidden;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Glassmorphism effect for active elements if needed */
+.glass-active {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
