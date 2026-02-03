@@ -244,7 +244,7 @@ export default function GlobalUserLookup() {
                 key={user.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => navigate(`/superadmin/users-details/${user.id}`)}
+                onClick={() => navigate(`/superadmin/users-details/${user.id}?mode=lookup`)}
                 className="border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-2 transition-colors cursor-pointer hover:border-[#3B4A66] dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3B4A66] bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
               >
                 <div className="flex items-center gap-3">

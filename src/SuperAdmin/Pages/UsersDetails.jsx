@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { superToastOptions } from '../utils/toastConfig';
@@ -101,6 +101,9 @@ const normalizeUserDetails = (data) => {
 const UsersDetails = () => {
     const navigate = useNavigate();
     const { userId } = useParams();
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const isLookupMode = queryParams.get('mode') === 'lookup';
     const [userDetails, setUserDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -383,13 +386,15 @@ const UsersDetails = () => {
                 <h3 className="text-lg font-semibold text-gray-900">
                     User Details – {fullName}
                 </h3>
-                <p className="text-sm text-gray-600">Comprehensive user information and account management</p>
+                <p className="text-sm text-gray-600">
+                    {isLookupMode ? 'View user credentials and basic account information' : 'Comprehensive user information and account management'}
+                </p>
                 <button
                     type="button"
-                    onClick={() => navigate('/superadmin/users')}
+                    onClick={() => navigate(isLookupMode ? '/superadmin/user-lookup' : '/superadmin/users')}
                     className="mt-2 inline-flex items-center gap-2 text-sm text-[#3B4A66] hover:underline focus:outline-none"
                 >
-                    ← Back to User Management
+                    ← Back to {isLookupMode ? 'User Lookup' : 'User Management'}
                 </button>
             </div>
             <div className="mb-6 space-y-1">
@@ -417,7 +422,7 @@ const UsersDetails = () => {
                     </div>
                     <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
                         <div className="flex flex-col sm:flex-row gap-3">
-                            {isSuperAdmin && (
+                            {isSuperAdmin && !isLookupMode && (
                                 <button
                                     className={actionButtonClasses}
                                     style={{ borderRadius: '7px' }}
@@ -438,7 +443,7 @@ const UsersDetails = () => {
                                     Password Options
                                 </button>
                             )}
-                            {isSuperAdmin && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
+                            {isSuperAdmin && !isLookupMode && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
                                 <button
                                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={actionLoading}
@@ -476,20 +481,22 @@ const UsersDetails = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white border border-[#E8F0FF] rounded-xl p-6">
-                        <h3 className="text-base font-semibold text-[#3B4A66] mb-4">Permissions</h3>
-                        <ul className="space-y-2 text-sm text-[#3B4A66]">
-                            {permissions.map((permission) => (
-                                <li key={permission} className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
-                                    {formatPermission(permission)}
-                                </li>
-                            ))}
-                            {permissions.length === 0 && (
-                                <li className="text-sm text-gray-500">No permissions assigned.</li>
-                            )}
-                        </ul>
-                    </div>
+                    {!isLookupMode && (
+                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-6">
+                            <h3 className="text-base font-semibold text-[#3B4A66] mb-4">Permissions</h3>
+                            <ul className="space-y-2 text-sm text-[#3B4A66]">
+                                {permissions.map((permission) => (
+                                    <li key={permission} className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+                                        {formatPermission(permission)}
+                                    </li>
+                                ))}
+                                {permissions.length === 0 && (
+                                    <li className="text-sm text-gray-500">No permissions assigned.</li>
+                                )}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </div>
             {showSuspendModal && (
