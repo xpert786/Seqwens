@@ -562,6 +562,11 @@ export const superAdminAPI = {
     return await apiRequest(`/user/admin/faqs/${faqId}/`, 'DELETE');
   },
 
+  // Reorder FAQs
+  reorderFAQs: async (faqOrders) => {
+    return await apiRequest('/user/admin/faqs/reorder/', 'POST', { faqs: faqOrders });
+  },
+
   // Support Tickets API functions
   // Get all support tickets for admin (with filters)
   getSupportTickets: async (page = 1, pageSize = 30, search = '', status = '', priority = '', category = '') => {

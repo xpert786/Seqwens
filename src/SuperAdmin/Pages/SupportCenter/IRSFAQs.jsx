@@ -17,6 +17,7 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
         total_pages: 1
     });
     const [saving, setSaving] = useState(false);
+    const [reordering, setReordering] = useState(false);
 
     // Delete Modal State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -121,7 +122,9 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
                 title: newFAQ.title.trim(),
                 description: newFAQ.description.trim(),
                 answer: newFAQ.answer.trim(),
-                is_active: true
+                is_active: true,
+                is_published: true,
+                order: faqData.length > 0 ? Math.max(...faqData.map(f => f.order || 0)) + 1 : 0
             };
 
             const response = await superAdminAPI.createFAQ(faqPayload);
@@ -240,6 +243,48 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
         }
     };
 
+    const togglePublished = async (faqId, currentStatus, e) => {
+        e.stopPropagation();
+        try {
+            const response = await superAdminAPI.updateFAQ(faqId, { is_published: !currentStatus });
+            if (response.success) {
+                setFaqData(prev => prev.map(f => f.id === faqId ? { ...f, is_published: !currentStatus } : f));
+                toast.success(`FAQ ${!currentStatus ? 'published' : 'unpublished'} successfully`);
+            }
+        } catch (err) {
+            toast.error(handleAPIError(err));
+        }
+    };
+
+    const handleMove = async (index, direction, e) => {
+        e.stopPropagation();
+        if (direction === 'up' && index === 0) return;
+        if (direction === 'down' && index === faqData.length - 1) return;
+
+        const newFaqData = [...faqData];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        [newFaqData[index], newFaqData[targetIndex]] = [newFaqData[targetIndex], newFaqData[index]];
+
+        // Update orders locally first for snappy UI
+        const reordered = newFaqData.map((f, i) => ({ ...f, order: i }));
+        setFaqData(reordered);
+
+        try {
+            setReordering(true);
+            const orderPayload = reordered.map(f => ({ id: f.id, order: f.order }));
+            const response = await superAdminAPI.reorderFAQs(orderPayload);
+            if (!response.success) {
+                throw new Error(response.message || 'Failed to save new order');
+            }
+        } catch (err) {
+            toast.error(handleAPIError(err));
+            // Revert on error
+            fetchFAQs();
+        } finally {
+            setReordering(false);
+        }
+    };
+
 
     return (
         <div className=" min-h-screen ">
@@ -310,6 +355,43 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
                                                     {faq.title || faq.question}
                                                 </h5>
                                                 <div className="flex items-center gap-3">
+                                                    {/* Reordering Controls */}
+                                                    <div className="flex flex-col gap-1 mr-2">
+                                                        <button
+                                                            onClick={(e) => handleMove(index, 'up', e)}
+                                                            disabled={index === 0 || reordering}
+                                                            className={`p-0.5 rounded hover:bg-gray-100 ${index === 0 ? 'opacity-20 cursor-not-allowed' : 'text-gray-400 hover:text-blue-500'}`}
+                                                            title="Move Up"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                            </svg>
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleMove(index, 'down', e)}
+                                                            disabled={index === faqData.length - 1 || reordering}
+                                                            className={`p-0.5 rounded hover:bg-gray-100 ${index === faqData.length - 1 ? 'opacity-20 cursor-not-allowed' : 'text-gray-400 hover:text-blue-500'}`}
+                                                            title="Move Down"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Published Toggle */}
+                                                    <div className="flex items-center gap-2 mr-4" onClick={(e) => e.stopPropagation()}>
+                                                        <span className={`text-[10px] font-medium ${faq.is_published ? 'text-green-600' : 'text-gray-400'}`}>
+                                                            {faq.is_published ? 'Published' : 'Hidden'}
+                                                        </span>
+                                                        <button
+                                                            onClick={(e) => togglePublished(faq.id, faq.is_published, e)}
+                                                            className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors focus:outline-none ${faq.is_published ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                        >
+                                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${faq.is_published ? 'translate-x-4' : 'translate-x-1'}`} />
+                                                        </button>
+                                                    </div>
+
                                                     {userType !== 'billing_admin' && (
                                                         <button
                                                             onClick={(e) => handleDeleteFAQ(faq.id, e)}
