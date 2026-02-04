@@ -185,7 +185,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
             <div className="d-flex align-items-end flex-column">
               <div className="d-flex mt-auto">
                 <button
-                  className="btn btn-sm me-2"
+                  className="btn  me-2"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedIndex(originalIndex);
@@ -195,7 +195,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                   <ViewIcon />
                 </button>
                 <button
-                  className="btn  btn-sm"
+                  className="btn  "
                   onClick={async (e) => {
                     e.stopPropagation();
                     setSelectedIndex(originalIndex);
@@ -219,7 +219,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
                   borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
@@ -244,7 +244,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className="btn btn-sm"
+                        className="btn "
                         style={{
                           backgroundColor: currentPage === page ? '#3B82F6' : 'white',
                           borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
@@ -274,7 +274,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
                   borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
@@ -554,7 +554,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                 <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
                 <div className="text-end mt-2">
                   <button
-                    className="btn btn-sm"
+                    className="btn "
                     style={{
                       backgroundColor: "#E8F0FF",
                       border: "1px solid #ced4da",
@@ -576,7 +576,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                   </button>
 
                   <button
-                    className="btn btn-sm"
+                    className="btn "
                     style={{
                       backgroundColor: "#E8F0FF",
                       border: "1px solid #ced4da",

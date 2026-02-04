@@ -119,12 +119,12 @@ export default function TaxDashboardMain() {
           </div>
         </div>
 
-        <h5
+        <h4
           className="mb-1"
-          style={{ color: "#3B4A66", fontSize: "28px", fontWeight: 500, fontFamily: "BasisGrotesquePro" }}
+          style={{ color: "#3B4A66", fontSize: "24px", fontWeight: 600, fontFamily: "BasisGrotesquePro, sans-serif" }}
         >
           Welcome, Michael Brown! 👋
-        </h5>
+        </h4>
         <p className="text-muted" style={{ fontSize: "18px", fontFamily: "BasisGrotesquePro" }}>
           Let's get your tax dashboard set up. You're making great progress!
         </p>
@@ -154,16 +154,17 @@ export default function TaxDashboardMain() {
 
       {/* Setup Tasks */}
       <div className="bg-white rounded  p-4 mb-4">
-        <h6
+        <h4
+          className="mb-2"
           style={{
             color: "#3B4A66",
-            fontSize: "25px",
-            fontWeight: 500,
-            fontFamily: "BasisGrotesquePro"
+            fontSize: "20px",
+            fontWeight: 600,
+            fontFamily: "BasisGrotesquePro, sans-serif"
           }}
         >
           Setup Tasks
-        </h6>
+        </h4>
         <p
           style={{
             color: "#4B5563",
@@ -210,12 +211,12 @@ export default function TaxDashboardMain() {
 
       {/* Quick Actions */}
       <div className="bg-white rounded  p-4 mt-4">
-        <h6
+        <h4
           className="mb-1"
-          style={{ color: "#3B4A66", fontSize: "18px", fontWeight: 600, fontFamily: "BasisGrotesquePro" }}
+          style={{ color: "#3B4A66", fontSize: "18px", fontWeight: 600, fontFamily: "BasisGrotesquePro, sans-serif" }}
         >
           Quick Actions
-        </h6>
+        </h4>
         <p className="text-muted" style={{ fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
           Common tasks you can do right now
         </p>
@@ -231,7 +232,7 @@ export default function TaxDashboardMain() {
                   <h6 className="quick-card-title">{action.title}</h6>
                 </div>
 
-                <button className="btn btn-sm w-100 quick-card-btn">
+                <button className="btn  w-100 quick-card-btn">
                   {action.button}
                 </button>
               </div>

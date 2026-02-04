@@ -190,7 +190,7 @@ export default function DashboardSwitcher() {
         type="button"
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={switching}
-        className="btn btn-sm d-flex align-items-center gap-2"
+        className="btn  d-flex align-items-center gap-2"
         style={{
           backgroundColor: "#00C0C6",
           border: "none",

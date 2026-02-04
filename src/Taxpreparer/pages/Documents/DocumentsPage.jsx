@@ -159,7 +159,7 @@ export default function DocumentsPage() {
   });
   const [statisticsLoading, setStatisticsLoading] = useState(true);
   const [statisticsError, setStatisticsError] = useState(null);
-  
+
   const documents = [
     {
       id: 1,
@@ -242,7 +242,7 @@ export default function DocumentsPage() {
         setStatisticsLoading(true);
         setStatisticsError(null);
         const response = await taxPreparerDocumentsAPI.getStatistics();
-        
+
         if (response.success && response.data) {
           setStatistics({
             total_clients: response.data.total_clients || 0,
@@ -339,7 +339,7 @@ export default function DocumentsPage() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
@@ -373,7 +373,7 @@ export default function DocumentsPage() {
     setDocumentToAssign(doc);
     setShowAssignModal(true);
     setShowMenuIndex(null);
-    
+
     // If client ID is available from URL, use it
     if (clientIdFromUrl) {
       setSelectedTaxpayerId(clientIdFromUrl);
@@ -382,7 +382,7 @@ export default function DocumentsPage() {
     } else {
       fetchTaxpayers();
     }
-    
+
     // Set default deadline to 30 days from now
     const defaultDeadline = new Date();
     defaultDeadline.setDate(defaultDeadline.getDate() + 30);
@@ -394,7 +394,7 @@ export default function DocumentsPage() {
     for (let i = 0; i < maxAttempts; i++) {
       try {
         const response = await esignAssignAPI.pollESignStatus(esignDocumentId);
-        
+
         if (response.success && response.data) {
           const status = response.data.processing_status;
           setPollingStatus({
@@ -406,12 +406,12 @@ export default function DocumentsPage() {
           if (status === 'completed') {
             return response.data;
           }
-          
+
           if (status === 'failed') {
             throw new Error(response.data.processing_error || 'Processing failed');
           }
         }
-        
+
         // Wait 2 seconds before next poll
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
@@ -422,14 +422,14 @@ export default function DocumentsPage() {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    
+
     throw new Error('Processing timeout');
   };
 
   // Handle assign document for e-sign
   const handleAssignDocument = async () => {
     const taxpayerId = clientIdFromUrl || selectedTaxpayerId;
-    
+
     if (!documentToAssign || !taxpayerId || !deadline) {
       toast.error('Please fill in all required fields', {
         position: "top-right",
@@ -441,7 +441,7 @@ export default function DocumentsPage() {
     try {
       setAssigning(true);
       setPollingStatus({ status: 'pending', message: 'Assigning document...' });
-      
+
       const assignmentData = {
         document_id: documentToAssign.id || documentToAssign.document_id,
         taxpayer_id: parseInt(taxpayerId),
@@ -454,16 +454,16 @@ export default function DocumentsPage() {
 
       if (response.success && response.data) {
         const esignDocId = response.data.id;
-        
-        setPollingStatus({ 
-          status: 'processing', 
-          message: 'Document assigned. Processing in background...' 
+
+        setPollingStatus({
+          status: 'processing',
+          message: 'Document assigned. Processing in background...'
         });
 
         // Poll for status
         try {
           const statusData = await pollESignStatus(esignDocId);
-          
+
           toast.success('Document assigned for e-signing successfully!', {
             position: "top-right",
             autoClose: 5000,
@@ -477,7 +477,7 @@ export default function DocumentsPage() {
           setHasSpouse(false);
           setPreparerMustSign(false);
           setPollingStatus(null);
-          
+
           // Refresh documents
           fetchFileManagerDocuments(fileManagerCurrentFolder?.id || null, fileManagerSearchQuery);
         } catch (pollError) {
@@ -593,7 +593,7 @@ export default function DocumentsPage() {
   const [fileManagerNewFolderName, setFileManagerNewFolderName] = useState("");
   const [fileManagerNewFolderDescription, setFileManagerNewFolderDescription] = useState("");
   const [fileManagerCreatingFolderLoading, setFileManagerCreatingFolderLoading] = useState(false);
-  
+
   // Assign for E-Sign states
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [documentToAssign, setDocumentToAssign] = useState(null);
@@ -604,12 +604,12 @@ export default function DocumentsPage() {
   const [preparerMustSign, setPreparerMustSign] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
-  
+
   // Delete document states
   const [showDeleteDocumentConfirm, setShowDeleteDocumentConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState(null);
   const [deletingDocumentId, setDeletingDocumentId] = useState(null);
-  
+
   // Menu state
   const [showMenuIndex, setShowMenuIndex] = useState(null);
 
@@ -808,13 +808,13 @@ export default function DocumentsPage() {
               <i className="bi bi-folder2-open me-1"></i>
               <span className="btn-text">Document Manager</span>
             </button>
-          <button
-            className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
-            onClick={() => setShowUpload(true)}
-          >
-            <UpIcon />
-            <span className="btn-text">Upload Documents</span>
-          </button>
+            <button
+              className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+              onClick={() => setShowUpload(true)}
+            >
+              <UpIcon />
+              <span className="btn-text">Upload Documents</span>
+            </button>
           </div>
         </div>
       )}
@@ -870,553 +870,590 @@ export default function DocumentsPage() {
         <SharedDocuments />
       ) : (
         <>
-      {/* Stats (hide when nested under client) */}
-      {!isNestedUnderClient && (
-        <div className="row g-3 mb-3">
-          {statisticsLoading ? (
-            // Loading state - show skeleton or loading cards
-            cardData.map((item, index) => (
-              <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
-                <div className="stat-card">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="stat-icon" style={{ color: item.color }}>
-                      {item.icon}
-                    </div>
-                    <div className="stat-count">
-                      <div className="spinner-border spinner-border-sm text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : statisticsError ? (
-            // Error state
-            <div className="col-12">
-              <div className="alert alert-warning" role="alert">
-                <small>Unable to load statistics: {statisticsError}</small>
-              </div>
-            </div>
-          ) : (
-            // Normal state with data
-            cardData.map((item, index) => (
-              <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
-                <div className="stat-card">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="stat-icon" style={{ color: item.color }}>
-                    {item.icon}
-                  </div>
-                  <div className="stat-count">{item.count}</div>
-                </div>
-                <div className="mt-2">
-                  <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
-                </div>
-              </div>
-            </div>
-            ))
-          )}
-        </div>
-      )}
-
-
-
-      {/* File Manager Section (only show when not nested under client) */}
-      {!isNestedUnderClient && (
-        <div className="bg-white rounded-xl p-6">
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
-                File Manager
-              </h3>
-              <p className="text-sm text-gray-500 mb-0">
-                {fileManagerCurrentFolder ? `Browsing: ${fileManagerCurrentFolder.title}` : 'Organized document folders'}
-              </p>
-            </div>
-            <button
-              className="btn btn-primary d-flex align-items-center gap-2"
-              onClick={() => setFileManagerCreatingFolder(true)}
-              style={{
-                backgroundColor: "#00C0C6",
-                border: "none",
-                borderRadius: "8px",
-                padding: "8px 16px"
-              }}
-            >
-              <FaFolder /> Create Folder
-            </button>
-          </div>
-
-          {/* Breadcrumb Navigation */}
-          {(fileManagerBreadcrumbs.length > 0 || fileManagerCurrentFolder) && (
-            <div className="mb-4">
-              <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "#f8f9fa", padding: "12px 16px", borderRadius: "8px" }}>
-                <button
-                  className="btn btn-sm text-primary p-0 border-0 bg-transparent"
-                  onClick={() => setFileManagerSelectedFolderId(null)}
-                  style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
-                >
-                  <i className="bi bi-house me-1"></i>
-                  Root
-                </button>
-                {fileManagerBreadcrumbs.map((breadcrumb, idx) => (
-                  <React.Fragment key={idx}>
-                    <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
-                    <button
-                      className="btn btn-sm text-primary p-0 border-0 bg-transparent"
-                      onClick={() => setFileManagerSelectedFolderId(breadcrumb.id)}
-                      style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
-                    >
-                      {breadcrumb.title}
-                    </button>
-                  </React.Fragment>
-                ))}
-                {fileManagerCurrentFolder && (
-                  <>
-                    <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
-                    <span style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500" }}>
-                      {fileManagerCurrentFolder.title}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Create Folder Modal */}
-          {fileManagerCreatingFolder && (
-            <div className="mb-4 p-3 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
-              <div className="mb-2">
-                <label className="form-label small fw-semibold text-black ">Folder Name <span className="text-danger">*</span></label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm text-black"
-                  placeholder="Enter folder name"
-                  value={fileManagerNewFolderName}
-                  onChange={(e) => setFileManagerNewFolderName(e.target.value)}
-                  disabled={fileManagerCreatingFolderLoading}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label small fw-semibold text-black">Description (Optional)</label>
-                <textarea
-                  className="form-control form-control-sm"
-                  placeholder="Enter folder description"
-                  value={fileManagerNewFolderDescription}
-                  onChange={(e) => setFileManagerNewFolderDescription(e.target.value)}
-                  rows="2"
-                  disabled={fileManagerCreatingFolderLoading}
-                />
-              </div>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={handleFileManagerCreateFolder}
-                  disabled={fileManagerCreatingFolderLoading || !fileManagerNewFolderName.trim()}
-                  style={{ backgroundColor: "#00C0C6", border: "none" }}
-                >
-                  {fileManagerCreatingFolderLoading ? 'Creating...' : 'Create'}
-                </button>
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => {
-                    setFileManagerCreatingFolder(false);
-                    setFileManagerNewFolderName("");
-                    setFileManagerNewFolderDescription("");
-                  }}
-                  disabled={fileManagerCreatingFolderLoading}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Search and Filter */}
-          <div className="d-flex align-items-center gap-2 mb-4" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-            <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
-              <input
-                type="text"
-                className="form-control rounded"
-                placeholder="Search..."
-                value={fileManagerSearchQuery}
-                onChange={(e) => setFileManagerSearchQuery(e.target.value)}
-                style={{
-                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                  paddingLeft: "38px",
-                  paddingRight: "12px",
-                  paddingTop: "10px",
-                  paddingBottom: "8px",
-                  width: "100%",
-                  height: "38px",
-                  fontSize: "14px",
-                  lineHeight: "22px"
-                }}
-              />
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{
-                  position: 'absolute',
-                  left: '14px',
-                  top: '12px',
-                  zIndex: 10,
-                  pointerEvents: 'none'
-                }}
-              >
-                <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-
-
-          </div>
-
-          {/* Loading State */}
-          {fileManagerLoading && (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-3">Loading documents...</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {fileManagerError && !fileManagerLoading && (
-            <div className="alert alert-danger" role="alert">
-              <strong>Error:</strong> {fileManagerError}
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, fileManagerSearchQuery)}>
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* Folders and Documents */}
-          {!fileManagerLoading && !fileManagerError && (
-            <>
-              {/* Folders */}
-              {fileManagerFolders.length > 0 && (
-                <div className="mb-4">
-                  <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Folders</h6>
-                  <div className={fileManagerView === "grid" ? "row g-3" : ""}>
-                    {fileManagerFolders.map((folder) => (
-                      <div
-                        key={folder.id}
-                        className={fileManagerView === "grid" ? "col-md-3 col-sm-4 col-6" : "mb-2"}
-                        onClick={() => setFileManagerSelectedFolderId(folder.id)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <div className={`border rounded p-3 ${fileManagerView === "grid" ? "" : "d-flex align-items-center gap-3"}`} style={{ borderColor: "#E8F0FF", transition: "all 0.2s" }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#F9FAFB";
-                            e.currentTarget.style.borderColor = "#00C0C6";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "white";
-                            e.currentTarget.style.borderColor = "#E8F0FF";
-                          }}
-                        >
-                          {/* <FaFolder style={{ color: "#F59E0B", fontSize: fileManagerView === "grid" ? "32px" : "24px" }} /> */}
-                          <div className={fileManagerView === "grid" ? "mt-2" : "flex-grow-1"}>
-                            <div className="fw-semibold small" style={{ color: "#3B4A66" }}>{folder.title}</div>
-                            {fileManagerView === "grid" && (
-                              <div className="text-muted" style={{ fontSize: "12px" }}>
-                                {folder.document_count || 0} documents
-                                {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
-                              </div>
-                            )}
-                            {fileManagerView === "list" && (
-                              <div className="text-muted small">
-                                {folder.document_count || 0} documents
-                                {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
-                                {folder.description && ` • ${folder.description}`}
-                              </div>
-                            )}
+          {/* Stats (hide when nested under client) */}
+          {!isNestedUnderClient && (
+            <div className="row g-3 mb-3">
+              {statisticsLoading ? (
+                // Loading state - show skeleton or loading cards
+                cardData.map((item, index) => (
+                  <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
+                    <div className="stat-card">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="stat-icon" style={{ color: item.color }}>
+                          {item.icon}
+                        </div>
+                        <div className="stat-count">
+                          <div className="spinner-border spinner-border-sm text-primary" role="status">
+                            <span className="visually-hidden">Loading...</span>
                           </div>
                         </div>
                       </div>
+                      <div className="mt-2">
+                        <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : statisticsError ? (
+                // Error state
+                <div className="col-12">
+                  <div className="alert alert-warning" role="alert">
+                    <small>Unable to load statistics: {statisticsError}</small>
+                  </div>
+                </div>
+              ) : (
+                // Normal state with data
+                cardData.map((item, index) => (
+                  <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
+                    <div className="stat-card">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="stat-icon" style={{ color: item.color }}>
+                          {item.icon}
+                        </div>
+                        <div className="stat-count">{item.count}</div>
+                      </div>
+                      <div className="mt-2">
+                        <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+
+
+          {/* File Manager Section (only show when not nested under client) */}
+          {!isNestedUnderClient && (
+            <div className="bg-white rounded-xl p-6">
+              {/* Header */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
+                    File Manager
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-0">
+                    {fileManagerCurrentFolder ? `Browsing: ${fileManagerCurrentFolder.title}` : 'Organized document folders'}
+                  </p>
+                </div>
+                <button
+                  className="btn btn-primary d-flex align-items-center gap-2"
+                  onClick={() => setFileManagerCreatingFolder(true)}
+                  style={{
+                    backgroundColor: "#00C0C6",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "8px 16px"
+                  }}
+                >
+                  <FaFolder /> Create Folder
+                </button>
+              </div>
+
+              {/* Breadcrumb Navigation */}
+              {(fileManagerBreadcrumbs.length > 0 || fileManagerCurrentFolder) && (
+                <div className="mb-4">
+                  <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "#f8f9fa", padding: "12px 16px", borderRadius: "8px" }}>
+                    <button
+                      className="btn  text-primary p-0 border-0 bg-transparent"
+                      onClick={() => setFileManagerSelectedFolderId(null)}
+                      style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
+                    >
+                      <i className="bi bi-house me-1"></i>
+                      Root
+                    </button>
+                    {fileManagerBreadcrumbs.map((breadcrumb, idx) => (
+                      <React.Fragment key={idx}>
+                        <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
+                        <button
+                          className="btn  text-primary p-0 border-0 bg-transparent"
+                          onClick={() => setFileManagerSelectedFolderId(breadcrumb.id)}
+                          style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
+                        >
+                          {breadcrumb.title}
+                        </button>
+                      </React.Fragment>
                     ))}
+                    {fileManagerCurrentFolder && (
+                      <>
+                        <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
+                        <span style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500" }}>
+                          {fileManagerCurrentFolder.title}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Documents */}
-              {fileManagerDocuments.length > 0 && (
-                <div>
-                  <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Documents</h6>
-                  <div className="table-responsive">
-                    <table className="table table-hover">
-                      <thead>
-                        <tr>
-                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Name</th>
-                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
-                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
-                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
-                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
-                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {fileManagerDocuments.map((doc, index) => {
-                          const meta = getDocumentMeta(doc);
-                          const docStatus = getDocumentStatus(doc);
-                          const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
-                          const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
-                          const typeLabel = getDocumentTypeLabel(doc);
 
-                          return (
-                            <tr
-                              key={doc.id || doc.document_id || meta.name}
-                              style={{ cursor: meta.url ? "pointer" : "default" }}
-                              onClick={() => {
-                                if (meta.url && showMenuIndex !== index) {
-                                  window.open(meta.url, "_blank", "noopener,noreferrer");
-                                }
+
+              {/* Search and Filter */}
+              <div className="d-flex align-items-center gap-2 mb-4" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+                <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
+                  <input
+                    type="text"
+                    className="form-control rounded"
+                    placeholder="Search..."
+                    value={fileManagerSearchQuery}
+                    onChange={(e) => setFileManagerSearchQuery(e.target.value)}
+                    style={{
+                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                      paddingLeft: "38px",
+                      paddingRight: "12px",
+                      paddingTop: "10px",
+                      paddingBottom: "8px",
+                      width: "100%",
+                      height: "38px",
+                      fontSize: "14px",
+                      lineHeight: "22px"
+                    }}
+                  />
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '12px',
+                      zIndex: 10,
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+
+
+              </div>
+
+              {/* Loading State */}
+              {fileManagerLoading && (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-3">Loading documents...</p>
+                </div>
+              )}
+
+              {/* Error State */}
+              {fileManagerError && !fileManagerLoading && (
+                <div className="alert alert-danger" role="alert">
+                  <strong>Error:</strong> {fileManagerError}
+                  <button className="btn  btn-outline-danger ms-2" onClick={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, fileManagerSearchQuery)}>
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* Folders and Documents */}
+              {!fileManagerLoading && !fileManagerError && (
+                <>
+                  {/* Folders */}
+                  {fileManagerFolders.length > 0 && (
+                    <div className="mb-4">
+                      <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Folders</h6>
+                      <div className={fileManagerView === "grid" ? "row g-3" : ""}>
+                        {fileManagerFolders.map((folder) => (
+                          <div
+                            key={folder.id}
+                            className={fileManagerView === "grid" ? "col-md-3 col-sm-4 col-6" : "mb-2"}
+                            onClick={() => setFileManagerSelectedFolderId(folder.id)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <div className={`border rounded p-3 ${fileManagerView === "grid" ? "" : "d-flex align-items-center gap-3"}`} style={{ borderColor: "#E8F0FF", transition: "all 0.2s" }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#F9FAFB";
+                                e.currentTarget.style.borderColor = "#00C0C6";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "white";
+                                e.currentTarget.style.borderColor = "#E8F0FF";
                               }}
                             >
-                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-                                <div className="d-flex align-items-center gap-2">
-                                  <FileIcon />
-                                  <span>{meta.name}</span>
-                                </div>
-                              </td>
-                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
-                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
-                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
-                              <td>
-                                <span
-                                  className={`badge ${getStatusBadgeClass(docStatus)} px-2 py-1`}
-                                  style={{ borderRadius: "12px", fontSize: "12px" }}
+                              {/* <FaFolder style={{ color: "#F59E0B", fontSize: fileManagerView === "grid" ? "32px" : "24px" }} /> */}
+                              <div className={fileManagerView === "grid" ? "mt-2" : "flex-grow-1"}>
+                                <div className="fw-semibold small" style={{ color: "#3B4A66" }}>{folder.title}</div>
+                                {fileManagerView === "grid" && (
+                                  <div className="text-muted" style={{ fontSize: "12px" }}>
+                                    {folder.document_count || 0} documents
+                                    {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
+                                  </div>
+                                )}
+                                {fileManagerView === "list" && (
+                                  <div className="text-muted small">
+                                    {folder.document_count || 0} documents
+                                    {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
+                                    {folder.description && ` • ${folder.description}`}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Documents */}
+                  {fileManagerDocuments.length > 0 && (
+                    <div>
+                      <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Documents</h6>
+                      <div className="table-responsive">
+                        <table className="table table-hover">
+                          <thead>
+                            <tr>
+                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Name</th>
+                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
+                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
+                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
+                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
+                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {fileManagerDocuments.map((doc, index) => {
+                              const meta = getDocumentMeta(doc);
+                              const docStatus = getDocumentStatus(doc);
+                              const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
+                              const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
+                              const typeLabel = getDocumentTypeLabel(doc);
+
+                              return (
+                                <tr
+                                  key={doc.id || doc.document_id || meta.name}
+                                  style={{ cursor: meta.url ? "pointer" : "default" }}
+                                  onClick={() => {
+                                    if (meta.url && showMenuIndex !== index) {
+                                      window.open(meta.url, "_blank", "noopener,noreferrer");
+                                    }
+                                  }}
                                 >
-                                  {docStatus}
-                                </span>
-                              </td>
-                              <td style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} onClick={(e) => e.stopPropagation()}>
-                                <div style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} data-menu-container>
-                                  <button
-                                    type="button"
-                                    className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
-                                    style={{
-                                      width: "32px",
-                                      height: "32px",
-                                      borderRadius: "50%",
-                                      fontFamily: "BasisGrotesquePro",
-                                      backgroundColor: showMenuIndex === index ? '#F3F4F6' : 'transparent',
-                                      border: '1px solid #E5E7EB',
-                                      cursor: 'pointer',
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#F3F4F6';
-                                      e.currentTarget.style.borderColor = '#D1D5DB';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      if (showMenuIndex !== index) {
-                                        e.currentTarget.style.backgroundColor = 'transparent';
-                                        e.currentTarget.style.borderColor = '#E5E7EB';
-                                      }
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowMenuIndex(showMenuIndex === index ? null : index);
-                                    }}
-                                    title="More options"
-                                  >
-                                    <i className="bi bi-three-dots-vertical" style={{ 
-                                      fontSize: '18px', 
-                                      color: '#6B7280',
-                                      fontWeight: 'bold'
-                                    }} />
-                                  </button>
-                                  {showMenuIndex === index && (
-                                    <div
-                                      style={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        top: '100%',
-                                        marginTop: '4px',
-                                        backgroundColor: 'white',
-                                        border: '1px solid #E5E7EB',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                        zIndex: 9999,
-                                        minWidth: '150px',
-                                        padding: '4px 0'
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
+                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                                    <div className="d-flex align-items-center gap-2">
+                                      <FileIcon />
+                                      <span>{meta.name}</span>
+                                    </div>
+                                  </td>
+                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
+                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
+                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
+                                  <td>
+                                    <span
+                                      className={`badge ${getStatusBadgeClass(docStatus)} px-2 py-1`}
+                                      style={{ borderRadius: "12px", fontSize: "12px" }}
                                     >
-                                      {meta.canPreview && (
-                                        <button
-                                          className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                          style={{
-                                            fontFamily: 'BasisGrotesquePro',
-                                            fontSize: '14px',
-                                            color: '#3B4A66',
-                                            cursor: 'pointer',
-                                            borderBottom: '1px solid #E5E7EB'
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            e.target.style.backgroundColor = '#F9FAFB';
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            e.target.style.backgroundColor = 'white';
-                                          }}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMenuIndex(null);
-                                      if (meta.canPreview) {
-                                              openPreviewModal(doc, e.currentTarget);
-                                      }
-                                    }}
-                                  >
-                                          <i className="bi bi-eye me-2"></i>
-                                    Preview
-                                  </button>
-                                      )}
-                                      {isFile(doc) && (
-                                  <button
-                                          className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                          style={{
-                                            fontFamily: 'BasisGrotesquePro',
-                                            fontSize: '14px',
-                                            color: '#00C0C6',
-                                            cursor: 'pointer',
-                                            borderBottom: '1px solid #E5E7EB'
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            e.target.style.backgroundColor = '#F0FDFF';
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            e.target.style.backgroundColor = 'white';
-                                          }}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMenuIndex(null);
-                                            handleOpenAssignModal(doc);
-                                          }}
-                                        >
-                                          <i className="bi bi-pen me-2"></i>
-                                          Assign
-                                        </button>
-                                      )}
+                                      {docStatus}
+                                    </span>
+                                  </td>
+                                  <td style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                    <div style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} data-menu-container>
                                       <button
-                                        className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                        type="button"
+                                        className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
                                         style={{
-                                          fontFamily: 'BasisGrotesquePro',
-                                          fontSize: '14px',
-                                          color: '#EF4444',
-                                          cursor: 'pointer'
+                                          width: "32px",
+                                          height: "32px",
+                                          borderRadius: "50%",
+                                          fontFamily: "BasisGrotesquePro",
+                                          backgroundColor: showMenuIndex === index ? '#F3F4F6' : 'transparent',
+                                          border: '1px solid #E5E7EB',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s ease'
                                         }}
                                         onMouseEnter={(e) => {
-                                          e.target.style.backgroundColor = '#FEF2F2';
+                                          e.currentTarget.style.backgroundColor = '#F3F4F6';
+                                          e.currentTarget.style.borderColor = '#D1D5DB';
                                         }}
                                         onMouseLeave={(e) => {
-                                          e.target.style.backgroundColor = 'white';
+                                          if (showMenuIndex !== index) {
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                            e.currentTarget.style.borderColor = '#E5E7EB';
+                                          }
                                         }}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setShowMenuIndex(null);
-                                          handleDeleteDocument(doc);
-                                    }}
-                                  >
-                                        <i className="bi bi-trash me-2"></i>
-                                        Delete
-                                  </button>
+                                          setShowMenuIndex(showMenuIndex === index ? null : index);
+                                        }}
+                                        title="More options"
+                                      >
+                                        <i className="bi bi-three-dots-vertical" style={{
+                                          fontSize: '18px',
+                                          color: '#6B7280',
+                                          fontWeight: 'bold'
+                                        }} />
+                                      </button>
+                                      {showMenuIndex === index && (
+                                        <div
+                                          style={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            top: '100%',
+                                            marginTop: '4px',
+                                            backgroundColor: 'white',
+                                            border: '1px solid #E5E7EB',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                            zIndex: 9999,
+                                            minWidth: '150px',
+                                            padding: '4px 0'
+                                          }}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {meta.canPreview && (
+                                            <button
+                                              className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                              style={{
+                                                fontFamily: 'BasisGrotesquePro',
+                                                fontSize: '14px',
+                                                color: '#3B4A66',
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid #E5E7EB'
+                                              }}
+                                              onMouseEnter={(e) => {
+                                                e.target.style.backgroundColor = '#F9FAFB';
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                e.target.style.backgroundColor = 'white';
+                                              }}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowMenuIndex(null);
+                                                if (meta.canPreview) {
+                                                  openPreviewModal(doc, e.currentTarget);
+                                                }
+                                              }}
+                                            >
+                                              <i className="bi bi-eye me-2"></i>
+                                              Preview
+                                            </button>
+                                          )}
+                                          {isFile(doc) && (
+                                            <button
+                                              className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                              style={{
+                                                fontFamily: 'BasisGrotesquePro',
+                                                fontSize: '14px',
+                                                color: '#00C0C6',
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid #E5E7EB'
+                                              }}
+                                              onMouseEnter={(e) => {
+                                                e.target.style.backgroundColor = '#F0FDFF';
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                e.target.style.backgroundColor = 'white';
+                                              }}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowMenuIndex(null);
+                                                handleOpenAssignModal(doc);
+                                              }}
+                                            >
+                                              <i className="bi bi-pen me-2"></i>
+                                              Assign
+                                            </button>
+                                          )}
+                                          <button
+                                            className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                            style={{
+                                              fontFamily: 'BasisGrotesquePro',
+                                              fontSize: '14px',
+                                              color: '#EF4444',
+                                              cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.target.style.backgroundColor = '#FEF2F2';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.target.style.backgroundColor = 'white';
+                                            }}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowMenuIndex(null);
+                                              handleDeleteDocument(doc);
+                                            }}
+                                          >
+                                            <i className="bi bi-trash me-2"></i>
+                                            Delete
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {fileManagerFolders.length === 0 && fileManagerDocuments.length === 0 && (
-                <div className="text-center py-5">
-                  {/* <FaFolder style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "16px" }} /> */}
-                  <p className="text-muted mb-0">
-                    {fileManagerSearchQuery ? 'No documents or folders found matching your search' : 'No folders or documents in this location'}
-                  </p>
-                  {!fileManagerSearchQuery && (
-                    <button
-                      className="btn btn-primary mt-3"
-                      onClick={() => setFileManagerCreatingFolder(true)}
-                      style={{ backgroundColor: "#00C0C6", border: "none" }}
-                    >
-                      Create Your First Folder
-                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
 
-      {/* Client Folders Section (only show when nested under client) */}
-      {isNestedUnderClient && (
-        <div className="bg-white rounded-xl p-4">
-          <div className="header d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h3 className="fw-semibold">Client Folders</h3>
-              <small className="text-muted">Organized document folders by client</small>
+                  {/* Empty State */}
+                  {fileManagerFolders.length === 0 && fileManagerDocuments.length === 0 && (
+                    <div className="text-center py-5">
+                      {/* <FaFolder style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "16px" }} /> */}
+                      <p className="text-muted mb-0">
+                        {fileManagerSearchQuery ? 'No documents or folders found matching your search' : 'No folders or documents in this location'}
+                      </p>
+                      {!fileManagerSearchQuery && (
+                        <button
+                          className="btn btn-primary mt-3"
+                          onClick={() => setFileManagerCreatingFolder(true)}
+                          style={{ backgroundColor: "#00C0C6", border: "none" }}
+                        >
+                          Create Your First Folder
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((doc, idx) => (
-              <div
-                key={doc.id}
-                className="document-card p-4 flex flex-col justify-between"
-                style={{
-                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                  borderRadius: "12px",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  // Navigate to the all documents page when any document card is clicked
-                  navigate("/taxdashboard/documents/all");
-                }}
-              >
-                {/* Header row: icon left, badge right */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-orange-500"><File /></div>
-                  <span className="text-xs text-white px-2 py-0.5 rounded-full" style={{ background: "var(--Palette2-Gold-800, #F49C2D)" }}>
-                    Client Folder
-                  </span>
-                </div>
-                <div className="font-medium text-gray-800">{doc.title}</div>
-                <div className="text-gray-500 text-xs">{doc.owner}</div>
-                {/* Footer row: documents count left, date right */}
-                <div className="flex items-center justify-between text-gray-400 text-xs mt-2">
-                  <div>{doc.docsCount} documents</div>
-                  <div>{doc.date}</div>
+          )}
+
+          {/* Client Folders Section (only show when nested under client) */}
+          {isNestedUnderClient && (
+            <div className="bg-white rounded-xl p-4">
+              <div className="header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h3 className="fw-semibold">Client Folders</h3>
+                  <small className="text-muted">Organized document folders by client</small>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {documents.map((doc, idx) => (
+                  <div
+                    key={doc.id}
+                    className="document-card p-4 flex flex-col justify-between"
+                    style={{
+                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                      borderRadius: "12px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      // Navigate to the all documents page when any document card is clicked
+                      navigate("/taxdashboard/documents/all");
+                    }}
+                  >
+                    {/* Header row: icon left, badge right */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-orange-500"><File /></div>
+                      <span className="text-xs text-white px-2 py-0.5 rounded-full" style={{ background: "var(--Palette2-Gold-800, #F49C2D)" }}>
+                        Client Folder
+                      </span>
+                    </div>
+                    <div className="font-medium text-gray-800">{doc.title}</div>
+                    <div className="text-gray-500 text-xs">{doc.owner}</div>
+                    {/* Footer row: documents count left, date right */}
+                    <div className="flex items-center justify-between text-gray-400 text-xs mt-2">
+                      <div>{doc.docsCount} documents</div>
+                      <div>{doc.date}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Render nested routes */}
+          {/* Render nested routes */}
           {isNestedUnderClient && (
-      <div className="mt-4">
-        <Outlet />
-      </div>
+            <div className="mt-4">
+              <Outlet />
+            </div>
           )}
         </>
       )}
+
+      {/* Create Folder Modal */}
+      <Modal
+        show={fileManagerCreatingFolder}
+        onHide={() => {
+          setFileManagerCreatingFolder(false);
+          setFileManagerNewFolderName("");
+          setFileManagerNewFolderDescription("");
+        }}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton style={{ borderBottom: '1px solid #F3F4F6' }}>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#111827' }}>
+            Create New Folder
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="mb-4">
+            <label className="form-label small fw-bold mb-2" style={{ color: '#374151' }}>
+              Folder Name <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="e.g. Financial Statements 2024"
+              value={fileManagerNewFolderName}
+              onChange={(e) => setFileManagerNewFolderName(e.target.value)}
+              disabled={fileManagerCreatingFolderLoading}
+              style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #D1D5DB' }}
+              autoFocus
+            />
+          </div>
+          <div className="mb-1">
+            <label className="form-label small fw-bold mb-2" style={{ color: '#374151' }}>
+              Description (Optional)
+            </label>
+            <textarea
+              className="form-control"
+              placeholder="Add a brief description..."
+              value={fileManagerNewFolderDescription}
+              onChange={(e) => setFileManagerNewFolderDescription(e.target.value)}
+              rows="3"
+              disabled={fileManagerCreatingFolderLoading}
+              style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', resize: 'none' }}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: 'none', padding: '0 24px 24px 24px' }}>
+          <button
+            className="btn btn-link text-decoration-none text-muted"
+            onClick={() => {
+              setFileManagerCreatingFolder(false);
+              setFileManagerNewFolderName("");
+              setFileManagerNewFolderDescription("");
+            }}
+            disabled={fileManagerCreatingFolderLoading}
+            style={{ fontWeight: '500' }}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleFileManagerCreateFolder}
+            disabled={fileManagerCreatingFolderLoading || !fileManagerNewFolderName.trim()}
+            style={{
+              backgroundColor: "#00C0C6",
+              border: "none",
+              borderRadius: "8px",
+              padding: '10px 24px',
+              fontWeight: '500',
+              boxShadow: '0 2px 5px rgba(0, 192, 198, 0.2)'
+            }}
+          >
+            {fileManagerCreatingFolderLoading ? (
+              <div className="d-flex align-items-center gap-2">
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Creating...</span>
+              </div>
+            ) : 'Create Folder'}
+          </button>
+        </Modal.Footer>
+      </Modal>
 
       <Modal show={showPreview} onHide={closePreviewModal} size="xl" centered>
         <Modal.Header closeButton>
@@ -1478,7 +1515,7 @@ export default function DocumentsPage() {
                 className="form-control"
                 value={getDocumentName(documentToAssign)}
                 disabled={true}
-                style={{ 
+                style={{
                   fontFamily: 'BasisGrotesquePro',
                   backgroundColor: '#F3F4F6',
                   cursor: 'not-allowed'
@@ -1488,7 +1525,7 @@ export default function DocumentsPage() {
           )}
 
           {pollingStatus && (
-            <div className="mb-3 p-3" style={{ 
+            <div className="mb-3 p-3" style={{
               backgroundColor: pollingStatus.status === 'completed' ? '#F0FDF4' : '#FEF3C7',
               borderRadius: '8px',
               border: `1px solid ${pollingStatus.status === 'completed' ? '#10B981' : '#F59E0B'}`
@@ -1510,15 +1547,15 @@ export default function DocumentsPage() {
                 value={(() => {
                   const client = taxpayers.find(t => t.id?.toString() === clientIdFromUrl);
                   if (client) {
-                    return client.full_name || 
-                           `${client.first_name || ''} ${client.last_name || ''}`.trim() || 
-                           client.email || 
-                           `Taxpayer ${clientIdFromUrl}`;
+                    return client.full_name ||
+                      `${client.first_name || ''} ${client.last_name || ''}`.trim() ||
+                      client.email ||
+                      `Taxpayer ${clientIdFromUrl}`;
                   }
                   return `Client ID: ${clientIdFromUrl}`;
                 })()}
                 disabled={true}
-                style={{ 
+                style={{
                   fontFamily: 'BasisGrotesquePro',
                   backgroundColor: '#F3F4F6',
                   cursor: 'not-allowed'

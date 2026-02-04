@@ -523,7 +523,7 @@ export default function Profile() {
                         />
                         <label 
                             htmlFor="profileImageInput" 
-                            className="btn text-white btn-sm mb-2" 
+                            className="btn text-white  mb-2" 
                             style={{ 
                                 background: "#F56D2D", 
                                 fontSize: "15px", 
@@ -539,7 +539,7 @@ export default function Profile() {
                     {selectedImage && (
                         <div className="mb-2">
                             <button 
-                                className="btn btn-success btn-sm me-2"
+                                className="btn btn-success  me-2"
                                 onClick={handleImageUpload}
                                 disabled={uploadingImage}
                                 style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
@@ -556,7 +556,7 @@ export default function Profile() {
                                 )}
                             </button>
                             <button 
-                                className="btn btn-secondary btn-sm"
+                                className="btn btn-secondary "
                                 onClick={() => {
                                     setSelectedImage(null);
                                     setImagePreview(null);

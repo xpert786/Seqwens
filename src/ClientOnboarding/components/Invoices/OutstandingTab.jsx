@@ -437,7 +437,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
                                 <div className="text-end">
                                     <button
-                                        className="btn btn-sm me-2"
+                                        className="btn  me-2"
                                         style={{
                                             backgroundColor: '#ffffff',
                                             borderRadius: '4px',
@@ -485,7 +485,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                             <button
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                 disabled={currentPage === 1}
-                                className="btn btn-sm"
+                                className="btn "
                                 style={{
                                     backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
                                     borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
@@ -510,7 +510,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                             <button
                                                 key={page}
                                                 onClick={() => setCurrentPage(page)}
-                                                className="btn btn-sm"
+                                                className="btn "
                                                 style={{
                                                     backgroundColor: currentPage === page ? '#3B82F6' : 'white',
                                                     borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
@@ -540,7 +540,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                             <button
                                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                 disabled={currentPage === totalPages}
-                                className="btn btn-sm"
+                                className="btn "
                                 style={{
                                     backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
                                     borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
@@ -955,7 +955,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
                             <div className="text-end mt-2">
                                 <button
-                                    className="btn btn-sm"
+                                    className="btn "
                                     style={{
                                         backgroundColor: "#E8F0FF",
                                         border: "1px solid #ced4da",
@@ -977,7 +977,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
                                 <button
                                     onClick={exportOutstandingInvoicesToPDF}
-                                    className="btn btn-sm"
+                                    className="btn "
                                     style={{
                                         backgroundColor: "#E8F0FF",
                                         border: "1px solid #ced4da",

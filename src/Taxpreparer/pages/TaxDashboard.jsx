@@ -255,16 +255,16 @@ export default function Dashboard() {
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [recentMessages, setRecentMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Pagination states
   const [myTasksPage, setMyTasksPage] = useState(1);
   const [deadlinesPage, setDeadlinesPage] = useState(1);
   const [messagesPage, setMessagesPage] = useState(1);
-  
+
   // View All states - to show all items or paginated
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [showAllDeadlines, setShowAllDeadlines] = useState(false);
-  
+
   // Items per page
   const ITEMS_PER_PAGE = 3;
 
@@ -358,42 +358,37 @@ export default function Dashboard() {
   const PaginationControls = ({ currentPage, totalPages, onPageChange, sectionName }) => {
     if (totalPages <= 1) return null;
 
+    const btnStyle = (isDisabled) => ({
+      backgroundColor: isDisabled ? '#E5E7EB' : '#F56D2D',
+      color: isDisabled ? '#9CA3AF' : '#FFFFFF',
+      border: 'none',
+      borderRadius: '6px',
+      padding: '8px 16px',
+      fontSize: '14px',
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
+      opacity: isDisabled ? 0.6 : 1,
+      width: '120px',
+      flex: 'none',
+      fontWeight: '500',
+      transition: 'all 0.2s ease'
+    });
+
     return (
-      <div className="d-flex justify-content-center align-items-center gap-2 mt-3" style={{ paddingTop: '0.5rem', borderTop: '1px solid #E5E7EB' }}>
+      <div className="d-flex justify-content-center align-items-center gap-3 mt-3" style={{ paddingTop: '1rem', borderTop: '1px solid #E5E7EB' }}>
         <button
-          className="btn btn-sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          style={{
-            backgroundColor: currentPage === 1 ? '#E5E7EB' : '#F56D2D',
-            color: currentPage === 1 ? '#9CA3AF' : '#FFFFFF',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '6px 12px',
-            fontSize: '14px',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-            opacity: currentPage === 1 ? 0.6 : 1
-          }}
+          style={btnStyle(currentPage === 1)}
         >
           Previous
         </button>
-        <span style={{ fontSize: '14px', color: '#4B5563', minWidth: '80px', textAlign: 'center' }}>
+        <span style={{ fontSize: '14px', color: '#4B5563', fontWeight: '500', minWidth: '100px', textAlign: 'center' }}>
           Page {currentPage} of {totalPages}
         </span>
         <button
-          className="btn btn-sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={{
-            backgroundColor: currentPage === totalPages ? '#E5E7EB' : '#F56D2D',
-            color: currentPage === totalPages ? '#9CA3AF' : '#FFFFFF',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '6px 12px',
-            fontSize: '14px',
-            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-            opacity: currentPage === totalPages ? 0.6 : 1
-          }}
+          style={btnStyle(currentPage === totalPages)}
         >
           Next
         </button>
@@ -408,10 +403,10 @@ export default function Dashboard() {
       <div className="row mt-1 g-3 lg:px-4 md:px-2 px-1">
         {/* My Tasks */}
         <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-3 h-100 sdfsdf">
+          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h1 className="section-title mb-1">My Tasks</h1>
+                <h4 className="section-title mb-1">My Tasks</h4>
                 <p className="section-subtitle m-0">Tasks assigned to you</p>
               </div>
               <button
@@ -472,7 +467,7 @@ export default function Dashboard() {
           <div className="card custom-card upcoming-deadlines-card">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h1 className="section-title mb-1">Upcoming Deadlines</h1>
+                <h4 className="section-title mb-1">Upcoming Deadlines</h4>
                 <p className="section-subtitle m-0">Important dates to remember</p>
               </div>
               <button
@@ -542,7 +537,7 @@ export default function Dashboard() {
           <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h1 className="section-title mb-1">Recent Messages</h1>
+                <h4 className="section-title mb-1">Recent Messages</h4>
                 <p className="section-subtitle m-0">Latest client communications</p>
               </div>
               <button
@@ -608,7 +603,7 @@ export default function Dashboard() {
         <div className="col-12 col-md-6">
           <div className="card custom-card p-3 p-md-4 rounded-4">
             <div className="mb-3">
-              <h1 className="section-title mb-1">Quick Actions</h1>
+              <h4 className="section-title mb-1">Quick Actions</h4>
               <p className="section-subtitle m-0">Common tasks and shortcuts</p>
             </div>
             <div className="quick-action-container">

@@ -677,7 +677,7 @@ export default function Folders({ onFolderSelect }) {
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                         <button
                             onClick={handleBackToFolders}
-                            className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+                            className="btn  text-primary p-0 border-0 bg-transparent"
                             style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
                         >
                             <i className="bi bi-house me-1"></i>
@@ -1224,7 +1224,7 @@ export default function Folders({ onFolderSelect }) {
                     <div className="mb-3 px-2">
                         <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "white", padding: "12px 16px", borderRadius: "8px" }}>
                             <button
-                                className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+                                className="btn  text-primary p-0 border-0 bg-transparent"
                                 onClick={() => {
                                     setCurrentFolder(null);
                                     setFolderPath([]);
@@ -1241,7 +1241,7 @@ export default function Folders({ onFolderSelect }) {
                                 <React.Fragment key={idx}>
                                     <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
                                     <button
-                                        className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+                                        className="btn  text-primary p-0 border-0 bg-transparent"
                                         onClick={() => {
                                             // Navigate to this folder level - would need to track folder IDs
                                             // For now, just show the path
@@ -1377,7 +1377,7 @@ export default function Folders({ onFolderSelect }) {
                                                     </div>
                                                     <div className="d-flex gap-2">
                                                         <button
-                                                            className="btn btn-sm"
+                                                            className="btn "
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleRecoverFolder(folder.id, folder.title);
@@ -1409,7 +1409,7 @@ export default function Folders({ onFolderSelect }) {
                                                             )}
                                                         </button>
                                                         <button
-                                                            className="btn btn-sm"
+                                                            className="btn "
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleDeleteFolder(folder.id, folder.title);
@@ -1487,7 +1487,7 @@ export default function Folders({ onFolderSelect }) {
                                                         {folder.title}
                                                     </div>
                                                     <button
-                                                        className="btn btn-sm"
+                                                        className="btn "
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleTrashFolder(folder.id, folder.title);
@@ -1593,7 +1593,7 @@ export default function Folders({ onFolderSelect }) {
                                                 </div>
                                                 <div className="d-flex gap-2">
                                                     <button
-                                                        className="btn btn-sm"
+                                                        className="btn "
                                                         onClick={() => handleRecoverFolder(folder.id, folder.title)}
                                                         disabled={recoveringFolder === folder.id}
                                                         style={{
@@ -1622,7 +1622,7 @@ export default function Folders({ onFolderSelect }) {
                                                         )}
                                                     </button>
                                                     <button
-                                                        className="btn btn-sm"
+                                                        className="btn "
                                                         onClick={() => handleDeleteFolder(folder.id, folder.title)}
                                                         disabled={deletingFolder === folder.id}
                                                         style={{
@@ -1703,7 +1703,7 @@ export default function Folders({ onFolderSelect }) {
                                                 </div>
                                                 <div className="d-flex align-items-center gap-2">
                                                     <button
-                                                        className="btn btn-sm"
+                                                        className="btn "
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleTrashFolder(folder.id, folder.title);
@@ -1820,7 +1820,7 @@ export default function Folders({ onFolderSelect }) {
                                                                     <div className="d-flex align-items-center justify-content-center gap-2">
                                                                         {isFile(doc) && (
                                                                             <button
-                                                                                className="btn btn-sm"
+                                                                                className="btn "
                                                                                 style={{
                                                                                     backgroundColor: "#00C0C6",
                                                                                     color: "#FFFFFF",
@@ -1843,7 +1843,7 @@ export default function Folders({ onFolderSelect }) {
                                                                             </button>
                                                                         )}
                                                                         <button
-                                                                            className="btn btn-sm"
+                                                                            className="btn "
                                                                             style={{
                                                                                 backgroundColor: "#EF4444",
                                                                                 color: "#FFFFFF",

@@ -321,7 +321,7 @@ export default function SharedDocumentsList() {
                     </td>
                     <td>
                       <button
-                        className="btn btn-sm shareddocs-actions-button"
+                        className="btn  shareddocs-actions-button"
                         onClick={() => handleUnshareClick(share)}
                         style={{
                           backgroundColor: '#FEE2E2',

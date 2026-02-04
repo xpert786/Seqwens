@@ -260,7 +260,7 @@ const SavedPaymentMethods = () => {
               <div className="card-actions">
                 {!card.is_default && (
                   <button
-                    className="btn btn-sm btn-secondary"
+                    className="btn  btn-secondary"
                     onClick={() => handleSetDefault(card.id)}
                     disabled={settingDefaultId === card.id || deletingId === card.id}
                   >
@@ -269,7 +269,7 @@ const SavedPaymentMethods = () => {
                 )}
 
                 <button
-                  className="btn btn-sm btn-danger"
+                  className="btn  btn-danger"
                   onClick={() => handleDeleteCard(card.id)}
                   disabled={deletingId === card.id || settingDefaultId === card.id}
                 >

@@ -437,7 +437,7 @@ export default function ESignature() {
               onClick={() => {
                 setFilter(null);
               }}
-              className="btn btn-sm"
+              className="btn "
               style={{
                 backgroundColor: filter === null ? "#00C0C6" : "#fff",
                 color: filter === null ? "#fff" : "#3B4A66",
@@ -454,7 +454,7 @@ export default function ESignature() {
               onClick={() => {
                 setFilter('pending');
               }}
-              className="btn btn-sm"
+              className="btn "
               style={{
                 backgroundColor: filter === 'pending' ? "#00C0C6" : "#fff",
                 color: filter === 'pending' ? "#fff" : "#3B4A66",
@@ -471,7 +471,7 @@ export default function ESignature() {
               onClick={() => {
                 setFilter('inprogress');
               }}
-              className="btn btn-sm"
+              className="btn "
               style={{
                 backgroundColor: filter === 'inprogress' ? "#00C0C6" : "#fff",
                 color: filter === 'inprogress' ? "#fff" : "#3B4A66",
@@ -488,7 +488,7 @@ export default function ESignature() {
               onClick={() => {
                 setFilter('expired');
               }}
-              className="btn btn-sm"
+              className="btn "
               style={{
                 backgroundColor: filter === 'expired' ? "#00C0C6" : "#fff",
                 color: filter === 'expired' ? "#fff" : "#3B4A66",

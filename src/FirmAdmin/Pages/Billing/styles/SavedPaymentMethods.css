@@ -278,12 +278,7 @@
   flex-wrap: wrap;
 }
 
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-  flex: 1;
-  min-width: 120px;
-}
+
 
 .btn-secondary {
   background-color: #e0e0e0;
@@ -454,9 +449,7 @@
     flex-direction: column;
   }
 
-  .btn-sm {
-    min-width: unset;
-  }
+
 
   .info-section {
     grid-template-columns: 1fr;

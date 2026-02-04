@@ -39,13 +39,13 @@ export default function ArchivedFilesPage() {
           <h3 className="fw-semibold">Documents</h3>
           <small className="text-muted">Manage client documents and files</small>
         </div>
-          <button
-                              className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
-                              onClick={() => setShowUpload(true)}
-                            >
-                              <UpIcon />
-                              Upload Documents
-                            </button>
+        <button
+          className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+          onClick={() => setShowUpload(true)}
+        >
+          <UpIcon />
+          Upload Documents
+        </button>
       </div>
 
       {/* Stats */}
@@ -99,12 +99,12 @@ export default function ArchivedFilesPage() {
 
       <div className="bg-white rounded-xl p-3" style={{ border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)" }}>
         <div className="header d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h3 className="fw-semibold"> Archived Files</h3>
-          <small className="text-muted">List of previously archived files</small>
+          <div>
+            <h4 className="fw-semibold"> Archived Files</h4>
+            <small className="text-muted">List of previously archived files</small>
+          </div>
         </div>
-      </div>
-      
+
         {files.map((f) => (
           <div
             key={f.id}

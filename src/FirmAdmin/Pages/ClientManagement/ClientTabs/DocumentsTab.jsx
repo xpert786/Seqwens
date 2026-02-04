@@ -752,7 +752,7 @@ export default function DocumentsTab({ client }) {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
-                                className="btn btn-sm w-100 text-start d-flex align-items-center gap-2"
+                                className="btn  w-100 text-start d-flex align-items-center gap-2"
                                 style={{ border: 'none', borderRadius: 0 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -762,7 +762,7 @@ export default function DocumentsTab({ client }) {
                                 <FaEdit /> Rename
                               </button>
                               <button
-                                className="btn btn-sm w-100 text-start d-flex align-items-center gap-2 text-danger"
+                                className="btn  w-100 text-start d-flex align-items-center gap-2 text-danger"
                                 style={{ border: 'none', borderRadius: 0 }}
                                 onClick={(e) => {
                                   e.stopPropagation();

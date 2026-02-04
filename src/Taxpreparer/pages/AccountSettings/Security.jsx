@@ -357,7 +357,7 @@ const Security = ({ security, onUpdate }) => {
                 <button
                   type="button"
                   onClick={handleSetup2FA}
-                  className="btn btn-sm"
+                  className="btn "
                   style={{
                     backgroundColor: "#F56D2D",
                     color: "#ffffff",
@@ -375,7 +375,7 @@ const Security = ({ security, onUpdate }) => {
                 <button
                   type="button"
                   onClick={() => setShowDisable2FA(true)}
-                  className="btn btn-sm"
+                  className="btn "
                   style={{
                     backgroundColor: "#dc3545",
                     color: "#ffffff",
@@ -463,7 +463,7 @@ const Security = ({ security, onUpdate }) => {
                 <button
                   type="button"
                   onClick={cancelDisable2FA}
-                  className="btn btn-sm"
+                  className="btn "
                   style={{
                     backgroundColor: "transparent",
                     color: "#3B4A66",
@@ -479,7 +479,7 @@ const Security = ({ security, onUpdate }) => {
                   type="button"
                   onClick={handleDisable2FA}
                   disabled={disabling || !disablePassword}
-                  className="btn btn-sm"
+                  className="btn "
                   style={{
                     backgroundColor: "#dc3545",
                     color: "#ffffff",

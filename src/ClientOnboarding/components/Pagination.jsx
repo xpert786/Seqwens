@@ -13,7 +13,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, tota
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="btn btn-sm"
+          className="btn "
           style={{
             backgroundColor: currentPage === 1 ? '#F3F4F6' : '#FFFFFF',
             color: currentPage === 1 ? '#9CA3AF' : '#3B4A66',
@@ -40,7 +40,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, tota
                 <button
                   key={page}
                   onClick={() => onPageChange(page)}
-                  className="btn btn-sm"
+                  className="btn "
                   style={{
                     backgroundColor: currentPage === page ? '#00C0C6' : '#FFFFFF',
                     color: currentPage === page ? '#FFFFFF' : '#3B4A66',
@@ -69,7 +69,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, tota
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="btn btn-sm"
+          className="btn "
           style={{
             backgroundColor: currentPage === totalPages ? '#F3F4F6' : '#FFFFFF',
             color: currentPage === totalPages ? '#9CA3AF' : '#3B4A66',

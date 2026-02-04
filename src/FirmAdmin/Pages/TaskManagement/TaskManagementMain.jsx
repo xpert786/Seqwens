@@ -684,7 +684,7 @@ const TaskManagementMain = () => {
             {pagination.total_pages > 1 && (
               <div className="d-flex justify-content-center align-items-center gap-2 mt-4 taskmanage-pagination">
                 <button
-                  className="btn btn-sm taskmanage-pagination-button"
+                  className="btn  taskmanage-pagination-button"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   style={{
@@ -705,7 +705,7 @@ const TaskManagementMain = () => {
                   Page {currentPage} of {pagination.total_pages}
                 </span>
                 <button
-                  className="btn btn-sm taskmanage-pagination-button"
+                  className="btn  taskmanage-pagination-button"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= pagination.total_pages}
                   style={{

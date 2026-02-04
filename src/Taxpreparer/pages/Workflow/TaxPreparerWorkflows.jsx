@@ -30,17 +30,17 @@ const TaxPreparerWorkflows = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         status: filter !== 'all' ? filter : undefined,
         search: searchTerm || undefined,
       };
-      
+
       const response = await workflowAPI.listTaxPreparerWorkflows(params);
-      
+
       if (response.success && response.data) {
-        const workflowsList = Array.isArray(response.data) 
-          ? response.data 
+        const workflowsList = Array.isArray(response.data)
+          ? response.data
           : (response.data.workflows || response.data.results || []);
         setWorkflows(workflowsList);
       } else {
@@ -71,7 +71,7 @@ const TaxPreparerWorkflows = () => {
 
   const handleVerifyRequest = async (request) => {
     setSelectedRequest(request);
-    
+
     // Fetch documents for this request
     try {
       const response = await workflowAPI.getWorkflowInstanceWithDocuments(request.workflow_instance || request.workflow);
@@ -95,7 +95,7 @@ const TaxPreparerWorkflows = () => {
       // Still show modal even if documents fetch fails
       setRequestDocuments([]);
     }
-    
+
     setShowVerifyModal(true);
   };
 
@@ -118,7 +118,7 @@ const TaxPreparerWorkflows = () => {
     try {
       setUpdatingStatus(workflowId);
       let response;
-      
+
       switch (newStatus) {
         case 'paused':
           response = await workflowAPI.pauseWorkflow(workflowId);
@@ -151,7 +151,7 @@ const TaxPreparerWorkflows = () => {
   const getAvailableStatusActions = (workflow) => {
     const actions = [];
     const currentStatus = workflow.status?.toLowerCase();
-    
+
     if (currentStatus === 'active') {
       actions.push({ value: 'paused', label: 'Pause', icon: '⏸️' });
       actions.push({ value: 'completed', label: 'Complete', icon: '✅' });
@@ -159,13 +159,13 @@ const TaxPreparerWorkflows = () => {
       actions.push({ value: 'active', label: 'Resume', icon: '▶️' });
       actions.push({ value: 'completed', label: 'Complete', icon: '✅' });
     }
-    
+
     return actions;
   };
 
   const filteredWorkflows = workflows.filter((workflow) => {
     const matchesFilter = filter === 'all' || workflow.status === filter;
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       workflow.tax_case_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       workflow.template_name?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -214,11 +214,10 @@ const TaxPreparerWorkflows = () => {
                 <button
                   key={status}
                   onClick={() => setFilter(status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition font-[BasisGrotesquePro] ${
-                    filter === status
-                      ? 'text-white'
-                      : 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition font-[BasisGrotesquePro] ${filter === status
+                    ? 'text-white'
+                    : 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
+                    }`}
                   style={{
                     backgroundColor: filter === status ? '#3AD6F2' : undefined,
                     borderRadius: '8px'
@@ -256,32 +255,32 @@ const TaxPreparerWorkflows = () => {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
+                      <h4 className="text-lg font-semibold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
                         {workflow.template_name || 'Workflow'}
-                      </h3>
+                      </h4>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-[BasisGrotesquePro]`}
                         style={{
-                          backgroundColor: 
+                          backgroundColor:
                             workflow.status === 'active' || workflow.status === 'Active'
                               ? '#D1FAE5'
                               : workflow.status === 'completed' || workflow.status === 'Completed'
-                              ? '#DBEAFE'
-                              : workflow.status === 'paused' || workflow.status === 'Paused'
-                              ? '#FEF3C7'
-                              : workflow.status === 'cancelled' || workflow.status === 'Cancelled'
-                              ? '#FEE2E2'
-                              : '#F3F4F6',
+                                ? '#DBEAFE'
+                                : workflow.status === 'paused' || workflow.status === 'Paused'
+                                  ? '#FEF3C7'
+                                  : workflow.status === 'cancelled' || workflow.status === 'Cancelled'
+                                    ? '#FEE2E2'
+                                    : '#F3F4F6',
                           color:
                             workflow.status === 'active' || workflow.status === 'Active'
                               ? '#065F46'
                               : workflow.status === 'completed' || workflow.status === 'Completed'
-                              ? '#1E40AF'
-                              : workflow.status === 'paused' || workflow.status === 'Paused'
-                              ? '#92400E'
-                              : workflow.status === 'cancelled' || workflow.status === 'Cancelled'
-                              ? '#991B1B'
-                              : '#374151'
+                                ? '#1E40AF'
+                                : workflow.status === 'paused' || workflow.status === 'Paused'
+                                  ? '#92400E'
+                                  : workflow.status === 'cancelled' || workflow.status === 'Cancelled'
+                                    ? '#991B1B'
+                                    : '#374151'
                         }}
                       >
                         {workflow.status_display || workflow.status || 'Active'}
@@ -302,7 +301,7 @@ const TaxPreparerWorkflows = () => {
                       <div className="flex-1 max-w-xs bg-gray-200 rounded-full h-2" style={{ borderRadius: '9999px' }}>
                         <div
                           className="h-2 rounded-full transition-all"
-                          style={{ 
+                          style={{
                             width: `${Math.min(workflow.progress_percentage || 0, 100)}%`,
                             backgroundColor: '#3AD6F2',
                             borderRadius: '9999px'
@@ -325,7 +324,7 @@ const TaxPreparerWorkflows = () => {
                     <button
                       onClick={() => handleCreateRequest(workflow)}
                       className="px-4 py-2 text-sm text-white rounded-lg transition font-[BasisGrotesquePro] flex items-center gap-2"
-                      style={{ 
+                      style={{
                         backgroundColor: '#3AD6F2',
                         borderRadius: '8px'
                       }}
@@ -335,7 +334,7 @@ const TaxPreparerWorkflows = () => {
                       <FaPlus className="w-4 h-4" />
                       Create Request
                     </button>
-                    
+
                     {/* Status Update Dropdown */}
                     {getAvailableStatusActions(workflow).length > 0 && (
                       <div className="relative">
@@ -414,7 +413,7 @@ const TaxPreparerWorkflows = () => {
 
       {/* Verify Documents Modal */}
       {showVerifyModal && selectedRequest && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
           style={{ zIndex: 99999 }}
         >

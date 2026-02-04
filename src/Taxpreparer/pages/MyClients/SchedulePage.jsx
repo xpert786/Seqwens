@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Calender, MiniClock, PhoneMiniIcon, MiniDocument, MiniContact, FiltIcon } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -102,6 +103,61 @@ export default function SchedulePage() {
     }
   };
 
+  // Update appointment status
+  const updateAppointmentStatus = async (appointmentId, newStatus) => {
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/taxpayer/appointments/${appointmentId}/update-status/`;
+
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ appointment_status: newStatus }),
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Appointment status updated to ${newStatus}`);
+        fetchUpcomingAppointments(); // Refresh list
+        setShowStatusModal(false);
+        setSelectedAppointment(null);
+      } else {
+        throw new Error(result.message || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error(handleAPIError(error));
+    }
+  };
+
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+
+  const openStatusModal = (appointment, e) => {
+    e.stopPropagation();
+    setSelectedAppointment(appointment);
+    setNewStatus(appointment.status || appointment.appointment_status || 'pending');
+    setShowStatusModal(true);
+  };
+
   if (loading) {
     return (
       <div className="mt-6">
@@ -120,7 +176,7 @@ export default function SchedulePage() {
       <div className="mt-6">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchUpcomingAppointments}>
+          <button className="btn  btn-outline-danger ms-2" onClick={fetchUpcomingAppointments}>
             Retry
           </button>
         </div>
@@ -226,7 +282,8 @@ export default function SchedulePage() {
                 : { background: "#FEF9C3", color: "#854D0E", border: "0.5px solid #854D0E" };
 
               const meetingUrl = appointment.meeting_url || appointment.zoom_meeting_link || appointment.google_meet_link;
-              const hasMeetingLink = !!meetingUrl;
+              const isVideoMeeting = ['zoom', 'google_meet'].includes(appointment.meeting_type);
+              const hasMeetingLink = !!meetingUrl && isVideoMeeting;
 
               return (
                 <div
@@ -257,24 +314,33 @@ export default function SchedulePage() {
                         {appointment.status_display || appointment.status || 'pending'}
                       </span>
                     </div>
-                    {hasMeetingLink && (
+                    <div className="d-flex gap-2">
                       <button
-                        className="btn btn-sm d-flex align-items-center justify-content-center gap-2"
-                        style={{
-                          background: "#F56D2D",
-                          color: "#fff",
-                          fontSize: "12px",
-                          padding: "4px 12px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px"
-                        }}
-                        onClick={(e) => handleJoinMeeting(meetingUrl, e)}
+                        className="btn  btn-outline-secondary d-flex align-items-center gap-1"
+                        style={{ fontSize: "12px", padding: "4px 8px" }}
+                        onClick={(e) => openStatusModal(appointment, e)}
                       >
-                        <BsCameraVideo style={{ fontSize: "14px", display: "inline-block", margin: 0, padding: 0 }} />
-                        <span style={{ display: "inline-block", lineHeight: "1" }}>Join Meeting</span>
+                         Update Status
                       </button>
-                    )}
+                      {hasMeetingLink && (
+                        <button
+                          className="btn d-flex align-items-center justify-content-center gap-2"
+                          style={{
+                            background: "#F56D2D",
+                            color: "#fff",
+                            fontSize: "12px",
+                            padding: "4px 12px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                          onClick={(e) => handleJoinMeeting(meetingUrl, e)}
+                        >
+                          <BsCameraVideo style={{ fontSize: "14px", display: "inline-block", margin: 0, padding: 0 }} />
+                          <span style={{ display: "inline-block", lineHeight: "1" }}>Join Meeting</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Details with icons */}
@@ -321,7 +387,7 @@ export default function SchedulePage() {
             </p>
             {searchQuery && (
               <button
-                className="btn btn-sm btn-outline-primary mt-2"
+                className="btn  btn-outline-primary mt-2"
                 onClick={() => setSearchQuery("")}
               >
                 Clear Search
@@ -343,6 +409,42 @@ export default function SchedulePage() {
           }}
           preSelectedClient={clientInfo}
         />
+      )}
+      
+      {/* Update Status Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h5 className="text-lg font-semibold mb-4">Update Appointment Status</h5>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select New Status</label>
+              <select 
+                className="form-select w-full rounded border-gray-300"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+              >
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button 
+                className="btn btn-secondary "
+                onClick={() => setShowStatusModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary  text-white"
+                style={{ backgroundColor: '#F56D2D', borderColor: '#F56D2D' }}
+                onClick={() => updateAppointmentStatus(selectedAppointment.id, newStatus)}
+              >
+                Update Status
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

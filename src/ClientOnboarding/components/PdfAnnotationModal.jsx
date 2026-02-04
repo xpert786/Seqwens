@@ -1169,7 +1169,7 @@ export default function PdfAnnotationModal({
               <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
                 <button
                   onClick={() => setActiveSigner('primary')}
-                  className={`btn btn-sm ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  className={`btn  ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
                   style={{
                     fontSize: '12px',
                     padding: '4px 12px',
@@ -1181,7 +1181,7 @@ export default function PdfAnnotationModal({
                 </button>
                 <button
                   onClick={() => setActiveSigner('spouse')}
-                  className={`btn btn-sm ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  className={`btn  ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
                   style={{
                     fontSize: '12px',
                     padding: '4px 12px',
@@ -1203,7 +1203,7 @@ export default function PdfAnnotationModal({
             <button
               onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
               disabled={isSaved}
-              className={`btn btn-sm ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn  ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
               style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Pen Tool"
             >
@@ -1212,7 +1212,7 @@ export default function PdfAnnotationModal({
             <button
               onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
               disabled={isSaved}
-              className={`btn btn-sm ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn  ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
               style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Eraser Tool"
             >
@@ -1221,7 +1221,7 @@ export default function PdfAnnotationModal({
             <button
               onClick={() => !isSaved && imageInputRef.current?.click()}
               disabled={isSaved}
-              className={`btn btn-sm ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn  ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
               style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Upload Image"
             >
@@ -1235,7 +1235,7 @@ export default function PdfAnnotationModal({
                 }
               }}
               disabled={isSaved}
-              className={`btn btn-sm ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn  ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
               style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Select/Move Tool - Click and drag images to move them"
             >
@@ -1256,7 +1256,7 @@ export default function PdfAnnotationModal({
             <button
               onClick={handleClearAll}
               disabled={isSaved || (annotations.length === 0 && images.length === 0)}
-              className="btn btn-sm btn-outline-danger"
+              className="btn  btn-outline-danger"
               style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Clear All Annotations"
             >
@@ -1389,7 +1389,7 @@ export default function PdfAnnotationModal({
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="btn btn-sm btn-outline-secondary"
+              className="btn  btn-outline-secondary"
             >
               Previous Page
             </button>
@@ -1399,7 +1399,7 @@ export default function PdfAnnotationModal({
             <button
               onClick={() => setCurrentPage(prev => Math.min(pdfPages.length, prev + 1))}
               disabled={currentPage === pdfPages.length}
-              className="btn btn-sm btn-outline-secondary"
+              className="btn  btn-outline-secondary"
             >
               Next Page
             </button>

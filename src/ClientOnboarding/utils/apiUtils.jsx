@@ -5361,7 +5361,7 @@ export const esignAssignAPI = {
       throw new Error('No authentication token found');
     }
 
-    const url = `${API_BASE_URL}/taxpayer/esign/custom/create/`;
+    const url = `${API_BASE_URL}/taxpayer/esign/assign-document/`;
 
     // Format deadline to MM/DD/YYYY if it's provided
     let deadlineFormatted = '';

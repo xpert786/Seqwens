@@ -317,7 +317,7 @@ const Notifications = () => {
           </div>
           {unreadCount > 0 && (
             <button
-              className="btn btn-sm"
+              className="btn "
               onClick={handleMarkAllAsRead}
               style={{
                 backgroundColor: "#F56D2D",
@@ -465,7 +465,7 @@ const Notifications = () => {
                                 </span>
                               )}
                               <button
-                                className="btn btn-sm"
+                                className="btn "
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDelete(notification.id);
@@ -517,7 +517,7 @@ const Notifications = () => {
             {totalPages > 1 && (
               <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
                 <button
-                  className="btn btn-sm"
+                  className="btn "
                   onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                   disabled={page === 1}
                   style={{
@@ -535,7 +535,7 @@ const Notifications = () => {
                   Page {page} of {totalPages}
                 </span>
                 <button
-                  className="btn btn-sm"
+                  className="btn "
                   onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={page === totalPages}
                   style={{
@@ -727,7 +727,7 @@ const Notifications = () => {
                 <div className="d-flex gap-2 justify-content-end">
                   {!selectedNotification.is_read && (
                     <button
-                      className="btn btn-sm"
+                      className="btn "
                       onClick={() => {
                         handleMarkAsRead(selectedNotification.id);
                       }}
@@ -745,7 +745,7 @@ const Notifications = () => {
                     </button>
                   )}
                   <button
-                    className="btn btn-sm"
+                    className="btn "
                     onClick={() => {
                       handleDelete(selectedNotification.id);
                       setShowDetailsModal(false);
@@ -763,7 +763,7 @@ const Notifications = () => {
                     Delete
                   </button>
                   <button
-                    className="btn btn-sm"
+                    className="btn "
                     onClick={() => setShowDetailsModal(false)}
                     style={{
                       backgroundColor: "#FFFFFF",

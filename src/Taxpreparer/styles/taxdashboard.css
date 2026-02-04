@@ -6,9 +6,9 @@
 
 .taxdashboard-title {
   font-family: "BasisGrotesquePro", sans-serif;
-  color: #3B4A66;
-  font-size: 28px;
-  font-weight: 500;
+  color: #1E293B;
+  font-size: 24px;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -73,13 +73,13 @@
   border: none !important;
   border-radius: 0 !important;
   padding: 0 !important;
-  font-size: 27px !important;
+  font-size: 28px !important;
   font-family: "BasisGrotesquePro", sans-serif !important;
-  font-weight: 600 !important;
-  margin: 0 !important;
-  text-align: center !important;
-  color: #3B4A66 !important;
-  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  margin: 12px 0 !important;
+  text-align: left !important;
+  color: #1E293B !important;
+  line-height: 1 !important;
 }
 
 .dashboarded-carded-btned {
@@ -108,11 +108,18 @@ p.card-contented {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding-bottom: 0.5rem;
-  /* remove extra space */
+  padding: 1rem;
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.car:hover {
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  border-color: #F56D2D50;
 }
 
 .bother {
@@ -289,9 +296,9 @@ p.card-contented {
 /* Section Title and Subtitle */
 .section-title {
   font-family: "BasisGrotesquePro", sans-serif;
-  color: #3B4A66;
-  font-size: 20px;
-  font-weight: 500;
+  color: #1E293B;
+  font-size: 18px;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -451,7 +458,7 @@ p.card-contented {
     padding-right: 0 !important;
   }
 
-  .taxdashboard-header > div {
+  .taxdashboard-header>div {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 1rem;
@@ -465,7 +472,7 @@ p.card-contented {
     font-size: 13px;
   }
 
-  .taxdashboard-header > div > div:last-child {
+  .taxdashboard-header>div>div:last-child {
     width: 100%;
     justify-content: flex-start;
     gap: 0.5rem !important;
@@ -490,12 +497,12 @@ p.card-contented {
     margin-right: -0.5rem;
   }
 
-  .row.g-3 > * {
+  .row.g-3>* {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
 
-  .row.g-3 > .col-sm-6.col-md-3 {
+  .row.g-3>.col-sm-6.col-md-3 {
     flex: 0 0 100%;
     max-width: 100%;
     margin-bottom: 0.75rem;
@@ -528,12 +535,12 @@ p.card-contented {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
-    padding-right:0 !important;
+    padding-right: 0 !important;
   }
 
-  .row.mt-1.g-3 > .col-12.col-md-6 {
+  .row.mt-1.g-3>.col-12.col-md-6 {
     padding-left: 0;
-    padding-right:0;
+    padding-right: 0;
     margin-bottom: 1rem;
   }
 
@@ -541,7 +548,7 @@ p.card-contented {
     padding: 12px !important;
   }
 
-  .card.custom-card > div:first-child {
+  .card.custom-card>div:first-child {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 0.75rem;

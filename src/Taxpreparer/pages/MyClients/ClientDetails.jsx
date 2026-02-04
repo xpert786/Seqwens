@@ -1157,10 +1157,10 @@ export default function ClientDetails() {
       <div className="p-4 font-['BasisGrotesquePro']">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchClientDetails}>
+          <button className="btn  btn-outline-danger ms-2" onClick={fetchClientDetails}>
             Retry
           </button>
-          <button className="btn btn-sm btn-outline-secondary ms-2" onClick={() => navigate('/taxdashboard/clients')}>
+          <button className="btn  btn-outline-secondary ms-2" onClick={() => navigate('/taxdashboard/clients')}>
             Back to Clients
           </button>
         </div>

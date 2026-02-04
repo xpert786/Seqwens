@@ -889,7 +889,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                           {isPreviewable(file) && file.previewUrl ? (
                             <button
                               type="button"
-                              className="btn btn-sm p-1"
+                              className="btn  p-1"
                               style={{
                                 border: 'none',
                                 background: 'transparent',
@@ -906,7 +906,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                           ) : (
                             <button
                               type="button"
-                              className="btn btn-sm p-1"
+                              className="btn  p-1"
                               style={{
                                 border: 'none',
                                 background: 'transparent',
@@ -926,7 +926,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                           {/* Download Button */}
                           <button
                             type="button"
-                            className="btn btn-sm p-1"
+                            className="btn  p-1"
                             style={{
                               border: 'none',
                               background: 'transparent',

@@ -229,7 +229,7 @@ function TwoFactorSetupModal({ show, onClose, onSuccess }) {
                       <button
                         type="button"
                         onClick={() => setShowSecret(!showSecret)}
-                        className="btn btn-sm"
+                        className="btn "
                         style={{
                           backgroundColor: 'transparent',
                           color: '#F56D2D',

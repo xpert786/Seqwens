@@ -97,15 +97,15 @@ export default function AllDocumentsPage() {
     return (
       <div className="p-4">
         <div className="d-flex align-items-center mb-4">
-          <button 
+          <button
             className="btn btn-link text-decoration-none me-3"
             onClick={() => navigate(-1)}
           >
             &larr; Back to Schedule
           </button>
-          <h3 className="mb-0">{documentDetails.title}</h3>
+          <h4 className="mb-0">{documentDetails.title}</h4>
         </div>
-        
+
         <div className="card">
           <div className="card-body">
             <div className="row mb-4">
@@ -125,7 +125,7 @@ export default function AllDocumentsPage() {
                   <button className="btn btn-primary">
                     <i className="bi bi-download me-2"></i>Download All
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline-secondary"
                     onClick={() => setShowUpload(true)}
                   >
@@ -134,7 +134,7 @@ export default function AllDocumentsPage() {
                 </div>
               </div>
             </div>
-            
+
             <h6 className="mb-3">Attached Files ({documentDetails.files.length})</h6>
             <div className="list-group">
               {documentDetails.files.map(file => (
@@ -147,10 +147,10 @@ export default function AllDocumentsPage() {
                     </div>
                   </div>
                   <div className="btn-group">
-                    <button className="btn btn-sm btn-outline-secondary">
+                    <button className="btn  btn-outline-secondary">
                       <i className="bi bi-download"></i>
                     </button>
-                    <button className="btn btn-sm btn-outline-secondary">
+                    <button className="btn  btn-outline-secondary">
                       <i className="bi bi-trash"></i>
                     </button>
                   </div>
@@ -159,7 +159,7 @@ export default function AllDocumentsPage() {
             </div>
           </div>
         </div>
-        
+
         <TaxUploadModal show={showUpload} handleClose={() => setShowUpload(false)} />
       </div>
     );
@@ -170,11 +170,11 @@ export default function AllDocumentsPage() {
     <div className="p-4">
       {/* Upload Modal */}
       <TaxUploadModal show={showUpload} handleClose={() => setShowUpload(false)} />
-      
+
       {/* Top header */}
       <div className="header d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h3 className="fw-semibold">Documents</h3>
+          <h4 className="fw-semibold">Documents</h4>
           <small className="text-muted">Select a document to view details</small>
         </div>
         <button
@@ -187,12 +187,12 @@ export default function AllDocumentsPage() {
       </div>
 
       {/* Stats */}
-     
+
       <div className="row g-3 mb-3">
-        
+
         {cardData.map((item, index) => (
           <div className="col-md-3 col-sm-6" key={index}>
-            
+
             <div className="stat-card">
               <div className="d-flex justify-content-start align-items-start">
                 <div className="stat-icon" style={{ color: item.color }}>
@@ -213,21 +213,21 @@ export default function AllDocumentsPage() {
       {/* Search / Filter row with Archive right-aligned (single line) */}
       <div className="d-flex align-items-center justify-content-between flex-nowrap mb-3 mt-3" style={{ gap: 12 }}>
         <div className="d-flex align-items-center gap-2 mb-3 mt-3">
-                <div className="position-relative search-box">
-                  <FaSearch className="search-icon" />
-                  <input
-                    type="text"
-                    className="form-control ps-5 rounded mt-2"
-                    placeholder="Search.."
-                    style={{ border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)" }}
-                  />
-                </div>
-                <button className="btn btn-filter d-flex align-items-center rounded px-4" style={{ border: "none" }}>
-                  <FiltIcon className="me-3 text-muted" />
-                  <span className="ms-1">Filter</span>
-                </button>
-              </div>
-        
+          <div className="position-relative search-box">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              className="form-control ps-5 rounded mt-2"
+              placeholder="Search.."
+              style={{ border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)" }}
+            />
+          </div>
+          <button className="btn btn-filter d-flex align-items-center rounded px-4" style={{ border: "none" }}>
+            <FiltIcon className="me-3 text-muted" />
+            <span className="ms-1">Filter</span>
+          </button>
+        </div>
+
         <button
           className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
           style={{ whiteSpace: "nowrap", height: 36, padding: "0 16px", borderRadius: 10 }}
@@ -241,7 +241,7 @@ export default function AllDocumentsPage() {
       {/* List container */}
       <div className="bg-white rounded-xl p-3" style={{ border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)" }}>
         <div className="header mb-4">
-          <h3 className="fw-semibold">All Documents</h3>
+          <h4 className="fw-semibold">All Documents</h4>
           <small className="text-muted">Complete list of client documents</small>
         </div>
         {files.map((f, idx) => (
@@ -250,7 +250,7 @@ export default function AllDocumentsPage() {
             className="document-card rounded-3 px-3 py-2 d-flex align-items-start mb-4"
             style={{
               // background: idx === 0 ? "var(--Palette2-Gold-200, #FFF4E6)" : "transparent",
-              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)" ,
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
               borderRadius: 12,
               marginBottom: 6,
               position: "relative",
@@ -271,7 +271,7 @@ export default function AllDocumentsPage() {
                     <span>{f.owner}</span>
                     <span>{f.size}</span>
                     <span className="d-inline-flex align-items-center" style={{ gap: 6 }}>
-                      <CalenderListing/> {f.date}
+                      <CalenderListing /> {f.date}
                     </span>
                   </div>
                 </div>
@@ -283,7 +283,7 @@ export default function AllDocumentsPage() {
                     style={{
                       padding: "2px 8px",
                       fontSize: 12,
-                     
+
                     }}
                   >
                     V1
@@ -314,7 +314,7 @@ export default function AllDocumentsPage() {
                   style={{
                     position: "absolute",
                     right: 12,
-                    
+
                     top: 40,
                     background: "#FFFFFF",
                     border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
@@ -360,27 +360,35 @@ export default function AllDocumentsPage() {
                   className="rounded-pill"
                   style={{
                     border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                cursor: idx === 0 ? "pointer" : "default",
+                    cursor: idx === 0 ? "pointer" : "default",
                     color: "#000",
                     fontSize: 11,
-                   
+
                     padding: "4px 10px",
                   }}
                 >
                   pending review
                 </span>
                 {/* w-2 */}
-                <span className="rounded-pill" style={{ color: "#000", fontSize: 11, border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                cursor: idx === 0 ? "pointer" : "default", padding: "4px 10px" }}>w-2</span>
+                <span className="rounded-pill" style={{
+                  color: "#000", fontSize: 11, border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  cursor: idx === 0 ? "pointer" : "default", padding: "4px 10px"
+                }}>w-2</span>
                 {/* 2023 */}
-                <span className="rounded-pill" style={{ color: "#000", fontSize: 11, border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                cursor: idx === 0 ? "pointer" : "default",padding: "4px 10px" }}>2023</span>
+                <span className="rounded-pill" style={{
+                  color: "#000", fontSize: 11, border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  cursor: idx === 0 ? "pointer" : "default", padding: "4px 10px"
+                }}>2023</span>
                 {/* Individual */}
-                <span className="rounded-pill" style={{  color: "#000", fontSize: 11,border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                cursor: idx === 0 ? "pointer" : "default", padding: "4px 10px" }}>Individual</span>
+                <span className="rounded-pill" style={{
+                  color: "#000", fontSize: 11, border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  cursor: idx === 0 ? "pointer" : "default", padding: "4px 10px"
+                }}>Individual</span>
                 {/* Shared */}
-                <span className="rounded-pill d-inline-flex align-items-center" style={{   fontSize: 11,     border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                cursor: idx === 0 ? "pointer" : "default", gap: 6, padding: "4px 10px" }}>
+                <span className="rounded-pill d-inline-flex align-items-center" style={{
+                  fontSize: 11, border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  cursor: idx === 0 ? "pointer" : "default", gap: 6, padding: "4px 10px"
+                }}>
                   <Uplopadedd /> Shared
                 </span>
               </div>

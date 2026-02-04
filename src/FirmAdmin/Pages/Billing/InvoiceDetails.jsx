@@ -538,7 +538,7 @@ export default function InvoiceDetails() {
                 type="button"
                 onClick={() => setShowEditModal(false)}
                 disabled={updating}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: '#FFFFFF',
                   color: '#3B4A66',
@@ -554,7 +554,7 @@ export default function InvoiceDetails() {
                 type="button"
                 onClick={handleUpdateInvoice}
                 disabled={updating}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: '#F56D2D',
                   color: '#FFFFFF',
@@ -625,7 +625,7 @@ export default function InvoiceDetails() {
                 type="button"
                 onClick={() => setShowSendModal(false)}
                 disabled={sending}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: '#FFFFFF',
                   color: '#3B4A66',
@@ -641,7 +641,7 @@ export default function InvoiceDetails() {
                 type="button"
                 onClick={handleSendInvoice}
                 disabled={sending}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: '#F56D2D',
                   color: '#FFFFFF',

@@ -448,7 +448,7 @@ export default function DocumentRequests() {
             <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0">
               <button
                 onClick={() => setFilterStatus(null)}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: filterStatus === null ? "#00C0C6" : "#fff",
                   color: filterStatus === null ? "#fff" : "#3B4A66",
@@ -463,7 +463,7 @@ export default function DocumentRequests() {
               </button>
               <button
                 onClick={() => setFilterStatus('pending')}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: filterStatus === 'pending' ? "#00C0C6" : "#fff",
                   color: filterStatus === 'pending' ? "#fff" : "#3B4A66",
@@ -478,7 +478,7 @@ export default function DocumentRequests() {
               </button>
               <button
                 onClick={() => setFilterStatus('in_progress')}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: filterStatus === 'in_progress' ? "#00C0C6" : "#fff",
                   color: filterStatus === 'in_progress' ? "#fff" : "#3B4A66",
@@ -493,7 +493,7 @@ export default function DocumentRequests() {
               </button>
               <button
                 onClick={() => setFilterStatus('completed')}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: filterStatus === 'completed' ? "#00C0C6" : "#fff",
                   color: filterStatus === 'completed' ? "#fff" : "#3B4A66",
@@ -581,7 +581,7 @@ export default function DocumentRequests() {
                       {(doc.status === 'pending' || !doc.status || doc.status === 'in_progress') && (
                         <div className="d-flex gap-2 mt-2">
                           <button 
-                            className="btn btn-sm d-flex align-items-center gap-2"
+                            className="btn  d-flex align-items-center gap-2"
                             onClick={(e) => handleSubmitRequestClick(e, doc)}
                             style={{
                               backgroundColor: '#32B582',

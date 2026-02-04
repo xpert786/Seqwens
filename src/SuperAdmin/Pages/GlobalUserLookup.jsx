@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiChevronDown, FiUsers } from 'react-icons/fi';
-import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
-import { superToastOptions } from '../utils/toastConfig';
 import { useTheme } from '../Context/ThemeContext';
 import { getUserData } from '../../ClientOnboarding/utils/userUtils';
 
@@ -29,8 +27,11 @@ export default function GlobalUserLookup() {
   const loggedInUser = getUserData();
   const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
 
+
+
   const getStatusBadgeClass = (status) => {
     const normalized = (status || '').toLowerCase();
+    if (normalized.includes('inactive')) return 'bg-gray-400';
     if (normalized.includes('active')) return 'bg-green-500';
     if (normalized.includes('suspend')) return 'bg-red-500';
     return 'bg-gray-400';
@@ -53,7 +54,7 @@ export default function GlobalUserLookup() {
 
         // If no search term and no specific filters, we might want to avoid loading *everyone* or just load recent?
         // For now, let's load default page 1 of "All Users" which the backend supports.
-        
+
         const response = await superAdminAPI.getPlatformUsers({
           status: statusParam,
           role: roleParam, // Backend now handles "all roles" properly
@@ -101,39 +102,39 @@ export default function GlobalUserLookup() {
       {/* Filters Bar */}
       <div className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-[#E8F0FF] dark:border-gray-700">
         <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
-            {/* Search Input */}
-            <div className="relative flex-1 w-full">
-                <input 
-                    type="text" 
-                    placeholder="Search by name, email, or firm..." 
-                    className="w-full pl-10 pr-4 py-2 border border-[#E8F0FF] dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                 <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M21 21L16.65 16.65"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-            </div>
+          {/* Search Input */}
+          <div className="relative flex-1 w-full">
+            <input
+              type="text"
+              placeholder="Search by name, email, or firm..."
+              className="w-full pl-10 pr-4 py-2 border border-[#E8F0FF] dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M21 21L16.65 16.65"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
 
           {/* Status Dropdown */}
           <div className="relative w-full md:w-auto">
@@ -188,7 +189,7 @@ export default function GlobalUserLookup() {
       {/* Error State */}
       {error && !loading && (
         <div className="bg-white rounded-lg border border-red-200 p-6">
-            <p className="text-red-600 text-center font-medium">Error loading users: {error}</p>
+          <p className="text-red-600 text-center font-medium">Error loading users: {error}</p>
         </div>
       )}
 
@@ -258,7 +259,7 @@ export default function GlobalUserLookup() {
                     {user.email || '—'}
                   </div>
 
-                   <div className="w-40 text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <div className="w-40 text-sm text-gray-700 dark:text-gray-300 truncate">
                     {user.firm_name || user.firm_id ? (user.firm_name || 'Firm #' + user.firm_id) : '—'}
                   </div>
 
@@ -279,27 +280,27 @@ export default function GlobalUserLookup() {
           </div>
 
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
-             <div className="flex items-center gap-6">
-               <span className="text-sm text-gray-600 dark:text-gray-400">
-                 Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-gray-900 dark:text-white">{pagination.total_count}</span>
-               </span>
-             </div>
-             <div className="flex items-center gap-2">
-                 <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1 || loading}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
-                 >
-                    Previous
-                 </button>
-                 <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
-                    disabled={currentPage === pagination.total_pages || loading}
-                     className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
-                 >
-                    Next
-                 </button>
-             </div>
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-gray-900 dark:text-white">{pagination.total_count}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
+                disabled={currentPage === pagination.total_pages || loading}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       )}

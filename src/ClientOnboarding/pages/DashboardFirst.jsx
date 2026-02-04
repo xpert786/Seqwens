@@ -33,6 +33,24 @@ export default function DashboardFirst() {
         const data = await dashboardAPI.getInitialDashboard();
         console.log('Fetched initial dashboard data:', data);
         setDashboardData(data);
+
+        // check completion immediately after fetching
+        const apiData = data.data || data;
+        const pct = apiData.profile_completion?.percentage;
+
+        if (pct === 100) {
+          // Auto-transition to main dashboard if complete
+          import('../utils/userUtils').then(({ setUserStatus }) => {
+            setUserStatus("existing");
+            toast.success("Setup complete! Redirecting to your dashboard...", {
+              autoClose: 2000,
+              onClose: () => window.location.href = '/dashboard'
+            });
+            // Determine if we should wait for toast or just go
+            setTimeout(() => window.location.href = '/dashboard', 1500);
+          });
+        }
+
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(handleAPIError(err));
@@ -60,8 +78,6 @@ export default function DashboardFirst() {
         return "/dashboard/documents";
       case "Schedule a Consultation":
         return "/dashboard/appointments";
-      case "Set Up Payment Method":
-        return "/accounts?tab=billing";
       default:
         return "#";
     }
@@ -100,11 +116,11 @@ export default function DashboardFirst() {
   // Get button class based on status
   const getButtonClass = (task) => {
     if (task.status === "complete") {
-      return "btn btn-success btn-sm";
+      return "btn btn-success ";
     } else if (startedTasks[task.title]) {
-      return "btn btn-warning btn-sm";
+      return "btn btn-warning ";
     } else {
-      return "btn btn-primary btn-sm";
+      return "btn btn-primary ";
     }
   };
 
@@ -118,8 +134,6 @@ export default function DashboardFirst() {
         return <FileIcon width={24} height={24} />;
       case "Schedule a Consultation":
         return <SignIcon width={24} height={24} />;
-      case "Set Up Payment Method":
-        return <ReviewIcon width={24} height={24} />;
       default:
         return null;
     }
@@ -154,11 +168,6 @@ export default function DashboardFirst() {
           description: "Schedule your first consultation",
           status: "incomplete",
         },
-        {
-          title: "Set Up Payment Method",
-          description: "Add a payment method",
-          status: "incomplete",
-        },
       ];
     }
 
@@ -169,28 +178,29 @@ export default function DashboardFirst() {
     return [
       {
         title: "Complete Profile Setup",
-        description: steps.profile_setup?.description || "Complete your personal profile details and upload profile picture",
+        description:
+          steps.profile_setup?.description ||
+          "Complete your personal profile details and upload profile picture",
         status: steps.profile_setup?.completed ? "complete" : "incomplete",
       },
       {
         title: "Complete Data Intake Form",
-        description: steps.data_intake_form?.description || "Complete data intake form",
+        description:
+          steps.data_intake_form?.description || "Complete data intake form",
         status: steps.data_intake_form?.completed ? "complete" : "incomplete",
       },
       {
         title: "Upload Tax Documents",
-        description: steps.tax_documents?.description || "Upload your tax documents",
+        description:
+          steps.tax_documents?.description || "Upload your tax documents",
         status: steps.tax_documents?.completed ? "complete" : "incomplete",
       },
       {
         title: "Schedule a Consultation",
-        description: steps.schedule_consultation?.description || "Schedule your first consultation",
+        description:
+          steps.schedule_consultation?.description ||
+          "Schedule your first consultation",
         status: steps.schedule_consultation?.completed ? "complete" : "incomplete",
-      },
-      {
-        title: "Set Up Payment Method",
-        description: steps.payment_method?.description || "Add a payment method",
-        status: steps.payment_method?.completed ? "complete" : "incomplete",
       },
     ];
   };
@@ -203,12 +213,6 @@ export default function DashboardFirst() {
       title: "Upload Documents",
       button: "Upload Now",
       route: "/dashboard/documents",
-    },
-    {
-      icon: <BalanceIcon size={28} />,
-      title: "Outstanding Balance",
-      button: "Pay Now",
-      route: "/dashboard/invoices",
     },
     {
       icon: <AiOutlineCalendar size={28} />,

@@ -341,7 +341,7 @@ export default function Topbar({
                 <LogoIcond />
               </span>
             </button>
-            <div className="sd ms-3">
+            <div className="ms-auto pe-4">
               {/* Right side */}
               <div className="d-flex align-items-center gap-3">
                 {/* Account Switcher - Wrapped in error boundary to prevent blocking */}

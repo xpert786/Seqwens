@@ -1173,7 +1173,7 @@ export default function MyClients() {
       <div className="myclients-container">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchClients} style={{ borderRadius: '8px' }}>
+          <button className="btn  btn-outline-danger ms-2" onClick={fetchClients} style={{ borderRadius: '8px' }}>
             Retry
           </button>
         </div>
@@ -1186,7 +1186,7 @@ export default function MyClients() {
       {/* Header */}
       <div className="header d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h3 className="fw-semibold">My Clients</h3>
+          <h4 className="fw-semibold">My Clients</h4>
           <small className="text-muted">Manage your assigned clients</small>
         </div>
         <div className="d-flex align-items-center gap-2">
@@ -1402,19 +1402,19 @@ export default function MyClients() {
                   <label className="form-label small fw-semibold">Status</label>
                   <div className="d-flex flex-column gap-1">
                     <button
-                      className={`btn btn-sm ${statusFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${statusFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handleStatusFilter(null)}
                     >
                       All
                     </button>
                     <button
-                      className={`btn btn-sm ${statusFilter === 'active' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${statusFilter === 'active' ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handleStatusFilter('active')}
                     >
                       Active
                     </button>
                     <button
-                      className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${statusFilter === 'pending' ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handleStatusFilter('pending')}
                     >
                       Pending
@@ -1425,25 +1425,25 @@ export default function MyClients() {
                   <label className="form-label small fw-semibold">Priority</label>
                   <div className="d-flex flex-column gap-1">
                     <button
-                      className={`btn btn-sm ${priorityFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${priorityFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handlePriorityFilter(null)}
                     >
                       All
                     </button>
                     <button
-                      className={`btn btn-sm ${priorityFilter === 'high' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${priorityFilter === 'high' ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handlePriorityFilter('high')}
                     >
                       High
                     </button>
                     <button
-                      className={`btn btn-sm ${priorityFilter === 'medium' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${priorityFilter === 'medium' ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handlePriorityFilter('medium')}
                     >
                       Medium
                     </button>
                     <button
-                      className={`btn btn-sm ${priorityFilter === 'low' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn  ${priorityFilter === 'low' ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => handlePriorityFilter('low')}
                     >
                       Low
@@ -1452,7 +1452,7 @@ export default function MyClients() {
                 </div>
                 {(statusFilter || priorityFilter || searchQuery) && (
                   <button
-                    className="btn btn-sm btn-outline-danger w-100 mt-2"
+                    className="btn  btn-outline-danger w-100 mt-2"
                     onClick={clearFilters}
                     style={{ borderRadius: '8px' }}
                   >
@@ -1477,7 +1477,7 @@ export default function MyClients() {
             <div className="text-center py-5">
               <p className="text-muted">No clients found</p>
               {(searchQuery || statusFilter || priorityFilter) && (
-                <button className="btn btn-sm btn-outline-primary mt-2" onClick={clearFilters}>
+                <button className="btn  btn-outline-primary mt-2" onClick={clearFilters}>
                   Clear filters to see all clients
                 </button>
               )}
@@ -1666,7 +1666,7 @@ export default function MyClients() {
           ) : invitesError ? (
             <div className="alert alert-danger" role="alert">
               <strong>Error:</strong> {invitesError}
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+              <button className="btn  btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
                 Retry
               </button>
             </div>
@@ -1748,7 +1748,7 @@ export default function MyClients() {
                       <div className="d-flex gap-2">
                         {invite.invite_link && (
                           <button
-                            className="btn btn-sm btn-outline-primary"
+                            className="btn  btn-outline-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigator.clipboard.writeText(invite.invite_link);
@@ -1777,14 +1777,14 @@ export default function MyClients() {
               </div>
               <div className="d-flex gap-2">
                 <button
-                  className="btn btn-sm btn-outline-primary"
+                  className="btn  btn-outline-primary"
                   onClick={() => fetchPendingInvites(invitesPagination.page - 1)}
                   disabled={invitesPagination.page === 1 || loadingInvites}
                 >
                   Previous
                 </button>
                 <button
-                  className="btn btn-sm btn-outline-primary"
+                  className="btn  btn-outline-primary"
                   onClick={() => fetchPendingInvites(invitesPagination.page + 1)}
                   disabled={invitesPagination.page >= invitesPagination.total_pages || loadingInvites}
                 >
@@ -1814,7 +1814,7 @@ export default function MyClients() {
           ) : unlinkedTaxpayersError ? (
             <div className="alert alert-danger" role="alert">
               <strong>Error:</strong> {unlinkedTaxpayersError}
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers()}>
+              <button className="btn  btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers()}>
                 Retry
               </button>
             </div>
@@ -1923,14 +1923,14 @@ export default function MyClients() {
                   </div>
                   <div className="d-flex gap-2">
                     <button
-                      className="btn btn-sm btn-outline-primary"
+                      className="btn  btn-outline-primary"
                       onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page - 1)}
                       disabled={unlinkedTaxpayersPagination.page === 1 || loadingUnlinkedTaxpayers}
                     >
                       Previous
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-primary"
+                      className="btn  btn-outline-primary"
                       onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page + 1)}
                       disabled={unlinkedTaxpayersPagination.page >= unlinkedTaxpayersPagination.total_pages || loadingUnlinkedTaxpayers}
                     >

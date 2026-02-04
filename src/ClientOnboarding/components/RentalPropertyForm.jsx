@@ -703,7 +703,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
         ))}
 
         <button
-          className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
+          className="btn btn-outline-primary  d-flex align-items-center gap-2"
           onClick={handleAddOtherExpense}
           style={{ fontFamily: "BasisGrotesquePro" }}
         >

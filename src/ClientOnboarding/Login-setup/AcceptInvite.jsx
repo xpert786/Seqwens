@@ -709,7 +709,7 @@ export default function AcceptInvite() {
                                         You can update their office assignments or permissions instead.
                                     </p>
                                     <button
-                                        className="btn btn-sm btn-primary mt-2"
+                                        className="btn  btn-primary mt-2"
                                         onClick={() => navigate("/firmadmin/staff")}
                                         style={{ marginTop: '0.5rem' }}
                                     >

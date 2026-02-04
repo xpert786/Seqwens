@@ -302,240 +302,244 @@ export default function ArchivedDocuments() {
 
     return (
         <>
-        <div className="container-fluid px-0 mt-3">
-            <div className="bg-white p-4 rounded-3">
-                <div className="mb-3">
-                    <h5 className="mb-0" style={{ fontSize: "20px", fontWeight: "500", color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                        Taxpayer — My Documents (Archived)
-                    </h5>
-                    <p className="mb-0 mt-1" style={{ fontSize: "14px", color: "#4B5563", fontFamily: "BasisGrotesquePro" }}>
-                        All archived documents you've uploaded and shared documents
-                    </p>
-                </div>
-
-                {/* Search and Filter Bar */}
-                <div className="d-flex align-items-center justify-content-between mb-4" style={{ flexWrap: "wrap", gap: "12px" }}>
-                    <div className="d-flex align-items-center" style={{ gap: "12px", flexWrap: "wrap" }}>
-                        <div className="position-relative" style={{
-                            width: "250px",
-                            border: "1px solid #E5E7EB",
-                            borderRadius: "6px",
-                            backgroundColor: "#F3F7FF",
-                            height: "32px",
-                            display: "flex",
-                            alignItems: "center"
-                        }}>
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 14 14"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                style={{
-                                    position: "absolute",
-                                    left: "12px",
-                                    top: "45%",
-                                    transform: "translateY(-50%)",
-                                    zIndex: 1,
-                                    pointerEvents: "none"
-                                }}
-                            >
-                                <path d="M12.25 12.25L9.74167 9.74167M11.0833 6.41667C11.0833 8.99399 8.99399 11.0833 6.41667 11.0833C3.83934 11.0833 1.75 8.99399 1.75 6.41667C1.75 3.83934 3.83934 1.75 6.41667 1.75C8.99399 1.75 11.0833 3.83934 11.0833 6.41667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Search documents by name, client, or uploader..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                style={{
-                                    backgroundColor: "transparent",
-                                    height: "100%",
-                                    fontSize: "13px",
-                                    paddingLeft: "32px",
-                                    paddingRight: "10px",
-                                    paddingTop: "10px",
-                                    paddingBottom: "0",
-                                    margin: "0",
-                                    border: "none",
-                                    outline: "none",
-                                    boxShadow: "none",
-                                    width: "100%",
-                                    lineHeight: "28px",
-                                    boxSizing: "border-box",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-
-                        <select
-                            className="form-select"
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            style={{
-                                width: "140px",
-                                fontFamily: "BasisGrotesquePro",
-                                fontSize: "14px"
-                            }}
-                        >
-                            <option>General</option>
-                            {categories.map((category, index) => (
-                                <option key={index} value={category}>
-                                    {category}
-                                </option>
-                            ))}
-                        </select>
-
-                        <select
-                            className="form-select"
-                            value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
-                            style={{
-                                width: "140px",
-                                fontFamily: "BasisGrotesquePro",
-                                fontSize: "14px"
-                            }}
-                        >
-                            <option>All Status</option>
-                            <option>Active</option>
-                            <option>Archived</option>
-                        </select>
-                    </div>
-
-                    <div className="d-flex align-items-center" style={{ gap: "12px", flexShrink: 0 }}>
-                        <button
-                            className="btn text-white fw-semibold d-flex align-items-center gap-2"
-                            onClick={handleExportLog}
-                            style={{
-                                backgroundColor: "#F56D2D",
-                                fontFamily: "BasisGrotesquePro",
-                                fontSize: "12px",
-                                padding: "6px 10px",
-                                whiteSpace: "nowrap"
-                            }}
-                        >
-                            <UpIcon />
-                            Export Archived Log
-                        </button>
-                    </div>
-                </div>
-
-                {/* Documents Table */}
-                {filteredDocuments.length === 0 ? (
-                    <div className="text-center py-5">
-                        <p style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
-                            No archived documents found
+            <div className="container-fluid px-0 mt-3">
+                <div className="bg-white p-4 rounded-3">
+                    <div className="mb-3">
+                        <h5 className="mb-0" style={{ fontSize: "20px", fontWeight: "500", color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                            Taxpayer — My Documents (Archived)
+                        </h5>
+                        <p className="mb-0 mt-1" style={{ fontSize: "14px", color: "#4B5563", fontFamily: "BasisGrotesquePro" }}>
+                            All archived documents you've uploaded and shared documents
                         </p>
                     </div>
-                ) : (
-                    <>
-                        <div className="table-responsive">
-                            <table className="table" style={{ fontFamily: "BasisGrotesquePro" }}>
-                                <thead>
-                                    <tr style={{ borderBottom: "1px solid #E8F0FF" }}>
-                                        <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>File Name</th>
-                                        <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>Category</th>
-                                        <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px", textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedDocuments.map((doc, index) => {
-                                    const docName = doc.document_name || doc.file_name || doc.name || doc.filename || 'Untitled Document';
-                                    const docCategory = doc.category?.name || 'General';
-                                    const fileUrl = doc.tax_documents || doc.file_url || '';
 
-                                    return (
-                                        <tr key={doc.id || doc.document_id || index} style={{ borderBottom: "1px solid #E8F0FF" }}>
-                                            <td style={{ padding: "16px 12px", color: "#3B4A66", fontSize: "14px" }}>
-                                                {docName}
-                                            </td>
-                                            <td style={{ padding: "16px 12px" }}>
-                                                <span
-                                                    className="badge"
-                                                    style={{
-                                                        backgroundColor: "#F3F4F6",
-                                                        color: "#6B7280",
-                                                        padding: "4px 12px",
-                                                        borderRadius: "12px",
-                                                        fontSize: "12px",
-                                                        fontWeight: "500"
-                                                    }}
-                                                >
-                                                    {docCategory}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: "16px 12px", textAlign: "right" }}>
-                                                <div className="d-flex align-items-center justify-content-end gap-2">
-                                                    <button
-                                                        className="btn btn-sm"
-                                                        onClick={() => handleRecover(doc.id || doc.document_id)}
-                                                        style={{
-                                                            backgroundColor: "#00C0C6",
-                                                            color: "white",
-                                                            border: "none",
-                                                            borderRadius: "6px",
-                                                            padding: "6px 16px",
-                                                            fontSize: "13px",
-                                                            fontFamily: "BasisGrotesquePro",
-                                                            fontWeight: "500"
-                                                        }}
-                                                    >
-                                                        Recover
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-sm"
-                                                        onClick={() => handleDownload(doc.id || doc.document_id)}
-                                                        style={{
-                                                            backgroundColor: "#F3F4F6",
-                                                            color: "#6B7280",
-                                                            border: "none",
-                                                            borderRadius: "6px",
-                                                            padding: "6px 16px",
-                                                            fontSize: "13px",
-                                                            fontFamily: "BasisGrotesquePro",
-                                                            fontWeight: "500"
-                                                        }}
-                                                    >
-                                                        Download
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                    })}
-                                </tbody>
-                            </table>
+                    {/* Search and Filter Bar */}
+                    <div className="d-flex align-items-center justify-content-between mb-4" style={{ flexWrap: "wrap", gap: "12px" }}>
+                        <div className="d-flex align-items-center" style={{ gap: "12px", flexWrap: "wrap" }}>
+                            <div className="position-relative" style={{
+                                width: "250px",
+                                border: "1px solid #E5E7EB",
+                                borderRadius: "6px",
+                                backgroundColor: "#F3F7FF",
+                                height: "32px",
+                                display: "flex",
+                                alignItems: "center"
+                            }}>
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 14 14"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    style={{
+                                        position: "absolute",
+                                        left: "12px",
+                                        top: "45%",
+                                        transform: "translateY(-50%)",
+                                        zIndex: 1,
+                                        pointerEvents: "none"
+                                    }}
+                                >
+                                    <path d="M12.25 12.25L9.74167 9.74167M11.0833 6.41667C11.0833 8.99399 8.99399 11.0833 6.41667 11.0833C3.83934 11.0833 1.75 8.99399 1.75 6.41667C1.75 3.83934 3.83934 1.75 6.41667 1.75C8.99399 1.75 11.0833 3.83934 11.0833 6.41667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search documents by name, client, or uploader..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    style={{
+                                        backgroundColor: "transparent",
+                                        height: "100%",
+                                        fontSize: "13px",
+                                        paddingLeft: "32px",
+                                        paddingRight: "10px",
+                                        paddingTop: "10px",
+                                        paddingBottom: "0",
+                                        margin: "0",
+                                        border: "none",
+                                        outline: "none",
+                                        boxShadow: "none",
+                                        width: "100%",
+                                        lineHeight: "28px",
+                                        boxSizing: "border-box",
+                                        display: "block"
+                                    }}
+                                />
+                            </div>
+
+                            <select
+                                className="form-select"
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                style={{
+                                    width: "140px",
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "14px"
+                                }}
+                            >
+                                <option>General</option>
+                                {categories.map((category, index) => (
+                                    <option key={index} value={category}>
+                                        {category}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="form-select"
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value)}
+                                style={{
+                                    width: "140px",
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "14px"
+                                }}
+                            >
+                                <option>All Status</option>
+                                <option>Active</option>
+                                <option>Archived</option>
+                            </select>
                         </div>
-                        {filteredDocuments.length > itemsPerPage && (
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                                totalItems={filteredDocuments.length}
-                                itemsPerPage={itemsPerPage}
-                                startIndex={startIndex}
-                                endIndex={endIndex}
-                            />
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
 
-        {/* Delete Document Confirmation Modal */}
-        <ConfirmationModal
-            isOpen={showDeleteDocumentConfirm}
-            onClose={() => {
-                setShowDeleteDocumentConfirm(false);
-                setDocumentToDelete(null);
-            }}
-            onConfirm={confirmDeleteDocument}
-            title="Delete Document"
-            message="Are you sure you want to delete this document? This action cannot be undone."
-            confirmText="Delete"
-            cancelText="Cancel"
-            isDestructive={true}
-        />
+                        <div className="d-flex align-items-center" style={{ gap: "12px", flexShrink: 0 }}>
+                            <button
+                                className="btn text-white fw-semibold d-flex align-items-center gap-2"
+                                onClick={handleExportLog}
+                                style={{
+                                    backgroundColor: "#F56D2D",
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "12px",
+                                    padding: "6px 10px",
+                                    whiteSpace: "nowrap"
+                                }}
+                            >
+                                <UpIcon />
+                                Export Archived Log
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Documents Table */}
+                    {filteredDocuments.length === 0 ? (
+                        <div className="text-center py-5">
+                            <p style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+                                No archived documents found
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="table-responsive">
+                                <table className="table" style={{ fontFamily: "BasisGrotesquePro" }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: "1px solid #E8F0FF" }}>
+                                            <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>File Name</th>
+                                            <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>Category</th>
+                                            <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px", textAlign: "right" }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedDocuments.map((doc, index) => {
+                                            const docName = doc.document_name || doc.file_name || doc.name || doc.filename || 'Untitled Document';
+                                            const docCategory = doc.category?.name || 'General';
+                                            const fileUrl = doc.tax_documents || doc.file_url || '';
+
+                                            return (
+                                                <tr key={doc.id || doc.document_id || index} style={{ borderBottom: "1px solid #E8F0FF" }}>
+                                                    <td style={{ padding: "16px 12px", color: "#3B4A66", fontSize: "14px" }}>
+                                                        {docName}
+                                                    </td>
+                                                    <td style={{ padding: "16px 12px" }}>
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                backgroundColor: "#F3F4F6",
+                                                                color: "#6B7280",
+                                                                padding: "4px 12px",
+                                                                borderRadius: "12px",
+                                                                fontSize: "12px",
+                                                                fontWeight: "500"
+                                                            }}
+                                                        >
+                                                            {docCategory}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: "16px 12px", textAlign: "right" }}>
+                                                        <div className="d-flex align-items-center justify-content-end gap-2">
+                                                            <button
+                                                                className="btn "
+                                                                onClick={() => handleRecover(doc.id || doc.document_id)}
+                                                                style={{
+                                                                    backgroundColor: "#00C0C6",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "6px",
+                                                                    padding: "6px 16px",
+                                                                    fontSize: "13px",
+                                                                    fontFamily: "BasisGrotesquePro",
+                                                                    fontWeight: "500",
+                                                                    width: "auto",
+                                                                    whiteSpace: "nowrap"
+                                                                }}
+                                                            >
+                                                                Recover
+                                                            </button>
+                                                            <button
+                                                                className="btn "
+                                                                onClick={() => handleDownload(doc.id || doc.document_id)}
+                                                                style={{
+                                                                    backgroundColor: "#F3F4F6",
+                                                                    color: "#6B7280",
+                                                                    border: "none",
+                                                                    borderRadius: "6px",
+                                                                    padding: "6px 16px",
+                                                                    fontSize: "13px",
+                                                                    fontFamily: "BasisGrotesquePro",
+                                                                    fontWeight: "500",
+                                                                    width: "auto",
+                                                                    whiteSpace: "nowrap"
+                                                                }}
+                                                            >
+                                                                Download
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {filteredDocuments.length > itemsPerPage && (
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    totalItems={filteredDocuments.length}
+                                    itemsPerPage={itemsPerPage}
+                                    startIndex={startIndex}
+                                    endIndex={endIndex}
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Delete Document Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteDocumentConfirm}
+                onClose={() => {
+                    setShowDeleteDocumentConfirm(false);
+                    setDocumentToDelete(null);
+                }}
+                onConfirm={confirmDeleteDocument}
+                title="Delete Document"
+                message="Are you sure you want to delete this document? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isDestructive={true}
+            />
         </>
     );
 }

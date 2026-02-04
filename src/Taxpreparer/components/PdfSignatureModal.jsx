@@ -375,7 +375,7 @@ export default function PdfSignatureModal({
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="btn btn-sm"
+              className="btn "
               style={{
                 backgroundColor: currentPage === 1 ? '#F3F4F6' : '#00C0C6',
                 color: currentPage === 1 ? '#9CA3AF' : 'white',
@@ -390,7 +390,7 @@ export default function PdfSignatureModal({
             <button
               onClick={() => setCurrentPage(p => Math.min(pdfPages.length, p + 1))}
               disabled={currentPage === pdfPages.length}
-              className="btn btn-sm"
+              className="btn "
               style={{
                 backgroundColor: currentPage === pdfPages.length ? '#F3F4F6' : '#00C0C6',
                 color: currentPage === pdfPages.length ? '#9CA3AF' : 'white',
@@ -484,7 +484,7 @@ export default function PdfSignatureModal({
                             );
                             removeSignaturePlacement(globalIndex, activeTab);
                           }}
-                          className="btn btn-sm"
+                          className="btn "
                           style={{
                             position: 'absolute',
                             top: '-8px',

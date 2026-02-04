@@ -31,26 +31,26 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
   // Check if a path is active - handles both top-level and nested dashboard routes
   const isActive = (path) => {
     const currentPath = location.pathname;
-    
+
     // Special handling for dashboard - match /dashboard, /dashboard/, and /dashboard-first
     if (path === "/dashboard") {
-      return currentPath === "/dashboard" || 
-             currentPath === "/dashboard/" || 
-             currentPath === "/dashboard-first";
+      return currentPath === "/dashboard" ||
+        currentPath === "/dashboard/" ||
+        currentPath === "/dashboard-first";
     }
-    
+
     // Exact match
     if (currentPath === path) return true;
-    
+
     // Check if current path is a nested route under the path
     // e.g., /documents/123 should match /documents
     if (currentPath.startsWith(path + "/")) return true;
-    
+
     // Check if current path is under /dashboard with the same suffix
     // e.g., /dashboard/documents should match /documents
     if (currentPath === `/dashboard${path}`) return true;
     if (currentPath.startsWith(`/dashboard${path}/`)) return true;
-    
+
     return false;
   };
 
@@ -66,9 +66,9 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
-    
+
     setIsLoggingOut(true);
-    
+
     try {
       // Call logout API
       await userAPI.logout();
@@ -78,10 +78,10 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
     } finally {
       // Clear local data regardless of API response
       clearUserData();
-      
+
       // Navigate to login page using conditional URL
       navigateToLogin(navigate);
-      
+
       setIsLoggingOut(false);
     }
   };
@@ -91,7 +91,7 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
       className={`client-sidebar-container ${isSidebarOpen ? "" : "collapsed"}`}
       aria-hidden={!isSidebarOpen}
     >
-    
+
       <div className="sidebar-top">
         <ul className="nav flex-column px-3">
           <li className="nav-item mb-2">
@@ -126,9 +126,10 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
               <span className={iconWrapperClass("/invoices")}>
                 <BalanceIcon />
               </span>
-              Invoices & Payments
+              Invoices & Billing
             </Link>
           </li>
+
 
           <li className="mb-2">
             <Link to="/messages" className={linkClass("/messages")} onClick={handleLinkClick}>
@@ -166,7 +167,7 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
           Help & Support
         </Link>
 
-        <button 
+        <button
           onClick={handleLogout}
           className={`sidebar-bottom-link ${isLoggingOut ? 'logging-out' : ''}`}
           disabled={isLoggingOut}

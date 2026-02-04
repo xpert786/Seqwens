@@ -327,8 +327,8 @@ export default function Messages() {
             const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
             const attachmentName = attachmentObj?.name || msg.attachment_name || null;
             const attachmentSize = attachmentObj?.size || msg.attachment_size || null;
-            const attachmentSizeDisplay = attachmentSize 
-              ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+            const attachmentSizeDisplay = attachmentSize
+              ? `${(attachmentSize / 1024).toFixed(1)} KB`
               : msg.attachment_size_display || null;
 
             return {
@@ -607,6 +607,7 @@ export default function Messages() {
         isEdited: false,
         messageType: attachment ? 'file' : 'text',
         isOptimistic: true, // Mark as optimistic
+        isUploading: !!attachment, // Add uploading flag
         attachment: attachment ? URL.createObjectURL(attachment) : null,
         attachmentName: attachment?.name || null,
       };
@@ -655,36 +656,36 @@ export default function Messages() {
         message_type: attachment ? 'file' : 'text',
         is_internal: false
       };
-      
+
       // Include attachment in messageData if present
       if (attachment) {
         messageData.attachment = attachment;
       }
-      
+
       const response = await threadsAPI.sendMessage(activeConversationId, messageData);
 
       if (response.success) {
         console.log('✅ Message sent successfully via REST API');
-        
+
         // Get current user to ensure message type is correct
         const currentUser = getUserData();
         const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
         const senderId = response.data?.sender_id || response.data?.sender?.id || null;
-        
+
         // Determine message type - sent messages should be "user" (right side)
         let messageType = "user"; // Default for sent messages
         if (senderId && currentUserId) {
           const isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
           messageType = isSentByCurrentUser ? "user" : "admin";
         }
-        
+
         // Parse attachment from response - handle various response formats
         const responseAttachment = response.data?.attachment || null;
         const attachmentUrl = responseAttachment?.url || response.data?.attachment_url || null;
         const attachmentName = responseAttachment?.name || response.data?.attachment_name || attachment?.name || null;
         const attachmentSize = responseAttachment?.size || response.data?.attachment_size || null;
-        const attachmentSizeDisplay = attachmentSize 
-          ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+        const attachmentSizeDisplay = attachmentSize
+          ? `${(attachmentSize / 1024).toFixed(1)} KB`
           : response.data?.attachment_size_display || null;
 
         // Replace optimistic message with real message
@@ -720,18 +721,18 @@ export default function Messages() {
                 const messagesArray = Array.isArray(refreshResponse.data.messages)
                   ? refreshResponse.data.messages
                   : (Array.isArray(refreshResponse.data) ? refreshResponse.data : []);
-                
+
                 if (messagesArray.length > 0) {
                   const refreshedMessages = messagesArray.map(msg => {
                     const sender = msg.sender || {};
                     const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
                     const senderRole = sender.role || msg.sender_role || '';
                     const senderId = sender.id || msg.sender_id || null;
-                    
+
                     const currentUser = getUserData();
                     const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
                     const currentUserEmail = currentUser?.email || '';
-                    
+
                     let messageType = "admin";
                     if (senderId && currentUserId) {
                       const isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
@@ -749,8 +750,8 @@ export default function Messages() {
                     const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
                     const attachmentName = attachmentObj?.name || msg.attachment_name || null;
                     const attachmentSize = attachmentObj?.size || msg.attachment_size || null;
-                    const attachmentSizeDisplay = attachmentSize 
-                      ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+                    const attachmentSizeDisplay = attachmentSize
+                      ? `${(attachmentSize / 1024).toFixed(1)} KB`
                       : msg.attachment_size_display || null;
 
                     return {
@@ -772,7 +773,7 @@ export default function Messages() {
                   });
 
                   setActiveChatMessages(refreshedMessages);
-                  
+
                   // Auto-scroll to bottom
                   setTimeout(() => {
                     if (messagesEndRef.current) {
@@ -786,7 +787,7 @@ export default function Messages() {
             }
           }, 1000);
         }
-        
+
         fetchChats(true);
       } else {
         // Remove optimistic message on error
@@ -1003,7 +1004,7 @@ export default function Messages() {
           try {
             setLoadingMessages(true);
             console.log('Fetching messages for newly created thread:', newChat.id);
-            
+
             // Try new chat-threads API first, fallback to old threads API
             let messagesResponse;
             try {
@@ -1012,7 +1013,7 @@ export default function Messages() {
               console.log('New chat API failed, trying old API:', newApiError);
               messagesResponse = await threadsAPI.getThreadDetails(newChat.id);
             }
-            
+
             console.log('Messages response for new thread:', messagesResponse);
 
             // Handle both new and old API response formats
@@ -1054,8 +1055,8 @@ export default function Messages() {
                 const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
                 const attachmentName = attachmentObj?.name || msg.attachment_name || null;
                 const attachmentSize = attachmentObj?.size || msg.attachment_size || null;
-                const attachmentSizeDisplay = attachmentSize 
-                  ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+                const attachmentSizeDisplay = attachmentSize
+                  ? `${(attachmentSize / 1024).toFixed(1)} KB`
                   : msg.attachment_size_display || null;
 
                 return {
@@ -1139,7 +1140,7 @@ export default function Messages() {
 
     try {
       setDeleting(true);
-      
+
       // Try chatService first, fallback to threadsAPI
       try {
         await chatService.deleteThread(threadToDelete);
@@ -1150,7 +1151,7 @@ export default function Messages() {
 
       // Remove from conversations list
       setConversations(prev => prev.filter(conv => conv.id !== threadToDelete));
-      
+
       // If deleted conversation was active, clear it
       if (activeConversationId === threadToDelete) {
         setActiveConversationId(null);
@@ -1261,12 +1262,12 @@ export default function Messages() {
             </div>
 
           </div>
-          <div 
-            className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll" 
-            style={{ 
-              gap: "12px", 
-              overflowY: "auto", 
-              overflowX: "hidden", 
+          <div
+            className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll"
+            style={{
+              gap: "12px",
+              overflowY: "auto",
+              overflowX: "hidden",
               maxHeight: "calc(55vh - 150px)",
               scrollbarWidth: "none",
               msOverflowStyle: "none"
@@ -1286,7 +1287,7 @@ export default function Messages() {
               <div className="text-center py-5">
                 <p className="text-danger small">{error}</p>
                 <button
-                  className="btn btn-sm btn-outline-primary mt-2"
+                  className="btn  btn-outline-primary mt-2"
                   onClick={() => window.location.reload()}
                 >
                   Retry
@@ -1348,7 +1349,7 @@ export default function Messages() {
                           <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
                           <button
                             onClick={(e) => handleDeleteThread(conv.id, e)}
-                            className="btn btn-sm"
+                            className="btn "
                             style={{
                               background: "transparent",
                               border: "none",
@@ -1464,8 +1465,8 @@ export default function Messages() {
                                     href={msg.attachment || msg.attachmentObj?.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ 
-                                      fontSize: "12px", 
+                                    style={{
+                                      fontSize: "12px",
                                       color: "#3B82F6",
                                       textDecoration: "underline",
                                       cursor: "pointer"
@@ -1505,23 +1506,32 @@ export default function Messages() {
                               {msg.hasAttachment && (
                                 <div className="mt-2">
                                   <FileIcon className="me-2 text-primary" />
-                                  <a
-                                    href={msg.attachment || msg.attachmentObj?.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ 
-                                      fontSize: "12px", 
-                                      color: "#3B82F6",
-                                      textDecoration: "underline",
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    {msg.attachmentName || "Attachment"}
-                                  </a>
-                                  {msg.attachmentSize && (
-                                    <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                      ({msg.attachmentSize})
+                                  {msg.isUploading ? (
+                                    <span className="d-inline-flex align-items-center">
+                                      <span className="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                                      <span className="text-muted small" style={{ fontSize: "12px" }}>Uploading {msg.attachmentName}...</span>
                                     </span>
+                                  ) : (
+                                    <>
+                                      <a
+                                        href={msg.attachment || msg.attachmentObj?.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          fontSize: "12px",
+                                          color: "#3B82F6",
+                                          textDecoration: "underline",
+                                          cursor: "pointer"
+                                        }}
+                                      >
+                                        {msg.attachmentName || "Attachment"}
+                                      </a>
+                                      {msg.attachmentSize && (
+                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                          ({msg.attachmentSize})
+                                        </span>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               )}
@@ -1582,8 +1592,8 @@ export default function Messages() {
                     type="button"
                     className="btn me-2"
                     onClick={() => messageFileInputRef.current?.click()}
-                    style={{ 
-                      background: "transparent", 
+                    style={{
+                      background: "transparent",
                       border: "1px solid #E8F0FF",
                       color: "#3B4A66"
                     }}
@@ -1601,8 +1611,8 @@ export default function Messages() {
                       type="button"
                       className="btn me-2"
                       onClick={() => setMessageAttachment(null)}
-                      style={{ 
-                        background: "transparent", 
+                      style={{
+                        background: "transparent",
                         border: "none",
                         color: "#EF4444",
                         padding: "0 5px"

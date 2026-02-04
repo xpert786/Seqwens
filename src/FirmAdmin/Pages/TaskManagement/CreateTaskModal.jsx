@@ -608,7 +608,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                       {formData.tax_preparer_id && (
                         <button
                           type="button"
-                          className="btn btn-sm btn-light border"
+                          className="btn  btn-light border"
                           onClick={() => {
                             setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
                             setShowTaxPreparerDropdown(false);
@@ -709,7 +709,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                     {formData.client_ids.length > 0 && (
                       <button
                         type="button"
-                        className="btn btn-sm btn-light border"
+                        className="btn  btn-light border"
                         onClick={() => {
                           setFormData(prev => ({ ...prev, client_ids: [] }));
                           setShowClientDropdown(false);
@@ -830,7 +830,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                       {formData.folder_id && (
                         <button
                           type="button"
-                          className="btn btn-sm btn-light border"
+                          className="btn  btn-light border"
                           onClick={() => {
                             setFormData(prev => ({ ...prev, folder_id: '' }));
                             setShowFolderDropdown(false);
@@ -915,7 +915,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                         </span>
                         <button
                           type="button"
-                          className="btn btn-sm btn-link text-danger p-0"
+                          className="btn  btn-link text-danger p-0"
                           onClick={() => removeFile(index)}
                         >
                           <FaTimes />
@@ -934,7 +934,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: '#FFFFFF',
                   color: '#3B4A66',
@@ -949,7 +949,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-sm"
+                className="btn "
                 style={{
                   backgroundColor: '#F56D2D',
                   color: '#FFFFFF',

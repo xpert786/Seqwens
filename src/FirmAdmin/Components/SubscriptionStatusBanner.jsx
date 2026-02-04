@@ -139,7 +139,7 @@ const SubscriptionStatusBanner = () => {
                     {ctaLabel && (
                         <button
                             onClick={handleCtaClick}
-                            className={`btn btn-sm fw-semibold px-3 py-1.5 rounded-pill shadow-sm ${status === 'pending_payment'
+                            className={`btn  fw-semibold px-3 py-1.5 rounded-pill shadow-sm ${status === 'pending_payment'
                                 ? 'btn-dark'
                                 : 'btn-light'
                                 }`}

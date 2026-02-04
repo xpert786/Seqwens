@@ -72,7 +72,7 @@ export default function RoleRequestsList({ refreshTrigger = 0 }) {
       <div className="text-center py-4" style={{ fontFamily: "BasisGrotesquePro" }}>
         <p className="text-danger">{error}</p>
         <button
-          className="btn btn-sm"
+          className="btn "
           onClick={fetchRequests}
           style={{
             backgroundColor: "#00C0C6",

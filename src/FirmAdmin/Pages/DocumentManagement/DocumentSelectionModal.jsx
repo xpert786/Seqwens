@@ -201,7 +201,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
                 </p>
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn "
                   onClick={handleSelectAll}
                   style={{
                     backgroundColor: 'transparent',

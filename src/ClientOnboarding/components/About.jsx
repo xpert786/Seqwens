@@ -7,7 +7,7 @@ function About() {
           <p className="text-muted">
             Seqwens was founded in 2020 by a team of CPAs and tax firm operators to create a modern AI-first solution that meets the real-world needs of tax practitioners.
           </p>
-          <button className="btn btn-outline-primary btn-sm mt-2">Learn More About Us</button>
+          <button className="btn btn-outline-primary  mt-2">Learn More About Us</button>
         </div>
       </div>
     </section>

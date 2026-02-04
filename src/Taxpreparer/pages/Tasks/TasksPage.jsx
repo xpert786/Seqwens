@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendinge, Progressingg, Completeded, Overduer, MiniContact, Dot, AddTask, Cut } from "../../component/icons";
+import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendinge, Progressingg, Completeded, Overduer, MiniContact, Dot, AddTask, Cut, Msg } from "../../component/icons";
 import { FaChevronDown, FaChevronRight, FaFolder, FaSearch, FaUpload, FaTimes, FaCheckCircle, FaEye, FaCheck, FaRedo, FaFilePdf } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -48,7 +48,228 @@ const checkboxStyle = `
   .task-item:hover {
     background-color: rgb(255, 247, 234) !important;
   }
+  .calendar-grid {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  
+  .calendar-day {
+    transition: background-color 0.1s ease;
+  }
+  
+  .calendar-day:hover {
+    background-color: #F8FAFC;
+  }
+  
+  .calendar-task-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
 `;
+
+const CalendarView = ({ tasksList, onTaskClick }) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const days = [];
+    const prevMonthLastDate = new Date(year, month, 0).getDate();
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: prevMonthLastDate - i, current: false, date: new Date(year, month - 1, prevMonthLastDate - i) });
+    }
+    for (let i = 1; i <= lastDate; i++) {
+      days.push({ day: i, current: true, date: new Date(year, month, i) });
+    }
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, current: false, date: new Date(year, month + 1, i) });
+    }
+    return days;
+  };
+
+  const navigateMonth = (step) => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + step, 1));
+  };
+
+  const days = getDaysInMonth(currentDate);
+
+  const tasksByDate = tasksList.reduce((acc, task) => {
+    if (task.due_date || task.due) {
+      const dueStr = task.due_date || task.due;
+      const d = new Date(dueStr);
+      if (!isNaN(d.getTime())) {
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(task);
+      }
+    }
+    return acc;
+  }, {});
+
+  const getPriorityInfo = (priority) => {
+    switch (priority) {
+      case 'high':
+        return { bg: '#FEF2F2', text: '#B91C1C', border: '#EF4444' };
+      case 'medium':
+        return { bg: '#FFFBEB', text: '#B45309', border: '#F59E0B' };
+      case 'low':
+      default:
+        return { bg: '#ECFDF5', text: '#047857', border: '#10B981' };
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden font-sans">
+      {/* Calendar Header */}
+      <div className="d-flex justify-content-between align-items-center p-4 border-bottom">
+        <div className="d-flex align-items-center gap-2">
+          <h2 className="m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
+            {monthNames[currentDate.getMonth()]}
+          </h2>
+          <span className="text-secondary" style={{ fontSize: '1.5rem', fontWeight: '300' }}>
+            {currentDate.getFullYear()}
+          </span>
+        </div>
+        <div className="d-flex align-items-center gap-2 bg-light rounded-pill p-1 border">
+          <button 
+            className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
+            style={{ width: '32px', height: '32px' }}
+            onClick={() => navigateMonth(-1)}
+          >
+            <FaChevronDown style={{ transform: 'rotate(90deg)', fontSize: '12px' }} />
+          </button>
+          <button 
+            className="btn  btn-white text-dark fw-bold px-3 py-1 shadow-sm rounded-pill"
+            style={{ fontSize: '0.85rem' }}
+            onClick={() => setCurrentDate(new Date())}
+          >
+            Today
+          </button>
+          <button 
+             className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
+             style={{ width: '32px', height: '32px' }}
+             onClick={() => navigateMonth(1)}
+          >
+            <FaChevronDown style={{ transform: 'rotate(-90deg)', fontSize: '12px' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* Days Header */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(7, 1fr)', 
+          borderBottom: '1px solid #E5E7EB',
+          backgroundColor: '#F9FAFB'
+        }}
+      >
+        {dayNames.map(d => (
+          <div key={d} className="py-3 text-center text-secondary small fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+            {d.toUpperCase()}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(7, 1fr)', 
+          backgroundColor: '#E5E7EB', // Grid lines color
+          gap: '1px', // Create grid lines
+          borderBottom: '1px solid #E5E7EB'
+        }}
+      >
+        {days.map((d, i) => {
+          const key = `${d.date.getFullYear()}-${d.date.getMonth()}-${d.date.getDate()}`;
+          const dayTasks = tasksByDate[key] || [];
+          const isToday = d.date.toDateString() === new Date().toDateString();
+          const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
+
+          return (
+            <div
+              key={i}
+              className={`bg-white p-2 d-flex flex-column transition-all`}
+              style={{
+                minHeight: '130px',
+                backgroundColor: !d.current ? '#F9FAFB' : '#FFFFFF', // Lighter background for non-current days
+                opacity: !d.current ? 0.7 : 1,
+              }}
+            >
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div
+                  className={`d-flex align-items-center justify-content-center fw-semibold ${isToday ? 'shadow-sm' : ''}`}
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    backgroundColor: isToday ? '#00C0C6' : 'transparent', // Using brand color
+                    color: isToday ? '#FFFFFF' : (d.current ? '#1F2937' : '#9CA3AF'),
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {d.day}
+                </div>
+                {dayTasks.length > 0 && (
+                   <span className="badge bg-light text-secondary border rounded-pill" style={{ fontSize: '0.65rem' }}>
+                     {dayTasks.length}
+                   </span>
+                )}
+              </div>
+
+              <div className="d-flex flex-column gap-1 overflow-auto custom-scrollbar" style={{ flex: 1, maxHeight: '90px' }}>
+                {dayTasks.map(t => {
+                   const style = getPriorityInfo(t.priority);
+                   return (
+                    <div
+                      key={t.id}
+                      className="px-2 py-1 rounded"
+                      style={{
+                        backgroundColor: style.bg,
+                        color: style.text,
+                        borderLeft: `3px solid ${style.text}`, // Cleaner border indicator
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginBottom: '2px',
+                        transition: 'transform 0.1s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                      onClick={(e) => { e.stopPropagation(); onTaskClick(t); }}
+                      title={t.title || t.task_title}
+                    >
+                      {t.title || t.task_title}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function TasksPage() {
   const modalRef = useRef(null);
@@ -1400,7 +1621,7 @@ export default function TasksPage() {
       {/* Header */}
       <div className="tasks-header d-flex justify-content-between align-items-center mb-4 tasks-header-wrapper">
         <div>
-          <h3 className="fw-semibold" style={{ marginBottom: 4 }}>My Tasks</h3>
+          <h4 className="fw-semibold" style={{ marginBottom: 4 }}>My Tasks</h4>
           <small className="text-muted">Manage your assigned tasks and workflow</small>
         </div>
         <button
@@ -1419,39 +1640,25 @@ export default function TasksPage() {
       {/* Stat cards row (Bootstrap grid) */}
       <div className="tasks-stats-row row g-3 mb-4">
         {stats.map((s, i) => (
-          <div key={i} className="col-12 col-sm-6 col-md-6 col-lg-3">
-            <div className="card h-100 " style={{
-              borderRadius: 16,
-              border: "1px solid #E8F0FF",
-              minHeight: '120px'
+          <div key={i} className="col-12 col-sm-6 col-md-4 col-lg-2-4" style={{ flex: '0 0 auto', width: '20%' }}>
+            <div className="card h-100 border-0 shadow-sm" style={{
+              borderRadius: 12,
+              backgroundColor: "#fff",
+              border: "1px solid #E8F0FF !important"
             }}>
-              <div className="card-body d-flex flex-column p-3 stat-card-body">
-                <div className="d-flex justify-content-between align-items-center mb-3 stat-card-header">
-                  <div className="stat-icon" style={{
-                    color: "#00C0C6",
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    // background: '#E8F0FF',
-                    borderRadius: '10px',
-                    flexShrink: 0
-                  }}>
-                    {s.icon}
-                  </div>
-                  <div className="stat-count ms-3" style={{
-                    color: "#3B4A66",
-                    fontWeight: 600,
-                    fontSize: '24px',
-                    textAlign: 'right',
-                    flexGrow: 1
-                  }}>
-                    {s.count}
-                  </div>
+              <div className="card-body p-3 d-flex align-items-center">
+                <div className="stat-icon-wrapper rounded-3 d-flex align-items-center justify-content-center" style={{
+                  width: '44px',
+                  height: '44px',
+                  backgroundColor: `${s.color}15`,
+                  color: s.color,
+                  flexShrink: 0
+                }}>
+                  {s.icon}
                 </div>
-                <div className="mt-auto">
-                  <p className="mb-0 text-muted fw-semibold">{s.label}</p>
+                <div className="ms-3 overflow-hidden">
+                  <div className="text-muted small fw-medium text-uppercase mb-0" style={{ letterSpacing: '0.025em' }}>{s.label}</div>
+                  <div className="h4 mb-0 fw-bold" style={{ color: '#1E293B' }}>{s.count}</div>
                 </div>
               </div>
             </div>
@@ -1607,8 +1814,8 @@ export default function TasksPage() {
                     <span style={{ cursor: 'grab', color: '#C2CCDE' }}>⋮⋮</span> {titleFor(k)}
                   </div>
                   {/* <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                    <button className="btn btn-sm btn-light" disabled={idx === 0} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx-1]; n[idx-1]=n[idx]; n[idx]=t; return n; })}>↑</button>
-                    <button className="btn btn-sm btn-light" disabled={idx === order.length-1} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx+1]; n[idx+1]=n[idx]; n[idx]=t; return n; })}>↓</button>
+                    <button className="btn  btn-light" disabled={idx === 0} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx-1]; n[idx-1]=n[idx]; n[idx]=t; return n; })}>↑</button>
+                    <button className="btn  btn-light" disabled={idx === order.length-1} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx+1]; n[idx+1]=n[idx]; n[idx]=t; return n; })}>↓</button>
                   </div> */}
                 </div>
               ))}
@@ -1640,7 +1847,7 @@ export default function TasksPage() {
               <div>
                 <strong style={{ color: "#DC2626" }}>Error:</strong> <span style={{ color: "#991B1B" }}>{tasksError}</span>
               </div>
-              <button className="btn btn-sm" onClick={fetchReceivedTasks} style={{ backgroundColor: "#DC2626", color: "#fff", border: "none" }}>
+              <button className="btn " onClick={fetchReceivedTasks} style={{ backgroundColor: "#DC2626", color: "#fff", border: "none" }}>
                 Retry
               </button>
             </div>
@@ -1658,28 +1865,34 @@ export default function TasksPage() {
                           {iconFor(k)} {titleFor(k)} ({tasks[k].length})
                         </h6>
                         {tasks[k].length > 0 ? (
-                          tasks[k].slice(0, 5).map((t) => (
-                            <div key={t.id} className="card task-item" onClick={() => setSelectedTask(t)}>
-                              <div className="card-body position-relative">
-                                <div className="priority-badge">
-                                  {t.priority.toUpperCase()}
+                          tasks[k].slice(0, 10).map((t) => (
+                            <div key={t.id} className="task-item" onClick={() => setSelectedTask(t)}>
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <span className={`priority-badge ${t.priority.toLowerCase()}`}>
+                                  {t.priority}
+                                </span>
+                                <button className="btn p-0 border-0" onClick={(e) => { e.stopPropagation(); setSelectedTask(t); }}>
+                                  <Dot />
+                                </button>
+                              </div>
+
+                              <div className="task-title mb-2">{t.title}</div>
+
+                              <div className="d-flex align-items-center gap-2 mb-2">
+                                <span className="icon-circle" style={{ width: '24px', height: '24px' }}><Doc /></span>
+                                <span className="text-muted small truncate" style={{ maxWidth: '150px' }}>{t.client}</span>
+                              </div>
+
+                              <div className="task-meta d-flex align-items-center justify-content-between pt-2 border-top">
+                                <div className="d-flex align-items-center gap-1 text-muted small">
+                                  <Clocking size={12} />
+                                  <span>{t.due}</span>
                                 </div>
-                                <div className="task-item-content d-flex align-items-start">
-                                  <span className="icon-circle"><Doc /></span>
-                                  <div className="task-text">
-                                    <div className="task-title">{t.title}</div>
-                                    <div className="task-meta d-flex align-items-center justify-content-between">
-                                      <span className="client-info d-flex align-items-center">
-                                        <MiniContact /> <span className="client-name">{t.client}</span>
-                                        <span className="ms-3 due-date">{t.due}</span>
-                                      </span>
-                                      <button className="btn btn-sm btn-light more-btn" onClick={(e) => { e.stopPropagation(); setSelectedTask(t); }}>
-                                        <Dot />
-                                      </button>
-                                    </div>
-                                    <div className="task-note">{t.note}</div>
+                                {t.note && (
+                                  <div className="text-muted small">
+                                    <Msg size={12} />
                                   </div>
-                                </div>
+                                )}
                               </div>
                             </div>
                           ))
@@ -1705,7 +1918,7 @@ export default function TasksPage() {
               </div>
               <div className="d-flex gap-2">
                 <button
-                  className="btn btn-sm btn-outline-secondary"
+                  className="btn  btn-outline-secondary"
                   onClick={() => setTasksPagination(prev => ({ ...prev, page: prev.page - 1 }))}
                   disabled={!tasksPagination.has_previous}
                 >
@@ -1715,7 +1928,7 @@ export default function TasksPage() {
                   Page {tasksPagination.page} of {tasksPagination.total_pages}
                 </span>
                 <button
-                  className="btn btn-sm btn-outline-secondary"
+                  className="btn  btn-outline-secondary"
                   onClick={() => setTasksPagination(prev => ({ ...prev, page: prev.page + 1 }))}
                   disabled={!tasksPagination.has_next}
                 >
@@ -1728,7 +1941,12 @@ export default function TasksPage() {
       )}
 
       {active === "calendar" && (
-        <div className="text-muted mt-3">Calendar view coming soon.</div>
+        <div className="mt-4">
+          <CalendarView
+            tasksList={Object.values(tasks).flat()}
+            onTaskClick={(t) => setSelectedTask(t)}
+          />
+        </div>
       )}
 
 
@@ -1893,7 +2111,7 @@ export default function TasksPage() {
                                 </div>
                                 <button
                                   type="button"
-                                  className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+                                  className="btn  btn-outline-primary d-flex align-items-center gap-2"
                                   onClick={() => handlePreviewFile(file)}
                                   style={{
                                     borderRadius: '6px',
@@ -2038,7 +2256,7 @@ export default function TasksPage() {
                             </div>
                             <button
                               type="button"
-                              className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+                              className="btn  btn-outline-primary d-flex align-items-center gap-2"
                               onClick={() => handlePreviewFile(file)}
                               style={{ borderRadius: '6px' }}
                             >
@@ -3139,7 +3357,7 @@ export default function TasksPage() {
                             </div>
                             <button
                               type="button"
-                              className="btn btn-sm btn-link text-danger p-0"
+                              className="btn  btn-link text-danger p-0"
                               onClick={() => removeUploadFile(index)}
                               style={{ textDecoration: 'none' }}
                             >

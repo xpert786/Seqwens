@@ -2821,7 +2821,7 @@ export default function DataIntakeForm({ targetClientId }) {
                         Dependent #{index + 1}
                       </h3>
                       <button
-                        className="btn btn-sm p-0"
+                        className="btn  p-0"
                         onClick={() => handleRemoveDependent(index)}
                         title="Remove"
                         style={{
@@ -3630,7 +3630,7 @@ export default function DataIntakeForm({ targetClientId }) {
                             </div>
                             <div className="d-flex gap-2 ms-3" style={{ flexShrink: 0 }}>
                               <button
-                                className="btn btn-sm"
+                                className="btn "
                                 onClick={() => handleEditBusiness(business.id)}
                                 style={{
                                   fontFamily: "BasisGrotesquePro",
@@ -3645,13 +3645,13 @@ export default function DataIntakeForm({ targetClientId }) {
                               </button>
 
                               {/* <button
-                                className="btn btn-sm" */}
+                                className="btn " */}
 
                               {/* >
                                 <FaTrash className="me-1" style={{ fontSize: "11px" }} />
                               </button> */}
                               <button
-                                className="btn btn-outline-danger btn-sm"
+                                className="btn btn-outline-danger "
                                 onClick={() => handleRemoveBusiness(business.id)}
                                 style={{
                                   fontFamily: "BasisGrotesquePro",
@@ -3877,7 +3877,7 @@ export default function DataIntakeForm({ targetClientId }) {
                           </div>
                           <div className="d-flex gap-2">
                             <button
-                              className="btn btn-outline-primary btn-sm"
+                              className="btn btn-outline-primary "
                               onClick={() => handleEditRentalProperty(property.id)}
                               style={{
                                 fontFamily: "BasisGrotesquePro",
@@ -3891,7 +3891,7 @@ export default function DataIntakeForm({ targetClientId }) {
                               Edit
                             </button>
                             <button
-                              className="btn btn-outline-danger btn-sm"
+                              className="btn btn-outline-danger "
                               onClick={() => handleRemoveRentalProperty(property.id)}
                               style={{
                                 fontFamily: "BasisGrotesquePro",

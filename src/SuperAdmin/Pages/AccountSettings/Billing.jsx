@@ -124,7 +124,7 @@ const Billing = () => {
               <div className="d-flex gap-2">
                 {!method.isPrimary && (
                   <button
-                    className="btn btn-sm"
+                    className="btn "
                     style={{ backgroundColor: "#FFFFFF", border: "1px solid #22C55E", color: "#22C55E", fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "400" }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -135,7 +135,7 @@ const Billing = () => {
                   </button>
                 )}
                 <button
-                  className="btn btn-sm"
+                  className="btn "
                   onClick={(e) => {
                     e.stopPropagation();
                     setEditCard(method);

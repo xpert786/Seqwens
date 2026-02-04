@@ -429,7 +429,7 @@ export default function FirmSharedDocuments() {
         <div className="mb-3">
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <button
-              className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+              className="btn  text-primary p-0 border-0 bg-transparent"
               onClick={() => handleBreadcrumbClick(-1)}
               style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
             >
@@ -440,7 +440,7 @@ export default function FirmSharedDocuments() {
               <React.Fragment key={idx}>
                 <FiChevronRight size={14} style={{ color: '#6B7280' }} />
                 <button
-                  className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+                  className="btn  text-primary p-0 border-0 bg-transparent"
                   onClick={() => handleBreadcrumbClick(idx)}
                   style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
                 >
@@ -553,7 +553,7 @@ export default function FirmSharedDocuments() {
                       <td>
                         <div className="d-flex gap-2">
                           <button
-                            className="btn btn-sm"
+                            className="btn "
                             onClick={() => handleDownload(doc)}
                             style={{
                               backgroundColor: '#F9FAFB',
@@ -567,7 +567,7 @@ export default function FirmSharedDocuments() {
                           </button>
                           {canPreview && (
                             <button
-                              className="btn btn-sm"
+                              className="btn "
                               onClick={() => handlePreview(doc)}
                               style={{
                                 backgroundColor: '#F9FAFB',
@@ -581,7 +581,7 @@ export default function FirmSharedDocuments() {
                             </button>
                           )}
                           <button
-                            className="btn btn-sm"
+                            className="btn "
                             onClick={() => handleDeleteClick(doc)}
                             disabled={deletingDocId === doc.id}
                             style={{

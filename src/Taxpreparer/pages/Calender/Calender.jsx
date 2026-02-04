@@ -441,7 +441,7 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h3 className="text-2xl font-semibold text-gray-900">Calendar</h3>
+          <h4 className="text-2xl font-bold text-gray-900" style={{ color: '#1E293B' }}>Calendar</h4>
           <p className="text-gray-600">Manage your appointments and schedule</p>
         </div>
         <div className="flex items-center gap-3">
@@ -471,14 +471,15 @@ export default function CalendarPage() {
       {/* Stats - First 4 Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {cardData.map((item, index) => (
-          <div key={index} className="bg-white rounded-lg border-[#E8F0FF] p-4">            <div className="flex justify-between items-center">
-            <div style={{ color: item.color }}>
-              {item.icon}
+          <div key={index} className="bg-white rounded-xl border border-[#E8F0FF] p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-center mb-3">
+              <div className="p-2 rounded-lg" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
+                {item.icon}
+              </div>
+              <div className="text-2xl font-bold text-gray-900" style={{ color: '#1E293B' }}>{item.count}</div>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{item.count}</div>
-          </div>
-            <div className="mt-2">
-              <p className="text-sm font-medium text-gray-600">{item.label}</p>
+            <div>
+              <p className="text-sm font-semibold text-gray-500 text-uppercase tracking-wider m-0">{item.label}</p>
             </div>
           </div>
         ))}

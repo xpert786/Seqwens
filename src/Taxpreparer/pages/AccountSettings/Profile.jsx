@@ -457,7 +457,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             />
                             <label
                                 htmlFor="taxProfileImageInput"
-                                className="btn text-white btn-sm mb-2"
+                                className="btn text-white  mb-2"
                                 style={{
                                     background: "#F56D2D",
                                     fontSize: "15px",
@@ -474,7 +474,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             <div className="mb-2">
                                 <button
                                     type="button"
-                                    className="btn btn-success btn-sm me-2 mobile-btn"
+                                    className="btn btn-success  me-2 mobile-btn"
                                     onClick={handleImageUpload}
                                     disabled={uploadingImage}
                                     style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
@@ -492,7 +492,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-secondary btn-sm mobile-btn"
+                                    className="btn btn-secondary  mobile-btn"
                                     onClick={() => {
                                         setSelectedImage(null);
                                         setImagePreview(null);

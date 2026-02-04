@@ -281,7 +281,7 @@ const Resources = () => {
                 href={watchUrl || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`btn btn-sm${watchUrl ? "" : " disabled"}`}
+                className={`btn ${watchUrl ? "" : " disabled"}`}
                 style={{
                   backgroundColor: "#FFFFFF",
                   border: "1px solid #E8F0FF",

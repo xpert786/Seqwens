@@ -601,7 +601,7 @@ export default function DocumentManager() {
           <div className="mb-4">
             <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "#f8f9fa", padding: "12px 16px", borderRadius: "8px" }}>
               <button
-                className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+                className="btn  text-primary p-0 border-0 bg-transparent"
                 onClick={() => setSelectedFolderId(null)}
                 style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
               >
@@ -612,7 +612,7 @@ export default function DocumentManager() {
                 <React.Fragment key={idx}>
                   <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
                   <button
-                    className="btn btn-sm text-primary p-0 border-0 bg-transparent"
+                    className="btn  text-primary p-0 border-0 bg-transparent"
                     onClick={() => setSelectedFolderId(breadcrumb.id)}
                     style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
                   >
@@ -659,7 +659,7 @@ export default function DocumentManager() {
             </div>
             <div className="d-flex gap-2">
               <button
-                className="btn btn-sm btn-primary"
+                className="btn  btn-primary"
                 onClick={handleCreateFolder}
                 disabled={creatingFolderLoading || !newFolderName.trim()}
                 style={{ backgroundColor: "#00C0C6", border: "none" }}
@@ -667,7 +667,7 @@ export default function DocumentManager() {
                 {creatingFolderLoading ? 'Creating...' : 'Create'}
               </button>
               <button
-                className="btn btn-sm btn-secondary"
+                className="btn  btn-secondary"
                 onClick={() => {
                   setCreatingFolder(false);
                   setNewFolderName("");
@@ -741,7 +741,7 @@ export default function DocumentManager() {
         {error && !loading && (
           <div className="alert alert-danger" role="alert">
             <strong>Error:</strong> {error}
-            <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchDocuments(selectedFolderId, searchQuery)}>
+            <button className="btn  btn-outline-danger ms-2" onClick={() => fetchDocuments(selectedFolderId, searchQuery)}>
               Retry
             </button>
           </div>
@@ -852,7 +852,7 @@ export default function DocumentManager() {
                               <div className="d-flex gap-2 flex-wrap align-items-center">
                                 <button
                                   type="button"
-                                  className="btn btn-outline-primary btn-sm"
+                                  className="btn btn-outline-primary "
                                   disabled={!meta.canPreview}
                                   title={meta.canPreview ? "Preview" : "Preview not available for this file type"}
                                   onClick={(event) => {
@@ -867,7 +867,7 @@ export default function DocumentManager() {
                                 </button>
                                 <button
                                   type="button"
-                                  className="btn btn-outline-secondary btn-sm"
+                                  className="btn btn-outline-secondary "
                                   disabled={!meta.url}
                                   onClick={(event) => {
                                     event.stopPropagation();
@@ -880,7 +880,7 @@ export default function DocumentManager() {
                                 <div className="position-relative">
                                   <button
                                     type="button"
-                                    className="btn btn-outline-secondary btn-sm"
+                                    className="btn btn-outline-secondary "
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       setOpenMenuIndex(openMenuIndex === doc.id ? null : doc.id);
@@ -902,7 +902,7 @@ export default function DocumentManager() {
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <button
-                                        className="btn btn-sm w-100 text-start d-flex align-items-center gap-2"
+                                        className="btn  w-100 text-start d-flex align-items-center gap-2"
                                         style={{ border: 'none', borderRadius: 0 }}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -912,7 +912,7 @@ export default function DocumentManager() {
                                         <FaEdit /> Rename
                                       </button>
                                       <button
-                                        className="btn btn-sm w-100 text-start d-flex align-items-center gap-2 text-danger"
+                                        className="btn  w-100 text-start d-flex align-items-center gap-2 text-danger"
                                         style={{ border: 'none', borderRadius: 0 }}
                                         onClick={(e) => {
                                           e.stopPropagation();

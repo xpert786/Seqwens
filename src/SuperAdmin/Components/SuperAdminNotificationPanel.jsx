@@ -333,7 +333,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         <div className="d-flex gap-2 align-items-center">
           {unreadCount > 0 && (
             <button
-              className="btn btn-sm"
+              className="btn "
               onClick={handleMarkAllAsRead}
               style={{
                 backgroundColor: "#F56D2D",
@@ -349,7 +349,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
             </button>
           )}
           <button
-            className="btn btn-sm"
+            className="btn "
             onClick={onClose}
             style={{
               backgroundColor: "transparent",
@@ -372,7 +372,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           <button
             key={tab.key}
             onClick={() => setSelectedTab(tab.key)}
-            className="btn btn-sm"
+            className="btn "
             style={{
               backgroundColor: "transparent",
               border: "none",
@@ -476,7 +476,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
                       </p>
                     </div>
                     <button
-                      className="btn btn-sm"
+                      className="btn "
                       onClick={(e) => handleDelete(notification.id, e)}
                       style={{
                         backgroundColor: "transparent",
@@ -528,7 +528,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           }}
         >
           <button
-            className="btn btn-sm"
+            className="btn "
             onClick={() => setShowAllNotifications(true)}
             style={{
               backgroundColor: "#F56D2D",
@@ -559,7 +559,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           }}
         >
           <button
-            className="btn btn-sm"
+            className="btn "
             onClick={() => setShowAllNotifications(false)}
             style={{
               backgroundColor: "#F56D2D",
@@ -586,7 +586,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           }}
         >
           <button
-            className="btn btn-sm"
+            className="btn "
             onClick={() => {
               navigate("/superadmin/notifications");
               onClose();

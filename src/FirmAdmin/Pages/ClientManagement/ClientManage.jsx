@@ -1518,7 +1518,7 @@ export default function ClientManage() {
             ) : unlinkedTaxpayersError ? (
               <div className="alert alert-danger" role="alert">
                 <strong>Error:</strong> {unlinkedTaxpayersError}
-                <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
+                <button className="btn  btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
                   Retry
                 </button>
               </div>
@@ -1600,7 +1600,7 @@ export default function ClientManage() {
                           </div>
                           <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
                             <button
-                              className="btn btn-sm"
+                              className="btn "
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedClientForReassign(taxpayer.id);
@@ -1683,7 +1683,7 @@ export default function ClientManage() {
             ) : pendingInvitesError ? (
               <div className="alert alert-danger" role="alert">
                 <strong>Error:</strong> {pendingInvitesError}
-                <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+                <button className="btn  btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
                   Retry
                 </button>
               </div>
@@ -1741,7 +1741,7 @@ export default function ClientManage() {
                           </div>
                           <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
                             <button
-                              className="btn btn-sm"
+                              className="btn "
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const clientId = invite.client_id || invite.taxpayer_id || invite.id;
@@ -1764,7 +1764,7 @@ export default function ClientManage() {
                               Assign
                             </button>
                             <button
-                              className="btn btn-sm d-flex align-items-center justify-content-center gap-1"
+                              className="btn  d-flex align-items-center justify-content-center gap-1"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openInviteActionsModal(invite);

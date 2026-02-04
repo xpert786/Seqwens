@@ -51,6 +51,7 @@ export default function UserManagement() {
 
   const getStatusBadgeClass = (status) => {
     const normalized = (status || '').toLowerCase();
+    if (normalized.includes('inactive')) return 'bg-gray-400';
     if (normalized.includes('active')) return 'bg-green-500';
     if (normalized.includes('suspend')) return 'bg-red-500';
     return 'bg-gray-400';

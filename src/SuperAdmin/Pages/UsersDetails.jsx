@@ -161,28 +161,32 @@ const UsersDetails = () => {
     const statusBadge =
         statusBadgeStyles[profile.status] || 'bg-gray-200 text-gray-700';
     const isSuspended = profile.status === 'suspended';
-    const actionButtonLabel = isSuspended ? 'Unsuspend Account' : 'Suspend Account';
-    const actionButtonClasses = isSuspended
-        ? 'px-4 py-2 text-sm font-medium text-white bg-[#22C55E] rounded-md hover:bg-[#16A34A] transition-colors'
-        : 'px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors';
+    const isInactive = !isSuspended && (profile.status === 'inactive' || !profile.status || profile.status_display === 'Inactive');
 
-    const updateUserStateAfterAction = (currentlySuspended) => {
+
+
+    const updateUserStateAfterAction = (statusType) => {
         setUserDetails((previous) => {
-            if (!previous) {
-                return previous;
+            if (!previous) return previous;
+
+            let updates = {};
+            if (statusType === 'suspended') {
+                updates = {
+                    is_suspended: true,
+                    is_active: false,
+                    profile: { ...previous.profile, status: 'suspended', status_display: 'Suspended' }
+                };
+            } else if (statusType === 'active') {
+                updates = {
+                    is_suspended: false,
+                    is_active: true,
+                    profile: { ...previous.profile, status: 'active', status_display: 'Active' }
+                };
             }
-            const nextStatus = currentlySuspended ? 'active' : 'suspended';
-            const nextStatusDisplay = currentlySuspended ? 'Active' : 'Suspended';
 
             return {
                 ...previous,
-                is_suspended: !currentlySuspended,
-                is_active: currentlySuspended ? true : false,
-                profile: {
-                    ...previous.profile,
-                    status: nextStatus,
-                    status_display: nextStatusDisplay,
-                },
+                ...updates,
                 actions: {
                     ...previous.actions,
                     can_suspend: true,
@@ -191,16 +195,24 @@ const UsersDetails = () => {
         });
     };
 
-    const handleUnsuspend = async () => {
-        if (!userDetails || actionLoading) {
-            return;
-        }
+    const handleStatusAction = async (action) => {
+        if (!userDetails || actionLoading) return;
 
         try {
             setActionLoading(true);
-            await superAdminAPI.updateAdminUserSuspension(userId, { action: 'unsuspend' });
-            toast.success('User unsuspended successfully.', superToastOptions);
-            updateUserStateAfterAction(true);
+            let payload = {};
+
+            if (action === 'reactivate') {
+                payload = { is_active: true };
+            } else if (action === 'unsuspend') {
+                payload = { is_suspended: false, is_active: true, suspension_reason: '' };
+            }
+
+            await superAdminAPI.updateGlobalUserStatus(userId, payload);
+
+            const successMsg = action === 'reactivate' ? 'User reactivated successfully' : 'User unsuspended successfully';
+            toast.success(successMsg, superToastOptions);
+            updateUserStateAfterAction('active');
         } catch (err) {
             const message = handleAPIError(err);
             toast.error(message, superToastOptions);
@@ -209,11 +221,28 @@ const UsersDetails = () => {
         }
     };
 
+    const handleUnsuspend = () => handleStatusAction('unsuspend');
+
     const handleSuspendClick = () => {
         setSuspensionReason('Policy violation under review');
         setReasonError('');
         setShowSuspendModal(true);
     };
+
+    // Button Logic
+    let actionButtonLabel = 'Suspend Account';
+    let actionButtonClasses = 'px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors';
+    let actionHandler = handleSuspendClick;
+
+    if (isSuspended) {
+        actionButtonLabel = 'Unsuspend Account';
+        actionButtonClasses = 'px-4 py-2 text-sm font-medium text-white bg-[#22C55E] rounded-md hover:bg-[#16A34A] transition-colors';
+        actionHandler = handleUnsuspend;
+    } else if (isInactive) {
+        actionButtonLabel = 'Reactivate Account';
+        actionButtonClasses = 'px-4 py-2 text-sm font-medium text-white bg-[#3B82F6] rounded-md hover:bg-[#2563EB] transition-colors';
+        actionHandler = () => handleStatusAction('reactivate');
+    }
 
     const handleConfirmSuspend = async () => {
         if (!userDetails || actionLoading) {
@@ -234,7 +263,7 @@ const UsersDetails = () => {
                 reason: trimmedReason,
             });
             toast.success('User suspended successfully.', superToastOptions);
-            updateUserStateAfterAction(false);
+            updateUserStateAfterAction('suspended');
             setShowSuspendModal(false);
         } catch (err) {
             const message = handleAPIError(err);
@@ -422,12 +451,12 @@ const UsersDetails = () => {
                     </div>
                     <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
                         <div className="flex flex-col sm:flex-row gap-3">
-                            {isSuperAdmin && !isLookupMode && (
+                            {isSuperAdmin && (
                                 <button
                                     className={actionButtonClasses}
                                     style={{ borderRadius: '7px' }}
                                     disabled={!actions.can_suspend || actionLoading}
-                                    onClick={isSuspended ? handleUnsuspend : handleSuspendClick}
+                                    onClick={actionHandler}
                                     title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
                                 >
                                     {actionLoading ? 'Processing...' : actionButtonLabel}

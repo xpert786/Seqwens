@@ -127,6 +127,12 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
           const fieldErrors = Object.entries(errorData.errors)
             .map(([field, errors]) => {
               const errorMessages = Array.isArray(errors) ? errors.join(', ') : errors;
+
+              // Don't prefix generic errors with "Non Field Errors"
+              if (field === 'non_field_errors' || field === 'detail') {
+                return errorMessages;
+              }
+
               // Format field name: replace underscores with spaces and capitalize
               const friendlyField = field
                 .split('_')
@@ -369,6 +375,12 @@ export const superAdminAPI = {
   // Update admin user suspension status
   updateAdminUserSuspension: async (userId, payload) => {
     return await apiRequest(`/user/superadmin/users/${userId}/suspend/`, 'POST', payload);
+  },
+
+  // Update any user status (active/suspended) via SuperAdminUserDetailView
+  // Uses PUT because the view is defined with 'put' method, but acts as partial update
+  updateGlobalUserStatus: async (userId, statusData) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/`, 'PUT', statusData);
   },
 
   // Reset user password (auto-generated or manual)

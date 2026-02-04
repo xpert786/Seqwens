@@ -155,9 +155,9 @@ export default function ClientESignLogs() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>
+              <h4 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>
                 E-Signature Activity Logs
-              </h3>
+              </h4>
               <p className="text-sm text-gray-500 mt-1">
                 Comprehensive view of e-signature requests with document previews, signature fields, and comments
               </p>

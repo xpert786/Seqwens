@@ -1760,7 +1760,7 @@ export default function ESignatureDashboard() {
                           fileInputRef.current.value = '';
                         }
                       }}
-                      className="btn btn-sm"
+                      className="btn "
                       style={{
                         backgroundColor: 'transparent',
                         border: 'none',

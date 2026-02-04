@@ -1188,7 +1188,7 @@ export default function MessagePage() {
               <div className="text-center py-5">
                 <p className="text-danger small">{threadsError}</p>
                 <button
-                  className="btn btn-sm btn-outline-primary mt-2"
+                  className="btn  btn-outline-primary mt-2"
                   onClick={() => window.location.reload()}
                 >
                   Retry
@@ -1245,7 +1245,7 @@ export default function MessagePage() {
                         <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
                         <button
                           onClick={(e) => handleDeleteThread(conv.id, e)}
-                          className="btn btn-sm"
+                          className="btn "
                           style={{
                             background: "transparent",
                             border: "none",

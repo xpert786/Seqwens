@@ -98,7 +98,7 @@ export default function Dashboard() {
       <div className="taxdashboard-header lg:px-4 ">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
-            <h2 className="taxdashboard-title">Dashboard</h2>
+            <h4 className="taxdashboard-title mb-1">Dashboard</h4>
             <h5 className="taxdashboard-subtitle">
               Welcome back, {taxPreparerInfo
                 ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim()

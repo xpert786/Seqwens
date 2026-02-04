@@ -518,7 +518,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
                   setSelectedTab(tab.key);
                   setShowAllNotifications(false); // Reset when changing tabs
                 }}
-                className={`btn btn-sm ${
+                className={`btn  ${
                   selectedTab === tab.key ? "active-tab" : "inactive-tab"
                 }`}
               >
@@ -529,7 +529,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
           <div className="colour4 p-1 rounded-2">
             <button
-              className="btn btn-sm d-flex align-items-center gap-2"
+              className="btn  d-flex align-items-center gap-2"
               onClick={markAllRead}
               disabled={unreadCount === 0}
             >
@@ -548,7 +548,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
         <div className="text-center text-danger py-4">
           Error: {error}
           <button
-            className="btn btn-sm btn-link"
+            className="btn  btn-link"
             onClick={fetchNotifications}
           >
             Retry
@@ -620,7 +620,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
       {!loading && !error && hasMoreNotifications && !showAllNotifications && (
         <div className="text-center mt-3 mb-2">
           <button
-            className="btn btn-sm"
+            className="btn "
             style={{
               backgroundColor: "#F56D2D",
               color: "#FFFFFF",

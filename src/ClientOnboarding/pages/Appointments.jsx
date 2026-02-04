@@ -37,7 +37,7 @@ export default function Appointments() {
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(false);
   const [formData, setFormData] = useState({
-    subject: '',
+    subject: 'Consultation',
     description: '',
     appointment_with: 1, // Default admin ID
     duration: '1 hour', // Default duration
@@ -406,7 +406,7 @@ export default function Appointments() {
         });
 
         // Reset form
-        setFormData({ subject: '', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern', meeting_type: 'zoom', phone_number: '', meeting_location: '' });
+        setFormData({ subject: 'Consultation', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern', meeting_type: 'zoom', phone_number: '', meeting_location: '' });
         setSelectedDate(null);
         setSelectedTime(null);
         setSelectedTimeSlot(null);
@@ -813,7 +813,7 @@ export default function Appointments() {
     setSelectedTime(null);
     setSelectedTimeSlot(null);
     setSelectedBox(null);
-    setFormData({ subject: '', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern', meeting_type: 'zoom', phone_number: '', meeting_location: '' });
+    setFormData({ subject: 'Consultation', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern', meeting_type: 'zoom', phone_number: '', meeting_location: '' });
     setAvailableTimeSlots([]);
     setSelectedCalendarDate(null);
     setAvailableDates([]);
@@ -901,7 +901,7 @@ export default function Appointments() {
         <div className="alert alert-danger mb-4" role="alert">
           <strong>Error:</strong> {error}
           <button
-            className="btn btn-sm btn-outline-danger ms-2"
+            className="btn  btn-outline-danger ms-2"
             onClick={fetchAppointments}
           >
             Retry
@@ -1060,7 +1060,7 @@ export default function Appointments() {
                         {/* Edit & Delete buttons */}
                         <div className="d-flex align-items-center gap-2">
                           <button
-                            className="btn btn-sm"
+                            className="btn "
                             style={{
 
                             }}
@@ -1077,7 +1077,7 @@ export default function Appointments() {
                           </button>
 
                           <button
-                            className="btn btn-sm ms-2"
+                            className="btn  ms-2"
                             style={{
 
                             }}
@@ -2238,14 +2238,6 @@ export default function Appointments() {
                 >
                   <button
                     onClick={createAppointment}
-                    disabled={
-                      creatingAppointment ||
-                      !hasSelectedDate ||
-                      !hasSelectedTime ||
-                      !formData.subject.trim() ||
-                      (formData.meeting_type === 'on_call' && !formData.phone_number.trim()) ||
-                      (formData.meeting_type === 'in_person' && !formData.meeting_location.trim())
-                    }
                     style={{
                       background: creatingAppointment ? "#ccc" : "#F56D2D",
                       color: "#fff",
@@ -2254,6 +2246,7 @@ export default function Appointments() {
                       borderRadius: "6px",
                       cursor: creatingAppointment ? "not-allowed" : "pointer",
                       fontFamily: "BasisGrotesquePro",
+                      opacity: creatingAppointment ? 0.6 : 1
                     }}
                   >
                     {creatingAppointment ? 'Creating...' : 'Submit'}

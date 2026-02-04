@@ -273,7 +273,7 @@ export default function SharedDocuments() {
                       <td>
                         <div className="d-flex gap-2">
                           <button
-                            className="btn btn-sm"
+                            className="btn "
                             onClick={() => handleDownload(doc)}
                             style={{
                               backgroundColor: '#F9FAFB',
@@ -287,7 +287,7 @@ export default function SharedDocuments() {
                           </button>
                           {canPreview && (
                             <button
-                              className="btn btn-sm"
+                              className="btn "
                               onClick={() => handlePreview(doc)}
                               style={{
                                 backgroundColor: '#F9FAFB',

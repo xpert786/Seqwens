@@ -287,7 +287,7 @@ export default function Security() {
                                 <button
                                     type="button"
                                     onClick={handleSetup2FA}
-                                    className="btn btn-sm"
+                                    className="btn "
                                     style={{
                                         backgroundColor: "#F56D2D",
                                         color: "#ffffff",
@@ -305,7 +305,7 @@ export default function Security() {
                                 <button
                                     type="button"
                                     onClick={() => setShowDisable2FA(true)}
-                                    className="btn btn-sm"
+                                    className="btn "
                                     style={{
                                         backgroundColor: "#dc3545",
                                         color: "#ffffff",
@@ -392,7 +392,7 @@ export default function Security() {
                                 <button
                                     type="button"
                                     onClick={cancelDisable2FA}
-                                    className="btn btn-sm"
+                                    className="btn "
                                     style={{
                                         backgroundColor: "transparent",
                                         color: "#3B4A66",
@@ -408,7 +408,7 @@ export default function Security() {
                                     type="button"
                                     onClick={handleDisable2FA}
                                     disabled={disabling || !disablePassword}
-                                    className="btn btn-sm"
+                                    className="btn "
                                     style={{
                                         backgroundColor: "#dc3545",
                                         color: "#ffffff",

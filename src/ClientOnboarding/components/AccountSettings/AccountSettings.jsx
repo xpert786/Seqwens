@@ -23,7 +23,6 @@ export default function AccountSettings() {
         { id: "profile", label: "Profile" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
-        { id: "billing", label: "Billing" },
         { id: "roles", label: "Roles" },
     ];
 
@@ -113,7 +112,6 @@ export default function AccountSettings() {
                     {activeTab === "profile" && <Profile />}
                     {activeTab === "notifications" && <Notifications />}
                     {activeTab === "security" && <Security />}
-                    {activeTab === "billing" && <Billing />}
                     {activeTab === "roles" && <UserProfileWithRoles />}
                 </div>
             </div>

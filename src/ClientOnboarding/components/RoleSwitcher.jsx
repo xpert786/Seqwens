@@ -150,7 +150,7 @@ export default function RoleSwitcher() {
         type="button"
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={switching}
-        className="btn btn-sm d-flex align-items-center gap-2"
+        className="btn  d-flex align-items-center gap-2"
         style={{
           backgroundColor: "#f8f9fa",
           border: "1px solid #dee2e6",
