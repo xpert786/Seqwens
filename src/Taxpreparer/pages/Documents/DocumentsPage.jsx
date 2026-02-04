@@ -370,6 +370,17 @@ export default function DocumentsPage() {
       });
       return;
     }
+
+    // Check if file is PDF
+    const fileExtension = getDocumentExtension(doc);
+    if (fileExtension?.toLowerCase() !== 'pdf') {
+      toast.warning('Only PDF files can be assigned for e-signature', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
     setDocumentToAssign(doc);
     setShowAssignModal(true);
     setShowMenuIndex(null);
