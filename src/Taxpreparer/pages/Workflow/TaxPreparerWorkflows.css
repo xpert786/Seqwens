@@ -1,0 +1,141 @@
+/* TaxPreparerWorkflows.css */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.workflow-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.workflow-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #E5E7EB;
+    background: white;
+}
+
+.workflow-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.08);
+    border-color: #3AD6F2;
+}
+
+.stat-card {
+    transition: all 0.3s ease;
+    background: white;
+    border: 1px solid #E8F0FF;
+}
+
+.stat-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 16px -4px rgba(58, 214, 242, 0.1);
+    border-color: #3AD6F2;
+}
+
+.progress-bar-container {
+    height: 8px;
+    background-color: #F3F4F6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-button {
+    transition: all 0.2s ease;
+}
+
+.filter-button.active {
+    background-color: #3AD6F2;
+    color: white;
+    box-shadow: 0 4px 12px rgba(58, 214, 242, 0.3);
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.search-container input {
+    transition: all 0.3s ease;
+}
+
+.search-container input:focus {
+    box-shadow: 0 0 0 4px rgba(58, 214, 242, 0.1);
+    border-color: #3AD6F2 !important;
+}
+
+.empty-state {
+    animation: fadeIn 0.8s ease-out;
+}
+
+.action-button {
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.action-button:active::after {
+    width: 200%;
+    height: 200%;
+}
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}

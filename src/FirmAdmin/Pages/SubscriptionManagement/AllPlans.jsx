@@ -206,15 +206,27 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
         return true;
     };
 
-    // Get plan description based on subscription type
-    const getPlanDescription = (type) => {
+    // Get plan description based on subscription type or API data
+    const getPlanDescription = (plan) => {
+        // Use description from API if available
+        if (plan.description) {
+            return plan.description;
+        }
+
+        // Fallback to default descriptions
+        const type = plan.subscription_type || '';
         const descriptions = {
             starter: 'Perfect for individual practitioners',
             growth: 'Great for small to medium firms',
             pro: 'Ideal for growing practices',
             elite: 'For large firms with custom needs'
         };
-        return descriptions[type] || 'Subscription plan';
+        return descriptions[type.toLowerCase()] || 'Subscription plan';
+    };
+
+    // Get display name (custom or default)
+    const getDisplayName = (plan) => {
+        return plan.display_name_computed || plan.display_name || formatPlanType(plan.subscription_type);
     };
 
     // Get default features based on subscription type
@@ -424,17 +436,20 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                         Current Plan
                                     </span>
                                 )}
-                                {/* Most Popular Badge */}
-                                {isMostPopular && !isCurrent && (
-                                    <span className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#F56D2D] text-white !rounded-full text-[10px] sm:text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap">
-                                        Most Popular
+                                {/* Custom Badge or Most Popular Badge */}
+                                {!isCurrent && (plan.badge_text || isMostPopular) && (
+                                    <span
+                                        className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 text-white !rounded-full text-[10px] sm:text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap"
+                                        style={{ backgroundColor: plan.badge_color || '#F56D2D' }}
+                                    >
+                                        {plan.badge_text || 'Most Popular'}
                                     </span>
                                 )}
 
                                 {/* Plan Header */}
                                 <div className={(isMostPopular || isCurrent) ? 'mt-2' : ''}>
                                     <h5 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
-                                        {formatPlanType(plan.subscription_type)}
+                                        {getDisplayName(plan)}
                                     </h5>
                                     <div className="mb-2">
                                         {isCustomPricing ? (
@@ -469,7 +484,7 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                         )}
                                     </div>
                                     <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] mb-4 sm:mb-6">
-                                        {getPlanDescription(plan.subscription_type)}
+                                        {getPlanDescription(plan)}
                                     </p>
                                 </div>
 
@@ -674,7 +689,7 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                         {/* Body */}
                         <div className="p-6">
                             <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-2">
-                                Are you sure you want to upgrade to the <span className="font-semibold">{formatPlanType(selectedPlanForUpgrade.subscription_type)}</span> plan?
+                                Are you sure you want to upgrade to the <span className="font-semibold">{getDisplayName(selectedPlanForUpgrade)}</span> plan?
                             </p>
                             <div className="bg-gray-50 rounded-lg p-4 mt-4">
                                 <div className="flex justify-between items-center mb-2">

@@ -28,7 +28,7 @@ const FinalizeSubscription = () => {
       // IMPERSONATION CHECK: If Super Admin is impersonating, allow full access
       const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
       const isImpersonating = !!impersonationData;
-      
+
       if (isImpersonating) {
         console.log('[FINALIZE_SUBSCRIPTION] Super Admin impersonation detected - bypassing subscription checks');
         toast.info('Super Admin Mode: Full access granted', {
@@ -269,7 +269,22 @@ const FinalizeSubscription = () => {
   };
 
   // Get plan description
-  const getPlanDescription = (type) => {
+  const getPlanDescription = (plan) => {
+    if (typeof plan === 'string') {
+      const descriptions = {
+        trial: 'Try all features free for 14 days. No credit card required.',
+        starter: 'Perfect for individual tax preparers',
+        growth: 'Ideal for small firms',
+        pro: 'Best for growing teams',
+        elite: 'Complete solution for large organizations'
+      };
+      return descriptions[plan?.toLowerCase()] || 'Subscription plan';
+    }
+
+    if (plan && plan.description) {
+      return plan.description;
+    }
+
     const descriptions = {
       trial: 'Try all features free for 14 days. No credit card required.',
       starter: 'Perfect for individual tax preparers',
@@ -277,7 +292,13 @@ const FinalizeSubscription = () => {
       pro: 'Best for growing teams',
       elite: 'Complete solution for large organizations'
     };
-    return descriptions[type?.toLowerCase()] || 'Subscription plan';
+    return descriptions[plan?.subscription_type?.toLowerCase()] || 'Subscription plan';
+  };
+
+  // Get display name (custom or default)
+  const getDisplayName = (plan) => {
+    if (!plan) return 'Plan';
+    return plan.display_name_computed || plan.display_name || plan.subscription_type_display || formatPlanType(plan.subscription_type);
   };
 
   // Get plan features
@@ -532,10 +553,7 @@ const FinalizeSubscription = () => {
               const priceDisplay = plan.price_display || `$${price.toFixed(2)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
 
               // Get plan display name
-              const planName = plan.subscription_type_display ||
-                formatPlanType(plan.subscription_type) ||
-                plan.name ||
-                'Plan';
+              const planName = getDisplayName(plan);
 
               // Get plan features
               const features = getPlanFeatures(plan);
@@ -547,10 +565,10 @@ const FinalizeSubscription = () => {
                   key={plan.id}
                   onClick={() => handleSelectPlan(plan)}
                   className={`bg-white rounded-xl border-2 p-5 sm:p-6 lg:p-7 cursor-pointer transition-all duration-200 hover:shadow-xl active:scale-[0.98] relative flex flex-col h-full ${isSelected
-                      ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
-                      : isTrial
-                        ? 'border-green-300 hover:border-green-400 hover:shadow-md ring-2 ring-green-100'
-                        : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
+                    ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
+                    : isTrial
+                      ? 'border-green-300 hover:border-green-400 hover:shadow-md ring-2 ring-green-100'
+                      : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
                     } ${plan.most_popular ? 'ring-2 ring-orange-200 sm:ring-4 sm:ring-opacity-30' : ''}`}
                 >
                   {isTrial && (
@@ -560,10 +578,14 @@ const FinalizeSubscription = () => {
                       </span>
                     </div>
                   )}
-                  {!isTrial && plan.most_popular && (
+                  {/* Custom Badge or Most Popular Badge */}
+                  {!isTrial && (plan.badge_text || plan.most_popular) && (
                     <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-10">
-                      <span className="bg-[#F56D2D] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold font-[BasisGrotesquePro] whitespace-nowrap shadow-md">
-                        Most Popular
+                      <span
+                        className="text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold font-[BasisGrotesquePro] whitespace-nowrap shadow-md"
+                        style={{ backgroundColor: plan.badge_color || '#F56D2D' }}
+                      >
+                        {plan.badge_text || 'Most Popular'}
                       </span>
                     </div>
                   )}
@@ -574,7 +596,7 @@ const FinalizeSubscription = () => {
                       {planName}
                     </h3>
                     <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-4 sm:mb-5 font-[BasisGrotesquePro] min-h-[2.5rem] sm:min-h-[3rem] flex items-center justify-center">
-                      {getPlanDescription(plan.subscription_type)}
+                      {getPlanDescription(plan)}
                     </p>
                     <div className="mb-4 sm:mb-5">
                       <div className="flex items-baseline justify-center gap-1 sm:gap-2">
@@ -656,7 +678,7 @@ const FinalizeSubscription = () => {
                 Selected Plan:
               </p>
               <p className="text-sm sm:text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">
-                {selectedPlan.subscription_type_display || formatPlanType(selectedPlan.subscription_type)}
+                {getDisplayName(selectedPlan)}
               </p>
             </div>
           )}

@@ -41,12 +41,31 @@ export default function CalendarPage() {
         throw new Error("No authentication token found");
       }
 
-      // Calculate date range for current month
+      // Calculate date range based on selected period
+      let dateFrom, dateTo;
       const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const dateFrom = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-      const lastDay = new Date(year, month + 1, 0).getDate();
-      const dateTo = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      if (selectedPeriod === "Years") {
+        dateFrom = `${year}-01-01`;
+        dateTo = `${year}-12-31`;
+      } else if (selectedPeriod === "Monthly") {
+        const month = currentDate.getMonth();
+        dateFrom = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        dateTo = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      } else if (selectedPeriod === "Week") {
+        const startDate = new Date(currentDate);
+        startDate.setDate(startDate.getDate() - startDate.getDay());
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 6);
+
+        dateFrom = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+        dateTo = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+      } else { // Day
+        const dateStr = formatDateKey(currentDate);
+        dateFrom = dateStr;
+        dateTo = dateStr;
+      }
 
       const config = {
         method: "GET",
@@ -110,7 +129,7 @@ export default function CalendarPage() {
   useEffect(() => {
     fetchCalendarData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate.getFullYear(), currentDate.getMonth()]);
+  }, [currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), selectedPeriod]);
 
   // Convert 24-hour time to 12-hour AM/PM format
   const convertTo12HourFormat = (timeStr) => {
@@ -217,20 +236,44 @@ export default function CalendarPage() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    if (selectedPeriod === "Monthly") {
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay());
 
-    const days = [];
-    const currentDay = new Date(startDate);
+      const days = [];
+      const currentDay = new Date(startDate);
 
-    for (let i = 0; i < 42; i++) {
-      days.push(new Date(currentDay));
-      currentDay.setDate(currentDay.getDate() + 1);
+      for (let i = 0; i < 42; i++) {
+        days.push(new Date(currentDay));
+        currentDay.setDate(currentDay.getDate() + 1);
+      }
+
+      return days;
+    } else if (selectedPeriod === "Week") {
+      // Find the Sunday of the current week
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - startDate.getDay());
+
+      const days = [];
+      const currentDay = new Date(startDate);
+      for (let i = 0; i < 7; i++) {
+        days.push(new Date(currentDay));
+        currentDay.setDate(currentDay.getDate() + 1);
+      }
+      return days;
+    } else if (selectedPeriod === "Day") {
+      return [new Date(currentDate)];
+    } else if (selectedPeriod === "Years") {
+      const days = [];
+      for (let i = 0; i < 12; i++) {
+        days.push(new Date(year, i, 1));
+      }
+      return days;
     }
 
-    return days;
+    return [];
   };
 
   const calendarDays = generateCalendarDays();
@@ -241,10 +284,18 @@ export default function CalendarPage() {
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const navigateMonth = (direction) => {
+  const navigateCalendar = (direction) => {
     setCurrentDate(prev => {
       const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() + direction);
+      if (selectedPeriod === "Monthly") {
+        newDate.setMonth(newDate.getMonth() + direction);
+      } else if (selectedPeriod === "Week") {
+        newDate.setDate(newDate.getDate() + (direction * 7));
+      } else if (selectedPeriod === "Day") {
+        newDate.setDate(newDate.getDate() + direction);
+      } else if (selectedPeriod === "Years") {
+        newDate.setFullYear(newDate.getFullYear() + direction);
+      }
       return newDate;
     });
   };
@@ -490,7 +541,14 @@ export default function CalendarPage() {
         {timePeriods.map((period) => (
           <button
             key={period}
-            onClick={() => setSelectedPeriod(period)}
+            onClick={() => {
+              setSelectedPeriod(period);
+              if (period === "Day") {
+                const today = new Date();
+                setCurrentDate(today);
+                setSelectedDate(today);
+              }
+            }}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedPeriod === period
               ? 'bg-orange-500 text-white'
               : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
@@ -510,7 +568,10 @@ export default function CalendarPage() {
             <div className="flex items-center gap-3 w-full justify-start pl-2">
 
               <h4 className="text-lg font-semibold text-gray-900 mb-0">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                {selectedPeriod === "Monthly" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+                {selectedPeriod === "Week" && `Week of ${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
+                {selectedPeriod === "Day" && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
+                {selectedPeriod === "Years" && `${currentDate.getFullYear()}`}
               </h4>
 
             </div>
@@ -518,7 +579,7 @@ export default function CalendarPage() {
               <button
                 className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors border-[#E8F0FF] bg-white"
                 style={{ borderRadius: '10px' }}
-                onClick={() => navigateMonth(-1)}
+                onClick={() => navigateCalendar(-1)}
               >
                 &lt;
               </button>
@@ -532,7 +593,7 @@ export default function CalendarPage() {
               <button
                 className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors bg-white"
                 style={{ borderRadius: '10px' }}
-                onClick={() => navigateMonth(1)}
+                onClick={() => navigateCalendar(1)}
               >
                 &gt;
               </button>
@@ -545,35 +606,53 @@ export default function CalendarPage() {
             <div className="flex-1">
               <div className="bg-white rounded-lg  border border-gray-200 overflow-hidden">
                 {/* Day Headers */}
-                <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-                  {dayNames.map(day => (
-                    <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0">
-                      {day}
-                    </div>
-                  ))}
-                </div>
+                {selectedPeriod !== "Day" && selectedPeriod !== "Years" && (
+                  <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                    {dayNames.map(day => (
+                      <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedPeriod === "Years" && (
+                  <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
+                    <div className="p-3 text-center text-sm font-semibold text-gray-600 col-span-4">Months</div>
+                  </div>
+                )}
 
                 {/* Calendar Days */}
-                <div className="grid grid-cols-7">
+                <div className={`grid ${selectedPeriod === "Day" ? "grid-cols-1" :
+                  selectedPeriod === "Years" ? "grid-cols-4" : "grid-cols-7"
+                  }`}>
                   {calendarDays.map((day, index) => {
                     const dayEvents = getAppointmentsForDate(day);
-                    const isCurrentMonth = day.getMonth() === currentDate.getMonth();
                     const isToday = day.toDateString() === new Date().toDateString();
                     const isSelected = day.toDateString() === selectedDate.toDateString();
+
+                    // For Years view, show month name instead of date
+                    const displayValue = selectedPeriod === "Years" ? monthNames[day.getMonth()] : day.getDate();
+                    const isCurrentMonthInMonthly = selectedPeriod === "Monthly" && day.getMonth() === currentDate.getMonth();
 
                     return (
                       <div
                         key={index}
-                        className={`min-h-[120px] p-2 cursor-pointer transition-colors hover:bg-[#F5F5F5] ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                        className={`min-h-[120px] p-2 cursor-pointer transition-colors hover:bg-[#F5F5F5] ${selectedPeriod === "Monthly" && !isCurrentMonthInMonthly ? 'bg-gray-50 text-gray-400' : 'bg-white'
                           } ${isToday ? 'bg-[#F5F5F5]' : ''} ${isSelected ? 'bg-orange-50 border-orange-200' : ''
-                          } ${index % 7 !== 6 ? 'border-r border-[#E8F0FF]' : ''
-                          } ${index < 35 ? 'border-b border-[#E8F0FF]' : ''
+                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index % 7 !== 6) || (selectedPeriod === "Years" && index % 4 !== 3) ? 'border-r border-[#E8F0FF]' : ''
+                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index < (selectedPeriod === "Monthly" ? 35 : 0)) || (selectedPeriod === "Years" && index < 8) ? 'border-b border-[#E8F0FF]' : ''
                           }`}
-                        onClick={() => setSelectedDate(day)}
+                        onClick={() => {
+                          setSelectedDate(day);
+                          if (selectedPeriod === "Years") {
+                            setCurrentDate(day);
+                            setSelectedPeriod("Monthly");
+                          }
+                        }}
                       >
-                        <div className={`text-sm font-medium mb-1 ${isToday ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center' : ''
+                        <div className={`text-sm font-medium mb-1 ${isToday ? 'bg-blue-500 text-white rounded-full px-2 py-1 flex items-center justify-center' : ''
                           }`}>
-                          {day.getDate()}
+                          {displayValue}
                         </div>
                         {dayEvents.map(event => (
                           <div

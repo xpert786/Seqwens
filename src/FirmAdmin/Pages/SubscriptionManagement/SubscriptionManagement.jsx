@@ -663,7 +663,7 @@ const SubscriptionManagement = () => {
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <h5 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                            {subscriptionOverview.overview.plan.name || 'Current'} Plan
+                                                            {subscriptionOverview.overview.plan.name || 'Current Plan'}
                                                         </h5>
                                                         <div className="flex items-center gap-2 flex-wrap">
                                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider ${subscriptionOverview.overview.plan.status === 'active'
@@ -757,7 +757,7 @@ const SubscriptionManagement = () => {
                                         </div>
                                         <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6 2V10M2 6H10" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M6 2V10M2 6H10" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Add-ons: {subscriptionOverview?.overview?.addons?.count || 0} (${subscriptionOverview?.overview?.addons?.total_monthly_cost || 0}/mo)</span>
                                         </div>

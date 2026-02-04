@@ -164,8 +164,18 @@ export default function FirmManagement() {
     };
 
     // Helper function to format plan display
-    const formatPlan = (plan) => {
-        if (!plan || plan === null) {
+    const formatPlan = (firm) => {
+        if (!firm) return 'None';
+
+        // If it's a firm object with subscription_plan_name
+        if (typeof firm === 'object' && firm.subscription_plan_name) {
+            return firm.subscription_plan_name;
+        }
+
+        // Fallback for when only the plan type string is passed
+        const plan = typeof firm === 'string' ? firm : firm.subscription_plan;
+
+        if (!plan) {
             return 'None';
         }
         return plan.charAt(0).toUpperCase() + plan.slice(1);
@@ -664,7 +674,7 @@ export default function FirmManagement() {
                                     <div style={{ fontSize: '10px', color: '#6B7280' }}>{firm.admin_user_email || firm.owner_email || 'No contact email'}</div>
                                 </td>
                                 <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
-                                    {formatPlan(firm.subscription_plan)}
+                                    {formatPlan(firm)}
                                 </td>
                                 <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
                                     {formatStatus(firm.status)}
@@ -850,7 +860,7 @@ export default function FirmManagement() {
                                         {/* Plan Column */}
                                         <div className="col-span-2">
                                             <span className={`inline-flex px-2 py-0.5 rounded-full text-sm font-medium text-white ${getPlanColor(firm.subscription_plan)}`}>
-                                                {formatPlan(firm.subscription_plan)}
+                                                {formatPlan(firm)}
                                             </span>
                                         </div>
 
@@ -1609,7 +1619,7 @@ export default function FirmManagement() {
                                     <div><strong>Name:</strong> {firmToDelete.name || firmToDelete.firm_name || 'N/A'}</div>
                                     <div><strong>Admin:</strong> {firmToDelete.admin_user_name || 'N/A'}</div>
                                     <div><strong>Email:</strong> {firmToDelete.admin_user_email || firmToDelete.owner_email || 'N/A'}</div>
-                                    <div><strong>Plan:</strong> {formatPlan(firmToDelete.subscription_plan) || 'N/A'}</div>
+                                    <div><strong>Plan:</strong> {formatPlan(firmToDelete) || 'N/A'}</div>
                                 </div>
                             </div>
                         </div>

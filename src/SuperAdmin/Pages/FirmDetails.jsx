@@ -300,9 +300,7 @@ export default function FirmDetails() {
 
     const billingInfo = useMemo(() => {
         return {
-            plan: firmDetails?.subscription_plan
-                ? firmDetails.subscription_plan.charAt(0).toUpperCase() + firmDetails.subscription_plan.slice(1)
-                : 'None',
+            plan: firmDetails?.subscription_plan_name || 'None',
             monthlyCost: formatCurrency(firmDetails?.monthly_fee ?? 0),
             nextBilling: formatDate(firmDetails?.next_billing_date) || 'Not available',
             status: firmDetails?.status
@@ -315,9 +313,10 @@ export default function FirmDetails() {
         if (Array.isArray(firmDetails?.subscription_history) && firmDetails.subscription_history.length > 0) {
             return firmDetails.subscription_history.map((entry, index) => ({
                 id: entry.id || index,
-                plan: entry.subscription_plan__subscription_type
-                    ? entry.subscription_plan__subscription_type.charAt(0).toUpperCase() + entry.subscription_plan__subscription_type.slice(1) + ' Plan'
-                    : 'Professional Plan',
+                plan: entry.subscription_plan__display_name ||
+                    (entry.subscription_plan__subscription_type
+                        ? entry.subscription_plan__subscription_type.charAt(0).toUpperCase() + entry.subscription_plan__subscription_type.slice(1) + ' Plan'
+                        : 'Professional Plan'),
                 period: entry.period_start && entry.period_end
                     ? `${formatDate(entry.period_start)} - ${formatDate(entry.period_end)}`
                     : 'Not available',
@@ -684,8 +683,8 @@ export default function FirmDetails() {
                                                 firmPhone !== 'Not provided' && { label: 'Phone:', value: firmPhone },
                                                 firmDetails?.subscription_plan && {
                                                     label: 'Plan:',
-                                                    value: firmDetails.subscription_plan.charAt(0).toUpperCase() +
-                                                        firmDetails.subscription_plan.slice(1)
+                                                    value: firmDetails.subscription_plan_name ||
+                                                        (firmDetails.subscription_plan.charAt(0).toUpperCase() + firmDetails.subscription_plan.slice(1))
                                                 },
                                                 firmJoinDate && { label: 'Join Date:', value: formatDate(firmJoinDate) }
                                             ].filter(Boolean).map(({ label, value }) => (

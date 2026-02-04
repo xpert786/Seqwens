@@ -213,8 +213,23 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         return planTypeMatches && billingCycleMatches;
     };
 
-    // Get plan description based on subscription type
-    const getPlanDescription = (type) => {
+    // Get plan description based on subscription type or API data
+    const getPlanDescription = (plan) => {
+        if (typeof plan === 'string') {
+            const descriptions = {
+                starter: 'Perfect for individual practitioners',
+                growth: 'Great for small to medium firms',
+                pro: 'Ideal for growing practices',
+                elite: 'For large firms with custom needs'
+            };
+            return descriptions[plan.toLowerCase()] || 'Subscription plan';
+        }
+
+        if (plan && plan.description) {
+            return plan.description;
+        }
+
+        const type = (plan?.subscription_type || '').toLowerCase();
         const descriptions = {
             starter: 'Perfect for individual practitioners',
             growth: 'Great for small to medium firms',
@@ -222,6 +237,12 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
             elite: 'For large firms with custom needs'
         };
         return descriptions[type] || 'Subscription plan';
+    };
+
+    // Get display name (custom or default)
+    const getDisplayName = (plan) => {
+        if (!plan) return 'Plan';
+        return plan.display_name_computed || plan.display_name || formatPlanType(plan.subscription_type);
     };
 
     // Get default features based on subscription type
@@ -518,7 +539,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     Payment Information
                                 </h5>
                                 <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                                    Complete your payment to upgrade to the <strong>{formatPlanType(selectedPlan.subscription_type)}</strong> plan
+                                    Complete your payment to upgrade to the <strong>{getDisplayName(selectedPlan)}</strong> plan
                                     {billingCycle === 'monthly' ? ' (Monthly)' : ' (Yearly)'}.
                                 </p>
                             </div>
@@ -734,17 +755,20 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                     </span>
                                                 )}
 
-                                                {/* Most Popular Badge */}
-                                                {isMostPopular && !isCurrent && (
-                                                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#F56D2D] text-white rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap">
-                                                        Most Popular
+                                                {/* Custom Badge or Most Popular Badge */}
+                                                {!isCurrent && (plan.badge_text || isMostPopular) && (
+                                                    <span
+                                                        className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 text-white rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10"
+                                                        style={{ backgroundColor: plan.badge_color || '#F56D2D' }}
+                                                    >
+                                                        {plan.badge_text || 'Most Popular'}
                                                     </span>
                                                 )}
 
                                                 {/* Plan Header */}
                                                 <div className={isMostPopular || isCurrent ? 'mt-2' : ''}>
                                                     <h5 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
-                                                        {formatPlanType(plan.subscription_type)}
+                                                        {getDisplayName(plan)}
                                                     </h5>
                                                     <div className="mb-2">
                                                         {isCustomPricing ? (
@@ -772,7 +796,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                         )}
                                                     </div>
                                                     <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">
-                                                        {getPlanDescription(plan.subscription_type)}
+                                                        {getPlanDescription(plan)}
                                                     </p>
                                                 </div>
 

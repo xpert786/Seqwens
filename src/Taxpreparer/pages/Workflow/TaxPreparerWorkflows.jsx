@@ -1,15 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import { FaSearch, FaFilter, FaPlus } from 'react-icons/fa';
+import {
+  Search,
+  Filter,
+  Plus,
+  LayoutGrid,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  MoreVertical,
+  ArrowRight,
+  FileText,
+  Activity,
+  Pause,
+  Play,
+  CheckCircle
+} from 'lucide-react';
 import DocumentRequestCard from '../../../components/Workflow/DocumentRequestCard';
 import CreateDocumentRequestModal from './CreateDocumentRequestModal';
 import DocumentVerificationComponent from '../../../components/Workflow/DocumentVerificationComponent';
+import './TaxPreparerWorkflows.css';
 
 /**
  * TaxPreparerWorkflows Component
- * List and manage workflows for tax preparers
+ * List and manage workflows for tax preparers with a premium redesign
  */
 const TaxPreparerWorkflows = () => {
   const navigate = useNavigate();
@@ -23,7 +39,7 @@ const TaxPreparerWorkflows = () => {
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requestDocuments, setRequestDocuments] = useState([]);
-  const [updatingStatus, setUpdatingStatus] = useState(null); // Track which workflow is updating
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
   // Fetch workflows
   const fetchWorkflows = async () => {
@@ -60,6 +76,18 @@ const TaxPreparerWorkflows = () => {
     fetchWorkflows();
   }, [filter, searchTerm]);
 
+  // Statistics calculation
+  const stats = useMemo(() => {
+    return {
+      total: workflows.length,
+      active: workflows.filter(w => w.status?.toLowerCase() === 'active').length,
+      completed: workflows.filter(w => w.status?.toLowerCase() === 'completed').length,
+      pendingRequests: workflows.reduce((acc, w) =>
+        acc + (w.document_requests?.filter(r => r.status?.toLowerCase() === 'pending').length || 0), 0
+      )
+    };
+  }, [workflows]);
+
   const handleViewWorkflow = (workflow) => {
     navigate(`/taxdashboard/workflows/${workflow.id}`);
   };
@@ -72,18 +100,15 @@ const TaxPreparerWorkflows = () => {
   const handleVerifyRequest = async (request) => {
     setSelectedRequest(request);
 
-    // Fetch documents for this request
     try {
       const response = await workflowAPI.getWorkflowInstanceWithDocuments(request.workflow_instance || request.workflow);
       if (response.success && response.data) {
-        // Find documents for this request
         const allDocuments = response.data.documents || response.data.tax_documents || [];
         const requestDocs = allDocuments.filter(
           (doc) => doc.document_request === request.id || doc.document_request_id === request.id
         );
         setRequestDocuments(requestDocs);
       } else {
-        // Try fetching from document request details
         const requestResponse = await workflowAPI.getDocumentRequest(request.id);
         if (requestResponse.success && requestResponse.data) {
           const docs = requestResponse.data.documents || requestResponse.data.tax_documents || [];
@@ -92,7 +117,6 @@ const TaxPreparerWorkflows = () => {
       }
     } catch (err) {
       console.error('Error fetching documents:', err);
-      // Still show modal even if documents fetch fails
       setRequestDocuments([]);
     }
 
@@ -113,7 +137,6 @@ const TaxPreparerWorkflows = () => {
     fetchWorkflows();
   };
 
-  // Handle workflow status updates
   const handleStatusUpdate = async (workflowId, newStatus) => {
     try {
       setUpdatingStatus(workflowId);
@@ -147,22 +170,6 @@ const TaxPreparerWorkflows = () => {
     }
   };
 
-  // Get available status actions for a workflow
-  const getAvailableStatusActions = (workflow) => {
-    const actions = [];
-    const currentStatus = workflow.status?.toLowerCase();
-
-    if (currentStatus === 'active') {
-      actions.push({ value: 'paused', label: 'Pause', icon: '⏸️' });
-      actions.push({ value: 'completed', label: 'Complete', icon: '✅' });
-    } else if (currentStatus === 'paused') {
-      actions.push({ value: 'active', label: 'Resume', icon: '▶️' });
-      actions.push({ value: 'completed', label: 'Complete', icon: '✅' });
-    }
-
-    return actions;
-  };
-
   const filteredWorkflows = workflows.filter((workflow) => {
     const matchesFilter = filter === 'all' || workflow.status === filter;
     const matchesSearch = !searchTerm ||
@@ -171,235 +178,242 @@ const TaxPreparerWorkflows = () => {
     return matchesFilter && matchesSearch;
   });
 
-  if (loading) {
+  const getStatusStyle = (status) => {
+    const s = status?.toLowerCase();
+    switch (s) {
+      case 'active':
+        return { bg: '#D1FAE5', text: '#065F46', icon: <Activity size={14} className="mr-1" /> };
+      case 'completed':
+        return { bg: '#DBEAFE', text: '#1E40AF', icon: <CheckCircle size={14} className="mr-1" /> };
+      case 'paused':
+        return { bg: '#FEF3C7', text: '#92400E', icon: <Pause size={14} className="mr-1" /> };
+      case 'cancelled':
+        return { bg: '#FEE2E2', text: '#991B1B', icon: <AlertCircle size={14} className="mr-1" /> };
+      default:
+        return { bg: '#F3F4F6', text: '#374151', icon: <Clock size={14} className="mr-1" /> };
+    }
+  };
+
+  if (loading && workflows.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3AD6F2]"></div>
-        <span className="ml-3 text-gray-600 font-[BasisGrotesquePro]">Loading workflows...</span>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3AD6F2]"></div>
+        <p className="mt-4 text-gray-500 font-medium">Loading your workflows...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6" style={{ backgroundColor: '#F3F7FF', minHeight: '100vh' }}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
-                My Workflows
-              </h1>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                Manage client workflows and document requests
-              </p>
-            </div>
-          </div>
-
-          {/* Filters and Search */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search clients or workflows..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                style={{ borderRadius: '8px' }}
-              />
-            </div>
-            <div className="flex gap-2">
-              {['all', 'active', 'completed'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilter(status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition font-[BasisGrotesquePro] ${filter === status
-                    ? 'text-white'
-                    : 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
-                    }`}
-                  style={{
-                    backgroundColor: filter === status ? '#3AD6F2' : undefined,
-                    borderRadius: '8px'
-                  }}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
+    <div className="lg:px-4 md:px-2 px-1 workflow-container" style={{ backgroundColor: '#F3F7FF', minHeight: '100vh', paddingTop: '24px' }}>
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 className="text-4xl font-extrabold text-[#1F2937] tracking-tight mb-2">
+            My Workflows
+          </h1>
+          <p className="text-gray-500 text-lg">
+            Monitor progress and manage client requests in real-time.
+          </p>
         </div>
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 !border border-red-200 rounded-lg p-4 mb-6" style={{ borderRadius: '8px' }}>
-            <p className="text-red-600 font-[BasisGrotesquePro]">{error}</p>
-          </div>
-        )}
-
-        {/* Workflows List */}
-        {filteredWorkflows.length === 0 ? (
-          <div className="bg-white !border border-[#E8F0FF] rounded-lg p-12 text-center" style={{ borderRadius: '8px' }}>
-            <p className="text-gray-500 font-[BasisGrotesquePro]">
-              {searchTerm ? 'No workflows found matching your search' : 'No workflows found'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredWorkflows.map((workflow) => (
-              <div
-                key={workflow.id}
-                className="bg-white !border border-[#E8F0FF] rounded-lg p-4 sm:p-6"
-                style={{ borderRadius: '8px' }}
-              >
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-lg font-semibold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
-                        {workflow.template_name || 'Workflow'}
-                      </h4>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-[BasisGrotesquePro]`}
-                        style={{
-                          backgroundColor:
-                            workflow.status === 'active' || workflow.status === 'Active'
-                              ? '#D1FAE5'
-                              : workflow.status === 'completed' || workflow.status === 'Completed'
-                                ? '#DBEAFE'
-                                : workflow.status === 'paused' || workflow.status === 'Paused'
-                                  ? '#FEF3C7'
-                                  : workflow.status === 'cancelled' || workflow.status === 'Cancelled'
-                                    ? '#FEE2E2'
-                                    : '#F3F4F6',
-                          color:
-                            workflow.status === 'active' || workflow.status === 'Active'
-                              ? '#065F46'
-                              : workflow.status === 'completed' || workflow.status === 'Completed'
-                                ? '#1E40AF'
-                                : workflow.status === 'paused' || workflow.status === 'Paused'
-                                  ? '#92400E'
-                                  : workflow.status === 'cancelled' || workflow.status === 'Cancelled'
-                                    ? '#991B1B'
-                                    : '#374151'
-                        }}
-                      >
-                        {workflow.status_display || workflow.status || 'Active'}
-                      </span>
-                    </div>
-                    {workflow.tax_case_name && (
-                      <p className="text-sm mb-2 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                        Client: <span className="font-medium" style={{ color: '#1F2937' }}>{workflow.tax_case_name}</span>
-                      </p>
-                    )}
-                    {workflow.current_stage_name && (
-                      <p className="text-sm mb-2 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                        Current Stage: <span className="font-medium" style={{ color: '#1F2937' }}>{workflow.current_stage_name}</span>
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Progress:</span>
-                      <div className="flex-1 max-w-xs bg-gray-200 rounded-full h-2" style={{ borderRadius: '9999px' }}>
-                        <div
-                          className="h-2 rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(workflow.progress_percentage || 0, 100)}%`,
-                            backgroundColor: '#3AD6F2',
-                            borderRadius: '9999px'
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-semibold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
-                        {Math.round(workflow.progress_percentage || 0)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleViewWorkflow(workflow)}
-                      className="px-4 py-2 text-sm bg-white !border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
-                      style={{ borderRadius: '8px', color: '#374151' }}
-                    >
-                      View Details
-                    </button>
-                    <button
-                      onClick={() => handleCreateRequest(workflow)}
-                      className="px-4 py-2 text-sm text-white rounded-lg transition font-[BasisGrotesquePro] flex items-center gap-2"
-                      style={{
-                        backgroundColor: '#3AD6F2',
-                        borderRadius: '8px'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#00C0C6'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#3AD6F2'}
-                    >
-                      <FaPlus className="w-4 h-4" />
-                      Create Request
-                    </button>
-
-                    {/* Status Update Dropdown */}
-                    {getAvailableStatusActions(workflow).length > 0 && (
-                      <div className="relative">
-                        <select
-                          value=""
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              handleStatusUpdate(workflow.id, e.target.value);
-                              e.target.value = ''; // Reset dropdown
-                            }
-                          }}
-                          disabled={updatingStatus === workflow.id}
-                          className="px-4 py-2 text-sm bg-white !border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none pr-8"
-                          style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'right 0.75rem center',
-                            paddingRight: '2rem',
-                            borderRadius: '8px',
-                            color: '#374151'
-                          }}
-                        >
-                          <option value="">Update Status</option>
-                          {getAvailableStatusActions(workflow).map((action) => (
-                            <option key={action.value} value={action.value}>
-                              {action.icon} {action.label}
-                            </option>
-                          ))}
-                        </select>
-                        {updatingStatus === workflow.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg" style={{ borderRadius: '8px' }}>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2" style={{ borderColor: '#3AD6F2' }}></div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Document Requests for this workflow */}
-                {workflow.document_requests && workflow.document_requests.length > 0 && (
-                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid #E5E7EB' }}>
-                    <h4 className="text-sm font-semibold mb-3 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                      Document Requests ({workflow.document_requests.length})
-                    </h4>
-                    <div className="space-y-3">
-                      {workflow.document_requests.map((request) => (
-                        <DocumentRequestCard
-                          key={request.id}
-                          request={request}
-                          userRole="preparer"
-                          onVerify={handleVerifyRequest}
-                          onViewDetails={(req) => handleViewWorkflow(workflow)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Create Document Request Modal */}
+      {/* Statistics Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {[
+          { label: 'Total Workflows', value: stats.total, icon: <FileText size={20} className="text-[#6366F1]" />, bg: 'bg-[#F0F2FF]' },
+          { label: 'Active Now', value: stats.active, icon: <Activity size={20} className="text-[#10B981]" />, bg: 'bg-[#ECFDF5]' },
+          { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={20} className="text-[#8B5CF6]" />, bg: 'bg-[#F5F3FF]' },
+          { label: 'Pending Requests', value: stats.pendingRequests, icon: <AlertCircle size={20} className="text-[#F59E0B]" />, bg: 'bg-[#FFFBEB]' }
+        ].map((item, i) => (
+          <div key={i} className="stat-card p-8 rounded-2xl bg-white flex flex-col items-center text-center shadow-sm">
+            <p className="text-gray-400 text-[11px] font-bold uppercase tracking-[0.15em] mb-4">{item.label}</p>
+            <h3 className="text-4xl font-bold text-gray-900 mb-8">{item.value}</h3>
+            <div className={`${item.bg} w-14 h-14 rounded-2xl flex items-center justify-center`}>
+              {item.icon}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Search and Filters */}
+      <div className="glass-effect p-4 rounded-2xl mb-8 flex flex-col lg:flex-row gap-4 items-center shadow-sm">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search by client name or workflow template..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 font-medium"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
+          {['all', 'active', 'completed'].map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`flex-1 lg:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filter === s
+                ? 'bg-[#3AD6F2] text-white shadow-lg shadow-blue-100'
+                : 'bg-white text-gray-600 border border-[#E8F0FF] hover:bg-gray-50'
+                }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Workflow List */}
+      {filteredWorkflows.length === 0 ? (
+        <div className="bg-white rounded-3xl p-20 text-center border-2 border-dashed border-[#E8F0FF] empty-state">
+          <div className="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search size={32} className="text-[#3AD6F2]" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">No workflows found</h3>
+          <p className="text-gray-500 max-w-sm mx-auto">
+            {searchTerm ? "We couldn't find anything matching your search. Try different keywords." : "You don't have any workflows yet. Get started by assigning one to a client."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6">
+          {filteredWorkflows.map((workflow) => {
+            const style = getStatusStyle(workflow.status);
+            return (
+              <div key={workflow.id} className="workflow-card rounded-2xl overflow-hidden shadow-sm">
+                <div className="p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-4">
+                        <span
+                          className="status-badge flex items-center"
+                          style={{ backgroundColor: style.bg, color: style.text }}
+                        >
+                          {style.icon}
+                          {workflow.status_display || workflow.status || 'Active'}
+                        </span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-500 text-sm font-medium">Last updated 2 days ago</span>
+                      </div>
+
+                      <h2 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#3AD6F2] transition-colors">
+                        {workflow.template_name || 'Workflow'}
+                      </h2>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-12 mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
+                            <LayoutGrid size={16} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-0">Client Account</p>
+                            <p className="text-gray-700 font-semibold">{workflow.tax_case_name || 'Individual'}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
+                            <Activity size={16} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-0">Current Stage</p>
+                            <p className="text-[#3AD6F2] font-semibold">{workflow.current_stage_name || 'In Progress'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mb-2">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-bold text-gray-900">Workflow Progress</span>
+                          <span className="text-sm font-extrabold text-[#3AD6F2]">{Math.round(workflow.progress_percentage || 0)}%</span>
+                        </div>
+                        <div className="progress-bar-container">
+                          <div
+                            className="progress-bar-fill bg-gradient-to-r from-[#3AD6F2] to-[#3AD6F2]"
+                            style={{ width: `${Math.min(workflow.progress_percentage || 0, 100)}%`, backgroundColor: '#3AD6F2' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto">
+                      <button
+                        onClick={() => handleViewWorkflow(workflow)}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1F2937] text-white rounded-xl font-bold hover:bg-gray-800 transition-all action-button"
+                      >
+                        View Activity
+                        <ArrowRight size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleCreateRequest(workflow)}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-[#E8F0FF] text-[#3AD6F2] rounded-xl font-bold hover:bg-gray-50 transition-all"
+                      >
+                        <Plus size={18} />
+                        New Request
+                      </button>
+
+                      {/* Status Actions */}
+                      {getAvailableStatusActions(workflow).length > 0 && (
+                        <div className="relative group/actions">
+                          <button
+                            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition-all border border-transparent"
+                            disabled={updatingStatus === workflow.id}
+                          >
+                            {updatingStatus === workflow.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                            ) : <MoreVertical size={18} />}
+                            Actions
+                          </button>
+                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E8F0FF] opacity-0 invisible group-hover/actions:opacity-100 group-hover/actions:visible transition-all z-20 overflow-hidden">
+                            {getAvailableStatusActions(workflow).map((action) => (
+                              <button
+                                key={action.value}
+                                onClick={() => handleStatusUpdate(workflow.id, action.value)}
+                                className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                              >
+                                {action.value === 'paused' ? <Pause size={16} /> :
+                                  action.value === 'active' ? <Play size={16} /> :
+                                    <CheckCircle size={16} />}
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Document Requests Accordion/List */}
+                  {workflow.document_requests && workflow.document_requests.length > 0 && (
+                    <div className="mt-8 pt-8 border-t border-gray-50">
+                      <div className="flex items-center justify-between mb-6">
+                        <h4 className="text-sm font-extrabold text-gray-400 uppercase tracking-[0.2em]">
+                          Recent Document Requests
+                        </h4>
+                        <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold">
+                          {workflow.document_requests.length} Total
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {workflow.document_requests.slice(0, 4).map((request) => (
+                          <DocumentRequestCard
+                            key={request.id}
+                            request={request}
+                            userRole="preparer"
+                            onVerify={handleVerifyRequest}
+                            onViewDetails={() => handleViewWorkflow(workflow)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modals */}
       {showCreateRequestModal && selectedWorkflow && (
         <CreateDocumentRequestModal
           workflow={selectedWorkflow}
@@ -411,45 +425,58 @@ const TaxPreparerWorkflows = () => {
         />
       )}
 
-      {/* Verify Documents Modal */}
       {showVerifyModal && selectedRequest && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-          style={{ zIndex: 99999 }}
-        >
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6" style={{ borderRadius: '12px' }}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
-                Verify Documents
-              </h3>
+        <div className="fixed inset-0 glass-effect bg-black/60 flex items-center justify-center p-4 z-[100000] animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Verify Documents</h3>
+                <p className="text-gray-500 font-medium">{selectedRequest.title}</p>
+              </div>
               <button
                 onClick={() => {
                   setShowVerifyModal(false);
                   setSelectedRequest(null);
                   setRequestDocuments([]);
                 }}
-                className="text-gray-400 hover:text-gray-600 transition"
+                className="bg-white p-2 rounded-xl text-gray-400 hover:text-gray-600 transition-all border border-gray-100 shadow-sm"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Plus size={24} className="rotate-45" />
               </button>
             </div>
-            <DocumentVerificationComponent
-              request={selectedRequest}
-              documents={requestDocuments}
-              onVerify={handleVerificationComplete}
-              onCancel={() => {
-                setShowVerifyModal(false);
-                setSelectedRequest(null);
-                setRequestDocuments([]);
-              }}
-            />
+            <div className="flex-1 overflow-y-auto p-8">
+              <DocumentVerificationComponent
+                request={selectedRequest}
+                documents={requestDocuments}
+                onVerify={handleVerificationComplete}
+                onCancel={() => {
+                  setShowVerifyModal(false);
+                  setSelectedRequest(null);
+                  setRequestDocuments([]);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
     </div>
   );
+
+  // Helper for available status actions
+  function getAvailableStatusActions(workflow) {
+    const actions = [];
+    const currentStatus = workflow.status?.toLowerCase();
+
+    if (currentStatus === 'active') {
+      actions.push({ value: 'paused', label: 'Pause Workflow' });
+      actions.push({ value: 'completed', label: 'Mark as Completed' });
+    } else if (currentStatus === 'paused') {
+      actions.push({ value: 'active', label: 'Resume Workflow' });
+      actions.push({ value: 'completed', label: 'Mark as Completed' });
+    }
+
+    return actions;
+  }
 };
 
 export default TaxPreparerWorkflows;

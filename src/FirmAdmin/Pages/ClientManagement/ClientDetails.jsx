@@ -14,7 +14,7 @@ import TimelineTab from './ClientTabs/TimelineTab';
 import AppointmentsTab from './ClientTabs/AppointmentsTab';
 import NotesTab from './ClientTabs/NotesTab';
 import DataEntryFormTab from './ClientTabs/DataEntryFormTab';
-// import SecurityTab from './ClientTabs/SecurityTab';
+import SecurityTab from './ClientTabs/SecurityTab';
 import '../../styles/ClientDetails.css';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -613,16 +613,7 @@ export default function ClientDetails() {
       )}
 
       {activeTab === 'Security' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl p-6 border border-[#E8F0FF]">
-            <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-              Security Settings - Test
-            </h3>
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
-              Active Tab: {activeTab}
-            </p>
-          </div>
-        </div>
+        <SecurityTab client={clientData} />
       )}
     </div>
   );
