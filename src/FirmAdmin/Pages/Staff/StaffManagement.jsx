@@ -626,13 +626,13 @@ export default function StaffManagement() {
     }
   };
 
-  const fetchInviteLinkDetails = async (inviteId) => {
+  const fetchInviteLinkDetails = async (inviteId, method = 'GET') => {
     const token = getAccessToken();
     if (!token) {
       throw new Error('No authentication token found');
     }
     const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/staff/invites/${inviteId}/link/`, {
-      method: 'GET',
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -649,7 +649,7 @@ export default function StaffManagement() {
     if (!activeInviteDetails?.id) return;
     try {
       setInviteLinkRefreshing(true);
-      const result = await fetchInviteLinkDetails(activeInviteDetails.id);
+      const result = await fetchInviteLinkDetails(activeInviteDetails.id, 'POST');
       if (result.success && result.data) {
         setActiveInviteDetails((prev) => ({
           ...prev,

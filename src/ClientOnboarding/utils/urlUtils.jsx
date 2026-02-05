@@ -6,7 +6,7 @@
  * @returns {string} The base URL (server URL or localhost)
  */
 export const getBaseUrl = () => {
-  const isServer = import.meta.env.VITE_IS_SERVER === 'false';
+  const isServer = import.meta.env.VITE_IS_SERVER === 'true';
   console.log('isServer', isServer);
   if (isServer) {
     return 'http://168.231.121.7/seqwens-frontend';
