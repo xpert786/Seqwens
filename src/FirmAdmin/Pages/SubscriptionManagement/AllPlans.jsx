@@ -161,15 +161,27 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
 
         if (!currentPlanName) return false;
 
-        const planType = (plan.subscription_type || '').toLowerCase();
         const currentPlan = currentPlanName.trim().toLowerCase();
+        
+        // Check against subscription_type
+        const planType = (plan.subscription_type || '').toLowerCase();
+        
+        // Also check against display name fields as currentPlanName often comes from the display name
+        const displayName = (plan.display_name || '').toLowerCase();
+        const computedDisplayName = (plan.display_name_computed || '').toLowerCase();
 
         let nameMatch = false;
 
-        // Direct match
-        if (planType === currentPlan) nameMatch = true;
+        // Direct match with any of the naming fields
+        if (planType === currentPlan || 
+            displayName === currentPlan || 
+            computedDisplayName === currentPlan) {
+            nameMatch = true;
+        } 
         // Check if normalized types match
-        else if (formatPlanType(planType).toLowerCase() === currentPlan) nameMatch = true;
+        else if (formatPlanType(planType).toLowerCase() === currentPlan) {
+            nameMatch = true;
+        }
         else {
             // Handle legacy mappings
             const mappings = {
@@ -189,13 +201,6 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
 
         // If names match, check billing cycle if available
         if (currentBillingCycle) {
-            // "plan" object here comes from the monthly OR yearly array based on the toggle state.
-            // However, the object itself might not strictly say "monthly" or "yearly" in a normalized way,
-            // or the API might return plan.billing_cycle (which we saw in earlier code references).
-            // Let's rely on the internal state `billingCycle` which filters the plans being displayed.
-            // If the user's actual cycle (currentBillingCycle) doesn't catch the viewed cycle (billingCycle),
-            // then this card is effectively NOT the current active plan instance.
-
             const userCycle = currentBillingCycle.toLowerCase();
             const viewCycle = billingCycle.toLowerCase();
 
@@ -667,9 +672,9 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
-                            <h2 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                            <h4 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                                 Upgrade Plan
-                            </h2>
+                            </h4>
                             <button
                                 onClick={() => {
                                     if (!processing) {

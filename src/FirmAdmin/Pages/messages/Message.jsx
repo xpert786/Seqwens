@@ -421,7 +421,9 @@ const Messages = () => {
   const fetchActiveUsers = async (search = '', role = '') => {
     try {
       setActiveUsersLoading(true);
-      const params = {};
+      const params = {
+        exclude_existing_chats: true // Only show users we don't have a chat with
+      };
       if (search) params.search = search;
       if (role) params.role = role;
 

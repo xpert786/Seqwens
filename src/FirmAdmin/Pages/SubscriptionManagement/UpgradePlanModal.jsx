@@ -184,11 +184,21 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
     const isCurrentPlan = (plan) => {
         if (!currentPlanName || !userBillingCycle) return false;
 
-        // Check if plan type matches
-        const planType = (plan.subscription_type || '').toLowerCase();
         const currentPlan = currentPlanName.toLowerCase().trim();
 
-        let planTypeMatches = planType === currentPlan;
+        // Check if plan type matches
+        const planType = (plan.subscription_type || '').toLowerCase();
+
+        // Also check against display name fields
+        const displayName = (plan.display_name || '').toLowerCase();
+        const computedDisplayName = (plan.display_name_computed || '').toLowerCase();
+
+        let planTypeMatches = (
+            planType === currentPlan ||
+            displayName === currentPlan ||
+            computedDisplayName === currentPlan ||
+            formatPlanType(planType).toLowerCase() === currentPlan
+        );
 
         // Handle legacy mappings
         if (!planTypeMatches) {

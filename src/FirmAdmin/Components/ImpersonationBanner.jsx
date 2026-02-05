@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { clearUserData, setTokens } from '../../ClientOnboarding/utils/userUtils';
+import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
 
 /**
  * ImpersonationBanner - Shows a persistent banner when Super Admin is impersonating a firm
@@ -142,7 +143,7 @@ const ImpersonationBanner = () => {
             // STEP 5: Force hard navigation to Super Admin dashboard
             console.log('[IMPERSONATION_BANNER] Step 5: Forcing navigation to Super Admin dashboard');
             setTimeout(() => {
-                const targetUrl = '/seqwens-frontend/superadmin';
+                const targetUrl = getPathWithPrefix('/superadmin');
                 console.log('[IMPERSONATION_BANNER] Navigating to:', targetUrl);
                 window.location.href = targetUrl;
             }, 500);

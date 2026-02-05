@@ -77,8 +77,8 @@ export default function DocumentManagement() {
     };
   }, [openActionsMenu]);
 
-  // Fetch folders and documents from API
-  const fetchDocuments = useCallback(async (folderId = null, search = '') => {
+  // Fetch folders and documents from API (without search - filtering done on frontend)
+  const fetchDocuments = useCallback(async (folderId = null) => {
     try {
       setLoading(true);
       setError(null);
@@ -87,9 +87,7 @@ export default function DocumentManagement() {
       if (folderId) {
         params.folder_id = folderId;
       }
-      if (search) {
-        params.search = search;
-      }
+      // Note: NOT passing search parameter - we filter on the frontend for instant results
 
       const response = await firmAdminDocumentsAPI.browseDocuments(params);
 
@@ -118,7 +116,10 @@ export default function DocumentManagement() {
           date: folder.created_at ? formatDateShort(folder.created_at) : '',
           size: '—', // Size not provided in API
           badges: ['System'], // Default badge
-          files: folder.files || []
+          files: folder.files || [],
+          // Store additional fields for search filtering
+          client_name: folder.client_name || '',
+          client_email: folder.client_email || ''
         }));
 
         setFolders(transformedFolders);
@@ -132,7 +133,10 @@ export default function DocumentManagement() {
           folder: doc.folder,
           category: doc.category,
           created_at: doc.created_at,
-          updated_at: doc.updated_at
+          updated_at: doc.updated_at,
+          // Store additional fields for search filtering
+          client_name: doc.client?.name || doc.client_name || '',
+          client_email: doc.client?.email || doc.client_email || ''
         }));
 
         setDocuments(transformedDocuments);
@@ -181,16 +185,12 @@ export default function DocumentManagement() {
     return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
   };
 
-  // Fetch documents on mount and when search changes
+  // Fetch documents on mount only (search filtering is done client-side)
   useEffect(() => {
     if (!isNestedRoute) {
-      const timer = setTimeout(() => {
-        fetchDocuments(null, searchQuery);
-      }, searchQuery ? 500 : 0); // Debounce search
-
-      return () => clearTimeout(timer);
+      fetchDocuments(null);
     }
-  }, [searchQuery, isNestedRoute, fetchDocuments]);
+  }, [isNestedRoute, fetchDocuments]);
 
   // Helper functions to map position values between display and API format
   const mapPositionToAPI = (displayPosition) => {
@@ -335,18 +335,18 @@ export default function DocumentManagement() {
           autoClose: 3000,
           pauseOnHover: false
         });
-        
+
         // Refresh the folders list
-        await fetchDocuments(null, searchQuery);
+        await fetchDocuments(null);
       } else {
         throw new Error(response.message || 'Failed to delete folder');
       }
     } catch (err) {
       console.error('Error deleting folder:', err);
-      
+
       // Extract specific error messages from errors object if available
       let errorMessage = handleAPIError(err);
-      
+
       // Try to extract errors from response if available
       if (err.response) {
         try {
@@ -357,7 +357,7 @@ export default function DocumentManagement() {
               const fieldMessages = Array.isArray(messages) ? messages : [messages];
               errorMessages.push(...fieldMessages);
             });
-            
+
             if (errorMessages.length > 0) {
               errorMessage = errorMessages.join('. ');
             }
@@ -368,7 +368,7 @@ export default function DocumentManagement() {
           console.error('Error parsing error response:', parseError);
         }
       }
-      
+
       toast.error(errorMessage || 'Failed to delete folder. Please try again.', {
         position: 'top-right',
         autoClose: 3000,
@@ -381,11 +381,29 @@ export default function DocumentManagement() {
     }
   };
 
-  // Filter folders based on search (now handled by API, but keep for client-side filtering if needed)
-  const filteredFolders = folders.filter(folder =>
-    folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    folder.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter folders based on search (client-side filtering for instant results)
+  const filteredFolders = folders.filter(folder => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      folder.name.toLowerCase().includes(query) ||
+      folder.description.toLowerCase().includes(query) ||
+      folder.client_name.toLowerCase().includes(query) ||
+      folder.client_email.toLowerCase().includes(query)
+    );
+  });
+
+  // Filter documents based on search (client-side filtering)
+  const filteredDocuments = documents.filter(doc => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const fileName = (doc.tax_documents || '').toLowerCase();
+    return (
+      fileName.includes(query) ||
+      doc.client_name.toLowerCase().includes(query) ||
+      doc.client_email.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="lg:p-6 md:p-4 sm:p-2 px-1 bg-[rgb(243,247,255)] min-h-screen docmanage-main-container">
@@ -486,7 +504,7 @@ export default function DocumentManagement() {
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 docmanage-error">
               <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
               <button
-                onClick={() => fetchDocuments(null, searchQuery)}
+                onClick={() => fetchDocuments(null)}
                 className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
               >
                 Retry
@@ -503,104 +521,104 @@ export default function DocumentManagement() {
                 </div>
               ) : (
                 filteredFolders.map((folder) => (
-              <div
-                key={folder.id}
-                onClick={() => handleFolderClick(folder.id)}
-                className="bg-white rounded-lg p-3 transition-all cursor-pointer relative docmanage-folder-card"
-                style={{
-                  border: '1px solid #E8F0FF',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  relative: 'true',
-                }}
-              >
-                {/* Header with icon, title, and menu */}
-                <div className="flex items-start justify-between mb-3 docmanage-folder-header">
-                  <div className="flex items-start gap-3 flex-1">
-                    {/* Orange Folder Icon */}
-                    <div className="flex-shrink-0 mt-0.5 docmanage-folder-icon">
-                      <DocumentDownload width={20} height={20} />
+                  <div
+                    key={folder.id}
+                    onClick={() => handleFolderClick(folder.id)}
+                    className="bg-white rounded-lg p-3 transition-all cursor-pointer relative docmanage-folder-card"
+                    style={{
+                      border: '1px solid #E8F0FF',
+                      borderRadius: '10px',
+                      padding: '10px',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                      relative: 'true',
+                    }}
+                  >
+                    {/* Header with icon, title, and menu */}
+                    <div className="flex items-start justify-between mb-3 docmanage-folder-header">
+                      <div className="flex items-start gap-3 flex-1">
+                        {/* Orange Folder Icon */}
+                        <div className="flex-shrink-0 mt-0.5 docmanage-folder-icon">
+                          <DocumentDownload width={20} height={20} />
+                        </div>
+                        {/* Folder Title */}
+                        <div className="flex-1 min-w-0">
+                          <h6 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 docmanage-folder-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            {folder.name}
+                          </h6>
+                          {/* Badges */}
+                          <div className="flex flex-wrap gap-1.5 mb-2 docmanage-folder-badges">
+                            {folder.badges.map((badge, idx) => (
+                              <span
+                                key={idx}
+                                className={`px-2 py-0.5 text-xs font-medium rounded-full docmanage-folder-badge ${idx === 0
+                                  ? 'bg-[#f49c2d] text-white'
+                                  : 'bg-white text-gray-800 border border-gray-300'
+                                  }`}
+                                style={{ fontFamily: 'BasisGrotesquePro' }}
+                              >
+                                {badge}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Three-dot Menu */}
+                      <div className="relative actions-menu-container flex-shrink-0">
+                        <button
+                          onClick={(e) => toggleActionsMenu(folder.id, e)}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                          aria-label="More options"
+                        >
+                          <DocumentMoreIcon />
+                        </button>
+                        {openActionsMenu === folder.id && (
+                          <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 docmanage-actions-menu">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenFolder(folder.id);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              style={{ fontFamily: 'BasisGrotesquePro' }}
+                            >
+                              Open Folder
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteFolder(folder.id, folder.name);
+                                setOpenActionsMenu(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                              style={{ fontFamily: 'BasisGrotesquePro' }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {/* Folder Title */}
-                    <div className="flex-1 min-w-0">
-                      <h6 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 docmanage-folder-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        {folder.name}
-                      </h6>
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-1.5 mb-2 docmanage-folder-badges">
-                        {folder.badges.map((badge, idx) => (
-                          <span
-                            key={idx}
-                            className={`px-2 py-0.5 text-xs font-medium rounded-full docmanage-folder-badge ${idx === 0
-                              ? 'bg-[#f49c2d] text-white'
-                              : 'bg-white text-gray-800 border border-gray-300'
-                              }`}
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            {badge}
-                          </span>
-                        ))}
+
+                    {/* Folder Description */}
+                    <p className="text-sm font-medium text-gray-600 mb-4 leading-relaxed docmanage-folder-description" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      {folder.description}
+                    </p>
+
+                    {/* Footer with document count, size, and date */}
+                    <div className="flex items-center justify-between text-xs text-gray-500 pt-3 docmanage-folder-footer">
+                      {/* Left side: Documents and Modified */}
+                      <div className="flex flex-col docmanage-folder-footer-left" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        <span>{folder.documentCount} documents</span>
+                        <span>{folder.modified}</span>
+                      </div>
+
+                      {/* Right side: Date */}
+                      <div className="flex flex-col items-end text-right docmanage-folder-footer-right" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        <span>{folder.date}</span>
                       </div>
                     </div>
                   </div>
-                  {/* Three-dot Menu */}
-                  <div className="relative actions-menu-container flex-shrink-0">
-                    <button
-                      onClick={(e) => toggleActionsMenu(folder.id, e)}
-                      className="p-1 hover:bg-gray-100 rounded transition-colors"
-                      aria-label="More options"
-                    >
-                      <DocumentMoreIcon />
-                    </button>
-                    {openActionsMenu === folder.id && (
-                      <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 docmanage-actions-menu">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenFolder(folder.id);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          style={{ fontFamily: 'BasisGrotesquePro' }}
-                        >
-                          Open Folder
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteFolder(folder.id, folder.name);
-                            setOpenActionsMenu(null);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
-                          style={{ fontFamily: 'BasisGrotesquePro' }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Folder Description */}
-                <p className="text-sm font-medium text-gray-600 mb-4 leading-relaxed docmanage-folder-description" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  {folder.description}
-                </p>
-
-                {/* Footer with document count, size, and date */}
-                <div className="flex items-center justify-between text-xs text-gray-500 pt-3 docmanage-folder-footer">
-                  {/* Left side: Documents and Modified */}
-                  <div className="flex flex-col docmanage-folder-footer-left" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <span>{folder.documentCount} documents</span>
-                    <span>{folder.modified}</span>
-                  </div>
-
-                  {/* Right side: Date */}
-                  <div className="flex flex-col items-end text-right docmanage-folder-footer-right" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <span>{folder.date}</span>
-                  </div>
-                </div>
-              </div>
                 ))
               )}
             </div>
@@ -634,22 +652,22 @@ export default function DocumentManagement() {
 
             {/* Navigation Tabs */}
             <div className="mb-6 w-fit">
-  <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-    {['Overview', 'IRS Tracking', 'Security', 'Alerts'].map((tab) => (
-      <button
-        key={tab}
-        onClick={() => setComplianceSubTab(tab)}
-        className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative ${complianceSubTab === tab
-          ? 'text-white bg-[#3AD6F2]'
-          : 'text-gray-600 hover:text-gray-900'
-          }`}
-        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-      >
-        {tab}
-      </button>
-    ))}
-  </div>
-</div>
+              <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
+                {['Overview', 'IRS Tracking', 'Security', 'Alerts'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setComplianceSubTab(tab)}
+                    className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative ${complianceSubTab === tab
+                      ? 'text-white bg-[#3AD6F2]'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
 
 
           </div>
@@ -2260,7 +2278,7 @@ export default function DocumentManagement() {
         onSuccess={() => {
           // Refresh shared documents list if on that tab
           if (activeTab === 'Shared Documents') {
-           
+
             // The SharedDocumentsList component will handle its own refresh
           }
         }}
@@ -2273,7 +2291,7 @@ export default function DocumentManagement() {
         onUploadSuccess={() => {
           // Refresh folders and documents after successful upload
           if (!isNestedRoute) {
-            fetchDocuments(null, searchQuery);
+            fetchDocuments(null);
           }
         }}
       />

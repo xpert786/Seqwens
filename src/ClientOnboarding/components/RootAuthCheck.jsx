@@ -17,9 +17,9 @@ export default function RootAuthCheck() {
       const storage = getStorage();
       const userType = storage?.getItem("userType");
       const userData = JSON.parse(storage?.getItem("userData") || "{}");
-      
+
       console.log('Root check - User type:', userType);
-      
+
       // Redirect based on user type
       if (userType === 'super_admin') {
         navigate("/superadmin", { replace: true });
@@ -34,14 +34,14 @@ export default function RootAuthCheck() {
         const isEmailVerified = userData.is_email_verified;
         const isPhoneVerified = userData.is_phone_verified;
         const isCompleted = userData.is_completed;
-        
+
         if (!isEmailVerified && !isPhoneVerified) {
           navigate("/two-auth", { replace: true });
-        } else if (isCompleted) {
-          // User is completed, go to main dashboard
+        } else if (userData.onboarding_completed) {
+          // User has completed onboarding, go to main dashboard
           navigate("/dashboard", { replace: true });
         } else {
-          // User is not completed, stay on dashboard-first page
+          // User has not completed onboarding, stay on dashboard-first page
           navigate("/dashboard-first", { replace: true });
         }
       } else {

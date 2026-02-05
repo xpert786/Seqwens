@@ -57,6 +57,7 @@ export default function MyDocumentsContent() {
     // Filter local data to show current folder content
     const updateViewFromLocalData = (folderId) => {
         setLoading(true);
+        setError(null); // Clear error when showing local data
         // 1. Get current folder info
         let currentFolder = null;
         if (folderId) {
@@ -106,10 +107,10 @@ export default function MyDocumentsContent() {
     };
 
     // Fetch documents using browse API (supports folder navigation)
-    const fetchAllDocuments = async (folderId = null) => {
+    const fetchAllDocuments = async (folderId = null, force = false) => {
         try {
-            // If we have all data loaded, just filter locally
-            if (isRecursiveLoaded.current && !folderId && !selectedFilter) {
+            // If we have all data loaded, just filter locally unless force is true
+            if (!force && isRecursiveLoaded.current && !folderId && !selectedFilter) {
                 // Only use local if we are just browsing (not forcefully refreshing)
                 // But wait, if we are here, maybe we should just use local data?
                 // Let's assume if updateViewFromLocalData works, we can try it.
@@ -140,7 +141,7 @@ export default function MyDocumentsContent() {
 
             // Add timeout to prevent hanging
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
             const response = await fetchWithCors(url, {
                 ...config,
@@ -312,7 +313,7 @@ export default function MyDocumentsContent() {
             }
         } catch (error) {
             console.error('Error fetching documents:', error);
-            
+
             // Handle specific error types
             if (error.name === 'AbortError') {
                 setError('Request timed out. Please check your connection and try again.');
@@ -320,7 +321,7 @@ export default function MyDocumentsContent() {
                 const errorMessage = handleAPIError(error);
                 setError(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to load documents. Please try again.'));
             }
-            
+
             // Set empty state so UI doesn't break
             setDocuments([]);
             setStats({ pending: 0, completed: 0, overdue: 0, uploaded: 0 });
@@ -546,18 +547,18 @@ export default function MyDocumentsContent() {
     // Create folder
     const handleCreateFolder = async (folderName) => {
         if (!folderName || !folderName.trim()) return;
-        
+
         try {
             setLoading(true);
             const API_BASE_URL = getApiBaseUrl();
             const token = getAccessToken();
-            
+
             const url = `${API_BASE_URL}/taxpayer/document-folders/`;
             const payload = {
                 title: folderName,
                 parent: currentFolderId || null
             };
-            
+
             const response = await fetchWithCors(url, {
                 method: 'POST',
                 headers: {
@@ -566,7 +567,7 @@ export default function MyDocumentsContent() {
                 },
                 body: JSON.stringify(payload)
             });
-            
+
             if (response.ok) {
                 const result = await response.json();
                 toast.success('Folder created successfully');
@@ -585,18 +586,18 @@ export default function MyDocumentsContent() {
             setLoading(false);
         }
     };
-    
+
     // Rename folder
     const handleRenameFolder = async (folder, newName) => {
         if (!newName || !newName.trim()) return;
-        
+
         try {
             setLoading(true);
             const API_BASE_URL = getApiBaseUrl();
             const token = getAccessToken();
-            
+
             const url = `${API_BASE_URL}/taxpayer/document-folders/${folder.id}/`;
-            
+
             const response = await fetchWithCors(url, {
                 method: 'PATCH',
                 headers: {
@@ -605,7 +606,7 @@ export default function MyDocumentsContent() {
                 },
                 body: JSON.stringify({ title: newName })
             });
-            
+
             if (response.ok) {
                 toast.success('Folder renamed successfully');
                 // Clear recursive cache
@@ -625,22 +626,22 @@ export default function MyDocumentsContent() {
     // Delete folder (soft delete/trash)
     const handleDeleteFolder = async (folder) => {
         if (!confirm(`Are you sure you want to delete folder "${folder.title}" and all its contents?`)) return;
-        
+
         try {
             setLoading(true);
             const API_BASE_URL = getApiBaseUrl();
             const token = getAccessToken();
-            
+
             // Assuming DELETE method on folder detail view soft deletes it
             const url = `${API_BASE_URL}/taxpayer/document-folders/${folder.id}/`;
-            
+
             const response = await fetchWithCors(url, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
+
             if (response.ok) {
                 toast.success('Folder deleted successfully');
                 isRecursiveLoaded.current = false;
@@ -660,21 +661,21 @@ export default function MyDocumentsContent() {
     // Archive folder (move to trash)
     const handleArchiveFolder = async (folder) => {
         if (!confirm(`Archive folder "${folder.title}" and all its contents? You can recover it from trash.`)) return;
-        
+
         try {
             setLoading(true);
             const API_BASE_URL = getApiBaseUrl();
             const token = getAccessToken();
-            
+
             const url = `${API_BASE_URL}/taxpayer/folders/${folder.id}/trash/`;
-            
+
             const response = await fetchWithCors(url, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
+
             if (response.ok) {
                 toast.success('Folder archived successfully');
                 isRecursiveLoaded.current = false;
@@ -977,9 +978,9 @@ export default function MyDocumentsContent() {
                     <i className="bi bi-exclamation-triangle-fill text-danger mb-3" style={{ fontSize: "48px" }}></i>
                     <p className="text-danger mb-3" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '16px', fontWeight: '500' }}>Error loading documents</p>
                     <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>{error}</p>
-                    <button 
+                    <button
                         className="btn btn-primary mt-3"
-                        onClick={() => fetchAllDocuments()}
+                        onClick={() => fetchAllDocuments(currentFolderId, true)}
                         style={{ backgroundColor: '#00C0C6', border: 'none' }}
                     >
                         <i className="bi bi-arrow-clockwise me-2"></i>
@@ -1148,7 +1149,7 @@ export default function MyDocumentsContent() {
                             // I'll stick to a simple prompt for now to prove functionality, or better, look for an existing modal.
                             // The user said "client can also add...".
                             // I will simply add the button layout here.
-                            
+
                             // Let's use a simple prompt for "Add Folder" for now to immediate effect
                             const folderName = prompt("Enter folder name:");
                             if (folderName) {
@@ -1446,138 +1447,138 @@ export default function MyDocumentsContent() {
                                                                 }} />
                                                             </button>
                                                             {showMenuIndex === (startIndex + index) && (
-                                                                    <div
-                                                                        style={{
-                                                                            position: 'absolute',
-                                                                            right: 0,
-                                                                            top: '100%',
-                                                                            marginTop: '4px',
-                                                                            backgroundColor: 'white',
-                                                                            border: '1px solid #E5E7EB',
-                                                                            borderRadius: '8px',
-                                                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                                                            zIndex: 1000,
-                                                                            minWidth: '150px',
-                                                                            padding: '4px 0'
-                                                                        }}
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                    >
-                                                                        {/* Only show Assign for E-Sign for files, not folders */}
-                                                                        {isFile(doc) ? (
-                                                                            <>
+                                                                <div
+                                                                    style={{
+                                                                        position: 'absolute',
+                                                                        right: 0,
+                                                                        top: '100%',
+                                                                        marginTop: '4px',
+                                                                        backgroundColor: 'white',
+                                                                        border: '1px solid #E5E7EB',
+                                                                        borderRadius: '8px',
+                                                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                                                        zIndex: 1000,
+                                                                        minWidth: '150px',
+                                                                        padding: '4px 0'
+                                                                    }}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    {/* Only show Assign for E-Sign for files, not folders */}
+                                                                    {isFile(doc) ? (
+                                                                        <>
 
-                                                                                
-                                                                                <button
-                                                                                    className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                                    style={{
-                                                                                        fontFamily: 'BasisGrotesquePro',
-                                                                                        fontSize: '14px',
-                                                                                        color: '#FF9800',
-                                                                                        cursor: 'pointer',
-                                                                                        borderBottom: '1px solid #E5E7EB'
-                                                                                    }}
-                                                                                    onMouseEnter={(e) => {
-                                                                                        e.target.style.backgroundColor = '#FFF4E5';
-                                                                                    }}
-                                                                                    onMouseLeave={(e) => {
-                                                                                        e.target.style.backgroundColor = 'white';
-                                                                                    }}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        setShowMenuIndex(null);
-                                                                                        handleArchiveDocument(doc.id || doc.document_id, false);
-                                                                                    }}
-                                                                                >
-                                                                                    <i className="bi bi-archive me-2"></i>
-                                                                                    Archive
-                                                                                </button>
-                                                                            </>
-                                                                        ) : (
-                                                                             /* Folder options: Rename + Archive */
-                                                                            <>
-                                                                                <button
-                                                                                    className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                                    style={{
-                                                                                        fontFamily: 'BasisGrotesquePro',
-                                                                                        fontSize: '14px',
-                                                                                        color: '#3B4A66',
-                                                                                        cursor: 'pointer',
-                                                                                        borderBottom: '1px solid #E5E7EB'
-                                                                                    }}
-                                                                                    onMouseEnter={(e) => {
-                                                                                        e.target.style.backgroundColor = '#F3F4F6';
-                                                                                    }}
-                                                                                    onMouseLeave={(e) => {
-                                                                                        e.target.style.backgroundColor = 'white';
-                                                                                    }}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        setShowMenuIndex(null);
-                                                                                        // Simple rename prompt for MVP
-                                                                                        const newName = prompt("Enter new folder name:", doc.title || doc.name);
-                                                                                        if (newName && newName !== doc.title && newName !== doc.name) {
-                                                                                            handleRenameFolder(doc, newName);
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                    <i className="bi bi-pencil-square me-2"></i>
-                                                                                    Rename
-                                                                                </button>
-                                                                                
-                                                                                <button
-                                                                                    className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                                    style={{
-                                                                                        fontFamily: 'BasisGrotesquePro',
-                                                                                        fontSize: '14px',
-                                                                                        color: '#FF9800',
-                                                                                        cursor: 'pointer',
-                                                                                        borderBottom: '1px solid #E5E7EB'
-                                                                                    }}
-                                                                                    onMouseEnter={(e) => {
-                                                                                        e.target.style.backgroundColor = '#FFF4E5';
-                                                                                    }}
-                                                                                    onMouseLeave={(e) => {
-                                                                                        e.target.style.backgroundColor = 'white';
-                                                                                    }}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        setShowMenuIndex(null);
-                                                                                        handleArchiveFolder(doc);
-                                                                                    }}
-                                                                                >
-                                                                                    <i className="bi bi-archive me-2"></i>
-                                                                                    Archive
-                                                                                </button>
-                                                                            </>
-                                                                        )}
-                                                                        
-                                                                        <button
-                                                                            className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                            style={{
-                                                                                fontFamily: 'BasisGrotesquePro',
-                                                                                fontSize: '14px',
-                                                                                color: '#EF4444',
-                                                                                cursor: 'pointer'
-                                                                            }}
-                                                                            onMouseEnter={(e) => {
-                                                                                e.target.style.backgroundColor = '#FEF2F2';
-                                                                            }}
-                                                                            onMouseLeave={(e) => {
-                                                                                e.target.style.backgroundColor = 'white';
-                                                                            }}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                if (isFile(doc)) {
-                                                                                    handleDeleteDocument(doc);
-                                                                                } else {
-                                                                                    handleDeleteFolder(doc);
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            <i className="bi bi-trash me-2"></i>
-                                                                            Delete
-                                                                        </button>
-                                                                    </div>
+
+                                                                            <button
+                                                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                                                style={{
+                                                                                    fontFamily: 'BasisGrotesquePro',
+                                                                                    fontSize: '14px',
+                                                                                    color: '#FF9800',
+                                                                                    cursor: 'pointer',
+                                                                                    borderBottom: '1px solid #E5E7EB'
+                                                                                }}
+                                                                                onMouseEnter={(e) => {
+                                                                                    e.target.style.backgroundColor = '#FFF4E5';
+                                                                                }}
+                                                                                onMouseLeave={(e) => {
+                                                                                    e.target.style.backgroundColor = 'white';
+                                                                                }}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setShowMenuIndex(null);
+                                                                                    handleArchiveDocument(doc.id || doc.document_id, false);
+                                                                                }}
+                                                                            >
+                                                                                <i className="bi bi-archive me-2"></i>
+                                                                                Archive
+                                                                            </button>
+                                                                        </>
+                                                                    ) : (
+                                                                        /* Folder options: Rename + Archive */
+                                                                        <>
+                                                                            <button
+                                                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                                                style={{
+                                                                                    fontFamily: 'BasisGrotesquePro',
+                                                                                    fontSize: '14px',
+                                                                                    color: '#3B4A66',
+                                                                                    cursor: 'pointer',
+                                                                                    borderBottom: '1px solid #E5E7EB'
+                                                                                }}
+                                                                                onMouseEnter={(e) => {
+                                                                                    e.target.style.backgroundColor = '#F3F4F6';
+                                                                                }}
+                                                                                onMouseLeave={(e) => {
+                                                                                    e.target.style.backgroundColor = 'white';
+                                                                                }}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setShowMenuIndex(null);
+                                                                                    // Simple rename prompt for MVP
+                                                                                    const newName = prompt("Enter new folder name:", doc.title || doc.name);
+                                                                                    if (newName && newName !== doc.title && newName !== doc.name) {
+                                                                                        handleRenameFolder(doc, newName);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <i className="bi bi-pencil-square me-2"></i>
+                                                                                Rename
+                                                                            </button>
+
+                                                                            <button
+                                                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                                                style={{
+                                                                                    fontFamily: 'BasisGrotesquePro',
+                                                                                    fontSize: '14px',
+                                                                                    color: '#FF9800',
+                                                                                    cursor: 'pointer',
+                                                                                    borderBottom: '1px solid #E5E7EB'
+                                                                                }}
+                                                                                onMouseEnter={(e) => {
+                                                                                    e.target.style.backgroundColor = '#FFF4E5';
+                                                                                }}
+                                                                                onMouseLeave={(e) => {
+                                                                                    e.target.style.backgroundColor = 'white';
+                                                                                }}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setShowMenuIndex(null);
+                                                                                    handleArchiveFolder(doc);
+                                                                                }}
+                                                                            >
+                                                                                <i className="bi bi-archive me-2"></i>
+                                                                                Archive
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+
+                                                                    <button
+                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                                        style={{
+                                                                            fontFamily: 'BasisGrotesquePro',
+                                                                            fontSize: '14px',
+                                                                            color: '#EF4444',
+                                                                            cursor: 'pointer'
+                                                                        }}
+                                                                        onMouseEnter={(e) => {
+                                                                            e.target.style.backgroundColor = '#FEF2F2';
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            e.target.style.backgroundColor = 'white';
+                                                                        }}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            if (isFile(doc)) {
+                                                                                handleDeleteDocument(doc);
+                                                                            } else {
+                                                                                handleDeleteFolder(doc);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <i className="bi bi-trash me-2"></i>
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     )}

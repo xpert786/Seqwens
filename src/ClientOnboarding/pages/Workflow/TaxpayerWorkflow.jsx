@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { workflowAPI, handleAPIError } from '../../utils/apiUtils';
 import { toast } from 'react-toastify';
 import WorkflowDashboard from '../../../components/Workflow/WorkflowDashboard';
@@ -10,6 +11,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal';
  * Main workflow view for taxpayers/clients
  */
 const TaxpayerWorkflow = () => {
+  const navigate = useNavigate();
   const [workflow, setWorkflow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -165,7 +167,7 @@ const TaxpayerWorkflow = () => {
           }}
           onManageFiles={() => {
             // Navigate to documents page
-            window.location.href = '/documents';
+            navigate('/documents');
           }}
         />
       </div>

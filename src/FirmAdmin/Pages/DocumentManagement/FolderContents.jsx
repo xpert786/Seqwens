@@ -10,22 +10,22 @@ import '../../styles/FolderContents.css';
 // Search icon
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 // Chevron down icon
 const ChevronDown = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 6L8 10L12 6" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M4 6L8 10L12 6" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 // File icon (light blue)
 const FileIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5.83333 2.5H11.6667L15 5.83333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H5.83333C5.39131 17.5 4.96738 17.3244 4.65482 17.0118C4.34226 16.6993 4.16667 16.2754 4.16667 15.8333V4.16667C4.16667 3.72464 4.34226 3.30072 4.65482 2.98816C4.96738 2.67559 5.39131 2.5 5.83333 2.5Z" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M11.6667 2.5V5.83333H15" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M5.83333 2.5H11.6667L15 5.83333V15.8333C15 16.2754 14.8244 16.6993 14.5118 17.0118C14.1993 17.3244 13.7754 17.5 13.3333 17.5H5.83333C5.39131 17.5 4.96738 17.3244 4.65482 17.0118C4.34226 16.6993 4.16667 16.2754 4.16667 15.8333V4.16667C4.16667 3.72464 4.34226 3.30072 4.65482 2.98816C4.96738 2.67559 5.39131 2.5 5.83333 2.5Z" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M11.6667 2.5V5.83333H15" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -35,7 +35,7 @@ export default function FolderContents() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
-  
+
   // Pagination state
   const [documentsCurrentPage, setDocumentsCurrentPage] = useState(1);
   const [showAllDocuments, setShowAllDocuments] = useState(false);
@@ -102,7 +102,7 @@ export default function FolderContents() {
           // Extract filename from URL
           const url = doc.tax_documents || '';
           const filename = url.split('/').pop() || 'document.pdf';
-          
+
           return {
             id: doc.id,
             name: filename,
@@ -112,9 +112,11 @@ export default function FolderContents() {
             statusColor: getStatusColor(doc.status),
             textColor: getStatusTextColor(doc.status),
             category: doc.category?.name || 'General',
-            client: doc.client?.name || doc.client_name || 'N/A',
-            uploaded_by: doc.uploaded_by?.name || doc.uploaded_by_name || doc.created_by?.name || 'N/A',
-            size: doc.size || doc.file_size || '—',
+            client: doc.client, // Keep original object if available
+            clientId: doc.client?.id || doc.client_id,
+            clientName: doc.client?.name || doc.client_name || 'N/A',
+            uploaded_by: doc.uploaded_by_name || doc.created_by?.name || 'N/A',
+            size: doc.file_size_formatted || doc.file_size_bytes || '—',
             created_at: doc.created_at,
             updated_at: doc.updated_at,
             is_archived: doc.is_archived || false
@@ -239,9 +241,9 @@ export default function FolderContents() {
   const displayedDocuments = showAllDocuments
     ? documents
     : documents.slice(
-        (documentsCurrentPage - 1) * DOCUMENTS_PER_PAGE,
-        documentsCurrentPage * DOCUMENTS_PER_PAGE
-      );
+      (documentsCurrentPage - 1) * DOCUMENTS_PER_PAGE,
+      documentsCurrentPage * DOCUMENTS_PER_PAGE
+    );
 
   // Fetch folder contents on mount and when filters change
   useEffect(() => {
@@ -266,7 +268,7 @@ export default function FolderContents() {
 
       // Get the access token
       const token = getAccessToken();
-      
+
       if (!token) {
         toast.error('Authentication token not found. Please login again.');
         return;
@@ -276,14 +278,24 @@ export default function FolderContents() {
       toast.info('Downloading document...', { autoClose: 2000 });
 
       // Construct the full URL if it's relative
-      let documentUrl = doc.tax_documents;
-      if (!documentUrl.startsWith('http://') && !documentUrl.startsWith('https://')) {
-        // If relative URL, construct full URL (adjust base URL as needed)
-        const baseUrl = window.location.origin;
-        documentUrl = documentUrl.startsWith('/') 
-          ? `${baseUrl}${documentUrl}` 
-          : `${baseUrl}/${documentUrl}`;
+      // Construct the full URL
+      let documentUrl = (doc.tax_documents || '').trim();
+
+      // Check if it's already an absolute URL (e.g. S3 signed URL)
+      if (documentUrl.startsWith('http://') || documentUrl.startsWith('https://')) {
+        // For S3 signed URLs or public URLs, it's better to open in new tab/window
+        // to avoid CORS issues and let browser handle the download
+        window.open(documentUrl, '_blank');
+        toast.success('Download started');
+        return;
       }
+
+      // If relative URL, construct full API URL
+      // This assumes the backend is serving the file (e.g. local dev or proxy)
+      const baseUrl = 'http://168.231.121.7/seqwens/api';
+      documentUrl = documentUrl.startsWith('/')
+        ? `${baseUrl}${documentUrl}`
+        : `${baseUrl}/${documentUrl}`;
 
       // Fetch the document with authorization
       const response = await fetch(documentUrl, {
@@ -294,17 +306,17 @@ export default function FolderContents() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to download document: ${response.statusText}`);
+        throw new Error(`Failed to download document: ${response.status} ${response.statusText}`);
       }
 
       // Get the blob data
       const blob = await response.blob();
-      
+
       // Determine file extension from content type or filename
       const contentType = response.headers.get('content-type') || 'application/pdf';
       const fileName = doc.name || 'document.pdf';
       let fileExtension = 'pdf';
-      
+
       if (fileName.includes('.')) {
         fileExtension = fileName.split('.').pop();
       } else if (contentType.includes('pdf')) {
@@ -312,10 +324,10 @@ export default function FolderContents() {
       } else if (contentType.includes('image')) {
         fileExtension = contentType.split('/')[1].split(';')[0];
       }
-      
+
       // Create a temporary URL for the blob
       const url = window.URL.createObjectURL(blob);
-      
+
       // Create a temporary anchor element to trigger download
       const link = document.createElement('a');
       link.href = url;
@@ -323,17 +335,42 @@ export default function FolderContents() {
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      
+
       // Clean up
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
-      
+
       toast.success('Document downloaded successfully');
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error(handleAPIError(error) || 'Failed to download document');
+    }
+  };
+
+  // Handle delete document
+  const handleDelete = async (doc) => {
+    if (!doc.clientId) {
+      console.error("Missing client information for deletion");
+      toast.error("Cannot delete document: Missing client information");
+      return;
+    }
+
+    // Confirm deletion
+    if (!window.confirm(`Are you sure you want to delete "${doc.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await firmAdminDocumentsAPI.deleteDocument(doc.clientId, doc.id);
+      toast.success("Document deleted successfully");
+
+      // Refresh the list
+      fetchFolderContents();
+    } catch (err) {
+      console.error("Error deleting document:", err);
+      toast.error(handleAPIError(err) || "Failed to delete document");
     }
   };
 
@@ -442,200 +479,200 @@ export default function FolderContents() {
             </div>
           )}
 
-      {/* Document List Section */}
-      {!loading && !error && (
-        <div className="bg-white rounded-lg p-6 foldercontents-document-section">
-          <div className="mb-6 foldercontents-document-header">
-            <h2 className="text-xl font-semibold text-gray-800 mb-1 foldercontents-document-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              All Documents ({showAllDocuments ? documents.length : `${displayedDocuments.length} of ${documents.length}`})
-            </h2>
-            <p className="text-sm text-gray-600 foldercontents-document-subtitle" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Complete list of documents with review status and metadata jjj
-            </p>
-          </div>
-
-          {/* Search Bar */}
-          <div className="flex gap-3 mb-6 foldercontents-search-section">
-            <div className="flex relative bg-blue-50 foldercontents-search-container">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 foldercontents-search-icon">
-                <SearchIcon />
+          {/* Document List Section */}
+          {!loading && !error && (
+            <div className="bg-white rounded-lg p-6 foldercontents-document-section">
+              <div className="mb-6 foldercontents-document-header">
+                <h4 className="text-xl font-semibold text-gray-800 mb-1 foldercontents-document-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  All Documents ({showAllDocuments ? documents.length : `${displayedDocuments.length} of ${documents.length}`})
+                </h4>
+                <p className="text-sm text-gray-600 foldercontents-document-subtitle" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Complete list of documents with review status and metadata jjj
+                </p>
               </div>
-              <input
-                type="text"
-                placeholder="Search documents by name, client, or uploader..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 foldercontents-search-input"
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              />
-            </div>
-          </div>
 
-        {/* Document Table */}
-        <div className="overflow-x-auto foldercontents-table-container">
-          <table className="w-full foldercontents-table">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedDocuments.map((doc, index) => (
-                <tr 
-                  key={doc.id} 
-                  onClick={() => handleViewDetails(doc)}
-                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${index < displayedDocuments.length - 1 ? '' : ''}`}
-                >
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-3 foldercontents-document-name">
-                      <div className="flex-shrink-0 foldercontents-document-icon">
-                        <FileIcon />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
-                        <p className="text-xs text-gray-500 foldercontents-document-type" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.client}</p>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 foldercontents-category-badge" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {doc.category}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="relative actions-menu-container">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
-                        }}
-                        className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
-                        title="Actions"
+              {/* Search Bar */}
+              <div className="flex gap-3 mb-6 foldercontents-search-section">
+                <div className="flex relative bg-blue-50 foldercontents-search-container">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 foldercontents-search-icon">
+                    <SearchIcon />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search documents by name, client, or uploader..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 foldercontents-search-input"
+                    style={{ fontFamily: 'BasisGrotesquePro' }}
+                  />
+                </div>
+              </div>
+
+              {/* Document Table */}
+              <div className="overflow-x-auto foldercontents-table-container">
+                <table className="w-full foldercontents-table">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedDocuments.map((doc, index) => (
+                      <tr
+                        key={doc.id}
+                        onClick={() => handleViewDetails(doc)}
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${index < displayedDocuments.length - 1 ? '' : ''}`}
                       >
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                      {openActionsMenu === doc.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 foldercontents-actions-menu" style={{ borderRadius: '8px' }}>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3 foldercontents-document-name">
+                            <div className="flex-shrink-0 foldercontents-document-icon">
+                              <FileIcon />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
+                              <p className="text-xs text-gray-500 foldercontents-document-type" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.clientName}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 foldercontents-category-badge" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            {doc.category}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="relative actions-menu-container">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
+                              }}
+                              className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
+                              title="Actions"
+                            >
+                              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                            {openActionsMenu === doc.id && (
+                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 foldercontents-actions-menu" style={{ borderRadius: '8px' }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDetails(doc);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#F56D2D] transition-colors"
+                                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                                >
+                                  View Details
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(doc);
+                                    setOpenActionsMenu(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                                >
+                                  Download
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(doc);
+                                    setOpenActionsMenu(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {documents.length === 0 && (
+                <div className="text-center py-12 foldercontents-empty-state">
+                  <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {documents.length > DOCUMENTS_PER_PAGE && (
+                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 foldercontents-pagination">
+                  <div className="flex items-center gap-2 foldercontents-pagination-controls">
+                    {!showAllDocuments ? (
+                      <>
+                        <div className="flex items-center gap-2 foldercontents-pagination-buttons">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(doc);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#F56D2D] transition-colors"
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                            onClick={() => handleDocumentsPageChange(documentsCurrentPage - 1)}
+                            disabled={documentsCurrentPage === 1}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors foldercontents-pagination-button"
+                            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                           >
-                            View Details
+                            Previous
                           </button>
+                          <span className="text-sm text-gray-600 font-[BasisGrotesquePro] foldercontents-pagination-info">
+                            Page {documentsCurrentPage} of {totalDocumentsPages}
+                          </span>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownload(doc);
-                              setOpenActionsMenu(null);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                            onClick={() => handleDocumentsPageChange(documentsCurrentPage + 1)}
+                            disabled={documentsCurrentPage === totalDocumentsPages}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors foldercontents-pagination-button"
+                            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                           >
-                            Download
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenActionsMenu(null);
-                              // TODO: Implement delete functionality
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            Delete
+                            Next
                           </button>
                         </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {documents.length === 0 && (
-          <div className="text-center py-12 foldercontents-empty-state">
-            <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
-          </div>
-        )}
-
-        {/* Pagination Controls */}
-        {documents.length > DOCUMENTS_PER_PAGE && (
-          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 foldercontents-pagination">
-            <div className="flex items-center gap-2 foldercontents-pagination-controls">
-              {!showAllDocuments ? (
-                <>
-                  <div className="flex items-center gap-2 foldercontents-pagination-buttons">
-                    <button
-                      onClick={() => handleDocumentsPageChange(documentsCurrentPage - 1)}
-                      disabled={documentsCurrentPage === 1}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors foldercontents-pagination-button"
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                    >
-                      Previous
-                    </button>
-                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] foldercontents-pagination-info">
-                      Page {documentsCurrentPage} of {totalDocumentsPages}
-                    </span>
-                    <button
-                      onClick={() => handleDocumentsPageChange(documentsCurrentPage + 1)}
-                      disabled={documentsCurrentPage === totalDocumentsPages}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors foldercontents-pagination-button"
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                    >
-                      Next
-                    </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={handleShowLessDocuments}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors foldercontents-pagination-button"
+                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                      >
+                        Show Less
+                      </button>
+                    )}
                   </div>
-                </>
-              ) : (
-                <button
-                  onClick={handleShowLessDocuments}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors foldercontents-pagination-button"
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                >
-                  Show Less
-                </button>
+                  {!showAllDocuments && (
+                    <button
+                      onClick={handleViewAllDocuments}
+                      className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors foldercontents-view-all-button"
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                    >
+                      View All ({documents.length})
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-            {!showAllDocuments && (
-              <button
-                onClick={handleViewAllDocuments}
-                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors foldercontents-view-all-button"
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-              >
-                View All ({documents.length})
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-      )}
+          )}
         </>
       )}
 

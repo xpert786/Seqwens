@@ -7,7 +7,7 @@ export default function ProtectedRoute({ children }) {
 
   if (!userIsLoggedIn) {
     // Use React Router Navigate which respects the basename
-    return <Navigate to="/seqwens-frontend/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;

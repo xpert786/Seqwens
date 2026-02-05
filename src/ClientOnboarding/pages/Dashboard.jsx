@@ -114,9 +114,8 @@ export default function Dashboard() {
     // Check if user is completed from stored user data
     const userData = JSON.parse(localStorage.getItem("userData") || sessionStorage.getItem("userData") || "{}");
 
-    // If user is not completed, redirect to dashboard-first
-    // User must stay on dashboard-first until all information is complete
-    if (userData && userData.is_completed === false) {
+    // If user has not completed onboarding, redirect to dashboard-first
+    if (userData && userData.onboarding_completed === false) {
       navigate("/dashboard-first");
       return;
     }

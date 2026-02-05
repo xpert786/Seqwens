@@ -21,7 +21,7 @@ export const getBaseUrl = () => {
  */
 export const getLoginUrl = () => {
   const baseUrl = getBaseUrl();
-  return `${baseUrl}/login`;
+  return `${baseUrl}/login/`;
 };
 
 /**
@@ -113,7 +113,7 @@ export const getMediaUrl = (mediaUrl) => {
   if (mediaUrl.startsWith('http')) {
     // Replace localhost URLs with server URL
     if (mediaUrl.includes('localhost:5173')) {
-      return mediaUrl.replace('http://localhost:5173', 'http://168.231.121.7/seqwens');
+      return mediaUrl.replace('http://localhost:5173', 'http://168.231.121.7:8000/seqwens');
     }
     // Already has full server URL
     return mediaUrl;
@@ -122,15 +122,15 @@ export const getMediaUrl = (mediaUrl) => {
   // Handle relative paths
   // If it's a relative path like /seqwens/media/firm_logos/testlogo.jpg
   if (mediaUrl.startsWith('/seqwens/')) {
-    return `http://168.231.121.7${mediaUrl}`;
+    return `http://168.231.121.7:8000${mediaUrl}`;
   }
 
   // If it's a path like /media/firm_logos/testlogo.jpg
   if (mediaUrl.startsWith('/media/')) {
-    return `http://168.231.121.7/seqwens${mediaUrl}`;
+    return `http://168.231.121.7:8000/seqwens${mediaUrl}`;
   }
 
   // Default: prepend the server base URL
   const cleanPath = mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`;
-  return `http://168.231.121.7/seqwens${cleanPath}`;
+  return `http://168.231.121.7:8000/seqwens${cleanPath}`;
 };

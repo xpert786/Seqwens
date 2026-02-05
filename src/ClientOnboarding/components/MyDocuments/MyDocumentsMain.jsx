@@ -16,7 +16,7 @@ const tabs = [
 export default function MyDocumentsMain() {
   const [activeTab, setActiveTab] = useState('requests');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const documentsRefreshKey = useRef(0);
+  const [documentsRefreshKey, setDocumentsRefreshKey] = useState(0);
 
   return (
     <div className='lg:px-4 md:px-2 px-1'>
@@ -45,7 +45,7 @@ export default function MyDocumentsMain() {
             handleClose={() => setShowUploadModal(false)}
             onUploadSuccess={() => {
               // Trigger refresh of documents list
-              documentsRefreshKey.current += 1;
+              setDocumentsRefreshKey(prev => prev + 1);
               // If on My Documents tab, the component will refresh automatically
               // The key change will force a remount if needed
             }}
@@ -93,7 +93,7 @@ export default function MyDocumentsMain() {
       {/* Conditional Content */}
       <div >
         {activeTab === 'requests' && <DocumentRequests />}
-        {activeTab === 'my' && <MyDocumentsContent key={documentsRefreshKey.current} />}
+        {activeTab === 'my' && <MyDocumentsContent key={documentsRefreshKey} />}
         {activeTab === 'signature' && <ESignature />}
         {activeTab === 'archived' && <ArchivedDocuments />}
       </div>

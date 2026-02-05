@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { invoicesAPI, taxpayerFirmAPI, handleAPIError } from '../../utils/apiUtils';
+import { getPathWithPrefix } from '../../utils/urlUtils';
 import '../../styles/OutStandingTab.css';
 const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [showModal, setShowModal] = useState(false);
@@ -21,9 +22,9 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
         try {
             // Build success and cancel URLs - redirect to invoices page with success parameter
             const baseUrl = window.location.origin;
-            const successUrl = `${baseUrl}/invoices?payment_success=true&invoice_id=${invoice.id}`;
-            const cancelUrl = `${baseUrl}/invoices?payment_cancelled=true`;
-            
+            const successUrl = baseUrl + getPathWithPrefix(`/invoices?payment_success=true&invoice_id=${invoice.id}`);
+            const cancelUrl = baseUrl + getPathWithPrefix('/invoices?payment_cancelled=true');
+
             // Call the payment API with success and cancel URLs
             const response = await invoicesAPI.payInvoice(invoice.id, successUrl, cancelUrl);
 
@@ -70,9 +71,9 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
             const invoiceId = selectedInvoice.id;
             // Build success and cancel URLs - redirect to invoices page with success parameter
             const baseUrl = window.location.origin;
-            const successUrl = `${baseUrl}/invoices?payment_success=true&invoice_id=${invoiceId}`;
-            const cancelUrl = `${baseUrl}/invoices?payment_cancelled=true`;
-            
+            const successUrl = baseUrl + getPathWithPrefix(`/invoices?payment_success=true&invoice_id=${invoiceId}`);
+            const cancelUrl = baseUrl + getPathWithPrefix('/invoices?payment_cancelled=true');
+
             // Call the payment API with success and cancel URLs
             const response = await invoicesAPI.payInvoice(invoiceId, successUrl, cancelUrl);
 
@@ -106,7 +107,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
         const totalAmount = parseFloat(inv.amount || 0);
         const paidAmount = parseFloat(inv.paid_amount || 0);
         const isPaid = status === 'paid' || (remainingAmount === 0 && paidAmount > 0);
-        
+
         return {
             id: inv.id,
             invoice_number: inv.invoice_number || `INV-${inv.id}`,
@@ -128,14 +129,14 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
     });
 
     // Use summary data from API (same as cards) or calculate as fallback
-    const outstandingBalance = summary.outstanding_balance !== undefined 
-        ? parseFloat(summary.outstanding_balance) 
+    const outstandingBalance = summary.outstanding_balance !== undefined
+        ? parseFloat(summary.outstanding_balance)
         : allInvoices.reduce((sum, inv) => sum + (parseFloat(inv.remaining_amount) || 0), 0);
-    
-    const paidThisYear = summary.paid_this_year !== undefined 
-        ? parseFloat(summary.paid_this_year) 
+
+    const paidThisYear = summary.paid_this_year !== undefined
+        ? parseFloat(summary.paid_this_year)
         : 0;
-    
+
     const currentYear = new Date().getFullYear();
 
     // Calculate pagination
@@ -350,7 +351,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
     return (
         <div className="bg-white lg:p-3 md:p-2 px-1 rounded" >
-            <div className="align-items-center mb-3 invoices-header" style={{marginLeft:"10px"}}>
+            <div className="align-items-center mb-3 invoices-header" style={{ marginLeft: "10px" }}>
                 <h5
                     className="mb-0 me-3"
                     style={{
@@ -383,183 +384,183 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                 </div>
             ) : (
                 <>
-                {paginatedInvoices.map((inv, idx) => {
-                    const statusStyle = getStatusBadgeStyle(inv.status, inv.status_color, inv.isPaid);
-                    return (
-                        <div
-                            key={inv.id || idx}
-                            className="border rounded p-3 mb-3 invoice-card"
-                            style={{
-                                backgroundColor: '#ffffff',
-                                transition: 'background-color 0.3s ease',
-                                fontFamily: "BasisGrotesquePro",
-                                marginLeft: "10px"
-                            }}
-                        >
-                            <div className="d-flex justify-content-between align-items-center">
-                                {/* Left Info */}
-                                <div>
-                                    <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                        {inv.invoice_number}
-                                    </strong>
-                                    <span
-                                        className="badge ms-2 px-2 py-1"
-                                        style={{
-                                            ...statusStyle,
-                                            fontSize: '12px',
-                                            borderRadius: '15px',
-                                            fontFamily: "BasisGrotesquePro"
-                                        }}
-                                    >
-                                        {inv.status_display || inv.status}
-                                    </span>
-
-                                    <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "4px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
-                                        {inv.name}
-                                    </div>
-                                    <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
-                                        Due: {inv.due}
-                                    </div>
-                                </div>
-
-
-                                <div className="text-center flex-grow-1">
-                                    <div className="mb-0">
-                                        <span style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                            {inv.isPaid ? 'Paid Invoice:' : 'Pay Invoice:'}
-                                        </span>{' '}
-                                        <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                            ${inv.isPaid ? inv.paid_amount.toFixed(2) : (inv.remaining_amount || inv.amount).toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
-
-
-                                <div className="text-end">
-                                    <button
-                                        className="btn  me-2"
-                                        style={{
-                                            backgroundColor: '#ffffff',
-                                            borderRadius: '4px',
-                                            border: '1px solid #e0e0e0'
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleViewInvoice(inv);
-                                        }}
-                                    >
-                                        <ViewIcon />
-                                    </button>
-
-                                    {!inv.isPaid && (
-                                        <button
-                                            className="btn"
+                    {paginatedInvoices.map((inv, idx) => {
+                        const statusStyle = getStatusBadgeStyle(inv.status, inv.status_color, inv.isPaid);
+                        return (
+                            <div
+                                key={inv.id || idx}
+                                className="border rounded p-3 mb-3 invoice-card"
+                                style={{
+                                    backgroundColor: '#ffffff',
+                                    transition: 'background-color 0.3s ease',
+                                    fontFamily: "BasisGrotesquePro",
+                                    marginLeft: "10px"
+                                }}
+                            >
+                                <div className="d-flex justify-content-between align-items-center">
+                                    {/* Left Info */}
+                                    <div>
+                                        <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                            {inv.invoice_number}
+                                        </strong>
+                                        <span
+                                            className="badge ms-2 px-2 py-1"
                                             style={{
-                                                backgroundColor: '#F56D2D',
-                                                color: '#FFFFFF',
-                                                fontSize: '16px',
-                                                padding: '8px 10px',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
+                                                ...statusStyle,
+                                                fontSize: '12px',
+                                                borderRadius: '15px',
+                                                fontFamily: "BasisGrotesquePro"
+                                            }}
+                                        >
+                                            {inv.status_display || inv.status}
+                                        </span>
+
+                                        <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "4px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
+                                            {inv.name}
+                                        </div>
+                                        <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
+                                            Due: {inv.due}
+                                        </div>
+                                    </div>
+
+
+                                    <div className="text-center flex-grow-1">
+                                        <div className="mb-0">
+                                            <span style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                                {inv.isPaid ? 'Paid Invoice:' : 'Pay Invoice:'}
+                                            </span>{' '}
+                                            <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                                ${inv.isPaid ? inv.paid_amount.toFixed(2) : (inv.remaining_amount || inv.amount).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+
+                                    <div className="text-end">
+                                        <button
+                                            className="btn  me-2"
+                                            style={{
+                                                backgroundColor: '#ffffff',
+                                                borderRadius: '4px',
+                                                border: '1px solid #e0e0e0'
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handlePayNowClick(inv);
+                                                handleViewInvoice(inv);
                                             }}
                                         >
-                                            <PayIcon style={{ fontSize: '30px' }} />
-                                            <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
+                                            <ViewIcon />
                                         </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
 
-                {/* Pagination Controls */}
-                {allInvoices.length > itemsPerPage && (
-                    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top invoice-pagination" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
-                        <div className="d-flex align-items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className="btn "
-                                style={{
-                                    backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
-                                    borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
-                                    color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
-                                    fontFamily: "BasisGrotesquePro",
-                                    fontSize: "14px",
-                                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                                    opacity: currentPage === 1 ? 0.5 : 1
-                                }}
-                            >
-                                Previous
-                            </button>
-                            
-                            <div className="d-flex align-items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                                    if (
-                                        page === 1 ||
-                                        page === totalPages ||
-                                        (page >= currentPage - 1 && page <= currentPage + 1)
-                                    ) {
-                                        return (
+                                        {!inv.isPaid && (
                                             <button
-                                                key={page}
-                                                onClick={() => setCurrentPage(page)}
-                                                className="btn "
+                                                className="btn"
                                                 style={{
-                                                    backgroundColor: currentPage === page ? '#3B82F6' : 'white',
-                                                    borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
-                                                    color: currentPage === page ? 'white' : '#6B7280',
-                                                    fontFamily: "BasisGrotesquePro",
-                                                    fontSize: "14px",
-                                                    minWidth: "36px"
+                                                    backgroundColor: '#F56D2D',
+                                                    color: '#FFFFFF',
+                                                    fontSize: '16px',
+                                                    padding: '8px 10px',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handlePayNowClick(inv);
                                                 }}
                                             >
-                                                {page}
+                                                <PayIcon style={{ fontSize: '30px' }} />
+                                                <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
                                             </button>
-                                        );
-                                    } else if (
-                                        page === currentPage - 2 ||
-                                        page === currentPage + 2
-                                    ) {
-                                        return (
-                                            <span key={page} className="px-2" style={{ color: '#6B7280', fontFamily: "BasisGrotesquePro" }}>
-                                                ...
-                                            </span>
-                                        );
-                                    }
-                                    return null;
-                                })}
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {/* Pagination Controls */}
+                    {allInvoices.length > itemsPerPage && (
+                        <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top invoice-pagination" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
+                            <div className="d-flex align-items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="btn "
+                                    style={{
+                                        backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
+                                        borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
+                                        color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
+                                        fontFamily: "BasisGrotesquePro",
+                                        fontSize: "14px",
+                                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                        opacity: currentPage === 1 ? 0.5 : 1
+                                    }}
+                                >
+                                    Previous
+                                </button>
+
+                                <div className="d-flex align-items-center gap-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                        if (
+                                            page === 1 ||
+                                            page === totalPages ||
+                                            (page >= currentPage - 1 && page <= currentPage + 1)
+                                        ) {
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className="btn "
+                                                    style={{
+                                                        backgroundColor: currentPage === page ? '#3B82F6' : 'white',
+                                                        borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
+                                                        color: currentPage === page ? 'white' : '#6B7280',
+                                                        fontFamily: "BasisGrotesquePro",
+                                                        fontSize: "14px",
+                                                        minWidth: "36px"
+                                                    }}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        } else if (
+                                            page === currentPage - 2 ||
+                                            page === currentPage + 2
+                                        ) {
+                                            return (
+                                                <span key={page} className="px-2" style={{ color: '#6B7280', fontFamily: "BasisGrotesquePro" }}>
+                                                    ...
+                                                </span>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="btn "
+                                    style={{
+                                        backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
+                                        borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
+                                        color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
+                                        fontFamily: "BasisGrotesquePro",
+                                        fontSize: "14px",
+                                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                        opacity: currentPage === totalPages ? 0.5 : 1
+                                    }}
+                                >
+                                    Next
+                                </button>
                             </div>
 
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                                className="btn "
-                                style={{
-                                    backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
-                                    borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
-                                    color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
-                                    fontFamily: "BasisGrotesquePro",
-                                    fontSize: "14px",
-                                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                                    opacity: currentPage === totalPages ? 0.5 : 1
-                                }}
-                            >
-                                Next
-                            </button>
+                            <div style={{ color: '#6B7280', fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+                                Showing {startIndex + 1}-{Math.min(endIndex, allInvoices.length)} of {allInvoices.length}
+                            </div>
                         </div>
-
-                        <div style={{ color: '#6B7280', fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
-                            Showing {startIndex + 1}-{Math.min(endIndex, allInvoices.length)} of {allInvoices.length}
-                        </div>
-                    </div>
-                )}
+                    )}
                 </>
             )}
 
@@ -634,11 +635,11 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                         <Form>
                             <Form.Group className="mb-2">
                                 <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro" }}>Payment Amount</Form.Label>
-                                <Form.Control 
-                                    size="sm" 
-                                    type="number" 
-                                    placeholder="$ 0" 
-                                    defaultValue={(selectedInvoice.remaining_amount || selectedInvoice.amount || 0).toFixed(2)} 
+                                <Form.Control
+                                    size="sm"
+                                    type="number"
+                                    placeholder="$ 0"
+                                    defaultValue={(selectedInvoice.remaining_amount || selectedInvoice.amount || 0).toFixed(2)}
                                 />
                             </Form.Group>
 
@@ -671,11 +672,11 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                     <Form.Group className="mb-2" style={{ width: '90px' }}>
                                         <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro" }}>CVV</Form.Label>
                                         <div style={{ position: "relative" }}>
-                                            <Form.Control 
-                                                size="sm" 
-                                                style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66", paddingRight: "30px" }} 
-                                                type={showCVV ? "text" : "password"} 
-                                                placeholder="123" 
+                                            <Form.Control
+                                                size="sm"
+                                                style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66", paddingRight: "30px" }}
+                                                type={showCVV ? "text" : "password"}
+                                                placeholder="123"
                                             />
                                             <button
                                                 type="button"

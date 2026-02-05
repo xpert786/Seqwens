@@ -1,6 +1,6 @@
 import { getApiBaseUrl, getFallbackApiBaseUrl, fetchWithCors } from './corsConfig';
 import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData } from './userUtils';
-import { getPathWithPrefix } from './urlUtils';
+import { getPathWithPrefix, getLoginUrl } from './urlUtils';
 
 // API Configuration
 const API_BASE_URL = getApiBaseUrl();
@@ -192,13 +192,13 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -1073,7 +1073,7 @@ export const dataIntakeAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = getPathWithPrefix('/login');
+            window.location.href = getLoginUrl();
             throw new Error('Session expired. Please login again.');
           }
 
@@ -1085,7 +1085,7 @@ export const dataIntakeAPI = {
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -1293,13 +1293,13 @@ export const profileAPI = {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -1573,13 +1573,13 @@ export const taxPreparerProfileAPI = {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -1629,6 +1629,14 @@ export const dashboardAPI = {
   // Get initial dashboard data
   getInitialDashboard: async () => {
     return await apiRequest('/taxpayer/initial-dashboard/', 'GET');
+  },
+  // Get onboarding status
+  getOnboardingStatus: async () => {
+    return await apiRequest('/taxpayer/onboarding-status/', 'GET');
+  },
+  // Update onboarding status
+  updateOnboardingStatus: async (completed) => {
+    return await apiRequest('/taxpayer/onboarding-status/', 'POST', { onboarding_completed: completed });
   },
   // Get taxpayer dashboard data
   getDashboard: async () => {
@@ -1834,13 +1842,13 @@ export const threadsAPI = {
 
           if (response.status === 401) {
             clearUserData();
-            window.location.href = getPathWithPrefix('/login');
+            window.location.href = getLoginUrl();
             throw new Error('Session expired. Please login again.');
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -1954,13 +1962,13 @@ export const threadsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -2742,6 +2750,34 @@ export const firmAdminDocumentsAPI = {
 
     const config = {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Delete document
+  // DELETE /firm/clients/:clientId/documents/:documentId/
+  deleteDocument: async (clientId, documentId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/clients/${clientId}/documents/${documentId}/`;
+
+    const config = {
+      method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -4491,13 +4527,13 @@ export const firmSignatureDocumentRequestsAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = getPathWithPrefix('/login');
+            window.location.href = getLoginUrl();
             throw new Error('Session expired. Please login again.');
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -4838,7 +4874,7 @@ export const taxPreparerFirmSharedAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = getPathWithPrefix('/login');
+            window.location.href = getLoginUrl();
             throw new Error('Session expired. Please login again.');
           }
 
@@ -4850,7 +4886,7 @@ export const taxPreparerFirmSharedAPI = {
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -5773,13 +5809,13 @@ export const taxPreparerThreadsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -6407,13 +6443,13 @@ export const documentsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -6457,13 +6493,13 @@ export const documentsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getPathWithPrefix('/login');
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -6788,11 +6824,12 @@ export const firmAdminMessagingAPI = {
   // GET /seqwens/api/firm/users/active/
   // Query params: search (string), role (string: 'client', 'staff', 'admin')
   getActiveUsers: async (params = {}) => {
-    const { search, role } = params;
+    const { search, role, exclude_existing_chats } = params;
     const queryParams = new URLSearchParams();
 
     if (search) queryParams.append('search', search);
     if (role) queryParams.append('role', role);
+    if (exclude_existing_chats) queryParams.append('exclude_existing_chats', 'true');
 
     const queryString = queryParams.toString();
     const url = `/firm/users/active/${queryString ? `?${queryString}` : ''}`;

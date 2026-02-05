@@ -37,29 +37,31 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
       // Extract server URL from API base URL
       // API base URL is typically: http://localhost:8000/seqwens/api
       // WebSocket URL should be: ws://localhost:8000/ws/notifications/?token=<token>
-      
+
       const apiBaseUrl = getApiBaseUrl();
       let wsServerUrl;
-      
+
       // Try to extract host and port from API base URL
       try {
         const apiUrl = new URL(apiBaseUrl);
         const host = apiUrl.hostname;
-        
+
         // Extract WebSocket server URL from API base URL
         // If API URL is http://168.231.121.7/seqwens/api, WebSocket should be ws://168.231.121.7
         if (host === '168.231.121.7') {
-          wsServerUrl = 'ws://168.231.121.7';
+          wsServerUrl = 'ws://168.231.121.7:8000';
         } else {
           // Use the same host for WebSocket
           wsServerUrl = `ws://${host}`;
+          // If the host is not localhost, it might need 8000 as well, 
+          // but we'll stick to the explicit IP fix for now as it matches the known configuration.
         }
       } catch (urlError) {
         // If URL parsing fails, use default
         console.warn('Failed to parse API base URL, using default WebSocket URL');
-        wsServerUrl = 'ws://168.231.121.7';
+        wsServerUrl = 'ws://168.231.121.7:8000';
       }
-      
+
       const wsUrl = `${wsServerUrl}/ws/notifications/?token=${token}`;
       return wsUrl;
     } catch (err) {
@@ -160,7 +162,7 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
         // if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
         //   reconnectAttemptsRef.current += 1;
         //   console.log(`🔄 Attempting to reconnect notification WebSocket (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
-          
+
         //   reconnectTimeoutRef.current = setTimeout(() => {
         //     connect();
         //   }, reconnectDelay);

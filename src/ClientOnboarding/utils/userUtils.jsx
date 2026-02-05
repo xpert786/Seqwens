@@ -5,6 +5,10 @@
  * @returns {boolean} True if user is new, false if existing
  */
 export const isNewUser = () => {
+  const userData = getUserData();
+  if (userData && typeof userData.onboarding_completed === 'boolean') {
+    return !userData.onboarding_completed;
+  }
   const userStatus = localStorage.getItem("userStatus"); // "new" or "existing"
   return userStatus === "new";
 };

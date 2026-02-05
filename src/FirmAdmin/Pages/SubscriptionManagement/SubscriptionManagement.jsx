@@ -601,7 +601,7 @@ const SubscriptionManagement = () => {
                                 <path d="M12 5.25H16.5V9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
 
-                            Upgrade Plan
+                            {currentPlan ? 'Change Plan' : 'Upgrade Plan'}
                         </button>
                     </div>
 

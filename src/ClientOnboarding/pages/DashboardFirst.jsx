@@ -39,16 +39,9 @@ export default function DashboardFirst() {
         const pct = apiData.profile_completion?.percentage;
 
         if (pct === 100) {
-          // Auto-transition to main dashboard if complete
-          import('../utils/userUtils').then(({ setUserStatus }) => {
-            setUserStatus("existing");
-            toast.success("Setup complete! Redirecting to your dashboard...", {
-              autoClose: 2000,
-              onClose: () => window.location.href = '/dashboard'
-            });
-            // Determine if we should wait for toast or just go
-            setTimeout(() => window.location.href = '/dashboard', 1500);
-          });
+          // We no longer auto-redirect even if 100% complete, 
+          // as per requirement "dont go to dashboard first even everything is fine"
+          console.log('Profile is 100% complete. User can now proceed to main dashboard.');
         }
 
       } catch (err) {
@@ -276,9 +269,35 @@ export default function DashboardFirst() {
           </div>
         </div>
 
-        <h5 className="mb-2 sm:mb-3 text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-medium font-[BasisGrotesquePro] pr-16 sm:pr-20">
-          Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
-        </h5>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-3">
+          <h5 className="text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-medium font-[BasisGrotesquePro]">
+            Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
+          </h5>
+          <button
+            onClick={async () => {
+              try {
+                await dashboardAPI.updateOnboardingStatus(true);
+                const { setUserStatus, getStorage, getUserData, setUserData } = await import('../utils/userUtils');
+
+                // Update local user data to reflect completion
+                const userData = getUserData();
+                if (userData) {
+                  userData.onboarding_completed = true;
+                  setUserData(userData);
+                }
+
+                setUserStatus("existing");
+                navigate('/dashboard');
+              } catch (e) {
+                console.error("Failed to update status", e);
+                navigate('/dashboard');
+              }
+            }}
+            className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg font-medium hover:bg-[#e05d20] transition-colors"
+          >
+            Proceed to Dashboard
+          </button>
+        </div>
         <p className="text-gray-600 text-base sm:text-lg font-[BasisGrotesquePro] mb-3 sm:mb-4">
           Let's get your tax dashboard set up. You're making great progress!
         </p>

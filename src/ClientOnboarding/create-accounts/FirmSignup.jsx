@@ -7,7 +7,7 @@ import FixedLayout from "../components/FixedLayout";
 import { PasswordStrengthBar } from "../components/icons";
 import { userAPI, validateEmail, validateFirmPhoneNumber, validatePassword, handleAPIError } from "../utils/apiUtils";
 import { setTokens } from "../utils/userUtils";
-import { getPathWithPrefix } from "../utils/urlUtils";
+import { getPathWithPrefix, getLoginUrl } from "../utils/urlUtils";
 
 const FirmSignup = () => {
   const navigate = useNavigate();
@@ -191,7 +191,7 @@ const FirmSignup = () => {
         // Store message and email in localStorage since we're using window.location.href
         localStorage.setItem('signupSuccessMessage', 'Account created successfully! Please sign in.');
         localStorage.setItem('signupEmail', signupData.email);
-        window.location.href = getPathWithPrefix('/login');
+        window.location.href = getLoginUrl();
       }
     } catch (error) {
       console.error('Firm signup error:', error);

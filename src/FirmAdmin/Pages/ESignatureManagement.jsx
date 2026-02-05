@@ -1549,13 +1549,17 @@ export default function ESignatureManagement() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-yellow-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.pending}</div>
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending</div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.completed}</div>
+              <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.signed}</div>
+              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Signed</div>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-green-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.completed}</div>
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Completed</div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">

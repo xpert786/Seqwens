@@ -33,7 +33,7 @@ import NotificationPanel from "../../ClientOnboarding/components/Notifications/N
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData, setTokens } from "../../ClientOnboarding/utils/userUtils";
-import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
+import { navigateToLogin, getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
 import { useSubscriptionStatus } from "../Context/SubscriptionStatusContext";
@@ -293,7 +293,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
             // Do NOT restore "last visited route" - always go to Super Admin home
             console.log('[IMPERSONATION_REVERT] Step 6: Forcing navigation to Super Admin dashboard');
             setTimeout(() => {
-                const targetUrl = '/seqwens-frontend/superadmin';
+                const targetUrl = getPathWithPrefix('/superadmin');
                 console.log('[IMPERSONATION_REVERT] Navigating to:', targetUrl);
                 window.location.href = targetUrl;
             }, 500);

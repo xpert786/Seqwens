@@ -115,15 +115,15 @@ const mapSessionResponseToViewModel = (session) => {
             const last = new Date(lastActivity);
             const now = new Date();
             const diffMs = now - last;
-            
+
             // If negative or zero, return "Just now"
             if (diffMs <= 0) return 'Just now';
-            
+
             const diffSecs = Math.floor(diffMs / 1000);
             const diffMins = Math.floor(diffSecs / 60);
             const diffHours = Math.floor(diffMins / 60);
             const diffDays = Math.floor(diffHours / 24);
-            
+
             if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h ago`;
             if (diffHours > 0) return `${diffHours}h ${diffMins % 60}m ago`;
             if (diffMins > 0) return `${diffMins}m ago`;
@@ -344,7 +344,7 @@ export default function SecurityCompliance() {
     const [isLoadingSessions, setIsLoadingSessions] = useState(false);
     const [sessionsError, setSessionsError] = useState('');
     const [sessionsSummary, setSessionsSummary] = useState(null);
-    
+
     // Blocked Accounts state
     const [blockedAccounts, setBlockedAccounts] = useState([]);
     const [blockedAccountsLoading, setBlockedAccountsLoading] = useState(false);
@@ -365,7 +365,7 @@ export default function SecurityCompliance() {
     const [blocking, setBlocking] = useState(false);
     const [blockDuration, setBlockDuration] = useState(24);
     const [blockReason, setBlockReason] = useState('');
-    
+
     // Geo Restrictions Management state
     const [geoLocationsList, setGeoLocationsList] = useState([]);
     const [geoRestrictionsList, setGeoRestrictionsList] = useState([]);
@@ -443,7 +443,7 @@ export default function SecurityCompliance() {
             document.body.style.position = 'fixed';
             document.body.style.top = `-${scrollY}px`;
             document.body.style.width = '100%';
-            
+
             return () => {
                 // Restore scroll position when modal closes
                 document.body.style.overflow = '';
@@ -465,7 +465,7 @@ export default function SecurityCompliance() {
             if (response && response.success && Array.isArray(response.data)) {
                 const mapped = response.data.map(mapSessionResponseToViewModel);
                 setActiveSessions(mapped);
-                
+
                 // Set summary data if available
                 if (response.summary) {
                     setSessionsSummary({
@@ -576,7 +576,7 @@ export default function SecurityCompliance() {
         try {
             setAuditLogSettingsLoading(true);
             const response = await securityAPI.getAuditLogSettings();
-            
+
             if (response && response.success && response.data) {
                 setAuditLogSettings({
                     enabled: response.data.enabled || false,
@@ -608,7 +608,7 @@ export default function SecurityCompliance() {
         try {
             setAuditLogSettingsSaving(true);
             const response = await securityAPI.updateAuditLogSettings(settings);
-            
+
             if (response && response.success) {
                 setAuditLogSettings(settings);
                 toast.success('Audit log settings updated successfully');
@@ -630,13 +630,13 @@ export default function SecurityCompliance() {
         try {
             setAuditLogsLoading(true);
             setAuditLogsError('');
-            
+
             const params = {
                 ...auditLogFilters,
                 page: auditLogsPagination.page,
                 page_size: auditLogsPagination.page_size
             };
-            
+
             // Remove empty filter values
             Object.keys(params).forEach(key => {
                 if (params[key] === '' || params[key] === null) {
@@ -645,7 +645,7 @@ export default function SecurityCompliance() {
             });
 
             const response = await securityAPI.getAuditLogs(params);
-            
+
             if (response && response.success) {
                 setAuditLogsData(response.data || []);
                 if (response.pagination) {
@@ -711,13 +711,13 @@ export default function SecurityCompliance() {
         try {
             setSecurityAlertsLoading(true);
             setSecurityAlertsError('');
-            
+
             const params = {
                 ...securityAlertsFilters,
                 page: securityAlertsPagination.page,
                 page_size: securityAlertsPagination.page_size
             };
-            
+
             // Remove empty filter values
             Object.keys(params).forEach(key => {
                 if (params[key] === '' || params[key] === null) {
@@ -726,7 +726,7 @@ export default function SecurityCompliance() {
             });
 
             const response = await securityAPI.getSecurityAlerts(params);
-            
+
             if (response && response.success) {
                 setSecurityAlerts(response.data || []);
                 if (response.statistics) {
@@ -800,144 +800,144 @@ export default function SecurityCompliance() {
         ];
 
         return (
-        <>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-                {calculatedMetrics.map((metric) => (
-                    <div key={metric.label} className="rounded-2xl bg-white p-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium tracking-wide text-[#6B7280]">{metric.label}</span>
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0F9FF] text-[#3AD6F2]">
-                                {metric.icon}
-                            </span>
+            <>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                    {calculatedMetrics.map((metric) => (
+                        <div key={metric.label} className="rounded-2xl bg-white p-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium tracking-wide text-[#6B7280]">{metric.label}</span>
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0F9FF] text-[#3AD6F2]">
+                                    {metric.icon}
+                                </span>
+                            </div>
+                            <p className="mt-4 text-xl font-semibold text-[#1F2937]">{metric.value}</p>
+                            <p className="mt-2 text-sm text-[#6B7280]">{metric.subtitle}</p>
                         </div>
-                        <p className="mt-4 text-xl font-semibold text-[#1F2937]">{metric.value}</p>
-                        <p className="mt-2 text-sm text-[#6B7280]">{metric.subtitle}</p>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
 
-            <div className="rounded-xl bg-white p-6">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h5 className="text-base font-semibold text-[#1F2937]">Security Alerts</h5>
-                        <p className="text-sm text-[#6B7280]">Recent security events requiring attention</p>
+                <div className="rounded-xl bg-white p-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h5 className="text-base font-semibold text-[#1F2937]">Security Alerts</h5>
+                            <p className="text-sm text-[#6B7280]">Recent security events requiring attention</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {securityAlertsError && (
+                                <span className="text-xs text-red-500">{securityAlertsError}</span>
+                            )}
+                            <button
+                                onClick={fetchSecurityAlerts}
+                                disabled={securityAlertsLoading}
+                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                {securityAlertsLoading ? 'Refreshing...' : 'Refresh'}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('Audits Logs')}
+                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                View Audit Logs
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {securityAlertsError && (
-                            <span className="text-xs text-red-500">{securityAlertsError}</span>
-                        )}
-                        <button 
-                            onClick={fetchSecurityAlerts}
-                            disabled={securityAlertsLoading}
-                            className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed" 
-                            style={{ borderRadius: '8px' }}
-                        >
-                            {securityAlertsLoading ? 'Refreshing...' : 'Refresh'}
-                        </button>
-                        <button 
-                            onClick={() => setActiveTab('Audits Logs')}
-                            className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]" 
-                            style={{ borderRadius: '8px' }}
-                        >
-                            View Audit Logs
-                        </button>
+                    <div className="mt-6 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
+                            <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
+                                <tr>
+                                    <th className="px-4 py-3">Alert ID</th>
+                                    <th className="px-4 py-3">Type</th>
+                                    <th className="px-4 py-3">Category</th>
+                                    <th className="px-4 py-3">Title</th>
+                                    <th className="px-4 py-3">Description</th>
+                                    <th className="px-4 py-3">Timestamp</th>
+                                    <th className="px-4 py-3">Status</th>
+                                    <th className="px-4 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#E5E7EB] bg-white">
+                                {securityAlertsLoading && securityAlerts.length === 0 && (
+                                    <tr>
+                                        <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
+                                            Loading security alerts...
+                                        </td>
+                                    </tr>
+                                )}
+                                {!securityAlertsLoading && securityAlerts.length === 0 && !securityAlertsError && (
+                                    <tr>
+                                        <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
+                                            No security alerts found.
+                                        </td>
+                                    </tr>
+                                )}
+                                {securityAlerts.map((alert) => (
+                                    <tr key={alert.id || alert.alert_id} className="hover:bg-[#F8FAFF]">
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.alert_id || `ALT-${alert.id}`}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${typeBadgeStyles[alert.alert_type] || 'border border-gray-300 text-gray-400'}`}>
+                                                {alert.alert_type_display || alert.alert_type || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{alert.alert_category_display || alert.alert_category || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.title || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{alert.description || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{alert.timestamp_formatted || alert.timestamp || 'N/A'}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeStyles[alert.status] || 'bg-gray-300 text-white'}`}>
+                                                {alert.status_display || alert.status || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {alert.status === 'active' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleUpdateSecurityAlert(alert.alert_id || alert.id, 'resolved', 'Resolved by admin')}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#22C55E] text-[#22C55E] transition-colors hover:bg-[#22C55E] hover:text-white"
+                                                            title="Resolve"
+                                                        >
+                                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M13.3332 4L5.99984 11.3333L2.6665 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleUpdateSecurityAlert(alert.alert_id || alert.id, 'dismissed', 'Dismissed by admin')}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#6B7280] text-[#6B7280] transition-colors hover:bg-[#6B7280] hover:text-white"
+                                                            title="Dismiss"
+                                                        >
+                                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <button
+                                                    onClick={() => {
+                                                        // View details - could open a modal
+                                                        console.log('View alert details:', alert);
+                                                    }}
+                                                    className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                                                    title="View Details"
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
+                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" strokeWidth="0.5" />
+                                                        <path d="M3.1665 8.9974C3.1665 8.9974 4.9165 4.91406 8.99984 4.91406C13.0832 4.91406 14.8332 8.9974 14.8332 8.9974C14.8332 8.9974 13.0832 13.0807 8.99984 13.0807C4.9165 13.0807 3.1665 8.9974 3.1665 8.9974Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                                        <path d="M9 10.75C9.9665 10.75 10.75 9.9665 10.75 9C10.75 8.0335 9.9665 7.25 9 7.25C8.0335 7.25 7.25 8.0335 7.25 9C7.25 9.9665 8.0335 10.75 9 10.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div className="mt-6 overflow-x-auto">
-                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                        <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
-                            <tr>
-                                <th className="px-4 py-3">Alert ID</th>
-                                <th className="px-4 py-3">Type</th>
-                                <th className="px-4 py-3">Category</th>
-                                <th className="px-4 py-3">Title</th>
-                                <th className="px-4 py-3">Description</th>
-                                <th className="px-4 py-3">Timestamp</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
-                            {securityAlertsLoading && securityAlerts.length === 0 && (
-                                <tr>
-                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
-                                        Loading security alerts...
-                                    </td>
-                                </tr>
-                            )}
-                            {!securityAlertsLoading && securityAlerts.length === 0 && !securityAlertsError && (
-                                <tr>
-                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
-                                        No security alerts found.
-                                    </td>
-                                </tr>
-                            )}
-                            {securityAlerts.map((alert) => (
-                                <tr key={alert.id || alert.alert_id} className="hover:bg-[#F8FAFF]">
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.alert_id || `ALT-${alert.id}`}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${typeBadgeStyles[alert.alert_type] || 'border border-gray-300 text-gray-400'}`}>
-                                            {alert.alert_type_display || alert.alert_type || 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{alert.alert_category_display || alert.alert_category || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.title || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{alert.description || 'N/A'}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{alert.timestamp_formatted || alert.timestamp || 'N/A'}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeStyles[alert.status] || 'bg-gray-300 text-white'}`}>
-                                            {alert.status_display || alert.status || 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {alert.status === 'active' && (
-                                                <>
-                                                    <button 
-                                                        onClick={() => handleUpdateSecurityAlert(alert.alert_id || alert.id, 'resolved', 'Resolved by admin')}
-                                                        className="flex h-8 w-8 items-center justify-center rounded-full border border-[#22C55E] text-[#22C55E] transition-colors hover:bg-[#22C55E] hover:text-white"
-                                                        title="Resolve"
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M13.3332 4L5.99984 11.3333L2.6665 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                        </svg>
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleUpdateSecurityAlert(alert.alert_id || alert.id, 'dismissed', 'Dismissed by admin')}
-                                                        className="flex h-8 w-8 items-center justify-center rounded-full border border-[#6B7280] text-[#6B7280] transition-colors hover:bg-[#6B7280] hover:text-white"
-                                                        title="Dismiss"
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                        </svg>
-                                                    </button>
-                                                </>
-                                            )}
-                                            <button 
-                                                onClick={() => {
-                                                    // View details - could open a modal
-                                                    console.log('View alert details:', alert);
-                                                }}
-                                                className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                                                title="View Details"
-                                            >
-                                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
-                                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" strokeWidth="0.5" />
-                                                    <path d="M3.1665 8.9974C3.1665 8.9974 4.9165 4.91406 8.99984 4.91406C13.0832 4.91406 14.8332 8.9974 14.8332 8.9974C14.8332 8.9974 13.0832 13.0807 8.99984 13.0807C4.9165 13.0807 3.1665 8.9974 3.1665 8.9974Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                    <path d="M9 10.75C9.9665 10.75 10.75 9.9665 10.75 9C10.75 8.0335 9.9665 7.25 9 7.25C8.0335 7.25 7.25 8.0335 7.25 9C7.25 9.9665 8.0335 10.75 9 10.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </>
-    );
+            </>
+        );
     };
 
     const renderActiveSessions = () => (
@@ -1013,80 +1013,80 @@ export default function SecurityCompliance() {
                     </div>
                 </div>
 
-            <div className="mt-6 overflow-x-auto">
-                <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                    <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
-                        <tr>
-                            <th className="px-4 py-3">User</th>
-                            <th className="px-4 py-3">Role / Type</th>
-                            <th className="px-4 py-3">Device</th>
-                            <th className="px-4 py-3">IP Address</th>
-                            <th className="px-4 py-3">Login Time</th>
-                            <th className="px-4 py-3">Last Activity</th>
-                            <th className="px-4 py-3">Time Since Last Activity</th>
-                            <th className="px-4 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E5E7EB] bg-white">
-                        {isLoadingSessions && activeSessions.length === 0 && (
+                <div className="mt-6 overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
+                        <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
                             <tr>
-                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
-                                    Loading active sessions...
-                                </td>
+                                <th className="px-4 py-3">User</th>
+                                <th className="px-4 py-3">Role / Type</th>
+                                <th className="px-4 py-3">Device</th>
+                                <th className="px-4 py-3">IP Address</th>
+                                <th className="px-4 py-3">Login Time</th>
+                                <th className="px-4 py-3">Last Activity</th>
+                                <th className="px-4 py-3">Time Since Last Activity</th>
+                                <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
-                        )}
-                        {!isLoadingSessions && activeSessions.length === 0 && !sessionsError && (
-                            <tr>
-                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
-                                    No active sessions found.
-                                </td>
-                            </tr>
-                        )}
-                        {activeSessions.map((session) => (
-                            <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
-                                <td className="px-4 py-3">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-semibold text-gray-600">{session.user}</span>
-                                        {session.email && (
-                                            <span className="text-xs text-[#6B7280]">{session.email}</span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex flex-col gap-1">
-                                        {session.role && (
-                                            <span className="text-xs font-medium text-[#4B5563]">{session.role}</span>
-                                        )}
-                                        {session.userType && (
-                                            <span className="inline-flex items-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-xs font-medium text-[#6B7280]">
-                                                {session.userType.replace('_', ' ')}
-                                            </span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{session.device}</td>
-                                <td className="px-4 py-3">
-                                    <span className="text-sm text-gray-600 font-mono">{session.ipAddress}</span>
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{session.loginAt}</td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{session.lastActivity}</td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{session.duration}</td>
-                                <td className="px-4 py-3 text-right">
-                                    <button
-                                        className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        style={{ borderRadius: '8px' }}
-                                        type="button"
-                                        onClick={() => handleTerminateSession(session.sessionKey)}
-                                        disabled={!session.sessionKey || isLoadingSessions}
-                                    >
-                                        Terminate
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
+                            {isLoadingSessions && activeSessions.length === 0 && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
+                                        Loading active sessions...
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoadingSessions && activeSessions.length === 0 && !sessionsError && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
+                                        No active sessions found.
+                                    </td>
+                                </tr>
+                            )}
+                            {activeSessions.map((session) => (
+                                <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
+                                    <td className="px-4 py-3">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-gray-600">{session.user}</span>
+                                            {session.email && (
+                                                <span className="text-xs text-[#6B7280]">{session.email}</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex flex-col gap-1">
+                                            {session.role && (
+                                                <span className="text-xs font-medium text-[#4B5563]">{session.role}</span>
+                                            )}
+                                            {session.userType && (
+                                                <span className="inline-flex items-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-xs font-medium text-[#6B7280]">
+                                                    {session.userType.replace('_', ' ')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{session.device}</td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-sm text-gray-600 font-mono">{session.ipAddress}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{session.loginAt}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{session.lastActivity}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{session.duration}</td>
+                                    <td className="px-4 py-3 text-right">
+                                        <button
+                                            className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            style={{ borderRadius: '8px' }}
+                                            type="button"
+                                            onClick={() => handleTerminateSession(session.sessionKey)}
+                                            disabled={!session.sessionKey || isLoadingSessions}
+                                        >
+                                            Terminate
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
@@ -1139,25 +1139,25 @@ export default function SecurityCompliance() {
                                 </div>
 
                                 {/* Session Timeout */}
-                                
+
                             </div>
 
                         </div>
 
                         {/* Toggle button */}
                         <div className="flex items-start sm:items-center pt-1">
-                                <button
-                                    type="button"
-                                    onClick={() => handleAuditLoggingToggle(!auditLoggingEnabled)}
-                                    disabled={auditLogSettingsSaving}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                            <button
+                                type="button"
+                                onClick={() => handleAuditLoggingToggle(!auditLoggingEnabled)}
+                                disabled={auditLogSettingsSaving}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     } ${auditLogSettingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
                                         }`}
-                                    />
-                                </button>
+                                />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1305,7 +1305,7 @@ export default function SecurityCompliance() {
                 )}
             </div>
 
-            
+
         </div>
     );
 
@@ -1500,7 +1500,7 @@ export default function SecurityCompliance() {
                 </div>
             </div>
 
-           
+
         </div>
     );
 
@@ -2197,9 +2197,9 @@ export default function SecurityCompliance() {
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
                     <FiShield className="text-[#3B4A66]" size={28} />
-                    <h2 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    <h3 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         Blocked Accounts
-                    </h2>
+                    </h3>
                 </div>
                 <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     View and manage blocked user accounts
@@ -2388,11 +2388,10 @@ export default function SecurityCompliance() {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => goToBlockedAccountsPage(pageNum)}
-                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                    blockedAccountsCurrentPage === pageNum
-                                                        ? 'bg-[#3AD6F2] text-white'
-                                                        : 'border border-[#E8F0FF] text-[#3B4A66] hover:bg-gray-50'
-                                                }`}
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${blockedAccountsCurrentPage === pageNum
+                                                    ? 'bg-[#3AD6F2] text-white'
+                                                    : 'border border-[#E8F0FF] text-[#3B4A66] hover:bg-gray-50'
+                                                    }`}
                                                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                                             >
                                                 {pageNum}
@@ -2616,9 +2615,9 @@ export default function SecurityCompliance() {
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                         <FiGlobe className="text-[#3B4A66]" size={28} />
-                        <h2 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        <h3 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                             Geo Restrictions
-                        </h2>
+                        </h3>
                     </div>
                     <button
                         onClick={() => handleOpenGeoRestrictionModal()}
@@ -2668,10 +2667,10 @@ export default function SecurityCompliance() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-lg font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            <h4 className="text-lg font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                                                 {region.region_name}
-                                            </h3>
-                                            
+                                            </h4>
+
                                         </div>
                                         {restriction ? (
                                             <div className="space-y-1">
@@ -2996,15 +2995,15 @@ export default function SecurityCompliance() {
 
     const renderReviewModal = () => {
         if (!isReviewModalOpen || !selectedCompliance) return null;
-    
+
         return (
             <div
                 className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50"
-                style={{ 
-                    position: 'fixed', 
-                    top: 0, 
-                    left: 0, 
-                    right: 0, 
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
                     bottom: 0,
                     zIndex: 9999
                 }}
@@ -3012,7 +3011,7 @@ export default function SecurityCompliance() {
             >
                 <div
                     className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col mx-auto"
-                    style={{ 
+                    style={{
                         maxWidth: '672px',
                         position: 'relative',
                         zIndex: 10000,
@@ -3041,7 +3040,7 @@ export default function SecurityCompliance() {
                             </svg>
                         </button>
                     </div>
-    
+
                     {/* Modal Body */}
                     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
                         {/* Checklist Section */}
@@ -3061,7 +3060,7 @@ export default function SecurityCompliance() {
                                 ))}
                             </div>
                         </div>
-    
+
                         {/* Notes Section */}
                         <div>
                             <p className="text-sm font-medium text-gray-600 mb-3">Notes</p>
@@ -3073,7 +3072,7 @@ export default function SecurityCompliance() {
                                 className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 resize-none"
                             />
                         </div>
-    
+
                         {/* Add Files Section */}
                         <div>
                             <p className="text-sm font-medium text-gray-600 mb-3">Add Files</p>
@@ -3105,18 +3104,17 @@ export default function SecurityCompliance() {
                             </div>
                         </div>
                     </div>
-    
+
                     {/* Modal Footer */}
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-4 sm:p-6 border-t border-[#E5E7EB] sticky bottom-0 bg-white rounded-b-xl">
                         {['Add Note', 'Send Reminder', 'Marked Resolved'].map((label) => (
                             <button
                                 key={label}
                                 onClick={() => setIsReviewModalOpen(false)}
-                                className={`flex-1 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors ${
-                                    label === 'Send Reminder'
-                                        ? 'bg-gray-300 text-[#4B5563] hover:bg-gray-400'
-                                        : 'bg-[#F56D2D] text-white hover:bg-orange-600'
-                                }`}
+                                className={`flex-1 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors ${label === 'Send Reminder'
+                                    ? 'bg-gray-300 text-[#4B5563] hover:bg-gray-400'
+                                    : 'bg-[#F56D2D] text-white hover:bg-orange-600'
+                                    }`}
                                 style={{ borderRadius: '8px' }}
                                 type="button"
                             >
@@ -3128,7 +3126,7 @@ export default function SecurityCompliance() {
             </div>
         );
     };
-    
+
     return (
         <div className="bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
             <div className="mx-auto flex w-full flex-col gap-6">

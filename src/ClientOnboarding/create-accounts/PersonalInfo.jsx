@@ -5,7 +5,7 @@ import { PasswordStrengthBar } from "../components/icons";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validatePassword, handleAPIError } from "../utils/apiUtils";
 import { setTokens } from "../utils/userUtils";
-import { getPathWithPrefix } from "../utils/urlUtils";
+import { getPathWithPrefix, getLoginUrl } from "../utils/urlUtils";
 
 const PersonalInfo = () => {
   const [password, setPassword] = useState("");
@@ -102,7 +102,7 @@ const PersonalInfo = () => {
       } catch (loginError) {
         console.error('Auto-login error:', loginError);
         // Fallback to manual login
-        window.location.href = getPathWithPrefix("/login");
+        window.location.href = getLoginUrl();
       }
     } catch (error) {
       console.error('Registration completion error:', error);

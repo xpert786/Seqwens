@@ -6,7 +6,7 @@ import { invitationAPI, clientInviteAPI, handleAPIError, validatePassword } from
 import { setTokens } from "../utils/userUtils";
 import { toast } from "react-toastify";
 import DataSharingModal from "../components/DataSharingModal";
-import { getPathWithPrefix } from "../utils/urlUtils";
+import { getPathWithPrefix, getLoginUrl } from "../utils/urlUtils";
 
 export default function AcceptInvite() {
     const navigate = useNavigate();
@@ -238,12 +238,12 @@ export default function AcceptInvite() {
                         response.data.tokens.refresh,
                         true
                     );
+                    localStorage.setItem("isLoggedIn", "true");
                 }
 
                 // Store user data if provided
                 if (response.data.user) {
                     const user = response.data.user;
-                    localStorage.setItem("isLoggedIn", "true");
                     localStorage.setItem("userData", JSON.stringify(user));
 
                     const roles = user.role; // Array of roles from API response
@@ -302,29 +302,32 @@ export default function AcceptInvite() {
 
                     // Redirect based on user type/role
                     let redirectPath = "/login"; // Default fallback
+                    const hasTokens = !!response.data.tokens;
 
-                    if (userType === 'super_admin') {
-                        redirectPath = "/superadmin";
-                    } else if (userType === 'support_admin' || userType === 'billing_admin') {
-                        redirectPath = "/superadmin";
-                    } else if (userType === 'admin' || userType === 'firm') {
-                        redirectPath = "/firmadmin";
-                    } else if (userType === 'tax_preparer') {
-                        redirectPath = "/taxdashboard";
-                    } else if (userType === 'client' || !userType) {
-                        // Client routing - check verification status
-                        const isEmailVerified = user.is_email_verified;
-                        const isPhoneVerified = user.is_phone_verified;
-                        const isCompleted = user.is_completed;
+                    if (hasTokens) {
+                        if (userType === 'super_admin') {
+                            redirectPath = "/superadmin";
+                        } else if (userType === 'support_admin' || userType === 'billing_admin') {
+                            redirectPath = "/superadmin";
+                        } else if (userType === 'admin' || userType === 'firm') {
+                            redirectPath = "/firmadmin";
+                        } else if (userType === 'tax_preparer') {
+                            redirectPath = "/taxdashboard";
+                        } else if (userType === 'client' || !userType) {
+                            // Client routing - check verification status
+                            const isEmailVerified = user.is_email_verified;
+                            const isPhoneVerified = user.is_phone_verified;
+                            const isCompleted = user.is_completed;
 
-                        if (!isEmailVerified && !isPhoneVerified) {
-                            redirectPath = "/two-auth";
-                        } else if (isCompleted) {
-                            // User is completed, go to main dashboard
-                            redirectPath = "/dashboard";
-                        } else {
-                            // User is not completed, stay on dashboard-first page
-                            redirectPath = "/dashboard-first";
+                            if (!isEmailVerified && !isPhoneVerified) {
+                                redirectPath = "/two-auth";
+                            } else if (isCompleted) {
+                                // User is completed, go to main dashboard
+                                redirectPath = "/dashboard";
+                            } else {
+                                // User is not completed, stay on dashboard-first page
+                                redirectPath = "/dashboard-first";
+                            }
                         }
                     }
 
@@ -332,7 +335,7 @@ export default function AcceptInvite() {
                     setTimeout(() => {
                         // Use window.location.href for login redirects to ensure full path
                         if (redirectPath === "/login") {
-                            window.location.href = getPathWithPrefix("/login");
+                            window.location.href = getLoginUrl();
                         } else {
                             navigate(redirectPath);
                         }
@@ -344,7 +347,7 @@ export default function AcceptInvite() {
                         autoClose: 3000,
                     });
                     setTimeout(() => {
-                        window.location.href = getPathWithPrefix("/login");
+                        window.location.href = getLoginUrl();
                     }, 2000);
                 }
             } else {
