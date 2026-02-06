@@ -26,7 +26,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
-import { LogoIcon } from "./icons";
+import { LogoIcon, DashIcon, FileIcon, IntakeIcon, BalanceIcon, MesIcon, MonthIcon, AccountIcon, HelpsIcon } from "./icons";
 import image from "../../assets/image.png";
 import NotificationPanel from "./Notifications/NotificationPanel";
 import AccountSwitcher from "./AccountSwitcher";
@@ -44,6 +44,57 @@ export default function Topbar({
     isSidebarOpen = true,
 }) {
     const { logoUrl } = useFirmPortalColors();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+    const searchRef = useRef(null);
+
+    const navigationItems = [
+        { title: "Dashboard", path: "/dashboard", icon: <DashIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "My Documents", path: "/documents", icon: <FileIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "Data Intake Form", path: "/dataintake", icon: <IntakeIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "Invoices & Billing", path: "/invoices", icon: <BalanceIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "Messages", path: "/messages", icon: <MesIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "Appointments", path: "/appointments", icon: <MonthIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "Account Settings", path: "/accounts", icon: <AccountIcon width={16} height={16} color="#3B4A66" /> },
+        { title: "Help & Support", path: "/helpers", icon: <HelpsIcon width={16} height={16} color="#3B4A66" /> },
+    ];
+
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim().length > 0) {
+            const filtered = navigationItems.filter(item =>
+                item.title.toLowerCase().includes(query.toLowerCase())
+            );
+            setFilteredSuggestions(filtered);
+            setShowSuggestions(true);
+        } else {
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleSuggestionClick = (path) => {
+        navigate(path);
+        setSearchQuery("");
+        setShowSuggestions(false);
+    };
+
+    // Close suggestions on click outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -403,9 +454,42 @@ export default function Topbar({
                         </button>
 
 
-                        <div className="topbar-search">
+                        <div className="topbar-search position-relative" ref={searchRef}>
                             <i className="bi bi-search"></i>
-                            <input type="text" className="form-control" placeholder="Search..." />
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                onFocus={() => {
+                                    if (searchQuery.trim().length > 0) setShowSuggestions(true);
+                                }}
+                            />
+                            {showSuggestions && filteredSuggestions.length > 0 && (
+                                <div className="position-absolute bg-white shadow-lg rounded-3 w-100 mt-2 overflow-hidden" style={{ zIndex: 1050, top: "100%", left: 0 }}>
+                                    <ul className="list-unstyled m-0 p-0">
+                                        {filteredSuggestions.map((item, index) => (
+                                            <li key={index}>
+                                                <button
+                                                    className="d-flex align-items-center gap-2 w-100 px-3 py-2 border-0 bg-transparent text-start text-dark hover:bg-light transition-colors"
+                                                    onClick={() => handleSuggestionClick(item.path)}
+                                                    style={{ cursor: "pointer" }}
+                                                    onMouseEnter={(e) => e.target.style.backgroundColor = "#f8f9fa"}
+                                                    onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+                                                >
+                                                    <span className="text-muted d-flex align-items-center">
+                                                        {item.icon}
+                                                    </span>
+                                                    <span style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                                                        {item.title}
+                                                    </span>
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
 
 

@@ -199,20 +199,26 @@ export default function DataIntakeForm({ targetClientId }) {
 
   // Handle Rental Property Save (Local State Only)
   const handleSaveRentalProperty = (rentalData) => {
-    // Basic validation
+    console.log("handleSaveRentalProperty called");
+    console.log("rentalData received:", rentalData);
 
-    // Create a complete rental object
+    // Determine ID: use ID from form data if present, otherwise fallback to editingId
+    const propertyId = rentalData.id || editingRentalPropertyId;
+
+    // Check if we are updating an existing item
+    const isUpdating = propertyId && rentalProperties.some(rp => rp.id === propertyId);
+
+    console.log(`Operation: ${isUpdating ? 'UPDATE' : 'CREATE'}, ID: ${propertyId}`);
+
     const newRentalProperty = {
-      id: editingRentalPropertyId || Date.now(), // Preserve ID if editing, else new
       ...rentalData,
-      // Ensure numeric fields are strings or numbers as needed, but the form likely handles this.
-      // We'll keep the data as is for now, matching the form state.
+      id: isUpdating ? propertyId : (Date.now()), // Ensure ID is set
     };
 
-    if (editingRentalPropertyId) {
+    if (isUpdating) {
       // Update existing
       setRentalProperties(prev => prev.map(rp =>
-        rp.id === editingRentalPropertyId ? newRentalProperty : rp
+        rp.id === propertyId ? newRentalProperty : rp
       ));
       toast.success('Rental property updated locally');
     } else {
@@ -261,14 +267,17 @@ export default function DataIntakeForm({ targetClientId }) {
   const handleEditRentalProperty = (rentalPropertyId) => {
     const rentalProperty = rentalProperties.find(rp => rp.id === rentalPropertyId);
     if (rentalProperty) {
-      setRentalData({
-        ...rentalProperty,
-        taxFormsReceived: Array.isArray(rentalProperty.taxFormsReceived)
-          ? rentalProperty.taxFormsReceived
-          : (rentalProperty.taxFormsReceived === 'none' ? [] : (rentalProperty.taxFormsReceived ? [rentalProperty.taxFormsReceived] : [])),
-      });
+      setRentalData(JSON.parse(JSON.stringify(rentalProperty)));
       setEditingRentalPropertyId(rentalPropertyId);
       setIsAddingRentalProperty(true);
+
+      // Scroll to form
+      setTimeout(() => {
+        const formElement = document.getElementById('rental-property-form-section');
+        if (formElement) {
+          formElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
   };
 
@@ -1438,13 +1447,11 @@ export default function DataIntakeForm({ targetClientId }) {
         errors['bankInfo.confirmAccountNumber'] = ['Account numbers do not match'];
       }
     }
-
     if (Object.keys(errors).length > 0) {
       console.log("Validation failed with errors:", errors);
     }
     return errors;
   };
-
   const handleSubmit = async () => {
     // Clear previous general errors
     setGeneralErrors([]);
@@ -1939,7 +1946,14 @@ export default function DataIntakeForm({ targetClientId }) {
   };
 
   const handlePersonalInfoChange = (field, value) => {
-    const formattedValue = field === 'ssn' ? formatSSN(value) : value;
+    let formattedValue = field === 'ssn' ? formatSSN(value) : value;
+
+    if (field === 'zip') {
+      // Only allow numbers and max 6 characters
+      if (!/^\d*$/.test(value)) return;
+      if (value.length > 6) return;
+      formattedValue = value;
+    }
 
     setPersonalInfo(prev => ({
       ...prev,
@@ -2033,7 +2047,7 @@ export default function DataIntakeForm({ targetClientId }) {
   };
 
   return (
-    <div className="data-intake-page row g-0 lg:px-4 md:px-2 px-1">
+    <div className="data-intake-page row g-0 px-3 px-md-4">
       <div className="align-items-center mb-3">
         <h5 className="mb-0 me-3" style={{
           color: "#3B4A66",
@@ -2502,6 +2516,7 @@ export default function DataIntakeForm({ targetClientId }) {
               placeholder="12345"
               value={personalInfo.zip}
               onChange={(e) => handlePersonalInfoChange('zip', e.target.value)}
+              maxLength={6}
               data-field="personalInfo.zip"
               ref={(el) => {
                 if (!fieldRefs.current['personalInfo.zip']) {
@@ -3778,7 +3793,9 @@ export default function DataIntakeForm({ targetClientId }) {
                 borderRadius: "8px",
                 padding: "16px",
                 marginTop: "8px"
-              }}>
+              }}
+                id="rental-property-form-section"
+              >
                 {/* Add Rental Property Button */}
                 {!isAddingRentalProperty && (
                   <div className="mb-3 text-center">
@@ -3914,6 +3931,7 @@ export default function DataIntakeForm({ targetClientId }) {
                 {/* Rental Property Form */}
                 {isAddingRentalProperty && (
                   <RentalPropertyForm
+                    key={editingRentalPropertyId || 'new'}
                     onSave={handleSaveRentalProperty}
                     onCancel={handleCancelRentalProperty}
                     initialData={editingRentalPropertyId ? rentalProperties.find(r => r.id === editingRentalPropertyId) : null}
@@ -4426,7 +4444,7 @@ export default function DataIntakeForm({ targetClientId }) {
             ) : (
               <div className="w-100 d-flex justify-content-center">
                 <button
-                  className="btn text-white"
+                  className="btn text-white d-flex align-items-center gap-2"
                   style={{
                     backgroundColor: '#F56D2D',
                     borderRadius: '8px',
@@ -4437,12 +4455,12 @@ export default function DataIntakeForm({ targetClientId }) {
                 >
                   {signatureLoading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                       Processing...
                     </>
                   ) : (
                     <>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                       </svg>
                       Sign Form
