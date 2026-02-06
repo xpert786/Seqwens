@@ -3874,8 +3874,8 @@ export const firmAdminEmailTemplatesAPI = {
     const headers = getHeaders();
     delete headers['Content-Type']; // Important: let browser set boundary
 
-    const url = EMAIL_TEMPLATE_BASE.startsWith('http') 
-      ? `${EMAIL_TEMPLATE_BASE}/assets/upload/` 
+    const url = EMAIL_TEMPLATE_BASE.startsWith('http')
+      ? `${EMAIL_TEMPLATE_BASE}/assets/upload/`
       : `${API_BASE_URL}${EMAIL_TEMPLATE_BASE}/assets/upload/`;
 
     const response = await fetchWithCors(url, {
@@ -6341,8 +6341,11 @@ export const customESignAPI = {
 
   // List signature requests
   // GET /api/taxpayer/signatures/requests/
-  listSignatureRequests: async () => {
-    return await apiRequest('/taxpayer/signatures/requests/', 'GET');
+  listSignatureRequests: async (filter = null) => {
+    const endpoint = filter
+      ? `/taxpayer/signatures/requests/?filter=${filter}`
+      : '/taxpayer/signatures/requests/';
+    return await apiRequest(endpoint, 'GET');
   },
 
   // Submit signature with coordinates

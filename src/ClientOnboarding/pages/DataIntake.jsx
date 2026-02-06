@@ -727,6 +727,9 @@ export default function DataIntakeForm({ targetClientId }) {
                 legalProfessional: rData.legal_professional || "0.00",
                 supplies: rData.supplies || "0.00",
                 otherExpenses: rData.other_expenses || [],
+                soldOrStoppedRenting: rData.sold_or_stopped_renting || 'no',
+                boughtMajorItems: rData.bought_major_items || 'no',
+                hasRentalLosses: rData.has_rental_losses || 'no',
                 isComplete: rData.is_complete || false
               }));
               setRentalProperties(rentalList);
@@ -998,7 +1001,10 @@ export default function DataIntakeForm({ targetClientId }) {
             'property_state': 'propertyState',
             'property_zip': 'propertyZip',
             'total_rent_received': 'totalRentReceived',
-            'days_rented_out': 'daysRentedOut'
+            'days_rented_out': 'daysRentedOut',
+            'sold_or_stopped_renting': 'soldOrStoppedRenting',
+            'bought_major_items': 'boughtMajorItems',
+            'has_rental_losses': 'hasRentalLosses'
           };
           return `rentalProperties.${index}.${rentalMap[lastPart] || lastPart}`;
         }
@@ -1225,6 +1231,47 @@ export default function DataIntakeForm({ targetClientId }) {
     console.log('Parsed field errors:', errors);
     setFieldErrors(errors);
     setGeneralErrors(generalErrorMessages);
+
+    // If there are errors in rental properties or businesses, open the dropdowns
+    const hasRentalErrors = Object.keys(errors).some(key => key.startsWith('rentalProperties.'));
+    const hasBusinessErrors = Object.keys(errors).some(key => key.startsWith('businesses.'));
+
+    if (hasRentalErrors || hasBusinessErrors) {
+      setOpenDropdowns(prev => ({
+        ...prev,
+        rentalProperty: hasRentalErrors ? true : prev.rentalProperty,
+        businessInfo: hasBusinessErrors ? true : prev.businessInfo
+      }));
+
+      // If there's a specific rental property or business with an error, open it for editing
+      if (hasRentalErrors && !isAddingRentalProperty) {
+        const errorKey = Object.keys(errors).find(key => key.startsWith('rentalProperties.'));
+        if (errorKey) {
+          const match = errorKey.match(/rentalProperties\.(\d+)\./);
+          if (match) {
+            const index = parseInt(match[1]);
+            if (rentalProperties[index]) {
+              setEditingRentalPropertyId(rentalProperties[index].id);
+              setIsAddingRentalProperty(true);
+            }
+          }
+        }
+      }
+
+      if (hasBusinessErrors && !isAddingBusiness) {
+        const errorKey = Object.keys(errors).find(key => key.startsWith('businesses.'));
+        if (errorKey) {
+          const match = errorKey.match(/businesses\.(\d+)\./);
+          if (match) {
+            const index = parseInt(match[1]);
+            if (businesses[index]) {
+              setEditingBusinessId(businesses[index].id);
+              setIsAddingBusiness(true);
+            }
+          }
+        }
+      }
+    }
 
     // Scroll to first error after a short delay to ensure DOM is updated
     setTimeout(() => {
@@ -1617,6 +1664,9 @@ export default function DataIntakeForm({ targetClientId }) {
           legal_professional: r.legalProfessional || "0.00",
           supplies: r.supplies || "0.00",
           other_expenses: r.otherExpenses || [],
+          sold_or_stopped_renting: r.soldOrStoppedRenting || 'no',
+          bought_major_items: r.boughtMajorItems || 'no',
+          has_rental_losses: r.hasRentalLosses || 'no',
           is_complete: r.isComplete || false
         }))
       };
@@ -3945,7 +3995,7 @@ export default function DataIntakeForm({ targetClientId }) {
                           }
                         });
                       }
-                      return { ...currentErrors, ...rentalFormErrors };
+                      return { ...currentErrors };
                     })()}
                   />
                 )}

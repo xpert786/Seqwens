@@ -167,7 +167,7 @@ Control animations on different screen sizes:
 // Section container
 <section data-aos="fade-up" data-aos-duration="1000">
   <div data-aos="zoom-in" data-aos-duration="800" data-aos-delay="200">
-    <h2>Feature Title</h2>
+    <h2>Feature Title</h3>
   </div>
   <p data-aos="fade-right" data-aos-duration="800" data-aos-delay="400">
     Feature description

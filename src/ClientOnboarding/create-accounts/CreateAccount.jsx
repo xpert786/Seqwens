@@ -78,7 +78,7 @@ const CreateAccount = () => {
     <FixedLayout>
       <div className="create-account-wrapper">
         <div className="create-account-container">
-          <h2 className="create-account-title">Create Your Account</h2>
+          <h3 className="create-account-title">Create Your Account</h3>
           <p className="create-account-subtitle">
             Start your return by creating a secure account.
           </p>

@@ -179,6 +179,7 @@ export default function ESignatureDashboard() {
   const calculateStatistics = (requests) => {
     const stats = {
       pending: 0,
+      inprogress: 0,
       completed: 0,
       declined: 0,
       expired: 0,
@@ -188,13 +189,17 @@ export default function ESignatureDashboard() {
     requests.forEach(request => {
       const status = request.status?.toLowerCase();
 
-      if (status === 'created' || status === 'processing' || status === 'ready' || status === 'in_progress') {
+      if (status === 'created' || status === 'pending' || status === 'processing' || status === 'ready') {
         stats.pending++;
-      } else if (status === 'signed') {
+      } else if (status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress') {
+        stats.inprogress++;
+      } else if (status === 'signed' || status === 'completed') {
         stats.completed++;
-      } else if (status === 'failed') {
+      } else if (status === 'failed' || status === 'cancelled') {
         stats.declined++;
       } else if (status === 'expired') {
+        stats.expired++;
+      } else if (isExpired(request)) {
         stats.expired++;
       }
     });
@@ -219,13 +224,15 @@ export default function ESignatureDashboard() {
 
         switch (statusFilter) {
           case 'pending':
-            return status === 'created' || status === 'processing' || status === 'ready' || status === 'in_progress';
+            return status === 'created' || status === 'pending' || status === 'processing' || status === 'ready';
+          case 'inprogress':
+            return status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress';
           case 'completed':
-            return status === 'signed';
+            return status === 'signed' || status === 'completed';
           case 'declined':
-            return status === 'failed';
+            return status === 'failed' || status === 'cancelled';
           case 'expired':
-            return status === 'expired';
+            return status === 'expired' || isExpired(request);
           default:
             return true;
         }
@@ -258,21 +265,32 @@ export default function ESignatureDashboard() {
 
     switch (status) {
       case 'created':
-        return { text: 'Created', className: 'status-badge-pending' };
+      case 'pending':
+        return { text: 'Pending', className: 'status-badge-pending' };
       case 'processing':
-        return { text: 'Processing', className: 'status-badge-pending' };
       case 'ready':
-        return { text: 'Ready', className: 'status-badge-pending' };
+        return { text: 'Processing', className: 'status-badge-pending' };
+      case 'sent':
+      case 'viewed':
+      case 'taxpayer_pending':
+      case 'preparer_pending':
+      case 'under_review':
       case 'in_progress':
         return { text: 'In Progress', className: 'status-badge-pending' };
       case 'signed':
-        return { text: 'Signed', className: 'status-badge-signed' };
+      case 'completed':
+        return { text: 'Completed', className: 'status-badge-signed' };
       case 'expired':
         return { text: 'Expired', className: 'status-badge-expired' };
       case 'failed':
-        return { text: 'Failed', className: 'status-badge-declined' };
+      case 'cancelled':
+        return { text: 'Declined', className: 'status-badge-declined' };
       default:
-        return { text: status || 'Unknown', className: 'status-badge-default' };
+        // Check if actually expired by date
+        if (isExpired(request)) {
+          return { text: 'Expired', className: 'status-badge-expired' };
+        }
+        return { text: status ? status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ') : 'Unknown', className: 'status-badge-default' };
     }
   };
 
@@ -1022,9 +1040,9 @@ export default function ESignatureDashboard() {
       {/* Header */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '8px', wordWrap: 'break-word' }}>
+          <h3 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '8px', wordWrap: 'break-word' }}>
             E-Signature Dashboard
-          </h2>
+          </h3>
           <p style={{ color: '#6B7280', fontSize: '14px', margin: 0, wordWrap: 'break-word' }}>
             Track and manage all e-signature requests across your clients
           </p>
@@ -1066,8 +1084,8 @@ export default function ESignatureDashboard() {
           <div className="stat-card stat-card-pending">
             <div className="d-flex align-items-center justify-content-between">
               <div>
-                <p className="stat-label">Pending Signatures</p>
-                <h3 className="stat-value">{statistics.pending}</h3>
+                <p className="stat-label">Pending / In Progress</p>
+                <h3 className="stat-value">{statistics.pending + statistics.inprogress}</h3>
               </div>
               <div className="stat-icon">
                 <FiClock size={32} />
@@ -1156,6 +1174,7 @@ export default function ESignatureDashboard() {
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
+            <option value="inprogress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="declined">Declined</option>
             <option value="expired">Expired</option>

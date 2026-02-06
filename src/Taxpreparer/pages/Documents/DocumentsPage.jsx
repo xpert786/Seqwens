@@ -809,17 +809,6 @@ export default function DocumentsPage() {
           </div>
           <div className="d-flex gap-2 documents-header-buttons">
             <button
-              className="btn btn-outline-primary d-flex align-items-center gap-2"
-              onClick={() => navigate('/taxdashboard/documents/manager')}
-              style={{
-                borderColor: "#00C0C6",
-                color: "#00C0C6"
-              }}
-            >
-              <i className="bi bi-folder2-open me-1"></i>
-              <span className="btn-text">Document Manager</span>
-            </button>
-            <button
               className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
               onClick={() => setShowUpload(true)}
             >

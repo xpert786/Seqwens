@@ -45,9 +45,9 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
       otherExpenses: [],
       otherExpenseDescription: '',
       otherExpenseAmount: '',
-      soldOrStoppedRenting: false,
-      boughtMajorItems: false,
-      hasRentalLosses: false,
+      soldOrStoppedRenting: 'no',
+      boughtMajorItems: 'no',
+      hasRentalLosses: 'no',
       isComplete: false,
       id: null
     };
@@ -70,6 +70,9 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
         ...initialData,
         taxFormsReceived: taxForms,
         otherExpenses: initialData.otherExpenses || [],
+        soldOrStoppedRenting: initialData.soldOrStoppedRenting || initialData.sold_or_stopped_renting || 'no',
+        boughtMajorItems: initialData.boughtMajorItems || initialData.bought_major_items || 'no',
+        hasRentalLosses: initialData.hasRentalLosses || initialData.has_rental_losses || 'no',
       };
     }
 
@@ -746,9 +749,71 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
         </button>
       </div>
 
-      {/* 8. Final Confirmation */}
+      {/* 6. Additional Property Information */}
+      <div className="mb-6" ref={(el) => fieldRefs.current['additional_info'] = el}>
+        <h5 style={sectionStyle}>6. Additional Property Information</h5>
+
+        <div className="row g-3 mb-3 mt-2">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Did you sell or stop renting this property during the year?
+            </label>
+            <div className="d-flex align-items-center gap-3 mt-1">
+              <SlideSwitch
+                value={formData.soldOrStoppedRenting === 'yes'}
+                onChange={(val) => handleChange('soldOrStoppedRenting', val ? 'yes' : 'no')}
+                ref={(el) => fieldRefs.current['soldOrStoppedRenting'] = el}
+              />
+              <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                {formData.soldOrStoppedRenting === 'yes' ? 'Yes' : 'No'}
+              </span>
+            </div>
+            {getFieldError('soldOrStoppedRenting') && <div className="text-danger small mt-1">{getFieldError('soldOrStoppedRenting')}</div>}
+          </div>
+        </div>
+
+        <div className="row g-3 mb-3">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Did you buy any major appliances or make major upgrades (over $2,500)?
+            </label>
+            <div className="d-flex align-items-center gap-3 mt-1">
+              <SlideSwitch
+                value={formData.boughtMajorItems === 'yes'}
+                onChange={(val) => handleChange('boughtMajorItems', val ? 'yes' : 'no')}
+                ref={(el) => fieldRefs.current['boughtMajorItems'] = el}
+              />
+              <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                {formData.boughtMajorItems === 'yes' ? 'Yes' : 'No'}
+              </span>
+            </div>
+            {getFieldError('boughtMajorItems') && <div className="text-danger small mt-1">{getFieldError('boughtMajorItems')}</div>}
+          </div>
+        </div>
+
+        <div className="row g-3 mb-3">
+          <div className="col-12">
+            <label className="form-label" style={labelStyle}>
+              Do you have rental losses from prior years that you haven't used?
+            </label>
+            <div className="d-flex align-items-center gap-3 mt-1">
+              <SlideSwitch
+                value={formData.hasRentalLosses === 'yes'}
+                onChange={(val) => handleChange('hasRentalLosses', val ? 'yes' : 'no')}
+                ref={(el) => fieldRefs.current['hasRentalLosses'] = el}
+              />
+              <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                {formData.hasRentalLosses === 'yes' ? 'Yes' : 'No'}
+              </span>
+            </div>
+            {getFieldError('hasRentalLosses') && <div className="text-danger small mt-1">{getFieldError('hasRentalLosses')}</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* 7. Final Confirmation */}
       <div className="mb-6">
-        <h5 style={sectionStyle}>Final Confirmation</h5>
+        <h5 style={sectionStyle}>7. Final Confirmation</h5>
 
         <div className="row g-3 mb-3">
           <div className="col-12">

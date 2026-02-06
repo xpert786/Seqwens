@@ -295,9 +295,9 @@ const TaxPreparerWorkflows = () => {
                         <span className="text-gray-500 text-sm font-medium">Last updated 2 days ago</span>
                       </div>
 
-                      <h2 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#3AD6F2] transition-colors">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#3AD6F2] transition-colors">
                         {workflow.template_name || 'Workflow'}
-                      </h2>
+                      </h3>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-12 mb-6">
                         <div className="flex items-center gap-3">

@@ -956,9 +956,9 @@ const SubscriptionManagement = () => {
                         >
                             {/* Header */}
                             <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
-                                <h2 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                                <h3 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                                     Cancel Subscription
-                                </h2>
+                                </h3>
                                 <button
                                     onClick={() => {
                                         if (!cancellingSubscription) {

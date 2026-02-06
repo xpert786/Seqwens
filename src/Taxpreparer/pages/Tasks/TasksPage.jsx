@@ -138,32 +138,32 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
       {/* Calendar Header */}
       <div className="d-flex justify-content-between align-items-center p-4 border-bottom">
         <div className="d-flex align-items-center gap-2">
-          <h2 className="m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
+          <h3 className="m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
             {monthNames[currentDate.getMonth()]}
-          </h2>
+          </h3>
           <span className="text-secondary" style={{ fontSize: '1.5rem', fontWeight: '300' }}>
             {currentDate.getFullYear()}
           </span>
         </div>
         <div className="d-flex align-items-center gap-2 bg-light rounded-pill p-1 border">
-          <button 
+          <button
             className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
             style={{ width: '32px', height: '32px' }}
             onClick={() => navigateMonth(-1)}
           >
             <FaChevronDown style={{ transform: 'rotate(90deg)', fontSize: '12px' }} />
           </button>
-          <button 
+          <button
             className="btn  btn-white text-dark fw-bold px-3 py-1 shadow-sm rounded-pill"
             style={{ fontSize: '0.85rem' }}
             onClick={() => setCurrentDate(new Date())}
           >
             Today
           </button>
-          <button 
-             className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
-             style={{ width: '32px', height: '32px' }}
-             onClick={() => navigateMonth(1)}
+          <button
+            className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
+            style={{ width: '32px', height: '32px' }}
+            onClick={() => navigateMonth(1)}
           >
             <FaChevronDown style={{ transform: 'rotate(-90deg)', fontSize: '12px' }} />
           </button>
@@ -171,10 +171,10 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
       </div>
 
       {/* Days Header */}
-      <div 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(7, 1fr)', 
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
           borderBottom: '1px solid #E5E7EB',
           backgroundColor: '#F9FAFB'
         }}
@@ -187,10 +187,10 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
       </div>
 
       {/* Calendar Grid */}
-      <div 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(7, 1fr)', 
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
           backgroundColor: '#E5E7EB', // Grid lines color
           gap: '1px', // Create grid lines
           borderBottom: '1px solid #E5E7EB'
@@ -227,16 +227,16 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
                   {d.day}
                 </div>
                 {dayTasks.length > 0 && (
-                   <span className="badge bg-light text-secondary border rounded-pill" style={{ fontSize: '0.65rem' }}>
-                     {dayTasks.length}
-                   </span>
+                  <span className="badge bg-light text-secondary border rounded-pill" style={{ fontSize: '0.65rem' }}>
+                    {dayTasks.length}
+                  </span>
                 )}
               </div>
 
               <div className="d-flex flex-column gap-1 overflow-auto custom-scrollbar" style={{ flex: 1, maxHeight: '90px' }}>
                 {dayTasks.map(t => {
-                   const style = getPriorityInfo(t.priority);
-                   return (
+                  const style = getPriorityInfo(t.priority);
+                  return (
                     <div
                       key={t.id}
                       className="px-2 py-1 rounded"

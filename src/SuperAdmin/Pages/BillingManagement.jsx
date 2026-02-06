@@ -19,9 +19,9 @@ export default function BillingManagement() {
     <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
+        <h3 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
           Billing Management
-        </h2>
+        </h3>
         <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
           Manage billing for firm growth - office locations and staff members
         </p>
@@ -35,11 +35,10 @@ export default function BillingManagement() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap font-[BasisGrotesquePro] ${
-                  activeTab === tab.id
-                    ? 'bg-[#3AD6F2] text-white'
-                    : 'bg-transparent text-gray-700 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap font-[BasisGrotesquePro] ${activeTab === tab.id
+                  ? 'bg-[#3AD6F2] text-white'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 {tab.label}
               </button>

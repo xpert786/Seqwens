@@ -49,7 +49,7 @@ const ReachOutModal = ({ isOpen, onClose }) => {
             <div className="bg-[#18181b] border border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-white">Reach Out</h2>
+                        <h3 className="text-2xl font-bold text-white">Reach Out</h3>
                         <button
                             onClick={onClose}
                             className="text-zinc-400 hover:text-white transition-colors"

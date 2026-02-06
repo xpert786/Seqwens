@@ -4,6 +4,7 @@ import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { setTokens, clearUserData } from '../../ClientOnboarding/utils/userUtils';
 import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 import '../style/FirmDetails.css';
 
@@ -59,6 +60,7 @@ export default function FirmDetails() {
     const [billingLoading, setBillingLoading] = useState(false);
     const [billingError, setBillingError] = useState(null);
     const [loggingIn, setLoggingIn] = useState(false);
+    const [enablingDevMode, setEnablingDevMode] = useState(false);
 
     const fetchFirmDetails = async () => {
         try {
@@ -505,6 +507,49 @@ export default function FirmDetails() {
         }
     };
 
+    const handleToggleDevMode = async () => {
+        if (!firmId || !firmDetails) return;
+
+        try {
+            setEnablingDevMode(true);
+
+            const newValue = !firmDetails.is_billing_bypass;
+            const response = await superAdminAPI.updateFirmSettings(firmId, {
+                is_billing_bypass: newValue
+            });
+
+            if (response.success && response.data) {
+                setFirmDetails(prev => ({
+                    ...prev,
+                    is_billing_bypass: newValue
+                }));
+
+                toast.success(
+                    newValue
+                        ? 'Developer Subscription enabled. Firm has full access for QA testing.'
+                        : 'Developer Subscription disabled.',
+                    {
+                        position: "top-right",
+                        autoClose: 3000,
+                    }
+                );
+
+                // Refresh firm details to get updated billing status
+                await fetchFirmDetails();
+            } else {
+                throw new Error(response.message || 'Failed to update developer subscription');
+            }
+        } catch (err) {
+            console.error('Error toggling developer subscription:', err);
+            toast.error(handleAPIError(err), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setEnablingDevMode(false);
+        }
+    };
+
     const quickActions = [
         {
             id: 'upgrade', label: 'Upgrade Plan', icon: (<svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -769,6 +814,8 @@ export default function FirmDetails() {
                                 error={billingError}
                                 onRetry={fetchFirmBillingOverview}
                                 firmDetails={firmDetails}
+                                handleToggleDevMode={handleToggleDevMode}
+                                enablingDevMode={enablingDevMode}
                                 fallbackSubscription={{
                                     plan: billingInfo.plan,
                                     monthly_cost_display: billingInfo.monthlyCost,
@@ -963,10 +1010,14 @@ const BillingOverviewTab = ({
     error,
     onRetry,
     firmDetails,
+    handleToggleDevMode,
+    enablingDevMode,
     fallbackQuickActions = [],
     fallbackHistory = [],
     fallbackSubscription = {}
 }) => {
+    const [showDevModeConfirm, setShowDevModeConfirm] = useState(false);
+
     if (loading) {
         return (
             <div className="flex min-h-[320px] items-center justify-center rounded-xl bg-white">
@@ -1086,6 +1137,66 @@ const BillingOverviewTab = ({
                             </span>
                         )}
                     </div>
+
+                    {/* Developer Subscription Button - Show only if no subscription plan or active bypass */}
+                    {(!firmDetails?.subscription_plan || firmDetails?.subscription_plan === 'None' || firmDetails?.is_billing_bypass) && (
+                        <div className="mb-6 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 dark:bg-blue-900/20 p-5">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
+                                            <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
+                                            <path d="M13.5 7L15.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                            <path d="M17 10H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        </svg>
+                                        <h6 className="text-base font-semibold text-blue-900 dark:text-blue-200">
+                                            {firmDetails?.is_billing_bypass ? 'Developer Subscription Active' : 'Enable QA Testing Mode'}
+                                        </h6>
+                                    </div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        {firmDetails?.is_billing_bypass
+                                            ? 'This firm has full access to all features for QA testing purposes. No subscription required.'
+                                            : 'Enable Developer Subscription to grant full access to all features for QA testing purposes.'}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDevModeConfirm(true)}
+                                    disabled={enablingDevMode}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${firmDetails?.is_billing_bypass
+                                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        }`}
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    {enablingDevMode ? (
+                                        <>
+                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent border-white"></div>
+                                            {firmDetails?.is_billing_bypass ? 'Disabling...' : 'Enabling...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {firmDetails?.is_billing_bypass ? (
+                                                <>
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Disable Developer Mode
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M10 3L8.5 6.5H5L8 9L7 12.5L10 10.5L13 12.5L12 9L15 6.5H11.5L10 3Z" fill="currentColor" />
+                                                    </svg>
+                                                    Enable Developer Subscription
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="divide-y divide-[#EFF4FF] rounded-xl border border-[#EFF4FF]">
                         {[{
@@ -1285,6 +1396,27 @@ const BillingOverviewTab = ({
                     </div>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={showDevModeConfirm}
+                onClose={() => setShowDevModeConfirm(false)}
+                onConfirm={() => {
+                    handleToggleDevMode?.();
+                    setShowDevModeConfirm(false);
+                }}
+                title={firmDetails?.is_billing_bypass ? "Disable Developer Subscription" : "Enable Developer Subscription"}
+                message={firmDetails?.is_billing_bypass
+                    ? "Are you sure you want to disable Developer Subscription? This firm will lose access to features unless they have a paid subscription."
+                    : "Are you sure you want to enable Developer Subscription? This firm will have full access to all features for QA testing."
+                }
+                confirmText={firmDetails?.is_billing_bypass ? "Disable" : "Enable"}
+                cancelText="Cancel"
+                confirmButtonStyle={{
+                    backgroundColor: firmDetails?.is_billing_bypass ? '#EF4444' : '#F56D2D',
+                    color: '#FFFFFF'
+                }}
+                isLoading={enablingDevMode}
+            />
         </div>
     );
 };

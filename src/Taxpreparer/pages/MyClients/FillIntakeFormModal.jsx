@@ -298,9 +298,9 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
                     legal_professional: r.legalProfessional,
                     supplies: r.supplies,
                     other_expenses: r.otherExpenses,
-                    sold_or_stopped_renting: r.soldOrStoppedRenting,
-                    bought_major_items: r.boughtMajorItems,
-                    has_rental_losses: r.hasRentalLosses,
+                    sold_or_stopped_renting: r.soldOrStoppedRenting || r.sold_or_stopped_renting || 'no',
+                    bought_major_items: r.boughtMajorItems || r.bought_major_items || 'no',
+                    has_rental_losses: r.hasRentalLosses || r.has_rental_losses || 'no',
                     is_complete: r.isComplete
                 }))
             };
@@ -378,6 +378,48 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
                 });
 
                 setErrors(flatErrors);
+
+                // Open relevant accordions if errors found
+                const hasRentalErrors = Object.keys(flatErrors).some(k => k.startsWith('rentalProperties.'));
+                const hasBusinessErrors = Object.keys(flatErrors).some(k => k.startsWith('businesses.'));
+                if (hasRentalErrors || hasBusinessErrors) {
+                    setOpenDropdowns(prev => ({
+                        ...prev,
+                        rentalProperty: hasRentalErrors ? true : prev.rentalProperty,
+                        businessInfo: hasBusinessErrors ? true : prev.businessInfo
+                    }));
+
+                    // If there's a specific rental property or business with an error, open it for editing
+                    if (hasRentalErrors && !isAddingRental) {
+                        const errorKey = Object.keys(flatErrors).find(key => key.startsWith('rentalProperties.'));
+                        if (errorKey) {
+                            const match = errorKey.match(/rentalProperties\.(\d+)\./);
+                            if (match) {
+                                const index = parseInt(match[1]);
+                                if (rentalProperties[index]) {
+                                    setRentalData(rentalProperties[index]);
+                                    setEditingRentalId(rentalProperties[index].id);
+                                    setIsAddingRental(true);
+                                }
+                            }
+                        }
+                    }
+
+                    if (hasBusinessErrors && !isAddingBusiness) {
+                        const errorKey = Object.keys(flatErrors).find(key => key.startsWith('businesses.'));
+                        if (errorKey) {
+                            const match = errorKey.match(/businesses\.(\d+)\./);
+                            if (match) {
+                                const index = parseInt(match[1]);
+                                if (businesses[index]) {
+                                    setBusinessData(businesses[index]);
+                                    setEditingBusinessId(businesses[index].id);
+                                    setIsAddingBusiness(true);
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Scroll to top to show errors
                 const modalBody = document.querySelector('.overflow-y-auto');

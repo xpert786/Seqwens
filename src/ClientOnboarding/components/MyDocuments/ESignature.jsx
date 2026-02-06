@@ -69,77 +69,77 @@ export default function ESignature() {
 
   // Fetch signature requests function
   const fetchSignatureRequests = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const options = {
-          filter: filter
-        };
-        
-        const response = await signatureRequestsAPI.getSignatureRequests(options);
-        
-        // Handle API response structure
-        let requests = [];
-        let counts = {
-          pending: 0,
-          sent: 0,
-          viewed: 0,
-          signed: 0,
-          completed: 0,
-          cancelled: 0
-        };
-        
-        if (response.success && response.data) {
-          if (response.data.requests && Array.isArray(response.data.requests)) {
-            requests = response.data.requests;
-          }
-          
-          // Update status counts from API if available
-          if (response.data.status_counts) {
-            counts = {
-              pending: response.data.pending_count || response.data.status_counts.pending || 0,
-              sent: response.data.sent_count || response.data.status_counts.sent || 0,
-              viewed: response.data.viewed_count || response.data.status_counts.viewed || 0,
-              signed: response.data.signed_count || response.data.status_counts.signed || 0,
-              completed: response.data.completed_count || response.data.status_counts.completed || 0,
-              cancelled: response.data.cancelled_count || response.data.status_counts.cancelled || 0
-            };
-          }
-        } else if (Array.isArray(response)) {
-          requests = response;
-        } else if (response.data && Array.isArray(response.data)) {
-          requests = response.data;
+    try {
+      setLoading(true);
+      setError(null);
+
+      const options = {
+        filter: filter
+      };
+
+      const response = await signatureRequestsAPI.getSignatureRequests(options);
+
+      // Handle API response structure
+      let requests = [];
+      let counts = {
+        pending: 0,
+        sent: 0,
+        viewed: 0,
+        signed: 0,
+        completed: 0,
+        cancelled: 0
+      };
+
+      if (response.success && response.data) {
+        if (response.data.requests && Array.isArray(response.data.requests)) {
+          requests = response.data.requests;
         }
-        
-        setSignatureRequests(requests);
-        setStatusCounts(counts);
-      } catch (err) {
-        console.error('Error fetching signature requests:', err);
-        setError(handleAPIError(err));
-        setSignatureRequests([]);
-        toast.error('Failed to load signature requests', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      } finally {
-        setLoading(false);
+
+        // Update status counts from API if available
+        if (response.data.status_counts) {
+          counts = {
+            pending: response.data.pending_count || response.data.status_counts.pending || 0,
+            sent: response.data.sent_count || response.data.status_counts.sent || 0,
+            viewed: response.data.viewed_count || response.data.status_counts.viewed || 0,
+            signed: response.data.signed_count || response.data.status_counts.signed || 0,
+            completed: response.data.completed_count || response.data.status_counts.completed || 0,
+            cancelled: response.data.cancelled_count || response.data.status_counts.cancelled || 0
+          };
+        }
+      } else if (Array.isArray(response)) {
+        requests = response;
+      } else if (response.data && Array.isArray(response.data)) {
+        requests = response.data;
       }
-    };
+
+      setSignatureRequests(requests);
+      setStatusCounts(counts);
+    } catch (err) {
+      console.error('Error fetching signature requests:', err);
+      setError(handleAPIError(err));
+      setSignatureRequests([]);
+      toast.error('Failed to load signature requests', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Check signature fields for a document
   const checkSignatureFieldsForDocument = async (esignDocumentId) => {
     if (!esignDocumentId) return;
-    
+
     // Set loading state
     setSignatureFieldsStatus(prev => ({
       ...prev,
       [esignDocumentId]: { ...prev[esignDocumentId], loading: true }
     }));
-    
+
     try {
       const response = await signatureRequestsAPI.checkSignatureFields(esignDocumentId, false);
-      
+
       if (response.success) {
         setSignatureFieldsStatus(prev => ({
           ...prev,
@@ -151,7 +151,7 @@ export default function ESignature() {
             loading: false
           }
         }));
-        
+
         if (response.regenerated) {
           toast.success(`Successfully extracted ${response.total_fields} signature field(s)`, {
             position: "top-right",
@@ -190,16 +190,16 @@ export default function ESignature() {
   // Regenerate signature fields
   const regenerateSignatureFields = async (esignDocumentId) => {
     if (!esignDocumentId) return;
-    
+
     // Set regenerating state for this document
     setSignatureFieldsStatus(prev => ({
       ...prev,
       [esignDocumentId]: { ...prev[esignDocumentId], regenerating: true, loading: true }
     }));
-    
+
     try {
       const response = await signatureRequestsAPI.checkSignatureFields(esignDocumentId, true);
-      
+
       if (response.success) {
         setSignatureFieldsStatus(prev => ({
           ...prev,
@@ -212,7 +212,7 @@ export default function ESignature() {
             regenerating: false
           }
         }));
-        
+
         toast.success(`Successfully regenerated ${response.total_fields} signature field(s)`, {
           position: "top-right",
           autoClose: 3000,
@@ -279,12 +279,12 @@ export default function ESignature() {
         awaiting: statusCounts.sent + statusCounts.viewed
       };
     }
-    
+
     // Fallback: calculate from current filtered requests
     const pending = signatureRequests.filter(req => req.status === 'pending').length;
     const completed = signatureRequests.filter(req => req.status === 'completed' || req.status === 'signed').length;
     const awaiting = signatureRequests.filter(req => req.status === 'sent' || req.status === 'viewed').length;
-    
+
     return {
       pending: pending,
       completed: completed,
@@ -430,7 +430,7 @@ export default function ESignature() {
               Documents requiring your electronic signature
             </p>
           </div>
-          
+
           {/* Filter Buttons */}
           <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0">
             <button
@@ -486,6 +486,40 @@ export default function ESignature() {
             </button>
             <button
               onClick={() => {
+                setFilter('completed');
+              }}
+              className="btn "
+              style={{
+                backgroundColor: filter === 'completed' ? "#00C0C6" : "#fff",
+                color: filter === 'completed' ? "#fff" : "#3B4A66",
+                border: "1px solid #E8F0FF",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "500",
+                padding: "6px 12px"
+              }}
+            >
+              Completed
+            </button>
+            <button
+              onClick={() => {
+                setFilter('declined');
+              }}
+              className="btn "
+              style={{
+                backgroundColor: filter === 'declined' ? "#00C0C6" : "#fff",
+                color: filter === 'declined' ? "#fff" : "#3B4A66",
+                border: "1px solid #E8F0FF",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "500",
+                padding: "6px 12px"
+              }}
+            >
+              Declined
+            </button>
+            <button
+              onClick={() => {
                 setFilter('expired');
               }}
               className="btn "
@@ -529,184 +563,184 @@ export default function ESignature() {
               const statusColors = getStatusBadgeColor(request.status);
               const originalIndex = startIndex + index;
               const selectedRequest = signatureRequests[selectedIndex];
-              
+
               return (
                 <div
                   key={request.id || originalIndex}
                   onClick={() => setSelectedIndex(originalIndex)}
-                className="p-3 rounded  d-flex justify-content-between align-items-center flex-wrap mb-3 cursor-pointer"
-                style={{
-                  backgroundColor: selectedIndex === originalIndex ? "#FFF4E6" : "#fff",
-                  border: selectedIndex === originalIndex ? "1px solid #F49C2D" : "1px solid #eee",
-                  transition: "background-color 0.2s ease, border-color 0.2s ease",
-                }}
-              >
-                <div className="d-flex align-items-start gap-3 flex-grow-1">
-                  <span className="mydocs-icon">
-                    <FileIcon />
-                  </span>
+                  className="p-3 rounded  d-flex justify-content-between align-items-center flex-wrap mb-3 cursor-pointer"
+                  style={{
+                    backgroundColor: selectedIndex === originalIndex ? "#FFF4E6" : "#fff",
+                    border: selectedIndex === originalIndex ? "1px solid #F49C2D" : "1px solid #eee",
+                    transition: "background-color 0.2s ease, border-color 0.2s ease",
+                  }}
+                >
+                  <div className="d-flex align-items-start gap-3 flex-grow-1">
+                    <span className="mydocs-icon">
+                      <FileIcon />
+                    </span>
 
-                  <div>
-                    <div className="d-flex align-items-center gap-2 mb-1">
-                      <div className="fw-semibold">{request.title || request.document_name || 'Signature Request'}</div>
-                      {(request.task_info?.priority || request.priority) && (() => {
-                        const priority = request.task_info?.priority || request.priority;
-                        const priorityColors = getPriorityBadgeColor(priority);
-                        return priorityColors ? (
-                          <span
-                            className="d-inline-block px-2 py-1 rounded"
-                            style={{
-                              backgroundColor: priorityColors.bg,
-                              color: priorityColors.color,
-                              fontSize: "10px",
-                              fontWeight: "700",
-                              textTransform: "uppercase",
-                              lineHeight: "1",
-                              height: "20px",
-                              display: "inline-flex",
-                              alignItems: "center"
-                            }}
-                          >
-                            {priority}
-                          </span>
-                        ) : null;
-                      })()}
-                    </div>
-                    {request.description && (
-                      <div className="small text-muted mb-1">{request.description}</div>
-                    )}
-                    {request.spouse_sign === true && (
-                      <div className="small mb-1" style={{ color: '#F49C2D', fontWeight: '500' }}>
-                        ⚠️ Spouse signature also required
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <div className="fw-semibold">{request.title || request.document_name || 'Signature Request'}</div>
+                        {(request.task_info?.priority || request.priority) && (() => {
+                          const priority = request.task_info?.priority || request.priority;
+                          const priorityColors = getPriorityBadgeColor(priority);
+                          return priorityColors ? (
+                            <span
+                              className="d-inline-block px-2 py-1 rounded"
+                              style={{
+                                backgroundColor: priorityColors.bg,
+                                color: priorityColors.color,
+                                fontSize: "10px",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                lineHeight: "1",
+                                height: "20px",
+                                display: "inline-flex",
+                                alignItems: "center"
+                              }}
+                            >
+                              {priority}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
-                    )}
-                    <div className="small text-muted">
-                      {request.created_at && `Created on ${formatDate(request.created_at)}`}
-                      {request.requested_by_name && ` · Requested by ${request.requested_by_name}`}
-                      {request.expires_at && ` · Expires ${formatDate(request.expires_at)}`}
-                    </div>
-                    
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <span
-                        className="d-inline-block px-3 py-1 rounded-pill"
-                        style={{
-                          backgroundColor: statusColors.bg,
-                          color: statusColors.color,
-                          fontSize: "12px",
-                          fontWeight: "500",
-                          border: `1px solid ${statusColors.border}`
-                        }}
-                      >
-                        {request.status_display || getStatusDisplay(request.status)}
-                      </span>
+                      {request.description && (
+                        <div className="small text-muted mb-1">{request.description}</div>
+                      )}
+                      {request.spouse_sign === true && (
+                        <div className="small mb-1" style={{ color: '#F49C2D', fontWeight: '500' }}>
+                          ⚠️ Spouse signature also required
+                        </div>
+                      )}
+                      <div className="small text-muted">
+                        {request.created_at && `Created on ${formatDate(request.created_at)}`}
+                        {request.requested_by_name && ` · Requested by ${request.requested_by_name}`}
+                        {request.expires_at && ` · Expires ${formatDate(request.expires_at)}`}
+                      </div>
+
+                      <div className="d-flex align-items-center gap-2 mt-2">
+                        <span
+                          className="d-inline-block px-3 py-1 rounded-pill"
+                          style={{
+                            backgroundColor: statusColors.bg,
+                            color: statusColors.color,
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            border: `1px solid ${statusColors.border}`
+                          }}
+                        >
+                          {request.status_display || getStatusDisplay(request.status)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="d-flex gap-4 mt-3 mt-md-0">
-                  {request.document_url && (
-                    <>
-                      <button
-                        className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          setSelectedIndex(originalIndex);
-                          
-                          // Check signature fields when opening preview
-                          const esignDocId = request.id || request.esign_id || request.document;
-                          if (esignDocId) {
-                            await checkSignatureFieldsForDocument(esignDocId);
+                  <div className="d-flex gap-4 mt-3 mt-md-0">
+                    {request.document_url && (
+                      <>
+                        <button
+                          className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setSelectedIndex(originalIndex);
+
+                            // Check signature fields when opening preview
+                            const esignDocId = request.id || request.esign_id || request.document;
+                            if (esignDocId) {
+                              await checkSignatureFieldsForDocument(esignDocId);
+                            }
+
+                            setShowPreviewModal(true);
+                          }}
+                        >
+                          <FaEye size={14} className="icon-eye" />
+                          Preview
+                        </button>
+
+                        {/* Check if both taxpayer and spouse have signed */}
+                        {(() => {
+                          const bothSigned = request.taxpayer_signed === true && request.spouse_signed === true;
+
+                          // If both have signed, show Preview Annotated PDF button (if annotated_pdf_url exists)
+                          if (bothSigned && request.annotated_pdf_url) {
+                            return (
+                              <button
+                                className="btn d-flex align-items-center gap-2 rounded"
+                                style={{
+                                  backgroundColor: "#10B981",
+                                  color: "#fff",
+                                  border: "none",
+                                  fontSize: "12px",
+                                  fontWeight: "500"
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedIndex(originalIndex);
+                                  // Open preview modal with annotated PDF
+                                  setShowPreviewModal(true);
+                                }}
+                                title="Preview Annotated PDF"
+                              >
+                                <FaEye size={14} />
+                                Preview Annotated PDF
+                              </button>
+                            );
                           }
-                          
-                          setShowPreviewModal(true);
-                        }}
-                      >
-                        <FaEye size={14} className="icon-eye" />
-                        Preview
-                      </button>
-                      
-                      {/* Check if both taxpayer and spouse have signed */}
-                      {(() => {
-                        const bothSigned = request.taxpayer_signed === true && request.spouse_signed === true;
-                        
-                        // If both have signed, show Preview Annotated PDF button (if annotated_pdf_url exists)
-                        if (bothSigned && request.annotated_pdf_url) {
-                          return (
-                            <button
-                              className="btn d-flex align-items-center gap-2 rounded"
-                              style={{
-                                backgroundColor: "#10B981",
-                                color: "#fff",
-                                border: "none",
-                                fontSize: "12px",
-                                fontWeight: "500"
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedIndex(originalIndex);
-                                // Open preview modal with annotated PDF
-                                setShowPreviewModal(true);
-                              }}
-                              title="Preview Annotated PDF"
-                            >
-                              <FaEye size={14} />
-                              Preview Annotated PDF
-                            </button>
-                          );
-                        }
-                        
-                        // If both haven't signed and status is not "processing", show Annotate PDF button
-                        if (!bothSigned && request.status !== 'processing') {
-                          return (
-                            <button
-                              className="btn d-flex align-items-center gap-2 rounded"
-                              style={{
-                                backgroundColor: "#00C0C6",
-                                color: "#fff",
-                                border: "none",
-                                fontSize: "12px",
-                                fontWeight: "500"
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedIndex(originalIndex);
-                                // Use annotated_pdf_url if available, otherwise use document_url
-                                const pdfUrl = request.annotated_pdf_url || request.document_url;
-                                setSelectedDocumentForAnnotation({
-                                  url: pdfUrl,
-                                  name: request.document_name || request.title || 'Document',
-                                  id: request.id || request.esign_id,  // E-signature request ID
-                                  document_id: request.document  // Actual document ID for backend
-                                });
-                                console.log('📄 Opening annotation modal for:', {
-                                  esign_request_id: request.id,
-                                  document_id: request.document,
-                                  document_name: request.document_name,
-                                  using_annotated_pdf: !!request.annotated_pdf_url,
-                                  pdf_url: pdfUrl
-                                });
-                                setShowAnnotationModal(true);
-                              }}
-                              title="Open PDF Annotation Tool"
-                            >
-                              <FiPenTool size={14} />
-                              Annotate PDF
-                            </button>
-                          );
-                        }
-                        
-                        return null;
-                      })()}
-                    </>
-                  )}
 
-                 
+                          // If both haven't signed and status is not "processing", show Annotate PDF button
+                          if (!bothSigned && request.status !== 'processing') {
+                            return (
+                              <button
+                                className="btn d-flex align-items-center gap-2 rounded"
+                                style={{
+                                  backgroundColor: "#00C0C6",
+                                  color: "#fff",
+                                  border: "none",
+                                  fontSize: "12px",
+                                  fontWeight: "500"
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedIndex(originalIndex);
+                                  // Use annotated_pdf_url if available, otherwise use document_url
+                                  const pdfUrl = request.annotated_pdf_url || request.document_url;
+                                  setSelectedDocumentForAnnotation({
+                                    url: pdfUrl,
+                                    name: request.document_name || request.title || 'Document',
+                                    id: request.id || request.esign_id,  // E-signature request ID
+                                    document_id: request.document  // Actual document ID for backend
+                                  });
+                                  console.log('📄 Opening annotation modal for:', {
+                                    esign_request_id: request.id,
+                                    document_id: request.document,
+                                    document_name: request.document_name,
+                                    using_annotated_pdf: !!request.annotated_pdf_url,
+                                    pdf_url: pdfUrl
+                                  });
+                                  setShowAnnotationModal(true);
+                                }}
+                                title="Open PDF Annotation Tool"
+                              >
+                                <FiPenTool size={14} />
+                                Annotate PDF
+                              </button>
+                            );
+                          }
+
+                          return null;
+                        })()}
+                      </>
+                    )}
 
 
-                  
+
+
+
+                  </div>
                 </div>
-              </div>
-            );
+              );
             })}
             {signatureRequests.length > itemsPerPage && (
               <Pagination
@@ -784,8 +818,8 @@ export default function ESignature() {
                       <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
                         {selectedRequest.client_name || '—'}
                       </div>
-                      </div>
-                      <div>
+                    </div>
+                    <div>
                       <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
                         Requested By
                       </div>
@@ -800,28 +834,28 @@ export default function ESignature() {
                     <div>
                       <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
                         Status
-                </div>
+                      </div>
                       <span className="esign-file-badge">
                         {selectedRequest.status_display || selectedRequest.status || '—'}
-                  </span>
-                </div>
+                      </span>
+                    </div>
                     <div>
                       <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
                         Created
                       </div>
                       <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#374151' }}>
                         {selectedRequest.created_at ? formatDate(selectedRequest.created_at) : '—'}
-            </div>
-              </div>
-              <div>
+                      </div>
+                    </div>
+                    <div>
                       <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
                         Due Date
                       </div>
                       <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#374151' }}>
                         {taskInfo.due_date ? formatDate(taskInfo.due_date) : '—'}
-                </div>
-              </div>
-            </div>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Description */}
                   {selectedRequest.description && (
@@ -843,8 +877,8 @@ export default function ESignature() {
               <button className="esign-btn-cancel" onClick={() => setShowModal(false)}>
                 Cancel
               </button>
-              <button 
-                className="esign-btn-proceed" 
+              <button
+                className="esign-btn-proceed"
                 onClick={async () => {
                   try {
                     const selectedRequest = selectedIndex !== null ? signatureRequests[selectedIndex] : null;
@@ -881,7 +915,7 @@ export default function ESignature() {
             setShowSignModal(false);
             setSelectedIndex(null);
           }}
-          pages={ <PDFViewer
+          pages={<PDFViewer
             pdfUrl={signatureRequests[selectedIndex]?.document_url}
             height="70vh"
             showThumbnails={true}
@@ -926,7 +960,7 @@ export default function ESignature() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
-          {selectedIndex !== null && signatureRequests[selectedIndex] ? ( 
+          {selectedIndex !== null && signatureRequests[selectedIndex] ? (
             <>
               {(() => {
                 const request = signatureRequests[selectedIndex];
@@ -934,7 +968,7 @@ export default function ESignature() {
                 const pdfUrl = (request.taxpayer_signed === true && request.spouse_signed === true && request.annotated_pdf_url)
                   ? request.annotated_pdf_url
                   : request.document_url;
-                
+
                 return pdfUrl ? (
                   <PDFViewer
                     pdfUrl={pdfUrl}
@@ -950,7 +984,7 @@ export default function ESignature() {
                 );
               })()}
               {/* Signature Fields Status */}
-              
+
             </>
           ) : (
             <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
@@ -986,16 +1020,16 @@ export default function ESignature() {
           documentName={selectedDocumentForAnnotation.name}
           requestId={selectedDocumentForAnnotation.id}
           spouseSignRequired={(() => {
-            const request = signatureRequests.find(req => 
-              req.id === selectedDocumentForAnnotation.id || 
+            const request = signatureRequests.find(req =>
+              req.id === selectedDocumentForAnnotation.id ||
               req.esign_id === selectedDocumentForAnnotation.id ||
               req.document === selectedDocumentForAnnotation.document_id
             );
             return request?.spouse_sign === true;
           })()}
           spouseSigned={(() => {
-            const request = signatureRequests.find(req => 
-              req.id === selectedDocumentForAnnotation.id || 
+            const request = signatureRequests.find(req =>
+              req.id === selectedDocumentForAnnotation.id ||
               req.esign_id === selectedDocumentForAnnotation.id ||
               req.document === selectedDocumentForAnnotation.document_id
             );
@@ -1038,11 +1072,11 @@ export default function ESignature() {
                   position: 'top-right',
                   autoClose: 5000
                 });
-                
+
                 // Close the annotation modal
                 setShowAnnotationModal(false);
                 setSelectedDocumentForAnnotation(null);
-                
+
                 // Refresh signature requests
                 setTimeout(() => {
                   fetchSignatureRequests();
@@ -1082,7 +1116,7 @@ export default function ESignature() {
               };
 
               const processedData = prepareAnnotationDataForPython(annotationData.annotations, canvasInfo);
-              
+
               // Send to backend
               const response = await annotationAPI.saveAnnotations({
                 ...annotationData,
@@ -1093,7 +1127,7 @@ export default function ESignature() {
 
               if (response.success) {
                 toast.success('PDF annotations saved and sent for processing!');
-                
+
                 // Optionally refresh the signature requests
                 setTimeout(async () => {
                   const refreshResponse = await signatureRequestsAPI.getSignatureRequests();

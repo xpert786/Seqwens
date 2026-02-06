@@ -250,9 +250,9 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
       <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
-          <h2 className="text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+          <h3 className="text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
             Business Information Form
-          </h2>
+          </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
             <FiX size={24} />
           </button>

@@ -388,6 +388,11 @@ export const superAdminAPI = {
     return await apiRequest(`/user/superadmin/users/${userId}/reset-password/`, 'POST', payload);
   },
 
+  // Permanently delete user from platform (HARD delete)
+  hardDeleteUser: async (userId) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/hard-delete/`, 'POST');
+  },
+
   // Get revenue insights analytics
   getRevenueInsights: async ({ days = 30, startDate = '', endDate = '' } = {}) => {
     const params = new URLSearchParams();

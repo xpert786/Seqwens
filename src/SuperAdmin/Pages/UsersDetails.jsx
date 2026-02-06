@@ -117,6 +117,7 @@ const UsersDetails = () => {
     const [passwordMode, setPasswordMode] = useState('generate'); // 'generate' or 'manual'
     const [manualPassword, setManualPassword] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const loggedInUser = getUserData();
     const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
@@ -379,6 +380,30 @@ const UsersDetails = () => {
         setPasswordMode('generate');
     };
 
+    const handleConfirmDelete = async () => {
+        if (!userDetails || actionLoading) return;
+
+        try {
+            setActionLoading(true);
+            const response = await superAdminAPI.hardDeleteUser(userId);
+            if (response.success) {
+                toast.success('User permanently deleted successfully', superToastOptions);
+                setShowDeleteModal(false);
+                // Redirect to user list after a short delay
+                setTimeout(() => {
+                    navigate('/superadmin/users');
+                }, 1500);
+            } else {
+                throw new Error(response.message || 'Failed to delete user');
+            }
+        } catch (err) {
+            const message = handleAPIError(err);
+            toast.error(message, superToastOptions);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const avatarInitials =
         profile.avatar_initials ||
         (profile.first_name && profile.last_name
@@ -481,6 +506,17 @@ const UsersDetails = () => {
                                     style={{ borderRadius: '8px' }}
                                 >
                                     Change Admin Type
+                                </button>
+                            )}
+                            {isSuperAdmin && (
+                                <button
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={actionLoading}
+                                    onClick={() => setShowDeleteModal(true)}
+                                    title="Permanently delete user"
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Permanently Delete
                                 </button>
                             )}
                         </div>
@@ -705,6 +741,51 @@ const UsersDetails = () => {
                                 style={{ borderRadius: '7px' }}
                             >
                                 {actionLoading ? 'Updating...' : 'Update Admin Type'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Permanent Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div
+                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                    style={{ background: 'var(--Color-overlay, #00000099)' }}
+                >
+                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                        <div className="flex items-center gap-3 text-red-600">
+                            <div className="p-2 bg-red-50 rounded-full">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33975 16C2.56995 17.3333 3.53225 19 5.07183 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold">Irreversible Action</h3>
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="text-sm text-gray-700">
+                                Are you sure you want to permanently delete <strong>{fullName}</strong> ({profile.email})?
+                            </p>
+                            <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">
+                                Warning: This will permanently remove all account data, login credentials, and firm associations. This action cannot be undone.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={actionLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                                onClick={handleConfirmDelete}
+                                disabled={actionLoading}
+                            >
+                                {actionLoading ? 'Deleting...' : 'Permanently Delete'}
                             </button>
                         </div>
                     </div>

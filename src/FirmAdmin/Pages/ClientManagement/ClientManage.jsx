@@ -1024,8 +1024,8 @@ export default function ClientManage() {
     }
   };
 
-  // Soft Delete Taxpayer
-  const handleSoftDelete = async (clientId) => {
+  // Permanently remove taxpayer from firm (Hard Delete from firm perspective)
+  const handleDeleteTaxpayer = async (clientId) => {
     try {
       setDeleting(true);
       const token = getAccessToken();
@@ -1045,7 +1045,7 @@ export default function ClientManage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(result.message || 'Client deleted successfully', getToastOptions());
+        toast.success(result.message || 'Client removed from firm successfully', getToastOptions());
         setShowDeleteConfirmModal(false);
         setSelectedClientForDelete(null);
         // Refresh clients list
@@ -2285,7 +2285,7 @@ export default function ClientManage() {
                                         setShowDropdown(null);
                                       }}
                                     >
-                                      Delete Client
+                                      Remove from Firm
                                     </button>
                                   </div>
                                 </div>
@@ -2358,213 +2358,216 @@ export default function ClientManage() {
             </div>
           )}
         </div>
-      )}
+      )
+      }
 
       {/* Filters Modal */}
-      {showFiltersModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          style={{ zIndex: 9999 }}
-          onClick={() => setShowFiltersModal(false)}
-        >
+      {
+        showFiltersModal && (
           <div
-            className="bg-white rounded-lg shadow-lg p-3 max-w-2xl w-full mx-4"
-            style={{
-              borderRadius: '12px',
-              maxHeight: '80vh',
-              overflowY: 'auto'
-            }}
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            style={{ zIndex: 9999 }}
+            onClick={() => setShowFiltersModal(false)}
           >
-            {/* Header */}
-            <div className="mb-3">
-              <div className="flex justify-between items-center pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-                <h2 className="taxdashboardr-titler text-base font-bold text-gray-900" style={{ color: '#3B4A66' }}>Filters</h2>
-                <button
-                  onClick={() => setShowFiltersModal(false)}
-                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <CrossesIcon />
-                </button>
+            <div
+              className="bg-white rounded-lg shadow-lg p-3 max-w-2xl w-full mx-4"
+              style={{
+                borderRadius: '12px',
+                maxHeight: '80vh',
+                overflowY: 'auto'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="mb-3">
+                <div className="flex justify-between items-center pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                  <h3 className="taxdashboardr-titler text-base font-bold text-gray-900" style={{ color: '#3B4A66' }}>Filters</h3>
+                  <button
+                    onClick={() => setShowFiltersModal(false)}
+                    className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <CrossesIcon />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Filter Columns */}
-            <div className="grid grid-cols-4 gap-3 items-start">
-              {/* Column 1: Status */}
-              <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-                <h3 className="taxdashboardr-titler mb-2">Status</h3>
-                <div className="space-y-1 flex flex-col">
-                  {['All Status', 'Lead', 'Prospect', 'Active', 'Inactive', 'Pending', 'Archived'].map((status) => {
-                    const key = status.toLowerCase().replace(' ', '');
-                    const filterKey = key === 'allstatus' ? 'allStatus' : key;
-                    return (
-                      <label key={status} className="flex items-center gap-4 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={statusFilters[filterKey] || false}
-                          onChange={(e) => {
-                            setStatusFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
-                          }}
-                          className="w-3 h-3 rounded border-gray-300"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            border: '1px solid #E5E7EB'
-                          }}
-                        />
-                        <span className="text-xs text-gray-600 ml-4">{status}</span>
-                      </label>
-                    );
-                  })}
+              {/* Filter Columns */}
+              <div className="grid grid-cols-4 gap-3 items-start">
+                {/* Column 1: Status */}
+                <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                  <h3 className="taxdashboardr-titler mb-2">Status</h3>
+                  <div className="space-y-1 flex flex-col">
+                    {['All Status', 'Lead', 'Prospect', 'Active', 'Inactive', 'Pending', 'Archived'].map((status) => {
+                      const key = status.toLowerCase().replace(' ', '');
+                      const filterKey = key === 'allstatus' ? 'allStatus' : key;
+                      return (
+                        <label key={status} className="flex items-center gap-4 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={statusFilters[filterKey] || false}
+                            onChange={(e) => {
+                              setStatusFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                            }}
+                            className="w-3 h-3 rounded border-gray-300"
+                            style={{
+                              accentColor: '#3AD6F2',
+                              border: '1px solid #E5E7EB'
+                            }}
+                          />
+                          <span className="text-xs text-gray-600 ml-4">{status}</span>
+                        </label>
+                      );
+                    })}
 
-                  {/* Types sub-section */}
-                  <div className="mt-3">
-                    <h4 className="taxdashboardr-titler mb-2">Types</h4>
-                    <div className="space-y-1 flex flex-col">
-                      {['All Types', 'Individual', 'Business', 'Partnership', 'Corporation'].map((type) => {
-                        const key = type.toLowerCase().replace(' ', '');
-                        const filterKey = key === 'alltypes' ? 'allTypes' : key;
-                        return (
-                          <label key={type} className="flex items-center gap-4 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={typeFilters[filterKey] || false}
-                              onChange={(e) => {
-                                setTypeFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
-                              }}
-                              className="w-3 h-3 rounded border-gray-300"
-                              style={{
-                                accentColor: '#3AD6F2',
-                                border: '1px solid #E5E7EB'
-                              }}
-                            />
-                            <span className="text-xs text-gray-600 ml-4">{type}</span>
-                          </label>
-                        );
-                      })}
+                    {/* Types sub-section */}
+                    <div className="mt-3">
+                      <h4 className="taxdashboardr-titler mb-2">Types</h4>
+                      <div className="space-y-1 flex flex-col">
+                        {['All Types', 'Individual', 'Business', 'Partnership', 'Corporation'].map((type) => {
+                          const key = type.toLowerCase().replace(' ', '');
+                          const filterKey = key === 'alltypes' ? 'allTypes' : key;
+                          return (
+                            <label key={type} className="flex items-center gap-4 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={typeFilters[filterKey] || false}
+                                onChange={(e) => {
+                                  setTypeFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                                }}
+                                className="w-3 h-3 rounded border-gray-300"
+                                style={{
+                                  accentColor: '#3AD6F2',
+                                  border: '1px solid #E5E7EB'
+                                }}
+                              />
+                              <span className="text-xs text-gray-600 ml-4">{type}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
 
-              {/* Column 2: Returns */}
-              <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-                <h3 className="taxdashboardr-titler mb-2">Returns</h3>
-                <div className="space-y-1 flex flex-col">
-                  {['All Returns', '1040', '1065', '1120', '990'].map((returnType) => {
-                    const key = returnType.toLowerCase().replace(' ', '');
-                    const filterKey = key === 'allreturns' ? 'allReturns' : key;
-                    return (
-                      <label key={returnType} className="flex items-center gap-4 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={returnFilters[filterKey] || false}
-                          onChange={(e) => {
-                            setReturnFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
-                          }}
-                          className="w-3 h-3 rounded border-gray-300"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            border: '1px solid #E5E7EB'
-                          }}
-                        />
-                        <span className="text-xs text-gray-600 ml-4">{returnType}</span>
-                      </label>
-                    );
-                  })}
+                {/* Column 2: Returns */}
+                <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                  <h3 className="taxdashboardr-titler mb-2">Returns</h3>
+                  <div className="space-y-1 flex flex-col">
+                    {['All Returns', '1040', '1065', '1120', '990'].map((returnType) => {
+                      const key = returnType.toLowerCase().replace(' ', '');
+                      const filterKey = key === 'allreturns' ? 'allReturns' : key;
+                      return (
+                        <label key={returnType} className="flex items-center gap-4 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={returnFilters[filterKey] || false}
+                            onChange={(e) => {
+                              setReturnFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                            }}
+                            className="w-3 h-3 rounded border-gray-300"
+                            style={{
+                              accentColor: '#3AD6F2',
+                              border: '1px solid #E5E7EB'
+                            }}
+                          />
+                          <span className="text-xs text-gray-600 ml-4">{returnType}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Column 3: All Tags */}
-              <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-                <h3 className="taxdashboardr-titler mb-2">All Tags</h3>
-                <div className="space-y-1 flex flex-col">
-                  {['EIC filer', 'Small Business', 'High Income', 'Audit Risk'].map((tag) => {
-                    const key = tag.toLowerCase().replace(' ', '');
-                    const filterKey = key === 'eicfiler' ? 'eicFiler' :
-                      key === 'smallbusiness' ? 'smallBusiness' :
-                        key === 'highincome' ? 'highIncome' :
-                          key === 'auditrisk' ? 'auditRisk' : key;
-                    return (
-                      <label key={tag} className="flex items-center gap-4 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={tagFilters[filterKey] || false}
-                          onChange={(e) => {
-                            setTagFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
-                          }}
-                          className="w-3 h-3 rounded border-gray-300"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            border: '1px solid #E5E7EB'
-                          }}
-                        />
-                        <span className="text-xs text-gray-600 ml-4">{tag}</span>
-                      </label>
-                    );
-                  })}
+                {/* Column 3: All Tags */}
+                <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                  <h3 className="taxdashboardr-titler mb-2">All Tags</h3>
+                  <div className="space-y-1 flex flex-col">
+                    {['EIC filer', 'Small Business', 'High Income', 'Audit Risk'].map((tag) => {
+                      const key = tag.toLowerCase().replace(' ', '');
+                      const filterKey = key === 'eicfiler' ? 'eicFiler' :
+                        key === 'smallbusiness' ? 'smallBusiness' :
+                          key === 'highincome' ? 'highIncome' :
+                            key === 'auditrisk' ? 'auditRisk' : key;
+                      return (
+                        <label key={tag} className="flex items-center gap-4 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={tagFilters[filterKey] || false}
+                            onChange={(e) => {
+                              setTagFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                            }}
+                            className="w-3 h-3 rounded border-gray-300"
+                            style={{
+                              accentColor: '#3AD6F2',
+                              border: '1px solid #E5E7EB'
+                            }}
+                          />
+                          <span className="text-xs text-gray-600 ml-4">{tag}</span>
+                        </label>
+                      );
+                    })}
 
-                  {/* Segments sub-section */}
-                  <div className="mt-3">
-                    <h4 className="taxdashboardr-titler mb-2">Segments</h4>
-                    <div className="space-y-1 flex flex-col">
-                      {['EIC Filers', 'High Income'].map((segment) => {
-                        const key = segment.toLowerCase().replace(' ', '');
-                        const filterKey = key === 'eicfilers' ? 'eicFilers' : key;
-                        return (
-                          <label key={segment} className="flex items-center gap-4 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={segmentFilters[filterKey] || false}
-                              onChange={(e) => {
-                                setSegmentFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
-                              }}
-                              className="w-3 h-3 rounded border-gray-300"
-                              style={{
-                                accentColor: '#3AD6F2',
-                                border: '1px solid #E5E7EB'
-                              }}
-                            />
-                            <span className="text-xs text-gray-600 ml-4">{segment}</span>
-                          </label>
-                        );
-                      })}
+                    {/* Segments sub-section */}
+                    <div className="mt-3">
+                      <h4 className="taxdashboardr-titler mb-2">Segments</h4>
+                      <div className="space-y-1 flex flex-col">
+                        {['EIC Filers', 'High Income'].map((segment) => {
+                          const key = segment.toLowerCase().replace(' ', '');
+                          const filterKey = key === 'eicfilers' ? 'eicFilers' : key;
+                          return (
+                            <label key={segment} className="flex items-center gap-4 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={segmentFilters[filterKey] || false}
+                                onChange={(e) => {
+                                  setSegmentFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                                }}
+                                className="w-3 h-3 rounded border-gray-300"
+                                style={{
+                                  accentColor: '#3AD6F2',
+                                  border: '1px solid #E5E7EB'
+                                }}
+                              />
+                              <span className="text-xs text-gray-600 ml-4">{segment}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Column 4: All Comm */}
-              <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-                <h4 className="taxdashboardr-titler mb-2">All Comm</h4>
-                <div className="space-y-1 flex flex-col">
-                  {['SMS', 'Email', 'Portal'].map((comm) => {
-                    const key = comm.toLowerCase();
-                    return (
-                      <label key={comm} className="flex items-center gap-4 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={commFilters[key] || false}
-                          onChange={(e) => {
-                            setCommFilters(prev => ({ ...prev, [key]: e.target.checked }));
-                          }}
-                          className="w-3 h-3 rounded border-gray-300"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            border: '1px solid #E5E7EB'
-                          }}
-                        />
-                        <span className="text-xs text-gray-600 ml-4">{comm}</span>
-                      </label>
-                    );
-                  })}
+                {/* Column 4: All Comm */}
+                <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                  <h4 className="taxdashboardr-titler mb-2">All Comm</h4>
+                  <div className="space-y-1 flex flex-col">
+                    {['SMS', 'Email', 'Portal'].map((comm) => {
+                      const key = comm.toLowerCase();
+                      return (
+                        <label key={comm} className="flex items-center gap-4 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={commFilters[key] || false}
+                            onChange={(e) => {
+                              setCommFilters(prev => ({ ...prev, [key]: e.target.checked }));
+                            }}
+                            className="w-3 h-3 rounded border-gray-300"
+                            style={{
+                              accentColor: '#3AD6F2',
+                              border: '1px solid #E5E7EB'
+                            }}
+                          />
+                          <span className="text-xs text-gray-600 ml-4">{comm}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Bulk Action Modal */}
       <BulkActionModal
@@ -2621,405 +2624,413 @@ export default function ClientManage() {
       />
 
       {/* Share Taxpayer Invite Modal */}
-      {showInviteActionsModal && activeInviteDetails && (
-        <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
-          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
-              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
-                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
-                <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
-              </div>
-              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
-                <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
-                  <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
-                    {activeInviteDetails.first_name} {activeInviteDetails.last_name}
-                  </p>
-                  <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.email}</p>
-                  {activeInviteDetails.phone_number && (
-                    <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.phone_number}</p>
-                  )}
-                  {inviteExpiresOn && (
-                    <small className="text-muted">Expires {inviteExpiresOn}</small>
-                  )}
+      {
+        showInviteActionsModal && activeInviteDetails && (
+          <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+            <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
+              <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
+                <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
+                  <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
+                  <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
                 </div>
-
-                <div className="mb-4">
-                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaLink size={14} /> Shareable Link
-                  </label>
-                  <div className="d-flex gap-2">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={activeInviteDetails.invite_link || ""}
-                      readOnly
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={handleCopyInviteLink}
-                      disabled={!activeInviteDetails.invite_link}
-                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
-                    >
-                      <FaCopy size={12} className="me-1" />
-                      Copy
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline-primary"
-                      onClick={handleRefreshInviteLink}
-                      disabled={inviteLinkRefreshing}
-                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
-                    >
-                      {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
-                    </button>
+                <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
+                  <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
+                    <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
+                      {activeInviteDetails.first_name} {activeInviteDetails.last_name}
+                    </p>
+                    <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.email}</p>
+                    {activeInviteDetails.phone_number && (
+                      <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.phone_number}</p>
+                    )}
+                    {inviteExpiresOn && (
+                      <small className="text-muted">Expires {inviteExpiresOn}</small>
+                    )}
                   </div>
-                  <small className="text-muted d-block mt-1">
-                    Share this link with the taxpayer. They can use it anytime before it expires.
-                  </small>
-                </div>
 
-                <div className="mb-4">
-                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaEnvelope size={14} /> Send Email Invite
-                  </label>
-                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll email a secure link to the address below.
-                  </p>
-                  <div className="d-flex gap-2">
-                    <input
-                      type="email"
-                      className="form-control"
-                      value={editedInviteEmail}
-                      onChange={(e) => setEditedInviteEmail(e.target.value)}
-                      placeholder={activeInviteDetails.email || 'Enter email'}
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={handleSendEmailInviteNow}
-                      disabled={inviteActionLoading}
-                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
-                    >
-                      {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
-                    </button>
-                  </div>
-                  {activeInviteDetails.delivery_summary && (
-                    <div className="mt-2 text-muted small">
-                      Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                      <FaLink size={14} /> Shareable Link
+                    </label>
+                    <div className="d-flex gap-2">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={activeInviteDetails.invite_link || ""}
+                        readOnly
+                        style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={handleCopyInviteLink}
+                        disabled={!activeInviteDetails.invite_link}
+                        style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                      >
+                        <FaCopy size={12} className="me-1" />
+                        Copy
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary"
+                        onClick={handleRefreshInviteLink}
+                        disabled={inviteLinkRefreshing}
+                        style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                      >
+                        {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                <div className="mb-1">
-                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaSms size={14} /> Send SMS Invite
-                  </label>
-                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll text the invite link to the phone number you provide3333.
-                  </p>
-                  <div className="d-flex gap-2 mb-2">
-                    <PhoneInput
-                      country={smsPhoneCountry}
-                      value={smsPhoneOverride || ''}
-                      onChange={(phone) => setSmsPhoneOverride(phone)}
-                      onCountryChange={(countryCode) => {
-                        setSmsPhoneCountry(countryCode.toLowerCase());
-                      }}
-                      inputClass="form-control"
-                      containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
-                      inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                      dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
-                      enableSearch={true}
-                      countryCodeEditable={false}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={handleSendSmsInviteNow}
-                      disabled={inviteActionLoading}
-                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
-                    >
-                      {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
-                    </button>
+                    <small className="text-muted d-block mt-1">
+                      Share this link with the taxpayer. They can use it anytime before it expires.
+                    </small>
                   </div>
-                  {activeInviteDetails.delivery_summary && (
-                    <div className="text-muted small">
-                      SMS sent: {activeInviteDetails.delivery_summary.sms_sent ? "Yes" : "No"}
+
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                      <FaEnvelope size={14} /> Send Email Invite
+                    </label>
+                    <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
+                      We'll email a secure link to the address below.
+                    </p>
+                    <div className="d-flex gap-2">
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={editedInviteEmail}
+                        onChange={(e) => setEditedInviteEmail(e.target.value)}
+                        placeholder={activeInviteDetails.email || 'Enter email'}
+                        style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSendEmailInviteNow}
+                        disabled={inviteActionLoading}
+                        style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                      >
+                        {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
+                      </button>
                     </div>
-                  )}
+                    {activeInviteDetails.delivery_summary && (
+                      <div className="mt-2 text-muted small">
+                        Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-1">
+                    <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                      <FaSms size={14} /> Send SMS Invite
+                    </label>
+                    <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
+                      We'll text the invite link to the phone number you provide3333.
+                    </p>
+                    <div className="d-flex gap-2 mb-2">
+                      <PhoneInput
+                        country={smsPhoneCountry}
+                        value={smsPhoneOverride || ''}
+                        onChange={(phone) => setSmsPhoneOverride(phone)}
+                        onCountryChange={(countryCode) => {
+                          setSmsPhoneCountry(countryCode.toLowerCase());
+                        }}
+                        inputClass="form-control"
+                        containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
+                        inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                        dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
+                        enableSearch={true}
+                        countryCodeEditable={false}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSendSmsInviteNow}
+                        disabled={inviteActionLoading}
+                        style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                      >
+                        {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
+                      </button>
+                    </div>
+                    {activeInviteDetails.delivery_summary && (
+                      <div className="text-muted small">
+                        SMS sent: {activeInviteDetails.delivery_summary.sms_sent ? "Yes" : "No"}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
-                {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
-                  <button
-                    className="btn btn-outline-danger d-flex align-items-center"
-                    style={{ borderRadius: '8px' }}
-                    onClick={handleDeleteInvite}
-                    disabled={deletingInvite}
-                  >
-                    <FaTrash size={12} className="me-1" />
-                    {deletingInvite ? 'Deleting...' : 'Delete Invite'}
+                <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
+                  {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
+                    <button
+                      className="btn btn-outline-danger d-flex align-items-center"
+                      style={{ borderRadius: '8px' }}
+                      onClick={handleDeleteInvite}
+                      disabled={deletingInvite}
+                    >
+                      <FaTrash size={12} className="me-1" />
+                      {deletingInvite ? 'Deleting...' : 'Delete Invite'}
+                    </button>
+                  )}
+                  <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
+                    Invite Later
                   </button>
-                )}
-                <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
-                  Invite Later
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Reassign/Assign Staff Modal */}
+      {
+        showReassignStaffModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            style={{ zIndex: 9999 }}
+            onClick={() => {
+              if (!reassigning) {
+                setShowReassignStaffModal(false);
+                setSelectedClientForReassign(null);
+                setIsAssignMode(false);
+              }
+            }}
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+              style={{
+                borderRadius: '12px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>
+                  {isAssignMode ? 'Assign Tax Preparer' : 'Reassign Tax Preparer'}
+                </h4>
+                <button
+                  onClick={() => {
+                    if (!reassigning) {
+                      setShowReassignStaffModal(false);
+                      setSelectedClientForReassign(null);
+                      setIsAssignMode(false);
+                    }
+                  }}
+                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  disabled={reassigning}
+                >
+                  <CrossesIcon />
+                </button>
+              </div>
+
+              {staffLoading ? (
+                <div className="text-center py-4 text-gray-500">Loading staff members...</div>
+              ) : staffError ? (
+                <div className="text-center py-4 text-red-500">{staffError}</div>
+              ) : staffMembers.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">No staff members available</div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                      Select Tax Preparer
+                    </label>
+                    <select
+                      id="reassign-staff-select"
+                      key={`reassign-select-${selectedClientForReassign}`}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 font-[BasisGrotesquePro] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={reassigning}
+                      defaultValue=""
+                    >
+                      <option value="">Select a tax preparer</option>
+                      {staffMembers.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.full_name || staff.name} {staff.email ? `(${staff.email})` : ''} {staff.is_firm_admin ? '- Firm Admin' : staff.role ? `- ${staff.role}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {reassigning && (
+                    <div className="text-center py-2 text-gray-500 text-sm">
+                      {isAssignMode ? 'Assigning...' : 'Reassigning...'}
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        if (!reassigning) {
+                          setShowReassignStaffModal(false);
+                          setSelectedClientForReassign(null);
+                          setIsAssignMode(false);
+                        }
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                      disabled={reassigning}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        const selectElement = document.getElementById('reassign-staff-select');
+                        const selectedValue = selectElement?.value;
+                        if (selectedValue && selectedClientForReassign) {
+                          // Find the selected staff member to check if it's a firm admin
+                          const selectedStaff = staffMembers.find(staff => staff.id.toString() === selectedValue);
+                          const isFirm = selectedStaff?.is_firm_admin === true;
+                          handleReassignTaxPreparer(selectedClientForReassign, selectedValue, isFirm);
+                        } else {
+                          toast.error('Please select a tax preparer', {
+                            position: "top-right",
+                            autoClose: 3000,
+                          });
+                        }
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                      style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
+                      disabled={reassigning}
+                    >
+                      {reassigning
+                        ? (isAssignMode ? 'Assigning...' : 'Reassigning...')
+                        : (isAssignMode ? 'Assign' : 'Reassign')
+                      }
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      {/* Delete Invite Confirmation Modal */}
+      {
+        showDeleteInviteConfirmModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            style={{ zIndex: 10000 }}
+            onClick={() => {
+              if (!deletingInvite) {
+                setShowDeleteInviteConfirmModal(false);
+              }
+            }}
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+              style={{
+                borderRadius: '12px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h3>
+                <button
+                  onClick={() => {
+                    if (!deletingInvite) {
+                      setShowDeleteInviteConfirmModal(false);
+                    }
+                  }}
+                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  disabled={deletingInvite}
+                >
+                  <CrossesIcon />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                  Are you sure you want to delete this invitation? This action cannot be undone.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteInviteConfirmModal(false);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                  disabled={deletingInvite}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteInvite}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                  style={{ background: 'var(--color-red-500, #EF4444)' }}
+                  disabled={deletingInvite}
+                >
+                  {deletingInvite ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Reassign/Assign Staff Modal */}
-      {showReassignStaffModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          style={{ zIndex: 9999 }}
-          onClick={() => {
-            if (!reassigning) {
-              setShowReassignStaffModal(false);
-              setSelectedClientForReassign(null);
-              setIsAssignMode(false);
-            }
-          }}
-        >
-          <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
-            style={{
-              borderRadius: '12px',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>
-                {isAssignMode ? 'Assign Tax Preparer' : 'Reassign Tax Preparer'}
-              </h2>
-              <button
-                onClick={() => {
-                  if (!reassigning) {
-                    setShowReassignStaffModal(false);
-                    setSelectedClientForReassign(null);
-                    setIsAssignMode(false);
-                  }
-                }}
-                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                disabled={reassigning}
-              >
-                <CrossesIcon />
-              </button>
-            </div>
-
-            {staffLoading ? (
-              <div className="text-center py-4 text-gray-500">Loading staff members...</div>
-            ) : staffError ? (
-              <div className="text-center py-4 text-red-500">{staffError}</div>
-            ) : staffMembers.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">No staff members available</div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                    Select Tax Preparer
-                  </label>
-                  <select
-                    id="reassign-staff-select"
-                    key={`reassign-select-${selectedClientForReassign}`}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 font-[BasisGrotesquePro] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={reassigning}
-                    defaultValue=""
-                  >
-                    <option value="">Select a tax preparer</option>
-                    {staffMembers.map((staff) => (
-                      <option key={staff.id} value={staff.id}>
-                        {staff.full_name || staff.name} {staff.email ? `(${staff.email})` : ''} {staff.is_firm_admin ? '- Firm Admin' : staff.role ? `- ${staff.role}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {reassigning && (
-                  <div className="text-center py-2 text-gray-500 text-sm">
-                    {isAssignMode ? 'Assigning...' : 'Reassigning...'}
-                  </div>
-                )}
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => {
-                      if (!reassigning) {
-                        setShowReassignStaffModal(false);
-                        setSelectedClientForReassign(null);
-                        setIsAssignMode(false);
-                      }
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
-                    disabled={reassigning}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      const selectElement = document.getElementById('reassign-staff-select');
-                      const selectedValue = selectElement?.value;
-                      if (selectedValue && selectedClientForReassign) {
-                        // Find the selected staff member to check if it's a firm admin
-                        const selectedStaff = staffMembers.find(staff => staff.id.toString() === selectedValue);
-                        const isFirm = selectedStaff?.is_firm_admin === true;
-                        handleReassignTaxPreparer(selectedClientForReassign, selectedValue, isFirm);
-                      } else {
-                        toast.error('Please select a tax preparer', {
-                          position: "top-right",
-                          autoClose: 3000,
-                        });
-                      }
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                    style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
-                    disabled={reassigning}
-                  >
-                    {reassigning
-                      ? (isAssignMode ? 'Assigning...' : 'Reassigning...')
-                      : (isAssignMode ? 'Assign' : 'Reassign')
-                    }
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Delete Invite Confirmation Modal */}
-      {showDeleteInviteConfirmModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          style={{ zIndex: 10000 }}
-          onClick={() => {
-            if (!deletingInvite) {
-              setShowDeleteInviteConfirmModal(false);
-            }
-          }}
-        >
-          <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
-            style={{
-              borderRadius: '12px',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h2>
-              <button
-                onClick={() => {
-                  if (!deletingInvite) {
-                    setShowDeleteInviteConfirmModal(false);
-                  }
-                }}
-                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                disabled={deletingInvite}
-              >
-                <CrossesIcon />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                Are you sure you want to delete this invitation? This action cannot be undone.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setShowDeleteInviteConfirmModal(false);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
-                disabled={deletingInvite}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteInvite}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                style={{ background: 'var(--color-red-500, #EF4444)' }}
-                disabled={deletingInvite}
-              >
-                {deletingInvite ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Delete Client Confirmation Modal */}
-      {showDeleteConfirmModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          style={{ zIndex: 9999 }}
-          onClick={() => {
-            if (!deleting) {
-              setShowDeleteConfirmModal(false);
-              setSelectedClientForDelete(null);
-            }
-          }}
-        >
+      {
+        showDeleteConfirmModal && (
           <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
-            style={{
-              borderRadius: '12px',
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            style={{ zIndex: 9999 }}
+            onClick={() => {
+              if (!deleting) {
+                setShowDeleteConfirmModal(false);
+                setSelectedClientForDelete(null);
+              }
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Client</h2>
-              <button
-                onClick={() => {
-                  if (!deleting) {
+            <div
+              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+              style={{
+                borderRadius: '12px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Remove Client from Firm</h3>
+                <button
+                  onClick={() => {
+                    if (!deleting) {
+                      setShowDeleteConfirmModal(false);
+                      setSelectedClientForDelete(null);
+                    }
+                  }}
+                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  disabled={deleting}
+                >
+                  <CrossesIcon />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                  Are you sure you want to remove this client from your firm? This will permanently remove their record from your firm and immediately free up their email address for new invites.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
                     setShowDeleteConfirmModal(false);
                     setSelectedClientForDelete(null);
-                  }
-                }}
-                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                disabled={deleting}
-              >
-                <CrossesIcon />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                Are you sure you want to delete this client? This action will soft delete the client and cannot be undone.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setShowDeleteConfirmModal(false);
-                  setSelectedClientForDelete(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedClientForDelete) {
-                    handleSoftDelete(selectedClientForDelete);
-                  }
-                }}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                style={{ background: 'var(--color-red-500, #EF4444)' }}
-                disabled={deleting}
-              >
-                {deleting ? 'Deleting...' : 'Delete'}
-              </button>
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedClientForDelete) {
+                      handleDeleteTaxpayer(selectedClientForDelete);
+                    }
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                  style={{ background: 'var(--color-red-500, #EF4444)' }}
+                  disabled={deleting}
+                >
+                  {deleting ? 'Removing...' : 'Confirm Removal'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

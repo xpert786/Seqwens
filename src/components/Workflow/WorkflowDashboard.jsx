@@ -62,9 +62,9 @@ const WorkflowDashboard = ({
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
                 {workflow.template_name || 'Workflow'}
-              </h2>
+              </h3>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
                   workflow.status

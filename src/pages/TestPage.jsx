@@ -165,11 +165,11 @@ const App = () => {
 
                 <div className="container mx-auto px-6 relative">
                     <div className="max-w-3xl mx-auto text-center mb-20 animate-fade-in">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+                        <h3 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-zinc-400">
                                 Unlock Endless Design Possibilities
                             </span>
-                        </h2>
+                        </h3>
                         <div className="w-20 h-1 bg-zinc-700 mx-auto mb-6 rounded-full"></div>
                         <p className="text-lg text-zinc-400 font-light max-w-2xl mx-auto">
                             Our AI-powered features give you complete control over your architectural design journey
@@ -209,12 +209,12 @@ const App = () => {
                 <div className="container mx-auto px-6">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16 animate-fade-in">
-                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                            <h3 className="text-4xl md:text-5xl font-bold text-white mb-6">
                                 Trusted by Design
                                 <span className="block bg-gradient-to-r from-white via-zinc-300 to-white bg-clip-text text-transparent">
                                     Professionals Worldwide
                                 </span>
-                            </h2>
+                            </h3>
                             <p className="text-xl text-zinc-400 max-w-3xl mx-auto">
                                 See how architects, designers, and real estate professionals are transforming their businesses and delivering exceptional results with AI-powered design.
                             </p>
@@ -265,9 +265,9 @@ const App = () => {
                             <div className="relative p-10 lg:p-16">
                                 <div className="max-w-xl">
                                     <div className="space-y-6 animate-fade-in">
-                                        <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+                                        <h3 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
                                             Transform Your Design Process
-                                        </h2>
+                                        </h3>
                                         <p className="text-lg text-zinc-400 leading-relaxed">
                                             Join 7M+ architects, designers, and real estate professionals who've already revolutionized how they work. Create presentation-ready visuals in minutes, win more projects, and deliver results that wow clients every time.
                                         </p>
