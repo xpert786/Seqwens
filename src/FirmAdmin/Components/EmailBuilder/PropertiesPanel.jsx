@@ -627,25 +627,54 @@ const MenuProperties = ({ data, onChange }) => (
 );
 
 // Video Properties
-const VideoProperties = ({ data, onChange }) => (
-    <div className="property-group">
-        <label>Video URL (YouTube or Vimeo)</label>
-        <input
-            type="url"
-            value={data.url}
-            onChange={(e) => onChange({ url: e.target.value })}
-            className="property-input"
-            placeholder="https://youtube.com/watch?v=..."
-        />
-        <label>Thumbnail Image (optional)</label>
-        <input
-            type="url"
-            value={data.thumbnail}
-            onChange={(e) => onChange({ thumbnail: e.target.value })}
-            className="property-input"
-        />
-    </div>
-);
+const VideoProperties = ({ data, onChange }) => {
+    const handleUrlChange = (e) => {
+        const newUrl = e.target.value;
+        const updates = { url: newUrl };
+        
+        // Auto-generate thumbnail for YouTube if not already set
+        if (newUrl && !data.thumbnail) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = newUrl.match(regExp);
+            if (match && match[2].length === 11) {
+                updates.thumbnail = `https://img.youtube.com/vi/${match[2]}/maxresdefault.jpg`;
+            }
+        }
+        
+        onChange(updates);
+    };
+
+    return (
+        <div className="property-group">
+            <label>Video URL (YouTube or Vimeo)</label>
+            <input
+                type="url"
+                value={data.url}
+                onChange={handleUrlChange}
+                className="property-input"
+                placeholder="https://youtube.com/watch?v=..."
+            />
+            <label>Thumbnail Image (optional)</label>
+            <input
+                type="url"
+                value={data.thumbnail}
+                onChange={(e) => onChange({ thumbnail: e.target.value })}
+                className="property-input"
+                placeholder="https://..."
+            />
+            {data.thumbnail && (
+                <div style={{ marginTop: '10px' }}>
+                    <label>Preview</label>
+                    <img 
+                        src={data.thumbnail} 
+                        alt="Thumbnail preview" 
+                        style={{ width: '100%', borderRadius: '4px', objectFit: 'cover' }} 
+                    />
+                </div>
+            )}
+        </div>
+    );
+};
 
 // HTML Properties
 const HtmlProperties = ({ data, onChange }) => (
