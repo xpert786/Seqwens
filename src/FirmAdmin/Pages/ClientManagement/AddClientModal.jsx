@@ -263,6 +263,10 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       // Ensure invite exists first
       const inviteId = await ensureInviteExists();
 
+      if (!inviteId) {
+        throw new Error("Unable to retrieve invite information. Please try refreshing the page.");
+      }
+
       const payload = { methods };
       if (options.email) {
         payload.email = options.email;

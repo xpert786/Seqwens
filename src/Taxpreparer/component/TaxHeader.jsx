@@ -319,7 +319,7 @@ export default function Topbar({
               }}
             >
               <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-                <img src={logoUrl || logo} alt="Logo" className="topbar-logo" style={{ maxHeight: '35px', width: 'auto' }} />
+                <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" style={{ maxHeight: '35px', width: 'auto' }} />
               </Link>
             </div>
 
@@ -380,6 +380,7 @@ export default function Topbar({
                       <img
                         src={profilePicture}
                         alt={`${profileName} avatar`}
+                        crossOrigin="anonymous"
                         className="topbar-user-avatar"
                         key={profilePicture}
                         onError={(e) => {

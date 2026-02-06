@@ -1,0 +1,159 @@
+.builder-canvas {
+    flex: 1;
+    background-color: #f3f6fd;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.canvas-email-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.empty-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6e7dae;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #1f2a55;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 14px;
+    max-width: 400px;
+}
+
+.canvas-block {
+    position: relative;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    background-color: #ffffff;
+}
+
+.canvas-block:hover {
+    border-color: #e8f0ff;
+}
+
+.canvas-block.selected {
+    border-color: #3ad6f2;
+    box-shadow: 0 0 0 3px rgba(58, 214, 242, 0.1);
+}
+
+.canvas-block.preview {
+    border: none !important;
+}
+
+.block-drag-handle {
+    position: absolute;
+    left: -32px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid #e8f0ff;
+    border-radius: 4px;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: #6e7dae;
+}
+
+.canvas-block:hover .block-drag-handle {
+    opacity: 1;
+}
+
+.block-drag-handle:active {
+    cursor: grabbing;
+}
+
+.block-actions {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+
+.canvas-block:hover .block-actions {
+    opacity: 1;
+}
+
+.block-action-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid #e8f0ff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #6e7dae;
+}
+
+.block-action-btn:hover {
+    background-color: #f3f6fd;
+    border-color: #3ad6f2;
+    color: #1f2a55;
+}
+
+.block-action-btn.delete:hover {
+    background-color: #fee;
+    border-color: #f56d2d;
+    color: #f56d2d;
+}
+
+.block-content {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .builder-canvas {
+        padding: 12px;
+    }
+
+    .canvas-email-container {
+        max-width: 100%;
+    }
+
+    .block-drag-handle {
+        left: 4px;
+        top: 4px;
+        transform: none;
+    }
+
+    .block-actions {
+        right: 4px;
+        top: 4px;
+    }
+}

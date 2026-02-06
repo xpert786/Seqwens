@@ -1614,6 +1614,7 @@ export default function DataIntakeForm({ targetClientId }) {
         return;
       }
 
+      const apiBaseUrl = getApiBaseUrl();
       let submitUrl = `${apiBaseUrl}/taxpayer/consolidated-data-intake/`;
       let submitMethod = hasExistingData ? "PATCH" : "POST";
 

@@ -700,12 +700,20 @@ export default function ClientManage() {
   };
 
   const handleSendInviteNotifications = async (methods, options = {}) => {
-    // Use invite_id if available, otherwise fall back to id
-    const inviteId = activeInviteDetails?.invite_id || activeInviteDetails?.id;
-    if (!inviteId || !methods?.length) return;
+    if (!methods?.length) return;
+
     try {
       setInviteActionLoading(true);
       setInviteActionMethod(methods.join(","));
+
+      // Use invite_id if available, otherwise fall back to id
+      const inviteId = activeInviteDetails?.invite_id || activeInviteDetails?.id;
+
+      if (!inviteId) {
+        toast.error("Unable to send invite. Invite ID is missing. Please try refreshing the page.", getToastOptions());
+        return;
+      }
+
       const payload = { methods };
       if (options.email) {
         payload.email = options.email;

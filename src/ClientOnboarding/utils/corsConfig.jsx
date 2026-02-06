@@ -63,13 +63,18 @@ export const handleCorsError = (error) => {
 
 // Fetch with CORS handling
 export const fetchWithCors = async (url, options = {}) => {
+  // Handle Content-Type for FormData
+  const headers = { ...options.headers };
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type']; // Let browser set Content-Type with boundary
+  } else if (!headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const defaultOptions = {
     mode: 'cors',
     credentials: 'omit', // Don't send credentials to avoid CORS issues
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
+    headers: headers
   };
 
   try {

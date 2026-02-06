@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { firmAdminEmailTemplatesAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminEmailTemplatesAPI, firmAdminSettingsAPI, firmAdminClientsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import UnifiedEmailBuilder from '../../Components/EmailBuilder/UnifiedEmailBuilder';
 import { toast } from 'react-toastify';
 import TabNavigation from '../Integrations/TabNavigation';
 import AnalyticsView from './AnalyticsView';
@@ -603,6 +604,13 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
     const [availableVariables, setAvailableVariables] = useState([]);
     const [variablesLoading, setVariablesLoading] = useState(false);
     const [sending, setSending] = useState(false);
+    const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+
+    // Client search states
+    const [clients, setClients] = useState([]);
+    const [clientSearch, setClientSearch] = useState('');
+    const [isSearchingClients, setIsSearchingClients] = useState(false);
+    const [showClientDropdown, setShowClientDropdown] = useState(false);
 
     const loadVariables = useCallback(async () => {
         if (!template?.email_type) {
@@ -626,14 +634,122 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
     }, [loadVariables]);
 
     useEffect(() => {
-        setVariablesInput(JSON.stringify(variables, null, 2));
-    }, [variables]);
+        if (isAdvancedMode) {
+            setVariablesInput(JSON.stringify(variables, null, 2));
+        }
+    }, [variables, isAdvancedMode]);
 
     useEffect(() => {
-        setVariables({});
+        setVariables(prev => ({
+            FirmName: prev.FirmName || '',
+            FirmAddress: prev.FirmAddress || '',
+            FirmPhone: prev.FirmPhone || ''
+        }));
         setVariablesInput('{}');
         setVariablesError('');
     }, [template?.id]);
+
+    // Fetch Firm Details for auto-population
+    useEffect(() => {
+        const fetchFirmDetails = async () => {
+            try {
+                const response = await firmAdminSettingsAPI.getGeneralInfo();
+                if (response.success && response.data) {
+                    setVariables(prev => ({
+                        ...prev,
+                        FirmName: response.data.name || prev.FirmName || '',
+                        FirmAddress: response.data.address || prev.FirmAddress || '',
+                        FirmPhone: response.data.phone_number || prev.FirmPhone || '',
+                        FirmEmail: response.data.email || prev.FirmEmail || '',
+                        FirmWebsite: response.data.website || prev.FirmWebsite || ''
+                    }));
+                }
+            } catch (err) {
+                console.error('Failed to fetch firm details:', err);
+            }
+        };
+        fetchFirmDetails();
+    }, []);
+
+    // Handle searching clients
+    useEffect(() => {
+        const fetchClients = async () => {
+            if (clientSearch.length < 2) {
+                setClients([]);
+                return;
+            }
+
+            try {
+                setIsSearchingClients(true);
+                const response = await firmAdminClientsAPI.listClients({
+                    search: clientSearch,
+                    page_size: 10
+                });
+                
+                if (response.success && response.data?.clients) {
+                    setClients(response.data.clients);
+                }
+            } catch (err) {
+                console.error('Failed to fetch clients:', err);
+            } finally {
+                setIsSearchingClients(false);
+            }
+        };
+
+        const timer = setTimeout(fetchClients, 300);
+        return () => clearTimeout(timer);
+    }, [clientSearch]);
+
+    const handleSelectClient = async (client) => {
+        const firstName = client.profile?.first_name || client.first_name || '';
+        const lastName = client.profile?.last_name || client.last_name || '';
+        const fullName = client.profile?.full_name || client.name || `${firstName} ${lastName}`.trim();
+        const email = client.profile?.email || client.email || '';
+
+        setRecipientEmail(email);
+        setRecipientName(fullName);
+        setClientSearch('');
+        setShowClientDropdown(false);
+
+        const newVariables = {
+            ...variables,
+            FirstName: firstName,
+            LastName: lastName,
+            FullName: fullName,
+            Email: email,
+            Phone: client.profile?.phone || client.phone || '',
+            Address: client.profile?.address || '',
+            City: client.profile?.city || '',
+            State: client.profile?.state || '',
+            ZipCode: client.profile?.zip_code || ''
+        };
+        setVariables(newVariables);
+        toast.info(`Imported details for ${fullName}`, { icon: '📥' });
+    };
+
+    const handleSendToSelf = () => {
+        try {
+            const rawData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+            const userData = rawData ? JSON.parse(rawData) : null;
+            if (userData?.email) {
+                setRecipientEmail(userData.email);
+                setRecipientName(userData.full_name || userData.name || (userData.first_name ? `${userData.first_name} ${userData.last_name || ''}`.trim() : 'Me'));
+                toast.info('Set to your profile info');
+            } else {
+                toast.error('Could not find your profile email');
+            }
+        } catch (err) {
+            console.error('Profile extraction error:', err);
+            toast.error('Error loading your profile');
+        }
+    };
+
+    const handleVariableChange = (key, value) => {
+        setVariables(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
 
     const handleVariablesInputChange = (value) => {
         setVariablesInput(value);
@@ -646,20 +762,13 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
         }
     };
 
-    const handleApplyVariable = (variable) => {
-        setVariables((prev) => ({
-            ...prev,
-            [variable.key]: variable.example || variable.placeholder || ''
-        }));
-    };
-
     const handleSubmit = async () => {
         if (!recipientEmail || !recipientEmail.trim()) {
-            toast.error('Please enter recipient email');
+            toast.error('Please enter a recipient email');
             return;
         }
-        if (variablesError) {
-            toast.error('Please fix variables JSON before sending');
+        if (isAdvancedMode && variablesError) {
+            toast.error('Please fix JSON errors first');
             return;
         }
         try {
@@ -677,105 +786,260 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
         }
     };
 
+    const EssentialVariables = [
+        { key: 'FirstName', label: 'First Name', placeholder: 'e.g. John' },
+        { key: 'LastName', label: 'Last Name', placeholder: 'e.g. Smith' },
+        { key: 'FullName', label: 'Full Name', placeholder: 'e.g. John Smith' },
+        { key: 'FirmName', label: 'Firm Name', placeholder: 'e.g. ABC Tax Services' },
+        { key: 'FirmAddress', label: 'Firm Address', placeholder: 'e.g. 123 Main St, Suite 100' },
+        { key: 'FirmPhone', label: 'Firm Phone', placeholder: 'e.g. (555) 000-0000' },
+        { key: 'FirmEmail', label: 'Firm Email', placeholder: 'e.g. info@firm.com' },
+        { key: 'FirmWebsite', label: 'Firm Website', placeholder: 'e.g. www.firm.com' }
+    ];
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4 send-email-modal">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto send-email-modal-box">
-                <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Send Email</h3>
-                <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Email *</label>
-                            <input
-                                type="email"
-                                value={recipientEmail}
-                                onChange={(e) => setRecipientEmail(e.target.value)}
-                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="client@example.com"
-                            />
+        <div className="fixed inset-0 bg-white/10 backdrop-blur-md flex items-center justify-center z-[1300] p-4 send-email-modal animate-in fade-in duration-300">
+            <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-3xl p-0 max-w-2xl w-full max-h-[92vh] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col send-email-modal-box">
+                {/* Header */}
+                <div className="px-6 py-5 border-b border-[#E8F0FF]/30 flex items-center justify-between bg-transparent sticky top-0 z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3AD6F2] to-[#2BC5E0] flex items-center justify-center text-white shadow-lg shadow-[#3AD6F2]/30">
+                            <SendIcon />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Name</label>
-                            <input
-                                type="text"
-                                value={recipientName}
-                                onChange={(e) => setRecipientName(e.target.value)}
-                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="Jane Smith"
-                            />
+                            <h3 className="text-xl font-bold text-[#1F2A55]">Send Email</h3>
+                            <p className="text-xs text-[#7B8AB2] font-semibold tracking-wider">PREVIEW & SEND</p>
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Variables (JSON)</label>
-                        <textarea
-                            value={variablesInput}
-                            onChange={(e) => handleVariablesInputChange(e.target.value)}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-40 font-mono text-xs"
-                            placeholder='{"Firm Name": "ABC Tax Services"}'
-                        />
-                        {variablesError && (
-                            <p className="mt-1 text-xs text-red-500">{variablesError}</p>
-                        )}
-                    </div>
-                    <div className="border border-dashed border-[#C8D5FF] rounded-lg p-4 bg-[#F9FBFF]">
-                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-[#1F2A55]">
-                                    Available Variables {template?.email_type ? `(${template.email_type.replace('_', ' ')})` : ''}
-                                </p>
-                                <p className="text-xs text-[#6B7280]">
-                                    Click a variable to add it with example data
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={loadVariables}
-                                className="mt-2 inline-flex items-center justify-center rounded-md border border-[#E8F0FF] px-3 py-1.5 text-xs font-semibold text-[#1F2A55] hover:bg-white sm:mt-0"
-                            >
-                                Refresh
-                            </button>
-                        </div>
-                        <div className="mt-3 max-h-48 overflow-y-auto space-y-2">
-                            {variablesLoading ? (
-                                <p className="text-sm text-[#7B8AB2]">Loading variables...</p>
-                            ) : availableVariables.length === 0 ? (
-                                <p className="text-sm text-[#7B8AB2]">No variables available for this email type.</p>
-                            ) : (
-                                availableVariables.map((variable) => (
-                                    <div
-                                        key={variable.key}
-                                        className="flex flex-col gap-1 rounded-lg border border-[#E8F0FF] bg-white/80 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
-                                    >
-                                        <div>
-                                            <p className="text-sm font-semibold text-[#1F2A55]">{variable.label}</p>
-                                            <p className="text-xs text-[#6B7280]">{variable.description}</p>
-                                            <p className="text-xs text-[#94A3B8]">Placeholder: {variable.placeholder}</p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleApplyVariable(variable)}
-                                            className="self-start rounded-md border border-[#3AD6F2] px-3 py-1 text-xs font-semibold text-[#1F2A55] hover:bg-[#EBFCFF]"
-                                        >
-                                            Use example
-                                        </button>
+                    <button onClick={onClose} className="p-2 text-[#7B8AB2] hover:text-[#1F2A55] hover:bg-white/50 rounded-full transition-all">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="overflow-y-auto flex-1 p-6 space-y-6">
+                    {/* Recipient Selection */}
+                    <div className="space-y-6">
+                        <div className="relative group">
+                            <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B4A66] mb-3 px-1 opacity-70">Smart Search Client</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={clientSearch}
+                                    onChange={(e) => {
+                                        setClientSearch(e.target.value);
+                                        setShowClientDropdown(true);
+                                    }}
+                                    onFocus={() => setShowClientDropdown(true)}
+                                    className="w-full pl-12 pr-4 py-4 bg-white/40 border-2 border-transparent focus:border-[#3AD6F2]/30 hover:bg-white/60 rounded-2xl focus:outline-none transition-all text-sm font-medium placeholder-[#7B8AB2]/50 shadow-sm"
+                                    placeholder="Type name or email address..."
+                                />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7B8AB2] transition-colors group-focus-within:text-[#3AD6F2]">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                </div>
+                                {isSearchingClients && (
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2">
+                                        <div className="w-4 h-4 border-2 border-[#3AD6F2] border-t-transparent rounded-full animate-spin"></div>
                                     </div>
-                                ))
+                                )}
+                            </div>
+
+                            {showClientDropdown && clientSearch.length >= 2 && (
+                                <div className="absolute top-full left-0 right-0 mt-3 bg-white/90 backdrop-blur-2xl border border-white rounded-2xl shadow-2xl z-20 max-h-60 overflow-y-auto py-2 p-1 ring-1 ring-black/5">
+                                    {clients.length === 0 && !isSearchingClients ? (
+                                        <div className="px-4 py-4 text-center text-sm text-[#7B8AB2] italic">No results found</div>
+                                    ) : (
+                                        clients.map(client => (
+                                            <button
+                                                key={client.id}
+                                                onClick={() => handleSelectClient(client)}
+                                                className="w-full text-left px-4 py-3.5 hover:bg-[#3AD6F2]/10 group transition-all rounded-xl"
+                                            >
+                                                <div className="font-bold text-[#1F2A55] text-sm group-hover:text-[#3AD6F2] transition-colors">
+                                                    {client.profile?.first_name || client.first_name} {client.profile?.last_name || client.last_name || client.name}
+                                                </div>
+                                                <div className="text-xs text-[#7B8AB2] font-medium">{client.profile?.email || client.email}</div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
                             )}
                         </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B4A66] px-1 opacity-70">Recipient Email *</label>
+                                <input
+                                    type="email"
+                                    value={recipientEmail}
+                                    onChange={(e) => setRecipientEmail(e.target.value)}
+                                    className="w-full px-5 py-3.5 bg-white/50 border border-transparent focus:border-[#3AD6F2]/30 rounded-xl focus:outline-none transition-all text-sm font-semibold shadow-sm"
+                                    placeholder="e.g. john@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B4A66] px-1 opacity-70">Recipient Name</label>
+                                <input
+                                    type="text"
+                                    value={recipientName}
+                                    onChange={(e) => setRecipientName(e.target.value)}
+                                    className="w-full px-5 py-3.5 bg-white/50 border border-transparent focus:border-[#3AD6F2]/30 rounded-xl focus:outline-none transition-all text-sm font-semibold shadow-sm"
+                                    placeholder="e.g. John Smith"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center px-1">
+                            <span className="text-[10px] text-[#94A3B8] font-bold tracking-tight">* MANDATORY RECIPIENT</span>
+                            <button
+                                type="button"
+                                onClick={handleSendToSelf}
+                                className="text-xs font-extrabold text-[#3AD6F2] hover:text-[#2BC5E0] bg-[#3AD6F2]/5 px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                Use My Account Info
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Variable Settings */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between px-1">
+                            <label className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B4A66] opacity-70">Personalization</label>
+                            <button 
+                                onClick={() => setIsAdvancedMode(!isAdvancedMode)}
+                                className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full transition-all ${isAdvancedMode ? 'bg-[#1F2A55] text-white shadow-lg' : 'bg-white/50 text-[#3B4A66] hover:bg-white border border-white/50 shadow-sm'}`}
+                            >
+                                {isAdvancedMode ? 'Standard View' : 'Expert (JSON)'}
+                            </button>
+                        </div>
+
+                        {isAdvancedMode ? (
+                            <div className="space-y-3">
+                                <textarea
+                                    value={variablesInput}
+                                    onChange={(e) => handleVariablesInputChange(e.target.value)}
+                                    className="w-full px-5 py-4 bg-[#1F2A55] text-[#A5B4FC] border border-white/10 rounded-2xl focus:outline-none h-48 font-mono text-xs leading-relaxed shadow-inner"
+                                    placeholder='{"Placeholder": "Value"}'
+                                />
+                                {variablesError && (
+                                    <div className="text-xs text-red-500 flex items-center gap-2 font-bold px-2 bg-red-500/10 py-2 rounded-lg">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                        </svg>
+                                        SYNTAX ERROR: {variablesError}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-3xl p-6 space-y-8 shadow-sm">
+                                {/* Fixed/Essential Variables */}
+                                <div className="space-y-5">
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-[11px] font-black text-[#7B8AB2] uppercase tracking-[0.2em]">Profile Basics</p>
+                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-[#E8F0FF] to-transparent"></div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        {EssentialVariables.map(v => (
+                                            <div key={v.key} className="space-y-1.5">
+                                                <label className="block text-[11px] font-bold text-[#3B4A66]/80 px-1">{v.label}</label>
+                                                <input
+                                                    type="text"
+                                                    value={variables[v.key] || ''}
+                                                    onChange={(e) => handleVariableChange(v.key, e.target.value)}
+                                                    className="w-full px-4 py-2.5 bg-white/70 border border-white focus:border-[#3AD6F2]/30 rounded-xl focus:outline-none text-sm font-medium transition-all shadow-sm"
+                                                    placeholder={v.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Dynamic Template Variables */}
+                                <div className="space-y-5">
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-[11px] font-black text-[#7B8AB2] uppercase tracking-[0.2em]">Email Context</p>
+                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-[#E8F0FF] to-transparent"></div>
+                                        <button 
+                                            onClick={loadVariables} 
+                                            className="p-1.5 text-[#3AD6F2] hover:bg-[#3AD6F2]/10 rounded-full transition-all"
+                                            disabled={variablesLoading}
+                                            title="Sync variables"
+                                        >
+                                            <svg className={variablesLoading ? 'animate-spin' : ''} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    {variablesLoading ? (
+                                        <div className="py-6 flex flex-col items-center gap-2">
+                                            <div className="w-6 h-6 border-3 border-[#3AD6F2] border-t-transparent rounded-full animate-spin"></div>
+                                            <span className="text-[10px] font-bold text-[#7B8AB2] uppercase tracking-widest">Detecting Placeholders</span>
+                                        </div>
+                                    ) : availableVariables.length === 0 ? (
+                                        <div className="py-4 text-center bg-white/30 rounded-2xl border border-dashed border-white/60">
+                                            <p className="text-xs text-[#94A3B8] font-medium italic">No custom placeholders detected for this type</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 gap-5">
+                                            {availableVariables.filter(v => !EssentialVariables.find(e => e.key === v.key)).map(v => (
+                                                <div key={v.key} className="space-y-2 group">
+                                                    <div className="flex justify-between items-baseline px-1">
+                                                        <label className="block text-[11px] font-bold text-[#3B4A66]">{v.label || v.key}</label>
+                                                        <span className="text-[9px] text-[#94A3B8] font-mono group-focus-within:text-[#3AD6F2] transition-colors">[{v.key}]</span>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        value={variables[v.key] || ''}
+                                                        onChange={(e) => handleVariableChange(v.key, e.target.value)}
+                                                        className="w-full px-5 py-3 bg-white/70 border border-white focus:border-[#3AD6F2]/30 rounded-xl focus:outline-none text-sm font-semibold transition-all shadow-sm"
+                                                        placeholder={v.placeholder || `Value for ${v.label || v.key}`}
+                                                    />
+                                                    {v.description && <p className="mt-1.5 text-[10px] text-[#6B7280] italic leading-relaxed px-1">{v.description}</p>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:justify-end send-email-footer">
+
+                {/* Footer */}
+                <div className="px-8 py-6 border-t border-[#E8F0FF]/30 bg-transparent flex items-center justify-end gap-4 sticky bottom-0">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                        className="px-6 py-3 text-sm font-extrabold text-[#3B4A66] hover:bg-white/60 rounded-2xl border border-white/50 transition-all active:scale-95"
                     >
-                        Cancel
+                        CANCEL
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={sending}
-                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] disabled:opacity-50"
+                        className="px-10 py-3 text-sm font-black bg-gradient-to-r from-[#F56D2D] to-[#E55A1D] text-white rounded-2xl hover:shadow-[0_10px_30px_rgba(245,109,45,0.4)] transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50"
                     >
-                        {sending ? 'Sending...' : 'Send Email'}
+                        {sending ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                SENDING...
+                            </>
+                        ) : (
+                            <>
+                                <span>SEND TEMPLATE</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
+                                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -841,6 +1105,8 @@ const getInitialFormState = (template) => ({
     header_html: template?.header_html || '',
     body_html: template?.body_html || template?.body || '',
     footer_html: template?.footer_html || '',
+    editor_mode: template?.editor_mode || 'visual',
+    blocks_data: template?.blocks_data || [],
     body_text: template?.body_text || '',
     tone: template?.tone || 'professional',
     status: template?.status || 'draft',
@@ -857,6 +1123,26 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
     const [previewData, setPreviewData] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [firmData, setFirmData] = useState(null);
+    const [brandingData, setBrandingData] = useState(null);
+
+    useEffect(() => {
+        const fetchBrandingData = async () => {
+            try {
+                const response = await firmAdminSettingsAPI.getBrandingInfo();
+                if (response.success) {
+                    setBrandingData(response.data);
+                }
+                const firmResponse = await firmAdminSettingsAPI.getGeneralInfo();
+                if (firmResponse.success) {
+                    setFirmData(firmResponse.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch branding data:', error);
+            }
+        };
+        fetchBrandingData();
+    }, []);
 
     useEffect(() => {
         setFormData(getInitialFormState(template));
@@ -974,10 +1260,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
             toast.error('Subject is required');
             return false;
         }
-        if (!formData.body_html.trim()) {
-            toast.error('Body HTML is required');
-            return false;
-        }
+
         return true;
     };
 
@@ -1003,6 +1286,12 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
         }
         if (formData.footer_html.trim()) payload.footer_html = formData.footer_html.trim();
         if (formData.body_text.trim()) payload.body_text = formData.body_text.trim();
+
+        // Add new fields
+        payload.editor_mode = formData.editor_mode;
+        if (formData.editor_mode === 'visual' && formData.blocks_data) {
+            payload.blocks_data = formData.blocks_data;
+        }
 
         try {
             setSubmitting(true);
@@ -1040,7 +1329,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1200]">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-7xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex-1">
                         <h3 className="text-xl font-bold text-[#1F2A55]">
@@ -1062,294 +1351,116 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                     </button>
                 </div>
 
-                <div className="lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(260px,1fr)] lg:gap-6">
-                    <div className="space-y-5">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Name *</label>
-                                <input
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                    placeholder="Welcome Email"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Description</label>
-                                <input
-                                    type="text"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                    placeholder="Short internal description"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div>
-                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Category</label>
-                                <select
-                                    value={formData.category}
-                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                >
-                                    {EMAIL_TEMPLATE_CATEGORIES.map((option) => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Email Type</label>
-                                <select
-                                    value={formData.email_type}
-                                    onChange={(e) => setFormData({ ...formData, email_type: e.target.value })}
-                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                >
-                                    {EMAIL_TEMPLATE_TYPES.map((option) => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Tone</label>
-                                <select
-                                    value={formData.tone}
-                                    onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                >
-                                    {EMAIL_TEMPLATE_TONES.map((option) => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div>
-                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Status</label>
-                                <select
-                                    value={formData.status}
-                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                                >
-                                    {EMAIL_TEMPLATE_STATUSES.map((option) => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex flex-col justify-end md:col-span-2">
-                                <label className="text-sm font-medium text-[#3B4A66] mb-2">Active Template</label>
-                                <label className="inline-flex items-center gap-2 text-sm text-[#1F2A55]">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.is_active}
-                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                        className="h-4 w-4 text-[#3AD6F2] border-[#C8D5FF] rounded focus:ring-[#3AD6F2]"
-                                    />
-                                    Use this template for live communications
-                                </label>
-                            </div>
-                        </div>
-
+                <div className="space-y-6">
+                    {/* Top Level Fields */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Subject *</label>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-1.5">Template Name *</label>
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="Welcome Email"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-1.5">Category</label>
+                            <select
+                                value={formData.category}
+                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            >
+                                {EMAIL_TEMPLATE_CATEGORIES.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-1.5">Email Type</label>
+                            <select
+                                value={formData.email_type}
+                                onChange={(e) => setFormData({ ...formData, email_type: e.target.value })}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            >
+                                {EMAIL_TEMPLATE_TYPES.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-1.5">Tone</label>
+                            <select
+                                value={formData.tone}
+                                onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            >
+                                {EMAIL_TEMPLATE_TONES.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-1.5">Subject *</label>
                             <input
                                 type="text"
                                 value={formData.subject}
-                                onFocus={() => setLastFocusedField('subject')}
-                                onDragOver={handleFieldDragOver}
-                                onDrop={(event) => handleFieldDrop(event, 'subject')}
                                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                                 className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
                                 placeholder="Welcome to Firm Name!"
                             />
                         </div>
-
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                            {['header_html', 'body_html', 'footer_html'].map((field) => (
-                                <div key={field} className={field === 'body_html' ? 'lg:col-span-3' : 'lg:col-span-3'}>
-                                    <label className="block text-sm font-medium text-[#3B4A66] mb-2 capitalize">
-                                        {VARIABLE_FIELD_LABELS[field]} {field === 'body_html' ? '*' : ''}
-                                    </label>
-                                    <textarea
-                                        value={formData[field]}
-                                        onFocus={() => setLastFocusedField(field)}
-                                        onDragOver={handleFieldDragOver}
-                                        onDrop={(event) => handleFieldDrop(event, field)}
-                                        onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                                        className={`w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-mono text-xs ${field === 'body_html' ? 'h-48' : 'h-32'}`}
-                                        placeholder="<div>Content...</div>"
-                                    />
-                                    {field === 'body_html' && (
-                                        <p className="mt-1 text-xs text-[#6B7280]">
-                                            Type plain text and we will wrap it with HTML automatically. You can also drag variables directly into this field.
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Body Text (optional)</label>
-                            <textarea
-                                value={formData.body_text}
-                                onFocus={() => setLastFocusedField('body_text')}
-                                onDragOver={handleFieldDragOver}
-                                onDrop={(event) => handleFieldDrop(event, 'body_text')}
-                                onChange={(e) => setFormData({ ...formData, body_text: e.target.value })}
-                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-32"
-                                placeholder="Plain text version for fallback"
-                            />
-                        </div>
-
-                        {previewData && (
-                            <div className="border border-[#E8F0FF] rounded-lg p-4 bg-[#FDFDFE]">
-                                <div className="flex justify-between items-center mb-3">
-                                    <p className="text-sm font-semibold text-[#1F2A55]">Preview</p>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPreviewData(null)}
-                                        className="text-xs text-[#7B8AB2] hover:text-[#1F2A55]"
-                                    >
-                                        Clear
-                                    </button>
-                                </div>
-                                <p className="text-sm font-medium text-[#1F2A55] mb-3">{previewData.subject}</p>
-                                <div
-                                    className="border border-[#E8F0FF] rounded-lg bg-white p-4 text-sm text-[#1F2A55]"
-                                    dangerouslySetInnerHTML={{ __html: previewData.html }}
+                        <div className="flex flex-col justify-end">
+                            <label className="inline-flex items-center gap-2 text-sm text-[#1F2A55] mb-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.is_active}
+                                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                    className="h-4 w-4 text-[#3AD6F2] border-[#C8D5FF] rounded focus:ring-[#3AD6F2]"
                                 />
-                                {previewData.sample_variables && (
-                                    <div className="mt-3">
-                                        <p className="text-xs font-semibold text-[#6B7280] uppercase">Sample Variables</p>
-                                        <div className="grid gap-2 mt-1 sm:grid-cols-2">
-                                            {Object.entries(previewData.sample_variables).map(([key, value]) => (
-                                                <div key={key} className="rounded-md border border-[#E8F0FF] bg-white px-3 py-2 text-xs text-[#1F2A55]">
-                                                    <span className="font-semibold">{key}:</span> {value}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                Set as Active Template
+                            </label>
+                        </div>
                     </div>
 
-                    {/* Enhanced Variable Picker - Grouped by Category */}
-                    <div className="mt-6 lg:mt-0">
-                        <div className="border border-dashed border-[#C8D5FF] rounded-lg p-4 bg-[#F9FBFF] lg:sticky lg:top-6">
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-semibold text-[#1F2A55] inline-flex items-center gap-2">
-                                            📝 Available Variables
-                                        </p>
-                                        <p className="text-xs text-[#6B7280] mt-1">
-                                            Click to insert into {fieldLabel.toLowerCase()}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={loadVariables}
-                                        className="text-xs text-[#3AD6F2] hover:underline"
-                                    >
-                                        Refresh
-                                    </button>
-                                </div>
+                    {/* The Visual/HTML Builder */}
+                    <div className="border border-[#E8F0FF] rounded-xl overflow-hidden min-h-[600px] flex flex-col bg-white">
+                        <UnifiedEmailBuilder
+                            initialMode={formData.editor_mode}
+                            initialBlocks={formData.blocks_data}
+                            initialHTML={{
+                                header: formData.header_html,
+                                body: formData.body_html,
+                                footer: formData.footer_html
+                            }}
+                            firmData={firmData}
+                            brandingData={brandingData}
+                            onSave={(data) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    editor_mode: data.mode,
+                                    blocks_data: data.blocks || prev.blocks_data,
+                                    header_html: data.html?.header || prev.header_html,
+                                    body_html: data.html?.body || prev.body_html,
+                                    footer_html: data.html?.footer || prev.footer_html
+                                }));
+                            }}
+                            onModeChange={(mode) => setFormData(prev => ({ ...prev, editor_mode: mode }))}
+                        />
+                    </div>
 
-                                {/* Helpful Info Banner */}
-                                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                    <p className="text-xs text-blue-900 leading-relaxed">
-                                        💡 <strong>Tip:</strong> Variables are automatically replaced with real data when emails are sent.
-                                        Example: <code className="bg-blue-100 px-1 rounded">[FirstName]</code> becomes "John"
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 max-h-96 overflow-y-auto space-y-3 pr-1">
-                                {variablesLoading ? (
-                                    <p className="text-sm text-[#7B8AB2]">Loading variables...</p>
-                                ) : variablesError ? (
-                                    <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-                                        <p className="font-semibold">⚠️ Using default variables</p>
-                                        <p className="text-xs mt-1">{variablesError}</p>
-                                    </div>
-                                ) : (
-                                    // Render grouped variables
-                                    Object.entries(VARIABLE_GROUPS).map(([groupKey, group]) => (
-                                        <div key={groupKey} className="border border-[#E8F0FF] rounded-lg bg-white p-3">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-lg">{group.icon}</span>
-                                                <p className="text-xs font-bold uppercase text-[#1F2A55] tracking-wide">
-                                                    {group.label}
-                                                </p>
-                                                <span className="text-xs text-[#94A3B8] ml-auto">
-                                                    {group.variables.length}
-                                                </span>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                {group.variables.map((variable) => (
-                                                    <button
-                                                        key={variable.key}
-                                                        type="button"
-                                                        draggable
-                                                        onDragStart={(event) => handleVariableDragStart(event, variable.placeholder)}
-                                                        onClick={() => handleInsertVariable(variable.placeholder)}
-                                                        className="w-full text-left rounded-md border border-[#E8F0FF] bg-gray-50 px-2.5 py-2 text-xs hover:bg-[#EBFCFF] hover:border-[#3AD6F2] transition-all group"
-                                                    >
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <div className="flex-1">
-                                                                <p className="font-semibold text-[#1F2A55] text-sm">
-                                                                    {variable.label}
-                                                                </p>
-                                                                <p className="text-[#6B7280] mt-0.5">
-                                                                    {variable.description}
-                                                                </p>
-                                                                <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-                                                                    <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">
-                                                                        {variable.placeholder}
-                                                                    </code>
-                                                                    {variable.example && (
-                                                                        <>
-                                                                            <span className="text-[#94A3B8]">→</span>
-                                                                            <span className="text-xs text-green-600 font-medium">
-                                                                                "{variable.example}"
-                                                                            </span>
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-[#3AD6F2]">
-                                                                    <path d="M12 8H4M8 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-
-                            {/* Help Footer */}
-                            <div className="mt-4 pt-3 border-t border-[#E8F0FF]">
-                                <p className="text-xs text-[#7B8AB2] mb-2">📚 Need help?</p>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        className="text-xs px-2 py-1.5 bg-white border border-[#E8F0FF] rounded hover:bg-gray-50 text-[#1F2A55]"
-                                        onClick={() => window.open('https://seqwens-s3.s3.us-east-1.amazonaws.com/docs/email_templates_guide.pdf', '_blank')}
-                                    >
-                                        📖 View Docs
-                                    </button>
-
-                                </div>
-                            </div>
-                        </div>
+                    {/* Optional Plain Text version */}
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-1.5">Plain Text Version (Fallback)</label>
+                        <textarea
+                            value={formData.body_text}
+                            onChange={(e) => setFormData({ ...formData, body_text: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-20 text-sm"
+                            placeholder="Optional plain text version..."
+                        />
                     </div>
                 </div>
 
