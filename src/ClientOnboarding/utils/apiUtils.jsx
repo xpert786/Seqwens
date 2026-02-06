@@ -2670,6 +2670,55 @@ export const taskDetailAPI = {
         }
         return response.json();
       });
+  },
+
+  // Add task comment
+  addTaskComment: async (taskId, data) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/comments/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  }
+};
+
+// Export tasksAPI for client-side task operations
+export const tasksAPI = {
+  // Get my tasks (for clients)
+  getMyTasks: async () => {
+    return await apiRequest('/taxpayer/tasks/', 'GET');
+  },
+
+  // Add task comment
+  addTaskComment: async (taskId, data) => {
+    return await taskDetailAPI.addTaskComment(taskId, data);
+  },
+
+  // Update task status
+  updateTaskStatus: async (taskId, data) => {
+    return await taskDetailAPI.updateTaskStatus(taskId, data.status);
+  },
+
+  // Update task (full update)
+  updateTask: async (taskId, taskData) => {
+    return await taskDetailAPI.updateTask(taskId, taskData);
   }
 };
 
