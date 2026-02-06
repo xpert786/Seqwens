@@ -8,7 +8,19 @@
 }
 
 .upload-modal .modal-body {
-  max-height: calc(100vh - 100px) !important;
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  padding: 1.5rem !important;
+  padding-bottom: 3rem !important;
+}
+
+.upload-modal .modal-content {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+.upload-modal .modal-dialog {
+  max-height: 90vh !important;
   overflow-y: auto !important;
 }
 
@@ -154,7 +166,8 @@
   max-height: calc(100vh - 250px);
   min-width: 250px;
   flex: 1 1 280px;
-  overflow-y: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden;
   border: 1px solid #E8F0FF;
   padding: 0.75rem;
   border-radius: 8px;
@@ -497,7 +510,8 @@
 
 
 .doc-scroll {
-  overflow-y: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden;
   border: 1px solid #E8F0FF;
   padding: 0.75rem;
   border-radius: 8px;

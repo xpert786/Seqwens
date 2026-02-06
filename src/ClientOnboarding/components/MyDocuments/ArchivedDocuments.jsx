@@ -402,22 +402,7 @@ export default function ArchivedDocuments() {
                             </select>
                         </div>
 
-                        <div className="d-flex align-items-center" style={{ gap: "12px", flexShrink: 0 }}>
-                            <button
-                                className="btn text-white fw-semibold d-flex align-items-center gap-2"
-                                onClick={handleExportLog}
-                                style={{
-                                    backgroundColor: "#F56D2D",
-                                    fontFamily: "BasisGrotesquePro",
-                                    fontSize: "12px",
-                                    padding: "6px 10px",
-                                    whiteSpace: "nowrap"
-                                }}
-                            >
-                                <UpIcon />
-                                Export Archived Log
-                            </button>
-                        </div>
+
                     </div>
 
                     {/* Documents Table */}

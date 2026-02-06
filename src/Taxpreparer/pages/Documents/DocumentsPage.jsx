@@ -888,19 +888,18 @@ export default function DocumentsPage() {
                 // Loading state - show skeleton or loading cards
                 cardData.map((item, index) => (
                   <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
-                    <div className="stat-card">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="stat-icon" style={{ color: item.color }}>
-                          {item.icon}
-                        </div>
+                    <div className="stat-card d-flex align-items-center p-3 gap-3">
+                      <div className="stat-icon p-3 rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ color: item.color, backgroundColor: `${item.color}15`, width: '60px', height: '60px' }}>
+                        {item.icon}
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="text-muted fw-medium" style={{ fontSize: '14px' }}>{item.label}</div>
                         <div className="stat-count">
                           <div className="spinner-border spinner-border-sm text-primary" role="status">
                             <span className="visually-hidden">Loading...</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-2">
-                        <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
                       </div>
                     </div>
                   </div>
@@ -916,15 +915,16 @@ export default function DocumentsPage() {
                 // Normal state with data
                 cardData.map((item, index) => (
                   <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
-                    <div className="stat-card">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="stat-icon" style={{ color: item.color }}>
-                          {item.icon}
-                        </div>
-                        <div className="stat-count">{item.count}</div>
+                    <div className="stat-card d-flex align-items-center p-3 gap-3">
+                      <div className="stat-icon p-3 rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ color: item.color, backgroundColor: `${item.color}15`, width: '60px', height: '60px' }}>
+                        {item.icon}
                       </div>
-                      <div className="mt-2">
-                        <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                      <div className="flex-grow-1">
+                        <div className="text-muted fw-medium" style={{ fontSize: '14px' }}>{item.label}</div>
+                        <h3 className="fw-bold mb-0" style={{ fontSize: '24px', color: '#111827' }}>
+                          {item.count}
+                        </h3>
                       </div>
                     </div>
                   </div>
@@ -1380,7 +1380,8 @@ export default function DocumentsPage() {
             </div>
           )}
         </>
-      )}
+      )
+      }
 
       {/* Create Folder Modal */}
       <Modal
@@ -1706,6 +1707,6 @@ export default function DocumentsPage() {
         confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
         isLoading={!!deletingDocumentId}
       />
-    </div>
+    </div >
   );
 }

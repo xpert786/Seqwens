@@ -15,9 +15,8 @@ import { useNotificationWebSocket } from "../../utils/useNotificationWebSocket";
 import "../../styles/NotificationsPanel.css";
 
 const TABS = [
-  { label: "All", key: "all" },
   { label: "Unread", key: "unread" },
-  { label: "Read", key: "read" },
+  { label: "All", key: "all" },
 ];
 
 const PRIORITY_COLOR = {
@@ -158,7 +157,7 @@ const transformNotification = (apiNotification) => {
 
 export default function NotificationsPanel({ onClose, onChange, userType = "client" }) {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("unread");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -166,7 +165,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
-  
+
   // Maximum number of notifications to show initially
   const MAX_INITIAL_NOTIFICATIONS = 5;
 
@@ -330,8 +329,8 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
   const groupedNotifications = useMemo(() => {
     // Limit notifications if not showing all
-    const notificationsToShow = showAllNotifications 
-      ? filteredNotifications 
+    const notificationsToShow = showAllNotifications
+      ? filteredNotifications
       : filteredNotifications.slice(0, MAX_INITIAL_NOTIFICATIONS);
     return groupNotificationsByDate(notificationsToShow);
   }, [filteredNotifications, showAllNotifications]);
@@ -375,11 +374,11 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
     try {
       const notificationToRemove = notifications.find((n) => n.id === notificationId);
       const wasUnread = notificationToRemove && !notificationToRemove.read;
-      
+
       const response = await notificationAPI.deleteNotification(notificationId);
       if (response.success) {
         setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
-        
+
         // Update unread count if removed notification was unread
         if (wasUnread) {
           setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -518,9 +517,8 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
                   setSelectedTab(tab.key);
                   setShowAllNotifications(false); // Reset when changing tabs
                 }}
-                className={`btn  ${
-                  selectedTab === tab.key ? "active-tab" : "inactive-tab"
-                }`}
+                className={`btn  ${selectedTab === tab.key ? "active-tab" : "inactive-tab"
+                  }`}
               >
                 {tab.label}
               </button>
@@ -615,7 +613,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
           ))}
         </div>
       ))}
-      
+
       {/* View All Button */}
       {!loading && !error && hasMoreNotifications && !showAllNotifications && (
         <div className="text-center mt-3 mb-2">
@@ -637,7 +635,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
           </button>
         </div>
       )}
-      
+
     </div>
   );
 }

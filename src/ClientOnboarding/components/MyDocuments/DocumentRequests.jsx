@@ -19,7 +19,7 @@ export default function DocumentRequests() {
     completed: 0,
     cancelled: 0
   });
-  
+
   // Upload modal state
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -32,14 +32,14 @@ export default function DocumentRequests() {
       try {
         setLoading(true);
         setError(null);
-        
+
         const options = {
           status: filterStatus,
           sort_by: '-due_date' // Sort by due date descending
         };
-        
+
         const response = await documentsAPI.getDocumentRequests(options);
-        
+
         // Handle new API response structure
         let documentRequests = [];
         let counts = {
@@ -48,13 +48,13 @@ export default function DocumentRequests() {
           completed: 0,
           cancelled: 0
         };
-        
+
         if (response.success && response.data) {
           // New API structure: response.data.tasks
           if (response.data.tasks && Array.isArray(response.data.tasks)) {
             documentRequests = response.data.tasks;
           }
-          
+
           // Update status counts from API if available
           if (response.data.status_counts) {
             counts = {
@@ -74,7 +74,7 @@ export default function DocumentRequests() {
         } else if (response.document_requests && Array.isArray(response.document_requests)) {
           documentRequests = response.document_requests;
         }
-        
+
         setDocuments(documentRequests);
         setStatusCounts(counts);
       } catch (err) {
@@ -98,7 +98,7 @@ export default function DocumentRequests() {
   // Handle file selection
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    
+
     // Filter only PDF files
     const pdfFiles = selectedFiles.filter(file => {
       const fileName = file.name.toLowerCase();
@@ -128,7 +128,7 @@ export default function DocumentRequests() {
     if (pdfFiles.length > 0) {
       setUploadFiles(prev => [...prev, ...pdfFiles]);
     }
-    
+
     // Reset file input so same file can be selected again if needed
     e.target.value = '';
   };
@@ -160,22 +160,22 @@ export default function DocumentRequests() {
       }
 
       const formData = new FormData();
-      
+
       // Get client_id from the document request
       // API response structure: clients_info: [{ id, name, email }] or clients: [id]
-      const clientId = selectedRequest.clients_info?.[0]?.id || 
-                       selectedRequest.clients?.[0] ||
-                       selectedRequest.client_id || 
-                       selectedRequest.taxpayer_id || 
-                       selectedRequest.taxpayer?.id ||
-                       selectedRequest.client?.id;
-      
+      const clientId = selectedRequest.clients_info?.[0]?.id ||
+        selectedRequest.clients?.[0] ||
+        selectedRequest.client_id ||
+        selectedRequest.taxpayer_id ||
+        selectedRequest.taxpayer?.id ||
+        selectedRequest.client?.id;
+
       if (!clientId) {
         throw new Error('Client ID is missing from document request');
       }
-      
+
       formData.append('client_id', clientId.toString());
-      
+
       // Add all files
       uploadFiles.forEach(file => {
         formData.append('files', file);
@@ -183,10 +183,10 @@ export default function DocumentRequests() {
 
       // Create documents_metadata array - one entry per file
       // Use folder_id from request if available, otherwise null
-      const folderId = selectedRequest.folder_id || 
-                       selectedRequest.folder?.id || 
-                       null;
-      
+      const folderId = selectedRequest.folder_id ||
+        selectedRequest.folder?.id ||
+        null;
+
       const documentsMetadata = uploadFiles.map(() => ({
         category_id: null, // Can be set if category selection is added
         folder_id: folderId
@@ -209,7 +209,7 @@ export default function DocumentRequests() {
       if (!response.ok || (result.success === false && result.errors)) {
         // Extract all error messages from the errors object
         const errorMessages = [];
-        
+
         if (result.errors && typeof result.errors === 'object') {
           Object.keys(result.errors).forEach(field => {
             const fieldErrors = result.errors[field];
@@ -220,7 +220,7 @@ export default function DocumentRequests() {
             }
           });
         }
-        
+
         // Show all error messages in toast notifications
         if (errorMessages.length > 0) {
           errorMessages.forEach(msg => {
@@ -234,7 +234,7 @@ export default function DocumentRequests() {
 
       if (result.success) {
         toast.success(result.message || 'Documents uploaded successfully!', { position: "top-right", autoClose: 3000 });
-        
+
         // Refresh document requests list
         const refreshResponse = await documentsAPI.getDocumentRequests({ status: filterStatus, sort_by: '-due_date' });
         if (refreshResponse.success && refreshResponse.data && refreshResponse.data.tasks) {
@@ -302,10 +302,10 @@ export default function DocumentRequests() {
       }
 
       const formData = new FormData();
-      
+
       // Add task_id (document request task ID)
       formData.append('task_id', selectedRequest.id.toString());
-      
+
       // Add all files
       uploadFiles.forEach(file => {
         formData.append('files', file);
@@ -326,7 +326,7 @@ export default function DocumentRequests() {
 
       if (!uploadResponse.ok || (uploadResult.success === false && uploadResult.errors)) {
         const errorMessages = [];
-        
+
         if (uploadResult.errors && typeof uploadResult.errors === 'object') {
           Object.keys(uploadResult.errors).forEach(field => {
             const fieldErrors = uploadResult.errors[field];
@@ -337,7 +337,7 @@ export default function DocumentRequests() {
             }
           });
         }
-        
+
         if (errorMessages.length > 0) {
           errorMessages.forEach(msg => {
             toast.error(msg, { position: "top-right", autoClose: 5000 });
@@ -351,7 +351,7 @@ export default function DocumentRequests() {
       if (uploadResult.success) {
         // API automatically submits the document request, so we just show success
         toast.success(uploadResult.message || 'Documents uploaded and request submitted successfully!', { position: "top-right", autoClose: 3000 });
-        
+
         // Refresh document requests list
         const refreshResponse = await documentsAPI.getDocumentRequests({ status: filterStatus, sort_by: '-due_date' });
         if (refreshResponse.success && refreshResponse.data && refreshResponse.data.tasks) {
@@ -443,7 +443,7 @@ export default function DocumentRequests() {
                 Documents requested by your tax professional
               </p>
             </div>
-            
+
             {/* Filter Buttons */}
             <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0">
               <button
@@ -476,21 +476,7 @@ export default function DocumentRequests() {
               >
                 Pending
               </button>
-              <button
-                onClick={() => setFilterStatus('in_progress')}
-                className="btn "
-                style={{
-                  backgroundColor: filterStatus === 'in_progress' ? "#00C0C6" : "#fff",
-                  color: filterStatus === 'in_progress' ? "#fff" : "#3B4A66",
-                  border: "1px solid #E8F0FF",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  padding: "6px 12px"
-                }}
-              >
-                In Progress
-              </button>
+
               <button
                 onClick={() => setFilterStatus('completed')}
                 className="btn "
@@ -524,138 +510,138 @@ export default function DocumentRequests() {
             {documents.map((doc) => {
               const overdueDays = calculateOverdueDays(doc.due_date || doc.dueDate);
               const requestedDocs = doc.requested_documents || doc.requestedDocs || doc.requested_docs || [];
-              
+
               return (
-              <div
-                key={doc.id || doc.request_id || `doc-${documents.indexOf(doc)}`}
-                className={`mydocs-card ${activeCard === doc.id ? 'active' : ''}`}
-                onClick={() => setActiveCard(doc.id)}
-              >
-                <div className="d-flex justify-content-between align-items-start w-100">
-                  <div className="w-100">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-3">
-                        <span className="mydocs-icon-wrapper">
-                          <FileIcon />
-                        </span>
+                <div
+                  key={doc.id || doc.request_id || `doc-${documents.indexOf(doc)}`}
+                  className={`mydocs-card ${activeCard === doc.id ? 'active' : ''}`}
+                  onClick={() => setActiveCard(doc.id)}
+                >
+                  <div className="d-flex justify-content-between align-items-start w-100">
+                    <div className="w-100">
+                      <div className="d-flex align-items-center justify-content-between mb-2">
+                        <div className="d-flex align-items-center gap-3">
+                          <span className="mydocs-icon-wrapper">
+                            <FileIcon />
+                          </span>
 
-                        <strong className="mydocs-doc-title">
-                          {doc.task_title || doc.title || `${doc.tax_year || doc.year || ''} ${doc.document_type || doc.type || 'Document Request'}`.trim()}
-                        </strong>
+                          <strong className="mydocs-doc-title">
+                            {doc.task_title || doc.title || `${doc.tax_year || doc.year || ''} ${doc.document_type || doc.type || 'Document Request'}`.trim()}
+                          </strong>
 
-                        {doc.priority && (() => {
-                          const priorityLower = (doc.priority || '').toLowerCase();
-                          const priorityColors = {
-                            'high': { bg: '#EF4444', color: '#FFFFFF' },
-                            'medium': { bg: '#F59E0B', color: '#FFFFFF' },
-                            'low': { bg: '#10B981', color: '#FFFFFF' }
-                          };
-                          const colors = priorityColors[priorityLower] || { bg: '#6B7280', color: '#FFFFFF' };
-                          return (
-                            <span
-                              className="badge"
+                          {doc.priority && (() => {
+                            const priorityLower = (doc.priority || '').toLowerCase();
+                            const priorityColors = {
+                              'high': { bg: '#EF4444', color: '#FFFFFF' },
+                              'medium': { bg: '#F59E0B', color: '#FFFFFF' },
+                              'low': { bg: '#10B981', color: '#FFFFFF' }
+                            };
+                            const colors = priorityColors[priorityLower] || { bg: '#6B7280', color: '#FFFFFF' };
+                            return (
+                              <span
+                                className="badge"
+                                style={{
+                                  backgroundColor: colors.bg,
+                                  color: colors.color,
+                                  fontSize: "10px",
+                                  fontWeight: "700",
+                                  textTransform: "uppercase",
+                                  lineHeight: "1",
+                                  height: "20px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  padding: "3px 9px",
+                                  borderRadius: "20px",
+                                  border: "none"
+                                }}
+                              >
+                                {doc.priority}
+                              </span>
+                            );
+                          })()}
+                          <span className="badge mydocs-badge-status">
+                            {doc.status || 'Pending'}
+                          </span>
+                        </div>
+
+                        {(doc.status === 'pending' || !doc.status || doc.status === 'in_progress') && (
+                          <div className="d-flex gap-2 mt-2">
+                            <button
+                              className="btn  d-flex align-items-center gap-2"
+                              onClick={(e) => handleSubmitRequestClick(e, doc)}
                               style={{
-                                backgroundColor: colors.bg,
-                                color: colors.color,
-                                fontSize: "10px",
-                                fontWeight: "700",
-                                textTransform: "uppercase",
-                                lineHeight: "1",
-                                height: "20px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                padding: "3px 9px",
-                                borderRadius: "20px",
-                                border: "none"
+                                backgroundColor: '#32B582',
+                                borderColor: '#32B582',
+                                color: 'white',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                padding: '6px 12px',
+                                cursor: 'pointer'
                               }}
                             >
-                              {doc.priority}
-                            </span>
-                          );
-                        })()}
-                        <span className="badge mydocs-badge-status">
-                          {doc.status || 'Pending'}
-                        </span>
+                              <FaCheckCircle />
+                              Submit Request
+                            </button>
+                          </div>
+                        )}
+
                       </div>
 
-                      {(doc.status === 'pending' || !doc.status || doc.status === 'in_progress') && (
-                        <div className="d-flex gap-2 mt-2">
-                          <button 
-                            className="btn  d-flex align-items-center gap-2"
-                            onClick={(e) => handleSubmitRequestClick(e, doc)}
-                            style={{
-                              backgroundColor: '#32B582',
-                              borderColor: '#32B582',
-                              color: 'white',
-                              borderRadius: '8px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              padding: '6px 12px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <FaCheckCircle />
-                            Submit Request
-                          </button>
+                      <div className="mydocs-description">
+                        {doc.description || doc.instructions || doc.message || 'Please upload the requested documents'}
+                      </div>
+
+                      <div className="d-flex flex-wrap mb-1 mydocs-info">
+                        <div className="d-flex align-items-center">
+                          <BlackDateIcon />
+                          {(doc.due_date || doc.dueDate) && (
+                            <span className="ms-2">
+                              <strong className="fw-normal">Due:</strong> {formatDate(doc.due_date || doc.dueDate)}
+                            </span>
+                          )}
+                          {(doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name) && (
+                            <span className="ms-2">
+                              <strong className="fw-normal">Requested by:</strong> {doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name}
+                            </span>
+                          )}
+                          {doc.reminders_count !== undefined && (
+                            <span className="ms-2 mydocs-reminder">
+                              {doc.reminders_count || doc.reminders || 0} reminder{doc.reminders_count !== 1 ? 's' : ''} sent
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {overdueDays > 0 && (
+                        <div className="mydocs-overdue">
+                          Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
                         </div>
                       )}
 
-                    </div>
-
-                    <div className="mydocs-description">
-                      {doc.description || doc.instructions || doc.message || 'Please upload the requested documents'}
-                    </div>
-
-                    <div className="d-flex flex-wrap mb-1 mydocs-info">
-                      <div className="d-flex align-items-center">
-                        <BlackDateIcon />
-                        {(doc.due_date || doc.dueDate) && (
-                          <span className="ms-2">
-                            <strong className="fw-normal">Due:</strong> {formatDate(doc.due_date || doc.dueDate)}
-                          </span>
-                        )}
-                        {(doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name) && (
-                          <span className="ms-2">
-                            <strong className="fw-normal">Requested by:</strong> {doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name}
-                          </span>
-                        )}
-                        {doc.reminders_count !== undefined && (
-                          <span className="ms-2 mydocs-reminder">
-                            {doc.reminders_count || doc.reminders || 0} reminder{doc.reminders_count !== 1 ? 's' : ''} sent
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {overdueDays > 0 && (
-                      <div className="mydocs-overdue">
-                        Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
-                      </div>
-                    )}
-
-                    {(doc.instructions || doc.description) && (
-                      <div className="mydocs-instructions">
-                        <span className="mydocs-instructions-title">Instructions:</span>
-                        <p className="mydocs-instructions-text">{doc.instructions || doc.description}</p>
-                      </div>
-                    )}
-
-                    {requestedDocs.length > 0 && (
-                      <div>
-                        <strong className="mydocs-req-title">Requested Documents:</strong>
-                        <div className="mt-2 d-flex flex-wrap gap-2">
-                          {requestedDocs.map((item, idx) => (
-                            <div key={idx} className="mydocs-req-chip">
-                              {typeof item === 'string' ? item : (item.name || item.document_type || item)}
-                            </div>
-                          ))}
+                      {(doc.instructions || doc.description) && (
+                        <div className="mydocs-instructions">
+                          <span className="mydocs-instructions-title">Instructions:</span>
+                          <p className="mydocs-instructions-text">{doc.instructions || doc.description}</p>
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {requestedDocs.length > 0 && (
+                        <div>
+                          <strong className="mydocs-req-title">Requested Documents:</strong>
+                          <div className="mt-2 d-flex flex-wrap gap-2">
+                            {requestedDocs.map((item, idx) => (
+                              <div key={idx} className="mydocs-req-chip">
+                                {typeof item === 'string' ? item : (item.name || item.document_type || item)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
+              );
             })}
           </div>
         )}
@@ -748,11 +734,11 @@ export default function DocumentRequests() {
                     cursor: 'pointer'
                   }}
                 />
-                <small style={{ 
-                  display: 'block', 
-                  marginTop: '6px', 
-                  color: '#6B7280', 
-                  fontSize: '12px' 
+                <small style={{
+                  display: 'block',
+                  marginTop: '6px',
+                  color: '#6B7280',
+                  fontSize: '12px'
                 }}>
                   Only PDF files are allowed
                 </small>

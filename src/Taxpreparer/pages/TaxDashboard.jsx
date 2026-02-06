@@ -151,7 +151,7 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
 
   return (
     <div
-      className="rounded-3 lg:p-3 md:p-2 sm:p-2 sm:px-1 px-0 car"
+      className="rounded-3 p-3 car"
       onClick={onClick}
       style={{
         cursor: "pointer",
@@ -164,7 +164,7 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
 
         <div className="d-flex justify-content-between align-items-start" style={{ gap: "1rem" }}>
 
-          <div className="d-flex align-items-start gap-2" style={{ flex: 1 }}>
+          <div className="d-flex align-items-start gap-3" style={{ flex: 1 }}>
             {icon}
 
             <div className="task-title">{title}</div>
@@ -438,7 +438,7 @@ export default function Dashboard() {
                       due={task.due_date_formatted || `Due: ${task.due_date || 'N/A'}`}
                       status={[task.priority_display || task.priority || 'medium', task.status_display || task.status || 'pending']}
                       user={(
-                        <span className="db-user">
+                        <span className="db-user d-flex align-items-center gap-2">
                           <span className="db-user-icon-wrapper"><Contacted /></span>
                           {task.client?.name || 'Unknown Client'}
                         </span>
@@ -500,7 +500,7 @@ export default function Dashboard() {
                       status={[deadline.priority_display || deadline.priority || 'medium']}
                       value={deadline.time_left || deadline.days_left !== undefined ? `${deadline.days_left} days left` : ''}
                       user={(
-                        <span className="db-user">
+                        <span className="db-user d-flex align-items-center gap-2">
                           <span className="db-user-icon-wrapper"><Contacted /></span>
                           {deadline.client?.name || 'Unknown Client'}
                         </span>

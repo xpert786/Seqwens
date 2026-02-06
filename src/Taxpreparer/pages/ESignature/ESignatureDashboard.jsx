@@ -537,11 +537,15 @@ export default function ESignatureDashboard() {
     }
   };
 
+  // State for re-requesting loading
+  const [rerequestingId, setRerequestingId] = useState(null);
+
   // Handle re-requesting e-sign
   const handleRerequestSignature = async (requestId, e) => {
     e?.stopPropagation();
 
     try {
+      setRerequestingId(requestId);
       const response = await taxPreparerClientAPI.rerequestSignature(requestId);
 
       if (response.success) {
@@ -557,6 +561,8 @@ export default function ESignatureDashboard() {
     } catch (error) {
       console.error('Error re-requesting signature:', error);
       handleAPIError(error);
+    } finally {
+      setRerequestingId(null);
     }
   };
 
@@ -1408,12 +1414,26 @@ export default function ESignatureDashboard() {
                                       fontWeight: '500',
                                       padding: '8px 16px',
                                       borderRadius: '6px',
-                                      fontSize: '14px'
+                                      fontSize: '14px',
+                                      opacity: rerequestingId === request.id ? 0.7 : 1,
+                                      cursor: rerequestingId === request.id ? 'not-allowed' : 'pointer'
                                     }}
                                     title="Re-Request E-Sign"
+                                    disabled={rerequestingId === request.id}
                                   >
-                                    <FiRefreshCw size={14} />
-                                    Re-Request E-Sign
+                                    {rerequestingId === request.id ? (
+                                      <>
+                                        <div className="spinner-border spinner-border-sm text-white" role="status">
+                                          <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                        Sending...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <FiRefreshCw size={14} />
+                                        Re-Request E-Sign
+                                      </>
+                                    )}
                                   </button>
                                 </>
                               )}

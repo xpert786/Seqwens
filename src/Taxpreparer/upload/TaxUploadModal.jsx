@@ -830,7 +830,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
   }, [files, selectedIndex]);
 
   return (
-    <Modal show={show} onHide={() => resetModal(true)} centered backdrop="static" size="xl" className="upload-modal">
+    <Modal show={show} onHide={() => resetModal(true)} centered backdrop="static" size="xl" className="upload-modal" scrollable={true}>
       <Modal.Body className="p-4">
         <h5 className="upload-heading">Upload Documents</h5>
         <p className="upload-subheading">Upload your tax documents securely</p>
@@ -1190,7 +1190,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                     </Form.Group>
                   </div>
                 ) : (
-                  <div className="preview-panel border rounded p-3">
+                  <div className="preview-panel border rounded p-3" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
                     {activeFile?.previewUrl ? (
                       <iframe
                         title={`${activeFile.name} preview`}
@@ -1215,21 +1215,27 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
           </div>
         )}
 
-        <div className="d-flex justify-content-between align-items-center mt-4">
+        <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
           <Button
             variant="link"
-            className="p-0 text-decoration-none text-danger"
+            className="p-0 text-decoration-none text-danger border border-danger rounded px-3 py-1 hover:bg-danger hover:text-white transition"
             onClick={handleClearAll}
             disabled={uploading || files.length === 0}
           >
             Clear all
           </Button>
+
           <div className="d-flex gap-2">
-            <Button className="btn-cancel-custom" onClick={() => resetModal(true)} disabled={uploading}>
+            <Button
+              className="btn-cancel-custom self-start w-auto"
+              onClick={() => resetModal(true)}
+              disabled={uploading}
+            >
               Cancel
             </Button>
+
             <Button
-              className="btn-upload-custom"
+              className="btn-upload-custom mb-4"
               onClick={handleFinalUpload}
               disabled={uploading || files.length === 0}
             >
@@ -1237,6 +1243,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
             </Button>
           </div>
         </div>
+        <div style={{ height: '40px', width: '100%' }} />
       </Modal.Body>
 
       {/* Preview Modal */}
