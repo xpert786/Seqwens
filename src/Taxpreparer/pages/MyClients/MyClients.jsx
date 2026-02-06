@@ -287,6 +287,7 @@ export default function MyClients() {
   // Fetch clients on component mount and when filters change
   useEffect(() => {
     fetchClients();
+    fetchPendingInvites();
   }, [searchQuery, statusFilter, priorityFilter]);
 
   // Check permission for unlinked taxpayers on component mount
@@ -310,7 +311,7 @@ export default function MyClients() {
     checkPermission();
   }, []);
 
-  // Fetch pending invites when tab is switched to pending invites
+  // No changes needed here, existing one handles tab switching
   useEffect(() => {
     if (activeTab === 'pending-invites') {
       fetchPendingInvites();
@@ -386,7 +387,7 @@ export default function MyClients() {
   const cardData = [
     { label: "Total Clients", icon: <DoubleUserIcon />, count: overview.total_clients, color: "#00bcd4" },
     { label: "Active", icon: <CompletedIcon />, count: overview.active, color: "#4caf50" },
-    { label: "Pending", icon: <AwaitingIcon />, count: overview.pending, color: "#3f51b5" },
+    { label: "Pending", icon: <AwaitingIcon />, count: invitesPagination.total_count > 0 ? invitesPagination.total_count : pendingInvites.length, color: "#3f51b5" },
     { label: "High Priority", icon: <FaildIcon />, count: overview.high_priority, color: "#EF4444" },
   ];
 
@@ -645,7 +646,13 @@ export default function MyClients() {
   };
 
   const handleCopyInviteLink = async () => {
-    if (!activeInviteDetails?.invite_link) return;
+    if (!activeInviteDetails?.invite_link) {
+      toast.error("No invite link available to copy.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
     try {
       await navigator.clipboard.writeText(activeInviteDetails.invite_link);
       toast.success("Invite link copied to clipboard!", {
@@ -796,11 +803,28 @@ export default function MyClients() {
   };
 
   const handleSendInviteNotifications = async (methods, options = {}) => {
-    if (!activeInviteDetails?.id || !methods?.length) return;
+    const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
+    if (!inviteId || !methods || methods.length === 0) {
+      console.warn("Cannot send invite: missing invite ID or methods", { activeInviteDetails, methods });
+      return;
+    }
     try {
       setInviteActionLoading(true);
       setInviteActionMethod(methods.join(","));
-      const payload = { methods };
+      const payload = {
+        invite_id: inviteId,
+        methods: methods,
+        // Also provide delivery_method (singular) for better compatibility if only one method
+        delivery_method: methods.length === 1 ? methods[0] : undefined,
+        first_name: activeInviteDetails.first_name,
+        last_name: activeInviteDetails.last_name,
+        email: activeInviteDetails.email || options.email
+      };
+
+      if (activeInviteDetails.client_id) {
+        payload.client_id = activeInviteDetails.client_id;
+      }
+
       if (options.email) {
         payload.email = options.email;
       }
@@ -815,7 +839,7 @@ export default function MyClients() {
           payload.phone_number = options.phone_number;
         }
       }
-      const response = await firmAdminClientsAPI.sendInvite(activeInviteDetails.id, payload);
+      const response = await taxPreparerClientAPI.sendInvite(payload);
       if (response.success && response.data) {
         setActiveInviteDetails((prev) => ({
           ...prev,
@@ -893,8 +917,6 @@ export default function MyClients() {
       return;
     }
     handleSendInviteNotifications(["sms"], { phone_number: trimmedPhone });
-    // Close the modal after sending SMS
-    closeInviteActionsModal();
   };
 
   // Fetch or create invite link for the selected client
@@ -1009,7 +1031,10 @@ export default function MyClients() {
       // Use the new tax preparer API to send invite via email
       const sendPayload = {
         client_id: client.id,
-        delivery_method: "email"
+        delivery_method: "email",
+        first_name: client.first_name,
+        last_name: client.last_name,
+        email: client.email
       };
 
       const sendResponse = await taxPreparerClientAPI.sendInvite(sendPayload);
@@ -1072,7 +1097,10 @@ export default function MyClients() {
       const sendPayload = {
         client_id: client.id,
         delivery_method: "sms",
-        phone_number: phoneNumber
+        phone_number: phoneNumber,
+        first_name: client.first_name,
+        last_name: client.last_name,
+        email: client.email
       };
 
       const sendResponse = await taxPreparerClientAPI.sendInvite(sendPayload);
