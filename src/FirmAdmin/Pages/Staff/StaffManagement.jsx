@@ -611,6 +611,43 @@ export default function StaffManagement() {
 
   const handleCopyInviteLink = async () => {
     if (!activeInviteDetails?.invite_link) return;
+
+    // Fallback for non-secure contexts where navigator.clipboard is unavailable
+    if (!navigator.clipboard) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = activeInviteDetails.invite_link;
+
+        // Ensure element is part of document but not visible
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          toast.success("Invite link copied to clipboard!", {
+            position: "top-right",
+            autoClose: 2000,
+          });
+        } else {
+          throw new Error("Copy command failed");
+        }
+      } catch (err) {
+        console.error("Fallback copy failed:", err);
+        toast.error("Could not auto-copy. Please manually copy the link.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(activeInviteDetails.invite_link);
       toast.success("Invite link copied to clipboard!", {

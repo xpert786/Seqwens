@@ -71,6 +71,25 @@ export default function GeneralTab() {
     }));
   };
 
+  // Handle EIN change with formatting (XX-XXXXXXX)
+  const handleEINChange = (e) => {
+    const value = e.target.value;
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    // Limit to 9 digits
+    const truncated = digits.slice(0, 9);
+
+    let formatted = truncated;
+    if (truncated.length > 2) {
+      formatted = `${truncated.slice(0, 2)}-${truncated.slice(2)}`;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      ein: formatted
+    }));
+  };
+
   // Handle form submission
   const handleSave = async () => {
     try {
@@ -191,7 +210,8 @@ export default function GeneralTab() {
                 type="text"
                 name="ein"
                 value={formData.ein}
-                onChange={handleInputChange}
+                onChange={handleEINChange}
+                maxLength={10}
                 placeholder="12-3456789"
                 className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro]"
               />

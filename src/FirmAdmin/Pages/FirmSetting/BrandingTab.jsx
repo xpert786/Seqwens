@@ -103,6 +103,10 @@ export default function BrandingTab() {
   const handleFaviconSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 1024 * 1024) {
+        toast.error('Favicon file size must be less than 1MB');
+        return;
+      }
       setFaviconFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -274,7 +278,14 @@ export default function BrandingTab() {
                     </svg>
                     {logoFile ? logoFile.name : 'Upload Logo'}
                   </button>
-                  <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">PNG, JPG up to 2MB</p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+                      Recommended: 200x50px. Max: 2MB.
+                    </p>
+                    <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+                      Supported: PNG, JPG.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -326,6 +337,18 @@ export default function BrandingTab() {
                     </svg>
                     {faviconFile ? faviconFile.name : 'Upload Favicon'}
                   </button>
+                  <div className="space-y-1">
+                    <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+                      Recommended: 32x32px. Max: 1MB.
+                    </p>
+                    <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">
+                      Supported: PNG, ICO, JPG.
+                    </p>
+                    <p className="text-xs text-amber-600 font-regular font-[BasisGrotesquePro] flex items-start gap-1">
+                      <i className="bi bi-info-circle-fill mt-0.5"></i>
+                      <span>Updates may take a few minutes to reflect due to caching.</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
