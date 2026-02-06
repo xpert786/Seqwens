@@ -2712,13 +2712,13 @@ export const tasksAPI = {
   },
 
   // Update task status
-  updateTaskStatus: async (taskId, data) => {
-    return await taskDetailAPI.updateTaskStatus(taskId, data.status);
+  updateTaskStatus: async (taskId, status) => {
+    return await apiRequest(`/taxpayer/tasks/${taskId}/`, 'PATCH', { status });
   },
 
   // Update task (full update)
   updateTask: async (taskId, taskData) => {
-    return await taskDetailAPI.updateTask(taskId, taskData);
+    return await apiRequest(`/taxpayer/tasks/${taskId}/`, 'PATCH', taskData);
   }
 };
 
