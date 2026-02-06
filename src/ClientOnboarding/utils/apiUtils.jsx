@@ -171,11 +171,12 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       return sanitized;
     };
 
-    console.log('API Request URL:', `${API_BASE_URL}${endpoint}`);
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    console.log('API Request URL:', url);
     console.log('API Request Config:', config);
     console.log('API Request Data:', sanitizeForLogging(data));
 
-    let response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
+    let response = await fetchWithCors(url, config);
 
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401 && endpoint !== '/user/refresh-token/') {
@@ -186,7 +187,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
 
         // Retry the original request with new token
         config.headers = getHeaders();
-        response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
+        response = await fetchWithCors(url, config);
 
         if (response.status === 401) {
           // Refresh failed, redirect to login
@@ -3859,6 +3860,37 @@ export const firmAdminEmailTemplatesAPI = {
       'GET'
     );
     return ensureEmailTemplateSuccess(response, 'Failed to fetch email templates');
+  },
+
+  // Upload asset image
+  uploadAsset: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // apiRequest handles headers, but we need to ensure Content-Type is not set for FormData
+    // The apiRequest implementation might set Content-Type: application/json by default
+    // We should use fetchWithCors directly but ensure headers are correct as we did in corsConfig.jsx
+
+    const headers = getHeaders();
+    delete headers['Content-Type']; // Important: let browser set boundary
+
+    const url = EMAIL_TEMPLATE_BASE.startsWith('http') 
+      ? `${EMAIL_TEMPLATE_BASE}/assets/upload/` 
+      : `${API_BASE_URL}${EMAIL_TEMPLATE_BASE}/assets/upload/`;
+
+    const response = await fetchWithCors(url, {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to upload asset');
+    }
+
+    const result = await response.json();
+    return ensureEmailTemplateSuccess(result, 'Failed to upload asset');
   },
 
   // Get template details

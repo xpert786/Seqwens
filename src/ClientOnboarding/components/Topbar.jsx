@@ -386,7 +386,7 @@ export default function Topbar({
 
                     <div className="d-flex align-items-center gap-3 flex-grow-1">
                         <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-                            <img src={logoUrl || logo} alt="Logo" className="topbar-logo" />
+                            <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" />
                         </Link>
                         <button
                             type="button"
@@ -474,6 +474,7 @@ export default function Topbar({
                                     <img
                                         src={profilePicture}
                                         alt="User"
+                                        crossOrigin="anonymous"
                                         className="rounded-circle"
                                         style={{ width: "32px", height: "32px", objectFit: "cover" }}
                                         onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}

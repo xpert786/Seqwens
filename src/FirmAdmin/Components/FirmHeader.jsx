@@ -461,6 +461,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                     ref={logoRef}
                                     src={logoUrl || logo}
                                     alt="Logo"
+                                    crossOrigin="anonymous"
                                     className="firm-topbar-logo"
                                     style={{ maxHeight: "35px", width: "auto" }}
                                 />
@@ -594,6 +595,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                     <img
                                         src={profilePicture}
                                         alt={`${profileName} avatar`}
+                                        crossOrigin="anonymous"
                                         className="rounded-circle"
                                         style={{
                                             width: "32px",

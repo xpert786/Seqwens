@@ -114,8 +114,8 @@ export const FirmPortalColorsProvider = ({ children }) => {
       faviconLink.href = faviconUrl;
       faviconLink.type = faviconUrl.includes('.ico') ? 'image/x-icon' : 'image/png';
 
-      // Add crossorigin attribute for B2 images
-      if (faviconUrl.includes('backblazeb2.com') || faviconUrl.includes('s3.us-')) {
+      // Add crossorigin attribute for S3 and B2 images to prevent CORS issues
+      if (faviconUrl.includes('backblazeb2.com') || faviconUrl.includes('s3.amazonaws.com') || faviconUrl.includes('s3-') || faviconUrl.includes('.s3.')) {
         faviconLink.crossOrigin = 'anonymous';
       }
 

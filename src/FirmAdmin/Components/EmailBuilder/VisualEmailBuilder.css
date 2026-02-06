@@ -1,0 +1,65 @@
+.visual-email-builder {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f3f6fd;
+}
+
+.builder-header {
+  padding: 16px 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e8f0ff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.builder-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.preview-toggle-btn,
+.save-template-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-toggle-btn {
+  background-color: #ffffff;
+  color: #1f2a55;
+  border: 2px solid #e8f0ff;
+}
+
+.preview-toggle-btn:hover {
+  background-color: #f3f6fd;
+  border-color: #3ad6f2;
+}
+
+.save-template-btn {
+  background-color: #3ad6f2;
+  color: #ffffff;
+}
+
+.save-template-btn:hover {
+  background-color: #2bc5e0;
+}
+
+.builder-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .builder-main {
+    flex-direction: column;
+  }
+}

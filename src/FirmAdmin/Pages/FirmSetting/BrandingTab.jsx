@@ -243,6 +243,7 @@ export default function BrandingTab() {
                     <img
                       src={logoPreview}
                       alt="Logo preview"
+                      crossOrigin="anonymous"
                       className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
                     />
                   ) : (
@@ -301,6 +302,7 @@ export default function BrandingTab() {
                     <img
                       src={faviconPreview}
                       alt="Favicon preview"
+                      crossOrigin="anonymous"
                       className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
                     />
                   ) : (
@@ -503,6 +505,7 @@ export default function BrandingTab() {
                 <img
                   src={logoPreview}
                   alt="Logo preview"
+                  crossOrigin="anonymous"
                   className="max-h-20 object-contain"
                 />
               ) : (
