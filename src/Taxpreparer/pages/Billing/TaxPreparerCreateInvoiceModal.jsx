@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FiCalendar } from 'react-icons/fi';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminMessagingAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -33,6 +34,30 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   const [serviceSearchQuery, setServiceSearchQuery] = useState('');
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
   const serviceDropdownRef = useRef(null);
+
+  // Date picker refs
+  const issueDatePickerRef = useRef(null);
+  const dueDatePickerRef = useRef(null);
+
+  const handleDatePickerChange = (field, e) => {
+    const dateValue = e.target.value; // YYYY-MM-DD
+    if (!dateValue) return;
+
+    const [year, month, day] = dateValue.split('-');
+    const formattedDate = `${month}/${day}/${year}`;
+
+    // Update state
+    setInvoiceData(prev => ({ ...prev, [field]: formattedDate }));
+
+    // Clear error if any
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
 
   // Fetch taxpayers when modal opens - use tax preparer endpoint
   useEffect(() => {
@@ -481,29 +506,63 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
                 <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
                   Issue Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={invoiceData.issue_date}
-                  onChange={(e) => handleInputChange('issue_date', e.target.value)}
-                  placeholder="mm/dd/yyyy"
-                  className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={invoiceData.issue_date}
+                    onChange={(e) => handleInputChange('issue_date', e.target.value)}
+                    placeholder="mm/dd/yyyy"
+                    className="w-full !border border-[#E8F0FF] rounded-lg pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <div
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:text-blue-500 transition-colors"
+                    onClick={() => issueDatePickerRef.current && issueDatePickerRef.current.showPicker()}
+                  >
+                    <FiCalendar className="text-gray-400" size={18} />
+                  </div>
+                  {/* Hidden date input for picker */}
+                  <input
+                    type="date"
+                    ref={issueDatePickerRef}
+                    className="absolute opacity-0 w-0 h-0"
+                    style={{ bottom: 0, right: 0 }}
+                    onChange={(e) => handleDatePickerChange('issue_date', e)}
+                    tabIndex={-1}
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
                   Due Date <span className="text-red-500">*</span>
                 </label>
-                <DateInput
-                  value={invoiceData.due_date}
-                  onChange={(e) => handleDateChange('due_date', e)}
-                  placeholder="mm/dd/yyyy"
-                  className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${fieldErrors.due_date
+                <div className="relative">
+                  <DateInput
+                    value={invoiceData.due_date}
+                    onChange={(e) => handleDateChange('due_date', e)}
+                    placeholder="mm/dd/yyyy"
+                    className={`w-full !border rounded-lg pl-3 pr-10 py-2 focus:outline-none focus:ring-2 ${fieldErrors.due_date
                       ? 'border-red-300 focus:ring-red-500'
                       : 'border-[#E8F0FF] focus:ring-blue-500'
-                    }`}
-                  required
-                />
+                      }`}
+                    required
+                  />
+                  <div
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:text-blue-500 transition-colors"
+                    onClick={() => dueDatePickerRef.current && dueDatePickerRef.current.showPicker()}
+                  >
+                    <FiCalendar className="text-gray-400" size={18} />
+                  </div>
+                  {/* Hidden date input for picker */}
+                  <input
+                    type="date"
+                    ref={dueDatePickerRef}
+                    className="absolute opacity-0 w-0 h-0"
+                    style={{ bottom: 0, right: 0 }}
+                    onChange={(e) => handleDatePickerChange('due_date', e)}
+                    tabIndex={-1}
+                  />
+                </div>
                 {fieldErrors.due_date && (
                   <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">
                     {fieldErrors.due_date}

@@ -510,20 +510,32 @@ export default function ClientDocuments() {
                         <Dropdown.Toggle variant="link" className="text-muted p-0 no-caret">
                           <FaEllipsisV />
                         </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item onClick={() => {
-                            setItemToRename({ type: 'folder', item: folder });
-                            setNewItemName(folder.title);
-                            setShowRenameModal(true);
-                          }}>
-                            <FaEdit className="me-2" /> Rename
-                          </Dropdown.Item>
-                          <Dropdown.Item className="text-danger" onClick={() => {
-                            setItemToDelete({ type: 'folder', item: folder });
-                            setShowDeleteModal(true);
-                          }}>
-                            <FaTrash className="me-2" /> Delete
-                          </Dropdown.Item>
+                        <Dropdown.Menu className="p-2" style={{ minWidth: '240px' }}>
+                          <div className="d-flex gap-2">
+                            <Button
+                              variant="light"
+                              size="sm"
+                              className="flex-fill d-flex align-items-center justify-content-center gap-2"
+                              onClick={() => {
+                                setItemToRename({ type: 'folder', item: folder });
+                                setNewItemName(folder.title);
+                                setShowRenameModal(true);
+                              }}
+                            >
+                              <FaEdit /> Rename
+                            </Button>
+                            <Button
+                              variant="light"
+                              size="sm"
+                              className="flex-fill d-flex align-items-center justify-content-center gap-2 text-danger"
+                              onClick={() => {
+                                setItemToDelete({ type: 'folder', item: folder });
+                                setShowDeleteModal(true);
+                              }}
+                            >
+                              <FaTrash /> Delete
+                            </Button>
+                          </div>
                         </Dropdown.Menu>
                       </Dropdown>
                     </div>

@@ -482,7 +482,7 @@ export default function ESignature() {
                 padding: "6px 12px"
               }}
             >
-              In Progress
+              Completed
             </button>
             <button
               onClick={() => {

@@ -11,15 +11,30 @@
   margin-right: 0;
 }
 
-.documents-page-wrapper .row.g-3.mb-3 > div {
+.documents-page-wrapper .row.g-3.mb-3>div {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
 }
 
-/* Stat cards should expand to fill available space */
+/* Stat cards styling */
 .documents-page-wrapper .stat-card {
   width: 100%;
-  min-height: 150px;
+  min-height: 120px;
+  background-color: #ffffff;
+  border: 1px solid #E8F0FF;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.02);
+  display: flex !important;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.documents-page-wrapper .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.06);
+  border-color: #F49C2D;
 }
 
 /* Header Responsive Styles */
@@ -69,7 +84,7 @@
   }
 
   /* Stats cards - full width on mobile */
-  .documents-page-wrapper .row.g-3.mb-3 > div {
+  .documents-page-wrapper .row.g-3.mb-3>div {
     flex: 0 0 100%;
     max-width: 100%;
     margin-bottom: 0.75rem;
@@ -173,4 +188,3 @@
     text-align: center;
   }
 }
-

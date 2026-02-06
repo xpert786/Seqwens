@@ -3,7 +3,6 @@ import '../styles/Pagination.css';
 
 export default function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, startIndex, endIndex }) {
   if (totalPages <= 1) return null;
-
   return (
     <div className="pagination-container mt-4 pt-3" style={{ borderTop: '1px solid #E8F0FF' }}>
       <div className="pagination-showing text-muted" style={{ fontSize: '14px', fontFamily: 'BasisGrotesquePro' }}>
