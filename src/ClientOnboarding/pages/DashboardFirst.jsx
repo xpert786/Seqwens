@@ -260,47 +260,57 @@ export default function DashboardFirst() {
     <div className="p-4 sm:p-6 lg:p-8">
 
       <div className="p-4 sm:p-6 rounded-lg mb-4 sm:mb-6 relative bg-[#FFF3E1] border border-[#FFD6A5]">
-        <div className="absolute top-0 right-0 m-3 sm:m-4 text-right leading-tight">
-          <div className="text-[#3B4A66] text-base sm:text-lg font-semibold">
-            {completionPercentage}%
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+          {/* Left Section: Welcome Message */}
+          <div className="flex-1">
+            <h5 className="text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-medium font-[BasisGrotesquePro] mb-2">
+              Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
+            </h5>
+            <p className="text-gray-600 text-base sm:text-lg font-[BasisGrotesquePro]">
+              Let's get your tax dashboard set up. You're making great progress!
+            </p>
           </div>
-          <div className="text-sm sm:text-base text-[#6B7280]">
-            Complete
-          </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-3">
-          <h5 className="text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-medium font-[BasisGrotesquePro]">
-            Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
-          </h5>
-          <button
-            onClick={async () => {
-              try {
-                await dashboardAPI.updateOnboardingStatus(true);
-                const { setUserStatus, getStorage, getUserData, setUserData } = await import('../utils/userUtils');
+          {/* Right Section: Progress & Action */}
+          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 flex-shrink-0">
+            {/* Completion Percentage */}
+            <div className="text-right leading-tight">
+              <div className="text-[#3B4A66] text-base sm:text-lg font-semibold">
+                {completionPercentage}%
+              </div>
+              <div className="text-sm sm:text-base text-[#6B7280]">
+                Complete
+              </div>
+            </div>
 
-                // Update local user data to reflect completion
-                const userData = getUserData();
-                if (userData) {
-                  userData.onboarding_completed = true;
-                  setUserData(userData);
+            {/* Action Button */}
+            <button
+              onClick={async () => {
+                try {
+                  await dashboardAPI.updateOnboardingStatus(true);
+                  const { setUserStatus, getStorage, getUserData, setUserData } = await import('../utils/userUtils');
+
+                  // Update local user data to reflect completion
+                  const userData = getUserData();
+                  if (userData) {
+                    userData.onboarding_completed = true;
+                    setUserData(userData);
+                  }
+
+                  setUserStatus("existing");
+                  navigate('/dashboard');
+                } catch (e) {
+                  console.error("Failed to update status", e);
+                  navigate('/dashboard');
                 }
-
-                setUserStatus("existing");
-                navigate('/dashboard');
-              } catch (e) {
-                console.error("Failed to update status", e);
-                navigate('/dashboard');
-              }
-            }}
-            className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg font-medium hover:bg-[#e05d20] transition-colors"
-          >
-            Proceed to Dashboard
-          </button>
+              }}
+              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg font-medium hover:bg-[#e05d20] transition-colors whitespace-nowrap"
+              style={{ borderRadius: "6px" }}
+            >
+              Proceed to Dashboard
+            </button>
+          </div>
         </div>
-        <p className="text-gray-600 text-base sm:text-lg font-[BasisGrotesquePro] mb-3 sm:mb-4">
-          Let's get your tax dashboard set up. You're making great progress!
-        </p>
         <div className="w-full bg-gray-200 rounded-full h-2 mb-2 sm:mb-3">
           <div
             className="bg-[#F56D2D] h-2 rounded-full transition-all duration-300"

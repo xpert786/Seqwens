@@ -1,63 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import SlideSwitch from '../../components/SlideSwitch';
 
 export default function RentalPropertyForm({ onSave, onCancel, externalErrors = {}, initialData = null }) {
+  const fieldRefs = useRef({});
+
+  const scrollToFirstError = (errors) => {
+    const firstErrorKey = Object.keys(errors)[0];
+    if (firstErrorKey && fieldRefs.current[firstErrorKey]) {
+      fieldRefs.current[firstErrorKey].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      fieldRefs.current[firstErrorKey].focus();
+    }
+  };
   const getFieldError = (field) => {
     const error = errors[field];
     if (Array.isArray(error)) return error[0];
     return error;
   };
 
-  const [formData, setFormData] = useState({
-    // 1. Property Basics
-    propertyAddress: '',
-    propertyCity: '',
-    propertyState: '',
-    propertyZip: '',
-    propertyType: 'single', // 'single', 'apartment', 'vacation', 'other'
-    ownershipType: '', // 'own_100', 'share', 'no'
+  const getInitialFormData = () => {
+    const defaultData = {
+      propertyAddress: '',
+      propertyCity: '',
+      propertyState: '',
+      propertyZip: '',
+      propertyType: 'single',
+      ownershipType: '',
+      rentedOutDuringYear: false,
+      daysRentedOut: '',
+      familyUse: false,
+      familyUseDays: '',
+      totalRentReceived: '',
+      taxFormsReceived: [],
+      advertising: '',
+      cleaningMaintenance: '',
+      repairs: '',
+      propertyManagementFees: '',
+      insurance: '',
+      mortgageInterest: '',
+      propertyTaxes: '',
+      utilities: '',
+      legalProfessional: '',
+      supplies: '',
+      otherExpenses: [],
+      otherExpenseDescription: '',
+      otherExpenseAmount: '',
+      soldOrStoppedRenting: false,
+      boughtMajorItems: false,
+      hasRentalLosses: false,
+      isComplete: false,
+      id: null
+    };
 
-    // 2. How the Property Was Used
-    rentedOutDuringYear: false,
-    daysRentedOut: '',
-    familyUse: false,
-    familyUseDays: '',
+    if (initialData) {
+      console.log('Initializing form with data:', initialData);
 
-    // 3. Rental Income
-    totalRentReceived: '',
-    taxFormsReceived: [], // Array of selected forms: ['1099NEC', '1099MISC', '1099K', 'none']
+      // Normalize taxFormsReceived
+      let taxForms = initialData.taxFormsReceived || [];
+      if (typeof taxForms === 'string') {
+        if (taxForms.toLowerCase() === 'none') {
+          taxForms = ['none'];
+        } else {
+          taxForms = [taxForms];
+        }
+      }
 
-    // 4. Common Rental Expenses
-    advertising: '',
-    cleaningMaintenance: '',
-    repairs: '',
-    propertyManagementFees: '',
-    insurance: '',
-    mortgageInterest: '',
-    propertyTaxes: '',
-    utilities: '',
-    legalProfessional: '',
-    supplies: '',
+      return {
+        ...defaultData,
+        ...initialData,
+        taxFormsReceived: taxForms,
+        otherExpenses: initialData.otherExpenses || [],
+      };
+    }
 
-    // 5. Other Rental Expenses
-    otherExpenses: [],
-    otherExpenseDescription: '',
-    otherExpenseAmount: '',
+    return defaultData;
+  };
 
-    // 6. Big Changes During the Year
-    soldOrStoppedRenting: false,
-    boughtMajorItems: false,
-
-    // 7. Prior-Year Information (Optional)
-    hasRentalLosses: false,
-
-    // 8. Final Confirmation
-    isComplete: false,
-
-    // ID for internal tracking if editing
-    id: null
-  });
+  const [formData, setFormData] = useState(getInitialFormData);
 
   const [errors, setErrors] = useState({});
 
@@ -68,28 +87,13 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
     }
   }, [externalErrors]);
 
-  useEffect(() => {
-    if (initialData) {
-      // Normalize taxFormsReceived - convert string to array if needed
-      let taxForms = initialData.taxFormsReceived || [];
-      if (typeof taxForms === 'string') {
-        if (taxForms.toLowerCase() === 'none') {
-          taxForms = ['none'];
-        } else {
-          taxForms = [taxForms];
-        }
-      }
-
-      setFormData({
-        ...initialData,
-        taxFormsReceived: taxForms,
-        // Ensure arrays are properly initialized
-        otherExpenses: initialData.otherExpenses || []
-      });
-    }
-  }, [initialData]);
-
   const handleChange = (field, value) => {
+    if (field === 'propertyZip') {
+      // Only allow numbers and max 6 characters
+      if (!/^\d*$/.test(value)) return;
+      if (value.length > 6) return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -149,6 +153,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
     }
     if (!formData.propertyZip.trim()) newErrors.propertyZip = 'Property ZIP is required';
     if (!formData.propertyType) newErrors.propertyType = 'Property type is required';
+    if (!formData.ownershipType) newErrors.ownershipType = 'Ownership Type is required';
     if (formData.ownershipType === 'own_100' && !formData.ownershipType) {
       newErrors.ownershipType = 'Ownership percentage is required when owned 100%';
     }
@@ -170,6 +175,26 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
   const handleSubmit = () => {
     if (validate()) {
       onSave(formData);
+    } else {
+      // Validation failed, scroll to first error
+      // We need to re-run validate to get errors or assume 'errors' state will update
+      // Since setState is async, we can use the result of local validation
+      const newErrors = {};
+      // ... validation logic duplicate or refactor?
+      // Simpler: Just rely on the fact that validate() calls setErrors().
+      // We use setTimeout to allow state to update and then scroll.
+      // Or better: Re-calculate errors locally to be sure.
+
+      const localErrors = {};
+      if (!formData.propertyAddress.trim()) localErrors.propertyAddress = true;
+      if (!formData.propertyCity.trim()) localErrors.propertyCity = true;
+      if (!formData.propertyState.trim()) localErrors.propertyState = true;
+      if (!formData.propertyZip.trim()) localErrors.propertyZip = true;
+      if (!formData.propertyType) localErrors.propertyType = true;
+      if (!formData.ownershipType) localErrors.ownershipType = true;
+      if (!formData.totalRentReceived.trim()) localErrors.totalRentReceived = true;
+
+      setTimeout(() => scrollToFirstError(localErrors), 100);
     }
   };
 
@@ -228,6 +253,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               placeholder="Street Address"
               value={formData.propertyAddress}
               onChange={(e) => handleChange('propertyAddress', e.target.value)}
+              ref={(el) => fieldRefs.current['propertyAddress'] = el}
             />
             {getFieldError('propertyAddress') && <div className="invalid-feedback">{getFieldError('propertyAddress')}</div>}
           </div>
@@ -244,6 +270,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               placeholder="City"
               value={formData.propertyCity}
               onChange={(e) => handleChange('propertyCity', e.target.value)}
+              ref={(el) => fieldRefs.current['propertyCity'] = el}
             />
             {getFieldError('propertyCity') && <div className="invalid-feedback">{getFieldError('propertyCity')}</div>}
           </div>
@@ -257,6 +284,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               placeholder="State"
               value={formData.propertyState}
               onChange={(e) => handleChange('propertyState', e.target.value)}
+              ref={(el) => fieldRefs.current['propertyState'] = el}
             />
             {getFieldError('propertyState') && <div className="invalid-feedback">{getFieldError('propertyState')}</div>}
           </div>
@@ -269,7 +297,9 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               className={`form-control ${getFieldError('propertyZip') ? 'is-invalid' : ''}`}
               placeholder="ZIP"
               value={formData.propertyZip}
+              maxLength={6}
               onChange={(e) => handleChange('propertyZip', e.target.value)}
+              ref={(el) => fieldRefs.current['propertyZip'] = el}
             />
             {getFieldError('propertyZip') && <div className="invalid-feedback">{getFieldError('propertyZip')}</div>}
           </div>
@@ -284,6 +314,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               className={`form-control ${getFieldError('propertyType') ? 'is-invalid' : ''}`}
               value={formData.propertyType}
               onChange={(e) => handleChange('propertyType', e.target.value)}
+              ref={(el) => fieldRefs.current['propertyType'] = el}
             >
               <option value="single">Single-family home</option>
               <option value="apartment">Apartment / Condo</option>
@@ -302,6 +333,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               className="form-control"
               value={formData.ownershipType}
               onChange={(e) => handleChange('ownershipType', e.target.value)}
+              ref={(el) => fieldRefs.current['ownershipType'] = el}
             >
               <option value="">Select ownership type</option>
               <option value="own_100">Yes, I own 100%</option>
@@ -338,6 +370,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
                   placeholder="0"
                   value={formData.daysRentedOut}
                   onChange={(e) => handleChange('daysRentedOut', e.target.value)}
+                  ref={(el) => fieldRefs.current['daysRentedOut'] = el}
                 />
                 {errors.daysRentedOut && <div className="invalid-feedback">{errors.daysRentedOut}</div>}
               </>
@@ -367,6 +400,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
                   placeholder="0"
                   value={formData.familyUseDays}
                   onChange={(e) => handleChange('familyUseDays', e.target.value)}
+                  ref={(el) => fieldRefs.current['familyUseDays'] = el}
                 />
                 {errors.familyUseDays && <div className="invalid-feedback">{errors.familyUseDays}</div>}
               </>
@@ -392,6 +426,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
                 placeholder="0.00"
                 value={formData.totalRentReceived}
                 onChange={(e) => handleChange('totalRentReceived', e.target.value)}
+                ref={(el) => fieldRefs.current['totalRentReceived'] = el}
               />
             </div>
             {errors.totalRentReceived && <div className="invalid-feedback">{errors.totalRentReceived}</div>}

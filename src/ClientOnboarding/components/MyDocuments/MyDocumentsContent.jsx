@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import Pagination from "../Pagination";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import { Modal } from "react-bootstrap";
+import NewFolderModal from "./NewFolderModal";
 
 export default function MyDocumentsContent() {
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -48,6 +49,7 @@ export default function MyDocumentsContent() {
     // Folder navigation state
     const [currentFolderId, setCurrentFolderId] = useState(null);
     const [breadcrumbs, setBreadcrumbs] = useState([]);
+    const [showNewFolderModal, setShowNewFolderModal] = useState(false);
 
     // Aggregated data for recursive mode
     const allFoldersRef = useRef([]);
@@ -1137,24 +1139,7 @@ export default function MyDocumentsContent() {
                     <button
                         className="btn btn-primary d-flex align-items-center gap-2"
                         onClick={() => {
-                            // Logic to open Add Folder modal
-                            // For now, let's use a prompt as a quick implementation or reuse an existing modal if available
-                            // But usually we need a proper modal. Let's assume we need to add state for it.
-                            // Since I cannot rewrite the whole file to add state easily without losing context, I will use window.prompt for now or check if there is a modal.
-                            // Wait, I should add the state in a previous step or simply use a prompt for MVP as requested.
-                            // Actual robust way: Add a modal state.
-                            // For this step, I'll add the button and a placeholder click handler that likely needs state added.
-                            // PROPOSAL: I will add the button here, and I will add the state and modal in a separate edit or assume I can add it here if I see where state is.
-                            // I see line 49 has state declarations. I can't reach there from here easily.
-                            // I'll stick to a simple prompt for now to prove functionality, or better, look for an existing modal.
-                            // The user said "client can also add...".
-                            // I will simply add the button layout here.
-
-                            // Let's use a simple prompt for "Add Folder" for now to immediate effect
-                            const folderName = prompt("Enter folder name:");
-                            if (folderName) {
-                                handleCreateFolder(folderName);
-                            }
+                            setShowNewFolderModal(true);
                         }}
                         style={{
                             height: "34px",
@@ -1995,6 +1980,11 @@ export default function MyDocumentsContent() {
                     </button>
                 </Modal.Footer>
             </Modal>
+            <NewFolderModal
+                show={showNewFolderModal}
+                handleClose={() => setShowNewFolderModal(false)}
+                onCreateFolder={handleCreateFolder}
+            />
         </div>
     );
 }
