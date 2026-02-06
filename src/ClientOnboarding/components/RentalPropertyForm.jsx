@@ -42,18 +42,6 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
 
     // 5. Other Rental Expenses
     otherExpenses: [],
-    otherExpenseDescription: '',
-    otherExpenseAmount: '',
-
-    // 6. Big Changes During the Year
-    soldOrStoppedRenting: false,
-    boughtMajorItems: false,
-
-    // 7. Prior-Year Information (Optional)
-    hasRentalLosses: false,
-
-    // 8. Final Confirmation
-    isComplete: false,
 
     // ID for internal tracking if editing
     id: null
@@ -709,73 +697,6 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
         >
           <FaPlus size={12} /> Add Other Expense
         </button>
-      </div>
-
-      {/* 6. Big Changes During the Year */}
-      <div className="mb-6">
-        <h5 style={sectionStyle}>6. Big Changes During the Year</h5>
-
-        <div className="row g-3 mb-3">
-          <div className="col-md-6">
-            <label className="form-label" style={labelStyle}>
-              Did you sell or completely stop renting this property this year?
-            </label>
-            <select
-              className="form-control"
-              value={formData.soldOrStoppedRenting === true ? 'yes' : (formData.soldOrStoppedRenting === false ? 'no' : formData.soldOrStoppedRenting)}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleChange('soldOrStoppedRenting', val === 'yes' ? true : (val === 'no' ? false : val));
-              }}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-              <option value="not_sure">Not sure</option>
-            </select>
-          </div>
-          <div className="col-md-6">
-            <label className="form-label" style={labelStyle}>
-              Did you buy major items for the property (appliances, roof, HVAC, etc.)?
-            </label>
-            <select
-              className="form-control"
-              value={formData.boughtMajorItems === true ? 'yes' : (formData.boughtMajorItems === false ? 'no' : formData.boughtMajorItems)}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleChange('boughtMajorItems', val === 'yes' ? true : (val === 'no' ? false : val));
-              }}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-              <option value="not_sure">Not sure</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* 7. Prior-Year Information (Optional) */}
-      <div className="mb-6">
-        <h5 style={sectionStyle}>7. Prior-Year Information (Optional)</h5>
-
-        <div className="row g-3 mb-3">
-          <div className="col-12">
-            <label className="form-label" style={labelStyle}>
-              Did you have rental losses from previous years that were not used?
-            </label>
-            <select
-              className="form-control"
-              value={formData.hasRentalLosses === true ? 'yes' : (formData.hasRentalLosses === false ? 'no' : formData.hasRentalLosses)}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleChange('hasRentalLosses', val === 'yes' ? true : (val === 'no' ? false : val));
-              }}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-              <option value="not_sure">Not sure</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       {/* 8. Final Confirmation */}

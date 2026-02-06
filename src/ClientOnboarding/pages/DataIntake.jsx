@@ -163,9 +163,6 @@ export default function DataIntakeForm({ targetClientId }) {
     otherExpenses: [],
     otherExpenseDescription: '',
     otherExpenseAmount: '',
-    soldOrStoppedRenting: false,
-    boughtMajorItems: false,
-    hasRentalLosses: false,
     isComplete: false
   });
 
@@ -255,9 +252,6 @@ export default function DataIntakeForm({ targetClientId }) {
       otherExpenses: [],
       otherExpenseDescription: '',
       otherExpenseAmount: '',
-      soldOrStoppedRenting: false,
-      boughtMajorItems: false,
-      hasRentalLosses: false,
       isComplete: false
     });
     setIsAddingRentalProperty(false);
@@ -346,7 +340,7 @@ export default function DataIntakeForm({ targetClientId }) {
     const businessForDisplay = {
       id: editingBusinessId || Date.now(),
       businessName: businessData.businessName || "",
-      businessType: "Self-Employment",
+      businessType: businessData.businessType || "Self-Employment",
       totalIncome: businessData.totalIncome || "0",
       totalExpenses: calculateTotalExpenses(businessData),
       address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
@@ -724,9 +718,6 @@ export default function DataIntakeForm({ targetClientId }) {
                 legalProfessional: rData.legal_professional || "0.00",
                 supplies: rData.supplies || "0.00",
                 otherExpenses: rData.other_expenses || [],
-                soldOrStoppedRenting: rData.sold_or_stopped_renting || false,
-                boughtMajorItems: rData.bought_major_items || false,
-                hasRentalLosses: rData.has_rental_losses || false,
                 isComplete: rData.is_complete || false
               }));
               setRentalProperties(rentalList);
@@ -948,15 +939,66 @@ export default function DataIntakeForm({ targetClientId }) {
 
     // Handle nested fields (e.g., personal_info.first_name, personal_info.spouse_info.spouse_dateOfBirth, bank_info.routing_number)
     let fieldKey = apiField;
+    let index = null;
+    let fieldPath = "";
+
     if (apiField.includes('.')) {
       const parts = apiField.split('.');
-      // Remove known prefixes (personal_info, spouse_info, bank_info)
-      // Extract the last part which is the actual field name
-      // For example: personal_info.spouse_info.spouse_dateOfBirth -> spouse_dateOfBirth
+
+      // Check if there's an index (e.g., dependents.0.dependent_first_name)
+      const indexMatch = apiField.match(/\.(\d+)\./);
+      if (indexMatch) {
+        index = indexMatch[1];
+
+        // Handle array fields
+        if (apiField.includes('dependents')) {
+          fieldPath = 'dependents';
+          const lastPart = parts[parts.length - 1];
+          const dependentMap = {
+            'dependent_first_name': 'firstName',
+            'dependent_middle_name': 'middleInitial',
+            'dependent_last_name': 'lastName',
+            'dependent_dateOfBirth': 'dob',
+            'dependent_ssn': 'ssn',
+            'dependent_relationship': 'relationship'
+          };
+          return `dependents.${index}.${dependentMap[lastPart] || lastPart}`;
+        }
+
+        if (apiField.includes('business_info')) {
+          const lastPart = parts[parts.length - 1];
+          const businessMap = {
+            'business_type': 'businessType',
+            'business_name': 'businessName',
+            'work_description': 'workDescription',
+            'business_city': 'businessCity',
+            'business_state': 'businessState',
+            'business_zip': 'businessZip',
+            'total_income': 'totalIncome',
+            'ein': 'ein',
+            'business_formation_date': 'businessFormationDate'
+          };
+          return `businesses.${index}.${businessMap[lastPart] || lastPart}`;
+        }
+
+        if (apiField.includes('rental_property_info')) {
+          const lastPart = parts[parts.length - 1];
+          const rentalMap = {
+            'property_address': 'propertyAddress',
+            'property_city': 'propertyCity',
+            'property_state': 'propertyState',
+            'property_zip': 'propertyZip',
+            'total_rent_received': 'totalRentReceived',
+            'days_rented_out': 'daysRentedOut'
+          };
+          return `rentalProperties.${index}.${rentalMap[lastPart] || lastPart}`;
+        }
+      }
+
+      // Remove known prefixes for non-array nested fields
       const prefixes = ['personal_info', 'spouse_info', 'bank_info'];
-      // Find the last part that's not a prefix
       for (let i = parts.length - 1; i >= 0; i--) {
-        if (!prefixes.includes(parts[i])) {
+        if (!prefixes.includes(parts[i]) && isNaN(parts[i])) {
           fieldKey = parts[i];
           break;
         }
@@ -1503,7 +1545,10 @@ export default function DataIntakeForm({ targetClientId }) {
           business_zip: b.businessZip || "",
           work_description: b.workDescription || "",
           business_name_type: b.businessNameType || "same",
-          different_business_name: b.differentBusinessName || "",
+          different_business_name: b.businessNameType === 'different' ? b.businessName : "",
+          business_code_id: b.businessCodeId || null,
+          business_code_naics: b.businessCodeNaics || "",
+          business_code_title: b.businessCodeTitle || "",
           ein: b.ein || "",
           started_during_year: b.startedDuringYear || false,
           business_formation_date: b.businessFormationDate ? formatDateToYYYYMMDD(b.businessFormationDate) : "",
@@ -1565,9 +1610,6 @@ export default function DataIntakeForm({ targetClientId }) {
           legal_professional: r.legalProfessional || "0.00",
           supplies: r.supplies || "0.00",
           other_expenses: r.otherExpenses || [],
-          sold_or_stopped_renting: r.soldOrStoppedRenting || false,
-          bought_major_items: r.boughtMajorItems || false,
-          has_rental_losses: r.hasRentalLosses || false,
           is_complete: r.isComplete || false
         }))
       };
@@ -3680,56 +3722,20 @@ export default function DataIntakeForm({ targetClientId }) {
                         setIsAddingBusiness(false);
                         setEditingBusinessId(null);
                         setBusinessFormErrors({}); // Clear errors on cancel
-                        // Reset business data if canceling
-                        if (!editingBusinessId) {
-                          setBusinessData({
-                            workDescription: '',
-                            businessName: '',
-                            businessNameType: 'same',
-                            differentBusinessName: '',
-                            startedDuringYear: false,
-                            homeBased: false,
-                            businessAddress: '',
-                            businessCity: '',
-                            businessState: '',
-                            businessZip: '',
-                            totalIncome: '',
-                            taxFormsReceived: 'none',
-                            issuedRefunds: false,
-                            totalRefunded: '',
-                            otherBusinessIncome: false,
-                            otherBusinessIncomeAmount: '',
-                            advertising: '',
-                            officeSupplies: '',
-                            cleaningRepairs: '',
-                            insurance: '',
-                            legalProfessional: '',
-                            phoneInternetUtilities: '',
-                            paidContractors: false,
-                            totalPaidContractors: '',
-                            otherExpenses: [],
-                            otherExpenseDescription: '',
-                            otherExpenseAmount: '',
-                            usedVehicle: false,
-                            businessMiles: '',
-                            parkingTollsTravel: '',
-                            businessMeals: '',
-                            travelExpenses: '',
-                            homeOfficeUse: false,
-                            homeOfficeSize: '',
-                            sellProducts: false,
-                            costItemsResold: '',
-                            inventoryLeftEnd: '',
-                            healthInsuranceBusiness: false,
-                            selfEmployedRetirement: false,
-                            retirementAmount: '',
-                            isAccurate: false,
-                            id: null
+                      }}
+                      initialData={editingBusinessId ? businesses.find(b => b.id === editingBusinessId) : null}
+                      externalErrors={(() => {
+                        const currentErrors = {};
+                        const editIdx = businesses.findIndex(b => b.id === editingBusinessId);
+                        if (editIdx !== -1) {
+                          Object.entries(fieldErrors).forEach(([key, val]) => {
+                            if (key.startsWith(`businesses.${editIdx}.`)) {
+                              currentErrors[key.split('.').pop()] = val;
+                            }
                           });
                         }
-                      }}
-                      externalErrors={businessFormErrors}
-                      initialData={editingBusinessId ? businessData : null}
+                        return { ...currentErrors, ...businessFormErrors };
+                      })()}
                     />
                   </ErrorBoundary>
                 )}
@@ -3807,9 +3813,6 @@ export default function DataIntakeForm({ targetClientId }) {
                           otherExpenses: [],
                           otherExpenseDescription: '',
                           otherExpenseAmount: '',
-                          soldOrStoppedRenting: false,
-                          boughtMajorItems: false,
-                          hasRentalLosses: false,
                           isComplete: false
                         });
                       }}
@@ -3913,7 +3916,19 @@ export default function DataIntakeForm({ targetClientId }) {
                   <RentalPropertyForm
                     onSave={handleSaveRentalProperty}
                     onCancel={handleCancelRentalProperty}
-                    initialData={editingRentalPropertyId ? rentalData : null}
+                    initialData={editingRentalPropertyId ? rentalProperties.find(r => r.id === editingRentalPropertyId) : null}
+                    externalErrors={(() => {
+                      const currentErrors = {};
+                      const editIdx = rentalProperties.findIndex(r => r.id === editingRentalPropertyId);
+                      if (editIdx !== -1) {
+                        Object.entries(fieldErrors).forEach(([key, val]) => {
+                          if (key.startsWith(`rentalProperties.${editIdx}.`)) {
+                            currentErrors[key.split('.').pop()] = val;
+                          }
+                        });
+                      }
+                      return { ...currentErrors, ...rentalFormErrors };
+                    })()}
                   />
                 )}
               </div>
