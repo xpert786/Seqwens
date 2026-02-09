@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
-import StaffInvites from "./StaffInvites";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import RoleManagement from "../../../ClientOnboarding/components/RoleManagement";
 import UserProfileWithRoles from "../../../ClientOnboarding/components/UserProfileWithRoles";
@@ -54,7 +53,6 @@ export default function AccountSettings() {
         { id: "profile", label: "Profile" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
-        { id: "invites", label: "Invites" },
         { id: "roles", label: "Roles" },
     ];
 
@@ -148,7 +146,6 @@ export default function AccountSettings() {
                         {activeTab === "profile" && <Profile profileData={settings?.profile} companyProfile={settings?.company_profile} onUpdate={fetchSettings} />}
                         {activeTab === "notifications" && <Notifications notifications={settings?.notifications} onUpdate={fetchSettings} />}
                         {activeTab === "security" && <Security security={settings?.security} onUpdate={fetchSettings} />}
-                        {activeTab === "invites" && <StaffInvites />}
                         {activeTab === "roles" && <UserProfileWithRoles />}
                     </>
                 )}
