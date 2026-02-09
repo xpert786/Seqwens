@@ -42,6 +42,17 @@ export default function Messages() {
   const [threadToDelete, setThreadToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredConversations = conversations.filter(conv => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (conv.name && conv.name.toLowerCase().includes(term)) ||
+      (conv.subject && conv.subject.toLowerCase().includes(term)) ||
+      (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term)) ||
+      (conv.clientName && conv.clientName.toLowerCase().includes(term))
+    );
+  });
 
   const isSendButtonActive = newMessage.trim().length > 0 || messageAttachment;
   const sendButtonStyles = {
@@ -1254,6 +1265,8 @@ export default function Messages() {
                 type="text"
                 className="form-control"
                 placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
                   fontFamily: "BasisGrotesquePro",
                   paddingLeft: "35px",
@@ -1295,7 +1308,7 @@ export default function Messages() {
               </div>
             )}
 
-            {/* Empty State */}
+            {/* Empty State - No conversations at all */}
             {!loading && !error && conversations.length === 0 && (
               <div className="text-center py-5">
                 <p className="text-muted small mb-0">No conversations yet</p>
@@ -1303,11 +1316,19 @@ export default function Messages() {
               </div>
             )}
 
+            {/* Empty State - No search results */}
+            {!loading && !error && conversations.length > 0 && filteredConversations.length === 0 && (
+              <div className="text-center py-5">
+                <p className="text-muted small mb-0">No conversations found</p>
+                <p className="text-muted small">Try a different search term</p>
+              </div>
+            )}
+
             {/* Conversations List */}
-            {!loading && !error && conversations.length > 0 && (
+            {!loading && !error && filteredConversations.length > 0 && (
               <div style={{ width: "100%" }}>
-                {console.log('🎯 Rendering conversations list, count:', conversations.length)}
-                {conversations.map((conv, index) => {
+                {console.log('🎯 Rendering filtered conversations list, count:', filteredConversations.length)}
+                {filteredConversations.map((conv, index) => {
                   console.log(`📦 Rendering conversation ${index + 1}:`, conv);
                   return (
                     <div
@@ -1320,7 +1341,7 @@ export default function Messages() {
                         borderRadius: "12px",
                         fontFamily: "BasisGrotesquePro",
                         color: "#3B4A66",
-                        marginBottom: index < conversations.length - 1 ? "12px" : "0",
+                        marginBottom: index < filteredConversations.length - 1 ? "12px" : "0",
                         width: "100%",
                         minHeight: "80px",
                         display: "flex",

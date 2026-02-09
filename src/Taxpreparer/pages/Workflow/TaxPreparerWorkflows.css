@@ -80,17 +80,17 @@
 
 .filter-button {
     transition: all 0.2s ease;
+    border-radius: 8px;
 }
 
 .filter-button.active {
     background-color: #3AD6F2;
     color: white;
-    box-shadow: 0 4px 12px rgba(58, 214, 242, 0.3);
 }
 
 .status-badge {
     padding: 4px 12px;
-    border-radius: 999px;
+    border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;

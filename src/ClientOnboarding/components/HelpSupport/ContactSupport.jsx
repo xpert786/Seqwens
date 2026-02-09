@@ -55,7 +55,7 @@ const ContactSupport = () => {
 
   const handleSubmitTicket = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!formData.subject.trim()) {
       setErrorMessage('Please enter a subject');
@@ -92,7 +92,7 @@ const ContactSupport = () => {
           priority: '',
           description: ''
         });
-        
+
         // Refresh support tickets list
         if (window.refreshSupportTickets) {
           console.log('🔄 Refreshing support tickets list...');
@@ -120,7 +120,7 @@ const ContactSupport = () => {
         {/* Email Support */}
         <div className="col-md-4">
           <div className="p-3 rounded-4  text-center h-100" style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF" }}>
-            <div className="fs-2 mb-2 text-primary">
+            <div className="fs-2 mb-2 text-primary d-flex justify-content-center align-items-center">
               <EmailsIcon />
             </div>
             <h6 className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "18px", color: "#3B4A66" }}>Email Support</h6>
@@ -149,7 +149,7 @@ const ContactSupport = () => {
         {/* Phone Support */}
         <div className="col-md-4">
           <div className="p-3 rounded-4  text-center h-100 " style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF" }}>
-            <div className="fs-2 mb-2 text-primary">
+            <div className="fs-2 mb-2 text-primary d-flex justify-content-center align-items-center">
               <MobileIcon />
             </div>
             <h6 className=" mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "18px", color: "#3B4A66" }}>Phone Support</h6>
@@ -178,7 +178,7 @@ const ContactSupport = () => {
         {/* Live Chat */}
         <div className="col-md-4">
           <div className="p-3 rounded-4 text-center h-100" style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF" }}>
-            <div className="fs-2 mb-2 text-primary">
+            <div className="fs-2 mb-2 text-primary d-flex justify-content-center align-items-center">
               <LiveIcon />
             </div>
             <h6 className="fw-semibold mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "18px", color: "#3B4A66" }}>Live Chat</h6>
@@ -285,7 +285,7 @@ const ContactSupport = () => {
             }}
             disabled={loading}
           >
-            <TicketIcon /> 
+            <TicketIcon />
             {loading ? 'Creating Ticket...' : 'Submit Ticket'}
           </button>
         </form>

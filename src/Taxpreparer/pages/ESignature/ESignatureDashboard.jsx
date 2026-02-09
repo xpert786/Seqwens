@@ -1123,18 +1123,20 @@ export default function ESignatureDashboard() {
       </div>
 
       {/* Filters and Search */}
-      <div className="d-flex flex-column flex-md-row gap-3 mb-4">
-        <div className="flex-grow-1 position-relative">
-          <FiSearch
-            size={18}
-            style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#6B7280'
-            }}
-          />
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-4 mt-2">
+        <div className="position-relative" style={{ minWidth: '300px', maxWidth: '400px', width: '100%' }}>
+          <div style={{
+            position: 'absolute',
+            left: '12px',
+            top: -11,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            pointerEvents: 'none',
+            zIndex: 1
+          }}>
+            <FiSearch size={18} color="#6B7280" />
+          </div>
           <input
             type="text"
             className="form-control"
@@ -1144,12 +1146,13 @@ export default function ESignatureDashboard() {
             style={{
               paddingLeft: '40px',
               fontFamily: 'BasisGrotesquePro',
-              borderColor: '#E5E7EB'
+              borderColor: '#E5E7EB',
+              height: '44px',
+              borderRadius: '8px'
             }}
           />
         </div>
-        <div className="d-flex align-items-center gap-2">
-          <FiFilter size={18} style={{ color: '#6B7280' }} />
+        <div>
           <select
             className="form-select"
             value={statusFilter}
@@ -1157,7 +1160,9 @@ export default function ESignatureDashboard() {
             style={{
               fontFamily: 'BasisGrotesquePro',
               borderColor: '#E5E7EB',
-              minWidth: '150px'
+              minWidth: '150px',
+              height: '44px',
+              borderRadius: '8px'
             }}
           >
             <option value="all">All Status</option>

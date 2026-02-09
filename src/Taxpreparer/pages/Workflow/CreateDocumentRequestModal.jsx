@@ -143,7 +143,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{ zIndex: 99999 }}
     >
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" style={{ borderRadius: '12px' }}>
+      <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" style={{ borderRadius: '8px' }}>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-900 font-[BasisGrotesquePro]">
             Create Document Request
@@ -183,8 +183,8 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="e.g., 2024 Tax Documents Request"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] ${errors.title
-                  ? 'border-red-300 focus:ring-red-500'
-                  : 'border-[#E8F0FF] focus:ring-blue-500'
+                ? 'border-red-300 focus:ring-red-500'
+                : 'border-[#E8F0FF] focus:ring-blue-500'
                 }`}
             />
             {errors.title && (
@@ -218,8 +218,8 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
               onChange={handleDateChange}
               placeholder="mm/dd/yyyy"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-[BasisGrotesquePro] ${errors.due_date
-                  ? 'border-red-300 focus:ring-red-500'
-                  : 'border-[#E8F0FF] focus:ring-blue-500'
+                ? 'border-red-300 focus:ring-red-500'
+                : 'border-[#E8F0FF] focus:ring-blue-500'
                 }`}
             />
             {errors.due_date && (
@@ -232,7 +232,8 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+              className="px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+              style={{ borderRadius: '8px' }}
               disabled={loading}
             >
               Cancel
@@ -240,7 +241,8 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+              className="px-4 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+              style={{ borderRadius: '8px' }}
             >
               {loading ? 'Creating...' : 'Create Request'}
             </button>

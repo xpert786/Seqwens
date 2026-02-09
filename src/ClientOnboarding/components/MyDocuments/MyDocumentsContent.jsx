@@ -10,6 +10,7 @@ import Pagination from "../Pagination";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import { Modal } from "react-bootstrap";
 import NewFolderModal from "./NewFolderModal";
+import * as XLSX from "xlsx";
 
 export default function MyDocumentsContent() {
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -50,6 +51,16 @@ export default function MyDocumentsContent() {
     const [currentFolderId, setCurrentFolderId] = useState(null);
     const [breadcrumbs, setBreadcrumbs] = useState([]);
     const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+
+    // Excel preview state
+    const [excelPreviewData, setExcelPreviewData] = useState(null);
+    const [loadingExcelPreview, setLoadingExcelPreview] = useState(false);
+
+    // Reset Excel preview when selected document changes
+    useEffect(() => {
+        setExcelPreviewData(null);
+        setLoadingExcelPreview(false);
+    }, [selectedDocument]);
 
     // Aggregated data for recursive mode
     const allFoldersRef = useRef([]);
@@ -514,12 +525,34 @@ export default function MyDocumentsContent() {
                 }
 
                 console.log(`Document ${action}d successfully:`, result.data);
+                toast.success(`Document ${action}d successfully`, {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    icon: false,
+                    className: "custom-toast-success",
+                    bodyClassName: "custom-toast-body",
+                });
             } else {
                 throw new Error(result.message || 'Failed to archive/unarchive document');
             }
         } catch (error) {
             console.error('Error archiving/unarchiving document:', error);
-            alert(handleAPIError(error));
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to archive/unarchive document'), {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
+            });
         } finally {
             setArchivingDocumentId(null);
         }
@@ -1278,14 +1311,13 @@ export default function MyDocumentsContent() {
                                                 }
 
                                                 setSelectedIndex(startIndex + index);
-                                                // Check if document is a PDF
-                                                const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
-                                                if (isPdf && fileUrl) {
+                                                // Allow preview for PDFs and Images
+                                                if (fileUrl) {
                                                     setSelectedDocument(doc);
                                                     setShowPdfModal(true);
                                                 }
                                             }}
-                                            title={doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? 'Click to open folder' : ((docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && fileUrl ? 'Click to view PDF' : '')}
+                                            title={doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? 'Click to open folder' : (fileUrl ? 'Click to preview' : '')}
                                         >
                                             <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                 {/* Left Side: File Info */}
@@ -1364,12 +1396,11 @@ export default function MyDocumentsContent() {
                                                                         backgroundColor: "#3AD6F2",
                                                                         color: "#FFFFFF",
                                                                         border: "none",
-                                                                        cursor: "pointer"
+                                                                        cursor: "pointer",
                                                                     }}
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
-                                                                        if (isPdf && fileUrl) {
+                                                                        if (fileUrl) {
                                                                             setSelectedDocument(doc);
                                                                             setShowPdfModal(true);
                                                                         }
@@ -1776,17 +1807,181 @@ export default function MyDocumentsContent() {
                             justifyContent: 'center',
                             padding: '24px 16px'
                         }}>
-                            <iframe
-                                src={`${selectedDocument.file_url || selectedDocument.tax_documents}#toolbar=1`}
-                                title={selectedDocument.file_name || 'PDF Viewer'}
-                                style={{
-                                    width: '100%',
-                                    maxWidth: '700px',
-                                    height: '100%',
-                                    border: 'none',
-                                    minHeight: '500px'
-                                }}
-                            ></iframe>
+                            {(() => {
+                                const fileExt = (selectedDocument.file_extension || selectedDocument.file_type || '').toLowerCase();
+                                const fileName = (selectedDocument.file_name || selectedDocument.name || '').toLowerCase();
+                                const isPdf = fileExt === 'pdf' || fileName.endsWith('.pdf');
+                                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(fileExt) || /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/.test(fileName);
+
+                                if (isPdf) {
+                                    return (
+                                        <iframe
+                                            src={`${selectedDocument.file_url || selectedDocument.tax_documents}#toolbar=1`}
+                                            title={selectedDocument.file_name || 'PDF Viewer'}
+                                            style={{
+                                                width: '100%',
+                                                maxWidth: '700px',
+                                                height: '100%',
+                                                border: 'none',
+                                                minHeight: '500px'
+                                            }}
+                                        ></iframe>
+                                    );
+                                } else if (isImage) {
+                                    return (
+                                        <img
+                                            src={selectedDocument.file_url || selectedDocument.tax_documents}
+                                            alt={selectedDocument.file_name || 'Preview'}
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '100%',
+                                                objectFit: 'contain',
+                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                            }}
+                                        />
+                                    );
+                                } else {
+                                    const isExcel = ['xlsx', 'xls', 'csv'].includes(fileExt) || /\.(xlsx?|csv)$/.test(fileName);
+
+                                    if (isExcel) {
+                                        // Excel file - show loading or table based on state
+                                        const fileUrl = selectedDocument.file_url || selectedDocument.tax_documents;
+
+                                        // Trigger Excel parsing if not already loaded
+                                        if (!excelPreviewData && !loadingExcelPreview && fileUrl) {
+                                            setLoadingExcelPreview(true);
+                                            fetch(fileUrl)
+                                                .then(response => response.arrayBuffer())
+                                                .then(arrayBuffer => {
+                                                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                                                    const firstSheetName = workbook.SheetNames[0];
+                                                    const worksheet = workbook.Sheets[firstSheetName];
+                                                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                                                    // Limit to first 100 rows and 10 columns for preview
+                                                    const previewData = jsonData.slice(0, 100).map(row =>
+                                                        Array.isArray(row) ? row.slice(0, 10) : []
+                                                    );
+
+                                                    setExcelPreviewData({
+                                                        sheetName: firstSheetName,
+                                                        data: previewData,
+                                                        totalRows: jsonData.length,
+                                                        totalSheets: workbook.SheetNames.length
+                                                    });
+                                                    setLoadingExcelPreview(false);
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error loading Excel file:', error);
+                                                    setLoadingExcelPreview(false);
+                                                });
+                                        }
+
+                                        if (loadingExcelPreview) {
+                                            return (
+                                                <div className="d-flex flex-column align-items-center justify-content-center text-center h-100">
+                                                    <div className="spinner-border text-success mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>Loading Excel preview...</p>
+                                                </div>
+                                            );
+                                        }
+
+                                        if (excelPreviewData && excelPreviewData.data && excelPreviewData.data.length > 0) {
+                                            return (
+                                                <div style={{ width: '100%', maxWidth: '900px', height: '100%', overflow: 'auto' }}>
+                                                    <div style={{
+                                                        padding: '12px 16px',
+                                                        backgroundColor: '#22C55E',
+                                                        color: 'white',
+                                                        borderRadius: '8px 8px 0 0',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <i className="bi bi-table" style={{ fontSize: '18px' }}></i>
+                                                            <span style={{ fontWeight: '600' }}>{selectedDocument.file_name || selectedDocument.name}</span>
+                                                        </div>
+                                                        <span style={{ fontSize: '12px', opacity: 0.9 }}>
+                                                            Sheet: {excelPreviewData.sheetName} • {excelPreviewData.totalRows} rows
+                                                        </span>
+                                                    </div>
+                                                    <div style={{
+                                                        maxHeight: '450px',
+                                                        overflow: 'auto',
+                                                        border: '1px solid #E5E7EB',
+                                                        borderTop: 'none',
+                                                        borderRadius: '0 0 8px 8px',
+                                                        backgroundColor: 'white'
+                                                    }}>
+                                                        <table style={{
+                                                            width: '100%',
+                                                            borderCollapse: 'collapse',
+                                                            fontSize: '13px'
+                                                        }}>
+                                                            <tbody>
+                                                                {excelPreviewData.data.map((row, rowIdx) => (
+                                                                    <tr key={rowIdx} style={{
+                                                                        backgroundColor: rowIdx === 0 ? '#F3F4F6' : (rowIdx % 2 === 0 ? '#FAFAFA' : 'white')
+                                                                    }}>
+                                                                        {row.map((cell, cellIdx) => (
+                                                                            <td key={cellIdx} style={{
+                                                                                padding: '8px 12px',
+                                                                                borderBottom: '1px solid #E5E7EB',
+                                                                                borderRight: '1px solid #E5E7EB',
+                                                                                whiteSpace: 'nowrap',
+                                                                                fontWeight: rowIdx === 0 ? '600' : 'normal',
+                                                                                color: rowIdx === 0 ? '#374151' : '#6B7280'
+                                                                            }}>
+                                                                                {cell !== null && cell !== undefined ? String(cell) : ''}
+                                                                            </td>
+                                                                        ))}
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    {excelPreviewData.totalRows > 100 && (
+                                                        <div style={{
+                                                            padding: '8px',
+                                                            textAlign: 'center',
+                                                            backgroundColor: '#FEF3C7',
+                                                            borderRadius: '0 0 8px 8px',
+                                                            fontSize: '12px',
+                                                            color: '#92400E'
+                                                        }}>
+                                                            Showing first 100 rows. Download file to view all {excelPreviewData.totalRows} rows.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+                                    }
+
+                                    // Default fallback for non-previewable files
+                                    return (
+                                        <div className="d-flex flex-column align-items-center justify-content-center text-center h-100">
+                                            <div className="mb-3 p-4 bg-white rounded-circle shadow-sm" style={{ width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <i className={`bi ${isExcel ? 'bi-file-earmark-spreadsheet text-success' : 'bi-file-earmark-text text-secondary'}`} style={{ fontSize: '40px' }}></i>
+                                            </div>
+                                            <h5 className="text-secondary mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>{isExcel ? 'Unable to load preview' : 'Preview not available'}</h5>
+                                            <p className="text-muted mb-4" style={{ maxWidth: '300px', fontSize: '14px' }}>
+                                                {isExcel ? 'There was an error loading the Excel preview. Please download the file to view it.' : 'This file type cannot be previewed directly. Please download the file to view it.'}
+                                            </p>
+                                            <a
+                                                href={selectedDocument.file_url || selectedDocument.tax_documents}
+                                                download={selectedDocument.file_name || 'document'}
+                                                className="btn btn-primary"
+                                                style={{ backgroundColor: '#00C0C6', border: 'none' }}
+                                            >
+                                                Download File
+                                            </a>
+                                        </div>
+                                    );
+                                }
+                            })()}
                         </div>
                     </div>
                 </div>

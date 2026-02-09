@@ -13,6 +13,13 @@
   justify-content: space-between;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.clickable-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
+  background-color: #F9FAFB;
 }
 
 .stat-icon {

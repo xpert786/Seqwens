@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaEye, FaDownload } from "react-icons/fa";
+import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaEye, FaDownload, FaTable } from "react-icons/fa";
 import { UploadsIcon, CrossIcon, ViewIcon, DownloadIcon } from "../component/icons";
 import "../styles/taxupload.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
+import * as XLSX from "xlsx";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -146,6 +147,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
   const [folderTree, setFolderTree] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
+  const [excelPreviews, setExcelPreviews] = useState({}); // Store parsed Excel data by file index
 
   const activeFile = files[selectedIndex] || null;
 
@@ -156,12 +158,15 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     if (!incoming.length) return;
 
     const skipped = [];
-    const entries = incoming.reduce((acc, file) => {
+    const startingIndex = files.length;
+    const entries = incoming.reduce((acc, file, idx) => {
       if (file.size > MAX_FILE_SIZE) {
         skipped.push(file.name);
         return acc;
       }
-      acc.push(createFileEntry(file));
+      const entry = createFileEntry(file);
+      entry.fileIndex = startingIndex + acc.length;
+      acc.push(entry);
       return acc;
     }, []);
 
@@ -173,10 +178,45 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       return;
     }
 
-    const startingIndex = files.length;
     setFiles((prev) => [...prev, ...entries]);
     setSelectedIndex(startingIndex);
     setPreviewMode(false);
+
+    // Parse Excel files for preview
+    entries.forEach((fileEntry) => {
+      const fileName = fileEntry.name.toLowerCase();
+      if (/\.(xlsx?|csv)$/.test(fileName)) {
+        parseExcelFile(fileEntry.fileObject, fileEntry.fileIndex);
+      }
+    });
+  };
+
+  // Function to parse Excel files for preview
+  const parseExcelFile = async (file, fileIndex) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Limit to first 100 rows and 10 columns for preview
+      const previewData = jsonData.slice(0, 100).map(row =>
+        Array.isArray(row) ? row.slice(0, 10) : []
+      );
+
+      setExcelPreviews(prev => ({
+        ...prev,
+        [fileIndex]: {
+          sheetName: firstSheetName,
+          data: previewData,
+          totalRows: jsonData.length,
+          totalSheets: workbook.SheetNames.length
+        }
+      }));
+    } catch (error) {
+      console.error('Error parsing Excel file:', error);
+    }
   };
 
   const handleFileSelect = () => {
@@ -858,8 +898,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
           <p className="upload-text">
             <strong className="texts">Drop files here or click to browse</strong>
           </p>
-          <p className="upload-hint">Supported formats up to 50MB per file</p>
-          <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileChange} accept="*/*" />
+          <p className="upload-hint">Supported formats: All files (PDF, Images, Excel, etc.) • Max 50MB per file</p>
+          <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileChange} />
         </div>
 
         {files.length > 0 ? (
@@ -1192,12 +1232,167 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                 ) : (
                   <div className="preview-panel border rounded p-3" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
                     {activeFile?.previewUrl ? (
-                      <iframe
-                        title={`${activeFile.name} preview`}
-                        src={activeFile.previewUrl}
-                        width="100%"
-                        height="480px"
-                      />
+                      (() => {
+                        const fileName = activeFile.name.toLowerCase();
+                        const fileType = activeFile.fileObject?.type || '';
+                        const isPdf = fileType === 'application/pdf' || fileName.endsWith('.pdf');
+                        const isImage = fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(fileName);
+
+                        if (isPdf) {
+                          return (
+                            <iframe
+                              title={`${activeFile.name} preview`}
+                              src={activeFile.previewUrl}
+                              width="100%"
+                              height="480px"
+                              style={{ border: 'none' }}
+                            />
+                          );
+                        } else if (isImage) {
+                          return (
+                            <img
+                              src={activeFile.previewUrl}
+                              alt={`Preview of ${activeFile.name}`}
+                              style={{ maxWidth: '100%', maxHeight: '480px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                            />
+                          );
+                        } else {
+                          // Non-previewable file - show file card
+                          const ext = activeFile.name.split('.').pop().toUpperCase();
+                          const isExcel = /\.(xlsx?|csv)$/i.test(activeFile.name);
+                          const isWord = /\.(docx?|rtf)$/i.test(activeFile.name);
+                          const excelData = excelPreviews[selectedIndex];
+
+                          // If it's an Excel file and we have parsed data, show table
+                          if (isExcel && excelData && excelData.data && excelData.data.length > 0) {
+                            return (
+                              <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
+                                <div style={{
+                                  padding: '12px 16px',
+                                  backgroundColor: '#22C55E',
+                                  color: 'white',
+                                  borderRadius: '8px 8px 0 0',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <FaTable size={18} />
+                                    <span style={{ fontWeight: '600' }}>{activeFile.name}</span>
+                                  </div>
+                                  <span style={{ fontSize: '12px', opacity: 0.9 }}>
+                                    Sheet: {excelData.sheetName} • {excelData.totalRows} rows
+                                  </span>
+                                </div>
+                                <div style={{
+                                  maxHeight: '350px',
+                                  overflow: 'auto',
+                                  border: '1px solid #E5E7EB',
+                                  borderTop: 'none',
+                                  borderRadius: '0 0 8px 8px'
+                                }}>
+                                  <table style={{
+                                    width: '100%',
+                                    borderCollapse: 'collapse',
+                                    fontSize: '13px'
+                                  }}>
+                                    <tbody>
+                                      {excelData.data.map((row, rowIdx) => (
+                                        <tr key={rowIdx} style={{
+                                          backgroundColor: rowIdx === 0 ? '#F3F4F6' : (rowIdx % 2 === 0 ? '#FAFAFA' : 'white')
+                                        }}>
+                                          {row.map((cell, cellIdx) => (
+                                            <td key={cellIdx} style={{
+                                              padding: '8px 12px',
+                                              borderBottom: '1px solid #E5E7EB',
+                                              borderRight: '1px solid #E5E7EB',
+                                              whiteSpace: 'nowrap',
+                                              fontWeight: rowIdx === 0 ? '600' : 'normal',
+                                              color: rowIdx === 0 ? '#374151' : '#6B7280'
+                                            }}>
+                                              {cell !== null && cell !== undefined ? String(cell) : ''}
+                                            </td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                                {excelData.totalRows > 100 && (
+                                  <div style={{
+                                    padding: '8px',
+                                    textAlign: 'center',
+                                    backgroundColor: '#FEF3C7',
+                                    borderRadius: '0 0 8px 8px',
+                                    fontSize: '12px',
+                                    color: '#92400E'
+                                  }}>
+                                    Showing first 100 rows. Download file to view all {excelData.totalRows} rows.
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div style={{
+                              backgroundColor: '#F8FAFC',
+                              borderRadius: '12px',
+                              border: '1px dashed #E2E8F0',
+                              minHeight: '300px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '40px'
+                            }}>
+                              <div style={{
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '16px',
+                                backgroundColor: isExcel ? '#22C55E' : isWord ? '#3B82F6' : '#6B7280',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: '16px'
+                              }}>
+                                <FaRegFileAlt size={36} color="white" />
+                              </div>
+                              <p style={{
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: '#1F2937',
+                                marginBottom: '4px',
+                                textAlign: 'center'
+                              }}>{activeFile.name}</p>
+                              <p style={{
+                                fontSize: '14px',
+                                color: '#6B7280',
+                                marginBottom: '8px'
+                              }}>{ext} File • {activeFile.sizeLabel}</p>
+                              <p style={{
+                                fontSize: '13px',
+                                color: '#9CA3AF',
+                                marginBottom: '16px'
+                              }}>{isExcel ? 'Loading preview...' : 'Preview not available in browser'}</p>
+                              <a
+                                href={activeFile.previewUrl}
+                                download={activeFile.name}
+                                className="btn btn-sm"
+                                style={{
+                                  backgroundColor: '#F56D2D',
+                                  color: 'white',
+                                  padding: '8px 20px',
+                                  borderRadius: '8px',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                Download to View
+                              </a>
+                            </div>
+                          );
+                        }
+                      })()
                     ) : (
                       <p className="text-muted mb-0">No preview available for this file.</p>
                     )}
