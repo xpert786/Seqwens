@@ -136,13 +136,17 @@ export default function FirmManagement() {
     }, [searchTerm, statusFilter, planFilter]);
 
     // Helper function to get plan color
-    const getPlanColor = (plan) => {
+    const getPlanColor = (plan, firm = null) => {
+        if (firm && firm.is_billing_bypass) {
+            return 'bg-purple-600';
+        }
         const colors = {
             'starter': 'bg-[#FBBF24]',
             'team': 'bg-[#22C55E]',
             'growth': 'bg-[#22C55E]',
             'pro': 'bg-[#1E40AF]',
-            'elite': 'bg-[#3AD6F2]'
+            'elite': 'bg-[#3AD6F2]',
+            'developer plan': 'bg-purple-600'
         };
         return colors[plan?.toLowerCase()] || 'bg-gray-500';
     };
@@ -167,6 +171,11 @@ export default function FirmManagement() {
     const formatPlan = (firm) => {
         if (!firm) return 'None';
 
+        // Check for Developer Plan/Bypass mode
+        if (typeof firm === 'object' && (firm.is_billing_bypass || firm.subscription_plan_name === 'Developer Plan')) {
+            return 'Developer Plan';
+        }
+
         // If it's a firm object with subscription_plan_name
         if (typeof firm === 'object' && firm.subscription_plan_name) {
             return firm.subscription_plan_name;
@@ -178,6 +187,9 @@ export default function FirmManagement() {
         if (!plan) {
             return 'None';
         }
+        
+        if (plan.toLowerCase() === 'developer') return 'Developer Plan';
+
         return plan.charAt(0).toUpperCase() + plan.slice(1);
     };
 
@@ -859,7 +871,7 @@ export default function FirmManagement() {
 
                                         {/* Plan Column */}
                                         <div className="col-span-2">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-sm font-medium text-white ${getPlanColor(firm.subscription_plan)}`}>
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-sm font-medium text-white ${getPlanColor(firm.subscription_plan, firm)}`}>
                                                 {formatPlan(firm)}
                                             </span>
                                         </div>
@@ -1062,7 +1074,7 @@ export default function FirmManagement() {
                                         <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-xl p-4">
                                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Subscription Plan</p>
                                             <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                                                {selectedFirm.firm?.subscription_plan?.label || 'N/A'}
+                                                {selectedFirm.firm?.is_billing_bypass ? 'Developer Plan' : (selectedFirm.firm?.subscription_plan?.label || 'N/A')}
                                             </h4>
                                             <div className="text-sm text-gray-600 dark:text-gray-300">
                                                 Monthly Fee:&nbsp;
