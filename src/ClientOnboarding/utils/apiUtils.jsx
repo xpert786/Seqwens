@@ -4536,6 +4536,12 @@ export const firmAdminMeetingsAPI = {
   confirmOverwrite: async (overwriteData) => {
     const endpoint = `/firm/meetings/confirm-overwrite/`;
     return await apiRequest(endpoint, 'POST', overwriteData);
+  },
+
+  // Manage client appointment (approve or cancel)
+  manageAppointment: async (appointmentId, action, reason = '') => {
+    const endpoint = `/taxpayer/staff/appointments/${appointmentId}/action/`;
+    return await apiRequest(endpoint, 'POST', { action, reason });
   }
 };
 

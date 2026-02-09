@@ -136,7 +136,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
     const fileType = file.type.toLowerCase();
 
     // Allowed file extensions
-    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
+    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
     const fileExtension = '.' + fileName.split('.').pop();
 
     // Check by extension
@@ -153,7 +153,8 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv'
     ];
 
     return allowedMimeTypes.includes(fileType);
@@ -181,7 +182,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
     // Show error for invalid files
     const invalidFiles = selectedFiles.filter(file => !isValidFileType(file));
     if (invalidFiles.length > 0) {
-      toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX`, {
+      toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`, {
         position: 'top-right',
         autoClose: 5000
       });
@@ -300,7 +301,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <p className="text-xs text-slate-300 font-[BasisGrotesquePro]">Supports PDFs, Word, Excel & Images</p>
+                  <p className="text-xs text-slate-300 font-[BasisGrotesquePro]">Supports PDFs, Word, Excel, CSV & Images</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-1 w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
@@ -342,10 +343,10 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             <div
               ref={dropzoneRef}
               className={`relative overflow-hidden group border-2 border-dashed transition-all duration-300 !rounded-2xl p-8 text-center mb-6 ${isDragging
-                  ? 'border-blue-500 bg-blue-50'
-                  : files.length > 0
-                    ? 'border-slate-200 bg-slate-50/50'
-                    : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'
+                ? 'border-blue-500 bg-blue-50'
+                : files.length > 0
+                  ? 'border-slate-200 bg-slate-50/50'
+                  : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'
                 }`}
               onClick={handleFileSelect}
               onDragEnter={handleDragEnter}
@@ -359,7 +360,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                 hidden
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                 disabled={uploading}
               />
 

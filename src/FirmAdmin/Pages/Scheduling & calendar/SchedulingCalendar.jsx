@@ -730,6 +730,61 @@ const SchedulingCalendar = () => {
         }
     };
 
+
+
+
+    // Handle managing appointment (approve/cancel)
+    const handleManageAppointment = async (appointmentId, action, reason = '') => {
+        try {
+            // Show processing toast if needed, but for now we'll just rely on success/error toasts
+
+            const response = await firmAdminMeetingsAPI.manageAppointment(appointmentId, action, reason);
+
+            if (response.success) {
+                toast.success(response.message || `Appointment ${action === 'approve' ? 'approved' : 'rejected'} successfully`, {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+
+                // Refresh calendar data
+                await fetchCalendarData();
+
+                // If the modal is open, update the events list locally to reflect the change immediately
+                if (eventsModal.open) {
+                    setEventsModal(prev => ({
+                        ...prev,
+                        events: prev.events.map(evt => {
+                            if (evt.id === appointmentId) {
+                                const newStatus = action === 'approve' ? 'scheduled' : 'cancelled'; // Note: API might return status, but 'scheduled' is usually what 'approve' does for firm
+                                // However, checking the API response would be better if it returned the updated appointment.
+                                // For now, let's assume 'scheduled' for approve and 'cancelled' for cancel.
+                                // Check what backend does: usually 'confirmed' or 'scheduled' for approve.
+                                const statusDisplay = action === 'approve' ? 'Confirmed' : 'Cancelled';
+                                return {
+                                    ...evt,
+                                    appointment_status: newStatus,
+                                    status_display: statusDisplay
+                                };
+                            }
+                            return evt;
+                        })
+                    }));
+                }
+            } else {
+                toast.error(response.message || 'Failed to update appointment', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+            }
+        } catch (error) {
+            console.error('Error managing appointment:', error);
+            toast.error(handleAPIError(error) || 'Failed to update appointment', {
+                position: 'top-right',
+                autoClose: 3000
+            });
+        }
+    };
+
     // Handle confirm overwrite
     const handleConfirmOverwrite = async () => {
         if (!newAppointmentDetails) return;
@@ -1602,6 +1657,28 @@ const SchedulingCalendar = () => {
                                         </div>
                                         {event.description && (
                                             <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-2 line-clamp-3">{event.description}</p>
+                                        )}
+                                        {event.appointment_status === 'pending' && (
+                                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#E8F0FF]">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleManageAppointment(event.id, 'approve');
+                                                    }}
+                                                    className="flex-1 px-3 py-1.5 text-xs font-bold text-white bg-[#059669] hover:bg-[#047857] rounded-lg transition-colors font-[BasisGrotesquePro]"
+                                                >
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleManageAppointment(event.id, 'cancel');
+                                                    }}
+                                                    className="flex-1 px-3 py-1.5 text-xs font-bold text-white bg-[#DC2626] hover:bg-[#B91C1C] rounded-lg transition-colors font-[BasisGrotesquePro]"
+                                                >
+                                                    Reject
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 ))

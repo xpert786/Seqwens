@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaTable } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../components/icons";
@@ -6,7 +6,6 @@ import "../styles/Upload_Premium.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../utils/corsConfig";
 import { getAccessToken } from "../utils/userUtils";
-import { handleAPIError } from "../utils/apiUtils";
 import * as XLSX from "xlsx";
 
 // --- Sub-Components ---
@@ -200,9 +199,36 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     };
 
     const processFiles = (rawFiles) => {
-        // Allow all files
+        // Allowed file extensions
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
+        const allowedMimeTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/csv'
+        ];
+
+        const isValidFileType = (file) => {
+            const fileName = file.name.toLowerCase();
+            const fileType = file.type.toLowerCase();
+            const fileExtension = '.' + fileName.split('.').pop();
+            return allowedExtensions.includes(fileExtension) || allowedMimeTypes.includes(fileType);
+        };
+
+        const validFiles = rawFiles.filter(f => isValidFileType(f));
+        const invalidFiles = rawFiles.filter(f => !isValidFileType(f));
+
+        if (invalidFiles.length > 0) {
+            setModalErrors(prev => [...prev, `Ignored ${invalidFiles.length} file(s) with unsupported formats. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`]);
+        }
+
         const startIndex = files.length;
-        const newFiles = rawFiles.map((f, idx) => ({
+        const newFiles = validFiles.map((f, idx) => ({
             name: f.name,
             size: (f.size / (1024 * 1024)).toFixed(2) + " MB",
             fileObject: f,
@@ -412,13 +438,14 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                     <UploadsIcon />
                                 </div>
                                 <div className="dropzone-text">Drop files here or click to browse</div>
-                                <div className="dropzone-hint">Supported formats: All files (PDF, Images, Excel, etc.) • Max 50MB per file</div>
+                                <div className="dropzone-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</div>
                                 <input
                                     type="file"
                                     ref={fileInputRef}
                                     onChange={handleFileChange}
                                     multiple
                                     hidden
+                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                                 />
                             </div>
 

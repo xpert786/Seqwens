@@ -1605,150 +1605,181 @@ export default function Appointments() {
                           transition: "all 0.3s ease"
                         }}>
                           <div className="selection-box">
-                            <div className="row">
-                              <div className="col-7">
-                                <h6 className="selection-title">Select a date</h6>
-
-                                {/* Month/Year Navigation */}
-                                <div className="d-flex justify-content-between align-items-center mb-2" style={{
-                                  fontFamily: "BasisGrotesquePro",
-                                  color: "#6B7280",
-                                  fontSize: "14px"
+                            {!loadingAvailableDates && availableDates.length === 0 ? (
+                              <div style={{
+                                textAlign: "center",
+                                padding: "40px 20px",
+                                backgroundColor: "#F9FAFB",
+                                borderRadius: "12px",
+                                border: "1px solid #E5E7EB",
+                                fontFamily: "BasisGrotesquePro",
+                                width: "100%",
+                                marginTop: "10px",
+                                boxShadow: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)"
+                              }}>
+                                <div style={{
+                                  color: "#111827",
+                                  fontSize: "18px",
+                                  fontWeight: "600",
+                                  marginBottom: "12px"
                                 }}>
-                                  <span>{monthNames[currentMonth]} {currentYear}</span>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigateMonth(-1);
-                                      }}
-                                      style={{
-                                        border: "none",
-                                        background: "transparent",
-                                        cursor: "pointer",
-                                        fontSize: "16px",
-                                        color: "#374151",
-                                        padding: "4px 8px"
-                                      }}
-                                    >
-                                      &lt;
-                                    </button>
-                                    <span style={{ minWidth: "50px", textAlign: "center" }}>
-                                      {monthNamesShort[currentMonth]}
-                                    </span>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigateMonth(1);
-                                      }}
-                                      style={{
-                                        border: "none",
-                                        background: "transparent",
-                                        cursor: "pointer",
-                                        fontSize: "16px",
-                                        color: "#374151",
-                                        padding: "4px 8px"
-                                      }}
-                                    >
-                                      &gt;
-                                    </button>
+                                  No appointment times are available right now.
+                                </div>
+                                <div style={{
+                                  color: "#4B5563",
+                                  fontSize: "14px",
+                                  lineHeight: "1.6",
+                                  maxWidth: "400px",
+                                  margin: "0 auto"
+                                }}>
+                                  This firm hasn’t set business hours or availability yet. Please contact the firm, or try again later.
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="row">
+                                <div className="col-7">
+                                  <h6 className="selection-title">Select a date</h6>
+
+                                  {/* Month/Year Navigation */}
+                                  <div className="d-flex justify-content-between align-items-center mb-2" style={{
+                                    fontFamily: "BasisGrotesquePro",
+                                    color: "#6B7280",
+                                    fontSize: "14px"
+                                  }}>
+                                    <span>{monthNames[currentMonth]} {currentYear}</span>
+                                    <div className="d-flex align-items-center gap-2">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigateMonth(-1);
+                                        }}
+                                        style={{
+                                          border: "none",
+                                          background: "transparent",
+                                          cursor: "pointer",
+                                          fontSize: "16px",
+                                          color: "#374151",
+                                          padding: "4px 8px"
+                                        }}
+                                      >
+                                        &lt;
+                                      </button>
+                                      <span style={{ minWidth: "50px", textAlign: "center" }}>
+                                        {monthNamesShort[currentMonth]}
+                                      </span>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigateMonth(1);
+                                        }}
+                                        style={{
+                                          border: "none",
+                                          background: "transparent",
+                                          cursor: "pointer",
+                                          fontSize: "16px",
+                                          color: "#374151",
+                                          padding: "4px 8px"
+                                        }}
+                                      >
+                                        &gt;
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Days of Week Header */}
+                                  <div className="d-flex mb-2" style={{
+                                    borderBottom: "1px solid #E5E7EB",
+                                    paddingBottom: "8px"
+                                  }}>
+                                    {dayNames.map((day) => (
+                                      <div
+                                        key={day}
+                                        style={{
+                                          flex: 1,
+                                          textAlign: "center",
+                                          fontSize: "12px",
+                                          color: "#6B7280",
+                                          fontFamily: "BasisGrotesquePro",
+                                          fontWeight: 400
+                                        }}
+                                      >
+                                        {day}
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Calendar Grid */}
+                                  <div className="calendar-grid">
+                                    {loadingAvailableDates && (
+                                      <div className="d-flex justify-content-center align-items-center" style={{
+                                        gridColumn: "1 / -1",
+                                        padding: "20px",
+                                        fontSize: "13px",
+                                        color: "#6B7280",
+                                        fontFamily: "BasisGrotesquePro"
+                                      }}>
+                                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                        Loading available dates...
+                                      </div>
+                                    )}
+                                    {!loadingAvailableDates && generateCalendarDays().map((date, index) => {
+                                      const isCurrentMonth = date.getMonth() === currentMonth;
+                                      const isSelected = selectedCalendarDate &&
+                                        date.toDateString() === selectedCalendarDate.toDateString();
+                                      const isAvailable = isDateAvailable(date);
+
+                                      // Only block past dates, allow all future available dates regardless of month
+                                      const today = new Date();
+                                      today.setHours(0, 0, 0, 0);
+                                      const dateToCheck = new Date(date);
+                                      dateToCheck.setHours(0, 0, 0, 0);
+                                      const isPast = dateToCheck < today;
+
+                                      // Make all available dates clickable (from any month if available)
+                                      const canSelect = isAvailable && !isPast;
+
+                                      return (
+                                        <button
+                                          key={index}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (canSelect) {
+                                              handleDateSelection(date);
+                                            }
+                                          }}
+                                          className={`calendar-btn ${isSelected ? "active" : ""}`}
+                                          disabled={!canSelect}
+                                          style={{
+                                            color: isCurrentMonth
+                                              ? (canSelect ? "#374151" : "#9CA3AF")
+                                              : (canSelect ? "#374151" : "#9CA3AF"),
+                                            fontWeight: isCurrentMonth ? 400 : 300,
+                                            opacity: canSelect ? 1 : 0.4,
+                                            cursor: canSelect ? 'pointer' : 'not-allowed',
+                                            backgroundColor: isSelected ? '#FF6600' : 'transparent'
+                                          }}
+                                        >
+                                          {date.getDate()}
+                                        </button>
+                                      );
+                                    })}
                                   </div>
                                 </div>
 
-                                {/* Days of Week Header */}
-                                <div className="d-flex mb-2" style={{
-                                  borderBottom: "1px solid #E5E7EB",
-                                  paddingBottom: "8px"
-                                }}>
-                                  {dayNames.map((day) => (
-                                    <div
-                                      key={day}
-                                      style={{
-                                        flex: 1,
-                                        textAlign: "center",
-                                        fontSize: "12px",
-                                        color: "#6B7280",
-                                        fontFamily: "BasisGrotesquePro",
-                                        fontWeight: 400
-                                      }}
-                                    >
-                                      {day}
-                                    </div>
-                                  ))}
-                                </div>
+                                <div className="col-5">
+                                  <h6 className="selection-title">
+                                    Select a time
+                                    {loadingTimeSlots && (
+                                      <span className="ms-2">
+                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                          <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                      </span>
+                                    )}
+                                  </h6>
 
-                                {/* Calendar Grid */}
-                                <div className="calendar-grid">
-                                  {loadingAvailableDates && (
-                                    <div className="d-flex justify-content-center align-items-center" style={{
-                                      gridColumn: "1 / -1",
-                                      padding: "20px",
-                                      fontSize: "13px",
-                                      color: "#6B7280",
-                                      fontFamily: "BasisGrotesquePro"
-                                    }}>
-                                      <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                      Loading available dates...
-                                    </div>
-                                  )}
-                                  {!loadingAvailableDates && generateCalendarDays().map((date, index) => {
-                                    const isCurrentMonth = date.getMonth() === currentMonth;
-                                    const isSelected = selectedCalendarDate &&
-                                      date.toDateString() === selectedCalendarDate.toDateString();
-                                    const isAvailable = isDateAvailable(date);
-
-                                    // Only block past dates, allow all future available dates regardless of month
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    const dateToCheck = new Date(date);
-                                    dateToCheck.setHours(0, 0, 0, 0);
-                                    const isPast = dateToCheck < today;
-
-                                    // Make all available dates clickable (from any month if available)
-                                    const canSelect = isAvailable && !isPast;
-
-                                    return (
-                                      <button
-                                        key={index}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (canSelect) {
-                                            handleDateSelection(date);
-                                          }
-                                        }}
-                                        className={`calendar-btn ${isSelected ? "active" : ""}`}
-                                        disabled={!canSelect}
-                                        style={{
-                                          color: isCurrentMonth
-                                            ? (canSelect ? "#374151" : "#9CA3AF")
-                                            : (canSelect ? "#374151" : "#9CA3AF"),
-                                          fontWeight: isCurrentMonth ? 400 : 300,
-                                          opacity: canSelect ? 1 : 0.4,
-                                          cursor: canSelect ? 'pointer' : 'not-allowed',
-                                          backgroundColor: isSelected ? '#FF6600' : 'transparent'
-                                        }}
-                                      >
-                                        {date.getDate()}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-
-                              <div className="col-5">
-                                <h6 className="selection-title">
-                                  Select a time
-                                  {loadingTimeSlots && (
-                                    <span className="ms-2">
-                                      <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                      </div>
-                                    </span>
-                                  )}
-                                </h6>
-
-                                {/* Duration */}
-                                {/* <div style={{
+                                  {/* Duration */}
+                                  {/* <div style={{
                                     fontSize: "13px",
                                     color: "#6B7280",
                                     fontFamily: "BasisGrotesquePro",
@@ -1757,88 +1788,89 @@ export default function Appointments() {
                                     Duration: 1 hour
                                   </div> */}
 
-                                {/* Timezone Selector */}
-                                <div className="mb-3">
-                                  <select
-                                    className="form-select"
-                                    value={formData.timezone || 'eastern'}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                                    style={{
-                                      fontSize: "12px",
-                                      fontFamily: "BasisGrotesquePro",
-                                      color: "#374151",
-                                      border: "1px solid #E5E7EB",
-                                      borderRadius: "30px",
-                                      padding: "8px 35px 8px 12px",
-                                      backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
-                                      cursor: "pointer",
-                                      appearance: "none",
-                                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-                                      backgroundRepeat: "no-repeat",
-                                      backgroundPosition: "right 12px center",
-                                      backgroundSize: "16px 12px"
-                                    }}
-                                  >
-                                    <option value="eastern">Eastern Time - US & Canada (EST/EDT)</option>
-                                    <option value="central">Central Time - US & Canada (CST/CDT)</option>
-                                    <option value="mountain">Mountain Time - US & Canada (MST/MDT)</option>
-                                    <option value="pacific">Pacific Time - US & Canada (PST/PDT)</option>
-                                    <option value="alaska">Alaska Time (AKST/AKDT)</option>
-                                    <option value="hawaii">Hawaii Time (HST)</option>
-                                    <option value="utc">UTC (Coordinated Universal Time)</option>
-                                  </select>
-                                </div>
+                                  {/* Timezone Selector */}
+                                  <div className="mb-3">
+                                    <select
+                                      className="form-select"
+                                      value={formData.timezone || 'eastern'}
+                                      onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
+                                      style={{
+                                        fontSize: "12px",
+                                        fontFamily: "BasisGrotesquePro",
+                                        color: "#374151",
+                                        border: "1px solid #E5E7EB",
+                                        borderRadius: "30px",
+                                        padding: "8px 35px 8px 12px",
+                                        backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
+                                        cursor: "pointer",
+                                        appearance: "none",
+                                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+                                        backgroundRepeat: "no-repeat",
+                                        backgroundPosition: "right 12px center",
+                                        backgroundSize: "16px 12px"
+                                      }}
+                                    >
+                                      <option value="eastern">Eastern Time - US & Canada (EST/EDT)</option>
+                                      <option value="central">Central Time - US & Canada (CST/CDT)</option>
+                                      <option value="mountain">Mountain Time - US & Canada (MST/MDT)</option>
+                                      <option value="pacific">Pacific Time - US & Canada (PST/PDT)</option>
+                                      <option value="alaska">Alaska Time (AKST/AKDT)</option>
+                                      <option value="hawaii">Hawaii Time (HST)</option>
+                                      <option value="utc">UTC (Coordinated Universal Time)</option>
+                                    </select>
+                                  </div>
 
-                                <div className={`time-list ${selectedTime ? "clicked" : ""}`}>
-                                  {loadingTimeSlots ? (
-                                    <div className="text-center py-3">
-                                      <div className="spinner-border text-primary mb-2" role="status">
-                                        <span className="visually-hidden">Loading...</span>
+                                  <div className={`time-list ${selectedTime ? "clicked" : ""}`}>
+                                    {loadingTimeSlots ? (
+                                      <div className="text-center py-3">
+                                        <div className="spinner-border text-primary mb-2" role="status">
+                                          <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                        <div>
+                                          <small>Loading available times for selected date...</small>
+                                        </div>
                                       </div>
-                                      <div>
-                                        <small>Loading available times for selected date...</small>
+                                    ) : availableTimeSlots.length > 0 ? (
+                                      availableTimeSlots.map((slot, index) => {
+                                        // Use start_time_display which is extracted from formatted_time
+                                        const timeDisplay = slot.start_time_display || slot.start_time;
+
+                                        return (
+                                          <button
+                                            key={slot.start_time || index}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (slot.is_available && !slot.is_booked) {
+                                                setSelectedTime(timeDisplay);
+                                                setSelectedTimeSlot(slot); // Store the full slot object
+                                              }
+                                            }}
+                                            className={`time-btn ${selectedTime === timeDisplay ? "active" : ""} ${!(slot.is_available && !slot.is_booked) ? "disabled" : ""}`}
+                                            disabled={!(slot.is_available && !slot.is_booked)}
+                                            style={{
+                                              opacity: (slot.is_available && !slot.is_booked) ? 1 : 0.5,
+                                              cursor: (slot.is_available && !slot.is_booked) ? 'pointer' : 'not-allowed'
+                                            }}
+                                          >
+                                            {timeDisplay}
+                                            {slot.is_booked && <small className="d-block">Booked</small>}
+                                          </button>
+                                        );
+                                      })
+                                    ) : selectedDate ? (
+                                      <div className="text-center py-2">
+                                        <small>No available time slots for this date</small>
                                       </div>
-                                    </div>
-                                  ) : availableTimeSlots.length > 0 ? (
-                                    availableTimeSlots.map((slot, index) => {
-                                      // Use start_time_display which is extracted from formatted_time
-                                      const timeDisplay = slot.start_time_display || slot.start_time;
+                                    ) : (
+                                      <div className="text-center py-2">
+                                        <small>Please select a date to see available times</small>
+                                      </div>
+                                    )}
+                                  </div>
 
-                                      return (
-                                        <button
-                                          key={slot.start_time || index}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (slot.is_available && !slot.is_booked) {
-                                              setSelectedTime(timeDisplay);
-                                              setSelectedTimeSlot(slot); // Store the full slot object
-                                            }
-                                          }}
-                                          className={`time-btn ${selectedTime === timeDisplay ? "active" : ""} ${!(slot.is_available && !slot.is_booked) ? "disabled" : ""}`}
-                                          disabled={!(slot.is_available && !slot.is_booked)}
-                                          style={{
-                                            opacity: (slot.is_available && !slot.is_booked) ? 1 : 0.5,
-                                            cursor: (slot.is_available && !slot.is_booked) ? 'pointer' : 'not-allowed'
-                                          }}
-                                        >
-                                          {timeDisplay}
-                                          {slot.is_booked && <small className="d-block">Booked</small>}
-                                        </button>
-                                      );
-                                    })
-                                  ) : selectedDate ? (
-                                    <div className="text-center py-2">
-                                      <small>No available time slots for this date</small>
-                                    </div>
-                                  ) : (
-                                    <div className="text-center py-2">
-                                      <small>Please select a date to see available times</small>
-                                    </div>
-                                  )}
                                 </div>
-
                               </div>
-                            </div>
+                            )}
                           </div>
 
                         </div>

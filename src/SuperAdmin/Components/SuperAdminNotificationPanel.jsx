@@ -84,7 +84,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
-  
+
   // Limit for recent notifications
   const RECENT_NOTIFICATIONS_LIMIT = 3;
 
@@ -156,15 +156,15 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
       );
       filtered = sortByRecent(messageNotifications);
     }
-    
+
     // If not showing all, limit to 5 notifications
     if (!showAllNotifications) {
       return filtered.slice(0, RECENT_NOTIFICATIONS_LIMIT);
     }
-    
+
     return filtered;
   }, [notifications, selectedTab, sortByRecent, showAllNotifications]);
-  
+
   // Check if there are more notifications to show
   const hasMoreNotifications = useMemo(() => {
     let allFiltered = [];
@@ -177,7 +177,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         (notification.notification_type || "").toLowerCase().includes("message")
       );
     }
-    
+
     return allFiltered.length > RECENT_NOTIFICATIONS_LIMIT;
   }, [notifications, selectedTab]);
 
@@ -287,7 +287,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         top: "70px",
         right: "20px",
         width: "400px",
-      maxHeight: "calc(100vh - 80px)",
+        maxHeight: "calc(100vh - 80px)",
         backgroundColor: "#FFFFFF",
         borderRadius: "12px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
@@ -295,7 +295,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         display: "flex",
         flexDirection: "column",
         border: "1px solid #E5E7EB",
-      paddingBottom: "16px",
+        paddingBottom: "16px",
       }}
     >
       {/* Header */}
@@ -345,7 +345,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
                 fontFamily: "BasisGrotesquePro",
               }}
             >
-              Mark All Read
+              Mark all as read
             </button>
           )}
           <button
@@ -541,15 +541,15 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
               fontWeight: "500",
             }}
           >
-            View All ({filteredNotifications.length > RECENT_NOTIFICATIONS_LIMIT ? 
+            View All ({filteredNotifications.length > RECENT_NOTIFICATIONS_LIMIT ?
               (selectedTab === "unread" ? notifications.filter((n) => !n.is_read).length :
-               selectedTab === "read" ? notifications.filter((n) => n.is_read).length :
-               notifications.filter((n) => (n.notification_type || "").toLowerCase().includes("message")).length) 
+                selectedTab === "read" ? notifications.filter((n) => n.is_read).length :
+                  notifications.filter((n) => (n.notification_type || "").toLowerCase().includes("message")).length)
               : filteredNotifications.length} notifications)
           </button>
         </div>
       )}
-      
+
       {/* Show Less Button */}
       {!loading && !error && showAllNotifications && (
         <div
@@ -576,7 +576,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           </button>
         </div>
       )}
-      
+
       {/* Footer - View All Notifications Page */}
       {filteredNotifications.length > 0 && (
         <div

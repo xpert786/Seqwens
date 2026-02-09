@@ -305,7 +305,9 @@ export default function FirmDetails() {
 
     const billingInfo = useMemo(() => {
         return {
-            plan: firmDetails?.subscription_plan_name || 'None',
+            plan: (firmDetails?.is_billing_bypass || firmDetails?.subscription_plan_name === 'Developer Plan')
+                ? 'Developer Plan'
+                : (firmDetails?.subscription_plan_name || 'None'),
             monthlyCost: formatCurrency(firmDetails?.monthly_fee ?? 0),
             nextBilling: formatDate(firmDetails?.next_billing_date) || 'Not available',
             status: firmDetails?.status
@@ -730,8 +732,10 @@ export default function FirmDetails() {
                                                 firmPhone !== 'Not provided' && { label: 'Phone:', value: firmPhone },
                                                 firmDetails?.subscription_plan && {
                                                     label: 'Plan:',
-                                                    value: firmDetails.subscription_plan_name ||
-                                                        (firmDetails.subscription_plan.charAt(0).toUpperCase() + firmDetails.subscription_plan.slice(1))
+                                                    value: (firmDetails.is_billing_bypass || firmDetails.subscription_plan_name === 'Developer Plan')
+                                                        ? 'Developer Plan'
+                                                        : (firmDetails.subscription_plan_name ||
+                                                            (firmDetails.subscription_plan.charAt(0).toUpperCase() + firmDetails.subscription_plan.slice(1)))
                                                 },
                                                 firmJoinDate && { label: 'Join Date:', value: formatDate(firmJoinDate) }
                                             ].filter(Boolean).map(({ label, value }) => (
