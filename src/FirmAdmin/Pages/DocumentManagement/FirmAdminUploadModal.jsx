@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { FaRegFileAlt, FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaTable, FaInfoCircle, FaFileExcel, FaFileWord, FaFileImage, FaFilePdf } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../../../ClientOnboarding/components/icons";
 import "../../../ClientOnboarding/styles/Upload.css";
-import { FaFolder } from "react-icons/fa";
+import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -33,6 +33,39 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
     const [folderTree, setFolderTree] = useState([]);
     const [loadingFolders, setLoadingFolders] = useState(false);
     const [expandedFolders, setExpandedFolders] = useState(new Set());
+    const [excelPreviewData, setExcelPreviewData] = useState(null);
+
+    // Parse Excel files for preview
+    useEffect(() => {
+        if (!previewMode || !files[selectedIndex]) {
+            setExcelPreviewData(null);
+            return;
+        }
+
+        const file = files[selectedIndex];
+        const fileName = file.name.toLowerCase();
+
+        if (/\.(xlsx|xls|csv)$/i.test(fileName)) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    // Limit to first 50 rows for preview performance
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }).slice(0, 50);
+                    setExcelPreviewData(jsonData);
+                } catch (err) {
+                    console.error("Excel parse error", err);
+                    setExcelPreviewData(null);
+                }
+            };
+            reader.readAsArrayBuffer(file.fileObject);
+        } else {
+            setExcelPreviewData(null);
+        }
+    }, [previewMode, selectedIndex, files]);
 
     // Handle click outside folder dropdown
     useEffect(() => {
@@ -137,45 +170,15 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         processFiles(droppedFiles);
     }, []);
 
-    // Validate file type and size
-    const isValidFileType = (file) => {
-        const fileName = file.name.toLowerCase();
-        const fileType = file.type.toLowerCase();
 
-        // Allowed file extensions
-        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
-        const fileExtension = '.' + fileName.split('.').pop();
 
-        // Check by extension
-        if (allowedExtensions.includes(fileExtension)) {
-            return true;
-        }
-
-        // Check by MIME type
-        const allowedMimeTypes = [
-            'application/pdf',
-            'image/jpeg',
-            'image/jpg',
-            'image/png',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'text/csv'
-        ];
-
-        return allowedMimeTypes.includes(fileType);
-    };
 
     // Process files (from drag-drop or file input)
     const processFiles = (selectedFiles) => {
         const maxSize = 50 * 1024 * 1024; // 50MB
 
-        // Filter valid files
+        // Filter valid files (only check size)
         const validFiles = selectedFiles.filter(file => {
-            if (!isValidFileType(file)) {
-                return false;
-            }
             if (file.size > maxSize) {
                 toast.error(`File ${file.name} exceeds 50MB limit and was skipped.`, {
                     position: "top-right",
@@ -185,15 +188,6 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             }
             return true;
         });
-
-        // Show error for invalid files
-        const invalidFiles = selectedFiles.filter(file => !isValidFileType(file));
-        if (invalidFiles.length > 0) {
-            toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`, {
-                position: "top-right",
-                autoClose: 5000,
-            });
-        }
 
         if (validFiles.length === 0) {
             return;
@@ -647,7 +641,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         <strong className="texts">Drop files here or click to browse</strong>
                     </p>
                     <p className="upload-hint">
-                        Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV - Max 50MB per file
+                        Supported formats: All files supported - Max 50MB per file
                     </p>
                     <input
                         type="file"
@@ -655,7 +649,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         hidden
                         ref={fileInputRef}
                         onChange={handleFileChange}
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                        accept="*/*"
                     />
                 </div>
 
@@ -886,8 +880,87 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                             </Form.Group>
                                         </div>
                                     ) : (
-                                        <div className="preview-panel border rounded p-3">
-                                            <iframe src={files[selectedIndex]?.file} title="Document Preview" width="100%" height="500px" />
+                                        <div className="preview-panel border rounded p-3 d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '400px', backgroundColor: '#f8f9fa' }}>
+                                            {(() => {
+                                                const selectedFile = files[selectedIndex];
+                                                if (!selectedFile) return <p className="text-muted">No file selected</p>;
+
+                                                const fileName = selectedFile.name.toLowerCase();
+                                                const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
+                                                const isPdf = /\.(pdf)$/i.test(fileName);
+                                                const isExcel = /\.(xlsx|xls|csv)$/i.test(fileName);
+                                                const isWord = /\.(doc|docx)$/i.test(fileName);
+
+                                                if (isImage) {
+                                                    return (
+                                                        <div className="text-center w-100 h-100" style={{ overflow: 'hidden' }}>
+                                                            <img
+                                                                src={selectedFile.file}
+                                                                alt="Preview"
+                                                                style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                                                            />
+                                                        </div>
+                                                    );
+                                                } else if (isPdf) {
+                                                    return <iframe src={selectedFile.file} title="Document Preview" width="100%" height="500px" style={{ border: 'none', borderRadius: '4px' }} />;
+                                                } else if (isExcel && excelPreviewData) {
+                                                    return (
+                                                        <div className="w-100 bg-white p-2 rounded shadow-sm" style={{ maxHeight: '500px', overflow: 'auto' }}>
+                                                            <div className="d-flex align-items-center mb-2 px-2 py-1 bg-light rounded text-success">
+                                                                <FaFileExcel className="me-2" />
+                                                                <small className="fw-bold">Excel Preview: {selectedFile.name}</small>
+                                                            </div>
+                                                            <div className="table-responsive">
+                                                                <table className="table table-bordered table-sm table-hover small mb-0" style={{ fontSize: '0.8rem' }}>
+                                                                    <tbody>
+                                                                        {excelPreviewData.map((row, rIdx) => (
+                                                                            <tr key={rIdx}>
+                                                                                {row.map((cell, cIdx) => (
+                                                                                    <td key={cIdx} style={{ padding: '4px 8px', whiteSpace: 'nowrap', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                                        {cell}
+                                                                                    </td>
+                                                                                ))}
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            {excelPreviewData.length >= 50 && (
+                                                                <div className="text-center p-2 text-muted small fst-italic">
+                                                                    Preview limited to first 50 rows
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                } else {
+                                                    // Fallback for Word or unparsed content
+                                                    let Icon = FaRegFileAlt;
+                                                    let color = '#6c757d';
+                                                    let typeLabel = "File";
+
+                                                    if (isWord) { Icon = FaFileWord; color = '#0d6efd'; typeLabel = "Word Document"; }
+                                                    else if (isExcel) { Icon = FaFileExcel; color = '#198754'; typeLabel = "Excel Spreadsheet"; }
+                                                    else if (isPdf) { Icon = FaFilePdf; color = '#dc3545'; typeLabel = "PDF Document"; }
+                                                    else if (isImage) { Icon = FaFileImage; color = '#0dcaf0'; typeLabel = "Image"; }
+
+                                                    return (
+                                                        <div className="text-center p-5 bg-white rounded shadow-sm border" style={{ maxWidth: '400px' }}>
+                                                            <div className="mb-3">
+                                                                <Icon size={64} color={color} />
+                                                            </div>
+                                                            <h5 className="mb-2 text-break">{selectedFile.name}</h5>
+                                                            <p className="text-muted mb-1">{typeLabel}</p>
+                                                            <span className="badge bg-light text-dark border">{selectedFile.size}</span>
+                                                            <div className="mt-4 pt-3 border-top">
+                                                                <p className="small text-muted mb-0">
+                                                                    <FaInfoCircle className="me-1" />
+                                                                    Preview not available for this file type.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                            })()}
                                         </div>
                                     )}
                                 </div>

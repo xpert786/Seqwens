@@ -22,20 +22,46 @@
   transform: translateY(-2px);
 }
 
+.stat-card.active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  border-left-width: 6px;
+}
+
 .stat-card-pending {
   border-left: 4px solid #F59E0B;
+}
+
+.stat-card-pending.active {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%);
+  border-left-color: #F59E0B;
 }
 
 .stat-card-completed {
   border-left: 4px solid #10B981;
 }
 
+.stat-card-completed.active {
+  background: linear-gradient(135deg, #D1FAE5 0%, #FFFFFF 100%);
+  border-left-color: #10B981;
+}
+
 .stat-card-declined {
   border-left: 4px solid #EF4444;
 }
 
+.stat-card-declined.active {
+  background: linear-gradient(135deg, #FEE2E2 0%, #FFFFFF 100%);
+  border-left-color: #EF4444;
+}
+
 .stat-card-expired {
   border-left: 4px solid #6B7280;
+}
+
+.stat-card-expired.active {
+  background: linear-gradient(135deg, #F3F4F6 0%, #FFFFFF 100%);
+  border-left-color: #6B7280;
 }
 
 .stat-label {
