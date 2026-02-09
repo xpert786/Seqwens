@@ -141,16 +141,16 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
     const isValidFileType = (file) => {
         const fileName = file.name.toLowerCase();
         const fileType = file.type.toLowerCase();
-        
+
         // Allowed file extensions
-        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
         const fileExtension = '.' + fileName.split('.').pop();
-        
+
         // Check by extension
         if (allowedExtensions.includes(fileExtension)) {
             return true;
         }
-        
+
         // Check by MIME type
         const allowedMimeTypes = [
             'application/pdf',
@@ -160,16 +160,17 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/csv'
         ];
-        
+
         return allowedMimeTypes.includes(fileType);
     };
 
     // Process files (from drag-drop or file input)
     const processFiles = (selectedFiles) => {
         const maxSize = 50 * 1024 * 1024; // 50MB
-        
+
         // Filter valid files
         const validFiles = selectedFiles.filter(file => {
             if (!isValidFileType(file)) {
@@ -188,7 +189,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         // Show error for invalid files
         const invalidFiles = selectedFiles.filter(file => !isValidFileType(file));
         if (invalidFiles.length > 0) {
-            toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX`, {
+            toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`, {
                 position: "top-right",
                 autoClose: 5000,
             });
@@ -574,7 +575,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             const hasChildren = folder.children && folder.children.length > 0;
             const isExpanded = expandedFolders.has(folder.id);
             const showExpandIcon = hasChildren || (!folder.loaded && folder.id);
-            
+
             // Generate unique key: use ID if available, otherwise use full path + index for uniqueness
             const uniqueKey = folder.id || `${fullPath}-${idx}` || `folder-${idx}`;
 
@@ -646,7 +647,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         <strong className="texts">Drop files here or click to browse</strong>
                     </p>
                     <p className="upload-hint">
-                        Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX - Max 50MB per file
+                        Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV - Max 50MB per file
                     </p>
                     <input
                         type="file"
@@ -654,7 +655,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         hidden
                         ref={fileInputRef}
                         onChange={handleFileChange}
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                     />
                 </div>
 

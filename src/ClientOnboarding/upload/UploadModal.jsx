@@ -21,13 +21,13 @@ const FolderNode = ({ folder, level = 0, onSelect, expandedFolders, onToggleExpa
 
     return (
         <div className="folder-node-wrapper" style={{ marginLeft: `${level * 16}px` }}>
-            <div 
+            <div
                 className={`tree-node ${isSelected ? 'selected' : ''}`}
                 onClick={() => onSelect(folder)}
             >
                 {canExpand ? (
-                    <span 
-                        className="expand-toggle" 
+                    <span
+                        className="expand-toggle"
                         onClick={(e) => {
                             e.stopPropagation();
                             onToggleExpand(folder);
@@ -44,11 +44,11 @@ const FolderNode = ({ folder, level = 0, onSelect, expandedFolders, onToggleExpa
             {isExpanded && hasChildren && (
                 <div className="children-container">
                     {folder.children.map(child => (
-                        <FolderNode 
-                            key={child.id} 
-                            folder={child} 
-                            level={level + 1} 
-                            onSelect={onSelect} 
+                        <FolderNode
+                            key={child.id}
+                            folder={child}
+                            level={level + 1}
+                            onSelect={onSelect}
                             expandedFolders={expandedFolders}
                             onToggleExpand={onToggleExpand}
                             selectedId={selectedId}
@@ -69,17 +69,17 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [previewMode, setPreviewMode] = useState(false);
     const [uploading, setUploading] = useState(false);
-    
+
     // Folder State
     const [folderTree, setFolderTree] = useState([]);
     const [loadingFolders, setLoadingFolders] = useState(false);
     const [expandedFolders, setExpandedFolders] = useState(new Set());
     const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
-    
+
     // UI Logic State
     const [modalErrors, setModalErrors] = useState([]); // Top-level errors
     const [isDragging, setIsDragging] = useState(false);
-    
+
     const fileInputRef = useRef();
     const folderDropdownRef = useRef();
 
@@ -120,7 +120,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             setLoadingFolders(true);
             const token = getAccessToken();
             const API_BASE_URL = getApiBaseUrl();
-            
+
             const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/folders/browse/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -198,14 +198,36 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     };
 
     const processFiles = (rawFiles) => {
-        const pdfs = rawFiles.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
-        const nonPdfs = rawFiles.filter(f => f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf'));
+        // Allowed file extensions
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
+        const allowedMimeTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/csv'
+        ];
 
-        if (nonPdfs.length > 0) {
-            setModalErrors(prev => [...prev, `Ignored ${nonPdfs.length} non-PDF file(s). Only PDFs are supported.`]);
+        const isValidFileType = (file) => {
+            const fileName = file.name.toLowerCase();
+            const fileType = file.type.toLowerCase();
+            const fileExtension = '.' + fileName.split('.').pop();
+
+            return allowedExtensions.includes(fileExtension) || allowedMimeTypes.includes(fileType);
+        };
+
+        const validFiles = rawFiles.filter(f => isValidFileType(f));
+        const invalidFiles = rawFiles.filter(f => !isValidFileType(f));
+
+        if (invalidFiles.length > 0) {
+            setModalErrors(prev => [...prev, `Ignored ${invalidFiles.length} file(s) with unsupported formats. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`]);
         }
 
-        const newFiles = pdfs.map(f => ({
+        const newFiles = validFiles.map(f => ({
             name: f.name,
             size: (f.size / (1024 * 1024)).toFixed(2) + " MB",
             fileObject: f,
@@ -328,12 +350,12 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const currentFile = files[selectedIndex];
 
     return (
-        <Modal 
-            show={show} 
-            onHide={handleClose} 
-            centered 
-            backdrop="static" 
-            size={step === 1 ? "md" : "xl"} 
+        <Modal
+            show={show}
+            onHide={handleClose}
+            centered
+            backdrop="static"
+            size={step === 1 ? "md" : "xl"}
             className="upload-modal"
         >
             <Modal.Body className="p-0">
@@ -367,7 +389,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                     {step === 1 ? (
                         /* Step 1: Selection Dropzone */
                         <div className="step-selection">
-                            <div 
+                            <div
                                 className={`premium-dropzone ${isDragging ? 'active' : ''}`}
                                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                                 onDragLeave={() => setIsDragging(false)}
@@ -378,14 +400,14 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                     <UploadsIcon />
                                 </div>
                                 <div className="dropzone-text">Drop files here or click to browse</div>
-                                <div className="dropzone-hint">Supported format: PDF only • Max 50MB per file</div>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    onChange={handleFileChange} 
-                                    multiple 
-                                    hidden 
-                                    accept=".pdf"
+                                <div className="dropzone-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    multiple
+                                    hidden
+                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                                 />
                             </div>
 
@@ -408,8 +430,8 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                 </div>
                                 <div className="file-items-container custom-scrollbar">
                                     {files.map((f, idx) => (
-                                        <div 
-                                            key={idx} 
+                                        <div
+                                            key={idx}
                                             className={`file-item-premium ${selectedIndex === idx ? 'active' : ''} ${f.errors.length > 0 ? 'has-error' : ''}`}
                                             onClick={() => setSelectedIndex(idx)}
                                         >
@@ -421,8 +443,8 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                                 <div className="file-meta-txt">{f.size} • {f.status}</div>
                                             </div>
                                             {f.errors.length > 0 && <FaExclamationCircle className="error-indicator" />}
-                                            <span 
-                                                className="ms-2 text-muted" 
+                                            <span
+                                                className="ms-2 text-muted"
                                                 onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
                                             >
                                                 <CrossIcon size={14} />
@@ -435,13 +457,13 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                             {/* Right Area: Config & Preview */}
                             <div className="main-config-area">
                                 <div className="config-tabs">
-                                    <button 
+                                    <button
                                         className={`tab-btn ${!previewMode ? 'active' : ''}`}
                                         onClick={() => setPreviewMode(false)}
                                     >
                                         Configure
                                     </button>
-                                    <button 
+                                    <button
                                         className={`tab-btn ${previewMode ? 'active' : ''}`}
                                         onClick={() => setPreviewMode(true)}
                                     >
@@ -456,7 +478,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                             <Form.Group className="mb-4">
                                                 <Form.Label className="small fw-600 text-muted uppercase">Target Folder</Form.Label>
                                                 <div className="position-relative">
-                                                    <div 
+                                                    <div
                                                         className={`premium-folder-select ${currentFile?.errors.some(e => e.includes('folder')) ? 'border-danger' : ''}`}
                                                         onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
                                                     >
@@ -475,9 +497,9 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                                                 <div className="text-center p-3 small text-muted">No folders found</div>
                                                             ) : (
                                                                 folderTree.map(f => (
-                                                                    <FolderNode 
-                                                                        key={f.id} 
-                                                                        folder={f} 
+                                                                    <FolderNode
+                                                                        key={f.id}
+                                                                        folder={f}
                                                                         onSelect={selectFolder}
                                                                         selectedId={currentFile?.folderId}
                                                                         expandedFolders={expandedFolders}
@@ -503,10 +525,10 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                         </div>
                                     ) : (
                                         <div className="preview-container h-100">
-                                            <iframe 
-                                                src={currentFile?.previewUrl} 
-                                                title="Preview" 
-                                                width="100%" 
+                                            <iframe
+                                                src={currentFile?.previewUrl}
+                                                title="Preview"
+                                                width="100%"
                                                 height="450px"
                                                 className="border rounded"
                                             />
@@ -520,16 +542,16 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
                 {/* Footer Actions */}
                 <div className="modal-footer-premium">
-                    <Button 
-                        className="btn-premium-secondary" 
+                    <Button
+                        className="btn-premium-secondary"
                         onClick={step === 2 ? () => setStep(1) : handleClose}
                         disabled={uploading}
                     >
                         {step === 2 ? 'Back to Selection' : 'Cancel'}
                     </Button>
-                    
+
                     {step === 1 ? (
-                        <Button 
+                        <Button
                             className="btn-premium-primary"
                             disabled={files.length === 0}
                             onClick={() => setStep(2)}
@@ -537,7 +559,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                             Configure Upload
                         </Button>
                     ) : (
-                        <Button 
+                        <Button
                             className="btn-premium-primary"
                             onClick={performUpload}
                             disabled={uploading}

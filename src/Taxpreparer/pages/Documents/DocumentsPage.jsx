@@ -1112,7 +1112,7 @@ export default function DocumentsPage() {
                               <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
                               <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
                               <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
-                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
+
                               <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
                             </tr>
                           </thead>
@@ -1143,14 +1143,7 @@ export default function DocumentsPage() {
                                   <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
                                   <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
                                   <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
-                                  <td>
-                                    <span
-                                      className={`badge ${getStatusBadgeClass(docStatus)} px-2 py-1`}
-                                      style={{ borderRadius: "12px", fontSize: "12px" }}
-                                    >
-                                      {docStatus}
-                                    </span>
-                                  </td>
+
                                   <td style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} onClick={(e) => e.stopPropagation()}>
                                     <div style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} data-menu-container>
                                       <button
@@ -1595,21 +1588,23 @@ export default function DocumentsPage() {
             />
           </div>
 
-          <div className="mb-3">
-            <div className="form-check">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                checked={hasSpouse}
-                onChange={(e) => setHasSpouse(e.target.checked)}
-                disabled={assigning}
-                id="hasSpouse"
-              />
-              <label className="form-check-label" htmlFor="hasSpouse" style={{ fontSize: '14px', color: '#3B4A66' }}>
-                Spouse signature required
-              </label>
+          {taxpayers.find(t => String(t.id) === String(selectedTaxpayerId))?.has_spouse && (
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={hasSpouse}
+                  onChange={(e) => setHasSpouse(e.target.checked)}
+                  disabled={assigning}
+                  id="hasSpouse"
+                />
+                <label className="form-check-label" htmlFor="hasSpouse" style={{ fontSize: '14px', color: '#3B4A66' }}>
+                  Spouse signature required
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mb-3">
             <div className="form-check">
