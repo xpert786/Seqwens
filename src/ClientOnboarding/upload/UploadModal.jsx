@@ -81,16 +81,34 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const [isDragging, setIsDragging] = useState(false);
     const [excelPreviews, setExcelPreviews] = useState({}); // Store parsed Excel data by file index
 
+    // Client Selection State
+    const [internalClientId, setInternalClientId] = useState(null);
+    const [availableClients, setAvailableClients] = useState([]); // For client dropdown if needed
+    const [loadingClients, setLoadingClients] = useState(false);
+
     const fileInputRef = useRef();
     const folderDropdownRef = useRef();
 
     // --- Effects ---
 
-    // Initial folder fetch
+    // Initial folder fetch and client fetch
     useEffect(() => {
-        if (show) fetchRootFolders();
-        else resetState();
+        if (show) {
+            fetchRootFolders();
+            fetchClients();
+        } else {
+            resetState();
+        }
     }, [show]);
+
+    // Fetch folders when client changes
+    useEffect(() => {
+        if (show && internalClientId) {
+            fetchRootFolders();
+        } else if (!internalClientId) {
+            setFolderTree([]);
+        }
+    }, [internalClientId]);
 
     // Click outside listener for folder dropdown
     useEffect(() => {
@@ -114,6 +132,28 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         setModalErrors([]);
         setExpandedFolders(new Set());
         setPreviewMode(false);
+        setInternalClientId(null);
+        setFolderTree([]);
+        setExcelPreviews({});
+    };
+
+    const fetchClients = async () => {
+        try {
+            setLoadingClients(true);
+            const token = getAccessToken();
+            const API_BASE_URL = getApiBaseUrl();
+            const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/`, { // Adjust endpoint as needed
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            if (result.success) {
+                setAvailableClients(result.data || []);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoadingClients(false);
+        }
     };
 
     const fetchRootFolders = async () => {
@@ -122,7 +162,12 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             const token = getAccessToken();
             const API_BASE_URL = getApiBaseUrl();
 
-            const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/folders/browse/`, {
+            let url = `${API_BASE_URL}/taxpayer/folders/browse/`;
+            if (internalClientId) {
+                url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}`;
+            }
+
+            const response = await fetchWithCors(url, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -411,6 +456,28 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                 </div>
 
                 <div className="p-4">
+                    {/* Select Client Field */}
+                    <Form.Group className="mb-4">
+                        <Form.Label>Select Client <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                            value={internalClientId || ""}
+                            onChange={(e) => {
+                                setInternalClientId(e.target.value);
+                                setFolderTree([]);
+                                setFiles((prev) => prev.map(f => ({ ...f, folderId: null, folderPath: "", issues: [] })));
+                            }}
+                            disabled={loadingClients}
+                        >
+                            <option value="">-- Select Client --</option>
+                            {availableClients.map(client => (
+                                <option key={client.id} value={client.id}>
+                                    {client.first_name} {client.last_name} ({client.email})
+                                </option>
+                            ))}
+                        </Form.Select>
+                        {loadingClients && <div className="text-muted small mt-1">Loading clients...</div>}
+                    </Form.Group>
+
                     {/* Error Summary Panel */}
                     {modalErrors.length > 0 && (
                         <div className="error-summary-banner">
