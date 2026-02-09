@@ -224,7 +224,8 @@ export default function ESignatureDashboard() {
 
         switch (statusFilter) {
           case 'pending':
-            return status === 'created' || status === 'pending' || status === 'processing' || status === 'ready';
+            return status === 'created' || status === 'pending' || status === 'processing' || status === 'ready' || 
+                   status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress';
           case 'inprogress':
             return status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress';
           case 'completed':
@@ -1089,7 +1090,13 @@ export default function ESignatureDashboard() {
         <div className="col-md-3 col-sm-6">
           <div 
             className={`stat-card stat-card-pending ${statusFilter === 'pending' || statusFilter === 'inprogress' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
+            onClick={() => {
+              if (statusFilter === 'pending' || statusFilter === 'inprogress') {
+                setStatusFilter('all');
+              } else {
+                setStatusFilter('pending');
+              }
+            }}
             style={{ cursor: 'pointer' }}
           >
             <div className="d-flex align-items-center justify-content-between">
