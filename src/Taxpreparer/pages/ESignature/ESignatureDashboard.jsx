@@ -1087,7 +1087,11 @@ export default function ESignatureDashboard() {
       {/* Statistics Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-3 col-sm-6">
-          <div className="stat-card stat-card-pending">
+          <div 
+            className={`stat-card stat-card-pending ${statusFilter === 'pending' || statusFilter === 'inprogress' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="d-flex align-items-center justify-content-between">
               <div>
                 <p className="stat-label">Pending / In Progress</p>
@@ -1100,7 +1104,11 @@ export default function ESignatureDashboard() {
           </div>
         </div>
         <div className="col-md-3 col-sm-6">
-          <div className="stat-card stat-card-completed">
+          <div 
+            className={`stat-card stat-card-completed ${statusFilter === 'completed' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="d-flex align-items-center justify-content-between">
               <div>
                 <p className="stat-label">Completed</p>
@@ -1113,7 +1121,11 @@ export default function ESignatureDashboard() {
           </div>
         </div>
         <div className="col-md-3 col-sm-6">
-          <div className="stat-card stat-card-declined">
+          <div 
+            className={`stat-card stat-card-declined ${statusFilter === 'declined' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'declined' ? 'all' : 'declined')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="d-flex align-items-center justify-content-between">
               <div>
                 <p className="stat-label">Declined / Cancelled</p>
@@ -1126,7 +1138,11 @@ export default function ESignatureDashboard() {
           </div>
         </div>
         <div className="col-md-3 col-sm-6">
-          <div className="stat-card stat-card-expired">
+          <div 
+            className={`stat-card stat-card-expired ${statusFilter === 'expired' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'expired' ? 'all' : 'expired')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="d-flex align-items-center justify-content-between">
               <div>
                 <p className="stat-label">Expired</p>

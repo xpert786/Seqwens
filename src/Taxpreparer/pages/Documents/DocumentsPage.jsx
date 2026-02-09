@@ -822,7 +822,7 @@ export default function DocumentsPage() {
       {/* Tabs (hide when nested under client) */}
       {!isNestedUnderClient && (
         <div className="mb-4">
-          <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #E5E7EB' }}>
+          <ul className="nav nav-tabs" >
             <li className="nav-item">
               <button
                 className={`nav-link ${activeTab === 'my-documents' ? 'active' : ''}`}
@@ -835,7 +835,7 @@ export default function DocumentsPage() {
                   backgroundColor: 'transparent',
                   padding: '12px 24px',
                   fontFamily: 'BasisGrotesquePro',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 My Documents

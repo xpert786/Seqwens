@@ -1615,33 +1615,78 @@ export default function TasksPage() {
       label: "Total",
       count: tasksStatistics.total_tasks || 0,
       icon: <Task1 />,
-      color: "#4F46E5"
+      color: "#4F46E5",
+      key: "all"
     },
     {
       label: "Pending",
       count: tasksStatistics.pending || 0,
       icon: <Clocking />,
-      color: "#F59E0B"
+      color: "#F59E0B",
+      key: "pending"
     },
     {
       label: "In Progress",
       count: tasksStatistics.in_progress || 0,
       icon: <Progressing />,
-      color: "#3B82F6"
+      color: "#3B82F6",
+      key: "inprogress"
     },
     {
       label: "Completed",
       count: tasksStatistics.completed || 0,
       icon: <Completeded />,
-      color: "#10B981"
+      color: "#10B981",
+      key: "completed"
     },
     {
       label: "Overdue",
       count: tasks.overdue.length || 0,
       icon: <Overduer />,
-      color: "#EF4444"
+      color: "#EF4444",
+      key: "overdue"
     },
   ];
+
+  const handleStatClick = (key) => {
+    if (key === 'all') return;
+
+    if (active !== 'kanban') {
+      setActive('kanban');
+      // Wait for state update and render
+      setTimeout(() => {
+        const element = document.getElementById(key);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+          // Add momentary highlight
+          const card = element.querySelector('.task-column-card');
+          if (card) {
+            card.style.transition = 'box-shadow 0.3s ease';
+            const originalShadow = card.style.boxShadow;
+            card.style.boxShadow = `0 0 0 4px ${stats.find(s => s.key === key)?.color}40`;
+            setTimeout(() => {
+              card.style.boxShadow = originalShadow;
+            }, 1500);
+          }
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(key);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        // Add momentary highlight
+        const card = element.querySelector('.task-column-card');
+        if (card) {
+          card.style.transition = 'box-shadow 0.3s ease';
+          const originalShadow = card.style.boxShadow;
+          card.style.boxShadow = `0 0 0 4px ${stats.find(s => s.key === key)?.color}40`;
+          setTimeout(() => {
+            card.style.boxShadow = originalShadow;
+          }, 1500);
+        }
+      }
+    }
+  };
   // State for checkbox tick marks (only visual)
   const [checkboxes, setCheckboxes] = useState({
     pending: true,
@@ -1680,13 +1725,31 @@ export default function TasksPage() {
 
       {/* Stat cards row (Bootstrap grid) */}
       <div className="tasks-stats-row row g-3 mb-4">
-        {stats.map((s, i) => (
+        {stats.filter(s => s.key === 'all' || checkboxes[s.key]).map((s, i) => (
           <div key={i} className="col-12 col-sm-6 col-md-4 col-lg-2-4" style={{ flex: '0 0 auto', width: '20%' }}>
-            <div className="card h-100 border-0 shadow-sm" style={{
-              borderRadius: 12,
-              backgroundColor: "#fff",
-              border: "1px solid #E8F0FF !important"
-            }}>
+            <div
+              className="card h-100 border-0 shadow-sm"
+              onClick={() => handleStatClick(s.key)}
+              style={{
+                borderRadius: 12,
+                backgroundColor: "#fff",
+                border: "1px solid #E8F0FF !important",
+                cursor: s.key !== 'all' ? 'pointer' : 'default',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (s.key !== 'all') {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (s.key !== 'all') {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '';
+                }
+              }}
+            >
               <div className="card-body p-3 d-flex align-items-center">
                 <div className="stat-icon-wrapper rounded-3 d-flex align-items-center justify-content-center" style={{
                   width: '44px',
@@ -1862,7 +1925,7 @@ export default function TasksPage() {
               ))}
             </div>
             <div className="d-flex justify-content-between mt-3">
-              <button className="btn btn-light" style={{ border: "1px solid #E8F0FF", borderRadius: 8 }} onClick={() => { setVisible({ pending: true, inprogress: true, completed: true, overdue: true }); setOrder(defaultOrder); }}>Reset</button>
+              <button className="btn btn-light" style={{ border: "1px solid #E8F0FF", borderRadius: 8 }} onClick={() => { setCheckboxes({ pending: true, inprogress: true, completed: true, overdue: true }); setOrder(defaultOrder); }}>Reset</button>
               <button className="btn btn-primary" style={{ background: "#FF7A2F", borderColor: "#FF7A2F", borderRadius: 8 }} onClick={() => setShowCustomize(false)}>Save</button>
             </div>
           </div>
@@ -1898,7 +1961,7 @@ export default function TasksPage() {
           {!tasksLoading && !tasksError && (
             <div className="tasks-container d-flex justify-content-center">
               <div className="tasks-grid mt-3 w-100">
-                {order.map((k) => (
+                {order.filter(k => checkboxes[k]).map((k) => (
                   <div key={k} id={k} className="task-column">
                     <div className="task-column-card" style={{ background: bgForCol(k) }}>
                       <div className="task-column-body">
@@ -2024,7 +2087,10 @@ export default function TasksPage() {
       {active === "calendar" && (
         <div className="mt-4">
           <CalendarView
-            tasksList={Object.values(tasks).flat()}
+            tasksList={Object.entries(tasks)
+              .filter(([key]) => checkboxes[key])
+              .map(([, taskList]) => taskList)
+              .flat()}
             onTaskClick={(t) => setSelectedTask(t)}
           />
         </div>

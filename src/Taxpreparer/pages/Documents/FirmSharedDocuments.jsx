@@ -10,7 +10,7 @@ const SUPPORTED_PREVIEW_TYPES = new Set(["pdf", "png", "jpg", "jpeg", "gif", "we
 export default function FirmSharedDocuments() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  
+
   const [documents, setDocuments] = useState([]);
   const [folders, setFolders] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -37,15 +37,15 @@ export default function FirmSharedDocuments() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {};
       if (selectedFolderId) params.folder_id = selectedFolderId;
       if (selectedCategoryId) params.category_id = selectedCategoryId;
       if (searchQuery.trim()) params.search = searchQuery.trim();
       if (showArchived) params.is_archived = true;
-      
+
       const response = await taxPreparerFirmSharedAPI.getFirmSharedDocuments(params);
-      
+
       if (response.success && response.data) {
         setDocuments(response.data.documents || []);
       } else {
@@ -73,9 +73,9 @@ export default function FirmSharedDocuments() {
       } else {
         params.parent_id = null;
       }
-      
+
       const response = await taxPreparerFirmSharedAPI.getFirmSharedFolders(params);
-      
+
       if (response.success && response.data) {
         setFolders(response.data.folders || []);
       }
@@ -88,7 +88,7 @@ export default function FirmSharedDocuments() {
   const fetchCategories = async () => {
     try {
       const response = await taxPreparerFirmSharedAPI.getFirmSharedCategories();
-      
+
       if (response.success && response.data) {
         setCategories(response.data.categories || []);
       }
@@ -172,11 +172,11 @@ export default function FirmSharedDocuments() {
 
   const confirmDelete = async () => {
     if (!docToDelete) return;
-    
+
     try {
       setDeletingDocId(docToDelete.id);
       const response = await taxPreparerFirmSharedAPI.deleteFirmSharedDocument(docToDelete.id);
-      
+
       if (response.success) {
         toast.success('Document deleted successfully', {
           position: "top-right",
@@ -237,7 +237,7 @@ export default function FirmSharedDocuments() {
         null, // categoryId
         uploadComment || null // comment
       );
-      
+
       if (response.success) {
         toast.success('File uploaded successfully', {
           position: "top-right",
@@ -324,7 +324,7 @@ export default function FirmSharedDocuments() {
           <small className="text-muted">Access and manage documents shared by your firm</small>
         </div>
         <div className="d-flex gap-2">
-          
+
           <button
             className="btn d-flex align-items-center gap-2"
             onClick={fetchDocuments}
@@ -478,10 +478,12 @@ export default function FirmSharedDocuments() {
         </div>
       ) : documents.length === 0 ? (
         <div className="text-center py-5 bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <FiFile size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
-          <p style={{ color: '#6B7280', fontSize: '16px', marginBottom: '8px' }}>
-            No documents found
-          </p>
+          <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <FiFile size={24} style={{ color: '#D1D5DB' }} />
+            <p style={{ color: '#6B7280', fontSize: '16px', margin: 0 }}>
+              No documents found
+            </p>
+          </div>
           <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
             {searchQuery || selectedFolderId || selectedCategoryId
               ? 'Try adjusting your filters'
@@ -507,7 +509,7 @@ export default function FirmSharedDocuments() {
                 {documents.map((doc) => {
                   const ext = getDocumentExtension(doc);
                   const canPreview = SUPPORTED_PREVIEW_TYPES.has(ext);
-                  
+
                   return (
                     <tr key={doc.id}>
                       <td>

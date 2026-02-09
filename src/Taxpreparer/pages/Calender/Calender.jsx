@@ -29,6 +29,7 @@ export default function CalendarPage() {
   });
   const [showPendingMeetingsModal, setShowPendingMeetingsModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState({});
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'confirmed'
 
   // Fetch calendar data from API
   const fetchCalendarData = async () => {
@@ -310,7 +311,12 @@ export default function CalendarPage() {
   const getAppointmentsForDate = (date) => {
     const dateStr = formatDateKey(date);
     const dateApps = appointmentsByDate[dateStr] || [];
-    const events = dateApps.map(convertAppointmentToEvent);
+    let events = dateApps.map(convertAppointmentToEvent);
+
+    if (filterStatus === 'confirmed') {
+      events = events.filter(e => e.status === 'confirmed' || e.status === 'Confirmed');
+    }
+
     // Sort appointments by time (earliest first)
     return events.sort((a, b) => (a.timeSort || 0) - (b.timeSort || 0));
   };
@@ -456,11 +462,54 @@ export default function CalendarPage() {
   };
 
   const cardData = [
-    { label: "Total Events", icon: <Task1 />, count: statistics.total_events, color: "#00bcd4" },
-    { label: "Today", icon: <CompletedIcon />, count: statistics.today, color: "#4caf50" },
-    { label: "This Week", icon: <DoubleuserIcon />, count: statistics.this_week, color: "#3f51b5" },
-    { label: "Confirmed", icon: <ZoomIcon />, count: statistics.confirmed, color: "#EF4444" },
+    { label: "Total Events", icon: <Task1 />, count: statistics.total_events, color: "#00bcd4", type: 'total' },
+    { label: "Today", icon: <CompletedIcon />, count: statistics.today, color: "#4caf50", type: 'today' },
+    { label: "This Week", icon: <DoubleuserIcon />, count: statistics.this_week, color: "#3f51b5", type: 'week' },
+    { label: "Confirmed", icon: <ZoomIcon />, count: statistics.confirmed, color: "#EF4444", type: 'confirmed' },
   ];
+
+  const handleStatClick = (type) => {
+    const calendarElement = document.getElementById('calendar-view-container');
+    const scroll = () => {
+      if (calendarElement) {
+        calendarElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Add highlight effect
+        calendarElement.style.transition = 'box-shadow 0.3s ease';
+        calendarElement.style.boxShadow = '0 0 0 4px rgba(0, 188, 212, 0.2)';
+        setTimeout(() => {
+          calendarElement.style.boxShadow = 'none';
+        }, 1500);
+      }
+    };
+
+    switch (type) {
+      case 'total':
+        setFilterStatus('all');
+        setSelectedPeriod('Monthly');
+        goToToday();
+        setTimeout(scroll, 100);
+        break;
+      case 'today':
+        setFilterStatus('all');
+        setSelectedPeriod('Day');
+        goToToday();
+        setTimeout(scroll, 100);
+        break;
+      case 'week':
+        setFilterStatus('all');
+        setSelectedPeriod('Week');
+        goToToday();
+        setTimeout(scroll, 100);
+        break;
+      case 'confirmed':
+        setFilterStatus('confirmed');
+        // Stay in current view but filter
+        setTimeout(scroll, 100);
+        break;
+      default:
+        break;
+    }
+  };
 
   const timePeriods = ["Day", "Week", "Monthly", "Years"];
 
@@ -522,7 +571,11 @@ export default function CalendarPage() {
       {/* Stats - First 4 Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {cardData.map((item, index) => (
-          <div key={index} className="bg-white rounded-xl border border-[#E8F0FF] p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div
+            key={index}
+            className="bg-white rounded-xl border border-[#E8F0FF] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => handleStatClick(item.type)}
+          >
             <div className="flex justify-between items-center mb-3">
               <div className="p-2 rounded-lg" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
                 {item.icon}
@@ -562,7 +615,7 @@ export default function CalendarPage() {
 
       <div className="flex gap-6 w-full ">
         {/* Calendar Navigation and Grid Container */}
-        <div className="border border-[#E8F0FF]  rounded-lg pt-2 bg-[#F3F7FF] w-[75%]">
+        <div id="calendar-view-container" className="border border-[#E8F0FF]  rounded-lg pt-2 bg-[#F3F7FF] w-[75%]">
           {/* Calendar Navigation */}
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-3 w-full justify-start pl-2">
