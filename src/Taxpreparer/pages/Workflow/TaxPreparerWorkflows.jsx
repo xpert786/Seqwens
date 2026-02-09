@@ -40,6 +40,7 @@ const TaxPreparerWorkflows = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requestDocuments, setRequestDocuments] = useState([]);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   // Fetch workflows
   const fetchWorkflows = async () => {
@@ -391,8 +392,12 @@ const TaxPreparerWorkflows = () => {
 
                       {/* Status Actions */}
                       {getAvailableStatusActions(workflow).length > 0 && (
-                        <div className="relative group/actions">
+                        <div className="relative">
                           <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenActionMenuId(openActionMenuId === workflow.id ? null : workflow.id);
+                            }}
                             className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-50 text-gray-600 font-bold hover:bg-gray-100 transition-all border border-transparent"
                             style={{ borderRadius: '8px' }}
                             disabled={updatingStatus === workflow.id}
@@ -402,21 +407,27 @@ const TaxPreparerWorkflows = () => {
                             ) : <MoreVertical size={18} />}
                             Actions
                           </button>
-                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-[#E8F0FF] opacity-0 invisible group-hover/actions:opacity-100 group-hover/actions:visible transition-all z-20 overflow-hidden">
-                            {getAvailableStatusActions(workflow).map((action) => (
-                              <button
-                                key={action.value}
-                                onClick={() => handleStatusUpdate(workflow.id, action.value)}
-                                className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-3"
-                                style={{ borderRadius: '8px' }}
-                              >
-                                {action.value === 'paused' ? <Pause size={16} /> :
-                                  action.value === 'active' ? <Play size={16} /> :
-                                    <CheckCircle size={16} />}
-                                {action.label}
-                              </button>
-                            ))}
-                          </div>
+
+                          {openActionMenuId === workflow.id && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-[#E8F0FF] z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                              {getAvailableStatusActions(workflow).map((action) => (
+                                <button
+                                  key={action.value}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusUpdate(workflow.id, action.value);
+                                    setOpenActionMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                >
+                                  {action.value === 'paused' ? <Pause size={16} /> :
+                                    action.value === 'active' ? <Play size={16} /> :
+                                      <CheckCircle size={16} />}
+                                  {action.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
