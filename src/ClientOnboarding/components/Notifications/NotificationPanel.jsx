@@ -532,7 +532,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
               disabled={unreadCount === 0}
             >
               <MakeIcon />
-              Make All read
+              Mark all as read
             </button>
           </div>
         </div>
