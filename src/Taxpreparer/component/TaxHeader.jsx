@@ -7,7 +7,10 @@ import { LogoIcond } from "./icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/apiUtils";
-import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
+import { clearUserData, getImpersonationStatus, performRevertToSuperAdmin } from "../../ClientOnboarding/utils/userUtils";
+import { getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
+import { toast } from "react-toastify";
+
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 import "../styles/topbar.css";
 
@@ -48,6 +51,9 @@ export default function Topbar({
   const [profileInitials, setProfileInitials] = useState("TP");
   const [menuOpenedViaKeyboard, setMenuOpenedViaKeyboard] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [isReverting, setIsReverting] = useState(false);
+
   const profileMenuRef = useRef(null);
   const profileButtonRef = useRef(null);
   const notificationButtonRef = useRef(null);
@@ -57,8 +63,10 @@ export default function Topbar({
     { label: "Profile", action: "profile" },
     { label: "Settings", action: "settings" },
     { label: "Help", action: "help" },
+    ...(isImpersonating ? [{ label: "Revert to Super Admin", action: "revert_superadmin", isPrimary: true }] : []),
     { label: "Log Out", action: "logout", isDanger: true },
   ];
+
 
   const toggleNotifications = () => {
     setShowNotifications((prev) => {
@@ -187,6 +195,12 @@ export default function Topbar({
       return;
     }
 
+    if (action === "revert_superadmin") {
+      await handleRevertToSuperAdmin();
+      return;
+    }
+
+
     const routes = {
       profile: "/taxdashboard/account",
       settings: "/taxdashboard/settings",
@@ -199,6 +213,32 @@ export default function Topbar({
     }
     closeProfileMenu(false);
   };
+
+  const handleRevertToSuperAdmin = async () => {
+    if (isReverting) return;
+
+    try {
+      setIsReverting(true);
+      toast.info("Reverting to Super Admin session...", { autoClose: 2000 });
+
+      const success = performRevertToSuperAdmin();
+
+      if (success) {
+        toast.success("Successfully reverted to Super Admin account");
+        setTimeout(() => {
+          window.location.href = getPathWithPrefix('/superadmin');
+        }, 500);
+      } else {
+        toast.error("Failed to revert. Original session data not found.");
+        setIsReverting(false);
+      }
+    } catch (error) {
+      console.error("Error during revert:", error);
+      toast.error("An error occurred while reverting.");
+      setIsReverting(false);
+    }
+  };
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -239,18 +279,32 @@ export default function Topbar({
 
   useEffect(() => {
     refreshProfileData();
+
+    // Check impersonation status
+    const checkStatus = () => {
+      const { isImpersonating: impersonating } = getImpersonationStatus();
+      setIsImpersonating(impersonating);
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 3000);
+
+
     if (typeof window !== "undefined") {
       window.refreshTaxHeaderProfile = refreshProfileData;
       window.setTaxHeaderProfile = applyProfileData;
     }
 
     return () => {
+      clearInterval(interval);
       if (typeof window !== "undefined") {
         delete window.refreshTaxHeaderProfile;
         delete window.setTaxHeaderProfile;
       }
     };
+
   }, [refreshProfileData, applyProfileData]);
+
 
   useEffect(() => {
     if (showProfileMenu && menuOpenedViaKeyboard) {
@@ -307,7 +361,14 @@ export default function Topbar({
 
   return (
     <>
-      <nav className="navbar bg-white fixed-top border-bottom custom-topbar p-0">
+      <nav
+        className={`navbar bg-white fixed-top border-bottom custom-topbar p-0 ${isImpersonating ? 'impersonating-topbar' : ''}`}
+        style={{
+          top: isImpersonating ? '40px' : '0',
+          transition: 'top 0.3s ease'
+        }}
+      >
+
         <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
           <div className="d-flex align-items-center h-full flex-grow-1">
             <div

@@ -8,9 +8,13 @@ import SubscriptionStatusBanner from './SubscriptionStatusBanner';
 import ImpersonationBanner from './ImpersonationBanner';
 import '../styles/FirmPortalColors.css';
 import ForcedPasswordChangeModal from '../../components/ForcedPasswordChangeModal';
+import { getImpersonationStatus } from '../../ClientOnboarding/utils/userUtils';
+
 
 export default function FirmDashboardLayout() {
   const [sidebarWidth, setSidebarWidth] = useState('320px');
+  const [isImpersonating, setIsImpersonating] = useState(false);
+
 
   // Check if screen is mobile (less than 768px) and close sidebar by default on mobile
   const isMobileScreen = () => window.innerWidth < 768;
@@ -331,6 +335,18 @@ export default function FirmDashboardLayout() {
     };
   }, []);
 
+  // Check impersonation status periodically
+  useEffect(() => {
+    const checkStatus = () => {
+      const { isImpersonating: impersonating } = getImpersonationStatus();
+      setIsImpersonating(impersonating);
+    };
+    checkStatus();
+    const interval = setInterval(checkStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -345,9 +361,11 @@ export default function FirmDashboardLayout() {
         <SubscriptionStatusBanner />
         <FirmSidebar isSidebarOpen={isSidebarOpen} />
         <main
-          className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
+          className="h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
           style={{
+            marginTop: isImpersonating ? '110px' : '70px',
             marginLeft: isSidebarOpen ? sidebarWidth : '0',
+
             width: isSidebarOpen ? `calc(100% - ${sidebarWidth})` : '100%',
             backgroundColor: 'var(--firm-secondary-color, #F3F7FF)'
           }}

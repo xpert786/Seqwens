@@ -1,5 +1,6 @@
 import { getApiBaseUrl, getFallbackApiBaseUrl, fetchWithCors } from './corsConfig';
-import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData } from './userUtils';
+import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData, getImpersonationStatus } from './userUtils';
+
 import { getPathWithPrefix, getLoginUrl } from './urlUtils';
 
 // API Configuration
@@ -192,16 +193,25 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         if (response.status === 401) {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
-          clearUserData();
+
+          // CRITICAL: Preserve impersonation data if we have any
+          const { isImpersonating } = getImpersonationStatus();
+          clearUserData(isImpersonating);
+
           window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        clearUserData();
+
+        // CRITICAL: Preserve impersonation data if we have any
+        const { isImpersonating } = getImpersonationStatus();
+        clearUserData(isImpersonating);
+
         window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
+
     }
 
     if (!response.ok) {

@@ -32,7 +32,8 @@ import { LogoIcon } from "../../ClientOnboarding/components/icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
-import { clearUserData, setTokens } from "../../ClientOnboarding/utils/userUtils";
+import { clearUserData, setTokens, getImpersonationStatus, performRevertToSuperAdmin } from "../../ClientOnboarding/utils/userUtils";
+
 import { navigateToLogin, getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
@@ -60,22 +61,11 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
     // Check if currently impersonating a firm
     const checkImpersonationStatus = useCallback(() => {
-        const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
-        const info = sessionStorage.getItem('impersonationInfo');
-
-        if (impersonationData && info) {
-            setIsImpersonating(true);
-            try {
-                setImpersonationInfo(JSON.parse(info));
-            } catch (e) {
-                console.error('Error parsing impersonation info:', e);
-                setImpersonationInfo(null);
-            }
-        } else {
-            setIsImpersonating(false);
-            setImpersonationInfo(null);
-        }
+        const { isImpersonating: impersonating, info } = getImpersonationStatus();
+        setIsImpersonating(impersonating);
+        setImpersonationInfo(info);
     }, []);
+
 
     const menuItems = [
         { label: "Profile", action: "profile" },
@@ -153,161 +143,39 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
         try {
             setIsReverting(true);
+            console.log('[FIRM_HEADER] Starting revert to Super Admin');
 
-            // LOGGING: Capture impersonation_end event
-            const impersonationStartTime = sessionStorage.getItem('superAdminImpersonationData');
-            let impersonationData = null;
+            const success = performRevertToSuperAdmin();
 
-            try {
-                impersonationData = impersonationStartTime ? JSON.parse(impersonationStartTime) : null;
-            } catch (e) {
-                console.error('[IMPERSONATION_REVERT] Failed to parse impersonation data:', e);
-            }
+            if (success) {
+                toast.success("Successfully reverted to Super Admin account", {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
 
-            console.log('[IMPERSONATION_REVERT] Starting revert process', {
-                timestamp: new Date().toISOString(),
-                hasImpersonationData: !!impersonationData,
-                currentUserType: localStorage.getItem('userType') || sessionStorage.getItem('userType'),
-                currentRoute: window.location.pathname,
-            });
-
-            // Get stored Super Admin session data
-            const impersonationDataStr = sessionStorage.getItem('superAdminImpersonationData');
-            if (!impersonationDataStr) {
-                console.error('[IMPERSONATION_REVERT] Original session data not found');
+                // STEP 5: Force hard navigation to Super Admin dashboard
+                console.log('[FIRM_HEADER] Step 5: Forcing navigation to Super Admin dashboard');
+                setTimeout(() => {
+                    const targetUrl = getPathWithPrefix('/superadmin');
+                    console.log('[FIRM_HEADER] Navigating to:', targetUrl);
+                    window.location.href = targetUrl;
+                }, 500);
+            } else {
                 toast.error("Unable to revert: Original session data not found", {
                     position: "top-right",
                     autoClose: 3000,
                 });
-                return;
+                setIsReverting(false);
             }
-
-            const sessionData = JSON.parse(impersonationDataStr);
-
-            console.log('[IMPERSONATION_REVERT] Retrieved session data', {
-                hasAccessToken: !!sessionData.accessToken,
-                hasRefreshToken: !!sessionData.refreshToken,
-                hasUserData: !!sessionData.userData,
-                originalUserType: sessionData.userType,
-                sessionTimestamp: sessionData.timestamp,
-            });
-
-            // STEP 1: Hard reset - Clear ALL current context (firm admin, client, taxpayer, etc.)
-            console.log('[IMPERSONATION_REVERT] Step 1: Clearing all current context');
-            clearUserData(); // Now clears ALL context including client/taxpayer
-
-            // Additional explicit clearing of impersonation-specific data
-            localStorage.removeItem('firmLoginData');
-            sessionStorage.removeItem('firmLoginData');
-
-            // STEP 2: Restore Super Admin session data
-            console.log('[IMPERSONATION_REVERT] Step 2: Restoring Super Admin session');
-
-            // Clear everything first to ensure clean slate
-            localStorage.clear();
-            sessionStorage.clear();
-
-            // Restore only Super Admin data
-            if (sessionData.accessToken) {
-                localStorage.setItem('accessToken', sessionData.accessToken);
-                console.log('[IMPERSONATION_REVERT] Restored accessToken to localStorage');
-            }
-            if (sessionData.refreshToken) {
-                localStorage.setItem('refreshToken', sessionData.refreshToken);
-                console.log('[IMPERSONATION_REVERT] Restored refreshToken to localStorage');
-            }
-            if (sessionData.userData) {
-                localStorage.setItem('userData', sessionData.userData);
-                // Parse and validate the user type
-                try {
-                    const userData = JSON.parse(sessionData.userData);
-                    console.log('[IMPERSONATION_REVERT] Restored userData:', {
-                        userType: userData.user_type,
-                        email: userData.email,
-                        role: userData.role,
-                    });
-                } catch (e) {
-                    console.error('[IMPERSONATION_REVERT] Failed to parse restored userData:', e);
-                }
-            }
-            if (sessionData.userType) {
-                localStorage.setItem('userType', sessionData.userType);
-                console.log('[IMPERSONATION_REVERT] Restored userType:', sessionData.userType);
-            }
-            if (sessionData.isLoggedIn) {
-                localStorage.setItem('isLoggedIn', sessionData.isLoggedIn);
-            }
-            if (sessionData.rememberMe) {
-                localStorage.setItem('rememberMe', sessionData.rememberMe);
-            }
-
-            // Restore session storage data
-            if (sessionData.sessionAccessToken) {
-                sessionStorage.setItem('accessToken', sessionData.sessionAccessToken);
-            }
-            if (sessionData.sessionRefreshToken) {
-                sessionStorage.setItem('refreshToken', sessionData.sessionRefreshToken);
-            }
-            if (sessionData.sessionUserData) {
-                sessionStorage.setItem('userData', sessionData.sessionUserData);
-            }
-            if (sessionData.sessionUserType) {
-                sessionStorage.setItem('userType', sessionData.sessionUserType);
-            }
-            if (sessionData.sessionIsLoggedIn) {
-                sessionStorage.setItem('isLoggedIn', sessionData.sessionIsLoggedIn);
-            }
-            if (sessionData.sessionRememberMe) {
-                sessionStorage.setItem('rememberMe', sessionData.sessionRememberMe);
-            }
-
-            // STEP 3: Clear impersonation data (must be after restore)
-            console.log('[IMPERSONATION_REVERT] Step 3: Clearing impersonation markers');
-            sessionStorage.removeItem('superAdminImpersonationData');
-            sessionStorage.removeItem('impersonationInfo');
-
-            // STEP 4: Set tokens properly using utility
-            console.log('[IMPERSONATION_REVERT] Step 4: Setting tokens');
-            if (sessionData.accessToken && sessionData.refreshToken) {
-                setTokens(sessionData.accessToken, sessionData.refreshToken, false);
-            }
-
-            // STEP 5: Log completion and prepare for navigation
-            const finalUserType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
-            console.log('[IMPERSONATION_REVERT] Revert complete', {
-                timestamp: new Date().toISOString(),
-                restoredUserType: finalUserType,
-                targetRoute: '/seqwens-frontend/superadmin',
-                tokens: {
-                    hasAccessToken: !!localStorage.getItem('accessToken'),
-                    hasRefreshToken: !!localStorage.getItem('refreshToken'),
-                },
-            });
-
-            toast.success("Successfully reverted to Super Admin account", {
-                position: "top-right",
-                autoClose: 2000,
-            });
-
-            // STEP 6: Force hard navigation to Super Admin dashboard
-            // Do NOT restore "last visited route" - always go to Super Admin home
-            console.log('[IMPERSONATION_REVERT] Step 6: Forcing navigation to Super Admin dashboard');
-            setTimeout(() => {
-                const targetUrl = getPathWithPrefix('/superadmin');
-                console.log('[IMPERSONATION_REVERT] Navigating to:', targetUrl);
-                window.location.href = targetUrl;
-            }, 500);
 
         } catch (error) {
-            console.error("[IMPERSONATION_REVERT] Error during revert:", error);
-            console.error("[IMPERSONATION_REVERT] Error stack:", error.stack);
-
+            console.error("[FIRM_HEADER] Error during revert:", error);
             toast.error("Failed to revert to Super Admin account. Please refresh the page and try again.", {
                 position: "top-right",
                 autoClose: 5000,
             });
-        } finally {
             setIsReverting(false);
+        } finally {
             closeProfileMenu();
         }
     };
@@ -443,7 +311,14 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
     return (
         <>
-            <nav className="navbar bg-white fixed-top border-bottom custom-topbar p-0">
+            <nav
+                className={`navbar bg-white fixed-top border-bottom custom-topbar p-0 ${isImpersonating ? 'impersonating-topbar' : ''}`}
+                style={{
+                    top: isImpersonating ? '40px' : '0',
+                    transition: 'top 0.3s ease'
+                }}
+            >
+
                 <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
 
                     {/* Left Section */}
@@ -512,21 +387,25 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                     backgroundColor:
                                         status === 'active' ? '#ECFDF5' :
                                             status === 'trial' ? '#EFF6FF' :
-                                                status === 'pending_payment' ? '#FFFBEB' :
-                                                    status === 'inactive' ? '#F3F4F6' :
-                                                        '#FEF2F2',
+                                                status === 'developer' ? '#F0F5FF' :
+                                                    status === 'pending_payment' ? '#FFFBEB' :
+                                                        status === 'inactive' ? '#F3F4F6' :
+                                                            '#FEF2F2',
                                     color:
                                         status === 'active' ? '#059669' :
                                             status === 'trial' ? '#2563EB' :
-                                                status === 'pending_payment' ? '#D97706' :
-                                                    status === 'inactive' ? '#4B5563' :
-                                                        '#DC2626',
+                                                status === 'developer' ? '#4F46E5' :
+                                                    status === 'pending_payment' ? '#D97706' :
+                                                        status === 'inactive' ? '#4B5563' :
+                                                            '#DC2626',
                                     border: `1px solid ${status === 'active' ? '#A7F3D0' :
                                         status === 'trial' ? '#BFDBFE' :
-                                            status === 'pending_payment' ? '#FDE68A' :
-                                                status === 'inactive' ? '#D1D5DB' :
-                                                    '#FECACA'
+                                            status === 'developer' ? '#C7D2FE' :
+                                                status === 'pending_payment' ? '#FDE68A' :
+                                                    status === 'inactive' ? '#D1D5DB' :
+                                                        '#FECACA'
                                         }`
+
                                 }}
                             >
                                 <span
@@ -683,26 +562,6 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                 />
             )}
 
-            {/* Impersonation Banner */}
-            {isImpersonating && impersonationInfo && (
-                <div
-                    className="bg-warning text-dark text-center py-2 px-3"
-                    style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        borderBottom: "1px solid #ffc107",
-                        position: "relative",
-                        zIndex: 1020
-                    }}
-                >
-                    <i className="bi bi-shield-exclamation me-2"></i>
-                    You are currently impersonating: <strong>{impersonationInfo.firmName}</strong>
-                    <span className="ms-3 text-muted">
-                        Use the profile menu to revert to Super Admin
-                    </span>
-                </div>
-            )}
         </>
     );
-
 }

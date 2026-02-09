@@ -14,12 +14,16 @@ import Automation from './Automation';
 import SavedPaymentMethods from '../Billing/SavedPaymentMethods';
 import UpgradePlanModal from './UpgradePlanModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import { useSubscriptionStatus } from '../../Context/SubscriptionStatusContext';
 import './SubscriptionManagement.css';
+
 
 const API_BASE_URL = getApiBaseUrl();
 
 const SubscriptionManagement = () => {
+    const { isDeveloperSubscription } = useSubscriptionStatus();
     const [searchParams, setSearchParams] = useSearchParams();
+
     const [activeTab, setActiveTab] = useState('Overview');
     const [isFailoverEnabled, setIsFailoverEnabled] = useState(true);
     const [paymentMethods, setPaymentMethods] = useState([]);
@@ -585,7 +589,32 @@ const SubscriptionManagement = () => {
     return (
         <div className="min-h-screen bg-[#F3F7FF] lg:p-4 sm:p-2">
             <div className="mx-auto">
+                {/* Developer Subscription Banner */}
+                {isDeveloperSubscription && (
+                    <div className="mb-6 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-6 flex items-center gap-5 shadow-sm">
+                        <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 16H13V18H11V16ZM11 6H13V14H11V6Z" fill="currentColor" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 className="text-xl font-bold text-blue-900 font-[BasisGrotesquePro]">Full Platform Access Activated</h5>
+                            <p className="text-[#3B4A66] font-[BasisGrotesquePro] max-w-2xl">
+                                Your account is currently authorized under a <strong>Developer Subscription</strong>.
+                                This grants you unrestricted access to all premium features and resource limits for internal QA and validation testing.
+                                No billing actions are required while this mode is active.
+                            </p>
+                        </div>
+                        <div className="ml-auto hidden md:block">
+                            <span className="px-4 py-2 bg-blue-600 text-white !rounded-full text-xs font-bold uppercase tracking-widest">
+                                Developer Mode
+                            </span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header Section */}
+
                 <div className="mb-6">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
                         <div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+ import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaEye, FaDownload } from "react-icons/fa";
 import { UploadsIcon, CrossIcon, ViewIcon, DownloadIcon } from "../component/icons";
@@ -146,6 +146,55 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
   const [folderTree, setFolderTree] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
+
+  // Client selection state
+  const [availableClients, setAvailableClients] = useState([]);
+  const [internalClientId, setInternalClientId] = useState(clientId);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  useEffect(() => {
+    setInternalClientId(clientId);
+  }, [clientId]);
+
+  // Fetch clients if no clientId provided
+  useEffect(() => {
+    if (show && !clientId) {
+      const fetchClients = async () => {
+        try {
+          setLoadingClients(true);
+          const API_BASE_URL = getApiBaseUrl();
+          const token = getAccessToken();
+
+          if (!token) return;
+
+          const response = await fetchWithCors(
+            `${API_BASE_URL}/firm/staff/my-clients/`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+              setAvailableClients(result.data);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching clients:", error);
+          toast.error("Failed to load clients. Please try again.");
+        } finally {
+          setLoadingClients(false);
+        }
+      };
+
+      fetchClients();
+    }
+  }, [show, clientId]);
 
   const activeFile = files[selectedIndex] || null;
 
@@ -363,9 +412,9 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       };
 
       let response;
-      if (clientId) {
+      if (internalClientId) {
         response = await fetchWithCors(
-          `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}&folder_id=${folderId}`,
+          `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}&folder_id=${folderId}`,
           config
         );
       } else {
@@ -375,393 +424,6 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
         );
       }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        let subfolders = [];
-
-        if (clientId) {
-          if (Array.isArray(result.data.subfolders)) {
-            subfolders = result.data.subfolders;
-          } else if (Array.isArray(result.data.folders)) {
-            subfolders = result.data.folders;
-          }
-        } else if (Array.isArray(result.data.folders)) {
-          subfolders = result.data.folders;
-        }
-
-        return subfolders.map((folder) => ({
-          id: folder.id,
-          name: folder.title || folder.name,
-          title: folder.title || folder.name,
-          description: folder.description || "",
-          children: [],
-          loaded: false,
-        }));
-      }
-
-      return [];
-    } catch (error) {
-      console.error("Error fetching subfolders:", error);
-      return [];
-    }
-  };
-
-  const updateFolderWithSubfolders = (tree, targetFolderId, subfolders) =>
-    tree.map((folder) => {
-      if (folder.id === targetFolderId) {
-        return {
-          ...folder,
-          children: subfolders,
-          loaded: true,
-        };
-      }
-      if (folder.children && folder.children.length > 0) {
-        return {
-          ...folder,
-          children: updateFolderWithSubfolders(folder.children, targetFolderId, subfolders),
-        };
-      }
-      return folder;
-    });
-
-  const toggleExpand = async (folder) => {
-    const isExpanded = expandedFolders.has(folder.id);
-    const newExpanded = new Set(expandedFolders);
-
-    if (isExpanded) {
-      newExpanded.delete(folder.id);
-    } else {
-      newExpanded.add(folder.id);
-    }
-
-    setExpandedFolders(newExpanded);
-
-    if (!isExpanded && !folder.loaded && folder.id) {
-      const subfolders = await fetchSubfolders(folder.id);
-      setFolderTree((prevTree) => updateFolderWithSubfolders(prevTree, folder.id, subfolders));
-    }
-  };
-
-  const handleFolderSelect = (path, folderId) => {
-    setFiles((prev) =>
-      prev.map((file, index) =>
-        index === selectedIndex
-          ? {
-            ...file,
-            folderPath: path,
-            folderId,
-            issues: file.issues.filter((issue) => !issue.toLowerCase().includes("folder")),
-          }
-          : file
-      )
-    );
-    setSelectedFolder(path);
-    setSelectedFolderId(folderId);
-    setFolderDropdownOpen(false);
-  };
-
-  const findFolderById = (tree, folderId) => {
-    for (const folder of tree) {
-      if (folder.id === folderId) {
-        return folder;
-      }
-      if (folder.children && folder.children.length > 0) {
-        const found = findFolderById(folder.children, folderId);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-
-    setCreatingFolderLoading(true);
-
-    try {
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-
-      if (!token) {
-        toast.error("No authentication token found. Please login again.");
-        return;
-      }
-
-      const folderData = {
-        title: newFolderName.trim(),
-        description: `Documents folder: ${newFolderName.trim()}`,
-      };
-
-      if (parentFolderForNewFolder) {
-        folderData.parent_id = parentFolderForNewFolder;
-      }
-
-      const apiUrl = `${API_BASE_URL}/firm/staff/documents/folders/create/`;
-
-      const response = await fetchWithCors(apiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(folderData),
-      });
-
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-        } catch (_) {
-          // ignore parse errors
-        }
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-      const folderInfo = result?.data || result;
-
-      const newFolder = {
-        id: folderInfo.id,
-        name: folderInfo.title || folderInfo.name || newFolderName.trim(),
-        title: folderInfo.title || folderInfo.name || newFolderName.trim(),
-        description: folderInfo.description || "",
-        children: [],
-        loaded: false,
-      };
-
-      setFolderTree((prevTree) => {
-        if (parentFolderForNewFolder) {
-          const target = findFolderById(prevTree, parentFolderForNewFolder);
-          const existingChildren = target?.children || [];
-          return updateFolderWithSubfolders(prevTree, parentFolderForNewFolder, [...existingChildren, newFolder]);
-        }
-        return [...prevTree, newFolder];
-      });
-
-      setNewFolderName("");
-      setCreatingFolder(false);
-      setParentFolderForNewFolder(null);
-      toast.success("Folder created successfully!");
-    } catch (error) {
-      console.error("Error creating folder:", error);
-      toast.error(handleAPIError(error));
-    } finally {
-      setCreatingFolderLoading(false);
-    }
-  };
-
-
-
-  const renderFolderTree = (folders, path = []) =>
-    folders.map((folder) => {
-      const fullPath = [...path, folder.name].join(" > ");
-      const hasChildren = folder.children && folder.children.length > 0;
-      const isExpanded = expandedFolders.has(folder.id);
-      const showCaret = hasChildren || (!folder.loaded && folder.id);
-
-      return (
-        <div key={folder.id || fullPath} style={{ paddingLeft: "8px", marginBottom: "4px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            {showCaret ? (
-              <span
-                onClick={() => toggleExpand(folder)}
-                style={{ cursor: "pointer", width: "12px", display: "inline-block" }}
-              >
-                {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
-              </span>
-            ) : (
-              <span style={{ width: "12px" }} />
-            )}
-            <div
-              onClick={() => handleFolderSelect(fullPath, folder.id)}
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                flex: 1,
-                padding: "2px 0",
-              }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.backgroundColor = "#F9FAFB";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.backgroundColor = "transparent";
-              }}
-            >
-              <FaFolder style={{ color: "#F59E0B" }} />
-              <span style={{ fontSize: "14px" }}>{folder.name}</span>
-            </div>
-          </div>
-          {hasChildren && isExpanded && (
-            <div style={{ paddingLeft: "12px" }}>{renderFolderTree(folder.children, [...path, folder.name])}</div>
-          )}
-        </div>
-      );
-    });
-
-  const resetModal = (closeModal = true) => {
-    files.forEach((file) => {
-      if (file.previewUrl) {
-        URL.revokeObjectURL(file.previewUrl);
-      }
-    });
-
-    setFiles([]);
-    setSelectedIndex(0);
-    setPreviewMode(false);
-    setCreatingFolder(false);
-    setNewFolderName("");
-    setFolderDropdownOpen(false);
-    setSelectedFolder("");
-    setSelectedFolderId(null);
-    setExpandedFolders(new Set());
-    setCreatingFolderLoading(false);
-    setParentFolderForNewFolder(null);
-    setUploading(false);
-    setCreatingFolderLoading(false);
-    setIsDragging(false);
-
-    if (closeModal) {
-      handleClose();
-    }
-  };
-
-  const handleFinalUpload = async () => {
-    if (uploading || files.length === 0) return;
-
-    const validated = validateFilesBeforeUpload(files);
-    setFiles(validated);
-
-    const hasIssues = validated.some((file) => file.issues.length > 0);
-    if (hasIssues) {
-      toast.error("Please resolve the highlighted issues before uploading.");
-      return;
-    }
-
-    setUploading(true);
-    setFolderDropdownOpen(false);
-    setCreatingFolder(false);
-
-
-    const updatedFiles = [...validated];
-    let successCount = 0;
-    let failureCount = 0;
-
-    for (let i = 0; i < updatedFiles.length; i += 1) {
-      updatedFiles[i] = {
-        ...updatedFiles[i],
-        status: "uploading",
-        progress: 20,
-        issues: [],
-      };
-      setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
-
-      try {
-        await uploadSingleFile({ fileEntry: updatedFiles[i], clientId });
-        updatedFiles[i] = {
-          ...updatedFiles[i],
-          status: "success",
-          progress: 100,
-          issues: [],
-        };
-        setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
-        successCount += 1;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to upload.";
-        updatedFiles[i] = {
-          ...updatedFiles[i],
-          status: "error",
-          progress: 0,
-          issues: [message],
-        };
-        setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
-        failureCount += 1;
-      }
-    }
-
-    setUploading(false);
-
-    if (successCount > 0) {
-      toast.success(`${successCount} file${successCount === 1 ? "" : "s"} uploaded successfully.`, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      if (typeof onUploadSuccess === "function") {
-        onUploadSuccess();
-      }
-      if (failureCount === 0) {
-        resetModal(true);
-        return;
-      }
-    }
-
-    if (failureCount > 0) {
-      toast.error(
-        `${failureCount} file${failureCount === 1 ? "" : "s"} failed to upload. Please review the highlighted items and try again.`,
-        {
-          position: "top-right",
-          autoClose: 5000,
-        }
-      );
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        folderDropdownOpen &&
-        folderDropdownRef.current &&
-        !folderDropdownRef.current.contains(event.target)
-      ) {
-        setFolderDropdownOpen(false);
-      }
-    };
-
-    if (folderDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [folderDropdownOpen]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    const fetchRootFolders = async () => {
-      try {
-        setLoadingFolders(true);
-        const API_BASE_URL = getApiBaseUrl();
-        const token = getAccessToken();
-
-        if (!token) {
-          console.error("No authentication token found");
-          return;
-        }
-
-        const config = {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        };
-
-        let response;
-        if (clientId) {
-          response = await fetchWithCors(`${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}`, config);
-        } else {
-          response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/`, config);
-        }
-
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -769,21 +431,19 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
         const result = await response.json();
 
         if (result.success && result.data) {
-          let rootFolders = [];
+          let subfolders = [];
 
-          if (clientId) {
+          if (internalClientId) {
             if (Array.isArray(result.data.subfolders)) {
-              rootFolders = result.data.subfolders;
+              subfolders = result.data.subfolders;
             } else if (Array.isArray(result.data.folders)) {
-              rootFolders = result.data.folders;
-            } else if (Array.isArray(result.data)) {
-              rootFolders = result.data;
+              subfolders = result.data.folders;
             }
           } else if (Array.isArray(result.data.folders)) {
-            rootFolders = result.data.folders;
+            subfolders = result.data.folders;
           }
 
-          const mapped = rootFolders.map((folder) => ({
+          return subfolders.map((folder) => ({
             id: folder.id,
             name: folder.title || folder.name,
             title: folder.title || folder.name,
@@ -791,102 +451,558 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
             children: [],
             loaded: false,
           }));
-
-          setFolderTree(mapped);
-          setExpandedFolders(new Set());
-        } else {
-          setFolderTree([]);
         }
+
+        return [];
       } catch (error) {
-        console.error("Error fetching root folders:", error);
-        toast.error("Failed to load folders. Please try again.");
-        setFolderTree([]);
-      } finally {
-        setLoadingFolders(false);
+        console.error("Error fetching subfolders:", error);
+        return [];
       }
     };
 
-    fetchRootFolders();
-  }, [show, clientId]);
+    const updateFolderWithSubfolders = (tree, targetFolderId, subfolders) =>
+      tree.map((folder) => {
+        if (folder.id === targetFolderId) {
+          return {
+            ...folder,
+            children: subfolders,
+            loaded: true,
+          };
+        }
+        if (folder.children && folder.children.length > 0) {
+          return {
+            ...folder,
+            children: updateFolderWithSubfolders(folder.children, targetFolderId, subfolders),
+          };
+        }
+        return folder;
+      });
+
+    const toggleExpand = async (folder) => {
+      const isExpanded = expandedFolders.has(folder.id);
+      const newExpanded = new Set(expandedFolders);
+
+      if (isExpanded) {
+        newExpanded.delete(folder.id);
+      } else {
+        newExpanded.add(folder.id);
+      }
+
+      setExpandedFolders(newExpanded);
+
+      if (!isExpanded && !folder.loaded && folder.id) {
+        const subfolders = await fetchSubfolders(folder.id);
+        setFolderTree((prevTree) => updateFolderWithSubfolders(prevTree, folder.id, subfolders));
+      }
+    };
+
+    const handleFolderSelect = (path, folderId) => {
+      setFiles((prev) =>
+        prev.map((file, index) =>
+          index === selectedIndex
+            ? {
+              ...file,
+              folderPath: path,
+              folderId,
+              issues: file.issues.filter((issue) => !issue.toLowerCase().includes("folder")),
+            }
+            : file
+        )
+      );
+      setSelectedFolder(path);
+      setSelectedFolderId(folderId);
+      setFolderDropdownOpen(false);
+    };
+
+    const findFolderById = (tree, folderId) => {
+      for (const folder of tree) {
+        if (folder.id === folderId) {
+          return folder;
+        }
+        if (folder.children && folder.children.length > 0) {
+          const found = findFolderById(folder.children, folderId);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const handleCreateFolder = async () => {
+      if (!newFolderName.trim()) return;
+
+      setCreatingFolderLoading(true);
+
+      try {
+        const API_BASE_URL = getApiBaseUrl();
+        const token = getAccessToken();
+
+        if (!token) {
+          toast.error("No authentication token found. Please login again.");
+          return;
+        }
+
+        const folderData = {
+          title: newFolderName.trim(),
+          description: `Documents folder: ${newFolderName.trim()}`,
+        };
+
+        if (parentFolderForNewFolder) {
+          folderData.parent_id = parentFolderForNewFolder;
+        }
+
+        const apiUrl = `${API_BASE_URL}/firm/staff/documents/folders/create/`;
+
+        const response = await fetchWithCors(apiUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(folderData),
+        });
+
+        if (!response.ok) {
+          let errorMessage = `HTTP error! status: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          } catch (_) {
+            // ignore parse errors
+          }
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+        const folderInfo = result?.data || result;
+
+        const newFolder = {
+          id: folderInfo.id,
+          name: folderInfo.title || folderInfo.name || newFolderName.trim(),
+          title: folderInfo.title || folderInfo.name || newFolderName.trim(),
+          description: folderInfo.description || "",
+          children: [],
+          loaded: false,
+        };
+
+        setFolderTree((prevTree) => {
+          if (parentFolderForNewFolder) {
+            const target = findFolderById(prevTree, parentFolderForNewFolder);
+            const existingChildren = target?.children || [];
+            return updateFolderWithSubfolders(prevTree, parentFolderForNewFolder, [...existingChildren, newFolder]);
+          }
+          return [...prevTree, newFolder];
+        });
+
+        setNewFolderName("");
+        setCreatingFolder(false);
+        setParentFolderForNewFolder(null);
+        toast.success("Folder created successfully!");
+      } catch (error) {
+        console.error("Error creating folder:", error);
+        toast.error(handleAPIError(error));
+      } finally {
+        setCreatingFolderLoading(false);
+      }
+    };
 
 
 
-  useEffect(() => {
-    if (files.length === 0) {
+    const renderFolderTree = (folders, path = []) =>
+      folders.map((folder) => {
+        const fullPath = [...path, folder.name].join(" > ");
+        const hasChildren = folder.children && folder.children.length > 0;
+        const isExpanded = expandedFolders.has(folder.id);
+        const showCaret = hasChildren || (!folder.loaded && folder.id);
+
+        return (
+          <div key={folder.id || fullPath} style={{ paddingLeft: "8px", marginBottom: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              {showCaret ? (
+                <span
+                  onClick={() => toggleExpand(folder)}
+                  style={{ cursor: "pointer", width: "12px", display: "inline-block" }}
+                >
+                  {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+                </span>
+              ) : (
+                <span style={{ width: "12px" }} />
+              )}
+              <div
+                onClick={() => handleFolderSelect(fullPath, folder.id)}
+                style={{
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  flex: 1,
+                  padding: "2px 0",
+                }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.backgroundColor = "#F9FAFB";
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                <FaFolder style={{ color: "#F59E0B" }} />
+                <span style={{ fontSize: "14px" }}>{folder.name}</span>
+              </div>
+            </div>
+            {hasChildren && isExpanded && (
+              <div style={{ paddingLeft: "12px" }}>{renderFolderTree(folder.children, [...path, folder.name])}</div>
+            )}
+          </div>
+        );
+      });
+
+    const resetModal = (closeModal = true) => {
+      files.forEach((file) => {
+        if (file.previewUrl) {
+          URL.revokeObjectURL(file.previewUrl);
+        }
+      });
+
+      setFiles([]);
+      setSelectedIndex(0);
+      setPreviewMode(false);
+      setCreatingFolder(false);
+      setNewFolderName("");
+      setFolderDropdownOpen(false);
       setSelectedFolder("");
       setSelectedFolderId(null);
-      setSelectedIndex(0);
-      return;
-    }
+      setExpandedFolders(new Set());
+      setCreatingFolderLoading(false);
+      setParentFolderForNewFolder(null);
+      setUploading(false);
+      setCreatingFolderLoading(false);
+      setIsDragging(false);
 
-    if (selectedIndex >= files.length) {
-      setSelectedIndex(files.length - 1);
-      return;
-    }
+      if (closeModal) {
+        handleClose();
+      }
+    };
 
-    const currentFile = files[selectedIndex];
-    setSelectedFolder(currentFile.folderPath || "");
-    setSelectedFolderId(currentFile.folderId || null);
-  }, [files, selectedIndex]);
+    const handleFinalUpload = async () => {
+      if (uploading || files.length === 0) return;
 
-  return (
-    <Modal show={show} onHide={() => resetModal(true)} centered backdrop="static" size="xl" className="upload-modal" scrollable={true}>
-      <Modal.Body className="p-4">
-        <h5 className="upload-heading">Upload Documents</h5>
-        <p className="upload-subheading">Upload your tax documents securely</p>
+      const validated = validateFilesBeforeUpload(files);
+      setFiles(validated);
 
-        <p className="upload-section-title">Add Files</p>
+      const hasIssues = validated.some((file) => file.issues.length > 0);
+      if (hasIssues) {
+        toast.error("Please resolve the highlighted issues before uploading.");
+        return;
+      }
 
-        <div
-          className={`upload-dropzone mb-4 ${isDragging ? "drag-active" : ""}`}
-          onClick={handleFileSelect}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          role="button"
-          tabIndex={0}
-          aria-disabled={uploading}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleFileSelect();
+      setUploading(true);
+      setFolderDropdownOpen(false);
+      setCreatingFolder(false);
+
+
+      const updatedFiles = [...validated];
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (let i = 0; i < updatedFiles.length; i += 1) {
+        updatedFiles[i] = {
+          ...updatedFiles[i],
+          status: "uploading",
+          progress: 20,
+          issues: [],
+        };
+        setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
+
+        try {
+          await uploadSingleFile({ fileEntry: updatedFiles[i], clientId: internalClientId });
+          updatedFiles[i] = {
+            ...updatedFiles[i],
+            status: "success",
+            progress: 100,
+            issues: [],
+          };
+          setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
+          successCount += 1;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Failed to upload.";
+          updatedFiles[i] = {
+            ...updatedFiles[i],
+            status: "error",
+            progress: 0,
+            issues: [message],
+          };
+          setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
+          failureCount += 1;
+        }
+      }
+
+      setUploading(false);
+
+      if (successCount > 0) {
+        toast.success(`${successCount} file${successCount === 1 ? "" : "s"} uploaded successfully.`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        if (typeof onUploadSuccess === "function") {
+          onUploadSuccess();
+        }
+        if (failureCount === 0) {
+          resetModal(true);
+          return;
+        }
+      }
+
+      if (failureCount > 0) {
+        toast.error(
+          `${failureCount} file${failureCount === 1 ? "" : "s"} failed to upload. Please review the highlighted items and try again.`,
+          {
+            position: "top-right",
+            autoClose: 5000,
+          }
+        );
+      }
+    };
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          folderDropdownOpen &&
+          folderDropdownRef.current &&
+          !folderDropdownRef.current.contains(event.target)
+        ) {
+          setFolderDropdownOpen(false);
+        }
+      };
+
+      if (folderDropdownOpen) {
+        document.addEventListener("mousedown", handleClickOutside);
+      }
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [folderDropdownOpen]);
+
+    useEffect(() => {
+      if (!show) return;
+
+      const fetchRootFolders = async () => {
+        // If we need to select a client but haven't yet, don't fetch folders
+        if (!clientId && !internalClientId) {
+          setFolderTree([]);
+          return;
+        }
+
+        try {
+          setLoadingFolders(true);
+          const API_BASE_URL = getApiBaseUrl();
+          const token = getAccessToken();
+
+          if (!token) {
+            console.error("No authentication token found");
+            return;
+          }
+
+          const config = {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          };
+
+          let response;
+          if (internalClientId) {
+            response = await fetchWithCors(`${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}`, config);
+          } else {
+            response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/`, config);
+          }
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
-          }}
-        >
-          <UploadsIcon className="upload-icon" />
-          <p className="upload-text">
-            <strong className="texts">Drop files here or click to browse</strong>
-          </p>
-          <p className="upload-hint">Supported formats up to 50MB per file</p>
-          <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileChange} accept="*/*" />
-        </div>
 
-        {files.length > 0 ? (
-          <div className="d-flex flex-wrap gap-4">
-            <div className="doc-scroll">
-              <h6 className="mb-1 custom-doc-header">Documents ({files.length})</h6>
-              <p className="small text-muted custom-doc-subtext">Select a document to configure it</p>
+            const result = await response.json();
 
-              {files.map((file, index) => (
-                <div
-                  key={file.id}
-                  className={`doc-item ${selectedIndex === index ? "active" : ""}`}
-                  onClick={() => setSelectedIndex(index)}
-                >
-                  <div className="d-flex align-items-start gap-2">
-                    <div className="file-icon-wrapper">
-                      <FaRegFileAlt className="file-icon" />
-                    </div>
-                    <div className="flex-grow-1">
-                      <div className="d-flex justify-content-between align-items-start gap-2">
-                        <div>
-                          <div className="small fw-semibold">{file.name}</div>
-                          <small className="text-muted">{file.sizeLabel}</small>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          {/* Preview Button */}
-                          {isPreviewable(file) && file.previewUrl ? (
+            if (result.success && result.data) {
+              let rootFolders = [];
+
+              if (internalClientId) {
+                if (Array.isArray(result.data.subfolders)) {
+                  rootFolders = result.data.subfolders;
+                } else if (Array.isArray(result.data.folders)) {
+                  rootFolders = result.data.folders;
+                } else if (Array.isArray(result.data)) {
+                  rootFolders = result.data;
+                }
+              } else if (Array.isArray(result.data.folders)) {
+                rootFolders = result.data.folders;
+              }
+
+              const mapped = rootFolders.map((folder) => ({
+                id: folder.id,
+                name: folder.title || folder.name,
+                title: folder.title || folder.name,
+                description: folder.description || "",
+                children: [],
+                loaded: false,
+              }));
+
+              setFolderTree(mapped);
+              setExpandedFolders(new Set());
+            } else {
+              setFolderTree([]);
+            }
+          } catch (error) {
+            console.error("Error fetching root folders:", error);
+            toast.error("Failed to load folders. Please try again.");
+            setFolderTree([]);
+          } finally {
+            setLoadingFolders(false);
+          }
+        };
+
+        fetchRootFolders();
+      }, [show, clientId, internalClientId]);
+
+
+
+    useEffect(() => {
+      if (files.length === 0) {
+        setSelectedFolder("");
+        setSelectedFolderId(null);
+        setSelectedIndex(0);
+        return;
+      }
+
+      if (selectedIndex >= files.length) {
+        setSelectedIndex(files.length - 1);
+        return;
+      }
+
+      const currentFile = files[selectedIndex];
+      setSelectedFolder(currentFile.folderPath || "");
+      setSelectedFolderId(currentFile.folderId || null);
+    }, [files, selectedIndex]);
+
+    return (
+      <Modal show={show} onHide={() => resetModal(true)} centered backdrop="static" size="xl" className="upload-modal" scrollable={true}>
+        <Modal.Body className="p-4">
+          <h5 className="upload-heading">Upload Documents</h5>
+
+          <p className="upload-subheading">Upload your tax documents securely</p>
+
+          {!clientId && (
+            <Form.Group className="mb-4">
+              <Form.Label>Select Client <span className="text-danger">*</span></Form.Label>
+              <Form.Select
+                value={internalClientId || ""}
+                onChange={(e) => {
+                  setInternalClientId(e.target.value);
+                  setFolderTree([]); // Clear folders when client changes
+                  setFiles((prev) => prev.map(f => ({ ...f, folderId: null, folderPath: "", issues: [] }))); // Clear folder selection in files
+                }}
+                disabled={loadingClients}
+              >
+                <option value="">-- Select Client --</option>
+                {availableClients.map(client => (
+                  <option key={client.id} value={client.id}>
+                    {client.first_name} {client.last_name} ({client.email})
+                  </option>
+                ))}
+              </Form.Select>
+              {loadingClients && <div className="text-muted small mt-1">Loading clients...</div>}
+            </Form.Group>
+          )}
+
+          <p className="upload-section-title">Add Files</p>
+
+          <div
+            className={`upload-dropzone mb-4 ${isDragging ? "drag-active" : ""}`}
+            onClick={handleFileSelect}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            role="button"
+            tabIndex={0}
+            aria-disabled={uploading}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleFileSelect();
+              }
+            }}
+          >
+            <UploadsIcon className="upload-icon" />
+            <p className="upload-text">
+              <strong className="texts">Drop files here or click to browse</strong>
+            </p>
+            <p className="upload-hint">Supported formats up to 50MB per file</p>
+            <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileChange} accept="*/*" />
+          </div>
+
+          {files.length > 0 ? (
+            <div className="d-flex flex-wrap gap-4">
+              <div className="doc-scroll">
+                <h6 className="mb-1 custom-doc-header">Documents ({files.length})</h6>
+                <p className="small text-muted custom-doc-subtext">Select a document to configure it</p>
+
+                {files.map((file, index) => (
+                  <div
+                    key={file.id}
+                    className={`doc-item ${selectedIndex === index ? "active" : ""}`}
+                    onClick={() => setSelectedIndex(index)}
+                  >
+                    <div className="d-flex align-items-start gap-2">
+                      <div className="file-icon-wrapper">
+                        <FaRegFileAlt className="file-icon" />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="d-flex justify-content-between align-items-start gap-2">
+                          <div>
+                            <div className="small fw-semibold">{file.name}</div>
+                            <small className="text-muted">{file.sizeLabel}</small>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            {/* Preview Button */}
+                            {isPreviewable(file) && file.previewUrl ? (
+                              <button
+                                type="button"
+                                className="btn  p-1"
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: '#3B4A66',
+                                  padding: '4px',
+                                  cursor: 'pointer'
+                                }}
+                                onClick={(event) => handlePreview(index, event)}
+                                title="Preview"
+                                aria-label={`Preview ${file.name}`}
+                              >
+                                <FaEye size={14} />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn  p-1"
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: '#9CA3AF',
+                                  padding: '4px',
+                                  cursor: 'not-allowed',
+                                  opacity: 0.5
+                                }}
+                                disabled
+                                title="Preview not available for this file type"
+                                aria-label={`Preview not available for ${file.name}`}
+                              >
+                                <FaEye size={14} />
+                              </button>
+                            )}
+
+                            {/* Download Button */}
                             <button
                               type="button"
                               className="btn  p-1"
@@ -897,422 +1013,385 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                 padding: '4px',
                                 cursor: 'pointer'
                               }}
-                              onClick={(event) => handlePreview(index, event)}
-                              title="Preview"
-                              aria-label={`Preview ${file.name}`}
+                              onClick={(event) => handleDownload(index, event)}
+                              title="Download"
+                              aria-label={`Download ${file.name}`}
                             >
-                              <FaEye size={14} />
+                              <FaDownload size={14} />
                             </button>
-                          ) : (
+
+                            {/* Remove Button */}
+                            <span
+                              className="remove-icon"
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`Remove ${file.name}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                removeFile(index);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  removeFile(index);
+                                }
+                              }}
+                            >
+                              <CrossIcon />
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="d-flex align-items-center gap-2 mt-2">
+                          <span className={`doc-status-badge doc-status-${file.status}`}>{STATUS_LABELS[file.status]}</span>
+                          {file.status === "error" && !uploading && (
                             <button
                               type="button"
-                              className="btn  p-1"
-                              style={{
-                                border: 'none',
-                                background: 'transparent',
-                                color: '#9CA3AF',
-                                padding: '4px',
-                                cursor: 'not-allowed',
-                                opacity: 0.5
+                              className="btn btn-link p-0 doc-retry-button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setFiles((prev) =>
+                                  prev.map((entry, idx) =>
+                                    idx === index
+                                      ? { ...entry, status: "queued", progress: 0, issues: [] }
+                                      : entry
+                                  )
+                                );
                               }}
-                              disabled
-                              title="Preview not available for this file type"
-                              aria-label={`Preview not available for ${file.name}`}
                             >
-                              <FaEye size={14} />
+                              Retry
                             </button>
                           )}
-
-                          {/* Download Button */}
-                          <button
-                            type="button"
-                            className="btn  p-1"
-                            style={{
-                              border: 'none',
-                              background: 'transparent',
-                              color: '#3B4A66',
-                              padding: '4px',
-                              cursor: 'pointer'
-                            }}
-                            onClick={(event) => handleDownload(index, event)}
-                            title="Download"
-                            aria-label={`Download ${file.name}`}
-                          >
-                            <FaDownload size={14} />
-                          </button>
-
-                          {/* Remove Button */}
-                          <span
-                            className="remove-icon"
-                            role="button"
-                            tabIndex={0}
-                            aria-label={`Remove ${file.name}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              removeFile(index);
-                            }}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                removeFile(index);
-                              }
-                            }}
-                          >
-                            <CrossIcon />
-                          </span>
                         </div>
-                      </div>
 
-                      <div className="d-flex align-items-center gap-2 mt-2">
-                        <span className={`doc-status-badge doc-status-${file.status}`}>{STATUS_LABELS[file.status]}</span>
-                        {file.status === "error" && !uploading && (
-                          <button
-                            type="button"
-                            className="btn btn-link p-0 doc-retry-button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setFiles((prev) =>
-                                prev.map((entry, idx) =>
-                                  idx === index
-                                    ? { ...entry, status: "queued", progress: 0, issues: [] }
-                                    : entry
-                                )
-                              );
-                            }}
-                          >
-                            Retry
-                          </button>
+                        <div className="doc-progress mt-2">
+                          <div className={`doc-progress-bar doc-progress-${file.status}`} style={{ width: `${file.progress}%` }} />
+                        </div>
+
+                        {file.issues.length > 0 && (
+                          <div className="doc-issues mt-2">
+                            {file.issues.map((issue, issueIndex) => (
+                              <div key={`${file.id}-issue-${issueIndex}`} className="doc-error-box">
+                                <span className="doc-error-icon">!</span>
+                                {issue}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-
-                      <div className="doc-progress mt-2">
-                        <div className={`doc-progress-bar doc-progress-${file.status}`} style={{ width: `${file.progress}%` }} />
-                      </div>
-
-                      {file.issues.length > 0 && (
-                        <div className="doc-issues mt-2">
-                          {file.issues.map((issue, issueIndex) => (
-                            <div key={`${file.id}-issue-${issueIndex}`} className="doc-error-box">
-                              <span className="doc-error-icon">!</span>
-                              {issue}
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex-grow-1 d-flex flex-column">
-              <div className="d-flex gap-2 mb-3">
-                <Button
-                  className={`toggle-btn ${!previewMode ? "active" : ""}`}
-                  onClick={() => setPreviewMode(false)}
-                  disabled={!activeFile}
-                >
-                  Configure
-                </Button>
-                <Button
-                  className={`toggle-btn ${previewMode ? "active" : ""}`}
-                  onClick={() => setPreviewMode(true)}
-                  disabled={!activeFile || !activeFile.previewUrl}
-                >
-                  Preview
-                </Button>
+                ))}
               </div>
 
-              <div className="config-scroll flex-grow-1">
-                {!previewMode ? (
-                  <div className="config-panel">
-                    <h6 className="mb-1 custom-doc-header">Details</h6>
-                    <p className="small text-muted custom-doc-subtext">
-                      Set the destination folder for <strong>{activeFile?.name}</strong>
-                    </p>
+              <div className="flex-grow-1 d-flex flex-column">
+                <div className="d-flex gap-2 mb-3">
+                  <Button
+                    className={`toggle-btn ${!previewMode ? "active" : ""}`}
+                    onClick={() => setPreviewMode(false)}
+                    disabled={!activeFile}
+                  >
+                    Configure
+                  </Button>
+                  <Button
+                    className={`toggle-btn ${previewMode ? "active" : ""}`}
+                    onClick={() => setPreviewMode(true)}
+                    disabled={!activeFile || !activeFile.previewUrl}
+                  >
+                    Preview
+                  </Button>
+                </div>
+
+                <div className="config-scroll flex-grow-1">
+                  {!previewMode ? (
+                    <div className="config-panel">
+                      <h6 className="mb-1 custom-doc-header">Details</h6>
+                      <p className="small text-muted custom-doc-subtext">
+                        Set the destination folder for <strong>{activeFile?.name}</strong>
+                      </p>
 
 
 
-                    <Form.Group className="mb-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h6 className="txt">Folder</h6>
-                        {!creatingFolder ? (
-                          <Button
-                            variant="link"
-                            className="p-0 small create-folder-btn"
-                            onClick={() => {
-                              setCreatingFolder(true);
-                              setParentFolderForNewFolder(selectedFolderId || null);
-                            }}
-                          >
-                            Create New Folder
-                          </Button>
-                        ) : (
-                          <div className="d-flex align-items-center gap-2">
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              placeholder="Enter folder name"
-                              value={newFolderName}
-                              onChange={(event) => setNewFolderName(event.target.value)}
-                              disabled={creatingFolderLoading}
-                              autoFocus
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter" && newFolderName.trim() && !creatingFolderLoading) {
-                                  event.preventDefault();
-                                  handleCreateFolder();
-                                }
-                                if (event.key === "Escape") {
+                      <Form.Group className="mb-3">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <h6 className="txt">Folder</h6>
+                          {!creatingFolder ? (
+                            <Button
+                              variant="link"
+                              className="p-0 small create-folder-btn"
+                              onClick={() => {
+                                setCreatingFolder(true);
+                                setParentFolderForNewFolder(selectedFolderId || null);
+                              }}
+                            >
+                              Create New Folder
+                            </Button>
+                          ) : (
+                            <div className="d-flex align-items-center gap-2">
+                              <Form.Control
+                                size="sm"
+                                type="text"
+                                placeholder="Enter folder name"
+                                value={newFolderName}
+                                onChange={(event) => setNewFolderName(event.target.value)}
+                                disabled={creatingFolderLoading}
+                                autoFocus
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" && newFolderName.trim() && !creatingFolderLoading) {
+                                    event.preventDefault();
+                                    handleCreateFolder();
+                                  }
+                                  if (event.key === "Escape") {
+                                    setCreatingFolder(false);
+                                    setNewFolderName("");
+                                    setParentFolderForNewFolder(null);
+                                  }
+                                }}
+                              />
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handleCreateFolder}
+                                disabled={creatingFolderLoading || !newFolderName.trim()}
+                              >
+                                {creatingFolderLoading ? "Creating..." : "Add"}
+                              </Button>
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => {
                                   setCreatingFolder(false);
                                   setNewFolderName("");
                                   setParentFolderForNewFolder(null);
-                                }
-                              }}
-                            />
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={handleCreateFolder}
-                              disabled={creatingFolderLoading || !newFolderName.trim()}
-                            >
-                              {creatingFolderLoading ? "Creating..." : "Add"}
-                            </Button>
-                            <Button
-                              variant="outline-secondary"
-                              size="sm"
-                              onClick={() => {
-                                setCreatingFolder(false);
-                                setNewFolderName("");
-                                setParentFolderForNewFolder(null);
-                              }}
-                              disabled={creatingFolderLoading}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div ref={folderDropdownRef} style={{ position: "relative" }}>
-                        <div
-                          className="d-flex flex-column folder-dropdown-toggle border rounded px-2 py-2 bg-white cursor-pointer"
-                          onClick={() => setFolderDropdownOpen((prev) => !prev)}
-                        >
-                          <div className="d-flex justify-content-between align-items-center mb-1">
-                            <div className="d-flex align-items-center gap-2">
-                              {selectedFolder ? <span>{selectedFolder}</span> : <span className="custom-select">Select a Folder</span>}
-                            </div>
-                            {selectedFolder && (
-                              <Button
-                                variant="light"
-                                size="sm"
-                                className="change-btns-t"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setSelectedFolder("");
-                                  setSelectedFolderId(null);
-                                  setFiles((prev) =>
-                                    prev.map((file, index) =>
-                                      index === selectedIndex
-                                        ? { ...file, folderPath: "", folderId: null }
-                                        : file
-                                    )
-                                  );
                                 }}
+                                disabled={creatingFolderLoading}
                               >
-                                ×
+                                Cancel
                               </Button>
-                            )}
-                            <FaChevronDown
-                              size={12}
-                              style={{
-                                color: "#9CA3AF",
-                                marginLeft: "8px",
-                                transform: folderDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                                transition: "transform 0.2s",
-                              }}
-                            />
-                          </div>
-                          <div className="small text-muted">
-                            {activeFile?.name || "N/A"} &gt;{" "}
-                            {activeFile?.folderPath || "No folder selected"} &gt;{" "}
-                            {activeFile?.category || "No category selected"}
-                          </div>
+                            </div>
+                          )}
                         </div>
 
-                        {folderDropdownOpen && (
+                        <div ref={folderDropdownRef} style={{ position: "relative" }}>
                           <div
-                            className="folder-dropdown-content"
-                            style={{
-                              position: "absolute",
-                              top: "100%",
-                              left: 0,
-                              right: 0,
-                              marginTop: "4px",
-                              backgroundColor: "white",
-                              border: "1px solid #E5E7EB",
-                              borderRadius: "8px",
-                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                              maxHeight: "300px",
-                              overflowY: "auto",
-                              zIndex: 1000,
-                              padding: "8px",
-                            }}
+                            className="d-flex flex-column folder-dropdown-toggle border rounded px-2 py-2 bg-white cursor-pointer"
+                            onClick={() => setFolderDropdownOpen((prev) => !prev)}
                           >
+                            <div className="d-flex justify-content-between align-items-center mb-1">
+                              <div className="d-flex align-items-center gap-2">
+                                {selectedFolder ? <span>{selectedFolder}</span> : <span className="custom-select">Select a Folder</span>}
+                              </div>
+                              {selectedFolder && (
+                                <Button
+                                  variant="light"
+                                  size="sm"
+                                  className="change-btns-t"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedFolder("");
+                                    setSelectedFolderId(null);
+                                    setFiles((prev) =>
+                                      prev.map((file, index) =>
+                                        index === selectedIndex
+                                          ? { ...file, folderPath: "", folderId: null }
+                                          : file
+                                      )
+                                    );
+                                  }}
+                                >
+                                  ×
+                                </Button>
+                              )}
+                              <FaChevronDown
+                                size={12}
+                                style={{
+                                  color: "#9CA3AF",
+                                  marginLeft: "8px",
+                                  transform: folderDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                                  transition: "transform 0.2s",
+                                }}
+                              />
+                            </div>
+                            <div className="small text-muted">
+                              {activeFile?.name || "N/A"} &gt;{" "}
+                              {activeFile?.folderPath || "No folder selected"} &gt;{" "}
+                              {activeFile?.category || "No category selected"}
+                            </div>
+                          </div>
+
+                          {folderDropdownOpen && (
                             <div
+                              className="folder-dropdown-content"
                               style={{
-                                fontSize: "12px",
-                                color: "#6B7280",
-                                marginBottom: "8px",
-                                fontWeight: "500",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px",
+                                position: "absolute",
+                                top: "100%",
+                                left: 0,
+                                right: 0,
+                                marginTop: "4px",
+                                backgroundColor: "white",
+                                border: "1px solid #E5E7EB",
+                                borderRadius: "8px",
+                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                maxHeight: "300px",
+                                overflowY: "auto",
+                                zIndex: 1000,
+                                padding: "8px",
                               }}
                             >
-                              {clientId ? "Client Folders" : "Folders"}
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#6B7280",
+                                  marginBottom: "8px",
+                                  fontWeight: "500",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.5px",
+                                }}
+                              >
+                                {clientId ? "Client Folders" : "Folders"}
+                              </div>
+                              {loadingFolders ? (
+                                <div className="text-center p-3">
+                                  <small className="text-muted">Loading folders...</small>
+                                </div>
+                              ) : folderTree.length === 0 ? (
+                                <div className="text-center p-3">
+                                  <small className="text-muted">
+                                    {clientId ? "No folders found." : "No folders available."}
+                                  </small>
+                                </div>
+                              ) : (
+                                renderFolderTree(folderTree)
+                              )}
                             </div>
-                            {loadingFolders ? (
-                              <div className="text-center p-3">
-                                <small className="text-muted">Loading folders...</small>
-                              </div>
-                            ) : folderTree.length === 0 ? (
-                              <div className="text-center p-3">
-                                <small className="text-muted">
-                                  {clientId ? "No folders found." : "No folders available."}
-                                </small>
-                              </div>
-                            ) : (
-                              renderFolderTree(folderTree)
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </Form.Group>
-                  </div>
-                ) : (
-                  <div className="preview-panel border rounded p-3" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-                    {activeFile?.previewUrl ? (
-                      <iframe
-                        title={`${activeFile.name} preview`}
-                        src={activeFile.previewUrl}
-                        width="100%"
-                        height="480px"
-                      />
-                    ) : (
-                      <p className="text-muted mb-0">No preview available for this file.</p>
-                    )}
-                  </div>
-                )}
+                          )}
+                        </div>
+                      </Form.Group>
+                    </div>
+                  ) : (
+                    <div className="preview-panel border rounded p-3" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                      {activeFile?.previewUrl ? (
+                        <iframe
+                          title={`${activeFile.name} preview`}
+                          src={activeFile.previewUrl}
+                          width="100%"
+                          height="480px"
+                        />
+                      ) : (
+                        <p className="text-muted mb-0">No preview available for this file.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div
-            className="text-muted small"
-            style={{ fontFamily: "BasisGrotesquePro", background: "#F9FAFB", padding: "16px", borderRadius: "10px" }}
-          >
-            No files added yet. Drag and drop files into the area above or click to browse.
-          </div>
-        )}
-
-        <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
-          <Button
-            variant="link"
-            className="p-0 text-decoration-none text-danger border border-danger rounded px-3 py-1 hover:bg-danger hover:text-white transition"
-            onClick={handleClearAll}
-            disabled={uploading || files.length === 0}
-          >
-            Clear all
-          </Button>
-
-          <div className="d-flex gap-2">
-            <Button
-              className="btn-cancel-custom self-start w-auto"
-              onClick={() => resetModal(true)}
-              disabled={uploading}
+          ) : (
+            <div
+              className="text-muted small"
+              style={{ fontFamily: "BasisGrotesquePro", background: "#F9FAFB", padding: "16px", borderRadius: "10px" }}
             >
-              Cancel
-            </Button>
+              No files added yet. Drag and drop files into the area above or click to browse.
+            </div>
+          )}
 
+          <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
             <Button
-              className="btn-upload-custom mb-4"
-              onClick={handleFinalUpload}
+              variant="link"
+              className="p-0 text-decoration-none text-danger border border-danger rounded px-3 py-1 hover:bg-danger hover:text-white transition"
+              onClick={handleClearAll}
               disabled={uploading || files.length === 0}
             >
-              {uploading ? "Uploading..." : `Upload ${files.length === 1 ? "File" : `${files.length} Files`}`}
+              Clear all
             </Button>
-          </div>
-        </div>
-        <div style={{ height: '40px', width: '100%' }} />
-      </Modal.Body>
 
-      {/* Preview Modal */}
-      <Modal
-        show={previewModalShow}
-        onHide={handleClosePreview}
-        centered
-        size="xl"
-        className="preview-modal"
-        ref={previewModalRef}
-        tabIndex={-1}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {previewFileIndex !== null && files[previewFileIndex]
-              ? `Preview: ${files[previewFileIndex].name}`
-              : 'Preview Document'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: 0, minHeight: '500px' }}>
-          {previewFileIndex !== null && files[previewFileIndex] && files[previewFileIndex].previewUrl ? (
-            <div style={{ width: '100%', height: '70vh', position: 'relative' }}>
-              {files[previewFileIndex].extension === 'pdf' ||
-                files[previewFileIndex].fileObject?.type === 'application/pdf' ? (
-                <iframe
-                  src={files[previewFileIndex].previewUrl}
-                  title={`Preview of ${files[previewFileIndex].name}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none'
-                  }}
-                />
-              ) : (
-                <img
-                  src={files[previewFileIndex].previewUrl}
-                  alt={`Preview of ${files[previewFileIndex].name}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain'
-                  }}
-                />
-              )}
+            <div className="d-flex gap-2">
+              <Button
+                className="btn-cancel-custom self-start w-auto"
+                onClick={() => resetModal(true)}
+                disabled={uploading}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                className="btn-upload-custom mb-4"
+                onClick={handleFinalUpload}
+                disabled={uploading || files.length === 0}
+              >
+                {uploading ? "Uploading..." : `Upload ${files.length === 1 ? "File" : `${files.length} Files`}`}
+              </Button>
             </div>
-          ) : (
-            <div className="text-center p-5">
-              <p className="text-muted">Preview not available</p>
-            </div>
-          )}
+          </div>
+          <div style={{ height: '40px', width: '100%' }} />
         </Modal.Body>
-        <Modal.Footer>
-          {previewFileIndex !== null && files[previewFileIndex] && (
-            <Button
-              variant="primary"
-              onClick={(event) => {
-                event.stopPropagation();
-                handleDownload(previewFileIndex, event);
-              }}
-            >
-              <FaDownload className="me-2" />
-              Download
+
+        {/* Preview Modal */}
+        <Modal
+          show={previewModalShow}
+          onHide={handleClosePreview}
+          centered
+          size="xl"
+          className="preview-modal"
+          ref={previewModalRef}
+          tabIndex={-1}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {previewFileIndex !== null && files[previewFileIndex]
+                ? `Preview: ${files[previewFileIndex].name}`
+                : 'Preview Document'}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ padding: 0, minHeight: '500px' }}>
+            {previewFileIndex !== null && files[previewFileIndex] && files[previewFileIndex].previewUrl ? (
+              <div style={{ width: '100%', height: '70vh', position: 'relative' }}>
+                {files[previewFileIndex].extension === 'pdf' ||
+                  files[previewFileIndex].fileObject?.type === 'application/pdf' ? (
+                  <iframe
+                    src={files[previewFileIndex].previewUrl}
+                    title={`Preview of ${files[previewFileIndex].name}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: 'none'
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={files[previewFileIndex].previewUrl}
+                    alt={`Preview of ${files[previewFileIndex].name}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain'
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="text-center p-5">
+                <p className="text-muted">Preview not available</p>
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            {previewFileIndex !== null && files[previewFileIndex] && (
+              <Button
+                variant="primary"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleDownload(previewFileIndex, event);
+                }}
+              >
+                <FaDownload className="me-2" />
+                Download
+              </Button>
+            )}
+            <Button variant="secondary" onClick={handleClosePreview}>
+              Close
             </Button>
-          )}
-          <Button variant="secondary" onClick={handleClosePreview}>
-            Close
-          </Button>
-        </Modal.Footer>
+          </Modal.Footer>
+        </Modal>
       </Modal>
-    </Modal>
-  );
-}
+    );
+  }

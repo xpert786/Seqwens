@@ -5,10 +5,15 @@ import MaintenanceMode from "../../ClientOnboarding/components/MaintenanceMode";
 import "../styles/taxdashboardlayout.css";
 import TaxSidebar from "./TaxSidebar";
 import ForcedPasswordChangeModal from "../../components/ForcedPasswordChangeModal";
+import ImpersonationBanner from "../../FirmAdmin/Components/ImpersonationBanner";
+
+import { getImpersonationStatus } from "../../ClientOnboarding/utils/userUtils";
 
 export default function TaxDashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isImpersonating, setIsImpersonating] = useState(false);
+
 
   // Check if screen is mobile/tablet size
   useEffect(() => {
@@ -50,10 +55,26 @@ export default function TaxDashboardLayout() {
     }
   };
 
+
+
+  // Check impersonation status periodically
+  useEffect(() => {
+    const checkStatus = () => {
+      const { isImpersonating: impersonating } = getImpersonationStatus();
+      setIsImpersonating(impersonating);
+    };
+    checkStatus();
+    const interval = setInterval(checkStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+
   return (
     <div className={`tdl-layout ${isSidebarOpen ? "" : "tdl-collapsed"}`}>
       <MaintenanceMode />
+      <ImpersonationBanner />
       <ForcedPasswordChangeModal />
+
       <TaxHeader
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -67,7 +88,14 @@ export default function TaxDashboardLayout() {
         />
       )}
       <TaxSidebar isSidebarOpen={isSidebarOpen} />
-      <main className="tdl-main">
+      <main
+        className="tdl-main"
+        style={{
+          marginTop: isImpersonating ? '110px' : '70px',
+          height: isImpersonating ? 'calc(100vh - 110px)' : 'calc(100vh - 70px)'
+        }}
+      >
+
         <Outlet />
       </main>
     </div>

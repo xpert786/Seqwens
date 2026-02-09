@@ -127,7 +127,7 @@ export default function Dashboard() {
               onClick={() => setShowUploadModal(true)}
             >
               <Uploading />
-              My Tasks
+              Upload Documents
             </button>
 
           </div>
