@@ -154,7 +154,14 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     };
 
     if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE')) {
-      config.body = JSON.stringify(data);
+      if (data instanceof FormData) {
+        config.body = data;
+        // Remove Content-Type to let browser set it with boundary
+        delete config.headers['Content-Type'];
+        delete config.headers['content-type'];
+      } else {
+        config.body = JSON.stringify(data);
+      }
     }
 
     // Sanitize data for logging to prevent API keys from appearing in console

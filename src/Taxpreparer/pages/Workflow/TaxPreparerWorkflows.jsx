@@ -16,7 +16,8 @@ import {
   Activity,
   Pause,
   Play,
-  CheckCircle
+  CheckCircle,
+  Info
 } from 'lucide-react';
 import DocumentRequestCard from '../../../components/Workflow/DocumentRequestCard';
 import CreateDocumentRequestModal from './CreateDocumentRequestModal';
@@ -153,12 +154,20 @@ const TaxPreparerWorkflows = () => {
         case 'completed':
           response = await workflowAPI.completeWorkflow(workflowId);
           break;
+        case 'advance':
+          response = await workflowAPI.advanceWorkflow(workflowId);
+          break;
         default:
-          throw new Error('Invalid status');
+          throw new Error('Invalid action');
       }
 
       if (response.success) {
-        toast.success(`Workflow ${newStatus === 'paused' ? 'paused' : newStatus === 'active' ? 'resumed' : 'completed'} successfully`);
+        const actionMsg =
+          newStatus === 'paused' ? 'paused' :
+            newStatus === 'active' ? 'resumed' :
+              newStatus === 'advance' ? 'advanced to next stage' :
+                'completed';
+        toast.success(`Workflow ${actionMsg} successfully`);
         await fetchWorkflows();
       } else {
         throw new Error(response.message || 'Failed to update workflow status');
@@ -318,7 +327,7 @@ const TaxPreparerWorkflows = () => {
           {filteredWorkflows.map((workflow) => {
             const style = getStatusStyle(workflow.status);
             return (
-              <div key={workflow.id} className="workflow-card rounded-lg overflow-hidden shadow-sm">
+              <div key={workflow.id} className="workflow-card rounded-lg shadow-sm">
                 <div className="p-6 md:p-8">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex-1">
@@ -351,7 +360,17 @@ const TaxPreparerWorkflows = () => {
                             <Activity size={16} />
                           </div>
                           <div>
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-0">Current Stage</p>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-0 flex items-center gap-1">
+                              Current Stage
+                              {workflow.current_stage_description && (
+                                <div className="group relative">
+                                  <Info size={12} className="text-gray-400 cursor-help" />
+                                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[10px] rounded shadow-lg z-50">
+                                    {workflow.current_stage_description}
+                                  </div>
+                                </div>
+                              )}
+                            </p>
                             <p className="text-[#3AD6F2] font-semibold">{workflow.current_stage_name || 'In Progress'}</p>
                           </div>
                         </div>
@@ -409,7 +428,7 @@ const TaxPreparerWorkflows = () => {
                           </button>
 
                           {openActionMenuId === workflow.id && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-[#E8F0FF] z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-2xl border border-[#E8F0FF] z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                               {getAvailableStatusActions(workflow).map((action) => (
                                 <button
                                   key={action.value}
@@ -422,7 +441,8 @@ const TaxPreparerWorkflows = () => {
                                 >
                                   {action.value === 'paused' ? <Pause size={16} /> :
                                     action.value === 'active' ? <Play size={16} /> :
-                                      <CheckCircle size={16} />}
+                                      action.value === 'advance' ? <ArrowRight size={16} /> :
+                                        <CheckCircle size={16} />}
                                   {action.label}
                                 </button>
                               ))}
@@ -520,6 +540,7 @@ const TaxPreparerWorkflows = () => {
     const currentStatus = workflow.status?.toLowerCase();
 
     if (currentStatus === 'active') {
+      actions.push({ value: 'advance', label: 'Complete Current Stage' });
       actions.push({ value: 'paused', label: 'Pause Workflow' });
       actions.push({ value: 'completed', label: 'Mark as Completed' });
     } else if (currentStatus === 'paused') {

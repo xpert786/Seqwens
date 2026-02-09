@@ -65,20 +65,29 @@ export const handleCorsError = (error) => {
 export const fetchWithCors = async (url, options = {}) => {
   // Handle Content-Type for FormData
   const headers = { ...options.headers };
-  if (options.body instanceof FormData) {
-    delete headers['Content-Type']; // Let browser set Content-Type with boundary
-  } else if (!headers['Content-Type']) {
+  const isFormData = options.body instanceof FormData || (options.body && typeof options.body.append === 'function');
+
+  if (isFormData) {
+    // Case-insensitive deletion of Content-Type
+    Object.keys(headers).forEach(key => {
+      if (key.toLowerCase() === 'content-type') {
+        delete headers[key];
+      }
+    });
+  } else if (!headers['Content-Type'] && !headers['content-type']) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const defaultOptions = {
+  // Final configuration for fetch
+  const fetchOptions = {
+    ...options,
     mode: 'cors',
-    credentials: 'omit', // Don't send credentials to avoid CORS issues
+    credentials: 'omit',
     headers: headers
   };
 
   try {
-    const response = await fetch(url, { ...defaultOptions, ...options });
+    const response = await fetch(url, fetchOptions);
     return response;
   } catch (error) {
     const corsError = handleCorsError(error);
