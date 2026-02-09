@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaEye, FaDownload, FaTable } from "react-icons/fa";
-import { UploadsIcon, CrossIcon } from "../components/icons";
+import { UploadsIcon, CrossIcon } from "../component/icons";
 import "../styles/taxupload.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";

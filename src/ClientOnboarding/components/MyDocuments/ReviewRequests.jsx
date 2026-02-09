@@ -20,8 +20,11 @@ const ReviewRequests = () => {
             const response = await tasksAPI.getMyTasks();
 
             if (response.success && response.data) {
-                // Filter for review_request type tasks
-                const reviewTasks = response.data.filter(task => task.task_type === 'review_request');
+                // Filter for review_request and client_onboarding type tasks
+                const reviewTasks = response.data.filter(task =>
+                    task.task_type === 'review_request' ||
+                    task.task_type === 'client_onboarding'
+                );
                 setReviewRequests(reviewTasks);
             }
         } catch (error) {
@@ -40,6 +43,26 @@ const ReviewRequests = () => {
         setSelectedRequest(request);
         setReviewComment('');
         setShowReviewModal(true);
+    };
+
+    const handleCompleteTask = async (request) => {
+        try {
+            setSubmitting(true);
+            const updateResponse = await tasksAPI.updateTaskStatus(request.id, 'completed');
+
+            if (updateResponse.success) {
+                toast.success('Task marked as completed!', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+                fetchReviewRequests();
+            }
+        } catch (error) {
+            console.error('Error completing task:', error);
+            handleAPIError(error);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleCloseReviewModal = () => {
@@ -133,7 +156,7 @@ const ReviewRequests = () => {
                     <span className="visually-hidden">Loading...</span>
                 </div>
                 <p className="mt-3" style={{ fontFamily: 'BasisGrotesquePro', color: '#6B7280' }}>
-                    Loading review requests...
+                    Loading tasks...
                 </p>
             </div>
         );
@@ -141,14 +164,16 @@ const ReviewRequests = () => {
 
     if (reviewRequests.length === 0) {
         return (
-            <div className="text-center py-5">
-                <FiFileText size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
-                <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
-                    No Review Requests
-                </h6>
-                <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
-                    You don't have any pending document review requests at this time.
-                </p>
+            <div className="bg-white p-4 rounded">
+                <div className="text-center py-5">
+                    <FiFileText size={48} style={{ color: '#D1D5DB', marginBottom: '16px', display: 'block', margin: '0 auto 16px' }} />
+                    <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+                        No Pending Tasks
+                    </h6>
+                    <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
+                        You don't have any pending tasks or review requests at this time.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -165,7 +190,7 @@ const ReviewRequests = () => {
                         fontFamily: 'BasisGrotesquePro'
                     }}
                 >
-                    Document Review Requests
+                    Tasks & Review Requests
                 </h5>
 
                 <div className="row g-3">
@@ -243,23 +268,44 @@ const ReviewRequests = () => {
 
                                 {request.status !== 'completed' && request.status !== 'cancelled' && (
                                     <div className="d-flex justify-content-end gap-2">
-                                        <button
-                                            className="btn btn-sm d-flex align-items-center gap-2"
-                                            onClick={() => handleOpenReviewModal(request)}
-                                            style={{
-                                                backgroundColor: '#00C0C6',
-                                                color: 'white',
-                                                border: 'none',
-                                                fontFamily: 'BasisGrotesquePro',
-                                                fontWeight: '500',
-                                                padding: '8px 16px',
-                                                borderRadius: '6px',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            <FiMessageSquare size={14} />
-                                            Review &amp; Submit
-                                        </button>
+                                        {request.task_type === 'review_request' ? (
+                                            <button
+                                                className="btn btn-sm d-flex align-items-center gap-2"
+                                                onClick={() => handleOpenReviewModal(request)}
+                                                style={{
+                                                    backgroundColor: '#00C0C6',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    fontFamily: 'BasisGrotesquePro',
+                                                    fontWeight: '500',
+                                                    padding: '8px 16px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                <FiMessageSquare size={14} />
+                                                Review &amp; Submit
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="btn btn-sm d-flex align-items-center gap-2"
+                                                onClick={() => handleCompleteTask(request)}
+                                                disabled={submitting}
+                                                style={{
+                                                    backgroundColor: '#10B981',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    fontFamily: 'BasisGrotesquePro',
+                                                    fontWeight: '500',
+                                                    padding: '8px 16px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                <FiCheckCircle size={14} />
+                                                {submitting ? 'Completing...' : 'Mark as Completed'}
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
