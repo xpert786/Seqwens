@@ -14,6 +14,7 @@ import "../../styles/MyClients.css";
 export default function MyClients() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const dropdownRefs = useRef({});
+  const clientListRef = useRef(null);
   const navigate = useNavigate();
 
   // API state
@@ -363,6 +364,40 @@ export default function MyClients() {
       setUnlinkedTaxpayers([]);
     } finally {
       setLoadingUnlinkedTaxpayers(false);
+    }
+  };
+
+  // Handle stat card clicks
+  const handleStatCardClick = (label) => {
+    switch (label) {
+      case "Total Clients":
+        setActiveTab('clients');
+        setStatusFilter(null);
+        setPriorityFilter(null);
+        setTimeout(() => {
+          clientListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        break;
+      case "Active":
+        setActiveTab('clients');
+        setStatusFilter('active');
+        setPriorityFilter(null);
+        setTimeout(() => {
+          clientListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        break;
+      case "Pending":
+        setActiveTab('pending-invites');
+        break;
+      case "High Priority":
+        setActiveTab('clients');
+        setPriorityFilter('high');
+        setTimeout(() => {
+          clientListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        break;
+      default:
+        break;
     }
   };
 
@@ -1255,7 +1290,11 @@ export default function MyClients() {
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (
           <div className="col-md-3 col-sm-12" key={index}>
-            <div className="stat-card ">
+            <div
+              className="stat-card clickable-card"
+              onClick={() => handleStatCardClick(item.label)}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="d-flex justify-content-between align-items-start">
                 <div className="stat-icon" style={{ color: item.color }}>
                   {item.icon}
@@ -1495,9 +1534,13 @@ export default function MyClients() {
 
       {/* Client List Card - Only show for clients tab */}
       {activeTab === 'clients' && (
-        <div className="card client-list-card p-3" style={{
-          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-        }}>
+        <div
+          ref={clientListRef}
+          className="card client-list-card p-3"
+          style={{
+            border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+          }}
+        >
           <h6 className="fw-semibold mb-3">Client List</h6>
           <div className="mb-3">All clients assigned to you</div>
 

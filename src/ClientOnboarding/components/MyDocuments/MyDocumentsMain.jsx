@@ -55,8 +55,6 @@ export default function MyDocumentsMain() {
           />
 
         </div>
-
-
         <div
           className="d-inline-block mb-4 tabs-wrapper"
           style={{

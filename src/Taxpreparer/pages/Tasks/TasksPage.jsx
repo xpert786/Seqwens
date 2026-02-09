@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendinge, Progressingg, Completeded, Overduer, MiniContact, Dot, AddTask, Cut, Msg } from "../../component/icons";
-import { FaChevronDown, FaChevronRight, FaFolder, FaSearch, FaUpload, FaTimes, FaCheckCircle, FaEye, FaCheck, FaRedo, FaFilePdf } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaChevronLeft, FaFolder, FaSearch, FaUpload, FaTimes, FaCheckCircle, FaEye, FaCheck, FaRedo, FaFilePdf } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError, taxPreparerClientAPI, taskDetailAPI } from "../../../ClientOnboarding/utils/apiUtils";
@@ -272,6 +272,7 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
 };
 
 export default function TasksPage() {
+  const [searchParams] = useSearchParams();
   const modalRef = useRef(null);
   const buttonRef = useRef(null);
   const [showCustomize, setShowCustomize] = useState(false);
@@ -329,6 +330,15 @@ export default function TasksPage() {
     completed: [],
     overdue: []
   });
+
+  // Kanban localized pagination
+  const [kanbanPages, setKanbanPages] = useState({
+    pending: 1,
+    inprogress: 1,
+    completed: 1,
+    overdue: 1
+  });
+  const KANBAN_PAGE_SIZE = 2;
 
   // Tasks API state
   const [tasksLoading, setTasksLoading] = useState(false);
@@ -583,6 +593,14 @@ export default function TasksPage() {
 
         setTasks(organizedTasks);
 
+        // Reset kanban pagination when fetching new data
+        setKanbanPages({
+          pending: 1,
+          inprogress: 1,
+          completed: 1,
+          overdue: 1
+        });
+
         if (result.data.statistics) {
           setTasksStatistics(result.data.statistics);
         }
@@ -614,6 +632,29 @@ export default function TasksPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, tasksSearchQuery, tasksStatusFilter, tasksPriorityFilter, tasksTypeFilter, tasksStartDate, tasksEndDate, tasksSortBy, tasksPagination.page, tasksPagination.page_size]);
+
+  // Handle auto-scroll to specific section from query params
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section && active === 'kanban' && !tasksLoading) {
+      // Small delay to ensure DOM is rendered
+      const timer = setTimeout(() => {
+        const element = document.getElementById(section);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          // Optional: Add a brief highlight effect
+          element.style.transition = 'background-color 0.5s ease';
+          const originalBg = element.style.background;
+          element.style.background = '#FFF4E6'; // Light gold highlight
+          setTimeout(() => {
+            element.style.background = originalBg;
+          }, 2000);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, active, tasksLoading]);
 
 
   // Fetch root folders from API
@@ -1858,14 +1899,54 @@ export default function TasksPage() {
             <div className="tasks-container d-flex justify-content-center">
               <div className="tasks-grid mt-3 w-100">
                 {order.map((k) => (
-                  <div key={k} className="task-column">
+                  <div key={k} id={k} className="task-column">
                     <div className="task-column-card" style={{ background: bgForCol(k) }}>
                       <div className="task-column-body">
-                        <h6 className="fw-semibold d-flex align-items-center task-column-title">
-                          {iconFor(k)} {titleFor(k)} ({tasks[k].length})
+                        <h6 className="fw-semibold d-flex align-items-center justify-content-between task-column-title">
+                          <div className="d-flex align-items-center gap-2">
+                            {iconFor(k)} {titleFor(k)} ({tasks[k].length})
+                          </div>
+
+                          {tasks[k].length > KANBAN_PAGE_SIZE && (
+                            <div className="d-flex align-items-center gap-1">
+                              <button
+                                className="btn p-0 border-0 d-flex align-items-center justify-content-center"
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  backgroundColor: '#E8F0FF',
+                                  borderRadius: '4px',
+                                  color: kanbanPages[k] > 1 ? '#00C0C6' : '#9CA3AF',
+                                  cursor: kanbanPages[k] > 1 ? 'pointer' : 'not-allowed'
+                                }}
+                                onClick={() => kanbanPages[k] > 1 && setKanbanPages(prev => ({ ...prev, [k]: prev[k] - 1 }))}
+                                disabled={kanbanPages[k] <= 1}
+                              >
+                                <FaChevronLeft size={12} />
+                              </button>
+                              <span style={{ fontSize: '12px', color: '#6B7280', fontWeight: '500', minWidth: '30px', textAlign: 'center' }}>
+                                {kanbanPages[k]}/{Math.ceil(tasks[k].length / KANBAN_PAGE_SIZE)}
+                              </span>
+                              <button
+                                className="btn p-0 border-0 d-flex align-items-center justify-content-center"
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  backgroundColor: '#E8F0FF',
+                                  borderRadius: '4px',
+                                  color: kanbanPages[k] < Math.ceil(tasks[k].length / KANBAN_PAGE_SIZE) ? '#00C0C6' : '#9CA3AF',
+                                  cursor: kanbanPages[k] < Math.ceil(tasks[k].length / KANBAN_PAGE_SIZE) ? 'pointer' : 'not-allowed'
+                                }}
+                                onClick={() => kanbanPages[k] < Math.ceil(tasks[k].length / KANBAN_PAGE_SIZE) && setKanbanPages(prev => ({ ...prev, [k]: prev[k] + 1 }))}
+                                disabled={kanbanPages[k] >= Math.ceil(tasks[k].length / KANBAN_PAGE_SIZE)}
+                              >
+                                <FaChevronRight size={12} />
+                              </button>
+                            </div>
+                          )}
                         </h6>
                         {tasks[k].length > 0 ? (
-                          tasks[k].slice(0, 10).map((t) => (
+                          tasks[k].slice((kanbanPages[k] - 1) * KANBAN_PAGE_SIZE, kanbanPages[k] * KANBAN_PAGE_SIZE).map((t) => (
                             <div key={t.id} className="task-item" onClick={() => setSelectedTask(t)}>
                               <div className="d-flex justify-content-between align-items-start mb-2">
                                 <span className={`priority-badge ${t.priority.toLowerCase()}`}>

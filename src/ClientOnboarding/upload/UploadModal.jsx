@@ -1,12 +1,12 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
-import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle } from "react-icons/fa";
+import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaTable } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../components/icons";
 import "../styles/Upload_Premium.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../utils/corsConfig";
 import { getAccessToken } from "../utils/userUtils";
-import { handleAPIError } from "../utils/apiUtils";
+import * as XLSX from "xlsx";
 
 // --- Sub-Components ---
 
@@ -79,6 +79,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     // UI Logic State
     const [modalErrors, setModalErrors] = useState([]); // Top-level errors
     const [isDragging, setIsDragging] = useState(false);
+    const [excelPreviews, setExcelPreviews] = useState({}); // Store parsed Excel data by file index
 
     const fileInputRef = useRef();
     const folderDropdownRef = useRef();
@@ -216,7 +217,6 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             const fileName = file.name.toLowerCase();
             const fileType = file.type.toLowerCase();
             const fileExtension = '.' + fileName.split('.').pop();
-
             return allowedExtensions.includes(fileExtension) || allowedMimeTypes.includes(fileType);
         };
 
@@ -227,7 +227,8 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             setModalErrors(prev => [...prev, `Ignored ${invalidFiles.length} file(s) with unsupported formats. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`]);
         }
 
-        const newFiles = validFiles.map(f => ({
+        const startIndex = files.length;
+        const newFiles = validFiles.map((f, idx) => ({
             name: f.name,
             size: (f.size / (1024 * 1024)).toFixed(2) + " MB",
             fileObject: f,
@@ -235,11 +236,48 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             folderId: null,
             folderPath: '',
             errors: [],
-            status: 'pending'
+            status: 'pending',
+            fileIndex: startIndex + idx
         }));
 
         setFiles(prev => [...prev, ...newFiles]);
         if (fileInputRef.current) fileInputRef.current.value = '';
+
+        // Parse Excel files for preview
+        newFiles.forEach((fileEntry, idx) => {
+            const fileName = fileEntry.name.toLowerCase();
+            if (/\.(xlsx?|csv)$/.test(fileName)) {
+                parseExcelFile(fileEntry.fileObject, startIndex + idx);
+            }
+        });
+    };
+
+    // Function to parse Excel files
+    const parseExcelFile = async (file, fileIndex) => {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            // Limit to first 100 rows and 10 columns for preview
+            const previewData = jsonData.slice(0, 100).map(row =>
+                Array.isArray(row) ? row.slice(0, 10) : []
+            );
+
+            setExcelPreviews(prev => ({
+                ...prev,
+                [fileIndex]: {
+                    sheetName: firstSheetName,
+                    data: previewData,
+                    totalRows: jsonData.length,
+                    totalSheets: workbook.SheetNames.length
+                }
+            }));
+        } catch (error) {
+            console.error('Error parsing Excel file:', error);
+        }
     };
 
     const handleDrop = (e) => {
@@ -524,14 +562,168 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="preview-container h-100">
-                                            <iframe
-                                                src={currentFile?.previewUrl}
-                                                title="Preview"
-                                                width="100%"
-                                                height="450px"
-                                                className="border rounded"
-                                            />
+                                        <div className="preview-container h-100 d-flex align-items-center justify-content-center bg-light border rounded">
+                                            {currentFile ? (
+                                                (() => {
+                                                    const fileType = currentFile.fileObject.type;
+                                                    const fileName = currentFile.name.toLowerCase();
+
+                                                    if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+                                                        return (
+                                                            <iframe
+                                                                src={currentFile.previewUrl}
+                                                                title="Preview"
+                                                                width="100%"
+                                                                height="100%"
+                                                                className="border-0"
+                                                            />
+                                                        );
+                                                    } else if (fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(fileName)) {
+                                                        return (
+                                                            <img
+                                                                src={currentFile.previewUrl}
+                                                                alt="Preview"
+                                                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                                            />
+                                                        );
+                                                    } else {
+                                                        // Get file extension for icon display
+                                                        const ext = fileName.split('.').pop().toUpperCase();
+                                                        const isExcel = /\.(xlsx?|csv)$/.test(fileName);
+                                                        const isWord = /\.(docx?|rtf)$/.test(fileName);
+                                                        const excelData = excelPreviews[selectedIndex];
+
+                                                        // If it's an Excel file and we have parsed data, show table
+                                                        if (isExcel && excelData && excelData.data && excelData.data.length > 0) {
+                                                            return (
+                                                                <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
+                                                                    <div style={{
+                                                                        padding: '12px 16px',
+                                                                        backgroundColor: '#22C55E',
+                                                                        color: 'white',
+                                                                        borderRadius: '8px 8px 0 0',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between'
+                                                                    }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                            <FaTable size={18} />
+                                                                            <span style={{ fontWeight: '600' }}>{currentFile.name}</span>
+                                                                        </div>
+                                                                        <span style={{ fontSize: '12px', opacity: 0.9 }}>
+                                                                            Sheet: {excelData.sheetName} • {excelData.totalRows} rows
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={{
+                                                                        maxHeight: '350px',
+                                                                        overflow: 'auto',
+                                                                        border: '1px solid #E5E7EB',
+                                                                        borderTop: 'none',
+                                                                        borderRadius: '0 0 8px 8px'
+                                                                    }}>
+                                                                        <table style={{
+                                                                            width: '100%',
+                                                                            borderCollapse: 'collapse',
+                                                                            fontSize: '13px'
+                                                                        }}>
+                                                                            <tbody>
+                                                                                {excelData.data.map((row, rowIdx) => (
+                                                                                    <tr key={rowIdx} style={{
+                                                                                        backgroundColor: rowIdx === 0 ? '#F3F4F6' : (rowIdx % 2 === 0 ? '#FAFAFA' : 'white')
+                                                                                    }}>
+                                                                                        {row.map((cell, cellIdx) => (
+                                                                                            <td key={cellIdx} style={{
+                                                                                                padding: '8px 12px',
+                                                                                                borderBottom: '1px solid #E5E7EB',
+                                                                                                borderRight: '1px solid #E5E7EB',
+                                                                                                whiteSpace: 'nowrap',
+                                                                                                fontWeight: rowIdx === 0 ? '600' : 'normal',
+                                                                                                color: rowIdx === 0 ? '#374151' : '#6B7280'
+                                                                                            }}>
+                                                                                                {cell !== null && cell !== undefined ? String(cell) : ''}
+                                                                                            </td>
+                                                                                        ))}
+                                                                                    </tr>
+                                                                                ))}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                    {excelData.totalRows > 100 && (
+                                                                        <div style={{
+                                                                            padding: '8px',
+                                                                            textAlign: 'center',
+                                                                            backgroundColor: '#FEF3C7',
+                                                                            borderRadius: '0 0 8px 8px',
+                                                                            fontSize: '12px',
+                                                                            color: '#92400E'
+                                                                        }}>
+                                                                            Showing first 100 rows. Download file to view all {excelData.totalRows} rows.
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div className="text-center p-4" style={{
+                                                                backgroundColor: '#F8FAFC',
+                                                                borderRadius: '12px',
+                                                                border: '1px dashed #E2E8F0',
+                                                                minHeight: '200px',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center'
+                                                            }}>
+                                                                <div style={{
+                                                                    width: '80px',
+                                                                    height: '80px',
+                                                                    borderRadius: '16px',
+                                                                    backgroundColor: isExcel ? '#22C55E' : isWord ? '#3B82F6' : '#6B7280',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    marginBottom: '16px'
+                                                                }}>
+                                                                    <FaRegFileAlt size={36} color="white" />
+                                                                </div>
+                                                                <p style={{
+                                                                    fontSize: '16px',
+                                                                    fontWeight: '600',
+                                                                    color: '#1F2937',
+                                                                    marginBottom: '4px'
+                                                                }}>{currentFile.name}</p>
+                                                                <p style={{
+                                                                    fontSize: '14px',
+                                                                    color: '#6B7280',
+                                                                    marginBottom: '8px'
+                                                                }}>{ext} File • {currentFile.size}</p>
+                                                                <p style={{
+                                                                    fontSize: '13px',
+                                                                    color: '#9CA3AF',
+                                                                    marginBottom: '16px'
+                                                                }}>{isExcel ? 'Loading preview...' : 'Preview not available in browser'}</p>
+                                                                <a
+                                                                    href={currentFile.previewUrl}
+                                                                    download={currentFile.name}
+                                                                    className="btn btn-sm"
+                                                                    style={{
+                                                                        backgroundColor: '#F56D2D',
+                                                                        color: 'white',
+                                                                        padding: '8px 20px',
+                                                                        borderRadius: '8px',
+                                                                        textDecoration: 'none'
+                                                                    }}
+                                                                >
+                                                                    Download to View
+                                                                </a>
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()
+                                            ) : (
+                                                <div className="text-muted">No file selected</div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

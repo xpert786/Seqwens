@@ -5,6 +5,7 @@ import { getStorage } from "../../../ClientOnboarding/utils/userUtils";
 import Pagination from "../../../ClientOnboarding/components/Pagination";
 import DataSharingModal from "../../../ClientOnboarding/components/DataSharingModal";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import { Inbox } from "lucide-react";
 
 export default function StaffInvites() {
     const [invites, setInvites] = useState([]);
@@ -94,12 +95,12 @@ export default function StaffInvites() {
         try {
             const { userAPI } = await import("../../../ClientOnboarding/utils/apiUtils");
             const response = await userAPI.getMemberships();
-            
+
             // Handle both direct array and response object
             const memberships = Array.isArray(response) ? response : (response?.data || response?.memberships || []);
-            
+
             const hasMemberships = memberships && memberships.length > 0;
-            
+
             // Store current firm info for modal
             if (hasMemberships && memberships.length > 0) {
                 // Get current firm from userData or first membership
@@ -112,7 +113,7 @@ export default function StaffInvites() {
                         const currentMembership = memberships.find(
                             (m) => m.firm?.id === currentFirmId || m.firm_id === currentFirmId
                         ) || memberships[0];
-                        
+
                         if (currentMembership) {
                             setCurrentFirmInfo({
                                 name: currentMembership.firm?.name || 'Current Firm',
@@ -124,10 +125,10 @@ export default function StaffInvites() {
                     }
                 }
             }
-            
+
             // Cache the result
             setHasExistingMemberships(hasMemberships);
-            
+
             return hasMemberships;
         } catch (err) {
             // If API fails, assume no existing memberships
@@ -146,7 +147,7 @@ export default function StaffInvites() {
         }
 
         console.log('✅ Accept invite clicked for invite ID:', invite.id);
-        
+
         try {
             setProcessingInvite(invite.id);
 
@@ -241,17 +242,17 @@ export default function StaffInvites() {
 
         console.log('✅ Data sharing confirmed for invite ID:', selectedInvite.id);
         console.log('📊 Data sharing data:', data);
-        
+
         // Map scope values: "All" -> "all", "None" -> "none", "Selected" -> "selected"
         const scopeMap = {
             'All': 'all',
             'None': 'none',
             'Selected': 'selected'
         };
-        
+
         const dataSharingScope = scopeMap[data.scope] || data.scope || 'all';
         const categories = data.selectedCategories || [];
-        
+
         console.log('📞 Calling accept invite API with data sharing scope:', dataSharingScope);
         acceptInviteDirectly(selectedInvite.id, dataSharingScope, categories);
     };
@@ -351,7 +352,7 @@ export default function StaffInvites() {
 
             {/* Search Bar */}
             <div className="mb-4">
-                <div className="position-relative">
+                <div className="position-relative" style={{ maxWidth: '400px' }}>
                     <input
                         type="text"
                         className="form-control"
@@ -431,39 +432,44 @@ export default function StaffInvites() {
 
             {/* Empty State */}
             {!loading && !error && invites.length === 0 && (
-                <div className="text-center py-5">
-                    <svg
-                        width="64"
-                        height="64"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="mb-3"
-                        style={{ opacity: 0.5 }}
+                <div
+                    className="d-flex align-items-center justify-content-center py-4 px-4 gap-3"
+                    style={{
+                        backgroundColor: "#F9FAFB",
+                        borderRadius: "12px",
+                        border: "1px dashed #E5E7EB",
+                        minHeight: "120px"
+                    }}
+                >
+                    <div
+                        className="d-flex align-items-center justify-content-center"
+                        style={{
+                            width: "40px",
+                            height: "40px",
+                            backgroundColor: "#F3F4F6",
+                            borderRadius: "10px",
+                            color: "#9CA3AF"
+                        }}
                     >
-                        <path
-                            d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7L12 14L21 7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7"
-                            stroke="#9CA3AF"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                    <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro", fontSize: "16px" }}>
-                        {searchTerm ? "No invites found matching your search" : "No pending invites"}
-                    </p>
-                    {searchTerm && (
-                        <button
-                            className="btn btn-link"
-                            onClick={() => {
-                                setSearchTerm("");
-                                setCurrentPage(1);
-                            }}
-                            style={{ color: "#00C0C6", textDecoration: "none" }}
-                        >
-                            Clear search
-                        </button>
-                    )}
+                        <Inbox size={20} />
+                    </div>
+                    <div className="text-start">
+                        <p className="mb-0" style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500" }}>
+                            {searchTerm ? "No invites found matching your search" : "No pending invites"}
+                        </p>
+                        {searchTerm && (
+                            <button
+                                className="btn btn-link p-0 mt-1"
+                                onClick={() => {
+                                    setSearchTerm("");
+                                    setCurrentPage(1);
+                                }}
+                                style={{ color: "#00C0C6", textDecoration: "none", fontSize: "13px" }}
+                            >
+                                Clear search
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -474,7 +480,7 @@ export default function StaffInvites() {
                         const daysUntilExpiry = getDaysUntilExpiry(invite.expires_at);
                         const isExpired = invite.is_expired || (daysUntilExpiry !== null && daysUntilExpiry < 0);
                         const isProcessing = processingInvite === invite.id;
-                        
+
                         console.log('Rendering invite:', invite.id, 'isProcessing:', isProcessing);
 
                         return (

@@ -143,6 +143,7 @@ export default function Dashboard() {
             value: loading ? "..." : summaryCards.assigned_clients?.count || 0,
             content: loading ? "Loading..." : summaryCards.assigned_clients?.status || "",
             statusType: summaryCards.assigned_clients?.status_type || "",
+            path: "/taxdashboard/clients"
           },
           {
             label: "Client Pending Tasks",
@@ -153,6 +154,7 @@ export default function Dashboard() {
             tooltip: summaryCards.pending_tasks?.status && summaryCards.pending_tasks.status.includes('behind target')
               ? `This shows tasks that are behind your daily completion target. The target is set in your firm's settings and represents the expected number of tasks to complete per day. Currently: ${summaryCards.pending_tasks.count} pending tasks.`
               : summaryCards.pending_tasks?.status || "",
+            path: "/taxdashboard/tasks"
           },
           {
             label: "Completed Today",
@@ -160,6 +162,7 @@ export default function Dashboard() {
             value: loading ? "..." : summaryCards.completed_today?.count || 0,
             content: loading ? "Loading..." : summaryCards.completed_today?.status || "",
             statusType: summaryCards.completed_today?.status_type || "",
+            path: "/taxdashboard/tasks?section=completed"
           },
           {
             label: "New Messages",
@@ -167,6 +170,7 @@ export default function Dashboard() {
             value: loading ? "..." : summaryCards.new_messages?.count || 0,
             content: loading ? "Loading..." : summaryCards.new_messages?.status || "",
             statusType: summaryCards.new_messages?.status_type || "",
+            path: "/taxdashboard/messages"
           },
         ].map((card, index) => {
           // Hide icons when status_type is "no_change"
@@ -175,8 +179,13 @@ export default function Dashboard() {
           return (
             <div className="col-sm-6 col-md-3 lg:px-4 md:px-2 px-1" key={index}>
               <div
-                className="carded dashboard-carded"
-                style={{ cursor: 'default', position: 'relative' }}
+                className={`carded dashboard-carded ${card.path ? 'clickable-card' : ''}`}
+                style={{
+                  cursor: card.path ? 'pointer' : 'default',
+                  position: 'relative',
+                  transition: 'all 0.2s ease-in-out'
+                }}
+                onClick={() => card.path && navigate(card.path)}
               >
                 <div className="d-flex justify-content-between align-items-start">
                   <div className="dashboarded-carded-labeled">{card.label}</div>
@@ -190,7 +199,7 @@ export default function Dashboard() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      cursor: card.tooltip ? 'help' : 'default'
+                      cursor: card.tooltip ? 'help' : (card.path ? 'pointer' : 'default')
                     }}
                     title={card.tooltip || card.content}
                   >

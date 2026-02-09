@@ -99,34 +99,9 @@ export default function DocumentRequests() {
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
 
-    // Filter only PDF files
-    const pdfFiles = selectedFiles.filter(file => {
-      const fileName = file.name.toLowerCase();
-      const fileType = file.type.toLowerCase();
-      return fileName.endsWith('.pdf') || fileType === 'application/pdf';
-    });
-
-    // Show error for non-PDF files
-    const nonPdfFiles = selectedFiles.filter(file => {
-      const fileName = file.name.toLowerCase();
-      const fileType = file.type.toLowerCase();
-      return !fileName.endsWith('.pdf') && fileType !== 'application/pdf';
-    });
-
-    if (nonPdfFiles.length > 0) {
-      toast.error(`Only PDF files are allowed. ${nonPdfFiles.length} non-PDF file(s) were ignored.`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-
-    // Only add PDF files
-    if (pdfFiles.length > 0) {
-      setUploadFiles(prev => [...prev, ...pdfFiles]);
+    // Add all files
+    if (selectedFiles.length > 0) {
+      setUploadFiles(prev => [...prev, ...selectedFiles]);
     }
 
     // Reset file input so same file can be selected again if needed
@@ -283,7 +258,7 @@ export default function DocumentRequests() {
   // Submit/Complete document request after uploading
   const handleSubmitDocumentRequest = async () => {
     if (uploadFiles.length === 0) {
-      toast.error('Please select at least one PDF file to upload', { position: "top-right", autoClose: 3000 });
+      toast.error('Please select at least one file to upload', { position: "top-right", autoClose: 3000 });
       return;
     }
 
@@ -689,7 +664,7 @@ export default function DocumentRequests() {
                   Submit Document Request
                 </h5>
                 <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: '14px' }}>
-                  {selectedRequest.task_title || 'Document Request'} - Upload PDF files to submit
+                  {selectedRequest.task_title || 'Document Request'} - Upload files to submit
                 </p>
               </div>
               <button
@@ -723,7 +698,6 @@ export default function DocumentRequests() {
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,application/pdf"
                   onChange={handleFileSelect}
                   style={{
                     width: '100%',
@@ -740,7 +714,7 @@ export default function DocumentRequests() {
                   color: '#6B7280',
                   fontSize: '12px'
                 }}>
-                  Only PDF files are allowed
+                  All file types are supported
                 </small>
                 {uploadFiles.length > 0 && (
                   <div style={{ marginTop: '12px' }}>

@@ -218,44 +218,82 @@ const TaxPreparerWorkflows = () => {
       </div>
 
       {/* Statistics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="row g-3 mb-10">
         {[
-          { label: 'Total Workflows', value: stats.total, icon: <FileText size={20} className="text-[#6366F1]" />, bg: 'bg-[#F0F2FF]' },
-          { label: 'Active Now', value: stats.active, icon: <Activity size={20} className="text-[#10B981]" />, bg: 'bg-[#ECFDF5]' },
-          { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={20} className="text-[#8B5CF6]" />, bg: 'bg-[#F5F3FF]' },
-          { label: 'Pending Requests', value: stats.pendingRequests, icon: <AlertCircle size={20} className="text-[#F59E0B]" />, bg: 'bg-[#FFFBEB]' }
+          { label: 'Total Workflows', value: stats.total, icon: <FileText size={20} />, color: '#6366F1' },
+          { label: 'Active Now', value: stats.active, icon: <Activity size={20} />, color: '#10B981' },
+          { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={20} />, color: '#8B5CF6' },
+          { label: 'Pending Requests', value: stats.pendingRequests, icon: <AlertCircle size={20} />, color: '#F59E0B' }
         ].map((item, i) => (
-          <div key={i} className="stat-card p-8 rounded-2xl bg-white flex flex-col items-center text-center shadow-sm">
-            <p className="text-gray-400 text-[11px] font-bold uppercase tracking-[0.15em] mb-4">{item.label}</p>
-            <h3 className="text-4xl font-bold text-gray-900 mb-8">{item.value}</h3>
-            <div className={`${item.bg} w-14 h-14 rounded-2xl flex items-center justify-center`}>
-              {item.icon}
+          <div key={i} className="col-12 col-sm-6 col-md-3">
+            <div className="card h-100 border-0 shadow-sm" style={{
+              borderRadius: 8,
+              backgroundColor: "#fff",
+              border: "1.5px solid #E8F0FF"
+            }}>
+              <div className="card-body p-3 d-flex align-items-center">
+                <div className="stat-icon-wrapper rounded-lg d-flex align-items-center justify-content-center" style={{
+                  width: '44px',
+                  height: '44px',
+                  backgroundColor: `${item.color}15`,
+                  color: item.color,
+                  flexShrink: 0,
+                  borderRadius: '8px'
+                }}>
+                  {item.icon}
+                </div>
+                <div className="ms-3 overflow-hidden">
+                  <div className="text-muted small fw-medium text-uppercase mb-0" style={{ letterSpacing: '0.025em', fontSize: '10px' }}>{item.label}</div>
+                  <div className="h4 mb-0 fw-bold" style={{ color: '#1E293B' }}>{item.value}</div>
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Search and Filters */}
-      <div className="glass-effect p-4 rounded-2xl mb-8 flex flex-col lg:flex-row gap-4 items-center shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-8 flex-wrap">
+        <div className="position-relative" style={{ minWidth: '300px', maxWidth: '400px', width: '100%' }}>
+          <div style={{
+            position: 'absolute',
+            left: '12px',
+            top: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            pointerEvents: 'none',
+            zIndex: 1
+          }}>
+            <Search size={18} color="#6B7280" />
+          </div>
           <input
             type="text"
+            className="form-control"
             placeholder="Search by client name or workflow template..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 font-medium"
+            style={{
+              paddingLeft: '40px',
+              borderColor: '#E5E7EB',
+              height: '44px',
+              borderRadius: '8px',
+              backgroundColor: '#fff',
+              fontSize: '14px'
+            }}
           />
         </div>
-        <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
+
+        <div className="d-flex align-items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
           {['all', 'active', 'completed'].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`flex-1 lg:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filter === s
-                ? 'bg-[#3AD6F2] text-white shadow-lg shadow-blue-100'
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === s
+                ? 'bg-[#3AD6F2] text-white'
                 : 'bg-white text-gray-600 border border-[#E8F0FF] hover:bg-gray-50'
                 }`}
+              style={{ minWidth: '100px', height: '44px', borderRadius: '8px' }}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
@@ -279,7 +317,7 @@ const TaxPreparerWorkflows = () => {
           {filteredWorkflows.map((workflow) => {
             const style = getStatusStyle(workflow.status);
             return (
-              <div key={workflow.id} className="workflow-card rounded-2xl overflow-hidden shadow-sm">
+              <div key={workflow.id} className="workflow-card rounded-lg overflow-hidden shadow-sm">
                 <div className="p-6 md:p-8">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex-1">
@@ -294,11 +332,9 @@ const TaxPreparerWorkflows = () => {
                         <span className="text-gray-400">•</span>
                         <span className="text-gray-500 text-sm font-medium">Last updated 2 days ago</span>
                       </div>
-
                       <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#3AD6F2] transition-colors">
                         {workflow.template_name || 'Workflow'}
                       </h3>
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-12 mb-6">
                         <div className="flex items-center gap-3">
                           <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
@@ -338,14 +374,16 @@ const TaxPreparerWorkflows = () => {
                     <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto">
                       <button
                         onClick={() => handleViewWorkflow(workflow)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1F2937] text-white rounded-xl font-bold hover:bg-gray-800 transition-all action-button"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1F2937] text-white font-bold hover:bg-gray-800 transition-all action-button"
+                        style={{ borderRadius: '8px' }}
                       >
                         View Activity
                         <ArrowRight size={18} />
                       </button>
                       <button
                         onClick={() => handleCreateRequest(workflow)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-[#E8F0FF] text-[#3AD6F2] rounded-xl font-bold hover:bg-gray-50 transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-[#E8F0FF] text-[#3AD6F2] font-bold hover:bg-gray-50 transition-all font-basis"
+                        style={{ borderRadius: '8px' }}
                       >
                         <Plus size={18} />
                         New Request
@@ -355,7 +393,8 @@ const TaxPreparerWorkflows = () => {
                       {getAvailableStatusActions(workflow).length > 0 && (
                         <div className="relative group/actions">
                           <button
-                            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition-all border border-transparent"
+                            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-50 text-gray-600 font-bold hover:bg-gray-100 transition-all border border-transparent"
+                            style={{ borderRadius: '8px' }}
                             disabled={updatingStatus === workflow.id}
                           >
                             {updatingStatus === workflow.id ? (
@@ -363,12 +402,13 @@ const TaxPreparerWorkflows = () => {
                             ) : <MoreVertical size={18} />}
                             Actions
                           </button>
-                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E8F0FF] opacity-0 invisible group-hover/actions:opacity-100 group-hover/actions:visible transition-all z-20 overflow-hidden">
+                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-[#E8F0FF] opacity-0 invisible group-hover/actions:opacity-100 group-hover/actions:visible transition-all z-20 overflow-hidden">
                             {getAvailableStatusActions(workflow).map((action) => (
                               <button
                                 key={action.value}
                                 onClick={() => handleStatusUpdate(workflow.id, action.value)}
                                 className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                style={{ borderRadius: '8px' }}
                               >
                                 {action.value === 'paused' ? <Pause size={16} /> :
                                   action.value === 'active' ? <Play size={16} /> :
@@ -427,7 +467,7 @@ const TaxPreparerWorkflows = () => {
 
       {showVerifyModal && selectedRequest && (
         <div className="fixed inset-0 glass-effect bg-black/60 flex items-center justify-center p-4 z-[100000] animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">Verify Documents</h3>
@@ -439,7 +479,8 @@ const TaxPreparerWorkflows = () => {
                   setSelectedRequest(null);
                   setRequestDocuments([]);
                 }}
-                className="bg-white p-2 rounded-xl text-gray-400 hover:text-gray-600 transition-all border border-gray-100 shadow-sm"
+                className="bg-white p-2 text-gray-400 hover:text-gray-600 transition-all border border-gray-100 shadow-sm"
+                style={{ borderRadius: '8px' }}
               >
                 <Plus size={24} className="rotate-45" />
               </button>

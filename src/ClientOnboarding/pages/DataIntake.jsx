@@ -4190,7 +4190,7 @@ export default function DataIntakeForm({ targetClientId }) {
       </div>
 
       {/* Document Upload */}
-      <div className="bg-white lg:p-4 md:p-2 px-1 rounded-4 shadow-sm mb-4">
+      <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
         <div className="align-items-center mb-3">
           <h5 className="mb-0 me-3" style={{
             color: "#3B4A66",
@@ -4457,7 +4457,7 @@ export default function DataIntakeForm({ targetClientId }) {
       {hasExistingData && !targetClientId && (
         <div className=" p-4 rounded-lg border" style={{
           borderColor: '#E8F0FF',
-          backgroundColor: '#F3F7FF',
+          backgroundColor: '#FFFFFF',
           fontFamily: 'BasisGrotesquePro',
           marginTop: "12px"
         }}>
@@ -4466,6 +4466,7 @@ export default function DataIntakeForm({ targetClientId }) {
               <h6 className="mb-1" style={{
                 color: '#3B4A66',
                 fontSize: '18px',
+
                 fontWeight: '600',
                 fontFamily: 'BasisGrotesquePro'
               }}>
