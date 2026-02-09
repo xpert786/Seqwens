@@ -164,7 +164,7 @@ const PersonalInfo = () => {
     <FixedLayout>
       <div className="personal-info-wrapper">
         <div className="personal-info-container">
-          <h2 className="personal-info-title">Create Your Password</h2>
+          <h3 className="personal-info-title">Create Your Password</h3>
           <p className="personal-info-subtitle">
             Let's finish setting up your account by creating a password
           </p>

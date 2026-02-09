@@ -149,7 +149,7 @@ export default function AddSubscription({ planType, onClose }) {
             ← Back to Subscription Plans
           </button>
           <div className="mt-4">
-            <h2 className="text-2xl font-bold" style={{ color: '#3B4A66' }}>Add New Subscription Plan</h2>
+            <h3 className="text-2xl font-bold" style={{ color: '#3B4A66' }}>Add New Subscription Plan</h3>
             <p className="text-sm mt-1" style={{ color: '#3B4A66' }}>Create a new subscription plan with custom pricing, features, and limits</p>
           </div>
         </div>

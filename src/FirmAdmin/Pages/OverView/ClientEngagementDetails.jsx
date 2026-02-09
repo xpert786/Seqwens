@@ -69,7 +69,7 @@ const ClientEngagementDetails = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Details</h2>
+                    <h3 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Details</h3>
                     <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro] mt-1">
                         Detailed view of client engagement funnel and statuses.
                     </p>

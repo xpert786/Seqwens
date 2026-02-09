@@ -56,7 +56,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
       >
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">Intake Forms Builder</h2>
+          <h3 className="text-xl font-semibold text-gray-800">Intake Forms Builder</h3>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors -sm"

@@ -277,7 +277,7 @@ const FirmSignup = () => {
     <FixedLayout>
       <div className="firm-signup-wrapper">
         <div className="firm-signup-container">
-          <h2 className="firm-signup-title">Create Your Firm Account</h2>
+          <h3 className="firm-signup-title">Create Your Firm Account</h3>
           <p className="firm-signup-subtitle">
             Register your firm and start managing your tax practice.
           </p>

@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
-import { setTokens, clearUserData } from '../../ClientOnboarding/utils/userUtils';
+import { setTokens, clearUserData, setImpersonationData } from '../../ClientOnboarding/utils/userUtils';
+
 import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 import '../style/FirmDetails.css';
 
@@ -59,6 +61,9 @@ export default function FirmDetails() {
     const [billingLoading, setBillingLoading] = useState(false);
     const [billingError, setBillingError] = useState(null);
     const [loggingIn, setLoggingIn] = useState(false);
+    const [enablingDevMode, setEnablingDevMode] = useState(false);
+    const [showDevModeConfirm, setShowDevModeConfirm] = useState(false);
+
 
     const fetchFirmDetails = async () => {
         try {
@@ -430,22 +435,21 @@ export default function FirmDetails() {
                     sessionTimestamp: originalSessionData.timestamp,
                 });
 
-                // Store in sessionStorage so it's cleared when browser tab closes
-                sessionStorage.setItem('superAdminImpersonationData', JSON.stringify(originalSessionData));
-
-                // Also store firm info for UI display
+                // Prepare impersonation info
                 const impersonationInfo = {
                     firmName: firm?.name || 'Unknown Firm',
                     firmId: firm?.id || firmId,
                     impersonatedAt: new Date().toISOString()
                 };
-                sessionStorage.setItem('impersonationInfo', JSON.stringify(impersonationInfo));
+
+                // Store in sessionStorage using utility
+                setImpersonationData(originalSessionData, impersonationInfo);
 
                 console.log('[IMPERSONATION_START] Stored impersonation info', impersonationInfo);
 
                 // STEP 2: Completely clear all superadmin session data using utility function
                 console.log('[IMPERSONATION_START] Clearing Super Admin context');
-                clearUserData();
+                clearUserData(true);
 
                 // Also clear any additional superadmin-specific data
                 localStorage.removeItem('firmLoginData');
@@ -502,6 +506,49 @@ export default function FirmDetails() {
                 autoClose: 3000,
             });
             setLoggingIn(false);
+        }
+    };
+
+    const handleToggleDevMode = async () => {
+        if (!firmId || !firmDetails) return;
+
+        try {
+            setEnablingDevMode(true);
+
+            const newValue = !firmDetails.is_billing_bypass;
+            const response = await superAdminAPI.updateFirmSettings(firmId, {
+                is_billing_bypass: newValue
+            });
+
+            if (response.success && response.data) {
+                setFirmDetails(prev => ({
+                    ...prev,
+                    is_billing_bypass: newValue
+                }));
+
+                toast.success(
+                    newValue
+                        ? 'Developer Subscription enabled. Firm has full access for QA testing.'
+                        : 'Developer Subscription disabled.',
+                    {
+                        position: "top-right",
+                        autoClose: 3000,
+                    }
+                );
+
+                // Refresh firm details to get updated billing status
+                await fetchFirmDetails();
+            } else {
+                throw new Error(response.message || 'Failed to update developer subscription');
+            }
+        } catch (err) {
+            console.error('Error toggling developer subscription:', err);
+            toast.error(handleAPIError(err), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setEnablingDevMode(false);
         }
     };
 
@@ -769,7 +816,11 @@ export default function FirmDetails() {
                                 error={billingError}
                                 onRetry={fetchFirmBillingOverview}
                                 firmDetails={firmDetails}
+                                handleToggleDevMode={handleToggleDevMode}
+                                enablingDevMode={enablingDevMode}
+                                setShowDevModeConfirm={setShowDevModeConfirm}
                                 fallbackSubscription={{
+
                                     plan: billingInfo.plan,
                                     monthly_cost_display: billingInfo.monthlyCost,
                                     next_billing_display: billingInfo.nextBilling,
@@ -899,7 +950,34 @@ export default function FirmDetails() {
                                             </div>
                                         </div>
 
+                                        {/* Developer Settings Section */}
+                                        <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
+                                            <h6 className="text-base font-semibold text-[#1E293B] dark:text-white mb-4">Developer Settings</h6>
+                                            <div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
+                                                            <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
+                                                        </svg>
+                                                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Developer Subscription (QA Mode)</p>
+                                                    </div>
+                                                    <p className="text-xs text-blue-700 dark:text-blue-300">Grant full access to all features (OCR, AI, etc.) for testing internal workflows. Bypasses all billing limits.</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowDevModeConfirm(true)}
+                                                    disabled={enablingDevMode}
+                                                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${firmDetails.is_billing_bypass ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+                                                >
+                                                    <span
+                                                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${firmDetails.is_billing_bypass ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    />
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end firmdetails-settings-actions">
+
                                             <button
                                                 type="button"
                                                 onClick={handleResetSettingsForm}
@@ -952,6 +1030,23 @@ export default function FirmDetails() {
                         </button>
                     </div>
                 )}
+                <ConfirmationModal
+                    isOpen={showDevModeConfirm}
+                    onClose={() => setShowDevModeConfirm(false)}
+                    onConfirm={() => {
+                        setShowDevModeConfirm(false);
+                        handleToggleDevMode();
+                    }}
+                    title={firmDetails?.is_billing_bypass ? "Disable Developer Subscription?" : "Enable Developer Subscription?"}
+                    message={firmDetails?.is_billing_bypass
+                        ? "This will re-enable billing limits and restrictions. The firm will be subject to standard usage limits based on their subscription plan. Are you sure?"
+                        : "This will grant full access to all features (OCR, AI Search, etc.) for QA testing purposes. This bypasses all billing limits and restrictions. Are you sure?"}
+                    confirmText={firmDetails?.is_billing_bypass ? "Disable" : "Enable"}
+                    confirmButtonStyle={firmDetails?.is_billing_bypass
+                        ? { backgroundColor: '#EF4444', color: '#FFFFFF', borderRadius: '8px' }
+                        : { backgroundColor: '#2563EB', color: '#FFFFFF', borderRadius: '8px' }
+                    }
+                />
             </div>
         </div>
     );
@@ -963,10 +1058,17 @@ const BillingOverviewTab = ({
     error,
     onRetry,
     firmDetails,
+    handleToggleDevMode,
+    enablingDevMode,
+    setShowDevModeConfirm,
     fallbackQuickActions = [],
+
     fallbackHistory = [],
     fallbackSubscription = {}
 }) => {
+    const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+
+
     if (loading) {
         return (
             <div className="flex min-h-[320px] items-center justify-center rounded-xl bg-white">
@@ -1086,6 +1188,68 @@ const BillingOverviewTab = ({
                             </span>
                         )}
                     </div>
+
+                    {/* Developer Subscription Banner - Always show to Super Admin for easy access */}
+                    {(true) && (
+                        <div className="mb-6 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 dark:bg-blue-900/20 p-5">
+
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
+                                            <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
+                                            <path d="M13.5 7L15.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                            <path d="M17 10H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        </svg>
+                                        <h6 className="text-base font-semibold text-blue-900 dark:text-blue-200">
+                                            {firmDetails?.is_billing_bypass ? 'Developer Subscription Active' : 'Enable QA Testing Mode'}
+                                        </h6>
+                                    </div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        {firmDetails?.is_billing_bypass
+                                            ? 'This firm has full access to all features for QA testing purposes. No subscription required.'
+                                            : 'Enable Developer Subscription to grant full access to all features for QA testing purposes.'}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDevModeConfirm(true)}
+                                    disabled={enablingDevMode}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${firmDetails?.is_billing_bypass
+                                        ? 'bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
+                                        }`}
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    {enablingDevMode ? (
+                                        <>
+                                            <div className={`h-4 w-4 animate-spin rounded-full border-2 border-b-transparent ${firmDetails?.is_billing_bypass ? 'border-red-500' : 'border-white'}`}></div>
+                                            {firmDetails?.is_billing_bypass ? 'Disabling...' : 'Enabling...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {firmDetails?.is_billing_bypass ? (
+                                                <>
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Disable Developer Mode
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M10 3L8.5 6.5H5L8 9L7 12.5L10 10.5L13 12.5L12 9L15 6.5H11.5L10 3Z" fill="currentColor" />
+                                                    </svg>
+                                                    Enable Developer Subscription
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+                                </button>
+
+                            </div>
+                        </div>
+                    )}
 
                     <div className="divide-y divide-[#EFF4FF] rounded-xl border border-[#EFF4FF]">
                         {[{
@@ -1285,6 +1449,9 @@ const BillingOverviewTab = ({
                     </div>
                 </div>
             </div>
+
+
         </div>
+
     );
 };

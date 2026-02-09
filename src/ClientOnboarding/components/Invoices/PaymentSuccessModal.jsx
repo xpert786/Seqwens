@@ -38,36 +38,36 @@ const PaymentSuccessModal = ({ show, onClose, invoice }) => {
       <Modal.Body className="p-4">
         <div className="text-center">
           <div className="mb-4">
-            <svg 
-              className="w-20 h-20 mx-auto text-green-500" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-20 h-20 mx-auto text-green-500"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
               style={{ width: '80px', height: '80px', color: '#10B981' }}
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </div>
-          <h2 
+          <h3
             className="text-2xl font-bold mb-2"
-            style={{ 
-              color: "#3B4A66", 
+            style={{
+              color: "#3B4A66",
               fontFamily: "BasisGrotesquePro",
               fontSize: "24px",
               fontWeight: "700"
             }}
           >
             Payment Successful!
-          </h2>
-          <p 
+          </h3>
+          <p
             className="text-gray-600 mb-4"
-            style={{ 
-              fontFamily: "BasisGrotesquePro", 
+            style={{
+              fontFamily: "BasisGrotesquePro",
               fontSize: "14px",
               color: "#4B5563"
             }}
@@ -77,17 +77,17 @@ const PaymentSuccessModal = ({ show, onClose, invoice }) => {
         </div>
 
         {invoice && (
-          <div 
-            className="border rounded-lg p-4 mb-4" 
-            style={{ 
-              backgroundColor: "#F3F7FF", 
-              borderColor: "#E8F0FF" 
+          <div
+            className="border rounded-lg p-4 mb-4"
+            style={{
+              backgroundColor: "#F3F7FF",
+              borderColor: "#E8F0FF"
             }}
           >
-            <h4 
+            <h4
               className="font-semibold mb-3"
-              style={{ 
-                color: "#3B4A66", 
+              style={{
+                color: "#3B4A66",
                 fontFamily: "BasisGrotesquePro",
                 fontSize: "16px",
                 fontWeight: "600"
@@ -97,51 +97,51 @@ const PaymentSuccessModal = ({ show, onClose, invoice }) => {
             </h4>
             <div className="space-y-2">
               <div className="d-flex justify-content-between">
-                <span style={{ 
-                  color: "#4B5563", 
-                  fontSize: "14px", 
-                  fontFamily: "BasisGrotesquePro" 
+                <span style={{
+                  color: "#4B5563",
+                  fontSize: "14px",
+                  fontFamily: "BasisGrotesquePro"
                 }}>
                   Invoice Number:
                 </span>
-                <span style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  fontFamily: "BasisGrotesquePro" 
+                <span style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  fontFamily: "BasisGrotesquePro"
                 }}>
                   {invoice.invoice_number || `INV-${invoice.id}`}
                 </span>
               </div>
               <div className="d-flex justify-content-between">
-                <span style={{ 
-                  color: "#4B5563", 
-                  fontSize: "14px", 
-                  fontFamily: "BasisGrotesquePro" 
+                <span style={{
+                  color: "#4B5563",
+                  fontSize: "14px",
+                  fontFamily: "BasisGrotesquePro"
                 }}>
                   Amount Paid:
                 </span>
-                <span style={{ 
-                  color: "#166534", 
-                  fontSize: "14px", 
-                  fontWeight: "600", 
-                  fontFamily: "BasisGrotesquePro" 
+                <span style={{
+                  color: "#166534",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  fontFamily: "BasisGrotesquePro"
                 }}>
                   {formatCurrency(invoice.paid_amount || invoice.amount)}
                 </span>
               </div>
               <div className="d-flex justify-content-between">
-                <span style={{ 
-                  color: "#4B5563", 
-                  fontSize: "14px", 
-                  fontFamily: "BasisGrotesquePro" 
+                <span style={{
+                  color: "#4B5563",
+                  fontSize: "14px",
+                  fontFamily: "BasisGrotesquePro"
                 }}>
                   Status:
                 </span>
-                <span 
+                <span
                   className="badge"
-                  style={{ 
-                    backgroundColor: "#DCFCE7", 
+                  style={{
+                    backgroundColor: "#DCFCE7",
                     color: "#166534",
                     fontSize: "12px",
                     fontFamily: "BasisGrotesquePro",

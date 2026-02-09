@@ -1826,7 +1826,7 @@ export default function StaffManagement() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Set Staff as Inactive</h2>
+              <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Set Staff as Inactive</h3>
               <button
                 onClick={() => {
                   if (!processingStatus) {
@@ -1895,7 +1895,7 @@ export default function StaffManagement() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Reactivate Staff</h2>
+              <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Reactivate Staff</h3>
               <button
                 onClick={() => {
                   if (!processingStatus) {

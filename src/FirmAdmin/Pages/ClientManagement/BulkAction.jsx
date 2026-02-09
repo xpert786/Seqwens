@@ -80,14 +80,14 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       style={{ zIndex: 9999 }}
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4"
-        style={{ 
+        style={{
           borderRadius: '12px',
           maxHeight: '80vh',
           overflowY: 'auto'
@@ -97,7 +97,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
         {/* Header */}
         <div style={{ padding: '16px 16px 12px 16px' }}>
           <div className="flex justify-between items-center" style={{ borderBottom: '0.5px solid #E8F0FF', paddingBottom: '8px' }}>
-            <h2 className="text-xl font-bold" style={{ color: '#3B4A66', fontSize: '18px' }}>Bulk Actions</h2>
+            <h3 className="text-xl font-bold" style={{ color: '#3B4A66', fontSize: '18px' }}>Bulk Actions</h3>
             <button
               onClick={onClose}
               className="flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
@@ -120,7 +120,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
               placeholder="Write a message..."
               className="w-full resize-none focus:outline-none"
               rows={3}
-              style={{ 
+              style={{
                 backgroundColor: '#FFFFFF',
                 border: '1px solid #D1D5DB',
                 borderRadius: '8px',
@@ -133,8 +133,8 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={handleSendMessage}
-                className="d-flex align-items-center gap-2" 
-                style={{ 
+                className="d-flex align-items-center gap-2"
+                style={{
                   backgroundColor: '#F97316',
                   borderRadius: '8px',
                   padding: '10px 16px',
@@ -163,7 +163,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
               onChange={(e) => setTask(e.target.value)}
               placeholder="e.g. Request W 2 Document..."
               className="w-full focus:outline-none"
-              style={{ 
+              style={{
                 backgroundColor: '#FFFFFF',
                 border: '1px solid #D1D5DB',
                 borderRadius: '8px',
@@ -177,7 +177,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
               <button
                 onClick={handleAssignTask}
                 className="d-flex align-items-center gap-2"
-                style={{ 
+                style={{
                   backgroundColor: '#F97316',
                   borderRadius: '8px',
                   padding: '10px 16px',
@@ -204,7 +204,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
               <button
                 onClick={handleComplianceCheck}
                 className={`relative inline-flex items-center rounded-full transition-colors`}
-                style={{ 
+                style={{
                   width: '36px',
                   height: '20px',
                   backgroundColor: complianceCheck ? '#F97316' : '#D1D5DB'
@@ -229,7 +229,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
               <button
                 onClick={handleImportCSV}
                 className="flex items-center gap-2 font-medium transition-colors"
-                style={{ 
+                style={{
                   backgroundColor: '#FFF',
                   color: '#131323',
                   border: '1px solid #DBEAFE',
@@ -246,7 +246,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
               <button
                 onClick={handleExportCSV}
                 className="flex items-center gap-2 font-medium transition-colors"
-                style={{ 
+                style={{
                   backgroundColor: '#F97316',
                   borderRadius: '8px',
                   fontSize: '14px',

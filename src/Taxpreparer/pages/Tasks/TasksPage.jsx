@@ -138,9 +138,9 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
       {/* Calendar Header */}
       <div className="d-flex justify-content-between align-items-center p-4 border-bottom">
         <div className="d-flex align-items-center gap-2">
-          <h2 className="m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
+          <h3 className="m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
             {monthNames[currentDate.getMonth()]}
-          </h2>
+          </h3>
           <span className="text-secondary" style={{ fontSize: '1.5rem', fontWeight: '300' }}>
             {currentDate.getFullYear()}
           </span>

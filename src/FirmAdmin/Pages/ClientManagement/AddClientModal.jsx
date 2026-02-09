@@ -959,7 +959,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h2>
+              <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h3>
               <button
                 onClick={() => {
                   if (!deletingInvite) {

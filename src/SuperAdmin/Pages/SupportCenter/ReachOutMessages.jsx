@@ -108,7 +108,7 @@ const ReachOutMessages = () => {
                         <div className="p-8">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <h2 className="text-xl font-bold text-[#1F2A55] mb-1 font-[BasisGrotesquePro]">Message Details</h2>
+                                    <h3 className="text-xl font-bold text-[#1F2A55] mb-1 font-[BasisGrotesquePro]">Message Details</h3>
                                     <p className="text-[#6B7280] text-sm font-[BasisGrotesquePro]">{new Date(selectedMsg.created_at).toLocaleString()}</p>
                                 </div>
                                 <button

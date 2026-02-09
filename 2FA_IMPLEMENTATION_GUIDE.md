@@ -513,7 +513,7 @@ export default function Login() {
   if (requires2FA) {
     return (
       <div>
-        <h2>Enter 2FA Code</h2>
+        <h2>Enter 2FA Code</h3>
         <TwoFactorCodeInput
           value={twoFactorCode}
           onChange={setTwoFactorCode}

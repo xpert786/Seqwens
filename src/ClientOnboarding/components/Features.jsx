@@ -9,7 +9,7 @@ function Features() {
   return (
     <section className="py-5" style={{ backgroundColor: "#2B3953", color: "#fff" }}>
       <div className="container">
-        <h2 className="text-center mb-4">EVERYTHING YOU NEED IN <span className="text-warning">ONE PLATFORM</span></h2>
+        <h3 className="text-center mb-4">EVERYTHING YOU NEED IN <span className="text-warning">ONE PLATFORM</span></h3>
         <div className="row g-4">
           {cards.map((card, i) => (
             <div className="col-md-3" key={i}>

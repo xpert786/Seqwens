@@ -149,6 +149,55 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
   const [loadingFolders, setLoadingFolders] = useState(false);
   const [excelPreviews, setExcelPreviews] = useState({}); // Store parsed Excel data by file index
 
+  // Client selection state
+  const [availableClients, setAvailableClients] = useState([]);
+  const [internalClientId, setInternalClientId] = useState(clientId);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  useEffect(() => {
+    setInternalClientId(clientId);
+  }, [clientId]);
+
+  // Fetch clients if no clientId provided
+  useEffect(() => {
+    if (show && !clientId) {
+      const fetchClients = async () => {
+        try {
+          setLoadingClients(true);
+          const API_BASE_URL = getApiBaseUrl();
+          const token = getAccessToken();
+
+          if (!token) return;
+
+          const response = await fetchWithCors(
+            `${API_BASE_URL}/firm/staff/my-clients/`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+              setAvailableClients(result.data);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching clients:", error);
+          toast.error("Failed to load clients. Please try again.");
+        } finally {
+          setLoadingClients(false);
+        }
+      };
+
+      fetchClients();
+    }
+  }, [show, clientId]);
+
   const activeFile = files[selectedIndex] || null;
 
   const handleFilesAdded = (fileList) => {
@@ -403,9 +452,9 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       };
 
       let response;
-      if (clientId) {
+      if (internalClientId) {
         response = await fetchWithCors(
-          `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}&folder_id=${folderId}`,
+          `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}&folder_id=${folderId}`,
           config
         );
       } else {
@@ -424,7 +473,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       if (result.success && result.data) {
         let subfolders = [];
 
-        if (clientId) {
+        if (internalClientId) {
           if (Array.isArray(result.data.subfolders)) {
             subfolders = result.data.subfolders;
           } else if (Array.isArray(result.data.folders)) {
@@ -704,7 +753,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       setFiles((prev) => prev.map((file, index) => (index === i ? updatedFiles[i] : file)));
 
       try {
-        await uploadSingleFile({ fileEntry: updatedFiles[i], clientId });
+        await uploadSingleFile({ fileEntry: updatedFiles[i], clientId: internalClientId });
         updatedFiles[i] = {
           ...updatedFiles[i],
           status: "success",
@@ -777,6 +826,12 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     if (!show) return;
 
     const fetchRootFolders = async () => {
+      // If we need to select a client but haven't yet, don't fetch folders
+      if (!clientId && !internalClientId) {
+        setFolderTree([]);
+        return;
+      }
+
       try {
         setLoadingFolders(true);
         const API_BASE_URL = getApiBaseUrl();
@@ -796,8 +851,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
         };
 
         let response;
-        if (clientId) {
-          response = await fetchWithCors(`${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}`, config);
+        if (internalClientId) {
+          response = await fetchWithCors(`${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}`, config);
         } else {
           response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/`, config);
         }
@@ -806,12 +861,13 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+
         const result = await response.json();
 
         if (result.success && result.data) {
           let rootFolders = [];
 
-          if (clientId) {
+          if (internalClientId) {
             if (Array.isArray(result.data.subfolders)) {
               rootFolders = result.data.subfolders;
             } else if (Array.isArray(result.data.folders)) {
@@ -847,7 +903,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     };
 
     fetchRootFolders();
-  }, [show, clientId]);
+  }, [show, clientId, internalClientId]);
 
 
 
@@ -873,7 +929,31 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     <Modal show={show} onHide={() => resetModal(true)} centered backdrop="static" size="xl" className="upload-modal" scrollable={true}>
       <Modal.Body className="p-4">
         <h5 className="upload-heading">Upload Documents</h5>
+
         <p className="upload-subheading">Upload your tax documents securely</p>
+
+        {!clientId && (
+          <Form.Group className="mb-4">
+            <Form.Label>Select Client <span className="text-danger">*</span></Form.Label>
+            <Form.Select
+              value={internalClientId || ""}
+              onChange={(e) => {
+                setInternalClientId(e.target.value);
+                setFolderTree([]); // Clear folders when client changes
+                setFiles((prev) => prev.map(f => ({ ...f, folderId: null, folderPath: "", issues: [] }))); // Clear folder selection in files
+              }}
+              disabled={loadingClients}
+            >
+              <option value="">-- Select Client --</option>
+              {availableClients.map(client => (
+                <option key={client.id} value={client.id}>
+                  {client.first_name} {client.last_name} ({client.email})
+                </option>
+              ))}
+            </Form.Select>
+            {loadingClients && <div className="text-muted small mt-1">Loading clients...</div>}
+          </Form.Group>
+        )}
 
         <p className="upload-section-title">Add Files</p>
 
@@ -898,8 +978,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
           <p className="upload-text">
             <strong className="texts">Drop files here or click to browse</strong>
           </p>
-          <p className="upload-hint">Supported formats: All files (PDF, Images, Excel, etc.) • Max 50MB per file</p>
-          <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileChange} />
+          <p className="upload-hint">Supported formats up to 50MB per file</p>
+          <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileChange} accept="*/*" />
         </div>
 
         {files.length > 0 ? (

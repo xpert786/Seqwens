@@ -62,18 +62,25 @@ export const setUserData = (userData) => {
 
 /**
  * Clear user data from localStorage
- * Enhanced to clear ALL context including client/taxpayer context and firm-specific data
+ * @param {boolean} keepImpersonation - If true, preserves impersonation-related data (useful when starting impersonation)
  */
-export const clearUserData = () => {
+export const clearUserData = (keepImpersonation = false) => {
+  console.log(`[USER_UTILS] clearUserData called (keepImpersonation=${keepImpersonation})`);
+
   // Core authentication data
   localStorage.removeItem("userData");
   localStorage.removeItem("userStatus");
   localStorage.removeItem("userType");
   localStorage.removeItem("customRole");
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("rememberMe");
+
+  // Only remove basic login markers if not transitioning to impersonation
+  if (!keepImpersonation) {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("rememberMe");
+  }
+
   localStorage.removeItem("rememberedEmail");
   localStorage.removeItem("userRegistrationData");
   localStorage.removeItem("resetEmail");
@@ -109,10 +116,14 @@ export const clearUserData = () => {
   sessionStorage.removeItem("userData");
   sessionStorage.removeItem("userType");
   sessionStorage.removeItem("customRole");
-  sessionStorage.removeItem("isLoggedIn");
-  sessionStorage.removeItem("accessToken");
-  sessionStorage.removeItem("refreshToken");
-  sessionStorage.removeItem("rememberMe");
+
+  if (!keepImpersonation) {
+    sessionStorage.removeItem("isLoggedIn");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("rememberMe");
+  }
+
   sessionStorage.removeItem("rememberedEmail");
 
   // Session storage - firm/client/taxpayer context
@@ -135,12 +146,21 @@ export const clearUserData = () => {
   sessionStorage.removeItem("previousRoute");
   sessionStorage.removeItem("redirectUrl");
 
-  // Impersonation context
-  localStorage.removeItem("impersonationInfo");
-  localStorage.removeItem("superAdminImpersonationData");
-  sessionStorage.removeItem("impersonationInfo");
-  sessionStorage.removeItem("superAdminImpersonationData");
+  // Impersonation context - ONLY clear if not requested to keep
+  if (!keepImpersonation) {
+    console.log('[USER_UTILS] Wiping impersonation markers');
+    localStorage.removeItem("impersonationInfo");
+    localStorage.removeItem("superAdminImpersonationData");
+    sessionStorage.removeItem("impersonationInfo");
+    sessionStorage.removeItem("superAdminImpersonationData");
+  } else {
+    console.log('[USER_UTILS] Preserving impersonation markers', {
+      hasLocal: !!localStorage.getItem('superAdminImpersonationData'),
+      hasSession: !!sessionStorage.getItem('superAdminImpersonationData')
+    });
+  }
 };
+
 
 /**
  * Check if user is logged in
@@ -234,3 +254,127 @@ export const isTokenExpired = () => {
     return true;
   }
 };
+
+/**
+ * Check if currently impersonating a firm
+ * @returns {Object} { isImpersonating: boolean, info: Object|null }
+ */
+export const getImpersonationStatus = () => {
+  // 1. Check markers in storage
+  const impersonationData = localStorage.getItem('superAdminImpersonationData') || sessionStorage.getItem('superAdminImpersonationData');
+  const infoStr = localStorage.getItem('impersonationInfo') || sessionStorage.getItem('impersonationInfo');
+
+  let info = null;
+  if (infoStr) {
+    try {
+      info = JSON.parse(infoStr);
+    } catch (e) {
+      console.error('Error parsing impersonation info:', e);
+    }
+  }
+
+  // 2. Check tokens for impersonation claim (more robust)
+  let tokenHasImpersonation = false;
+  const token = getAccessToken();
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.is_impersonation) {
+        tokenHasImpersonation = true;
+      }
+    } catch (e) {
+      // Ignore token parsing errors
+    }
+  }
+
+  // CRITICAL: isImpersonating should only be true if we have the data to REVERT
+  // otherwise we'll show a banner that doesn't work.
+  const isImpersonating = !!impersonationData && tokenHasImpersonation;
+
+  return {
+    isImpersonating,
+    info: info,
+    tokenClaim: tokenHasImpersonation,
+    hasData: !!impersonationData
+  };
+};
+
+
+/**
+ * Store impersonation data in storage
+ * @param {Object} originalSession - Original Super Admin session data
+ * @param {Object} info - Impersonated firm info
+ */
+export const setImpersonationData = (originalSession, info) => {
+  // Use both for maximum compatibility across logic
+  const dataStr = JSON.stringify(originalSession);
+  const infoStr = JSON.stringify(info);
+
+  sessionStorage.setItem('superAdminImpersonationData', dataStr);
+  sessionStorage.setItem('impersonationInfo', infoStr);
+
+  localStorage.setItem('superAdminImpersonationData', dataStr);
+  localStorage.setItem('impersonationInfo', infoStr);
+};
+
+
+/**
+ * Handle the logic of reverting from impersonation back to Super Admin
+ * This performs session restoration and returns true if successful
+ * @returns {boolean} True if revert logic was successful
+ */
+export const performRevertToSuperAdmin = () => {
+  try {
+    const impersonationDataStr = localStorage.getItem('superAdminImpersonationData') || sessionStorage.getItem('superAdminImpersonationData');
+
+    console.log('[IMPERSONATION_REVERT] Attempting revert', {
+      hasData: !!impersonationDataStr,
+      localExists: !!localStorage.getItem('superAdminImpersonationData'),
+      sessionExists: !!sessionStorage.getItem('superAdminImpersonationData')
+    });
+
+    if (!impersonationDataStr) {
+      console.error('[IMPERSONATION_REVERT] Original session data not found');
+      return false;
+    }
+
+
+
+    const sessionData = JSON.parse(impersonationDataStr);
+
+    // STEP 1: Hard reset - Clear ALL current context
+    clearUserData();
+
+    // STEP 2: Restore Super Admin session data
+    // Clear everything first to ensure clean slate
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Restore localStorage data
+    if (sessionData.accessToken) localStorage.setItem('accessToken', sessionData.accessToken);
+    if (sessionData.refreshToken) localStorage.setItem('refreshToken', sessionData.refreshToken);
+    if (sessionData.userData) localStorage.setItem('userData', sessionData.userData);
+    if (sessionData.userType) localStorage.setItem('userType', sessionData.userType);
+    if (sessionData.isLoggedIn) localStorage.setItem('isLoggedIn', sessionData.isLoggedIn);
+    if (sessionData.rememberMe) localStorage.setItem('rememberMe', sessionData.rememberMe);
+
+    // Restore sessionStorage data
+    if (sessionData.sessionAccessToken) sessionStorage.setItem('accessToken', sessionData.sessionAccessToken);
+    if (sessionData.sessionRefreshToken) sessionStorage.setItem('refreshToken', sessionData.sessionRefreshToken);
+    if (sessionData.sessionUserData) sessionStorage.setItem('userData', sessionData.sessionUserData);
+    if (sessionData.sessionUserType) sessionStorage.setItem('userType', sessionData.sessionUserType);
+    if (sessionData.sessionIsLoggedIn) sessionStorage.setItem('isLoggedIn', sessionData.sessionIsLoggedIn);
+    if (sessionData.sessionRememberMe) sessionStorage.setItem('rememberMe', sessionData.sessionRememberMe);
+
+    // STEP 3: Clear impersonation markers (they shouldn't exist after sessionStorage.clear() but for safety)
+    sessionStorage.removeItem('superAdminImpersonationData');
+    sessionStorage.removeItem('impersonationInfo');
+
+    return true;
+  } catch (error) {
+    console.error('[IMPERSONATION_REVERT] Error during revert:', error);
+    return false;
+  }
+};
+
+

@@ -52,7 +52,7 @@ const ComplianceDetails = () => {
         <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Details</h2>
+                    <h3 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Details</h3>
                     <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro] mt-1">
                         Detailed view of compliance scores, risks, and action items.
                     </p>

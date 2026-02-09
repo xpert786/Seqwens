@@ -371,7 +371,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             ← Back to Subscription Plans
           </button>
           <div className="mt-4">
-            <h2 className="text-2xl font-bold" style={{ color: '#3B4A66' }}>Edit Subscription Plan</h2>
+            <h3 className="text-2xl font-bold" style={{ color: '#3B4A66' }}>Edit Subscription Plan</h3>
             <p className="text-sm mt-1" style={{ color: '#3B4A66' }}>Modify pricing, features, limits, and display settings for subscription plans</p>
           </div>
         </div>

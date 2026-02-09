@@ -77,7 +77,9 @@ export const SubscriptionStatusProvider = ({ children }) => {
         message: subscriptionStatus?.message || '',
         ctaLabel: subscriptionStatus?.cta_label || null,
         ctaAction: subscriptionStatus?.cta_action || null,
+        isDeveloperSubscription: subscriptionStatus?.is_billing_bypass || subscriptionStatus?.status === 'developer' || false,
     };
+
 
     return (
         <SubscriptionStatusContext.Provider value={value}>
@@ -105,7 +107,9 @@ export const useSubscriptionStatus = () => {
             message: '',
             ctaLabel: null,
             ctaAction: null,
+            isDeveloperSubscription: false,
         };
+
     }
     return context;
 };

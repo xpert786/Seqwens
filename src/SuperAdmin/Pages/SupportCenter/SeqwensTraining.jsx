@@ -423,7 +423,7 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                         <div className="relative bg-white rounded-lg w-[450px] p-2" style={{ margin: 0 }}>
                             {/* Header */}
                             <div className="flex items-center justify-between pt-3 pl-3">
-                                <h2 className="text-xl font-semibold text-gray-800">Add Resources</h2>
+                                <h3 className="text-xl font-semibold text-gray-800">Add Resources</h3>
                                 <button
                                     onClick={handleCloseModal}
                                     className="text-gray-400 hover:text-gray-600 transition-colors"

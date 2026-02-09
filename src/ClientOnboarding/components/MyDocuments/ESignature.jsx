@@ -486,6 +486,40 @@ export default function ESignature() {
             </button>
             <button
               onClick={() => {
+                setFilter('completed');
+              }}
+              className="btn "
+              style={{
+                backgroundColor: filter === 'completed' ? "#00C0C6" : "#fff",
+                color: filter === 'completed' ? "#fff" : "#3B4A66",
+                border: "1px solid #E8F0FF",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "500",
+                padding: "6px 12px"
+              }}
+            >
+              Completed
+            </button>
+            <button
+              onClick={() => {
+                setFilter('declined');
+              }}
+              className="btn "
+              style={{
+                backgroundColor: filter === 'declined' ? "#00C0C6" : "#fff",
+                color: filter === 'declined' ? "#fff" : "#3B4A66",
+                border: "1px solid #E8F0FF",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "500",
+                padding: "6px 12px"
+              }}
+            >
+              Declined
+            </button>
+            <button
+              onClick={() => {
                 setFilter('expired');
               }}
               className="btn "

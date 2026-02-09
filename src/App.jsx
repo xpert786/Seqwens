@@ -70,7 +70,7 @@ class RouteErrorBoundary extends React.Component {
           padding: '20px',
           textAlign: 'center'
         }}>
-          <h2 style={{ color: '#EF4444', marginBottom: '10px' }}>Error Loading Page</h2>
+          <h3 style={{ color: '#EF4444', marginBottom: '10px' }}>Error Loading Page</h3>
           <p style={{ color: '#666', marginBottom: '20px' }}>
             {this.state.error?.message || 'An error occurred while loading this page.'}
           </p>

@@ -9,6 +9,8 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken, getStorage } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
+import { useSubscriptionStatus } from '../../Context/SubscriptionStatusContext';
+
 import {
   AreaChart,
   Area,
@@ -64,7 +66,9 @@ export default function FirmAdminDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { advancedReportingEnabled } = useFirmSettings();
+  const { isDeveloperSubscription, statusDisplay } = useSubscriptionStatus();
   const [activeTab, setActiveTab] = useState('trend');
+
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
@@ -1059,8 +1063,28 @@ export default function FirmAdminDashboard() {
       <ScheduleModal />
       <RevenueModal />
       <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
+        {/* Developer Subscription Banner */}
+        {isDeveloperSubscription && (
+          <div className="mb-6 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 16H13V18H11V16ZM11 6H13V14H11V6Z" fill="currentColor" />
+                </svg>
+              </div>
+              <div>
+                <h5 className="text-lg font-bold text-blue-900 font-[BasisGrotesquePro]">Developer Subscription Active</h5>
+                <p className="text-sm text-blue-700 font-[BasisGrotesquePro]">
+                  Your account is currently in QA Mode. You have full access to all features (including OCR and AI) for testing purposes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-3">
+
 
           {/* Left Section */}
           <div className="flex-1 min-w-0 pr-4 xl:pr-2 max-md:pr-0">

@@ -5,11 +5,14 @@ import MyDocumentsContent from './MyDocumentsContent';
 import UploadModal from "../../upload/UploadModal";
 import ESignature from './ESignature';
 import ArchivedDocuments from './ArchivedDocuments';
+import ReviewRequests from './ReviewRequests';
 import '../../styles/MyDocumentMain.css';
+
 const tabs = [
   { name: 'Document Requests', key: 'requests' },
   { name: 'My Documents', key: 'my' },
   { name: 'E-signature', key: 'signature' },
+  { name: 'Review Requests', key: 'reviews' },
   { name: 'Archived Documents', key: 'archived' }
 ];
 
@@ -93,6 +96,7 @@ export default function MyDocumentsMain() {
         {activeTab === 'requests' && <DocumentRequests />}
         {activeTab === 'my' && <MyDocumentsContent key={documentsRefreshKey} />}
         {activeTab === 'signature' && <ESignature />}
+        {activeTab === 'reviews' && <ReviewRequests />}
         {activeTab === 'archived' && <ArchivedDocuments />}
       </div>
     </div>

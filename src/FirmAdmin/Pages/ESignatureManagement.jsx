@@ -2528,7 +2528,7 @@ export default function ESignatureManagement() {
                         ) : uploadedFile && uploadedFile.type !== 'application/pdf' ? (
                           /* Simulated Document Content */
                           <div className="space-y-4 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            <h2 className="text-2xl font-bold mb-4">Project Overview: MVP Beta - Movement Feedback Module</h2>
+                            <h3 className="text-2xl font-bold mb-4">Project Overview: MVP Beta - Movement Feedback Module</h3>
 
                             <div>
                               <h3 className="text-lg font-semibold mb-2">Objective</h3>
@@ -2916,7 +2916,7 @@ export default function ESignatureManagement() {
                       /* Simulated Document Content for non-PDF files */
                       <div className="space-y-4 text-gray-800 relative" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         <div className="flex items-center gap-2 mb-4">
-                          <h2 className="text-2xl font-bold">Project Overview: MVP Beta - Movement Feedback Module</h2>
+                          <h3 className="text-2xl font-bold">Project Overview: MVP Beta - Movement Feedback Module</h3>
                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M10 2C5.58 2 2 5.58 2 10C2 14.42 5.58 18 10 18C14.42 18 18 14.42 18 10C18 5.58 14.42 2 10 2ZM10 16C6.69 16 4 13.31 4 10C4 6.69 6.69 4 10 4C13.31 4 16 6.69 16 10C16 13.31 13.31 16 10 16Z" fill="#3AD6F2" />
                             <path d="M10 6C9.45 6 9 6.45 9 7V10C9 10.55 9.45 11 10 11C10.55 11 11 10.55 11 10V7C11 6.45 10.55 6 10 6ZM10 13C9.45 13 9 13.45 9 14C9 14.55 9.45 15 10 15C10.55 15 11 14.55 11 14C11 13.45 10.55 13 10 13Z" fill="#3AD6F2" />
@@ -3243,9 +3243,9 @@ export default function ESignatureManagement() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+              <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
                 Create Template
-              </h2>
+              </h3>
               <button
                 onClick={() => !creatingTemplate && setShowCreateTemplateModal(false)}
                 className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
@@ -3349,9 +3349,9 @@ export default function ESignatureManagement() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+              <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
                 Delete Template
-              </h2>
+              </h3>
               <button
                 onClick={() => !deletingTemplate && setShowDeleteTemplateModal(false)}
                 className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"

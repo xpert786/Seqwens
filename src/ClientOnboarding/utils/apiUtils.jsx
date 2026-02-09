@@ -1,5 +1,6 @@
 import { getApiBaseUrl, getFallbackApiBaseUrl, fetchWithCors } from './corsConfig';
-import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData } from './userUtils';
+import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData, getImpersonationStatus } from './userUtils';
+
 import { getPathWithPrefix, getLoginUrl } from './urlUtils';
 
 // API Configuration
@@ -192,16 +193,25 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         if (response.status === 401) {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
-          clearUserData();
+
+          // CRITICAL: Preserve impersonation data if we have any
+          const { isImpersonating } = getImpersonationStatus();
+          clearUserData(isImpersonating);
+
           window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        clearUserData();
+
+        // CRITICAL: Preserve impersonation data if we have any
+        const { isImpersonating } = getImpersonationStatus();
+        clearUserData(isImpersonating);
+
         window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
+
     }
 
     if (!response.ok) {
@@ -2670,6 +2680,55 @@ export const taskDetailAPI = {
         }
         return response.json();
       });
+  },
+
+  // Add task comment
+  addTaskComment: async (taskId, data) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/comments/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  }
+};
+
+// Export tasksAPI for client-side task operations
+export const tasksAPI = {
+  // Get my tasks (for clients)
+  getMyTasks: async () => {
+    return await apiRequest('/taxpayer/tasks/', 'GET');
+  },
+
+  // Add task comment
+  addTaskComment: async (taskId, data) => {
+    return await taskDetailAPI.addTaskComment(taskId, data);
+  },
+
+  // Update task status
+  updateTaskStatus: async (taskId, status) => {
+    return await apiRequest(`/taxpayer/tasks/${taskId}/`, 'PATCH', { status });
+  },
+
+  // Update task (full update)
+  updateTask: async (taskId, taskData) => {
+    return await apiRequest(`/taxpayer/tasks/${taskId}/`, 'PATCH', taskData);
   }
 };
 
@@ -3874,8 +3933,8 @@ export const firmAdminEmailTemplatesAPI = {
     const headers = getHeaders();
     delete headers['Content-Type']; // Important: let browser set boundary
 
-    const url = EMAIL_TEMPLATE_BASE.startsWith('http') 
-      ? `${EMAIL_TEMPLATE_BASE}/assets/upload/` 
+    const url = EMAIL_TEMPLATE_BASE.startsWith('http')
+      ? `${EMAIL_TEMPLATE_BASE}/assets/upload/`
       : `${API_BASE_URL}${EMAIL_TEMPLATE_BASE}/assets/upload/`;
 
     const response = await fetchWithCors(url, {
@@ -6341,8 +6400,11 @@ export const customESignAPI = {
 
   // List signature requests
   // GET /api/taxpayer/signatures/requests/
-  listSignatureRequests: async () => {
-    return await apiRequest('/taxpayer/signatures/requests/', 'GET');
+  listSignatureRequests: async (filter = null) => {
+    const endpoint = filter
+      ? `/taxpayer/signatures/requests/?filter=${filter}`
+      : '/taxpayer/signatures/requests/';
+    return await apiRequest(endpoint, 'GET');
   },
 
   // Submit signature with coordinates
