@@ -23,6 +23,8 @@ const BuilderCanvas = ({
     onUpdateBlock,
     onDeleteBlock,
     onDuplicateBlock,
+    onMoveUp,
+    onMoveDown,
     previewMode,
     firmData,
     brandingData,
@@ -42,15 +44,20 @@ const BuilderCanvas = ({
     return (
         <div className="builder-canvas">
             <div className="canvas-email-container">
-                {blocks.map((block) => (
+                {blocks.map((block, index) => (
                     <SortableBlock
                         key={block.id}
+                        index={index}
+                        isFirst={index === 0}
+                        isLast={index === blocks.length - 1}
                         block={block}
                         isSelected={selectedBlockId === block.id}
                         onSelect={onSelectBlock}
                         onUpdate={onUpdateBlock}
                         onDelete={onDeleteBlock}
                         onDuplicate={onDuplicateBlock}
+                        onMoveUp={onMoveUp}
+                        onMoveDown={onMoveDown}
                         previewMode={previewMode}
                         firmData={firmData}
                         brandingData={brandingData}
@@ -63,11 +70,16 @@ const BuilderCanvas = ({
 
 const SortableBlock = ({
     block,
+    index,
+    isFirst,
+    isLast,
     isSelected,
     onSelect,
     onUpdate,
     onDelete,
     onDuplicate,
+    onMoveUp,
+    onMoveDown,
     previewMode,
     firmData,
     brandingData,
@@ -155,6 +167,32 @@ const SortableBlock = ({
                         </svg>
                     </div>
                     <div className="block-actions">
+                        <button
+                            className={`block-action-btn ${isFirst ? 'disabled' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isFirst) onMoveUp(index);
+                            }}
+                            disabled={isFirst}
+                            title="Move up"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z" />
+                            </svg>
+                        </button>
+                        <button
+                            className={`block-action-btn ${isLast ? 'disabled' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isLast) onMoveDown(index);
+                            }}
+                            disabled={isLast}
+                            title="Move down"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z" />
+                            </svg>
+                        </button>
                         <button
                             className="block-action-btn"
                             onClick={(e) => {

@@ -1457,7 +1457,7 @@ const SubscriptionInvoicesTab = () => {
         invoice_type: typeFilter,
       });
 
-      const response = await superAdminAPI.get(`/admin/subscription-invoices/?${params}`);
+      const response = await superAdminAPI.get(`/user/admin/subscription-invoices/?${params}`);
       if (response.data.success) {
         setInvoices(response.data.data.invoices);
         setTotalPages(response.data.data.pagination.total_pages);
@@ -1473,7 +1473,7 @@ const SubscriptionInvoicesTab = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await superAdminAPI.get('/admin/subscription-invoices/stats/');
+      const response = await superAdminAPI.get('/user/admin/subscription-invoices/stats/');
       if (response.data.success) {
         setStats(response.data.data);
       }

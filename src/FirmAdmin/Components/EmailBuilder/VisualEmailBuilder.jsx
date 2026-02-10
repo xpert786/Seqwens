@@ -78,6 +78,18 @@ const VisualEmailBuilder = ({
         }
     }, [blocks]);
 
+    const moveBlockUp = useCallback((index) => {
+        if (index > 0) {
+            setBlocks(prev => arrayMove(prev, index, index - 1));
+        }
+    }, []);
+
+    const moveBlockDown = useCallback((index) => {
+        if (index < blocks.length - 1) {
+            setBlocks(prev => arrayMove(prev, index, index + 1));
+        }
+    }, [blocks.length]);
+
     const handleDragEnd = (event) => {
         const { active, over } = event;
 
@@ -130,6 +142,8 @@ const VisualEmailBuilder = ({
                             onUpdateBlock={updateBlock}
                             onDeleteBlock={deleteBlock}
                             onDuplicateBlock={duplicateBlock}
+                            onMoveUp={moveBlockUp}
+                            onMoveDown={moveBlockDown}
                             previewMode={previewMode}
                             firmData={firmData}
                             brandingData={brandingData}

@@ -130,8 +130,8 @@ export default function Security() {
     // Mask API key for display - always mask, never show full key
     const maskAPIKey = (key) => {
         if (!key || key === "N/A") return "N/A";
-        // If already masked (contains asterisks), return as is
-        if (key.includes('*')) return key;
+        // If already masked (contains asterisks, dots or bullets), return as is
+        if (key.includes('*') || key.includes('•') || key.includes('·')) return key;
         // Mask the key: show first 4 and last 4 characters, mask the rest
         if (key.length <= 8) {
             return '•'.repeat(key.length);
@@ -204,7 +204,7 @@ export default function Security() {
             const response = await superAdminAPI.revealAPIKey(serviceName);
 
             if (response.success && response.data) {
-                setRevealedKey(response.data.key);
+                setRevealedKey(response.data.key || response.data.masked_key);
                 setSelectedKey(response.data);
                 setShowRevealModal(true);
             }

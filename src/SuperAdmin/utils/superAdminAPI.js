@@ -190,6 +190,23 @@ export const handleAPIError = (error) => {
 
 // SuperAdmin Dashboard API functions
 export const superAdminAPI = {
+  // Generic methods
+  get: async (endpoint) => {
+    return await apiRequest(endpoint, 'GET');
+  },
+  post: async (endpoint, data) => {
+    return await apiRequest(endpoint, 'POST', data);
+  },
+  patch: async (endpoint, data) => {
+    return await apiRequest(endpoint, 'PATCH', data);
+  },
+  put: async (endpoint, data) => {
+    return await apiRequest(endpoint, 'PUT', data);
+  },
+  delete: async (endpoint) => {
+    return await apiRequest(endpoint, 'DELETE');
+  },
+
   // Get admin dashboard data
   // Optional params: revenue_month, revenue_year, distribution_month, distribution_year
   getAdminDashboard: async (params = {}) => {
@@ -1188,6 +1205,28 @@ export const superAdminAPI = {
   // Get archive monitoring data
   getArchiveMonitoring: async () => {
     return await apiRequest('/user/superadmin/archive-monitoring/', 'GET');
+  },
+
+  // Backup Management API functions
+  getBackups: async (params = {}) => {
+    const { status, type } = params;
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    if (type) queryParams.append('type', type);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/superadmin/backups/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  createBackup: async (backupData = {}) => {
+    return await apiRequest('/user/superadmin/backups/create/', 'POST', backupData);
+  },
+
+  deleteBackup: async (backupId) => {
+    return await apiRequest(`/user/superadmin/backups/${backupId}/`, 'DELETE');
+  },
+
+  downloadBackup: async (backupId) => {
+    return await apiRequest(`/user/superadmin/backups/${backupId}/download/`, 'GET');
   }
 };
 

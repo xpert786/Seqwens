@@ -121,6 +121,7 @@ const UsersDetails = () => {
 
     const loggedInUser = getUserData();
     const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
+    const isOwnProfile = loggedInUser?.id?.toString() === userId?.toString();
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -151,6 +152,7 @@ const UsersDetails = () => {
     const accountInfo = userDetails?.account_information || {};
     const permissions = userDetails?.permissions || [];
     const actions = userDetails?.actions || {};
+    const isDefaultSuperAdmin = !accountInfo?.created_by && profile.role === 'super_admin';
 
     const fullName = useMemo(() => {
         const name = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
@@ -508,7 +510,7 @@ const UsersDetails = () => {
                                     Change Admin Type
                                 </button>
                             )}
-                            {isSuperAdmin && (
+                            {isSuperAdmin && !isOwnProfile && !isDefaultSuperAdmin && (
                                 <button
                                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={actionLoading}

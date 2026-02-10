@@ -46,7 +46,7 @@ function SuperAdminProtectedRoute({ children }) {
   return children;
 }
 
-// Protected Route Component for Support Admin - Allow support_admin, billing_admin and super_admin
+// Protected Route Component for Support Admin - Allow support_admin and super_admin only
 function SupportAdminProtectedRoute({ children }) {
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
@@ -55,7 +55,7 @@ function SupportAdminProtectedRoute({ children }) {
   const storage = getStorage();
   const userType = storage?.getItem("userType");
 
-  if (userType !== 'support_admin' && userType !== 'super_admin' && userType !== 'billing_admin') {
+  if (userType !== 'support_admin' && userType !== 'super_admin') {
     console.warn('Unauthorized access attempt to Support Center');
     // Redirect to appropriate page based on role
     if (userType === 'billing_admin') {

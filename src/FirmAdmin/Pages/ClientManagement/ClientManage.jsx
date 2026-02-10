@@ -2823,7 +2823,22 @@ export default function ClientManage() {
               ) : staffError ? (
                 <div className="text-center py-4 text-red-500">{staffError}</div>
               ) : staffMembers.length === 0 ? (
-                <div className="text-center py-4 text-gray-500">No staff members available</div>
+                <div className="text-center py-6">
+                  <div className="text-gray-600 mb-2 font-medium">No preparers found</div>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Add a staff member or this client will remain unassigned.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowReassignStaffModal(false);
+                      navigate('/firmadmin/staff');
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                    style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
+                  >
+                    Add Staff Member
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-4">
                   <div>

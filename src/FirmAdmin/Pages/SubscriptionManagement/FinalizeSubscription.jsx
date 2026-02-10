@@ -25,20 +25,7 @@ const FinalizeSubscription = () => {
       const userDataStr = storage?.getItem("userData");
       const userType = storage?.getItem("userType");
 
-      // IMPERSONATION CHECK: If Super Admin is impersonating, allow full access
-      const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
-      const isImpersonating = !!impersonationData;
 
-      if (isImpersonating) {
-        console.log('[FINALIZE_SUBSCRIPTION] Super Admin impersonation detected - bypassing subscription checks');
-        toast.info('Super Admin Mode: Full access granted', {
-          position: 'top-right',
-          autoClose: 2000,
-        });
-        // Redirect to firm admin dashboard - Super Admin can do anything
-        navigate('/firmadmin', { replace: true });
-        return;
-      }
 
       // Check user type first
       if (userType !== 'admin' && userType !== 'firm') {

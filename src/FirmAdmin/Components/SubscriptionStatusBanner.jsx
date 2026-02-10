@@ -32,11 +32,7 @@ const SubscriptionStatusBanner = () => {
         return null;
     }
 
-    // IMPERSONATION CHECK: Don't show banner if impersonating
-    const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
-    if (impersonationData) {
-        return null;
-    }
+
 
     // Determine banner style based on status
     const getBannerStyle = () => {

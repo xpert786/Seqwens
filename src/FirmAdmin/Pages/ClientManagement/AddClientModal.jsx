@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
-import { FaEnvelope, FaSms, FaLink, FaCopy, FaTrash } from "react-icons/fa";
+import { FaEnvelope, FaSms, FaLink, FaCopy, FaTrash, FaExclamationTriangle } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -21,6 +21,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
   const [phoneCountry, setPhoneCountry] = useState('us');
   const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
 
+  const [sendInvite, setSendInvite] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -36,6 +38,9 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
   const [deletingInvite, setDeletingInvite] = useState(false);
   const [showDeleteInviteConfirmModal, setShowDeleteInviteConfirmModal] = useState(false);
 
+  // Link identity confirmation state
+  const [linkConfirmation, setLinkConfirmation] = useState(null);
+
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -48,6 +53,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       });
       setPhoneCountry('us');
       setSmsPhoneCountry('us');
+      setSendInvite(true); // Default to sending invite
       setLoading(false);
       setError('');
       setSuccess('');
@@ -60,6 +66,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setInviteActionLoading(false);
       setInviteActionMethod(null);
       setInviteLinkRefreshing(false);
+      setLinkConfirmation(null);
     }
   }, [isOpen]);
 
@@ -544,6 +551,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim(),
+        send_invitation: sendInvite
       };
 
       // Add phone_number only if provided
@@ -565,6 +573,17 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
+        // Handle Identity Link Confirmation (409 Conflict)
+        if (response.status === 409 && errorData.error_code === 'USER_EXISTS_DIFFERENT_ROLE') {
+          setLoading(false);
+          setLinkConfirmation({
+            message: errorData.message || "This email is already associated with another role. Do you want to link it as a Taxpayer?",
+            existingRole: errorData.existing_role
+          });
+          return;
+        }
+
         throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
@@ -588,44 +607,52 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         // Close add client modal first
         onClose();
 
-        // Show success toast
-        toast.success("Client created successfully!", getToastOptions());
+        // Show success toast with backend message (e.g., "Linked as Taxpayer")
+        toast.success(result.message || "Client created successfully!", getToastOptions());
 
-        // Generate invite link using the firm admin API (same flow as tax preparer)
-        try {
-          const inviteResponse = await firmAdminClientsAPI.generateInviteLink({
-            client_id: clientId
-          });
+        // If user chose NOT to send invite immediately, offer to send/share it now
+        if (!sendInvite) {
+          // Generate invite link using the firm admin API (same flow as tax preparer)
+          try {
+            const inviteResponse = await firmAdminClientsAPI.generateInviteLink({
+              client_id: clientId
+            });
 
-          if (inviteResponse.success) {
-            // Format the response to match the expected structure for openInviteActionsModal
-            const inviteData = {
-              id: inviteResponse.data?.invite_id,
-              invite_id: inviteResponse.data?.invite_id,
-              client_id: clientId,
-              first_name: result.data.first_name || formData.first_name.trim(),
-              last_name: result.data.last_name || formData.last_name.trim(),
-              email: result.data.email || formData.email.trim(),
-              phone_number: result.data.phone_number || formData.phone_number || '',
-              invite_link: inviteResponse.invite_link || inviteResponse.data?.invite_link,
-              expires_at: inviteResponse.data?.expires_at,
-              status: inviteResponse.data?.status || 'pending',
-              firm_name: result.data.firm?.name || null
-            };
+            if (inviteResponse.success) {
+              // Format invite data
+              const inviteData = {
+                id: inviteResponse.data?.invite_id,
+                invite_id: inviteResponse.data?.invite_id,
+                client_id: clientId,
+                first_name: result.data.first_name || formData.first_name.trim(),
+                last_name: result.data.last_name || formData.last_name.trim(),
+                email: result.data.email || formData.email.trim(),
+                phone_number: result.data.phone_number || formData.phone_number || '',
+                invite_link: inviteResponse.invite_link || inviteResponse.data?.invite_link,
+                expires_at: inviteResponse.data?.expires_at,
+                status: inviteResponse.data?.status || 'pending',
+                firm_name: result.data.firm?.name || null
+              };
 
-            // Small delay to ensure Add Client modal is closed first
-            setTimeout(() => {
-              openInviteActionsModal(inviteData);
-            }, 100);
+              // Small delay to ensure Add Client modal is closed first
+              setTimeout(() => {
+                openInviteActionsModal(inviteData);
+              }, 100);
 
-            toast.info("Invite link created. Share or send it below.", getToastOptions());
-          } else {
-            throw new Error(inviteResponse.message || "Failed to create invite");
+              toast.info("Client added. You can now share the invite manually.", getToastOptions());
+            }
+          } catch (inviteError) {
+            console.error("Error creating invite options:", inviteError);
+            toast.error(handleAPIError(inviteError) || "Failed to create invite options. You can send it later from the client's invite options.", getToastOptions());
           }
-        } catch (inviteError) {
-          console.error("Error creating invite for client:", inviteError);
-          toast.error(handleAPIError(inviteError) || "Failed to create invite. You can send it later from the client's invite options.", getToastOptions());
+        } else {
+          // Invite already sent automatically by backend
+          // Trigger refresh callback if provided
+          if (onClientCreated) {
+            onClientCreated();
+          }
         }
+
       } else {
         // Don't close modal on error - show error message
         const errorMsg = result.message || 'Failed to create client';
@@ -641,6 +668,80 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setLoading(false);
     }
   };
+
+  const confirmLinkCreate = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const payload = {
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        email: formData.email.trim(),
+        send_invitation: sendInvite,
+        force_link: true // Force link the identity
+      };
+
+      // Add phone_number only if provided
+      if (formData.phone_number.trim()) {
+        payload.phone_number = formData.phone_number.trim();
+      }
+
+      console.log('Force linking client with payload:', payload);
+
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/create/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Success flow (same as handleSubmit)
+        const clientId = result.data.id || result.data.client_id;
+
+        setLoading(false);
+        setLinkConfirmation(null); // Clear confirmation
+        setFormData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone_number: ''
+        });
+
+        onClose();
+
+        toast.success(result.message || "Client linked successfully!", getToastOptions());
+
+        if (!sendInvite) {
+          // ... existing invite logic if needed ...
+          // For simplicity, just show success toast if linked
+          toast.info("Client linked. You can share access details manually.", getToastOptions());
+        } else {
+          if (onClientCreated) onClientCreated();
+        }
+      } else {
+        throw new Error(result.message || 'Failed to link client');
+      }
+
+    } catch (err) {
+      console.error('Error linking client:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to link client.');
+      setLoading(false);
+    }
+  };
+
 
   return (
     <>
@@ -686,103 +787,170 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               </div>
             )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* First and Last Name */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.first_name}
-                    onChange={(e) => handleInputChange('first_name', e.target.value)}
-                    placeholder="Enter first name"
-                    className="w-full !border border-gray-300 !rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
-                    required
-                  />
+            {/* Form or Link Confirmation */}
+            {linkConfirmation ? (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="bg-orange-100 p-3 rounded-full">
+                    <FaExclamationTriangle className="text-orange-600 text-2xl" />
+                  </div>
                 </div>
+
+                <h3 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">Account Exists</h3>
+
+                <p className="text-gray-700 font-[BasisGrotesquePro]">
+                  {linkConfirmation.message}
+                </p>
+
+                <div className="flex gap-3 justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setLinkConfirmation(null)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium font-[BasisGrotesquePro]"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmLinkCreate}
+                    disabled={loading}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium font-[BasisGrotesquePro] flex items-center"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      'Yes, Link Identity'
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* First and Last Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.first_name}
+                      onChange={(e) => handleInputChange('first_name', e.target.value)}
+                      placeholder="Enter first name"
+                      className="w-full !border border-gray-300 !rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) => handleInputChange('last_name', e.target.value)}
+                      placeholder="Enter last name"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-                    Last Name <span className="text-red-500">*</span>
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    value={formData.last_name}
-                    onChange={(e) => handleInputChange('last_name', e.target.value)}
-                    placeholder="Enter last name"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="abc@gmail.com"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
                     required
                   />
                 </div>
-              </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="abc@gmail.com"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
-                  required
-                />
-              </div>
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+                    Phone
+                  </label>
+                  <PhoneInput
+                    country={phoneCountry}
+                    value={formData.phone_number || ''}
+                    onChange={(phone) => handleInputChange('phone_number', phone)}
+                    onCountryChange={(countryCode) => {
+                      setPhoneCountry(countryCode.toLowerCase());
+                    }}
+                    inputClass="form-control"
+                    containerClass="w-100 phone-input-container"
+                    inputStyle={{
+                      height: '45px',
+                      paddingLeft: '48px',
+                      paddingRight: '12px',
+                      paddingTop: '6px',
+                      paddingBottom: '6px',
+                      width: '100%',
+                      fontSize: '1rem',
+                      border: '1px solid #ced4da',
+                      borderRadius: '0.375rem',
+                      backgroundColor: '#fff'
+                    }}
+                    enableSearch={true}
+                    countryCodeEditable={false}
+                  />
+                </div>
 
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-                  Phone
-                </label>
-                <PhoneInput
-                  country={phoneCountry}
-                  value={formData.phone_number || ''}
-                  onChange={(phone) => handleInputChange('phone_number', phone)}
-                  onCountryChange={(countryCode) => {
-                    setPhoneCountry(countryCode.toLowerCase());
-                  }}
-                  inputClass="form-control"
-                  containerClass="w-100 phone-input-container"
-                  inputStyle={{
-                    height: '45px',
-                    paddingLeft: '48px',
-                    paddingRight: '12px',
-                    paddingTop: '6px',
-                    paddingBottom: '6px',
-                    width: '100%',
-                    fontSize: '1rem',
-                    border: '1px solid #ced4da',
-                    borderRadius: '0.375rem',
-                    backgroundColor: '#fff'
-                  }}
-                  enableSearch={true}
-                  countryCodeEditable={false}
-                />
-              </div>
+                {/* Send Invite Checkbox */}
+                <div className="flex items-start mt-2">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="sendInvite"
+                      name="sendInvite"
+                      type="checkbox"
+                      checked={sendInvite}
+                      onChange={(e) => setSendInvite(e.target.checked)}
+                      className="focus:ring-[#F56D2D] h-4 w-4 text-[#F56D2D] border-gray-300 rounded cursor-pointer"
+                    />
+                  </div>
+                  <div className="ml-2 text-sm">
+                    <label htmlFor="sendInvite" className="font-[BasisGrotesquePro] text-gray-700 cursor-pointer">
+                      Send invitation email immediately
+                    </label>
+                    <p className="text-gray-500 text-xs font-[BasisGrotesquePro]">
+                      Uncheck if you want to prepare documents before inviting the client.
+                    </p>
+                  </div>
+                </div>
 
-              {/* Footer Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
-                  style={{ borderRadius: '8px' }}
-                >
-                  {loading ? 'Creating...' : 'Add Client'}
-                </button>
-              </div>
-            </form>
+                {/* Footer Buttons */}
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
+                    style={{ borderRadius: '8px' }}
+                  >
+                    {loading ? 'Creating...' : 'Add Client'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

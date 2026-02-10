@@ -82,22 +82,10 @@ function FirmAdminProtectedRoute({ children }) {
   }
 
   // Check if admin user has no subscription plan (except on finalize-subscription page)
-  // Handle both with and without base path - use includes for better matching
   const pathname = location.pathname;
   const isFinalizeSubscription = pathname.includes('/finalize-subscription');
 
   if (!isFinalizeSubscription) {
-    // IMPERSONATION CHECK: If Super Admin is impersonating, bypass all subscription checks
-    const impersonationData = localStorage.getItem('superAdminImpersonationData') || sessionStorage.getItem('superAdminImpersonationData');
-    const isImpersonating = !!impersonationData;
-
-
-    if (isImpersonating) {
-      console.log('[FIRM_ROUTES] Super Admin impersonation detected - bypassing subscription checks');
-      // Allow full access - Super Admin can do anything
-      return children;
-    }
-
     const userDataStr = storage?.getItem("userData");
     if (userDataStr) {
       try {

@@ -72,7 +72,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
       aria-hidden={!isSidebarOpen}
     >
       <div className="tsb-top">
-        <ul className="nav flex-column px-3">
+        <ul className="nav flex-column px-3" style={{ paddingBottom: '120px' }}>
           {isFeatureVisible('dashboard') && (
             <Link to="/taxdashboard" className={linkClass("/taxdashboard")}>
               <span className={iconWrapperClass("/taxdashboard")}><DashIconed /></span>

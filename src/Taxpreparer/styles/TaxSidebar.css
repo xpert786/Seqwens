@@ -57,6 +57,8 @@
   flex: 1 !important;
   padding-top: 15px !important;
   padding-bottom: 10px !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
 }
 
 .tsb-top::-webkit-scrollbar {

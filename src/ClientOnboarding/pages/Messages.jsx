@@ -873,6 +873,11 @@ export default function Messages() {
         message: chatMessage.trim() || "Hello, I need assistance with my taxes."
       };
 
+      // Handle attachment if present (take the first one)
+      if (attachedFiles && attachedFiles.length > 0) {
+        payload.document = attachedFiles[0];
+      }
+
       console.log('Creating thread with payload:', payload);
 
       const response = await threadsAPI.createThread(payload);

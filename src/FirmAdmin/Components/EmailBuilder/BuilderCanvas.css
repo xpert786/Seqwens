@@ -126,6 +126,18 @@
     color: #1f2a55;
 }
 
+.block-action-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background-color: #f8f9fa;
+}
+
+.block-action-btn.disabled:hover {
+    background-color: #f8f9fa;
+    border-color: #e8f0ff;
+    color: #6e7dae;
+}
+
 .block-action-btn.delete:hover {
     background-color: #fee;
     border-color: #f56d2d;

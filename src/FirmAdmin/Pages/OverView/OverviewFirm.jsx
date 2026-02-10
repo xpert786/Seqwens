@@ -6,7 +6,7 @@ import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import { firmAdminDashboardAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken, getStorage } from '../../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getStorage, getImpersonationStatus } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
 import { useSubscriptionStatus } from '../../Context/SubscriptionStatusContext';
@@ -66,8 +66,25 @@ export default function FirmAdminDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { advancedReportingEnabled } = useFirmSettings();
-  const { isDeveloperSubscription, statusDisplay } = useSubscriptionStatus();
+  const {
+    isDeveloperSubscription,
+    statusDisplay,
+    hasActiveSubscription,
+    loading: subscriptionLoading
+  } = useSubscriptionStatus();
   const [activeTab, setActiveTab] = useState('trend');
+
+  // Subscription check for impersonation
+  useEffect(() => {
+    // If subscription info is loaded and firm has no active subscription and is not a developer bypass
+    if (!subscriptionLoading && hasActiveSubscription === false && !isDeveloperSubscription) {
+      const { isImpersonating } = getImpersonationStatus();
+      if (isImpersonating) {
+        console.warn('[DASHBOARD] Firm has no active subscription. Redirecting impersonator to purchase page.');
+        navigate('/firmadmin/finalize-subscription');
+      }
+    }
+  }, [hasActiveSubscription, isDeveloperSubscription, subscriptionLoading, navigate]);
 
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);

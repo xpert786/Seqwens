@@ -26,6 +26,13 @@ export default function PlatformControl() {
     const [minPasswordLength, setMinPasswordLength] = useState("10");
     const [requireSpecialChar, setRequireSpecialChar] = useState(false);
 
+    // Audit Summary Data
+    const auditData = [
+        { label: "Active Firms", value: "128", icon: <TotalFirmsIcon /> },
+        { label: "2FA Not Enforced", value: "12", icon: <BlueUserIcon /> },
+        { label: "Pending IP Rules", value: "3", icon: <SystemHealthIcon /> }
+    ];
+
     // IP Restrictions state
     const [ipRestrictions, setIpRestrictions] = useState([]);
     const [loadingIPRestrictions, setLoadingIPRestrictions] = useState(true);
@@ -41,28 +48,6 @@ export default function PlatformControl() {
     const [ipFormErrors, setIpFormErrors] = useState({});
     const [submittingIP, setSubmittingIP] = useState(false);
     const [ipFilter, setIpFilter] = useState(""); // "tenant", "firm", or ""
-
-    // Retention Rules state
-    const [retentionRule, setRetentionRule] = useState(null);
-    const [loadingRetention, setLoadingRetention] = useState(true);
-    const [retentionFormData, setRetentionFormData] = useState({
-        enable_retention_rules: false,
-        years_to_keep: 7,
-        firm_id: null
-    });
-    const [submittingRetention, setSubmittingRetention] = useState(false);
-
-    const auditData = [
-        { label: "Active Firms", value: "128", icon: <TotalFirmsIcon /> },
-        { label: "2FA Not Enforced", value: "12", icon: <BlueUserIcon /> },
-        { label: "Pending IP Rules", value: ipRestrictions.filter(r => !r.is_active).length.toString(), icon: <SystemHealthIcon /> }
-    ];
-
-    const storagePlans = [
-        { name: "Starter", planId: "Plan ID 1", used: 50, total: 5000 },
-        { name: "Growth", planId: "Plan ID 2", used: 4000, total: 5000 },
-        { name: "Enterprise", planId: "Plan ID 3", used: 520, total: 5000 }
-    ];
 
     // Fetch IP Restrictions
     const fetchIPRestrictions = async () => {
@@ -88,31 +73,8 @@ export default function PlatformControl() {
         }
     };
 
-    // Fetch Retention Rules
-    const fetchRetentionRule = async () => {
-        try {
-            setLoadingRetention(true);
-            const response = await superAdminAPI.getRetentionRule();
-
-            if (response.success && response.data) {
-                setRetentionRule(response.data);
-                setRetentionFormData({
-                    enable_retention_rules: response.data.enable_retention_rules || false,
-                    years_to_keep: response.data.years_to_keep || 7,
-                    firm_id: response.data.firm || null
-                });
-            }
-        } catch (err) {
-            console.error('Error fetching retention rule:', err);
-            toast.error(handleAPIError(err), superToastOptions);
-        } finally {
-            setLoadingRetention(false);
-        }
-    };
-
     useEffect(() => {
         fetchIPRestrictions();
-        fetchRetentionRule();
     }, [ipFilter]);
 
     // Handle create/update IP restriction
@@ -238,37 +200,6 @@ export default function PlatformControl() {
         }
     };
 
-    // Handle save retention rule
-    const handleSaveRetentionRule = async () => {
-        if (retentionFormData.years_to_keep < 1 || retentionFormData.years_to_keep > 100) {
-            toast.error("Years to keep must be between 1 and 100", superToastOptions);
-            return;
-        }
-
-        try {
-            setSubmittingRetention(true);
-            const payload = {
-                enable_retention_rules: retentionFormData.enable_retention_rules,
-                years_to_keep: retentionFormData.years_to_keep
-            };
-
-            if (retentionFormData.firm_id) {
-                payload.firm_id = retentionFormData.firm_id;
-            }
-
-            const response = await superAdminAPI.createOrUpdateRetentionRule(payload);
-
-            if (response.success) {
-                toast.success(response.message || "Retention rule updated successfully", superToastOptions);
-                fetchRetentionRule();
-            }
-        } catch (err) {
-            console.error('Error saving retention rule:', err);
-            toast.error(handleAPIError(err), superToastOptions);
-        } finally {
-            setSubmittingRetention(false);
-        }
-    };
 
     // Open IP restriction modal for editing
     const openEditIPModal = (restriction) => {
@@ -369,7 +300,7 @@ export default function PlatformControl() {
 
 
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
                 {/* IP / Location Restrictions */}
                 <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
                     <div className="flex justify-between items-center mb-4">
@@ -428,14 +359,14 @@ export default function PlatformControl() {
                                             </div>
                                             <div className="flex items-center gap-2 mt-2">
                                                 <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${restriction.restriction_type === "tenant"
-                                                        ? "bg-blue-100 text-blue-800"
-                                                        : "bg-purple-100 text-purple-800"
+                                                    ? "bg-blue-100 text-blue-800"
+                                                    : "bg-purple-100 text-purple-800"
                                                     }`}>
                                                     {restriction.restriction_type === "tenant" ? "Tenant-Level" : "Firm-Level"}
                                                 </span>
                                                 <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${restriction.is_active
-                                                        ? "bg-green-100 text-green-800"
-                                                        : "bg-red-100 text-red-800"
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-red-100 text-red-800"
                                                     }`}>
                                                     {restriction.is_active ? "Active" : "Inactive"}
                                                 </span>
@@ -480,88 +411,6 @@ export default function PlatformControl() {
                     </div>
                 </div>
 
-                {/* Retention Rules */}
-                <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
-                    <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
-                        Retention Rules
-                    </h3>
-                    <p className="text-[#4B5563] text-sm font-normal font-[BasisGrotesquePro] mb-6">
-                        Configure data retention policies.
-                    </p>
-
-                    {loadingRetention ? (
-                        <div className="text-center py-8 text-gray-600 font-[BasisGrotesquePro]">
-                            Loading retention rules...
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="enableRetentionRules"
-                                    checked={retentionFormData.enable_retention_rules}
-                                    onChange={(e) => setRetentionFormData({
-                                        ...retentionFormData,
-                                        enable_retention_rules: e.target.checked
-                                    })}
-                                    className="w-4 h-4 rounded focus:ring-[#3AD6F2] border-2"
-                                    style={{
-                                        accentColor: "#3AD6F2",
-                                        borderColor: "#3AD6F2",
-                                    }}
-                                />
-                                <label htmlFor="enableRetentionRules" className="text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro]">
-                                    Enable Retention Rules
-                                </label>
-                            </div>
-
-                            {retentionFormData.enable_retention_rules && (
-                                <div>
-                                    <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                                        Years to Keep Data
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        value={retentionFormData.years_to_keep}
-                                        onChange={(e) => setRetentionFormData({
-                                            ...retentionFormData,
-                                            years_to_keep: parseInt(e.target.value) || 7
-                                        })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
-                                    />
-                                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
-                                        Enter a value between 1 and 100 years
-                                    </p>
-                                </div>
-                            )}
-
-                            <button
-                                onClick={handleSaveRetentionRule}
-                                disabled={submittingRetention}
-                                className="w-full px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-[#E55A1F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {submittingRetention ? "Saving..." : "Save Retention Rule"}
-                            </button>
-
-                            {retentionRule && (
-                                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">
-                                        <strong>Current Setting:</strong> {retentionRule.enable_retention_rules
-                                            ? `Data will be kept for ${retentionRule.years_to_keep} years`
-                                            : "Retention rules are disabled"}
-                                    </p>
-                                    {retentionRule.updated_at && (
-                                        <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
-                                            Last updated: {new Date(retentionRule.updated_at).toLocaleDateString()}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
             </div>
 
             {/* IP Restriction Modal */}
