@@ -121,7 +121,7 @@ const InvoicesMain = () => {
   }, [searchParams, invoices, fetchInvoices, setSearchParams]);
 
   return (
-    <div className='lg:px-4 md:px-2 px-1' >
+    <div className='lg:px-4 md:px-2 px-1 invoices-main' >
 
 
       <div className="align-items-center mb-3 ">
@@ -159,11 +159,11 @@ const InvoicesMain = () => {
 
       {/* Stat Cards */}
       {!loading && (
-        <div className="row mb-4">
-          <div className="col-md-4">
-            <div className="bg-white p-3 rounded shadow-sm d-flex align-items-center justify-content-between">
+        <div className="row mb-4 g-2 g-md-3">
+          <div className="col-12 col-sm-6 col-md-4">
+            <div className="bg-white p-3 p-md-4 rounded shadow-sm d-flex align-items-center justify-content-between h-100">
               <div>
-                <small style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Outstanding Balance</small>
+                <small style={{ color: "#4B5563", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Outstanding Balance</small>
                 <h5 style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                   {formatCurrency(summary.outstanding_balance)}
                 </h5>
@@ -171,10 +171,10 @@ const InvoicesMain = () => {
               <BalanceIcon size={30} className="text-warning" />
             </div>
           </div>
-          <div className="col-md-4">
-            <div className="bg-white p-3 rounded shadow-sm d-flex align-items-center justify-content-between">
+          <div className="col-12 col-sm-6 col-md-4">
+            <div className="bg-white p-3 p-md-4 rounded shadow-sm d-flex align-items-center justify-content-between h-100">
               <div>
-                <small style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Paid This Year</small>
+                <small style={{ color: "#4B5563", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Paid This Year</small>
                 <h5 style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                   {formatCurrency(summary.paid_this_year)}
                 </h5>
@@ -182,10 +182,10 @@ const InvoicesMain = () => {
               <BalanceIcon size={30} className="text-success" />
             </div>
           </div>
-          <div className="col-md-4">
-            <div className="bg-white p-3 rounded shadow-sm d-flex align-items-center justify-content-between">
+          <div className="col-12 col-sm-6 col-md-4">
+            <div className="bg-white p-3 p-md-4 rounded shadow-sm d-flex align-items-center justify-content-between h-100">
               <div>
-                <small style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Next Due Date</small>
+                <small style={{ color: "#4B5563", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Next Due Date</small>
                 <h5 style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                   {summary.next_due_date ? formatDate(summary.next_due_date) : 'N/A'}
                 </h5>

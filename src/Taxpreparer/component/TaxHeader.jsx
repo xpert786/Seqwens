@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
-import { LogoIcond } from "./icons";
+import { LogoIcond, DashIconed, Clients, FileIconed, Task, MesIconed, MonthIconed, SignatureIcon, AccountIcon } from "./icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/apiUtils";
@@ -54,11 +54,64 @@ export default function Topbar({
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [isReverting, setIsReverting] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const searchRef = useRef(null);
+
   const profileMenuRef = useRef(null);
   const profileButtonRef = useRef(null);
   const notificationButtonRef = useRef(null);
   const menuItemRefs = useRef([]);
   const navigate = useNavigate();
+
+  const navigationItems = [
+    { title: "Dashboard", path: "/taxdashboard", icon: <DashIconed /> },
+    { title: "My Clients", path: "/taxdashboard/clients", icon: <Clients /> },
+    { title: "Documents", path: "/taxdashboard/documents", icon: <FileIconed /> },
+    { title: "Tasks / To-Dos", path: "/taxdashboard/tasks", icon: <Task /> },
+    { title: "Messages", path: "/taxdashboard/messages", icon: <MesIconed /> },
+    { title: "Calendar / Appointments", path: "/taxdashboard/calendar", icon: <MonthIconed /> },
+    { title: "E-Signatures", path: "/taxdashboard/e-signatures", icon: <SignatureIcon /> },
+    { title: "Workflows", path: "/taxdashboard/workflows", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3H5C3.89543 3 3 3.89543 3 5V9C3 10.1046 3.89543 11 5 11H9C10.1046 11 11 10.1046 11 9V5C11 3.89543 10.1046 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M7 11V15C7 15.5304 7.21071 16.0391 7.58579 16.4142C7.96086 16.7893 8.46957 17 9 17H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M19 13H15C13.8954 13 13 13.8954 13 15V19C13 20.1046 13.8954 21 15 21H19C20.1046 21 21 20.1046 21 19V15C21 13.8954 20.1046 13 19 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+    { title: "Billing & Invoices", path: "/taxdashboard/billing", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+    { title: "Account Settings", path: "/taxdashboard/account", icon: <AccountIcon /> },
+  ];
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.trim().length > 0) {
+      const filtered = navigationItems.filter(item =>
+        item.title.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (path) => {
+    navigate(path);
+    setSearchQuery("");
+    setShowSuggestions(false);
+  };
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const menuItems = [
     { label: "Profile", action: "profile" },
     { label: "Settings", action: "settings" },
@@ -372,15 +425,14 @@ export default function Topbar({
         <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
           <div className="d-flex align-items-center h-full flex-grow-1">
             <div
-              className="d-flex align-items-center px-4"
+              className={`d-flex align-items-center px-4 topbar-logo-wrapper ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}
               style={{
-                width: isSidebarOpen ? '280px' : '80px',
                 height: '100%',
                 transition: 'width 0.3s ease'
               }}
             >
               <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-                <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" style={{ maxHeight: '35px', width: 'auto' }} />
+                <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" />
               </Link>
             </div>
 
@@ -402,6 +454,46 @@ export default function Topbar({
                 <LogoIcond />
               </span>
             </button>
+
+            <div className="topbar-search position-relative ms-4" ref={searchRef}>
+              <i className="bi bi-search"></i>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => {
+                  if (searchQuery.trim().length > 0) setShowSuggestions(true);
+                }}
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div className="position-absolute bg-white shadow-lg rounded-3 w-100 mt-2 overflow-hidden" style={{ zIndex: 1050, top: "100%", left: 0 }}>
+                  <ul className="list-unstyled m-0 p-0">
+                    {filteredSuggestions.map((item, index) => (
+                      <li key={index}>
+                        <button
+                          className="d-flex align-items-center gap-2 w-100 px-3 py-2 border-0 bg-transparent text-start text-dark hover:bg-light transition-colors"
+                          onClick={() => handleSuggestionClick(item.path)}
+                          style={{ cursor: "pointer" }}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = "#f8f9fa"}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+                        >
+                          <span className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: "28px", height: "28px", backgroundColor: "#00C0C6", color: "white" }}>
+                            <span className="d-flex align-items-center justify-content-center" style={{ filter: "brightness(0) invert(1)", scale: "0.8" }}>
+                              {item.icon}
+                            </span>
+                          </span>
+                          <span style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", color: '#3B4A66' }}>
+                            {item.title}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
             <div className="ms-auto pe-4">
               {/* Right side */}
               <div className="d-flex align-items-center gap-3">

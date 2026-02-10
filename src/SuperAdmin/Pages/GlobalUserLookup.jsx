@@ -103,7 +103,7 @@ export default function GlobalUserLookup() {
       <div className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-[#E8F0FF] dark:border-gray-700">
         <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
           {/* Search Input */}
-          <div className="relative flex-1 w-full">
+          <div className="relative w-full md:w-[450px] md:mr-auto">
             <input
               type="text"
               placeholder="Search by name, email, or firm..."

@@ -1044,9 +1044,9 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 </div>
 
                 {/* Search and Filter Bar */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6 support-tickets-search-row">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 support-tickets-search-row">
                     {/* Search */}
-                    <div className="relative flex-1 w-[10%] support-tickets-search">
+                    <div className="relative w-full md:w-[300px] support-tickets-search">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

@@ -1312,6 +1312,7 @@ export default function SuperDashboardContent() {
                 <button
                   onClick={handleViewAll}
                   className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors border border-[#E8F0FF] dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  style={{ borderRadius: '6px' }}
                 >
                   {showAllFirms ? 'Show Less' : 'View All'}
                 </button>
@@ -1872,6 +1873,7 @@ export default function SuperDashboardContent() {
                             navigate(`/superadmin/firms/${firm.id}`);
                           }}
                           className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
+                          style={{ borderRadius: '6px' }}
                         >
                           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -1885,6 +1887,7 @@ export default function SuperDashboardContent() {
                             navigate(`/superadmin/firms/${firm.id}?action=login`);
                           }}
                           className="px-3 py-1.5 text-xs font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-1.5"
+                          style={{ borderRadius: '6px' }}
                         >
                           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M15.8333 9.16667V5.83333C15.8333 5.39131 15.6577 4.96738 15.345 4.65482C15.0325 4.34226 14.6085 4.16667 14.1667 4.16667H5.83333C5.39131 4.16667 4.96738 4.34226 4.65482 4.65482C4.34226 4.96738 4.16667 5.39131 4.16667 5.83333V14.1667C4.16667 14.6087 4.34226 15.0326 4.65482 15.3452C4.96738 15.6577 5.39131 15.8333 5.83333 15.8333H14.1667C14.6085 15.8333 15.0325 15.6577 15.345 15.3452C15.6577 15.0326 15.8333 15.0326 15.8333 14.1667V10.8333M12.5 10H18.3333M18.3333 10L16.25 7.91667M18.3333 10L16.25 12.0833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

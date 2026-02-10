@@ -2,52 +2,53 @@
 @media (max-width: 767px) {
 
     /* PANEL */
-    .conversations-panel {
+    .messages-page .conversations-panel {
       width: 100% !important;
       height: auto !important;
       min-height: 350px !important;
       margin-right: 0 !important;
+      margin-bottom: 16px !important;
       padding: 14px !important;
       border-radius: 10px !important;
     }
   
     /* Title */
-    .conversations-panel h5 {
+    .messages-page .conversations-panel h5 {
       font-size: 14px !important;
       margin-bottom: 10px !important;
     }
   
     /* SEARCH BOX */
-    .search-wrapper {
+    .messages-page .search-wrapper {
       position: relative !important;
     }
   
-    .search-wrapper input {
+    .messages-page .search-wrapper input {
       font-size: 13px !important;
       padding-left: 30px !important;
       height: 34px !important;
     }
   
-    .search-wrapper svg {
+    .messages-page .search-wrapper svg {
       left: 8px !important;
       width: 14px !important;
       height: 14px !important;
     }
   
     /* LIST WRAPPER */
-    .conversations-list {
+    .messages-page .conversations-list {
       gap: 10px !important;
     }
   
     /* EACH CONVERSATION ITEM */
-    .conversation-item {
+    .messages-page .conversation-item {
       padding: 10px !important;
       border-radius: 10px !important;
       min-height: 70px !important;
     }
   
     /* TOP ROW (name + time + delete) */
-    .conversation-item .top-row {
+    .messages-page .conversation-item .top-row {
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
@@ -56,7 +57,7 @@
     }
   
     /* ICON + NAME */
-    .conversation-item .name-text {
+    .messages-page .conversation-item .name-text {
       font-size: 13px !important;
       font-weight: 500 !important;
       max-width: 160px !important; /* prevents overflow on 320px */
@@ -66,25 +67,25 @@
     }
   
     /* UNREAD BADGE */
-    .conversation-item .badge {
+    .messages-page .conversation-item .badge {
       font-size: 9px !important;
       padding: 2px 6px !important;
     }
   
     /* TIME */
-    .conversation-item .time-text {
+    .messages-page .conversation-item .time-text {
       font-size: 10px !important;
       white-space: nowrap !important;
     }
   
     /* DELETE BUTTON */
-    .conversation-item button svg {
+    .messages-page .conversation-item button svg {
       width: 14px !important;
       height: 14px !important;
     }
   
     /* LAST MESSAGE */
-    .last-message {
+    .messages-page .last-message {
       font-size: 11px !important;
       margin-left: 28px !important;
       max-width: 230px !important;
@@ -94,21 +95,21 @@
     }
   
     /* SUBJECT ROW */
-    .subject-row {
+    .messages-page .subject-row {
       margin-left: 28px !important;
       font-size: 10px !important;
       display: flex !important;
       flex-wrap: wrap !important;
       gap: 2px !important;
     }
-    .chat-wrapper {
+    .messages-page .chat-wrapper {
         display: flex;
         flex-direction: column !important;
         gap: 16px !important;
       }
     
       /* LEFT card */
-      .chat-wrapper > div:first-child {
+      .messages-page .chat-wrapper > div:first-child {
         width: 100% !important;
         height: auto !important;
         min-height: 350px !important;
@@ -116,115 +117,140 @@
       }
     
       /* RIGHT card */
-      .chat-wrapper > div:last-child {
+      .messages-page .chat-wrapper > div:last-child {
         width: 100% !important;
         height: auto !important;
       }
     
       /* Fix conversation items spacing for mobile */
-      .conversation-item {
+      .messages-page .conversation-item {
         min-height: 70px !important;
         padding: 10px !important;
       }
     
       /* Fix title */
-      .chat-wrapper h5 {
+      .messages-page .chat-wrapper h5 {
         font-size: 14px !important;
       }
     
       /* Fix search bar size */
-      .chat-wrapper input.form-control {
+      .messages-page .chat-wrapper input.form-control {
         height: 35px !important;
         font-size: 13px !important;
       }
-      .message-header {
+      .messages-page .message-header {
         flex-direction: column !important;
-        align-items: flex-start !important;
+        align-items: center !important;
+        text-align: center !important;
         gap: 10px;
       }
     
-      .message-header h5 {
+      .messages-page .message-header h5 {
         font-size: 20px !important;
       }
     
-      .message-header small {
+      .messages-page .message-header small {
         font-size: 12px !important;
       }
     
-      .new-message-btn {
+      .messages-page .new-message-btn {
         width: 100% !important;
         justify-content: center !important;
         padding: 10px !important;
         font-size: 14px !important;
       }
     
-      .new-message-btn svg {
+      .messages-page .new-message-btn svg {
         width: 16px !important;
         height: 16px !important;
       }
-      .compose-modal-box {
-        padding: 24px !important;
-        width: 94% !important;
-        max-height: 88vh !important;
-      }
-    
-      .compose-modal-box h2 {
-        font-size: 22px !important;
-      }
-    
-      .compose-modal-box p {
-        font-size: 14px !important;
-      }
-    
-      /* Category + Priority side-by-side becomes stacked */
-      .compose-modal-box .category-priority {
-        flex-direction: column !important;
-        gap: 16px !important;
-      }
-    
-      /* Buttons full width on mobile */
-      .compose-modal-footer button {
-        width: 100% !important;
-      }
-    
-      .compose-modal-footer {
-        flex-direction: column !important;
-        gap: 12px !important;
-      }
-  }
 
-  /* Extra Small Screens (<= 420px) */
-@media (max-width: 420px) {
-    .message-header h5 {
-      font-size: 18px !important;
-    }
+      /* Chat Interface Mobile Responsive */
+      .messages-page .chat-interface {
+        min-height: 400px !important;
+      }
+
+      /* Messages container mobile */
+      .messages-page .chat-interface .flex-grow-1.overflow-auto.mb-3 {
+        max-height: calc(50vh - 150px) !important;
+        min-height: 250px !important;
+      }
+
+      /* Message bubbles mobile */
+      .messages-page .chat-interface .bg-light {
+        max-width: 85% !important;
+        min-width: 70px !important;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+      }
+
+      /* Input area mobile - FORCE SAME ROW */
+      .messages-page .chat-interface .border-top {
+        padding-top: 12px !important;
+      }
+
+      .messages-page .chat-interface .border-top .d-flex {
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        align-items: center !important;
+      }
+
+      .messages-page .chat-interface .border-top input.form-control {
+        flex: 1 !important;
+        min-width: 0 !important;
+        font-size: 14px !important;
+        height: 40px !important;
+      }
+
+      .messages-page .chat-interface .border-top button {
+        flex-shrink: 0 !important;
+        padding: 8px 12px !important;
+      }
+
+      /* Reduce send button icon size on mobile */
+      .messages-page .chat-interface .border-top button svg {
+        width: 14px !important;
+        height: 14px !important;
+      }
+
+      /* Reduce attachment icon size on mobile */
+      .messages-page .chat-interface .border-top button[title="Attach file"] svg {
+        width: 16px !important;
+        height: 16px !important;
+      }
+
+      /* Attachment preview mobile */
+      .messages-page .chat-interface .border-top .text-muted.small {
+        font-size: 11px !important;
+        max-width: 120px !important;
+      }
+
+      .messages-page .message-header small {
+        font-size: 11px !important;
+      }
   
-    .message-header small {
-      font-size: 11px !important;
-    }
-  
-    .new-message-btn {
-      font-size: 13px !important;
-      padding: 8px !important;
-    }
-    .compose-modal-box {
+      .messages-page .new-message-btn {
+        font-size: 13px !important;
+        padding: 8px !important;
+      }
+    .messages-page .compose-modal-box {
         padding: 18px !important;
       }
     
-      .compose-modal-box h2 {
+      .messages-page .compose-modal-box h2 {
         font-size: 20px !important;
       }
     
-      .compose-modal-box p {
+      .messages-page .compose-modal-box p {
         font-size: 13px !important;
       }
     
-      select, input, textarea {
+      .messages-page select, .messages-page input, .messages-page textarea {
         padding: 12px !important;
         font-size: 14px !important;
       }
     
-      label {
+      .messages-page label {
         font-size: 14px !important;
       }
   }
@@ -235,37 +261,36 @@
   
   /* EXTREME SMALL MOBILE FIX: 320px */
   @media (max-width: 360px) {
-    .name-text {
+    .messages-page .name-text {
       max-width: 130px !important;
     }
-    .last-message {
+    .messages-page .last-message {
       max-width: 200px !important;
     }
-    .new-message-btn {
+    .messages-page .new-message-btn {
         font-size: 12px !important;
       }
-      .compose-modal-box {
+      .messages-page .compose-modal-box {
         padding: 14px !important;
         width: 96% !important;
         border-radius: 12px !important;
       }
     
-      .compose-modal-box h2 {
+      .messages-page .compose-modal-box h2 {
         font-size: 18px !important;
       }
     
-      .compose-modal-box p {
+      .messages-page .compose-modal-box p {
         font-size: 12px !important;
       }
     
-      select, input, textarea {
+      .messages-page select, .messages-page input, .messages-page textarea {
         padding: 10px !important;
         font-size: 13px !important;
       }
     
-      .compose-modal-wrapper button {
+      .messages-page .compose-modal-wrapper button {
         font-size: 13px !important;
         padding: 10px 16px !important;
       }
   }
-  

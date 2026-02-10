@@ -313,6 +313,7 @@ export default function LogsAndBackups() {
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
                                     className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                    style={{ borderRadius: '7px' }}
                                 >
                                     Previous
                                 </button>
@@ -323,6 +324,7 @@ export default function LogsAndBackups() {
                                     onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
                                     disabled={currentPage >= pagination.total_pages}
                                     className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                    style={{ borderRadius: '7px' }}
                                 >
                                     Next
                                 </button>
@@ -412,12 +414,12 @@ export default function LogsAndBackups() {
                             className="grid grid-cols-5 gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg backup-row"
                         >
                             <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
-                               
+
                                 {backup.date}
                             </div>
 
                             <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
-                                
+
                                 {backup.size}
                             </div>
 
@@ -436,12 +438,12 @@ export default function LogsAndBackups() {
                             </div>
 
                             <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
-                                
+
                                 {backup.duration}
                             </div>
 
                             <div className="backup-cell backup-actions">
-                               
+
                                 <div className="flex gap-2">
                                     <button className="w-10 h-10">
                                         <EyeOffIcon />

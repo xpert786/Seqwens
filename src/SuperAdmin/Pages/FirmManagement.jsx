@@ -187,7 +187,7 @@ export default function FirmManagement() {
         if (!plan) {
             return 'None';
         }
-        
+
         if (plan.toLowerCase() === 'developer') return 'Developer Plan';
 
         return plan.charAt(0).toUpperCase() + plan.slice(1);
@@ -758,17 +758,23 @@ export default function FirmManagement() {
                         </div>
 
                         {/* Status Filter */}
-                        <div className="w-fit firmmgmt-filter">
+                        <div className="relative w-fit firmmgmt-filter">
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                style={{ borderRadius: '7px' }}
                             >
                                 <option value="All Status">All Status</option>
                                 <option value="Active">Active</option>
                                 <option value="Trial">Trial</option>
                                 <option value="Suspended">Suspended</option>
                             </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                </svg>
+                            </div>
                         </div>
 
                         {/* Plan Filter */}
@@ -793,6 +799,7 @@ export default function FirmManagement() {
                                     <button
                                         onClick={fetchFirms}
                                         className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                                        style={{ borderRadius: '7px' }}
                                     >
                                         Try Again
                                     </button>
@@ -819,6 +826,7 @@ export default function FirmManagement() {
                                 <button
                                     onClick={handleViewAllFirmCards}
                                     className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors firmmgmt-view-toggle border border-[#E8F0FF] dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    style={{ borderRadius: '7px' }}
                                 >
                                     {showAllFirmCards ? 'Show Less' : 'View All'}
                                 </button>
@@ -941,23 +949,13 @@ export default function FirmManagement() {
                                                     <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
                                                     <button
-                                                        onClick={() => handleAction('Edit User', firm.id)}
+                                                        onClick={() => handleAction('Edit Firm', firm.id)}
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                                                     >
                                                         <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M14.1667 2.5C14.3856 2.28113 14.6454 2.10752 14.9314 1.98906C15.2173 1.87061 15.5238 1.80969 15.8334 1.80969C16.1429 1.80969 16.4494 1.87061 16.7353 1.98906C17.0213 2.10752 17.2811 2.28113 17.5 2.5C17.7189 2.71887 17.8925 2.97871 18.011 3.26466C18.1294 3.55061 18.1903 3.85706 18.1903 4.16667C18.1903 4.47627 18.1294 4.78272 18.011 5.06867C17.8925 5.35462 17.7189 5.61446 17.5 5.83333L6.25004 17.0833L1.66671 18.3333L2.91671 13.75L14.1667 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                         </svg>
                                                         Edit Firm
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => handleAction('Assign Clients', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M14.1667 17.5V15.8333C14.1667 14.9493 13.8155 14.1014 13.1904 13.4763C12.5653 12.8512 11.7174 12.5 10.8334 12.5H4.16671C3.28265 12.5 2.43481 12.8512 1.80968 13.4763C1.18456 14.1014 0.833374 14.9493 0.833374 15.8333V17.5M19.1667 17.5V15.8333C19.1662 15.0948 18.9204 14.3773 18.4679 13.7936C18.0154 13.2099 17.3819 12.793 16.6667 12.6083M13.3334 2.60833C14.0503 2.79192 14.6858 3.20892 15.1396 3.79359C15.5935 4.37827 15.8399 5.09736 15.8399 5.8375C15.8399 6.57764 15.5935 7.29673 15.1396 7.88141C14.6858 8.46608 14.0503 8.88308 13.3334 9.06667M11.6667 5.83333C11.6667 7.67428 10.1743 9.16667 8.33337 9.16667C6.49242 9.16667 5.00004 7.67428 5.00004 5.83333C5.00004 3.99238 6.49242 2.5 8.33337 2.5C10.1743 2.5 11.6667 3.99238 11.6667 5.83333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                        Assign Clients
                                                     </button>
 
                                                     <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
@@ -1007,6 +1005,7 @@ export default function FirmManagement() {
                                 onClick={() => handleFirmCardsPageChange(firmCardsCurrentPage - 1)}
                                 disabled={firmCardsCurrentPage === 1}
                                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors firmmgmt-pagination-btn rounded-lg"
+                                style={{ borderRadius: '7px' }}
                             >
                                 Previous
                             </button>
@@ -1019,6 +1018,7 @@ export default function FirmManagement() {
                                 onClick={() => handleFirmCardsPageChange(firmCardsCurrentPage + 1)}
                                 disabled={firmCardsCurrentPage === totalFirmCardsPages}
                                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors firmmgmt-pagination-btn rounded-lg"
+                                style={{ borderRadius: '7px' }}
                             >
                                 Next
                             </button>
@@ -1550,6 +1550,7 @@ export default function FirmManagement() {
                                 }}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                 disabled={unsuspendingFirm}
+                                style={{ borderRadius: '7px' }}
                             >
                                 Cancel
                             </button>
@@ -1557,6 +1558,7 @@ export default function FirmManagement() {
                                 onClick={unsuspendFirm}
                                 disabled={unsuspendingFirm}
                                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ borderRadius: '7px' }}
                             >
                                 {unsuspendingFirm ? 'Unsuspending...' : 'Unsuspend Firm'}
                             </button>
@@ -1646,6 +1648,7 @@ export default function FirmManagement() {
                                 }}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                 disabled={deletingFirm}
+                                style={{ borderRadius: '7px' }}
                             >
                                 Cancel
                             </button>
@@ -1653,6 +1656,7 @@ export default function FirmManagement() {
                                 onClick={deleteFirm}
                                 disabled={deletingFirm}
                                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ borderRadius: '7px' }}
                             >
                                 {deletingFirm ? 'Deleting...' : 'Delete Firm'}
                             </button>
@@ -1752,7 +1756,7 @@ export default function FirmManagement() {
                             <button
                                 onClick={closeAssignClientsModal}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors "
-                                style={{ borderRadius: '10px' }}
+                                style={{ borderRadius: '7px' }}
                                 disabled={assigningClient}
                             >
                                 Cancel
@@ -1761,7 +1765,7 @@ export default function FirmManagement() {
                                 onClick={handleAssignClient}
                                 disabled={assigningClient || loadingAssignClients || !selectedClientId || assignClientOptions.length === 0}
                                 className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ borderRadius: '10px' }}
+                                style={{ borderRadius: '7px' }}
                             >
                                 {assigningClient ? 'Assigning...' : 'Assign Client'}
                             </button>

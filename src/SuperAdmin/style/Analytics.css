@@ -16,6 +16,45 @@
   }
 }
 
+/* Fix for Revenue By Plan Pie Chart Overlapping Labels */
+.recharts-pie-label-text {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  max-width: 80px !important;
+  overflow: hidden !important;
+}
+
+.recharts-pie-label-line {
+  stroke-width: 1px !important;
+}
+
+/* Pie chart container adjustments */
+.recharts-responsive-container {
+  min-height: 300px !important;
+}
+
+/* Revenue by Plan legend items */
+.flex.items-center.justify-between.gap-3 {
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  padding: 4px 0 !important;
+}
+
+.flex.items-center.justify-between.gap-3 .text-sm.font-medium {
+  min-width: 0 !important;
+  flex: 1 !important;
+  text-align: left !important;
+}
+
+.flex.items-center.justify-between.gap-3 .text-sm.font-semibold {
+  min-width: fit-content !important;
+  flex-shrink: 0 !important;
+  text-align: right !important;
+  margin-left: 8px !important;
+}
+
 @media (max-width: 767px) {
   .overview-filter-row {
     flex-direction: column;

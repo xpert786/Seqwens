@@ -96,7 +96,7 @@ export default function ArchivedMonitoring() {
 
     const retentionOptions = [
         "1 Year",
-        "3 Years", 
+        "3 Years",
         "5 Years",
         "7 Years",
         "10 Years"
@@ -106,7 +106,7 @@ export default function ArchivedMonitoring() {
         <div className="min-h-screen ">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Panel - Archive Monitoring */}
-                <div className="lg:col-span-2 bg-white rounded-lg p-6 border border-[#E8F0FF]">
+                <div className="lg:col-span-2 bg-white rounded-lg p-6 border border-[#E8F0FF] h-fit">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-6">
                         <div>
@@ -117,13 +117,13 @@ export default function ArchivedMonitoring() {
                                 Track, manage, and safeguard archives with ease
                             </p>
                         </div>
-                        
+
                         {/* Export Button */}
-                        <button 
+                        <button
                             onClick={handleExportCSV}
                             disabled={exporting || firmsData.length === 0}
-                            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                            style={{borderRadius: "7px"}}
+                            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ borderRadius: "7px" }}
                         >
                             {exporting ? (
                                 <>
@@ -133,7 +133,7 @@ export default function ArchivedMonitoring() {
                             ) : (
                                 <>
                                     <FiDownload className="w-4 h-4" />
-                            Export CSV
+                                    Export CSV
                                 </>
                             )}
                         </button>
@@ -152,7 +152,7 @@ export default function ArchivedMonitoring() {
                             placeholder="Search firms..."
                         />
                     </div>
-                   
+
                     {/* Error Message */}
                     {error && (
                         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-[BasisGrotesquePro]">
@@ -176,46 +176,46 @@ export default function ArchivedMonitoring() {
                         </div>
                     ) : (
                         /* Firms Data Table */
-                    <div className="space-y-3">
-                        {/* Header Row */}
+                        <div className="space-y-3">
+                            {/* Header Row */}
                             <div className="grid grid-cols-6 gap-4 py-3 px-4 rounded-lg bg-gray-50">
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Offices</div>
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Archived Docs</div>
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Storage Used</div>
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Retention</div>
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Last Audit</div>
-                        </div>
+                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
+                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Offices</div>
+                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Archived Docs</div>
+                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Storage Used</div>
+                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Retention</div>
+                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Last Audit</div>
+                            </div>
 
-                        {/* Data Rows */}
+                            {/* Data Rows */}
                             {filteredFirmsData.map((firm, index) => (
                                 <div key={firm.id || firm.firm_id || index} className="grid grid-cols-6 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 transition-colors">
-                                <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
                                         {firm.firm || firm.name || firm.firm_name || 'N/A'}
-                                </div>
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    </div>
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
                                         {firm.offices || firm.offices_count || '0'}
-                                </div>
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    </div>
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
                                         {firm.archivedDocs || firm.archived_docs || firm.archived_documents || '0'}
-                                </div>
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    </div>
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
                                         {firm.storageUsed || firm.storage_used || '0'}
-                                </div>
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    </div>
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
                                         {firm.retention || firm.retention_period || 'N/A'}
-                                </div>
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    </div>
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
                                         {firm.lastAudit || firm.last_audit || firm.last_audit_date || 'N/A'}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
                     )}
                 </div>
 
                 {/* Right Panel - Data Retention */}
-                <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
+                <div className="bg-white rounded-lg p-6 border border-[#E8F0FF] h-fit">
                     {/* Header */}
                     <div className="mb-6">
                         <h3 className="text-[#3B4A66] text-2xl font-semibold font-[BasisGrotesquePro] mb-2">

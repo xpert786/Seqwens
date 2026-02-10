@@ -224,8 +224,8 @@ export default function ESignatureDashboard() {
 
         switch (statusFilter) {
           case 'pending':
-            return status === 'created' || status === 'pending' || status === 'processing' || status === 'ready' || 
-                   status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress';
+            return status === 'created' || status === 'pending' || status === 'processing' || status === 'ready' ||
+              status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress';
           case 'inprogress':
             return status === 'sent' || status === 'viewed' || status === 'taxpayer_pending' || status === 'preparer_pending' || status === 'under_review' || status === 'in_progress';
           case 'completed':
@@ -1088,7 +1088,7 @@ export default function ESignatureDashboard() {
       {/* Statistics Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-3 col-sm-6">
-          <div 
+          <div
             className={`stat-card stat-card-pending ${statusFilter === 'pending' || statusFilter === 'inprogress' ? 'active' : ''}`}
             onClick={() => {
               if (statusFilter === 'pending' || statusFilter === 'inprogress') {
@@ -1111,7 +1111,7 @@ export default function ESignatureDashboard() {
           </div>
         </div>
         <div className="col-md-3 col-sm-6">
-          <div 
+          <div
             className={`stat-card stat-card-completed ${statusFilter === 'completed' ? 'active' : ''}`}
             onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
             style={{ cursor: 'pointer' }}
@@ -1128,7 +1128,7 @@ export default function ESignatureDashboard() {
           </div>
         </div>
         <div className="col-md-3 col-sm-6">
-          <div 
+          <div
             className={`stat-card stat-card-declined ${statusFilter === 'declined' ? 'active' : ''}`}
             onClick={() => setStatusFilter(statusFilter === 'declined' ? 'all' : 'declined')}
             style={{ cursor: 'pointer' }}
@@ -1145,7 +1145,7 @@ export default function ESignatureDashboard() {
           </div>
         </div>
         <div className="col-md-3 col-sm-6">
-          <div 
+          <div
             className={`stat-card stat-card-expired ${statusFilter === 'expired' ? 'active' : ''}`}
             onClick={() => setStatusFilter(statusFilter === 'expired' ? 'all' : 'expired')}
             style={{ cursor: 'pointer' }}
@@ -1164,8 +1164,8 @@ export default function ESignatureDashboard() {
       </div>
 
       {/* Filters and Search */}
-      <div className="d-flex justify-content-between align-items-center gap-3 mb-4 mt-2">
-        <div className="position-relative" style={{ minWidth: '300px', maxWidth: '400px', width: '100%' }}>
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-4 mt-2 esign-filters-section">
+        <div className="position-relative esign-search-container" style={{ minWidth: '300px', maxWidth: '400px', width: '100%' }}>
           <div style={{
             position: 'absolute',
             left: '12px',
@@ -1193,7 +1193,7 @@ export default function ESignatureDashboard() {
             }}
           />
         </div>
-        <div>
+        <div className="esign-status-filter">
           <select
             className="form-select"
             value={statusFilter}
@@ -1251,8 +1251,8 @@ export default function ESignatureDashboard() {
                 >
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="flex-grow-1">
-                      <div className="d-flex align-items-center gap-2 mb-2">
-                        <h5 style={{ color: '#3B4A66', fontWeight: '600', margin: 0 }}>
+                      <div className="d-flex align-items-center gap-2 mb-2 signature-request-header">
+                        <h5 className="signature-request-title" style={{ color: '#3B4A66', fontWeight: '600', margin: 0 }}>
                           {request.title || documentName}
                         </h5>
                         <span className={`status-badge ${statusBadge.className}`}>
@@ -1260,19 +1260,19 @@ export default function ESignatureDashboard() {
                         </span>
                       </div>
                       <div className="d-flex flex-column gap-1 mb-2">
-                        <div className="d-flex align-items-center gap-2">
-                          <span style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
                             Client:
                           </span>
-                          <span style={{ color: '#3B4A66', fontSize: '14px' }}>
+                          <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
                             {clientName}
                           </span>
                         </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <span style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
                             Document:
                           </span>
-                          <span style={{ color: '#3B4A66', fontSize: '14px' }}>
+                          <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
                             {documentName}
                           </span>
                         </div>
@@ -1321,7 +1321,7 @@ export default function ESignatureDashboard() {
                         )}
                       </div>
                       {/* Action Buttons */}
-                      <div className="mt-2 d-flex gap-2 flex-wrap">
+                      <div className="mt-2 d-flex gap-2 flex-wrap action-buttons-wrapper">
                         {/* Preview Button - Show if document URL exists */}
                         {request.document_url && (
                           <button

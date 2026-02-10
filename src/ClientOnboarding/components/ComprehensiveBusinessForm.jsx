@@ -1319,9 +1319,8 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         }}>
           Your tax preparer will handle all calculations, deductions, and tax forms. This form is only to help them prepare your return accurately.
         </p>
-
         {/* Actions */}
-        <div className="d-flex justify-content-end gap-3 pt-3 border-top">
+        <div className="d-flex justify-content-end gap-3 pt-3 border-top business-form-actions">
           <button
             className="btn btn-light"
             onClick={onCancel}
@@ -1336,7 +1335,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               fontFamily: "BasisGrotesquePro",
               fontWeight: 500,
               backgroundColor: "#3B4A66",
-              borderColor: "#3B4A66"
+              borderColor: "#3B4A66",
             }}
           >
             Save Business Information

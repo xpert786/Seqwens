@@ -18,10 +18,12 @@
   max-height: 90vh !important;
   overflow-y: auto !important;
 }
+
 .upload-modal .modal-dialog {
   max-height: 90vh !important;
   overflow-y: auto !important;
 }
+
 .upload-subheading {
   font-size: 14px !important;
   font-weight: 400 !important;
@@ -30,6 +32,7 @@
   margin-top: 0px !important;
   line-height: 1.2;
 }
+
 .btn-cancel-custom {
   background-color: white !important;
   border: 1px solid #E8F0FF !important;
@@ -572,5 +575,91 @@
 
   .folder-dropdown-content {
     max-height: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .upload-heading {
+    font-size: 18px !important;
+  }
+
+  .upload-subheading {
+    font-size: 13px !important;
+  }
+
+  .upload-modal .modal-body {
+    padding: 1rem !important;
+    /* max-height: calc(100vh - 80px) !important; */
+  }
+
+  .upload-dropzone {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .upload-icon {
+    font-size: 1.5rem !important;
+  }
+
+  .upload-text {
+    font-size: 13px !important;
+  }
+
+  /* Structure adjustments */
+  .doc-scroll {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    max-height: 200px !important;
+    margin-bottom: 1rem;
+  }
+
+  .config-panel {
+    height: auto !important;
+    min-height: auto !important;
+    width: 100% !important;
+  }
+
+  .upload-modal .d-flex.flex-wrap.gap-4 {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  /* Footer Buttons */
+  .upload-modal .modal-body>div.d-flex.justify-content-between.align-items-center.mt-4 {
+    flex-direction: column-reverse !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+    margin-top: 1rem !important;
+  }
+
+  .upload-modal .modal-body>div.d-flex.justify-content-between.align-items-center.mt-4>button {
+    width: 100% !important;
+    margin-top: 0.5rem;
+  }
+
+  .upload-modal .modal-body>div.d-flex.justify-content-between.align-items-center.mt-4>div {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .upload-modal .modal-body>div.d-flex.justify-content-between.align-items-center.mt-4>div>button {
+    width: 100% !important;
+  }
+
+  /* File items */
+  .doc-item .d-flex.justify-content-between {
+    flex-direction: row;
+    /* Keep row unless too squeezed */
+    gap: 0.5rem;
+  }
+
+  .file-icon-wrapper {
+    padding: 5px !important;
+  }
+
+  .file-icon {
+    font-size: 16px !important;
   }
 }

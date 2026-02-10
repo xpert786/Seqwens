@@ -537,14 +537,14 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="lg:p-6 md:p-2 px-1 min-h-screen bg-[#F3F7FF]">
+    <div className="calendar-page-container lg:p-6 md:p-4 p-2 min-h-screen bg-[#F3F7FF]">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 calendar-header-section">
         <div>
           <h4 className="text-2xl font-bold text-gray-900" style={{ color: '#1E293B' }}>Calendar</h4>
-          <p className="text-gray-600">Manage your appointments and schedule</p>
+          <p className="text-gray-600 text-sm">Manage your appointments and schedule</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <button
             onClick={() => setIsSetAvailabilityModalOpen(true)}
             className="btn dashboard-btn d-flex align-items-center gap-2"
@@ -569,7 +569,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Stats - First 4 Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 calendar-stats-grid">
         {cardData.map((item, index) => (
           <div
             key={index}
@@ -590,7 +590,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Time Period Selector */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 period-buttons-container">
         {timePeriods.map((period) => (
           <button
             key={period}
@@ -613,12 +613,12 @@ export default function CalendarPage() {
       </div>
 
 
-      <div className="flex gap-6 w-full ">
+      <div className="flex flex-col lg:flex-row gap-6 w-full calendar-main-layout">
         {/* Calendar Navigation and Grid Container */}
-        <div id="calendar-view-container" className="border border-[#E8F0FF]  rounded-lg pt-2 bg-[#F3F7FF] w-[75%]">
+        <div id="calendar-view-container" className="border border-[#E8F0FF] rounded-lg pt-2 bg-[#F3F7FF] w-full lg:w-[75%] calendar-content-area">
           {/* Calendar Navigation */}
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-3 w-full justify-start pl-2">
+          <div className="flex justify-between items-center mb-2 calendar-nav-controls">
+            <div className="flex items-center gap-3 w-full justify-start pl-2 calendar-date-title">
 
               <h4 className="text-lg font-semibold text-gray-900 mb-0">
                 {selectedPeriod === "Monthly" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
@@ -628,7 +628,7 @@ export default function CalendarPage() {
               </h4>
 
             </div>
-            <div className="flex items-center gap-2 justify-end w-full pr-2">
+            <div className="flex items-center gap-2 justify-end w-full md:w-auto pr-2 calendar-nav-buttons">
               <button
                 className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors border-[#E8F0FF] bg-white"
                 style={{ borderRadius: '10px' }}
@@ -736,7 +736,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="w-80 space-y-4">
+        <div className="w-full lg:w-80 space-y-4 calendar-sidebar-area">
           {/* Today's Events */}
           <div className="bg-white rounded-lg  border border-[#E8F0FF] p-4">
             <h6 className="font-semibold text-gray-900 mb-2">Today's Events</h6>            <p className="text-sm text-gray-500 mb-3">

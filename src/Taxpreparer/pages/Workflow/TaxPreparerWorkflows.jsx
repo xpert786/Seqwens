@@ -73,7 +73,11 @@ const TaxPreparerWorkflows = () => {
   };
 
   useEffect(() => {
-    fetchWorkflows();
+    const delayDebounceFn = setTimeout(() => {
+      fetchWorkflows();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [filter, searchTerm]);
 
   // Statistics calculation

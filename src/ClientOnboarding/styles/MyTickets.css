@@ -91,6 +91,14 @@
     border-radius: 10px !important;
 }
 
+.status-badge.in-progress {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border-color: #0369a1 !important;
+    padding: 3px 8px !important;
+    border-radius: 10px !important;
+}
+
 .priority-badge {
     font-size: 11px !important;
     font-family: BasisGrotesquePro !important;
@@ -111,6 +119,12 @@
     color: #3b4a66 !important;
     padding: 3px 20px !important;
     border-radius: 10px !important;
+}
+
+.priority-badge.high {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    padding: 3px 15px !important;
 }
 
 /* View button */
@@ -339,4 +353,87 @@
 /* Bubble adjustment */
 .msg-bubble {
     max-width: 48% !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .ticket-box {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+        position: relative;
+    }
+
+    .ticket-info {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    .status-badge {
+        margin-left: 0 !important;
+    }
+
+    .priority-badge {
+        margin-left: 0 !important;
+    }
+
+    .view-btn {
+        width: 100% !important;
+        text-align: center !important;
+        margin-top: 5px !important;
+        padding: 8px !important;
+    }
+
+    /* Popup responsive */
+    .ticket-popup-box {
+        width: 95% !important;
+        padding: 1rem !important;
+        max-height: 80vh !important;
+    }
+
+    .ticket-popup-header {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+    }
+
+    .ticket-popup-title {
+        font-size: 18px !important;
+        word-break: break-word;
+    }
+
+    /* Ticket Issue Box inside Popup */
+    /* Target the header row */
+    .ticket-issue-box .d-flex.justify-content-between.align-items-center.mb-2 {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+
+    /* Target the badges container which has margin-left: 300px inline */
+    .ticket-issue-box .d-flex.align-items-center {
+        margin-left: 0 !important;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Target the meta data row */
+    .ticket-issue-box .d-flex.justify-content-between {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    /* Make meta data items look like list items */
+    .ticket-issue-box .d-flex.justify-content-between>div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #e8f0ff;
+        padding-bottom: 4px;
+        width: 100%;
+        /* Ensure they take full width */
+    }
+
+    .ticket-issue-box .d-flex.justify-content-between>div:last-child {
+        border-bottom: none;
+    }
 }

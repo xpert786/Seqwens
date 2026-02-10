@@ -349,14 +349,13 @@ export default function StaffInvites() {
                     View and manage your pending staff invitations from firms
                 </p>
             </div>
-
             {/* Search Bar */}
             <div className="mb-4">
                 <div className="position-relative" style={{ maxWidth: '400px' }}>
                     <input
                         type="text"
                         className="form-control"
-                        placeholder="Search by firm name or email..."
+                            placeholder="Search by firm name or email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{

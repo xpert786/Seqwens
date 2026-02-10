@@ -384,6 +384,7 @@ export default function PlatformControl() {
                         <button
                             onClick={openCreateIPModal}
                             className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-[#E55A1F] transition-colors"
+                            style={{ borderRadius: '7px' }}
                         >
                             Add IP Restriction
                         </button>
@@ -428,14 +429,14 @@ export default function PlatformControl() {
                                             </div>
                                             <div className="flex items-center gap-2 mt-2">
                                                 <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${restriction.restriction_type === "tenant"
-                                                        ? "bg-blue-100 text-blue-800"
-                                                        : "bg-purple-100 text-purple-800"
+                                                    ? "bg-blue-100 text-blue-800"
+                                                    : "bg-purple-100 text-purple-800"
                                                     }`}>
                                                     {restriction.restriction_type === "tenant" ? "Tenant-Level" : "Firm-Level"}
                                                 </span>
                                                 <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${restriction.is_active
-                                                        ? "bg-green-100 text-green-800"
-                                                        : "bg-red-100 text-red-800"
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-red-100 text-red-800"
                                                     }`}>
                                                     {restriction.is_active ? "Active" : "Inactive"}
                                                 </span>
@@ -481,7 +482,7 @@ export default function PlatformControl() {
                 </div>
 
                 {/* Retention Rules */}
-                <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
+                <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 h-fit">
                     <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
                         Retention Rules
                     </h3>
@@ -541,6 +542,7 @@ export default function PlatformControl() {
                                 onClick={handleSaveRetentionRule}
                                 disabled={submittingRetention}
                                 className="w-full px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-[#E55A1F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ borderRadius: '7px' }}
                             >
                                 {submittingRetention ? "Saving..." : "Save Retention Rule"}
                             </button>
@@ -650,14 +652,14 @@ export default function PlatformControl() {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={closeIPModal}>
+                    <Button variant="secondary" onClick={closeIPModal} style={{ borderRadius: '7px' }}>
                         Cancel
                     </Button>
                     <Button
                         variant="primary"
                         onClick={handleSaveIPRestriction}
                         disabled={submittingIP}
-                        style={{ backgroundColor: "#F56D2D", border: "none" }}
+                        style={{ backgroundColor: "#F56D2D", border: "none", borderRadius: '7px' }}
                     >
                         {submittingIP ? "Saving..." : (editingIPRestriction ? "Update" : "Create")}
                     </Button>

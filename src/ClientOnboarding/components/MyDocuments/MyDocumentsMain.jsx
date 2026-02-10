@@ -22,7 +22,7 @@ export default function MyDocumentsMain() {
   const [documentsRefreshKey, setDocumentsRefreshKey] = useState(0);
 
   return (
-    <div className='lg:px-4 md:px-2 px-1'>
+    <div className='lg:px-4 md:px-2 px-3'>
       {/* Header */}
       <>
         <div className="d-flex justify-content-between align-items-center mb-3 my-docs-header">

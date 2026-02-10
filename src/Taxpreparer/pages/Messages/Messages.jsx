@@ -1107,7 +1107,7 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="lg:px-4 md:px-2 px-1">
+    <div className="lg:px-4 md:px-2 px-1 messages-page">
       <style>
         {`
           @keyframes slideUp {
@@ -1148,156 +1148,193 @@ export default function MessagePage() {
       <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
 
         {/* Left Column - Conversations */}
-        <div className="p-3 me-3 d-flex flex-column" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
+        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
           <div className="mb-2">
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
-            <div style={{ position: "relative", width: "100%" }}>
+            <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
               <FaSearch
                 style={{
                   position: "absolute",
                   left: "10px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#6c757d",
+                  color: "#9CA3AF",
+                  fontSize: "14px"
                 }}
               />
               <input
                 type="text"
                 className="form-control"
-                placeholder="Search..."
+                placeholder="Search conversations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  fontFamily: "BasisGrotesquePro",
                   paddingLeft: "35px",
+                  fontSize: "13px",
+                  fontFamily: "BasisGrotesquePro",
+                  height: "38px"
                 }}
               />
             </div>
           </div>
-          <div className="flex-grow-1 overflow-auto d-flex flex-column mt-3" style={{ gap: "12px" }}>
-            {/* Loading State */}
-            {loadingThreads && (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-                <p className="mt-2 text-muted small">Loading conversations...</p>
-              </div>
-            )}
 
-            {/* Error State */}
-            {threadsError && !loadingThreads && (
-              <div className="text-center py-5">
-                <p className="text-danger small">{threadsError}</p>
-                <button
-                  className="btn  btn-outline-primary mt-2"
-                  onClick={() => window.location.reload()}
-                >
-                  Retry
-                </button>
-              </div>
-            )}
+          {/* Filter Dropdown */}
+          <div className="mb-3" ref={dropdownRef}>
+            <button
+              className="btn btn-sm w-100 d-flex justify-content-between align-items-center"
+              style={{
+                background: "transparent",
+                border: "1px solid #E8F0FF",
+                color: "#3B4A66",
+                fontFamily: "BasisGrotesquePro",
+                fontSize: "13px"
+              }}
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            >
+              <span>{selectedFilter}</span>
+              <FaChevronDown style={{ fontSize: "12px" }} />
+            </button>
 
-            {/* Empty State */}
-            {!loadingThreads && !threadsError && conversations.length === 0 && (
-              <div className="text-center py-5">
-                <p className="text-muted small mb-0">No conversations yet</p>
-                <p className="text-muted small">Start a new message to begin</p>
-              </div>
-            )}
-
-            {/* Conversations List */}
-            {(() => {
-              const filteredConversations = conversations.filter(conv => {
-                const term = searchTerm.toLowerCase();
-                return (
-                  (conv.name && conv.name.toLowerCase().includes(term)) ||
-                  (conv.subject && conv.subject.toLowerCase().includes(term)) ||
-                  (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
-                );
-              });
-
-              return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
-                <div style={{ width: "100%" }}>
-                  {filteredConversations.map((conv, index) => (
-                    <div
-                      key={conv.id || `conv-${index}`}
-                      className="conversation-item p-3"
+            {showFilterDropdown && (
+              <div className="position-absolute w-100 mt-1" style={{ zIndex: 1000 }}>
+                <div className="list-group bg-white shadow-sm" style={{ borderRadius: "8px", border: "1px solid #E8F0FF" }}>
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option}
+                      className={`list-group-item list-group-item-action border-0 ${selectedFilter === option ? 'active' : ''}`}
                       style={{
-                        cursor: "pointer",
-                        border: "2px solid #E8F0FF",
-                        backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
-                        borderRadius: "12px",
+                        fontSize: "13px",
                         fontFamily: "BasisGrotesquePro",
-                        color: "#3B4A66",
-                        marginBottom: index < conversations.length - 1 ? "12px" : "0",
-                        width: "100%",
-                        minHeight: "80px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center"
+                        color: selectedFilter === option ? "#fff" : "#3B4A66",
+                        backgroundColor: selectedFilter === option ? "#F56D2D" : "transparent"
                       }}
                       onClick={() => {
-                        setActiveConversationId(conv.id);
+                        setSelectedFilter(option);
+                        setShowFilterDropdown(false);
                       }}
                     >
-                      <div className="d-flex justify-content-between align-items-center mb-1">
-                        <div className="d-flex align-items-center">
-                          <ConverIcon className="me-2 text-primary" />
-                          <div className="d-flex align-items-center gap-2">
-                            <div style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
-                            {conv.unreadCount > 0 && (
-                              <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
-                                {conv.unreadCount}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
-                          <button
-                            onClick={(e) => handleDeleteThread(conv.id, e)}
-                            className="btn "
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              padding: "4px 8px",
-                              color: "#EF4444",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center"
-                            }}
-                            title="Delete thread"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <small style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
-                      {conv.subject && (
-                        <div className="mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
-                          <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
-                          <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
-                        </div>
-                      )}
-                    </div>
+                      {option}
+                    </button>
                   ))}
                 </div>
-              ) : !loadingThreads && !threadsError && conversations.length > 0 && filteredConversations.length === 0 ? (
-                <div className="text-center py-5">
-                  <p className="text-muted small">No matches found for "{searchTerm}"</p>
-                </div>
-              ) : null;
-            })()}
+              </div>
+            )}
           </div>
+
+          {/* Loading State */}
+          {loadingThreads && (
+            <div className="text-center py-4">
+              <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+              <p className="text-muted mt-2 small">Loading conversations...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {threadsError && (
+            <div className="text-center py-4">
+              <p className="text-muted small">{threadsError}</p>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loadingThreads && !threadsError && conversations.length === 0 && (
+            <div className="text-center py-5">
+              <p className="text-muted small mb-0">No conversations yet</p>
+              <p className="text-muted small">Start a new message to begin</p>
+            </div>
+          )}
+
+          {/* Conversations List */}
+          {(() => {
+            const filteredConversations = conversations.filter(conv => {
+              const term = searchTerm.toLowerCase();
+              return (
+                (conv.name && conv.name.toLowerCase().includes(term)) ||
+                (conv.subject && conv.subject.toLowerCase().includes(term)) ||
+                (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
+              );
+            });
+
+            return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
+              <div className="conversations-list" style={{ width: "100%" }}>
+                {filteredConversations.map((conv, index) => (
+                  <div
+                    key={conv.id || `conv-${index}`}
+                    className="conversation-item p-3"
+                    style={{
+                      cursor: "pointer",
+                      border: "2px solid #E8F0FF",
+                      backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
+                      borderRadius: "12px",
+                      fontFamily: "BasisGrotesquePro",
+                      color: "#3B4A66",
+                      marginBottom: index < conversations.length - 1 ? "12px" : "0",
+                      width: "100%",
+                      minHeight: "80px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    onClick={() => {
+                      setActiveConversationId(conv.id);
+                    }}
+                  >
+                    <div className="top-row d-flex justify-content-between align-items-center mb-1">
+                      <div className="d-flex align-items-center">
+                        <ConverIcon className="me-2 text-primary" />
+                        <div className="d-flex align-items-center gap-2">
+                          <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
+                          {conv.unreadCount > 0 && (
+                            <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center gap-2">
+                        <small className="time-text" style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                        <button
+                          onClick={(e) => handleDeleteThread(conv.id, e)}
+                          className="btn "
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            padding: "4px 8px",
+                            color: "#EF4444",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                          title="Delete thread"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <small className="last-message" style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
+                    {conv.subject && (
+                      <div className="subject-row mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
+                        <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
+                        <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : !loadingThreads && !threadsError && conversations.length > 0 && filteredConversations.length === 0 ? (
+              <div className="text-center py-5">
+                <p className="text-muted small">No matches found for "{searchTerm}"</p>
+              </div>
+            ) : null;
+          })()}
         </div>
 
         {/* Right Column - Chat Interface */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column">
+        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-interface">
           {/* Chat Header with Tabs */}
           {(() => {
             const activeConversation = conversations.find(c => c.id === activeConversationId);

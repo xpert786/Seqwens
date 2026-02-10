@@ -236,7 +236,7 @@
 
 @media (max-height: 700px) {
   .client-sidebar-container {
-    width: 200px !important;
+    width: 240px !important;
   }
 
   .sidebar-top {
@@ -320,10 +320,12 @@
   .client-sidebar-container {
     width: 100% !important;
     max-width: 260px !important;
-    height: calc(100vh - 60px) !important;
+    height: auto !important;
+    max-height: calc(100vh - 60px) !important;
     top: 60px !important;
     z-index: 1050 !important;
     box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2) !important;
+    overflow-y: auto !important;
   }
 
   .client-sidebar-container:not(.collapsed) {

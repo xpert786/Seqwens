@@ -837,7 +837,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
         </p>
 
         {/* Actions */}
-        <div className="d-flex justify-content-end gap-3 pt-3 border-top">
+        <div className="d-flex justify-content-end gap-3 pt-3 border-top rental-form-actions">
           <button
             className="btn btn-light"
             onClick={onCancel}

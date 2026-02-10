@@ -4,14 +4,37 @@
 }
 
 .custom-topbar .topbar-logo {
-  height: 40px;
+  height: 35px;
+  width: auto;
+  object-fit: contain;
   margin-right: 7px;
+  transition: all 0.3s ease;
+}
+
+.topbar-logo-wrapper {
+  width: 280px;
+}
+
+.topbar-logo-wrapper.sidebar-closed {
+  width: 80px;
+}
+
+@media (max-width: 767px) {
+  .topbar-logo-wrapper {
+    width: auto !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+
+  .custom-topbar .topbar-logo {
+    height: 28px;
+  }
 }
 
 .custom-topbar .topbar-search {
   position: relative;
   flex: 1;
-  max-width: 400px;
+  max-width: 300px;
 }
 
 .custom-topbar .topbar-search input.form-control {
@@ -265,8 +288,10 @@
   }
 
   .custom-topbar .notification-belling {
-    width: 32px;
-    height: 32px;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    flex-shrink: 0 !important;
   }
 
   .custom-topbar .notification-belling svg {
@@ -294,4 +319,11 @@
     gap: 0.5rem !important;
   }
 
+  .topbar-profile-menu {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    width: 200px;
+    z-index: 9999;
+  }
 }

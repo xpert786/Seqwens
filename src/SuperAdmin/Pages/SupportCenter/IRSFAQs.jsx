@@ -288,7 +288,7 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
 
     return (
         <div className=" min-h-screen ">
-            <div className="max-w-4xl mx-auto">
+            <div className="w-full">
                 {/* Main Container */}
                 <div className="bg-white rounded-lg  border border-gray-200">
                     {/* Header Section */}
@@ -384,12 +384,12 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
                                                         <span className={`text-[10px] font-medium ${faq.is_published ? 'text-green-600' : 'text-gray-400'}`}>
                                                             {faq.is_published ? 'Published' : 'Hidden'}
                                                         </span>
-                                                        <button
+                                                        <div
                                                             onClick={(e) => togglePublished(faq.id, faq.is_published, e)}
-                                                            className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors focus:outline-none ${faq.is_published ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${faq.is_published ? 'bg-[#F56D2D]' : 'bg-gray-200'}`}
                                                         >
-                                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${faq.is_published ? 'translate-x-4' : 'translate-x-1'}`} />
-                                                        </button>
+                                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${faq.is_published ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                        </div>
                                                     </div>
 
                                                     {userType !== 'billing_admin' && (

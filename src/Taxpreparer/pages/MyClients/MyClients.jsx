@@ -1816,7 +1816,7 @@ export default function MyClients() {
                           </div>
                         </div>
                       </div>
-                      <div className="d-flex gap-2">
+                      <div className="d-flex gap-2 invite-copy-btn-wrapper">
                         {invite.invite_link && (
                           <button
                             className="btn  btn-outline-primary"
@@ -2193,8 +2193,7 @@ export default function MyClients() {
                       disabled={!activeInviteDetails.invite_link}
                       style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
                     >
-                      <FaCopy size={12} className="me-1" />
-                      Copy
+                      <FaCopy size={12} />
                     </button>
                     <button
                       type="button"

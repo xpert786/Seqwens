@@ -138,111 +138,45 @@ const messages = [
 
 // ------------------- Status Colors ----------------------
 const statusColors = {
-  high: "#DC2626",
-  medium: "var(--color-yellow-400, #FBBF24)",
-  low: "var(--color-green-500, #22C55E)",
-  pending: "#854D0E",
-  "in progress": "var(--color-green-500, #22C55E)",
+  high: "#EF4444",
+  medium: "#F59E0B",
+  low: "#10B981",
+  pending: "#8B5CF6",
+  "in progress": "#3B82F6",
 };
 
 // ------------------- Task Card ------------------------
-const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleStatus, value }) => {
+const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleStatus, value, className }) => {
   const displayStatus = singleStatus && Array.isArray(status) ? [status[0]] : status;
 
   return (
     <div
-      className="rounded-3 p-3 car"
+      className={`task-card-v2 ${selected ? 'selected' : ''} ${className || ''}`}
       onClick={onClick}
-      style={{
-        cursor: "pointer",
-        backgroundColor: selected ? "var(--Palette2-Gold-200, #FFF4E6)" : "#fff",
-        transition: "background-color 0.2s",
-      }}
     >
-      <div>
-
-
-        <div className="d-flex justify-content-between align-items-start" style={{ gap: "1rem" }}>
-
-          <div className="d-flex align-items-start gap-3" style={{ flex: 1 }}>
-            {icon}
-
-            <div className="task-title">{title}</div>
-
-
-          </div>
-          <div
-            className="d-flex align-items-center"
-            style={{
-              gap: "0.5rem",
-              flexShrink: 0,
-              whiteSpace: "nowrap",
-              alignSelf: "flex-start",
-            }}
-          >
-            {displayStatus?.map((s, i) => (
-              <span
-                key={i}
-                className="badge rounded-pill text-capitalize task-badge"
-                style={{
-                  backgroundColor: statusColors[s] || "#6B7280",
-                  color: "#fff",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {s}
-              </span>
-            ))}
-
-            {value && <span className="dashboard-card-value m-0" style={{ fontSize: '12px', fontWeight: '500', color: '#3B4A66' }}>{value}</span>}
-          </div>
-
+      <div className="task-header-row">
+        <div className="task-title-group">
+          {icon && <span className="task-icon-mini">{icon}</span>}
+          <span className="task-main-title">{title}</span>
         </div>
-        <div className="bother">
-          <div className="task-due">{due}</div>
-          <div className="task-usered">{user}</div>
-        </div>
-      </div>
-      {/* <div className="d-flex justify-content-between align-items-start" style={{ gap: "1rem" }}>
-      
-        <div className="d-flex align-items-start gap-2" style={{ flex: 1 }}>
-          {icon}
-          
-            <div className="task-title">{title}</div>
-            
-         
-        </div>
-        <div
-          className="d-flex align-items-center"
-          style={{
-            gap: "0.5rem",
-            flexShrink: 0,
-            whiteSpace: "nowrap",
-            alignSelf: "flex-start",
-          }}
-        >
+        <div className="task-status-group">
           {displayStatus?.map((s, i) => (
             <span
               key={i}
-              className="badge rounded-pill text-capitalize task-badge"
-              style={{
-                backgroundColor: statusColors[s] || "#6B7280",
-                color: "#fff",
-                whiteSpace: "nowrap",
-              }}
+              className="badge rounded-pill text-capitalize task-badge-v2"
+              style={{ backgroundColor: statusColors[s.toLowerCase()] || "#6B7280" }}
             >
               {s}
             </span>
           ))}
-
-          {value && <h5 className="dashboard-card-value m-0">{value}</h5>}
+          {value && <span className="task-value-text">{value}</span>}
         </div>
-       
-      </div> */}
-
-
+      </div>
+      <div className="task-meta-row">
+        <div className="task-due-date">{due}</div>
+        <div className="task-user-info">{user}</div>
+      </div>
     </div>
-
   );
 };
 
@@ -302,17 +236,17 @@ export default function Dashboard() {
   // Helper function to get priority color
   const getPriorityColor = (priority) => {
     const priorityLower = (priority || '').toLowerCase();
-    if (priorityLower === 'high') return "#DC2626";
-    if (priorityLower === 'medium') return "var(--color-yellow-400, #FBBF24)";
-    if (priorityLower === 'low') return "var(--color-green-500, #22C55E)";
+    if (priorityLower === 'high') return "#EF4444";
+    if (priorityLower === 'medium') return "#F59E0B";
+    if (priorityLower === 'low') return "#10B981";
     return "#6B7280";
   };
 
   // Helper function to get status color
   const getStatusColor = (status) => {
     const statusLower = (status || '').toLowerCase();
-    if (statusLower === 'pending') return "#854D0E";
-    if (statusLower === 'in progress' || statusLower === 'in_progress') return "var(--color-green-500, #22C55E)";
+    if (statusLower === 'pending') return "#8B5CF6";
+    if (statusLower === 'in progress' || statusLower === 'in_progress') return "#3B82F6";
     return "#6B7280";
   };
 
@@ -374,21 +308,21 @@ export default function Dashboard() {
     });
 
     return (
-      <div className="d-flex justify-content-center align-items-center gap-3 mt-3" style={{ paddingTop: '1rem', borderTop: '1px solid #E5E7EB' }}>
+      <div className="d-flex justify-content-between align-items-center mt-3 w-100" style={{ paddingTop: '1rem', borderTop: '1px solid #E5E7EB' }}>
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          style={btnStyle(currentPage === 1)}
+          style={{ ...btnStyle(currentPage === 1), width: '100px' }}
         >
           Previous
         </button>
-        <span style={{ fontSize: '14px', color: '#4B5563', fontWeight: '500', minWidth: '100px', textAlign: 'center' }}>
-          Page {currentPage} of {totalPages}
+        <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500', textAlign: 'center' }}>
+          {currentPage} / {totalPages}
         </span>
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={btnStyle(currentPage === totalPages)}
+          style={{ ...btnStyle(currentPage === totalPages), width: '100px' }}
         >
           Next
         </button>
@@ -397,10 +331,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container-fluid px-2 sm:px-0 px-md-2">
+    <div className="dashboard-main-container">
       <TaxDashboardWidget />
 
-      <div className="row mt-1 g-3 lg:px-4 md:px-2 px-1">
+      <div className="row mt-3 g-3 dashboard-sections-wrapper">
         {/* My Tasks */}
         <div className="col-12 col-md-6">
           <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
@@ -530,7 +464,7 @@ export default function Dashboard() {
 
       {/* Bottom Section */}
 
-      <div className="row mt-1 g-3 px-4">
+      <div className="row mt-3 g-3 dashboard-sections-wrapper">
         {/* Recent Messages */}
 
         <div className="col-12 col-md-6">
@@ -559,31 +493,28 @@ export default function Dashboard() {
                   return (
                     <div
                       key={msg.id || i}
-                      className={`rounded-3 lg:p-3 md:p-2 px-1 car recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        backgroundColor: msgType === "client" ? "#FFF4E6" : "#fff",
-                        cursor: "pointer",
-                      }}
+                      className={`recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"}`}
                       onClick={() => navigate(`/taxdashboard/messages?thread=${msg.thread_id}`)}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
-                        <div className="msg-icon-wrapper"><Msg /></div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                            <span className="msg-role" style={{ fontWeight: 500 }}>{senderName}</span>
-                            <span className="name-role-circle"></span>
-                            <span className="role-badge">{msg.sender_type || (msg.sender?.role === 'client' ? 'Client' : 'Internal')}</span>
-                          </div>
-                          <div className="msg-content" style={{ fontSize: "0.875rem", color: "#4B5563" }}>
-                            {msg.message_preview || msg.message_snippet || msg.content || 'No message content'}
-                          </div>
+                      <div className="msg-header-row">
+                        <div className="msg-sender-box">
+                          <span className="msg-name-text">{senderName}</span>
+                          <span className="name-role-circle"></span>
+                          <span className="role-badge">{msg.sender_type || (msg.sender?.role === 'client' ? 'Client' : 'Internal')}</span>
+                        </div>
+                        <div className="msg-time-box">
+                          <Clocking />
+                          <span>{msg.time_ago || 'Just now'}</span>
                         </div>
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "black", display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                        <Clocking />{msg.time_ago || 'Just now'}
+
+                      <div className="msg-body-row">
+                        <div className="msg-icon-holder">
+                          <Msg />
+                        </div>
+                        <div className="msg-preview-text">
+                          {msg.message_preview || msg.message_snippet || msg.content || 'No message content'}
+                        </div>
                       </div>
                     </div>
                   );

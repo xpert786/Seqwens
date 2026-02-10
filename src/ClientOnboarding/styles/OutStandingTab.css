@@ -53,12 +53,25 @@
     text-align: left !important;
   }
 
-  /* Actions row */
+  /* Actions row - moved to top with invoice info */
   .invoice-card .text-end {
     width: 100%;
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 8px;
+  }
+
+  /* Button container in top section */
+  .invoice-card .flex-grow-1 > .d-flex {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  /* Ensure buttons stay together in top section */
+  .invoice-card .flex-grow-1 > .d-flex > .d-flex {
+    flex-wrap: nowrap;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   /* Pay Now button sizing */
@@ -100,5 +113,21 @@
     padding: 4px 8px;
     min-width: auto;
   }
+
+  /* Invoice Stat Cards Mobile Responsive */
+  .invoices-main .row.g-2.g-md-3 > div {
+    margin-bottom: 12px;
   }
-  
+
+  .invoices-main .row.g-2.g-md-3 > div > div {
+    min-height: 80px;
+  }
+
+  .invoices-main .row.g-2.g-md-3 > div > div small {
+    font-size: 12px !important;
+  }
+
+  .invoices-main .row.g-2.g-md-3 > div > div h5 {
+    font-size: 15px !important;
+  }
+  }

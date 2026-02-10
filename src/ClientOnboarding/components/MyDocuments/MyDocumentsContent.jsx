@@ -1031,7 +1031,7 @@ export default function MyDocumentsContent() {
 
             {/* Breadcrumb Navigation */}
             {breadcrumbs.length > 0 && (
-                <div className="mb-3 d-flex align-items-center gap-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                <div className="mb-3 d-flex align-items-center gap-2 mydocs-breadcrumb-wrapper" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     <button
                         onClick={() => handleBreadcrumbClick(null)}
                         style={{
@@ -1154,14 +1154,14 @@ export default function MyDocumentsContent() {
 
 
             {/* Filters */}
-            <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 mydocs-filter-container">
 
                 <div className="mydocs-search-wrapper">
                     <i className="bi bi-search mydocs-search-icon"></i>
                     <input
                         type="text"
                         className="form-control mydocs-search-input"
-                        placeholder="Search by name..."
+                        placeholder="Search documents..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
