@@ -866,14 +866,66 @@ export const superAdminAPI = {
     return await apiRequest(`/user/superadmin/audit-logs/?${params}`, 'GET');
   },
 
-  // Export audit logs
+  // Export audit logs as CSV
   exportAuditLogs: async (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.keys(filters).forEach(key => {
-      if (filters[key]) params.append(key, filters[key]);
-    });
-    const query = params.toString();
-    return await apiRequest(`/user/superadmin/audit-logs/export/${query ? `?${query}` : ''}`, 'GET');
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) params.append(key, filters[key]);
+      });
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
+      const url = `${API_BASE_URL}/user/superadmin/audit-logs/export/${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/csv'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP ${response.status}: Failed to export logs`);
+      }
+
+      // Get the filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `audit_logs_${new Date().getTime()}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+
+      // Create download link and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 100);
+
+      return { success: true, filename };
+    } catch (error) {
+      console.error('Error exporting audit logs:', error);
+      throw error;
+    }
   },
 
   // API Keys Management API functions
@@ -1227,6 +1279,129 @@ export const superAdminAPI = {
 
   downloadBackup: async (backupId) => {
     return await apiRequest(`/user/superadmin/backups/${backupId}/download/`, 'GET');
+  },
+
+  // Export backups as CSV
+  exportBackups: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.type) params.append('type', filters.type);
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
+      const url = `${API_BASE_URL}/user/superadmin/backups/export/${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/csv'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP ${response.status}: Failed to export backups`);
+      }
+
+      // Get the filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `system_backups_${new Date().getTime()}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+
+      // Create download link and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 100);
+
+      return { success: true, filename };
+    } catch (error) {
+      console.error('Error exporting backups:', error);
+      throw error;
+    }
+  },
+
+  // Export system logs as CSV
+  exportSystemLogs: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) params.append(key, filters[key]);
+      });
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
+      const url = `${API_BASE_URL}/user/superadmin/system-logs/export/${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/csv'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP ${response.status}: Failed to export system logs`);
+      }
+
+      // Get the filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `system_logs_${new Date().getTime()}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+
+      // Create download link and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 100);
+
+      return { success: true, filename };
+    } catch (error) {
+      console.error('Error exporting system logs:', error);
+      throw error;
+    }
   }
 };
 

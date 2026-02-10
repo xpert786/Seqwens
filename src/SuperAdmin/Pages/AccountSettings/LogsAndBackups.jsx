@@ -245,29 +245,38 @@ export default function LogsAndBackups() {
     const handleExportLogs = async () => {
         try {
             setExporting(true);
-            const token = localStorage.getItem('accessToken');
-            const level = selectedLevel !== 'All Levels' ? selectedLevel : '';
-            // Construct direct download URL with token
-            const url = `${getApiBaseUrl()}/user/superadmin/audit-logs/export/?level=${level}&token=${token}`;
-
-            // Log export action
             toast.info('Preparing audit log export...', superToastOptions);
 
-            // Use a temporary link to trigger download
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `audit_logs_${new Date().getTime()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const level = selectedLevel !== 'All Levels' ? selectedLevel : '';
 
-            setTimeout(() => {
-                toast.success('Audit logs export started', superToastOptions);
-                setExporting(false);
-            }, 1000);
+            // Use the superAdminAPI method
+            await superAdminAPI.exportAuditLogs({ level });
+
+            toast.success('Audit logs exported successfully', superToastOptions);
         } catch (err) {
             console.error('Error exporting logs:', err);
-            toast.error('Failed to export logs', superToastOptions);
+            toast.error(err.message || 'Failed to export logs', superToastOptions);
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const handleExportBackups = async () => {
+        try {
+            setExporting(true);
+            toast.info('Preparing backup history export...', superToastOptions);
+
+            const status = backupsStatus !== 'All Statuses' ? backupsStatus : '';
+            const type = backupsType !== 'All Types' ? backupsType : '';
+
+            // Use the superAdminAPI method
+            await superAdminAPI.exportBackups({ status, type });
+
+            toast.success('Backup history exported successfully', superToastOptions);
+        } catch (err) {
+            console.error('Error exporting backups:', err);
+            toast.error(err.message || 'Failed to export backups', superToastOptions);
+        } finally {
             setExporting(false);
         }
     };
@@ -362,15 +371,7 @@ export default function LogsAndBackups() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={handleExportLogs}
-                        disabled={loading || exporting}
-                        className="flex items-center gap-2 text-[#4B5563] px-4 py-2 rounded-lg text-sm font-[BasisGrotesquePro] border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ borderRadius: "7px" }}
-                    >
-                        <ExportIcon />
-                        {exporting ? 'Exporting...' : 'Export Logs'}
-                    </button>
+                    
                 </div>
 
                 {/* Error Message */}
@@ -525,14 +526,7 @@ export default function LogsAndBackups() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleExportLogs}
-                                className="flex items-center gap-2 px-4 py-2 border border-[#E8F0FF] rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-gray-50 transition-colors"
-                                style={{ borderRadius: "7px" }}
-                            >
-                                <ExportIcon />
-                                Export Logs
-                            </button>
+        
                             <button
                                 onClick={handleCreateBackup}
                                 disabled={submittingBackup}

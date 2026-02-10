@@ -63,6 +63,9 @@ export default function FirmDetails() {
     const [loggingIn, setLoggingIn] = useState(false);
     const [enablingDevMode, setEnablingDevMode] = useState(false);
     const [showDevModeConfirm, setShowDevModeConfirm] = useState(false);
+    const [showActionConfirm, setShowActionConfirm] = useState(false);
+    const [actionReason, setActionReason] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
 
 
     const fetchFirmDetails = async () => {
@@ -554,6 +557,49 @@ export default function FirmDetails() {
         }
     };
 
+    const getActionType = () => {
+        if (!firmDetails?.status) return 'suspend';
+        const status = firmDetails.status.toLowerCase();
+        return (status === 'suspended' || status === 'inactive') ? 'reactivate' : 'suspend';
+    };
+
+    const handleFirmAction = async () => {
+        if (!firmId) return;
+        const action = getActionType();
+
+        try {
+            setActionLoading(true);
+            let response;
+
+            if (action === 'suspend') {
+                response = await superAdminAPI.suspendFirm(firmId, actionReason);
+            } else {
+                response = await superAdminAPI.reactivateFirm(firmId, actionReason);
+            }
+
+            if (response.success) {
+                toast.success(
+                    action === 'suspend'
+                        ? 'Firm suspended successfully.'
+                        : 'Firm reactivated successfully.',
+                    { position: "top-right", autoClose: 3000 }
+                );
+
+                // Refresh details
+                await fetchFirmDetails();
+                setShowActionConfirm(false);
+                setActionReason('');
+            } else {
+                throw new Error(response.message || `Failed to ${action} firm`);
+            }
+        } catch (err) {
+            console.error(`Error ${action}ing firm:`, err);
+            toast.error(handleAPIError(err), { position: "top-right", autoClose: 3000 });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const quickActions = [
         {
             id: 'upgrade', label: 'Upgrade Plan', icon: (<svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -674,6 +720,33 @@ export default function FirmDetails() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowActionConfirm(true)}
+                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${getActionType() === 'reactivate'
+                                                ? 'bg-white text-green-600 border-green-200 hover:bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-900'
+                                                : 'bg-white text-red-600 border-red-200 hover:bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-900'
+                                            }`}
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        {getActionType() === 'reactivate' ? (
+                                            <>
+                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M10 1.66667V5M10 15V18.3333M3.57501 3.575L5.83334 5.83333M14.1667 14.1667L16.425 16.425M1.66667 10H5M15 10H18.3333M3.57501 16.425L5.83334 14.1667M14.1667 5.83333L16.425 3.575" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Reactivate Firm
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    <path d="M10 1.66667C5.39763 1.66667 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66667 10 1.66667ZM3.33333 10C3.33333 6.3181 6.3181 3.33333 10 3.33333C13.6819 3.33333 16.6667 6.3181 16.6667 10C16.6667 13.6819 13.6819 16.6667 10 16.6667C6.3181 16.6667 3.33333 13.6819 3.33333 10Z" fill="currentColor" />
+                                                    <path d="M13.5 6.5L6.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Disable Firm
+                                            </>
+                                        )}
+                                    </button>
                                     <button
                                         type="button"
                                         onClick={handleFirmLogin}
@@ -1049,6 +1122,41 @@ export default function FirmDetails() {
                         ? { backgroundColor: '#EF4444', color: '#FFFFFF', borderRadius: '8px' }
                         : { backgroundColor: '#2563EB', color: '#FFFFFF', borderRadius: '8px' }
                     }
+                />
+
+                <ConfirmationModal
+                    isOpen={showActionConfirm}
+                    onClose={() => {
+                        setShowActionConfirm(false);
+                        setActionReason('');
+                    }}
+                    onConfirm={handleFirmAction}
+                    isLoading={actionLoading}
+                    isDestructive={getActionType() === 'suspend'}
+                    title={getActionType() === 'reactivate' ? "Reactivate Firm" : "Suspend Firm"}
+                    message={
+                        <div className="flex flex-col gap-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                {getActionType() === 'reactivate'
+                                    ? "Are you sure you want to reactivate this firm? They will regain access to the platform immediately."
+                                    : "Are you sure you want to suspend this firm? All users associated with this firm will lose access immediately."
+                                }
+                            </p>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                    Reason <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={actionReason}
+                                    onChange={(e) => setActionReason(e.target.value)}
+                                    placeholder={getActionType() === 'reactivate' ? "Reason for reactivation..." : "Reason for suspension..."}
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                    }
+                    confirmText={getActionType() === 'reactivate' ? "Reactivate" : "Suspend"}
                 />
             </div>
         </div>
