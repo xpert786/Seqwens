@@ -187,7 +187,7 @@ export default function FirmManagement() {
         if (!plan) {
             return 'None';
         }
-        
+
         if (plan.toLowerCase() === 'developer') return 'Developer Plan';
 
         return plan.charAt(0).toUpperCase() + plan.slice(1);
@@ -557,7 +557,7 @@ export default function FirmManagement() {
             const firm = firms.find(f => f.id === firmId);
             setFirmToSuspend(firm);
             setShowSuspendModal(true);
-        } else if (action === 'Unsuspend Firm') {
+        } else if (action === 'Unsuspend Firm' || action === 'Reactivate Firm') {
             const firm = firms.find(f => f.id === firmId);
             setFirmToUnsuspend(firm);
             setShowUnsuspendModal(true);
@@ -963,13 +963,24 @@ export default function FirmManagement() {
                                                     <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
                                                     <button
-                                                        onClick={() => handleAction(firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm', firm.id)}
+                                                        onClick={() => {
+                                                            const status = firm.status?.toLowerCase();
+                                                            let action = 'Suspend Firm';
+                                                            if (status === 'suspended') action = 'Unsuspend Firm';
+                                                            else if (status === 'inactive') action = 'Reactivate Firm';
+                                                            handleAction(action, firm.id);
+                                                        }}
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                                                     >
                                                         <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M10 1.66667V5M10 15V18.3333M3.57501 3.575L5.83334 5.83333M14.1667 14.1667L16.425 16.425M1.66667 10H5M15 10H18.3333M3.57501 16.425L5.83334 14.1667M14.1667 5.83333L16.425 3.575" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                         </svg>
-                                                        {firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm'}
+                                                        {(() => {
+                                                            const status = firm.status?.toLowerCase();
+                                                            if (status === 'suspended') return 'Unsuspend Firm';
+                                                            if (status === 'inactive') return 'Reactivate Firm';
+                                                            return 'Suspend Firm';
+                                                        })()}
                                                     </button>
 
                                                     <button
@@ -1470,8 +1481,12 @@ export default function FirmManagement() {
                     <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px' }}>
                         <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Unsuspend Firm</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Restore access for {firmToUnsuspend.name}</p>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {firmToUnsuspend.status?.toLowerCase() === 'inactive' ? 'Reactivate Firm' : 'Unsuspend Firm'}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {firmToUnsuspend.status?.toLowerCase() === 'inactive' ? 'Reactivate' : 'Restore access for'} {firmToUnsuspend.name}
+                                </p>
                             </div>
                             <button
                                 onClick={() => {
@@ -1500,7 +1515,9 @@ export default function FirmManagement() {
 
                             {unsuspendSuccess && (
                                 <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg p-3">
-                                    <div className="text-sm text-green-700 dark:text-green-400">Firm unsuspended successfully!</div>
+                                    <div className="text-sm text-green-700 dark:text-green-400">
+                                        Firm {firmToUnsuspend.status?.toLowerCase() === 'inactive' ? 'reactivated' : 'unsuspended'} successfully!
+                                    </div>
                                 </div>
                             )}
 
@@ -1558,7 +1575,9 @@ export default function FirmManagement() {
                                 disabled={unsuspendingFirm}
                                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {unsuspendingFirm ? 'Unsuspending...' : 'Unsuspend Firm'}
+                                {unsuspendingFirm
+                                    ? (firmToUnsuspend.status?.toLowerCase() === 'inactive' ? 'Reactivating...' : 'Unsuspending...')
+                                    : (firmToUnsuspend.status?.toLowerCase() === 'inactive' ? 'Reactivate Firm' : 'Unsuspend Firm')}
                             </button>
                         </div>
                     </div>
