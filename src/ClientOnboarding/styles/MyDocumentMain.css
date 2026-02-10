@@ -1,48 +1,50 @@
 @media (max-width: 767px) {
 
-    .my-docs-header {
-      flex-direction: column;
-      align-items: flex-start !important;
-      gap: 12px;
-    }
-  
-    /* Title */
-    .my-docs-header h5 {
-      font-size: 20px !important;
-      line-height: 1.2;
-    }
-  
-    /* Subtitle */
-    .my-docs-header small {
-      font-size: 13px !important;
-      display: block;
-      margin-top: 2px;
-    }
-  
-    /* Upload button */
-    .my-docs-header button {
-      width: 100%;
-      justify-content: center;
-      padding: 10px 12px;
-      font-size: 14px;
-    }
-    .tabs-wrapper {
-        width: 100%;
-        overflow-x: auto;
-      }
-    
-      .tabs-wrapper > div {
-        flex-wrap: nowrap;
-        gap: 6px;
-      }
-    
-      /* Compact buttons */
-      .tabs-wrapper button {
-        padding: 6px 14px !important;
-        font-size: 13px !important;
-        white-space: nowrap;
-      }
-        /* Main container */
+  .my-docs-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  /* Title */
+  .my-docs-header h5 {
+    font-size: 20px !important;
+    line-height: 1.2;
+  }
+
+  /* Subtitle */
+  .my-docs-header small {
+    font-size: 13px !important;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Upload button */
+  .my-docs-header button {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .tabs-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .tabs-wrapper>div {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  /* Compact buttons */
+  .tabs-wrapper button {
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    white-space: nowrap;
+  }
+
+  /* Main container */
   .documents-wrapper {
     padding: 12px !important;
   }
@@ -103,6 +105,54 @@
   .documents-wrapper .text-center {
     padding: 16px 8px !important;
   }
+
+  .mydocs-filter-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .mydocs-search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 0 !important;
+    z-index: 10 !important;
+    position: relative !important;
+    display: block !important;
+  }
+
+  .mydocs-search-input {
+    font-size: 16px !important;
+    /* Prevent zoom on mobile */
+    height: 42px !important;
+    /* Larger tap target */
+    border: 1px solid #ced4da !important;
+    color: #333 !important;
+    background-color: #fff !important;
+    opacity: 1 !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .mydocs-search-icon {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 11 !important;
+    left: 12px !important;
+  }
+
+  /* Buttons container - New Folder, View Toggles */
+  .mydocs-filter-container>div:last-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .mydocs-breadcrumb-wrapper {
+    padding-top: 8px;
+    margin-bottom: 16px !important;
+  }
+
   .pdf-modal-overlay {
     padding: 8px !important;
   }
@@ -118,7 +168,7 @@
   }
 
   /* Header layout */
-  .pdf-modal-container > div:first-child {
+  .pdf-modal-container>div:first-child {
     padding: 12px 14px !important;
     flex-wrap: wrap;
     gap: 8px;
@@ -155,8 +205,7 @@
   }
 
   /* Viewer padding */
-  .pdf-modal-container > div:last-child {
+  .pdf-modal-container>div:last-child {
     padding: 8px !important;
   }
-  }
-  
+}

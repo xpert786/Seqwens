@@ -90,7 +90,9 @@ const TaskCard = ({ title, due, status, icon, iconType, priority, isRecentActivi
         </div>
         {!isRecentActivity && (
           <span
-            className={`px-2 py-1 text-xs rounded-full text-white capitalize ${badgeColorMap[badgeStatus] || badgeColorMap.low}`}
+            className={`px-2 py-1 text-xs rounded-full text-white capitalize
+  flex items-center justify-center
+  ${badgeColorMap[badgeStatus] || badgeColorMap.low}`}
           >
             {badgeStatus}
           </span>

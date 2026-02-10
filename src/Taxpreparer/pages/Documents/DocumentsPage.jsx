@@ -151,7 +151,7 @@ export default function DocumentsPage() {
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const previewTriggerRef = useRef(null);
-  const [activeTab, setActiveTab] = useState('my-documents'); // 'my-documents' or 'firm-shared'
+  const [activeTab, setActiveTab] = useState('my-documents');  // 'my-documents' or 'firm-shared'
   const [statistics, setStatistics] = useState({
     total_clients: 0,
     reviewed_documents: 0,
@@ -822,8 +822,8 @@ export default function DocumentsPage() {
 
       {/* Tabs (hide when nested under client) */}
       {!isNestedUnderClient && (
-        <div className="mb-4">
-          <ul className="nav nav-tabs" >
+        <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <ul className="nav nav-tabs documents-nav-tabs flex-grow-1 border-0" style={{ gap: '10px' }}>
             <li className="nav-item">
               <button
                 className={`nav-link ${activeTab === 'my-documents' ? 'active' : ''}`}
@@ -873,18 +873,18 @@ export default function DocumentsPage() {
         <>
           {/* Stats (hide when nested under client) */}
           {!isNestedUnderClient && (
-            <div className="row g-3 mb-3">
+            <div className="documents-stats-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'nowrap' }}>
               {statisticsLoading ? (
                 // Loading state - show skeleton or loading cards
                 cardData.map((item, index) => (
-                  <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
+                  <div key={index} style={{ flex: '1', minWidth: '200px' }}>
                     <div className="stat-card d-flex align-items-center p-3 gap-3">
-                      <div className="stat-icon p-3 rounded-circle d-flex align-items-center justify-content-center"
-                        style={{ color: item.color, backgroundColor: `${item.color}15`, width: '60px', height: '60px' }}>
+                      <div className="stat-icon p-0 rounded-lg d-flex align-items-center justify-content-center flex-shrink-0"
+                        style={{ color: item.color, backgroundColor: `${item.color}15`, width: '44px', height: '44px', borderRadius: '8px' }}>
                         {item.icon}
                       </div>
-                      <div className="flex-grow-1">
-                        <div className="text-muted fw-medium" style={{ fontSize: '14px' }}>{item.label}</div>
+                      <div className="d-flex flex-column">
+                        <div className="text-muted fw-medium text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.025em' }}>{item.label}</div>
                         <div className="stat-count">
                           <div className="spinner-border spinner-border-sm text-primary" role="status">
                             <span className="visually-hidden">Loading...</span>
@@ -896,7 +896,7 @@ export default function DocumentsPage() {
                 ))
               ) : statisticsError ? (
                 // Error state
-                <div className="col-12">
+                <div style={{ width: '100%' }}>
                   <div className="alert alert-warning" role="alert">
                     <small>Unable to load statistics: {statisticsError}</small>
                   </div>
@@ -904,18 +904,17 @@ export default function DocumentsPage() {
               ) : (
                 // Normal state with data
                 cardData.map((item, index) => (
-                  <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
+                  <div key={index} style={{ flex: '1', minWidth: '200px' }}>
                     <div className="stat-card d-flex align-items-center p-3 gap-3">
-                      <div className="stat-icon p-3 rounded-circle d-flex align-items-center justify-content-center"
-                        style={{ color: item.color, backgroundColor: `${item.color}15`, width: '60px', height: '60px' }}>
+                      <div className="stat-icon p-0 rounded-lg d-flex align-items-center justify-content-center flex-shrink-0"
+                        style={{ color: item.color, backgroundColor: `${item.color}15`, width: '44px', height: '44px', borderRadius: '8px' }}>
                         {item.icon}
                       </div>
-                      <div className="flex-grow-1 align-items-center">
+                      <div className="d-flex flex-column flex-grow-1">
                         <h3 className="fw-bold mb-0" style={{ fontSize: '24px', color: '#111827' }}>
                           {item.count}
                         </h3>
-                        <div className="text-muted fw-medium" style={{ fontSize: '14px', paddingBottom: '10px' }}>{item.label}</div>
-
+                        <div className="text-muted fw-medium text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.025em' }}>{item.label}</div>
                       </div>
                     </div>
                   </div>
@@ -930,7 +929,7 @@ export default function DocumentsPage() {
           {!isNestedUnderClient && (
             <div className="bg-white rounded-xl p-6">
               {/* Header */}
-              <div className="d-flex justify-content-between align-items-center mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-4 file-manager-header">
                 <div>
                   <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
                     File Manager
@@ -956,7 +955,7 @@ export default function DocumentsPage() {
               {/* Breadcrumb Navigation */}
               {(fileManagerBreadcrumbs.length > 0 || fileManagerCurrentFolder) && (
                 <div className="mb-4">
-                  <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "#f8f9fa", padding: "12px 16px", borderRadius: "8px" }}>
+                  <div className="d-flex align-items-center gap-2 flex-wrap breadcrumb-container" style={{ backgroundColor: "#f8f9fa", padding: "12px 16px", borderRadius: "8px" }}>
                     <button
                       className="btn  text-primary p-0 border-0 bg-transparent"
                       onClick={() => setFileManagerSelectedFolderId(null)}
@@ -992,8 +991,8 @@ export default function DocumentsPage() {
 
 
               {/* Search and Filter */}
-              <div className="d-flex align-items-center gap-2 mb-4" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-                <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
+              <div className="d-flex align-items-center gap-2 mb-4 file-manager-search-row" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+                <div className="position-relative file-manager-search-box" style={{ width: '260px', flexShrink: 0 }}>
                   <input
                     type="text"
                     className="form-control rounded"

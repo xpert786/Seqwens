@@ -536,21 +536,21 @@ export default function ESignature() {
                 <div
                   key={request.id || originalIndex}
                   onClick={() => setSelectedIndex(originalIndex)}
-                  className="p-3 rounded  d-flex justify-content-between align-items-center flex-wrap mb-3 cursor-pointer"
+                  className="p-3 rounded d-flex justify-content-between align-items-center flex-wrap mb-3 cursor-pointer esign-request-card"
                   style={{
                     backgroundColor: selectedIndex === originalIndex ? "#FFF4E6" : "#fff",
                     border: selectedIndex === originalIndex ? "1px solid #F49C2D" : "1px solid #eee",
                     transition: "background-color 0.2s ease, border-color 0.2s ease",
                   }}
                 >
-                  <div className="d-flex align-items-start gap-3 flex-grow-1">
-                    <span className="mydocs-icon">
+                  <div className="d-flex align-items-start gap-3 flex-grow-1 esign-request-info" style={{ minWidth: 0 }}>
+                    <span className="mydocs-icon esign-doc-icon">
                       <FileIcon />
                     </span>
 
-                    <div>
-                      <div className="d-flex align-items-center gap-2 mb-1">
-                        <div className="fw-semibold">{request.title || request.document_name || 'Signature Request'}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                        <div className="fw-semibold esign-request-title">{request.title || request.document_name || 'Signature Request'}</div>
                         {(request.task_info?.priority || request.priority) && (() => {
                           const priority = request.task_info?.priority || request.priority;
                           const priorityColors = getPriorityBadgeColor(priority);
@@ -575,14 +575,14 @@ export default function ESignature() {
                         })()}
                       </div>
                       {request.description && (
-                        <div className="small text-muted mb-1">{request.description}</div>
+                        <div className="small text-muted mb-1 esign-request-description">{request.description}</div>
                       )}
                       {request.spouse_sign === true && (
-                        <div className="small mb-1" style={{ color: '#F49C2D', fontWeight: '500' }}>
+                        <div className="small mb-1 esign-spouse-warning" style={{ color: '#F49C2D', fontWeight: '500' }}>
                           ⚠️ Spouse signature also required
                         </div>
                       )}
-                      <div className="small text-muted">
+                      <div className="small text-muted esign-request-meta">
                         {request.created_at && `Created on ${formatDate(request.created_at)}`}
                         {request.requested_by_name && ` · Requested by ${request.requested_by_name}`}
                         {request.expires_at && ` · Expires ${formatDate(request.expires_at)}`}
@@ -605,7 +605,7 @@ export default function ESignature() {
                     </div>
                   </div>
 
-                  <div className="d-flex gap-4 mt-3 mt-md-0">
+                  <div className="d-flex gap-2 mt-3 mt-md-0 esign-request-actions">
                     {request.document_url && (
                       <>
                         <button

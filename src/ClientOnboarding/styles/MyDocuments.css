@@ -151,3 +151,82 @@
     padding: 8px 16px;
     display: inline-block;
 }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .mydocs-container {
+        padding: 12px;
+    }
+
+    .mydocs-header-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .mydocs-title-group {
+        width: 100%;
+        gap: 10px !important;
+    }
+
+    .mydocs-doc-title {
+        font-size: 14px;
+        flex: 1;
+    }
+
+    .mydocs-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+
+    .mydocs-icon-wrapper svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .mydocs-action-group {
+        width: 100%;
+        margin-top: 4px;
+    }
+
+    .mydocs-action-group button {
+        width: 100%;
+        justify-content: center;
+        padding: 10px !important;
+        font-size: 14px !important;
+    }
+
+    .mydocs-description,
+    .mydocs-info,
+    .mydocs-overdue {
+        margin-left: 0 !important;
+        margin-top: 8px;
+    }
+
+    .mydocs-info .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 6px;
+    }
+
+    .mydocs-info span {
+        margin-left: 0 !important;
+    }
+
+    .mydocs-badge-status,
+    .mydocs-badge-priority {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mydocs-title {
+        font-size: 16px;
+    }
+
+    .mydocs-subtitle {
+        font-size: 12px;
+    }
+}

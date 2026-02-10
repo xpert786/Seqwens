@@ -494,8 +494,8 @@ export default function DocumentRequests() {
                 >
                   <div className="d-flex justify-content-between align-items-start w-100">
                     <div className="w-100">
-                      <div className="d-flex align-items-center justify-content-between mb-2">
-                        <div className="d-flex align-items-center gap-3">
+                      <div className="mydocs-header-row d-flex align-items-center justify-content-between mb-2 flex-wrap gap-3">
+                        <div className="d-flex align-items-center gap-3 flex-wrap mydocs-title-group">
                           <span className="mydocs-icon-wrapper">
                             <FileIcon />
                           </span>
@@ -540,7 +540,7 @@ export default function DocumentRequests() {
                         </div>
 
                         {(doc.status === 'pending' || !doc.status || doc.status === 'in_progress') && (
-                          <div className="d-flex gap-2 mt-2">
+                          <div className="d-flex gap-2 mydocs-action-group">
                             <button
                               className="btn  d-flex align-items-center gap-2"
                               onClick={(e) => handleSubmitRequestClick(e, doc)}

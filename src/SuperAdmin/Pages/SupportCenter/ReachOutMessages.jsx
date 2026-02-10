@@ -62,7 +62,7 @@ const ReachOutMessages = () => {
                                 <th className="px-6 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider font-[BasisGrotesquePro]">Name</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider font-[BasisGrotesquePro]">Email</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider font-[BasisGrotesquePro]">Reason</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider font-[BasisGrotesquePro] text-right">Action</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider font-[BasisGrotesquePro] text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E8F0FF]">
@@ -80,10 +80,11 @@ const ReachOutMessages = () => {
                                     <td className="px-6 py-4 text-sm text-[#4B5563] max-w-xs truncate font-[BasisGrotesquePro]" title={msg.reason}>
                                         {msg.reason}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-center">
                                         <button
                                             onClick={() => setSelectedMsg(msg)}
                                             className="text-xs bg-white hover:bg-gray-50 text-[#3B4A66] px-3 py-1.5 rounded-lg border border-[#E8F0FF] transition-colors font-medium font-[BasisGrotesquePro]"
+                                            style={{ borderRadius: '7px' }}
                                         >
                                             View Details
                                         </button>
@@ -141,6 +142,7 @@ const ReachOutMessages = () => {
                                 <button
                                     onClick={() => setSelectedMsg(null)}
                                     className="px-6 py-2.5 bg-white hover:bg-gray-50 text-[#3B4A66] rounded-xl border border-[#E8F0FF] transition-colors font-medium font-[BasisGrotesquePro]"
+                                    style={{ borderRadius: '7px' }}
                                 >
                                     Close
                                 </button>

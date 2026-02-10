@@ -449,6 +449,7 @@ export default function LogsAndBackups() {
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
                                     className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                    style={{ borderRadius: '7px' }}
                                 >
                                     Previous
                                 </button>
@@ -459,6 +460,7 @@ export default function LogsAndBackups() {
                                     onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
                                     disabled={currentPage >= pagination.total_pages}
                                     className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                    style={{ borderRadius: '7px' }}
                                 >
                                     Next
                                 </button>

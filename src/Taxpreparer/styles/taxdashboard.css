@@ -30,7 +30,6 @@
   transition: background-color 0.3s ease;
 }
 
-/* Contacted / Uploaded Buttons */
 .btn-contacted {
   background-color: #ffffff !important;
   color: #3B4A66 !important;
@@ -90,19 +89,6 @@
   line-height: 1 !important;
 }
 
-.dashboarded-carded-btned {
-  border: 1px solid #CED4DA !important;
-  border-radius: 5px !important;
-  padding: 6px 14px !important;
-  font-size: 14px;
-  font-family: "BasisGrotesquePro", sans-serif;
-  font-weight: 400;
-  background-color: #ffffff !important;
-  color: #3B4A66 !important;
-  width: 100%;
-  transition: background-color 0.3s ease;
-}
-
 p.card-contented {
   color: rgba(244, 156, 45, 1);
   font-size: 14px;
@@ -134,7 +120,6 @@ p.card-contented {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  /* align left */
   gap: 12px;
   align-items: center;
 }
@@ -159,14 +144,12 @@ p.card-contented {
   color: #6c757d;
 }
 
-/* Badge */
 .task-badge {
   font-size: 12px;
   padding: 2px 8px;
   color: #fff;
 }
 
-/* Icon circle */
 .icon-circle {
   display: flex;
   align-items: center;
@@ -181,124 +164,6 @@ p.card-contented {
   display: inline-flex;
   width: 16px;
   height: 16px;
-  transform: scale(1);
-  transform-origin: center;
-}
-
-.msg-role {
-  font-family: "BasisGrotesquePro", sans-serif;
-}
-
-/* -------------------- Responsive -------------------- */
-@media (max-width: 1366px) {
-  .taxdashboard-title {
-    font-size: 24px;
-  }
-
-  .taxdashboard-subtitle {
-    font-size: 14px;
-  }
-
-  .taxdashboard-btn {
-    font-size: 13px;
-    padding: 7px 12px;
-  }
-
-  .card.dashboard-card {
-    min-height: 180px;
-    padding: 16px;
-  }
-}
-
-@media (max-width: 1280px) {
-  .taxdashboard-title {
-    font-size: 22px;
-  }
-
-  .taxdashboard-subtitle {
-    font-size: 13px;
-  }
-
-  .taxdashboard-btn {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-
-  .card.dashboard-card {
-    min-height: 170px;
-    padding: 14px;
-  }
-
-  .dashboarded-carded-valued {
-    font-size: 28px;
-    padding: 4px 10px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .dashboarded-carded-btned {
-    font-size: 13px;
-    padding: 5px 12px;
-  }
-
-}
-
-@media (max-width: 1280px) {
-  .taxdashboardr-titler {
-    font-size: 15px;
-  }
-
-  .taxdashboard-subtitle {
-    font-size: 13px;
-  }
-
-  .taxdashboard-btn {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-
-  .card.dashboard-card {
-    min-height: 170px;
-    padding: 14px;
-  }
-
-  .dashboarded-carded-valued {
-    font-size: 28px;
-    padding: 4px 10px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .dashboarded-carded-btned {
-    font-size: 13px;
-    padding: 5px 12px;
-  }
-
-}
-
-@media (max-width: 768px) {
-  .bother {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .car {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .icon-circle {
-    width: 24px;
-    height: 24px;
-  }
-
 }
 
 /* Section Title and Subtitle */
@@ -320,9 +185,9 @@ p.card-contented {
 
 /* View All Button */
 .view-all-btn {
-  background: var(--White-900, #FFFFFF);
-  border: 1px solid var(--Palette2-Dark-blue-100, #E8F0FF);
-  color: var(--Palette2-Orange-900, #F56D2D);
+  background: #FFFFFF;
+  border: 1px solid #E8F0FF;
+  color: #F56D2D;
   font-family: "BasisGrotesquePro", sans-serif;
   font-weight: 400;
   font-size: 12px;
@@ -330,32 +195,23 @@ p.card-contented {
   padding: 6px 12px;
   border-radius: 27px;
   cursor: pointer;
-  min-height: 28px;
 }
 
-/* Role badge for messages */
 .role-badge {
   padding: 4px 8px;
   border-radius: 27px;
   font-size: 10px;
-  line-height: 100%;
   display: flex;
   align-items: center;
-  border: 0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF);
-  font-family: "BasisGrotesquePro", sans-serif;
-  justify-content: center;
-  background: var(--White-900, #FFFFFF);
+  border: 0.5px solid #E8F0FF;
+  background: #FFFFFF;
   color: black;
-}
-
-.msg-content {
-  font-family: "BasisGrotesquePro", sans-serif;
 }
 
 .name-role-circle {
   width: 6px;
   height: 6px;
-  background: var(--Palette2-Gold-800, #F49C2D);
+  background: #F49C2D;
   border-radius: 50%;
   display: inline-block;
 }
@@ -364,10 +220,8 @@ p.card-contented {
 .quick-action-container {
   display: flex;
   justify-content: center;
-  /* center horizontally */
   flex-wrap: wrap;
   gap: 40px;
-  /* increased spacing */
   margin-top: 12px;
 }
 
@@ -378,16 +232,11 @@ p.card-contented {
   justify-content: center;
   gap: 8px;
   width: 130px;
-  /* slightly bigger */
-  height: auto;
-  /* height adjusts to icon + label */
-  background: var(--White-900, #FFFFFF);
-  border: 0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF);
+  background: #FFFFFF;
+  border: 0.5px solid #E8F0FF;
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
-  text-align: center;
-  flex-shrink: 0;
   transition: background-color 0.2s;
 }
 
@@ -401,270 +250,432 @@ p.card-contented {
   color: #F56D2D;
 }
 
-/* Ensure parent card wraps tightly around quick-action cards */
 .card.custom-card {
   height: auto;
-  /* dynamic height */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  /* align top */
   padding: 16px;
-  /* reduce vertical padding */
 }
 
-/* Upcoming Deadlines card wrapper */
-.upcoming-deadlines-card {
-  height: auto;
-  /* wrap tightly */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  /* align top */
-  padding: 16px;
-  /* optional padding */
-}
-
-/* Container for all tasks inside Upcoming Deadlines */
 .upcoming-deadlines-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* spacing between tasks */
 }
 
-/* Each task card inside Upcoming Deadlines */
-.upcoming-deadline-task {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  padding-bottom: 0.5rem;
-  /* minimal space inside task */
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Dashboard card value - smaller font size for dates */
 .dashboard-card-value {
   font-size: 12px !important;
   font-weight: 500 !important;
   color: #3B4A66 !important;
-  font-family: "BasisGrotesquePro", sans-serif;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
+}
+
+.dashboard-main-container {
+  padding: 0 32px;
+  width: 100%;
+}
+
+.dashboard-sections-wrapper {
   margin: 0 !important;
 }
 
-/* Responsive for screens 420px and below */
-@media (max-width: 420px) {
-  .taxdashboard-header {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
+/* Recent Messages */
+.recent-msg-card {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-  .taxdashboard-header>div {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 1rem;
-  }
+.recent-msg-card.client-msg {
+  background-color: #FFF4E6;
+}
 
-  .taxdashboard-title {
-    font-size: 20px;
-  }
+.recent-msg-card.internal-msg {
+  background-color: #FFFFFF;
+}
 
-  .taxdashboard-subtitle {
+.msg-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.msg-sender-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.msg-name-text {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1E293B;
+}
+
+.msg-time-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748B;
+}
+
+.msg-body-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.msg-icon-holder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(245, 109, 45, 0.1);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Task Card Redesign V2 */
+.task-card-v2 {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-card-v2:hover {
+  border-color: #F56D2D50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.task-card-v2.selected {
+  background-color: #FFF4E6;
+  border-color: #F56D2D50;
+}
+
+.task-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.task-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.task-icon-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #F1F5F9;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.task-main-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-status-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.task-badge-v2 {
+  font-size: 10px;
+  padding: 2px 8px;
+  color: #FFFFFF !important;
+}
+
+.task-value-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #F56D2D;
+  white-space: nowrap;
+}
+
+.task-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.task-due-date {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.task-user-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #334155;
+}
+
+@media (max-width: 480px) {
+  .task-main-title {
     font-size: 13px;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.4;
+    width: auto;
+    display: block;
+    text-align: left;
   }
 
-  .taxdashboard-header>div>div:last-child {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.5rem !important;
-    margin-top: 0 !important;
+  .task-header-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    text-align: left;
+    margin-bottom: 8px;
+    gap: 8px;
+    width: 100% !important;
   }
 
-  .taxdashboard-btn {
-    font-size: 12px;
-    padding: 6px 10px;
-    flex: 1;
+  .task-title-group {
+    width: auto !important;
+    justify-content: flex-start !important;
+    flex: 1 !important;
     min-width: 0;
   }
 
-  .taxdashboard-btn svg {
-    width: 14px;
-    height: 14px;
+  .task-status-group {
+    width: auto !important;
+    justify-content: flex-end !important;
+    gap: 4px;
+    display: flex !important;
+    flex-wrap: nowrap;
+    flex: none !important;
+    margin: 0;
   }
 
-  /* Dashboard Cards Responsive */
-  .row.g-3 {
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
+  .task-badge-v2 {
+    width: auto !important;
+    min-width: 0;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+    height: auto !important;
+    line-height: normal !important;
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px !important;
+    margin: 0 !important;
   }
 
-  .row.g-3>* {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+  .task-meta-row {
+    padding-top: 6px;
+    width: 100%;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 8px;
+    align-items: center !important;
+    text-align: left;
   }
 
-  .row.g-3>.col-sm-6.col-md-3 {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin-bottom: 0.75rem;
-  }
-
-  .carded.dashboard-carded {
-    min-height: 160px;
-    padding: 16px;
-  }
-
-  .dashboarded-carded-labeled {
-    font-size: 13px;
-  }
-
-  .dashboarded-carded-valued {
-    font-size: 22px !important;
-  }
-
-  .card-contented {
-    font-size: 12px !important;
-  }
-
-  .carded.dashboard-carded svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  /* My Tasks and Upcoming Deadlines Sections */
-  .row.mt-1.g-3 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .row.mt-1.g-3>.col-12.col-md-6 {
-    padding-left: 0;
-    padding-right: 0;
-    margin-bottom: 1rem;
-  }
-
-  .card.custom-card {
-    padding: 12px !important;
-  }
-
-  .card.custom-card>div:first-child {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 0.75rem;
-    margin-bottom: 1rem !important;
-  }
-
-  .section-title {
-    font-size: 18px;
-  }
-
-  .section-subtitle {
-    font-size: 12px;
-  }
-
-  .view-all-btn {
+  .task-due-date {
     font-size: 11px;
-    padding: 5px 10px;
-    min-height: 24px;
-    align-self: flex-start;
+    text-align: left;
+    width: auto;
   }
 
-  /* Task Cards */
+  .task-user-info {
+    font-size: 11px;
+    text-align: right;
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+
+/* -------------------- Responsive -------------------- */
+@media (max-width: 1366px) {
+  .taxdashboard-title {
+    font-size: 22px;
+  }
+
+  .dashboard-main-container {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .taxdashboard-header {
+    padding: 0 10px;
+  }
+
+  .quick-action-container {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .taxdashboard-header>div {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
   .car {
-    padding: 12px !important;
-    gap: 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .bother {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .task-title {
-    font-size: 13px;
-  }
-
-  .task-due {
-    font-size: 11px;
-  }
-
-  .db-user {
-    font-size: 12px;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
   }
 
-  .icon-circle {
-    width: 24px;
-    height: 24px;
-  }
-
-  .icon-circle svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .db-user-icon-wrapper {
-    width: 14px;
-    height: 14px;
-  }
-
-  .db-user-icon-wrapper svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  .task-badge {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
-
-  /* Upcoming Deadlines Container */
-  .upcoming-deadlines-container {
-    gap: 0.75rem;
-  }
-
-  .upcoming-deadline-task {
-    padding: 12px;
-    gap: 0.75rem;
-  }
-
-  /* Gap adjustments */
-  .d-flex.flex-column.gap-3 {
-    gap: 0.75rem !important;
-  }
-
-  /* Quick Actions Section */
   .quick-action-container {
-    gap: 12px;
-    margin-top: 8px;
-    justify-content: flex-start;
+    gap: 15px;
   }
 
   .quick-action-card {
-    width: calc(50% - 6px);
+    width: calc(50% - 10px);
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-main-container {
+    padding: 0 12px;
+  }
+
+  .dashboard-sections-wrapper {
+    gap: 1rem !important;
+  }
+
+  .taxdashboard-title {
+    font-size: 19px;
+  }
+
+  .taxdashboard-btn {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px 10px;
+    flex: 1;
     min-width: 0;
-    padding: 10px 8px;
-    gap: 6px;
-    flex-shrink: 1;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .taxdashboard-header .d-flex.flex-wrap.gap-3 {
+    flex-direction: row !important;
+    width: 100%;
+    gap: 8px !important;
+  }
+
+  /* Full-width stat cards on mobile */
+  .carded.dashboard-carded {
+    padding: 16px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+
+  .carded.dashboard-carded .d-flex {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+  }
+
+  .dashboarded-carded-valued {
+    font-size: 24px !important;
+    margin: 0 !important;
+    text-align: right !important;
+    width: auto;
+  }
+
+  .dashboarded-carded-labeled {
+    font-size: 12px;
+    margin-bottom: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .card-contented {
+    justify-content: flex-end;
+    font-size: 11px !important;
+    margin: 0;
+    text-align: right;
+  }
+
+  /* Ensure cards row has proper spacing */
+  .row.g-3 > [class*="col-"] {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .msg-name-text {
+    font-size: 13px;
+  }
+
+  .msg-time-box {
+    font-size: 10px;
+  }
+
+  .quick-action-container {
+    gap: 6px !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .quick-action-card {
+    width: auto !important;
+    flex: 1;
+    padding: 10px 2px !important;
+    min-width: 0;
   }
 
   .quick-action-card span {
-    font-size: 11px;
-    line-height: 1.2;
+    font-size: 9px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .quick-action-card .action-icon,
   .quick-action-card svg {
-    width: 20px;
-    height: 20px;
+    width: 18px !important;
+    height: 18px !important;
   }
 }

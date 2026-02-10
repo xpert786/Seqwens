@@ -124,12 +124,12 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
   const getPriorityInfo = (priority) => {
     switch (priority) {
       case 'high':
-        return { bg: '#FEF2F2', text: '#B91C1C', border: '#EF4444' };
+        return { bg: '#EF4444', text: '#FFFFFF', border: '#B91C1C' };
       case 'medium':
-        return { bg: '#FFFBEB', text: '#B45309', border: '#F59E0B' };
+        return { bg: '#F59E0B', text: '#FFFFFF', border: '#B45309' };
       case 'low':
       default:
-        return { bg: '#ECFDF5', text: '#047857', border: '#10B981' };
+        return { bg: '#10B981', text: '#FFFFFF', border: '#059669' };
     }
   };
 
@@ -2155,12 +2155,10 @@ export default function TasksPage() {
                     <span
                       className="badge"
                       style={{
-                        backgroundColor: selectedTask.priority.toLowerCase() === 'high' ? '#FEE2E2' :
-                          selectedTask.priority.toLowerCase() === 'medium' ? '#FEF3C7' :
-                            selectedTask.priority.toLowerCase() === 'low' ? '#D1FAE5' : '#F3F4F6',
-                        color: selectedTask.priority.toLowerCase() === 'high' ? '#B91C1C' :
-                          selectedTask.priority.toLowerCase() === 'medium' ? '#92400E' :
-                            selectedTask.priority.toLowerCase() === 'low' ? '#065F46' : '#4B5563',
+                        backgroundColor: selectedTask.priority.toLowerCase() === 'high' ? '#EF4444' :
+                          selectedTask.priority.toLowerCase() === 'medium' ? '#F59E0B' :
+                            selectedTask.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
+                        color: '#FFFFFF',
                         borderRadius: '12px',
                         padding: '4px 12px',
                         fontSize: '0.75rem',
@@ -2202,14 +2200,11 @@ export default function TasksPage() {
                       <span
                         className="badge"
                         style={{
-                          backgroundColor: selectedTask.status === 'completed' ? '#D1FAE5' :
-                            selectedTask.status === 'submitted' ? '#DBEAFE' :
-                              selectedTask.status === 'in_progress' ? '#FEF3C7' :
-                                selectedTask.status === 'pending' ? '#FEE2E2' : '#F3F4F6',
-                          color: selectedTask.status === 'completed' ? '#065F46' :
-                            selectedTask.status === 'submitted' ? '#1E40AF' :
-                              selectedTask.status === 'in_progress' ? '#92400E' :
-                                selectedTask.status === 'pending' ? '#B91C1C' : '#4B5563',
+                          backgroundColor: selectedTask.status === 'completed' ? '#10B981' :
+                            selectedTask.status === 'submitted' ? '#3B82F6' :
+                              selectedTask.status === 'in_progress' ? '#F59E0B' :
+                                selectedTask.status === 'pending' ? '#EF4444' : '#6B7280',
+                          color: '#FFFFFF',
                           borderRadius: '12px',
                           padding: '4px 12px',
                           fontSize: '0.75rem',

@@ -96,8 +96,8 @@ export default function Dashboard() {
     <div>
 
       <div className="taxdashboard-header lg:px-4 ">
-        <div className="d-flex flex-wrap justify-content-between align-items-center">
-          <div>
+        <div className="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center">
+          <div className="text-center text-md-start">
             <h4 className="taxdashboard-title mb-1">Dashboard</h4>
             <h5 className="taxdashboard-subtitle">
               Welcome back, {taxPreparerInfo
@@ -108,7 +108,7 @@ export default function Dashboard() {
             </h5>
           </div>
 
-          <div className="d-flex flex-wrap gap-3 mt-2 mt-md-0">
+          <div className="d-flex flex-wrap gap-3 mt-2 mt-md-0 justify-content-center">
             <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
               onClick={() => navigate('/taxdashboard/calendar')}
@@ -177,7 +177,7 @@ export default function Dashboard() {
           const shouldShowStatusIcon = card.statusType !== "no_change";
 
           return (
-            <div className="col-sm-6 col-md-3 lg:px-4 md:px-2 px-1" key={index}>
+            <div className="col-12 col-sm-6 col-md-6 col-lg-3 lg:px-4 md:px-2 px-1" key={index}>
               <div
                 className={`carded dashboard-carded ${card.path ? 'clickable-card' : ''}`}
                 style={{

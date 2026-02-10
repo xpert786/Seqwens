@@ -389,7 +389,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                         return (
                             <div
                                 key={inv.id || idx}
-                                className="border rounded p-3 mb-3 invoice-card"
+                                className="border rounded p-3 p-md-4 mb-3 invoice-card"
                                 style={{
                                     backgroundColor: '#ffffff',
                                     transition: 'background-color 0.3s ease',
@@ -397,34 +397,76 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                     marginLeft: "10px"
                                 }}
                             >
-                                <div className="d-flex justify-content-between align-items-center">
+                                <div className="d-flex justify-content-between align-items-start flex-column flex-md-row">
                                     {/* Left Info */}
-                                    <div>
-                                        <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                            {inv.invoice_number}
-                                        </strong>
-                                        <span
-                                            className="badge ms-2 px-2 py-1"
-                                            style={{
-                                                ...statusStyle,
-                                                fontSize: '12px',
-                                                borderRadius: '15px',
-                                                fontFamily: "BasisGrotesquePro"
-                                            }}
-                                        >
-                                            {inv.status_display || inv.status}
-                                        </span>
+                                    <div className="mb-3 mb-md-0 flex-grow-1">
+                                        <div className="d-flex align-items-start justify-content-between">
+                                            <div>
+                                                <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                                    {inv.invoice_number}
+                                                </strong>
+                                                <span
+                                                    className="badge ms-2 px-2 py-1"
+                                                    style={{
+                                                        ...statusStyle,
+                                                        fontSize: '12px',
+                                                        borderRadius: '15px',
+                                                        fontFamily: "BasisGrotesquePro"
+                                                    }}
+                                                >
+                                                    {inv.status_display || inv.status}
+                                                </span>
 
-                                        <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "4px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
-                                            {inv.name}
-                                        </div>
-                                        <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
-                                            Due: {inv.due}
+                                                <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "4px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
+                                                    {inv.name}
+                                                </div>
+                                                <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
+                                                    Due: {inv.due}
+                                                </div>
+                                            </div>
+                                            <div className="d-flex gap-2 ms-2">
+                                                <button
+                                                    className="btn"
+                                                    style={{
+                                                        backgroundColor: '#ffffff',
+                                                        borderRadius: '4px',
+                                                        border: '1px solid #e0e0e0'
+                                                    }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleViewInvoice(inv);
+                                                    }}
+                                                >
+                                                    <ViewIcon />
+                                                </button>
+
+                                                {!inv.isPaid && (
+                                                    <button
+                                                        className="btn"
+                                                        style={{
+                                                            backgroundColor: '#F56D2D',
+                                                            color: '#FFFFFF',
+                                                            fontSize: '16px',
+                                                            padding: '8px 10px',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handlePayNowClick(inv);
+                                                        }}
+                                                    >
+                                                        <PayIcon style={{ fontSize: '30px' }} />
+                                                        <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
 
-                                    <div className="text-center flex-grow-1">
+                                    <div className="text-center flex-grow-1 mb-3 mb-md-0">
                                         <div className="mb-0">
                                             <span style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                                 {inv.isPaid ? 'Paid Invoice:' : 'Pay Invoice:'}
@@ -436,43 +478,8 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                     </div>
 
 
-                                    <div className="text-end">
-                                        <button
-                                            className="btn  me-2"
-                                            style={{
-                                                backgroundColor: '#ffffff',
-                                                borderRadius: '4px',
-                                                border: '1px solid #e0e0e0'
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleViewInvoice(inv);
-                                            }}
-                                        >
-                                            <ViewIcon />
-                                        </button>
-
-                                        {!inv.isPaid && (
-                                            <button
-                                                className="btn"
-                                                style={{
-                                                    backgroundColor: '#F56D2D',
-                                                    color: '#FFFFFF',
-                                                    fontSize: '16px',
-                                                    padding: '8px 10px',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '4px',
-                                                }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handlePayNowClick(inv);
-                                                }}
-                                            >
-                                                <PayIcon style={{ fontSize: '30px' }} />
-                                                <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
-                                            </button>
-                                        )}
+                                    <div className="text-end d-none d-md-block">
+                                        {/* Empty div for desktop layout - buttons moved to top */}
                                     </div>
                                 </div>
                             </div>
@@ -481,12 +488,12 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
                     {/* Pagination Controls */}
                     {allInvoices.length > itemsPerPage && (
-                        <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top invoice-pagination" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
-                            <div className="d-flex align-items-center gap-2">
+                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-start mt-4 pt-3 border-top invoice-pagination" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
+                            <div className="d-flex align-items-center gap-2 mb-3 mb-md-0">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
-                                    className="btn "
+                                    className="btn btn-sm"
                                     style={{
                                         backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
                                         borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
@@ -511,7 +518,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                                 <button
                                                     key={page}
                                                     onClick={() => setCurrentPage(page)}
-                                                    className="btn "
+                                                    className="btn btn-sm"
                                                     style={{
                                                         backgroundColor: currentPage === page ? '#3B82F6' : 'white',
                                                         borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
@@ -541,7 +548,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="btn "
+                                    className="btn btn-sm"
                                     style={{
                                         backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
                                         borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
@@ -556,7 +563,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                 </button>
                             </div>
 
-                            <div style={{ color: '#6B7280', fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+                            <div style={{ color: '#6B7280', fontSize: "14px", fontFamily: "BasisGrotesquePro", textAlign: 'center', textAlignMd: 'left' }}>
                                 Showing {startIndex + 1}-{Math.min(endIndex, allInvoices.length)} of {allInvoices.length}
                             </div>
                         </div>

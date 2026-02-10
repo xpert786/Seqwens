@@ -640,7 +640,6 @@ export default function FirmDetails() {
                         </button>
                     </div>
                 )}
-
                 {!loading && firmDetails && (
                     <>
                         <button

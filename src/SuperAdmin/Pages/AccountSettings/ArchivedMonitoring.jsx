@@ -162,11 +162,19 @@ export default function ArchivedMonitoring() {
         return firmName.includes(searchLower);
     });
 
+    const retentionOptions = [
+        "1 Year",
+        "3 Years",
+        "5 Years",
+        "7 Years",
+        "10 Years"
+    ];
+
     return (
         <div className="min-h-screen ">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Panel - Archive Monitoring */}
-                <div className="lg:col-span-2 bg-white rounded-lg p-6 border border-[#E8F0FF]">
+                <div className="lg:col-span-2 bg-white rounded-lg p-6 border border-[#E8F0FF] h-fit">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-6">
                         <div>
@@ -275,7 +283,7 @@ export default function ArchivedMonitoring() {
                 </div>
 
                 {/* Right Panel - Data Retention */}
-                <div className="bg-white rounded-lg p-6 border border-[#E8F0FF] shadow-sm">
+                <div className="bg-white rounded-lg p-6 border border-[#E8F0FF] h-fit">
                     {/* Header */}
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-2">

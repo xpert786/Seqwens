@@ -188,9 +188,9 @@ export default function Revenue() {
       const formattedRevenue = data.payload?.formattedRevenue || formatCurrency(data.value);
       const percentage = data.payload?.percentage;
       return (
-        <div className="bg-gray-900 text-white rounded-lg shadow-xl p-3 border-0" style={{minWidth: '160px'}}>
+        <div className="bg-gray-900 text-white rounded-lg shadow-xl p-3 border-0" style={{ minWidth: '160px' }}>
           <div className="text-sm font-semibold mb-1">{data.name}</div>
-          <div className="text-lg font-bold" style={{color: data.payload?.color || '#1E40AF'}}>
+          <div className="text-lg font-bold" style={{ color: data.payload?.color || '#1E40AF' }}>
             {formattedRevenue}
           </div>
           {typeof percentage === 'number' && (
@@ -209,9 +209,9 @@ export default function Revenue() {
       const formattedRevenue =
         payload[0].payload?.formattedRevenue || formatCurrency(payload[0].value);
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '160px'}}>
-          <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
-          <div className="text-sm" style={{color: '#374151'}}>
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '160px' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
+          <div className="text-sm" style={{ color: '#374151' }}>
             Total Revenue: {formattedRevenue}
           </div>
         </div>
@@ -220,36 +220,59 @@ export default function Revenue() {
     return null;
   };
 
-  const renderLabel = (entry) => {
-    const RADIAN = Math.PI / 180;
-    const radius = entry.outerRadius;
-    const x = entry.cx + radius * Math.cos(-entry.midAngle * RADIAN);
-    const y = entry.cy + radius * Math.sin(-entry.midAngle * RADIAN);
+  const pieData = useMemo(() => {
+    return revenueByPlan.filter(item => item.value > 0);
+  }, [revenueByPlan]);
 
-    const labelRadius = radius + 20;
-    const labelX = entry.cx + labelRadius * Math.cos(-entry.midAngle * RADIAN);
-    const labelY = entry.cy + labelRadius * Math.sin(-entry.midAngle * RADIAN);
+  const renderLabel = (props) => {
+    const {
+      cx, cy, midAngle, outerRadius, fill, name, value, index, payload
+    } = props;
+    const RADIAN = Math.PI / 180;
+
+    // Calculate radius for start, middle and end of the elbow line
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+
+    // Start of the line (on the pie edge)
+    const sx = cx + outerRadius * cos;
+    const sy = cy + outerRadius * sin;
+
+    // The "elbow" point (further out)
+    const mx = cx + (outerRadius + 20) * cos;
+    const my = cy + (outerRadius + 20) * sin;
+
+    // The end of the line (horizontal shift)
+    const textAnchor = cos > 0 ? 'start' : 'end';
+    const ex = mx + (cos > 0 ? 1 : -1) * 15;
+    const ey = my;
+
+    const formattedRevenue = payload?.formattedRevenue || formatCurrency(value);
+    const displayName = name.length > 15 ? name.substring(0, 15) + '...' : name;
+
+    // To prevent near-identical angles from overlapping,
+    // we add a tiny vertical offset based on index if the angle is very flat
+    const verticalOffset = Math.abs(sin) < 0.2 ? (index % 2 === 0 ? -8 : 8) : 0;
 
     return (
       <g>
-        <line
-          x1={x}
-          y1={y}
-          x2={labelX}
-          y2={labelY}
-          stroke={entry.fill}
-          strokeWidth="2"
+        <path
+          d={`M${sx},${sy}L${mx},${my}L${ex},${ey + verticalOffset}`}
+          stroke={fill}
+          fill="none"
+          strokeWidth={1.5}
         />
+        <circle cx={ex} cy={ey + verticalOffset} r={2} fill={fill} stroke="none" />
         <text
-          x={labelX}
-          y={labelY}
+          x={ex + (cos > 0 ? 8 : -8)}
+          y={ey + verticalOffset}
           fill="#374151"
-          textAnchor={labelX > entry.cx ? 'start' : 'end'}
+          textAnchor={textAnchor}
           dominantBaseline="central"
-          fontSize="11"
-          fontWeight="500"
+          fontSize="10"
+          fontWeight="600"
         >
-          {`${entry.name}: ${entry.payload?.formattedRevenue || formatCurrency(entry.value)}`}
+          {`${displayName}: ${formattedRevenue}`}
         </text>
       </g>
     );
@@ -285,8 +308,8 @@ export default function Revenue() {
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-lg font-semibold mb-1" style={{color: '#3B4A66'}}>Revenue Insights</h3>
-          <p className="text-sm" style={{color: '#3B4A66'}}>Detailed revenue analysis and performance across plans</p>
+          <h3 className="text-lg font-semibold mb-1" style={{ color: '#3B4A66' }}>Revenue Insights</h3>
+          <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed revenue analysis and performance across plans</p>
           <p className="text-xs text-gray-500 mt-2">
             Range: {dateRangeLabel}
             {generatedAt ? ` • Generated at ${generatedAt}` : ''}
@@ -297,9 +320,8 @@ export default function Revenue() {
             <button
               key={option.value}
               onClick={() => setSelectedRange(option.value)}
-              className={`px-3 py-1 text-xs font-medium transition-all duration-300 ease-in-out ${
-                selectedRange === option.value ? 'text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-3 py-1 text-xs font-medium transition-all duration-300 ease-in-out ${selectedRange === option.value ? 'text-white' : 'hover:bg-gray-100'
+                }`}
               style={{
                 backgroundColor: selectedRange === option.value ? '#3B4A66' : 'white',
                 color: selectedRange === option.value ? 'white' : '#3B4A66',
@@ -364,10 +386,10 @@ export default function Revenue() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 h-fit" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+        <div className="bg-white p-6 h-fit" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="mb-6">
-            <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Revenue By Plan</h3>
-            <p className="text-sm" style={{color: '#3B4A66'}}>Distribution of revenue across subscription plans.</p>
+            <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue By Plan</h3>
+            <p className="text-sm" style={{ color: '#3B4A66' }}>Distribution of revenue across subscription plans.</p>
           </div>
 
           {revenueByPlan.length > 0 ? (
@@ -375,12 +397,12 @@ export default function Revenue() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={revenueByPlan}
+                    data={pieData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
+                    labelLine={true}
                     label={renderLabel}
-                    outerRadius={80}
+                    outerRadius={85}
                     fill="#8884d8"
                     dataKey="value"
                     stroke="#fff"
@@ -405,10 +427,10 @@ export default function Revenue() {
               revenueByPlan.map((item, index) => (
                 <div key={`${item.name}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: item.color}}></div>
-                    <span className="text-sm font-medium" style={{color: '#3B4A66'}}>{item.name}</span>
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
+                    <span className="text-sm font-medium" style={{ color: '#3B4A66' }}>{item.name}</span>
                   </div>
-                  <span className="text-sm font-semibold" style={{color: '#3B4A66'}}>
+                  <span className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
                     {item.formattedRevenue}
                   </span>
                 </div>
@@ -419,10 +441,10 @@ export default function Revenue() {
           </div>
         </div>
 
-        <div className="bg-white p-6" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+        <div className="bg-white p-6" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="mb-6">
-            <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Top Revenue Generating Firms</h3>
-            <p className="text-sm" style={{color: '#3B4A66'}}>Highest revenue firms and their growth rates.</p>
+            <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Top Revenue Generating Firms</h3>
+            <p className="text-sm" style={{ color: '#3B4A66' }}>Highest revenue firms and their growth rates.</p>
           </div>
 
           <div className="space-y-4">
@@ -443,25 +465,25 @@ export default function Revenue() {
                 <div key={`${firm.rank}-${firm.firm_id}-${firm.name}`} className="p-2 rounded-lg border border-[#E8F0FF]">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold" style={{color: '#3B4A66'}}>
+                      <span className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
                         {firm.rank ?? '-'}
                       </span>
                       <div>
-                        <p className="text-xs font-semibold" style={{color: '#3B4A66'}}>{firm.name}</p>
-                        <p className="text-xs" style={{color: '#6B7280'}}>{formatNumber(firm.users)} users</p>
+                        <p className="text-xs font-semibold" style={{ color: '#3B4A66' }}>{firm.name}</p>
+                        <p className="text-xs" style={{ color: '#6B7280' }}>{formatNumber(firm.users)} users</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-semibold" style={{color: '#3B4A66'}}>
+                      <p className="text-xs font-semibold" style={{ color: '#3B4A66' }}>
                         {firm.formatted_revenue || formatCurrency(firm.revenue)}
                       </p>
                       <div className="flex items-center gap-1 justify-end">
                         <GrowthIcon />
-                        <span className="text-xs font-medium" style={{color: growthColor}}>
+                        <span className="text-xs font-medium" style={{ color: growthColor }}>
                           {growthLabel}
                         </span>
                       </div>
-                      <p className="text-[10px]" style={{color: '#6B7280'}}>
+                      <p className="text-[10px]" style={{ color: '#6B7280' }}>
                         {firm.invoice_count || 0} invoices
                       </p>
                     </div>
@@ -473,10 +495,10 @@ export default function Revenue() {
         </div>
       </div>
 
-      <div className="bg-white p-6 mb-8" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+      <div className="bg-white p-6 mb-8" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Monthly Revenue Breakdown</h3>
-          <p className="text-sm" style={{color: '#3B4A66'}}>Detailed revenue analysis by subscription plan.</p>
+          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Monthly Revenue Breakdown</h3>
+          <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed revenue analysis by subscription plan.</p>
         </div>
 
         {monthlyRevenueData.length > 0 ? (
@@ -524,8 +546,8 @@ export default function Revenue() {
         {monthlyRevenueData.length > 0 && (
           <div className="flex justify-center mt-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{backgroundColor: '#4285F4'}}></div>
-              <span className="text-sm" style={{color: '#3B4A66'}}>Total Revenue</span>
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4285F4' }}></div>
+              <span className="text-sm" style={{ color: '#3B4A66' }}>Total Revenue</span>
             </div>
           </div>
         )}

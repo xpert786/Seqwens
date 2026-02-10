@@ -65,7 +65,7 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
           <div className="d-flex align-items-center h-full">
             {/* Logo area matching sidebar width */}
             <div
-              className="d-flex align-items-center px-4 border-end"
+              className="d-flex align-items-center justify-content-between ps-4 pe-0 border-end"
               style={{
                 width: 'var(--sa-sidebar-width, 265px)',
                 height: '100%',
@@ -75,26 +75,26 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
               <Link to="/superadmin" className="navbar-brand d-flex align-items-center m-0">
                 <img src={logo} alt="Logo" className="super-topbar-logo" style={{ maxHeight: '35px', width: 'auto' }} />
               </Link>
-            </div>
 
-            {/* Sidebar Toggle */}
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-black/5 transition-colors border-end focus:outline-none"
-              style={{ background: "transparent", border: "none", width: '60px' }}
-              aria-label={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
-            >
-              <span
-                style={{
-                  display: "inline-flex",
-                  transition: "transform 0.3s ease",
-                  transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)"
-                }}
+              {/* Sidebar Toggle */}
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-black/5 transition-colors focus:outline-none"
+                style={{ background: "transparent", border: "none", width: '50px' }}
+                aria-label={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
               >
-                <LogoIcond />
-              </span>
-            </button>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    transition: "transform 0.3s ease",
+                    transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)"
+                  }}
+                >
+                  <LogoIcond />
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Right Section */}

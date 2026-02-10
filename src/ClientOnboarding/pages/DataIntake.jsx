@@ -3604,15 +3604,15 @@ export default function DataIntakeForm({ targetClientId }) {
                       return (
                         <div
                           key={business.id}
-                          className="p-3 mb-3 rounded border"
+                          className="p-3 mb-3 rounded border business-card"
                           style={{
                             borderColor: "#E5E7EB",
                             backgroundColor: "#FFFFFF",
                             boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
                           }}
                         >
-                          <div className="d-flex justify-content-between align-items-start">
-                            <div className="flex-grow-1">
+                          <div className="d-flex justify-content-between align-items-start flex-column flex-md-row">
+                            <div className="flex-grow-1 mb-3 mb-md-0">
                               <h6
                                 className="mb-2"
                                 style={{
@@ -3637,7 +3637,7 @@ export default function DataIntakeForm({ targetClientId }) {
                                 </div>
                               )}
                               <div className="d-flex flex-wrap gap-3 mt-2">
-                                <div>
+                                <div className="w-100 w-sm-auto">
                                   <span
                                     style={{
                                       fontFamily: "BasisGrotesquePro",
@@ -3660,7 +3660,7 @@ export default function DataIntakeForm({ targetClientId }) {
                                     ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </span>
                                 </div>
-                                <div>
+                                <div className="w-100 w-sm-auto">
                                   <span
                                     style={{
                                       fontFamily: "BasisGrotesquePro",
@@ -3683,7 +3683,7 @@ export default function DataIntakeForm({ targetClientId }) {
                                     ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </span>
                                 </div>
-                                <div>
+                                <div className="w-100 w-sm-auto">
                                   <span
                                     style={{
                                       fontFamily: "BasisGrotesquePro",
@@ -3736,9 +3736,9 @@ export default function DataIntakeForm({ targetClientId }) {
                                 </div>
                               )}
                             </div>
-                            <div className="d-flex gap-2 ms-3" style={{ flexShrink: 0 }}>
+                            <div className="d-flex gap-2 ms-3 ms-md-0" style={{ flexShrink: 0 }}>
                               <button
-                                className="btn "
+                                className="btn btn-sm"
                                 onClick={() => handleEditBusiness(business.id)}
                                 style={{
                                   fontFamily: "BasisGrotesquePro",
@@ -3759,7 +3759,7 @@ export default function DataIntakeForm({ targetClientId }) {
                                 <FaTrash className="me-1" style={{ fontSize: "11px" }} />
                               </button> */}
                               <button
-                                className="btn btn-outline-danger "
+                                className="btn btn-outline-danger btn-sm"
                                 onClick={() => handleRemoveBusiness(business.id)}
                                 style={{
                                   fontFamily: "BasisGrotesquePro",
@@ -3908,12 +3908,12 @@ export default function DataIntakeForm({ targetClientId }) {
                       Your Rental Properties
                     </h6>
                     {rentalProperties.map((property, index) => (
-                      <div key={property.id} className="border rounded p-3 mb-2" style={{
+                      <div key={property.id} className="border rounded p-3 mb-2 property-card" style={{
                         borderColor: "#E8F0FF",
                         backgroundColor: "#F9FAFF"
                       }}>
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
+                        <div className="d-flex justify-content-between align-items-start flex-column flex-md-row">
+                          <div className="flex-grow-1 mb-3 mb-md-0">
                             <h6 style={{
                               color: "#3B4A66",
                               fontSize: "14px",
@@ -3946,9 +3946,9 @@ export default function DataIntakeForm({ targetClientId }) {
                               </p>
                             )}
                           </div>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex gap-2 ms-3 ms-md-0">
                             <button
-                              className="btn btn-outline-primary "
+                              className="btn btn-outline-primary btn-sm"
                               onClick={() => handleEditRentalProperty(property.id)}
                               style={{
                                 fontFamily: "BasisGrotesquePro",
@@ -3962,7 +3962,7 @@ export default function DataIntakeForm({ targetClientId }) {
                               Edit
                             </button>
                             <button
-                              className="btn btn-outline-danger "
+                              className="btn btn-outline-danger btn-sm"
                               onClick={() => handleRemoveRentalProperty(property.id)}
                               style={{
                                 fontFamily: "BasisGrotesquePro",
