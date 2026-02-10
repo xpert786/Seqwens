@@ -1,819 +1,733 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
-import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaEye, FaDownload, FaTable } from "react-icons/fa";
+import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaTable } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../component/icons";
-import "../styles/taxupload.css";
+import "../../ClientOnboarding/styles/Upload_Premium.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
 import * as XLSX from "xlsx";
+
+// --- Constants ---
+const STATUS_LABELS = {
+    pending: 'Pending',
+    uploading: 'Uploading...',
+    success: 'Completed',
+    error: 'Failed'
+};
 
 // --- Sub-Components ---
 
+/**
+ * Renders a single node in the folder tree
+ */
 const FolderNode = ({ folder, level = 0, onSelect, expandedFolders, onToggleExpand, selectedId }) => {
-  const isExpanded = expandedFolders.has(folder.id);
-  const isSelected = selectedId === folder.id;
-  const hasChildren = folder.children && folder.children.length > 0;
-  const canExpand = hasChildren || (!folder.loaded && folder.id);
+    const isExpanded = expandedFolders.has(folder.id);
+    const isSelected = selectedId === folder.id;
+    const hasChildren = folder.children && folder.children.length > 0;
+    const canExpand = hasChildren || (!folder.loaded && folder.id);
 
-  return (
-    <div className="folder-node-wrapper" style={{ marginLeft: `${level * 16}px` }}>
-      <div
-        className={`tree-node ${isSelected ? 'selected' : ''}`}
-        onClick={() => onSelect(folder)}
-      >
-        {canExpand ? (
-          <span
-            className="expand-toggle"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleExpand(folder);
-            }}
-          >
-            {isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
-          </span>
-        ) : (
-          <span className="spacer" style={{ width: 12 }} />
-        )}
-        <FaFolder className="folder-icon" />
-        <span className="folder-name">{folder.name}</span>
-      </div>
-      {isExpanded && hasChildren && (
-        <div className="children-container">
-          {folder.children.map(child => (
-            <FolderNode
-              key={child.id}
-              folder={child}
-              level={level + 1}
-              onSelect={onSelect}
-              expandedFolders={expandedFolders}
-              onToggleExpand={onToggleExpand}
-              selectedId={selectedId}
-            />
-          ))}
+    return (
+        <div className="folder-node-wrapper" style={{ marginLeft: `${level * 16}px` }}>
+            <div
+                className={`tree-node ${isSelected ? 'selected' : ''}`}
+                onClick={() => onSelect(folder)}
+            >
+                {canExpand ? (
+                    <span
+                        className="expand-toggle"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleExpand(folder);
+                        }}
+                    >
+                        {isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
+                    </span>
+                ) : (
+                    <span className="spacer" style={{ width: 12 }} />
+                )}
+                <FaFolder className="folder-icon" />
+                <span className="folder-name">{folder.name}</span>
+            </div>
+            {isExpanded && hasChildren && (
+                <div className="children-container">
+                    {folder.children.map(child => (
+                        <FolderNode
+                            key={child.id}
+                            folder={child}
+                            level={level + 1}
+                            onSelect={onSelect}
+                            expandedFolders={expandedFolders}
+                            onToggleExpand={onToggleExpand}
+                            selectedId={selectedId}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
-};
-
-// --- Helpers ---
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
-
-const STATUS_LABELS = {
-  pending: "Queued",
-  uploading: "Uploading…",
-  success: "Uploaded",
-  error: "Failed",
-};
-
-const getExtension = (name = "") => {
-  return name.split('.').pop().toLowerCase();
-};
-
-const isPreviewable = (file) => {
-  const extension = getExtension(file.name);
-  const previewableExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-  const previewableMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml'];
-
-  if (file.fileObject?.type && previewableMimeTypes.includes(file.fileObject.type.toLowerCase())) {
-    return true;
-  }
-  return previewableExtensions.includes(extension.toLowerCase());
+    );
 };
 
 // --- Main Component ---
 
 export default function TaxUploadModal({ show, handleClose, clientId = null, onUploadSuccess }) {
-  // --- States ---
-  const [step, setStep] = useState(1); // 1: Select, 2: Configure
-  const [files, setFiles] = useState([]); // Array of file objects with status, progress, etc.
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [previewMode, setPreviewMode] = useState(false);
-  const [uploading, setUploading] = useState(false);
+    // --- States ---
+    const [step, setStep] = useState(1); // 1: Select, 2: Configure
+    const [files, setFiles] = useState([]); // { name, size, folderId, folderPath, fileObject, previewUrl, errors: [], status: 'pending'|'uploading'|'success'|'error' }
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [previewMode, setPreviewMode] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
-  // Folder State
-  const [folderTree, setFolderTree] = useState([]);
-  const [loadingFolders, setLoadingFolders] = useState(false);
-  const [expandedFolders, setExpandedFolders] = useState(new Set());
-  const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
-  const [creatingFolder, setCreatingFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
-  const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
-  const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
+    // Folder State
+    const [folderTree, setFolderTree] = useState([]);
+    const [loadingFolders, setLoadingFolders] = useState(false);
+    const [expandedFolders, setExpandedFolders] = useState(new Set());
+    const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
 
-  // UI Logic State
-  const [modalErrors, setModalErrors] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [excelPreviews, setExcelPreviews] = useState({});
+    // UI Logic State
+    const [modalErrors, setModalErrors] = useState([]); // Top-level errors
+    const [isDragging, setIsDragging] = useState(false);
+    const [excelPreviews, setExcelPreviews] = useState({}); // Store parsed Excel data by file index
 
-  // Client Selection State
-  const [internalClientId, setInternalClientId] = useState(clientId);
-  const [availableClients, setAvailableClients] = useState([]); // For client dropdown if needed
-  const [loadingClients, setLoadingClients] = useState(false);
+    const fileInputRef = useRef();
+    const folderDropdownRef = useRef();
 
-  // Preview Modal State
-  const [previewModalShow, setPreviewModalShow] = useState(false);
-  const [previewFileIndex, setPreviewFileIndex] = useState(null);
-  const previewModalRef = useRef(null);
+    // --- Effects ---
 
-  const fileInputRef = useRef();
-  const folderDropdownRef = useRef();
+    // Initial folder fetch
+    useEffect(() => {
+        if (show) {
+            fetchRootFolders();
+        } else {
+            resetState();
+        }
+    }, [show, clientId]);
 
-  // --- Effects ---
+    // Click outside listener for folder dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (folderDropdownOpen && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
+                setFolderDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [folderDropdownOpen]);
 
-  useEffect(() => {
-    setInternalClientId(clientId);
-  }, [clientId]);
+    // --- Logic Functions ---
 
-  // Initial load
-  useEffect(() => {
-    if (show) {
-      if (!clientId) {
-        // Fetch clients if no client is pre-selected
-        fetchClients();
-      }
-      fetchRootFolders();
-    } else {
-      resetState();
-    }
-  }, [show, clientId]);
+    const resetState = () => {
+        setStep(1);
+        files.forEach(f => f.previewUrl && URL.revokeObjectURL(f.previewUrl));
+        setFiles([]);
+        setSelectedIndex(0);
+        setUploading(false);
+        setModalErrors([]);
+        setExpandedFolders(new Set());
+        setPreviewMode(false);
+        setFolderTree([]);
+        setExcelPreviews({});
+    };
 
-  // Fetch folders when client changes
-  useEffect(() => {
-    if (show && internalClientId) {
-      fetchRootFolders();
-    } else if (!internalClientId) {
-      setFolderTree([]);
-    }
-  }, [internalClientId]);
+    const fetchRootFolders = async () => {
+        try {
+            setLoadingFolders(true);
+            const token = getAccessToken();
+            const API_BASE_URL = getApiBaseUrl();
 
-  // Click outside listener for folder dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (folderDropdownOpen && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
+            // Use the staff browse endpoint
+            let url = `${API_BASE_URL}/firm/staff/documents/browse/`;
+            if (clientId) {
+                url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}`;
+            }
+
+            const response = await fetchWithCors(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch folders');
+            const result = await response.json();
+
+            if (result.success) {
+                const data = result.data?.subfolders || result.data?.folders || result.subfolders || result.data || [];
+                const formatted = data.map(f => ({
+                    id: f.id,
+                    name: f.title || f.name,
+                    children: [],
+                    loaded: false
+                }));
+                setFolderTree(formatted);
+            }
+        } catch (err) {
+            console.error(err);
+            setModalErrors(['Could not load folder structure. Please try again.']);
+        } finally {
+            setLoadingFolders(false);
+        }
+    };
+
+    const fetchSubfolders = async (parentId) => {
+        const token = getAccessToken();
+        const API_BASE_URL = getApiBaseUrl();
+        try {
+            let url = `${API_BASE_URL}/firm/staff/documents/browse/?folder_id=${parentId}`;
+            if (clientId) {
+                url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}&folder_id=${parentId}`;
+            }
+
+            const response = await fetchWithCors(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            if (result.success) {
+                const data = result.data?.subfolders || result.subfolders || result.data || [];
+                return data.map(f => ({
+                    id: f.id,
+                    name: f.title || f.name,
+                    children: [],
+                    loaded: false
+                }));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        return [];
+    };
+
+    const toggleFolderExpand = async (folder) => {
+        const newExpanded = new Set(expandedFolders);
+        if (newExpanded.has(folder.id)) {
+            newExpanded.delete(folder.id);
+        } else {
+            newExpanded.add(folder.id);
+            if (!folder.loaded) {
+                const subs = await fetchSubfolders(folder.id);
+                updateFolderInTree(folder.id, subs);
+            }
+        }
+        setExpandedFolders(newExpanded);
+    };
+
+    const updateFolderInTree = (id, children) => {
+        const updateRecursive = (list) => list.map(f => {
+            if (f.id === id) return { ...f, children, loaded: true };
+            if (f.children.length > 0) return { ...f, children: updateRecursive(f.children) };
+            return f;
+        });
+        setFolderTree(prev => updateRecursive(prev));
+    };
+
+    const handleFileChange = (e) => {
+        const rawFiles = Array.from(e.target.files);
+        processFiles(rawFiles);
+    };
+
+    const processFiles = (rawFiles) => {
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
+        const allowedMimeTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/csv'
+        ];
+
+        const isValidFileType = (file) => {
+            const fileName = file.name.toLowerCase();
+            const fileType = file.type.toLowerCase();
+            const fileExtension = '.' + fileName.split('.').pop();
+            return allowedExtensions.includes(fileExtension) || allowedMimeTypes.includes(fileType);
+        };
+
+        const validFiles = rawFiles.filter(f => isValidFileType(f));
+        const invalidFiles = rawFiles.filter(f => !isValidFileType(f));
+
+        if (invalidFiles.length > 0) {
+            toast.error(`Ignored ${invalidFiles.length} file(s) with unsupported formats.`);
+        }
+
+        const startIndex = files.length;
+        const newFiles = validFiles.map((f, idx) => ({
+            name: f.name,
+            size: (f.size / (1024 * 1024)).toFixed(2) + " MB",
+            fileObject: f,
+            previewUrl: URL.createObjectURL(f),
+            folderId: null,
+            folderPath: '',
+            errors: [],
+            status: 'pending',
+            fileIndex: startIndex + idx
+        }));
+
+        if (newFiles.length > 0) {
+            setFiles(prev => [...prev, ...newFiles]);
+            setStep(2);
+        }
+        if (fileInputRef.current) fileInputRef.current.value = '';
+
+        // Parse Excel files for preview
+        newFiles.forEach((fileEntry, idx) => {
+            const fileName = fileEntry.name.toLowerCase();
+            if (/\.(xlsx?|csv)$/.test(fileName)) {
+                parseExcelFile(fileEntry.fileObject, startIndex + idx);
+            }
+        });
+    };
+
+    const parseExcelFile = async (file, fileIndex) => {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            const previewData = jsonData.slice(0, 100).map(row =>
+                Array.isArray(row) ? row.slice(0, 10) : []
+            );
+
+            setExcelPreviews(prev => ({
+                ...prev,
+                [fileIndex]: {
+                    sheetName: firstSheetName,
+                    data: previewData,
+                    totalRows: jsonData.length,
+                    totalSheets: workbook.SheetNames.length
+                }
+            }));
+        } catch (error) {
+            console.error('Error parsing Excel file:', error);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        processFiles(Array.from(e.dataTransfer.files));
+    };
+
+    const removeFile = (idx) => {
+        const updated = [...files];
+        const removed = updated.splice(idx, 1)[0];
+        if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+        setFiles(updated);
+        if (updated.length === 0) setStep(1);
+        if (selectedIndex >= updated.length) setSelectedIndex(Math.max(0, updated.length - 1));
+    };
+
+    const selectFolder = (folder) => {
+        const updated = [...files];
+        updated[selectedIndex].folderId = folder.id;
+        updated[selectedIndex].folderPath = folder.name; // In a full implementation, this should be the breadcrumb
+        updated[selectedIndex].errors = updated[selectedIndex].errors.filter(e => !e.includes('folder'));
+        setFiles(updated);
         setFolderDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [folderDropdownOpen]);
-
-  // Handle ESC key in preview modal
-  useEffect(() => {
-    if (!previewModalShow) return;
-    const handleEscKey = (event) => {
-      if (event.key === 'Escape') handleClosePreview();
-    };
-    document.addEventListener('keydown', handleEscKey);
-    setTimeout(() => previewModalRef.current?.focus(), 100);
-    return () => document.removeEventListener('keydown', handleEscKey);
-  }, [previewModalShow]);
-
-  // --- Logic Functions ---
-
-  const resetState = () => {
-    setStep(1);
-    files.forEach(f => f.previewUrl && URL.revokeObjectURL(f.previewUrl));
-    setFiles([]);
-    setSelectedIndex(0);
-    setUploading(false);
-    setModalErrors([]);
-    setExpandedFolders(new Set());
-    setPreviewMode(false);
-    setInternalClientId(clientId);
-    setFolderTree([]);
-    setExcelPreviews({});
-  };
-
-  const fetchClients = async () => {
-    try {
-      setLoadingClients(true);
-      const token = getAccessToken();
-      const API_BASE_URL = getApiBaseUrl();
-      const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/`, { // Adjust endpoint as needed
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const result = await response.json();
-      if (result.success) {
-        setAvailableClients(result.data || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingClients(false);
-    }
-  };
-
-  const fetchRootFolders = async () => {
-    try {
-      setLoadingFolders(true);
-      const token = getAccessToken();
-      const API_BASE_URL = getApiBaseUrl();
-
-      let url = `${API_BASE_URL}/firm/staff/documents/browse/`;
-      if (internalClientId) {
-        url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}`;
-      }
-
-      const response = await fetchWithCors(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch folders');
-      const result = await response.json();
-
-      if (result.success) {
-        let rootFolders = [];
-        if (Array.isArray(result.data.subfolders)) {
-          rootFolders = result.data.subfolders;
-        } else if (Array.isArray(result.data.folders)) {
-          rootFolders = result.data.folders;
-        } else if (Array.isArray(result.data)) {
-          rootFolders = result.data;
-        }
-
-        const formatted = rootFolders.map(f => ({
-          id: f.id,
-          name: f.title || f.name,
-          children: [],
-          loaded: false
-        }));
-        setFolderTree(formatted);
-      }
-    } catch (err) {
-      console.error(err);
-      setModalErrors(['Could not load folder structure. Please try again.']);
-      setFolderTree([]);
-    } finally {
-      setLoadingFolders(false);
-    }
-  };
-
-  const fetchSubfolders = async (parentId) => {
-    const token = getAccessToken();
-    const API_BASE_URL = getApiBaseUrl();
-    try {
-      let url = `${API_BASE_URL}/firm/staff/documents/browse/?folder_id=${parentId}`;
-      if (internalClientId) {
-        url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${internalClientId}&folder_id=${parentId}`;
-      }
-
-      const response = await fetchWithCors(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const result = await response.json();
-      if (result.success) {
-        let subfolders = [];
-        if (Array.isArray(result.data.subfolders)) {
-          subfolders = result.data.subfolders;
-        } else if (Array.isArray(result.data.folders)) {
-          subfolders = result.data.folders;
-        }
-
-        return subfolders.map(f => ({
-          id: f.id,
-          name: f.title || f.name,
-          children: [],
-          loaded: false
-        }));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    return [];
-  };
-
-  const toggleFolderExpand = async (folder) => {
-    const newExpanded = new Set(expandedFolders);
-    if (newExpanded.has(folder.id)) {
-      newExpanded.delete(folder.id);
-    } else {
-      newExpanded.add(folder.id);
-      if (!folder.loaded) {
-        const subs = await fetchSubfolders(folder.id);
-        updateFolderInTree(folder.id, subs);
-      }
-    }
-    setExpandedFolders(newExpanded);
-  };
-
-  const updateFolderInTree = (id, children) => {
-    const updateRecursive = (list) => list.map(f => {
-      if (f.id === id) return { ...f, children, loaded: true };
-      if (f.children.length > 0) return { ...f, children: updateRecursive(f.children) };
-      return f;
-    });
-    setFolderTree(prev => updateRecursive(prev));
-  };
-
-
-  const handleFilesAdded = (fileList) => {
-    if (uploading) return;
-
-    const incoming = Array.from(fileList || []);
-    if (!incoming.length) return;
-
-    // Validation Logic
-    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
-    const allowedMimeTypes = [
-      'application/pdf',
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/csv'
-    ];
-
-    const isValidFileType = (file) => {
-      const fileName = file.name.toLowerCase();
-      const fileType = file.type.toLowerCase();
-      const fileExtension = '.' + fileName.split('.').pop();
-      return allowedExtensions.includes(fileExtension) || allowedMimeTypes.includes(fileType);
     };
 
-    const skippedSize = [];
-    const skippedType = [];
-    const validFiles = [];
+    const validateBeforeUpload = () => {
+        const newModalErrors = [];
+        const updatedFiles = files.map(f => {
+            const fileErrors = [];
+            if (!f.folderId) fileErrors.push('Please select a folder');
+            return { ...f, errors: fileErrors };
+        });
 
-    incoming.forEach(file => {
-      if (!isValidFileType(file)) {
-        skippedType.push(file.name);
-      } else if (file.size > MAX_FILE_SIZE) {
-        skippedSize.push(file.name);
-      } else {
-        validFiles.push(file);
-      }
-    });
-
-    if (skippedSize.length > 0) {
-      toast.error(`Skipped ${skippedSize.length} files larger than 50MB.`);
-    }
-
-    if (skippedType.length > 0) {
-      toast.error(`Skipped ${skippedType.length} files with unsupported formats. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`);
-    }
-
-    const startingIndex = files.length;
-    const newEntries = validFiles.map((file, idx) => ({
-      name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
-      sizeLabel: (file.size / (1024 * 1024)).toFixed(2) + " MB",
-      fileObject: file,
-      previewUrl: URL.createObjectURL(file),
-      folderId: null,
-      folderPath: '',
-      errors: [], // For compatibility
-      issues: [],  // For compatibility
-      status: 'pending',
-      progress: 0,
-      fileIndex: startingIndex + idx
-    }));
-
-    setFiles((prev) => [...prev, ...newEntries]);
-    if (newEntries.length > 0) {
-      setSelectedIndex(Math.max(0, files.length)); // Select the first new file
-    }
-
-    // Parse Excel files for preview
-    newEntries.forEach((fileEntry, idx) => {
-      const fileName = fileEntry.name.toLowerCase();
-      if (/\.(xlsx?|csv)$/.test(fileName)) {
-        parseExcelFile(fileEntry.fileObject, fileEntry.fileIndex);
-      }
-    });
-  };
-
-  const parseExcelFile = async (file, fileIndex) => {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      const previewData = jsonData.slice(0, 100).map(row =>
-        Array.isArray(row) ? row.slice(0, 10) : []
-      );
-
-      setExcelPreviews(prev => ({
-        ...prev,
-        [fileIndex]: {
-          sheetName: firstSheetName,
-          data: previewData,
-          totalRows: jsonData.length,
-          totalSheets: workbook.SheetNames.length
+        const filesWithErrors = updatedFiles.filter(f => f.errors.length > 0);
+        if (filesWithErrors.length > 0) {
+            newModalErrors.push(`Configuration incomplete for ${filesWithErrors.length} file(s).`);
         }
-      }));
-    } catch (error) {
-      console.error('Error parsing Excel file:', error);
-    }
-  };
 
-  const handleFileChange = (event) => {
-    handleFilesAdded(event.target.files);
-    if (event.target) event.target.value = "";
-  };
+        setFiles(updatedFiles);
+        setModalErrors(newModalErrors);
+        return newModalErrors.length === 0;
+    };
 
-  const handleDragEnter = (e) => { e.preventDefault(); e.stopPropagation(); if (!uploading) setIsDragging(true); };
-  const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); if (!uploading) { e.dataTransfer.dropEffect = "copy"; setIsDragging(true); } };
-  const handleDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); if (e.currentTarget === e.target) setIsDragging(false); };
-  const handleDrop = (e) => {
-    e.preventDefault(); e.stopPropagation();
-    if (uploading) return;
-    setIsDragging(false);
-    handleFilesAdded(e.dataTransfer.files);
-  };
+    const performUpload = async () => {
+        if (!validateBeforeUpload()) return;
 
-  const removeFile = (idx) => {
-    const updated = [...files];
-    const removed = updated.splice(idx, 1)[0];
-    if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+        setUploading(true);
+        setModalErrors([]);
+        const token = getAccessToken();
+        const API_BASE_URL = getApiBaseUrl();
 
-    // Re-index remaining files if needed, or just keep as is? 
-    // Re-indexing might break excelPreviews map if it uses index.
-    // Better to use a stable ID, but index is what we have. 
-    // For now, let's just update files. Excel previews might get misaligned if we delete from middle.
-    // Ideally we should use a unique ID for files.
-    // But for this quick fix, let's just clear excelPreviews for the removed index if we can, or just accept it might be buggy for Excel previews after delete.
+        let successCount = 0;
+        let finalFiles = [...files];
 
-    setFiles(updated);
-    if (selectedIndex >= updated.length) setSelectedIndex(Math.max(0, updated.length - 1));
-  };
+        for (let i = 0; i < finalFiles.length; i++) {
+            const file = finalFiles[i];
+            if (file.status === 'success') {
+                successCount++;
+                continue;
+            }
 
-  const selectFolder = (folder) => {
-    const updated = [...files];
-    if (updated[selectedIndex]) {
-      updated[selectedIndex].folderId = folder.id;
-      updated[selectedIndex].folderPath = folder.name;
-      updated[selectedIndex].issues = updated[selectedIndex].issues.filter(e => !e.toLowerCase().includes('folder'));
-      updated[selectedIndex].errors = updated[selectedIndex].errors.filter(e => !e.toLowerCase().includes('folder'));
-      setFiles(updated);
-    }
-    setFolderDropdownOpen(false);
-  };
+            finalFiles[i].status = 'uploading';
+            setFiles([...finalFiles]);
 
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-    setCreatingFolderLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append("files", file.fileObject);
+                const documentsConfig = [{
+                    folder_id: file.folderId || null
+                }];
+                formData.append("documents", JSON.stringify(documentsConfig));
 
-    try {
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-      const folderData = {
-        title: newFolderName.trim(),
-        description: `Documents folder: ${newFolderName.trim()}`,
-      };
-      if (parentFolderForNewFolder) folderData.parent_id = parentFolderForNewFolder;
-      if (internalClientId) folderData.client_id = internalClientId;
+                if (clientId) {
+                    formData.append("client_id", clientId);
+                }
 
-      const apiUrl = `${API_BASE_URL}/firm/staff/documents/folders/create/`; // Verify endpoint
-      const response = await fetchWithCors(apiUrl, {
-        method: "POST",
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(folderData),
-      });
+                const url = `${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`;
 
-      if (!response.ok) throw new Error('Failed to create folder');
-      const result = await response.json();
-      const folderInfo = result.data || result;
+                const response = await fetchWithCors(url, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
 
-      const newFolder = {
-        id: folderInfo.id,
-        name: folderInfo.title || folderInfo.name,
-        children: [],
-        loaded: false
-      };
+                const result = await response.json();
 
-      // Simplistic update: reload folders or append to tree?
-      // Reloading is safer for consistency
-      fetchRootFolders();
+                if (response.ok && result.success) {
+                    finalFiles[i].status = 'success';
+                    finalFiles[i].errors = [];
+                    successCount++;
+                } else {
+                    const msg = result.message || 'Upload failed';
+                    finalFiles[i].status = 'error';
+                    finalFiles[i].errors = [msg];
+                }
+            } catch (err) {
+                finalFiles[i].status = 'error';
+                finalFiles[i].errors = ['Network error occurred'];
+            }
+            setFiles([...finalFiles]);
+        }
 
-      setNewFolderName("");
-      setCreatingFolder(false);
-      setParentFolderForNewFolder(null);
-      toast.success("Folder created successfully!");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to create folder.");
-    } finally {
-      setCreatingFolderLoading(false);
-    }
-  };
+        setUploading(false);
+        if (successCount === finalFiles.length) {
+            toast.success('All documents uploaded successfully!');
+            onUploadSuccess && onUploadSuccess();
+            handleClose();
+        } else {
+            setModalErrors([`${finalFiles.length - successCount} file(s) encountered errors during upload.`]);
+        }
+    };
 
-  const validateBeforeUpload = () => {
-    const updatedFiles = files.map(f => {
-      const issues = [];
-      if (!f.folderId) issues.push('Please select a folder');
-      return { ...f, issues, errors: issues };
-    });
+    // --- Render Helpers ---
 
-    const hasErrors = updatedFiles.some(f => f.issues.length > 0);
-    setFiles(updatedFiles);
-    return !hasErrors;
-  };
+    const currentFile = files[selectedIndex];
 
-  const uploadSingleFile = async ({ fileEntry, clientId }) => {
-    const API_BASE_URL = getApiBaseUrl();
-    const token = getAccessToken();
-    const formData = new FormData();
-    formData.append("file", fileEntry.fileObject);
-
-    // Handle folder ID. The backend expects 'folder_id' or 'category' often.
-    // Based on previous code, 'folder_id' seems correct.
-    if (fileEntry.folderId) {
-      formData.append("folder_id", fileEntry.folderId);
-    }
-
-    if (clientId) {
-      formData.append("client_id", clientId);
-    }
-
-    // Endpoint: Use the one for Tax Preparer upload
-    // /taxpayer/tax-preparer/documents/upload/
-    const url = `${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`;
-
-    const response = await fetchWithCors(url, {
-      method: "POST",
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData
-    });
-
-    if (!response.ok) {
-      const resText = await response.text();
-      let message = "Upload failed";
-      try {
-        const resJson = JSON.parse(resText);
-        message = resJson.message || resJson.error || message;
-      } catch (e) { }
-      throw new Error(message);
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.message || 'Upload failed');
-    }
-    return result;
-  };
-
-  const handleFinalUpload = async () => {
-    if (uploading || files.length === 0) return;
-    if (!validateBeforeUpload()) {
-      toast.error("Please resolve issues before uploading.");
-      return;
-    }
-
-    setUploading(true);
-    let successCount = 0;
-    let failureCount = 0;
-    const updatedFiles = [...files];
-
-    for (let i = 0; i < updatedFiles.length; i++) {
-      updatedFiles[i].status = 'uploading';
-      updatedFiles[i].progress = 20;
-      setFiles([...updatedFiles]);
-
-      try {
-        await uploadSingleFile({ fileEntry: updatedFiles[i], clientId: internalClientId });
-        updatedFiles[i].status = 'success';
-        updatedFiles[i].progress = 100;
-        updatedFiles[i].issues = [];
-        updatedFiles[i].errors = [];
-        successCount++;
-      } catch (err) {
-        console.error(err);
-        updatedFiles[i].status = 'error';
-        updatedFiles[i].progress = 0;
-        updatedFiles[i].issues = [err.message];
-        updatedFiles[i].errors = [err.message];
-        failureCount++;
-      }
-      setFiles([...updatedFiles]);
-    }
-
-    setUploading(false);
-
-    if (successCount > 0) {
-      toast.success(`${successCount} file(s) uploaded successfully.`);
-      if (onUploadSuccess) onUploadSuccess();
-      if (failureCount === 0) {
-        handleClose();
-      }
-    }
-
-    if (failureCount > 0) {
-      toast.error(`${failureCount} file(s) failed to upload.`);
-    }
-  };
-
-  // Preview Logic
-  const handlePreview = (index, e) => {
-    e.stopPropagation();
-    setPreviewFileIndex(index);
-    setPreviewModalShow(true);
-  };
-
-  const handleClosePreview = () => {
-    setPreviewModalShow(false);
-    setPreviewFileIndex(null);
-  };
-
-  const handleDownload = (index, e) => {
-    e.stopPropagation();
-    const file = files[index];
-    if (file && file.previewUrl) {
-      const link = document.createElement('a');
-      link.href = file.previewUrl;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
-  // --- Render ---
-
-  const currentFile = files[selectedIndex];
-
-  return (
-    <Modal show={show} onHide={handleClose} centered backdrop="static" size="xl" className="upload-modal" scrollable={true}>
-      <Modal.Body className="p-4">
-        <h5 className="upload-heading">Upload Documents</h5>
-        <p className="upload-subheading">Upload your tax documents securely</p>
-
-        {!clientId && (
-          <Form.Group className="mb-4">
-            <Form.Label>Select Client <span className="text-danger">*</span></Form.Label>
-            <Form.Select
-              value={internalClientId || ""}
-              onChange={(e) => {
-                setInternalClientId(e.target.value);
-                setFolderTree([]);
-                setFiles((prev) => prev.map(f => ({ ...f, folderId: null, folderPath: "", issues: [] })));
-              }}
-              disabled={loadingClients}
-            >
-              <option value="">-- Select Client --</option>
-              {availableClients.map(client => (
-                <option key={client.id} value={client.id}>
-                  {client.first_name} {client.last_name} ({client.email})
-                </option>
-              ))}
-            </Form.Select>
-            {loadingClients && <div className="text-muted small mt-1">Loading clients...</div>}
-          </Form.Group>
-        )}
-
-        <p className="upload-section-title">Add Files</p>
-
-        <div
-          className={`upload-dropzone mb-4 ${isDragging ? "drag-active" : ""}`}
-          onClick={() => fileInputRef.current?.click()}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          role="button"
-          tabIndex={0}
+    return (
+        <Modal
+            show={show}
+            onHide={handleClose}
+            centered
+            backdrop="static"
+            size={step === 1 ? "md" : "xl"}
+            className="upload-modal"
         >
-          <UploadsIcon className="upload-icon" />
-          <p className="upload-text">
-            <strong className="texts">Drop files here or click to browse</strong>
-          </p>
-          <p className="upload-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            hidden
-            onChange={handleFileChange}
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-          />
-        </div>
-
-        {files.length > 0 ? (
-          <div className="d-flex flex-wrap gap-4">
-            <div className="doc-scroll">
-              <h6 className="mb-1 custom-doc-header">Documents ({files.length})</h6>
-              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                {files.map((file, index) => (
-                  <div
-                    key={index}
-                    className={`doc-item ${selectedIndex === index ? "active" : ""}`}
-                    onClick={() => setSelectedIndex(index)}
-                  >
-                    <div className="d-flex align-items-start gap-2">
-                      <div className="file-icon-wrapper"><FaRegFileAlt className="file-icon" /></div>
-                      <div className="flex-grow-1">
-                        <div className="d-flex justify-content-between">
-                          <div>
-                            <div className="small fw-semibold">{file.name}</div>
-                            <small className="text-muted">{file.sizeLabel}</small>
-                          </div>
-                          <div className="d-flex gap-1" onClick={(e) => e.stopPropagation()}>
-                            {isPreviewable(file) && <Button variant="link" size="sm" className="p-0 text-dark" onClick={(e) => handlePreview(index, e)}><FaEye /></Button>}
-                            <Button variant="link" size="sm" className="p-0 text-danger" onClick={() => removeFile(index)}><CrossIcon size={12} /></Button>
-                          </div>
+            <Modal.Body className="p-0">
+                {/* Header Section */}
+                <div className="p-4 bg-white border-bottom">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 className="upload-heading">Upload Documents</h5>
+                            <p className="upload-subheading mb-0">Upload your tax documents securely to Seqwens</p>
                         </div>
-                        <div className="d-flex align-items-center gap-2 mt-1">
-                          <span className={`badge bg-${file.status === 'success' ? 'success' : file.status === 'error' ? 'danger' : 'secondary'}`}>{STATUS_LABELS[file.status]}</span>
-                        </div>
-                        {file.issues.length > 0 && <div className="text-danger small mt-1">{file.issues[0]}</div>}
-                      </div>
+                        <Button variant="link" className="p-0 text-muted" onClick={handleClose}>
+                            <CrossIcon />
+                        </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-grow-1 d-flex flex-column">
-              {/* Config Panel */}
-              {currentFile && (
-                <div className="config-panel">
-                  <h6 className="mb-3">Configuration for {currentFile.name}</h6>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Target Folder</Form.Label>
-                    <div className="position-relative">
-                      <div className="form-control d-flex justify-content-between align-items-center" onClick={() => setFolderDropdownOpen(!folderDropdownOpen)} style={{ cursor: 'pointer' }}>
-                        <span>{currentFile.folderPath || 'Select Folder'}</span>
-                        <FaChevronDown />
-                      </div>
-                      {folderDropdownOpen && (
-                        <div className="folder-dropdown-premium border rounded mt-1 bg-white p-2" ref={folderDropdownRef} style={{ position: 'absolute', width: '100%', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
-                          {!creatingFolder ? (
-                            <>
-                              <Button variant="link" size="sm" onClick={() => { setCreatingFolder(true); setParentFolderForNewFolder(null); }}>+ Create New Folder</Button>
-                              {folderTree.map(f => (
-                                <FolderNode key={f.id} folder={f} onSelect={selectFolder} expandedFolders={expandedFolders} onToggleExpand={toggleFolderExpand} selectedId={currentFile.folderId} />
-                              ))}
-                            </>
-                          ) : (
-                            <div className="p-2">
-                              <Form.Control size="sm" placeholder="Folder Name" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} className="mb-2" />
-                              <div className="d-flex gap-2">
-                                <Button size="sm" onClick={handleCreateFolder} disabled={creatingFolderLoading}>Create</Button>
-                                <Button size="sm" variant="secondary" onClick={() => setCreatingFolder(false)}>Cancel</Button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Form.Group>
-
-                  {/* Preview Area within Config */}
-                  {currentFile.previewUrl && (
-                    <div className="mt-3 border rounded p-3 bg-light text-center" style={{ minHeight: '200px' }}>
-                      {isPreviewable(currentFile) ? (
-                        currentFile.fileObject.type === 'application/pdf' ?
-                          <iframe src={currentFile.previewUrl} width="100%" height="200px" title="preview" /> :
-                          <img src={currentFile.previewUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />
-                      ) : (
-                        <div className="text-muted py-4">
-                          <FaRegFileAlt size={32} className="mb-2" />
-                          <div>Preview not available</div>
-                          {/\.(xlsx?|csv)$/.test(currentFile.name.toLowerCase()) && excelPreviews[currentFile.fileIndex] && (
-                            <div className="mt-2 text-success"><FaTable /> Excel Data Loaded</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-5 bg-light rounded text-muted">No files selected</div>
-        )}
 
-        <div className="d-flex justify-content-between align-items-center mt-4">
-          <Button variant="link" className="text-danger text-decoration-none" onClick={() => { setFiles([]); }}>Clear All</Button>
-          <div className="d-flex gap-2">
-            <Button variant="light" onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleFinalUpload} disabled={uploading || files.length === 0}>
-              {uploading ? <><Spinner size="sm" /> Uploading</> : 'Upload Files'}
-            </Button>
-          </div>
-        </div>
+                <div className="p-4">
+                    {/* Error Summary Panel */}
+                    {modalErrors.length > 0 && (
+                        <div className="error-summary-banner">
+                            <FaExclamationCircle size={20} className="mt-1" />
+                            <div className="error-summary-content">
+                                <strong>Important: Please fix the following</strong>
+                                <ul className="error-summary-list">
+                                    {modalErrors.map((err, i) => <li key={i}>{err}</li>)}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
 
-      </Modal.Body>
+                    {step === 1 ? (
+                        /* Step 1: Selection Dropzone */
+                        <div className="step-selection">
+                            <div
+                                className={`premium-dropzone ${isDragging ? 'active' : ''}`}
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current.click()}
+                            >
+                                <div className="dropzone-icon-container">
+                                    <UploadsIcon />
+                                </div>
+                                <div className="dropzone-text">Drop files here or click to browse</div>
+                                <div className="dropzone-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    multiple
+                                    hidden
+                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                                />
+                            </div>
 
-      {/* Full Preview Modal */}
-      <Modal show={previewModalShow} onHide={handleClosePreview} size="xl" centered>
-        <Modal.Header closeButton><Modal.Title>Preview</Modal.Title></Modal.Header>
-        <Modal.Body className="p-0">
-          {files[previewFileIndex]?.previewUrl && (
-            <iframe src={files[previewFileIndex].previewUrl} width="100%" height="600px" title="Full Preview" className="border-0" />
-          )}
-        </Modal.Body>
-      </Modal>
-    </Modal>
-  );
+                            {files.length > 0 && (
+                                <div className="mt-4 p-3 border rounded bg-light">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <span className="small fw-semibold">{files.length} file(s) selected</span>
+                                        <Button variant="link" size="sm" onClick={() => setFiles([])}>Clear All</Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        /* Step 2: Configuration View */
+                        <div className="config-layout">
+                            {/* Left Sidebar: File List */}
+                            <div className="file-sidebar">
+                                <div className="file-list-header">
+                                    <h6 className="mb-0 fw-bold">Selected Documents ({files.length})</h6>
+                                </div>
+                                <div className="file-items-container custom-scrollbar">
+                                    {files.map((f, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`file-item-premium ${selectedIndex === idx ? 'active' : ''} ${f.errors.length > 0 ? 'has-error' : ''}`}
+                                            onClick={() => setSelectedIndex(idx)}
+                                        >
+                                            <div className="file-icon-square">
+                                                <FaRegFileAlt size={18} />
+                                            </div>
+                                            <div className="file-info-mini">
+                                                <div className="file-name-txt">{f.name}</div>
+                                                <div className="file-meta-txt">{f.size} • {STATUS_LABELS[f.status]}</div>
+                                            </div>
+                                            {f.errors.length > 0 && <FaExclamationCircle className="error-indicator" />}
+                                            <span
+                                                className="ms-2 text-muted"
+                                                onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                                            >
+                                                <CrossIcon size={14} />
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Right Area: Config & Preview */}
+                            <div className="main-config-area">
+                                <div className="config-tabs">
+                                    <button
+                                        className={`tab-btn ${!previewMode ? 'active' : ''}`}
+                                        onClick={() => setPreviewMode(false)}
+                                    >
+                                        Configure
+                                    </button>
+                                    <button
+                                        className={`tab-btn ${previewMode ? 'active' : ''}`}
+                                        onClick={() => setPreviewMode(true)}
+                                    >
+                                        Preview
+                                    </button>
+                                </div>
+
+                                <div className="config-content-wrapper custom-scrollbar">
+                                    {!previewMode ? (
+                                        <div className="form-content">
+                                            <h6 className="fw-bold mb-3">Configure Document Settings</h6>
+                                            <Form.Group className="mb-4">
+                                                <Form.Label className="small fw-600 text-muted uppercase">Target Folder</Form.Label>
+                                                <div className="position-relative">
+                                                    <div
+                                                        className={`premium-folder-select ${currentFile?.errors.some(e => e.includes('folder')) ? 'border-danger' : ''}`}
+                                                        onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
+                                                    >
+                                                        <div className="folder-path-display">
+                                                            <FaFolder className="text-warning" />
+                                                            <span>{currentFile?.folderPath || 'Select a destination folder...'}</span>
+                                                        </div>
+                                                        <FaChevronDown size={12} className="text-muted" />
+                                                    </div>
+
+                                                    {folderDropdownOpen && (
+                                                        <div className="folder-dropdown-premium" ref={folderDropdownRef}>
+                                                            {loadingFolders ? (
+                                                                <div className="text-center p-3"><Spinner size="sm" /></div>
+                                                            ) : folderTree.length === 0 ? (
+                                                                <div className="text-center p-3 small text-muted">No folders found</div>
+                                                            ) : (
+                                                                folderTree.map(f => (
+                                                                    <FolderNode
+                                                                        key={f.id}
+                                                                        folder={f}
+                                                                        onSelect={selectFolder}
+                                                                        selectedId={currentFile?.folderId}
+                                                                        expandedFolders={expandedFolders}
+                                                                        onToggleExpand={toggleFolderExpand}
+                                                                    />
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {currentFile?.errors.map((err, i) => (
+                                                    <div key={i} className="text-danger small mt-1 d-flex align-items-center gap-1">
+                                                        <FaExclamationCircle size={10} /> {err}
+                                                    </div>
+                                                ))}
+                                            </Form.Group>
+
+                                            <div className="bg-light p-3 rounded">
+                                                <div className="small fw-bold text-main mb-1">File Details</div>
+                                                <div className="small text-muted">Name: {currentFile?.name}</div>
+                                                <div className="small text-muted">Estimated Size: {currentFile?.size}</div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="preview-container h-100 d-flex align-items-center justify-content-center bg-light border rounded overflow-hidden">
+                                            {currentFile ? (
+                                                (() => {
+                                                    const fileType = currentFile.fileObject.type;
+                                                    const fileName = currentFile.name.toLowerCase();
+
+                                                    if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+                                                        return (
+                                                            <iframe
+                                                                src={currentFile.previewUrl}
+                                                                title="Preview"
+                                                                width="100%"
+                                                                height="100%"
+                                                                className="border-0"
+                                                            />
+                                                        );
+                                                    } else if (fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(fileName)) {
+                                                        return (
+                                                            <img
+                                                                src={currentFile.previewUrl}
+                                                                alt="Preview"
+                                                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                                            />
+                                                        );
+                                                    } else {
+                                                        const isExcel = /\.(xlsx?|csv)$/.test(fileName);
+                                                        const excelData = excelPreviews[selectedIndex];
+
+                                                        if (isExcel && excelData && excelData.data && excelData.data.length > 0) {
+                                                            return (
+                                                                <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
+                                                                    <div style={{
+                                                                        padding: '12px 16px',
+                                                                        backgroundColor: '#22C55E',
+                                                                        color: 'white',
+                                                                        borderRadius: '8px 8px 0 0',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between'
+                                                                    }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                            <FaTable size={18} />
+                                                                            <span style={{ fontWeight: '600', fontSize: '14px' }}>{currentFile.name}</span>
+                                                                        </div>
+                                                                        <span style={{ fontSize: '12px', opacity: 0.9 }}>
+                                                                            Sheet: {excelData.sheetName} • {excelData.totalRows} rows
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={{
+                                                                        maxHeight: '350px',
+                                                                        overflow: 'auto',
+                                                                        border: '1px solid #E5E7EB',
+                                                                        borderTop: 'none',
+                                                                        borderRadius: '0 0 8px 8px'
+                                                                    }}>
+                                                                        <table style={{
+                                                                            width: '100%',
+                                                                            borderCollapse: 'collapse',
+                                                                            fontSize: '13px'
+                                                                        }}>
+                                                                            <tbody>
+                                                                                {excelData.data.map((row, rowIdx) => (
+                                                                                    <tr key={rowIdx} style={{
+                                                                                        backgroundColor: rowIdx === 0 ? '#F3F4F6' : (rowIdx % 2 === 0 ? '#FAFAFA' : 'white')
+                                                                                    }}>
+                                                                                        {row.map((cell, cellIdx) => (
+                                                                                            <td key={cellIdx} style={{
+                                                                                                padding: '8px 12px',
+                                                                                                borderBottom: '1px solid #E5E7EB',
+                                                                                                borderRight: '1px solid #E5E7EB',
+                                                                                                whiteSpace: 'nowrap',
+                                                                                                fontWeight: rowIdx === 0 ? '600' : 'normal',
+                                                                                                color: rowIdx === 0 ? '#374151' : '#6B7280'
+                                                                                            }}>
+                                                                                                {cell !== null && cell !== undefined ? String(cell) : ''}
+                                                                                            </td>
+                                                                                        ))}
+                                                                                    </tr>
+                                                                                ))}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div className="text-center p-4">
+                                                                <FaRegFileAlt size={48} className="text-muted mb-3" />
+                                                                <h6>{currentFile.name}</h6>
+                                                                <p className="text-muted small">Preview not available for this file type.</p>
+                                                                <Button variant="outline-primary" size="sm" as="a" href={currentFile.previewUrl} download={currentFile.name}>
+                                                                    Download to View
+                                                                </Button>
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()
+                                            ) : (
+                                                <div className="text-muted">No file selected</div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="modal-footer-premium">
+                    <Button
+                        variant="secondary"
+                        className="btn-premium-secondary"
+                        onClick={handleClose}
+                    >
+                        Cancel
+                    </Button>
+                    {step === 2 && (
+                        <Button
+                            variant="primary"
+                            className="btn-premium-primary"
+                            onClick={performUpload}
+                            disabled={uploading}
+                        >
+                            {uploading ? (
+                                <><Spinner size="sm" className="me-2" /> Uploading...</>
+                            ) : (
+                                'Complete Upload'
+                            )}
+                        </Button>
+                    )}
+                </div>
+            </Modal.Body>
+        </Modal>
+    );
 }

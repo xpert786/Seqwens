@@ -1009,6 +1009,12 @@ export default function ClientDetails() {
       return;
     }
 
+    // Validate that files are uploaded for signature_request and review_request
+    if (formData.task_type !== 'document_request' && (!formData.files || formData.files.length === 0)) {
+      toast.error('Please upload at least one document for this task type');
+      return;
+    }
+
     try {
       setLoadingTask(true);
 
@@ -2713,7 +2719,7 @@ export default function ClientDetails() {
                       fontWeight: '500',
                       color: '#4B5563'
                     }}>
-                      Files
+                      Files {formData.task_type !== 'document_request' && <span style={{ color: 'red' }}>*</span>}
                     </label>
                     <input
                       type="file"

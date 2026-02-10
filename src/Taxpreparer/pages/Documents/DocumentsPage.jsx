@@ -798,6 +798,7 @@ export default function DocumentsPage() {
       <TaxUploadModal
         show={showUpload}
         handleClose={() => setShowUpload(false)}
+        clientId={clientIdFromUrl}
         onUploadSuccess={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, fileManagerSearchQuery)}
       />
       {/* Header (hide when nested under client) */}
@@ -909,11 +910,11 @@ export default function DocumentsPage() {
                         style={{ color: item.color, backgroundColor: `${item.color}15`, width: '44px', height: '44px', borderRadius: '8px' }}>
                         {item.icon}
                       </div>
-                      <div className="d-flex flex-column">
-                        <div className="text-muted fw-medium text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.025em' }}>{item.label}</div>
+                      <div className="d-flex flex-column flex-grow-1">
                         <h3 className="fw-bold mb-0" style={{ fontSize: '24px', color: '#111827' }}>
                           {item.count}
                         </h3>
+                        <div className="text-muted fw-medium text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.025em' }}>{item.label}</div>
                       </div>
                     </div>
                   </div>

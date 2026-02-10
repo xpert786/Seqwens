@@ -11,6 +11,7 @@ const ReviewRequests = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewComment, setReviewComment] = useState('');
+    const [uploadFiles, setUploadFiles] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
     // Fetch review requests
@@ -20,10 +21,9 @@ const ReviewRequests = () => {
             const response = await tasksAPI.getMyTasks();
 
             if (response.success && response.data) {
-                // Filter for review_request and client_onboarding type tasks
+                // Filter for review_request type tasks
                 const reviewTasks = response.data.filter(task =>
-                    task.task_type === 'review_request' ||
-                    task.task_type === 'client_onboarding'
+                    task.task_type === 'review_request'
                 );
                 setReviewRequests(reviewTasks);
             }
@@ -38,10 +38,10 @@ const ReviewRequests = () => {
     useEffect(() => {
         fetchReviewRequests();
     }, []);
-
     const handleOpenReviewModal = (request) => {
         setSelectedRequest(request);
         setReviewComment('');
+        setUploadFiles([]);
         setShowReviewModal(true);
     };
 
@@ -69,6 +69,13 @@ const ReviewRequests = () => {
         setShowReviewModal(false);
         setSelectedRequest(null);
         setReviewComment('');
+        setUploadFiles([]);
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files) {
+            setUploadFiles(Array.from(e.target.files));
+        }
     };
 
     const handleSubmitReview = async () => {
@@ -83,13 +90,18 @@ const ReviewRequests = () => {
         try {
             setSubmitting(true);
 
-            // Update task with review comment and mark as completed
-            const updateData = {
-                status: 'completed',
-                description: `${selectedRequest.description || ''}\n\n--- Client Review ---\n${reviewComment}`
-            };
+            // Use FormData for file upload support
+            const formData = new FormData();
+            formData.append('status', 'completed');
+            formData.append('description', `${selectedRequest.description || ''}\n\n--- Client Review ---\n${reviewComment}`);
 
-            const updateResponse = await tasksAPI.updateTask(selectedRequest.id, updateData);
+            if (uploadFiles.length > 0) {
+                uploadFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+            }
+
+            const updateResponse = await tasksAPI.updateTask(selectedRequest.id, formData);
 
             if (updateResponse.success) {
                 toast.success('Review submitted successfully!', {
@@ -112,6 +124,7 @@ const ReviewRequests = () => {
         const statusStyles = {
             'to_do': { bg: '#FEF3C7', color: '#92400E', text: 'To Do' },
             'pending': { bg: '#FEF3C7', color: '#92400E', text: 'Pending' },
+            'submitted': { bg: '#DBEAFE', color: '#1E40AF', text: 'Submitted' },
             'in_progress': { bg: '#DBEAFE', color: '#1E40AF', text: 'In Progress' },
             'waiting_for_client': { bg: '#FEF3C7', color: '#92400E', text: 'Waiting' },
             'completed': { bg: '#D1FAE5', color: '#065F46', text: 'Completed' },
@@ -168,10 +181,10 @@ const ReviewRequests = () => {
                 <div className="text-center py-5">
                     <FiFileText size={48} style={{ color: '#D1D5DB', marginBottom: '16px', display: 'block', margin: '0 auto 16px' }} />
                     <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
-                        No Pending Tasks
+                        No Review Requests
                     </h6>
                     <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
-                        You don't have any pending tasks or review requests at this time.
+                        You don't have any pending review requests at this time.
                     </p>
                 </div>
             </div>
@@ -190,7 +203,7 @@ const ReviewRequests = () => {
                         fontFamily: 'BasisGrotesquePro'
                     }}
                 >
-                    Tasks & Review Requests
+                    Review Requests
                 </h5>
 
                 <div className="row g-3">
@@ -266,46 +279,92 @@ const ReviewRequests = () => {
                                     </div>
                                 </div>
 
+                                {/* Task Files */}
+                                {request.files && request.files.length > 0 && (
+                                    <div className="mb-4">
+                                        <h6
+                                            style={{
+                                                fontSize: '14px',
+                                                fontWeight: '600',
+                                                color: '#374151',
+                                                marginBottom: '12px',
+                                                fontFamily: 'BasisGrotesquePro'
+                                            }}
+                                        >
+                                            Documents for Review:
+                                        </h6>
+                                        <div className="d-flex flex-wrap gap-2">
+                                            {request.files.map((file) => (
+                                                <a
+                                                    key={file.id}
+                                                    href={file.file_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 border bg-light"
+                                                    style={{
+                                                        textDecoration: 'none',
+                                                        color: '#4B5563',
+                                                        fontSize: '13px',
+                                                        borderColor: '#E5E7EB',
+                                                        transition: 'all 0.2s ease',
+                                                        fontFamily: 'BasisGrotesquePro'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.borderColor = '#00C0C6';
+                                                        e.currentTarget.style.backgroundColor = '#F0FDFA';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.borderColor = '#E5E7EB';
+                                                        e.currentTarget.style.backgroundColor = '#F8F9FA';
+                                                    }}
+                                                >
+                                                    <FiFileText size={16} style={{ color: '#00C0C6' }} />
+                                                    <span style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {file.file_name}
+                                                    </span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {request.status !== 'completed' && request.status !== 'cancelled' && (
                                     <div className="d-flex justify-content-end gap-2">
-                                        {request.task_type === 'review_request' ? (
-                                            <button
-                                                className="btn btn-sm d-flex align-items-center gap-2"
-                                                onClick={() => handleOpenReviewModal(request)}
-                                                style={{
-                                                    backgroundColor: '#00C0C6',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    fontFamily: 'BasisGrotesquePro',
-                                                    fontWeight: '500',
-                                                    padding: '8px 16px',
-                                                    borderRadius: '6px',
-                                                    fontSize: '14px'
-                                                }}
-                                            >
-                                                <FiMessageSquare size={14} />
-                                                Review &amp; Submit
-                                            </button>
-                                        ) : (
-                                            <button
-                                                className="btn btn-sm d-flex align-items-center gap-2"
-                                                onClick={() => handleCompleteTask(request)}
-                                                disabled={submitting}
-                                                style={{
-                                                    backgroundColor: '#10B981',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    fontFamily: 'BasisGrotesquePro',
-                                                    fontWeight: '500',
-                                                    padding: '8px 16px',
-                                                    borderRadius: '6px',
-                                                    fontSize: '14px'
-                                                }}
-                                            >
-                                                <FiCheckCircle size={14} />
-                                                {submitting ? 'Completing...' : 'Mark as Completed'}
-                                            </button>
-                                        )}
+                                        <button
+                                            className="btn btn-sm d-flex align-items-center gap-2"
+                                            onClick={() => handleCompleteTask(request)}
+                                            disabled={submitting}
+                                            style={{
+                                                backgroundColor: '#F3F4F6',
+                                                color: '#374151',
+                                                border: '1px solid #E5E7EB',
+                                                fontFamily: 'BasisGrotesquePro',
+                                                fontWeight: '500',
+                                                padding: '8px 16px',
+                                                borderRadius: '6px',
+                                                fontSize: '14px'
+                                            }}
+                                        >
+                                            <FiCheckCircle size={14} />
+                                            {submitting ? 'Completing...' : 'Mark as Completed'}
+                                        </button>
+                                        <button
+                                            className="btn btn-sm d-flex align-items-center gap-2"
+                                            onClick={() => handleOpenReviewModal(request)}
+                                            style={{
+                                                backgroundColor: '#00C0C6',
+                                                color: 'white',
+                                                border: 'none',
+                                                fontFamily: 'BasisGrotesquePro',
+                                                fontWeight: '500',
+                                                padding: '8px 16px',
+                                                borderRadius: '6px',
+                                                fontSize: '14px'
+                                            }}
+                                        >
+                                            <FiMessageSquare size={14} />
+                                            Review &amp; Submit
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -354,6 +413,30 @@ const ReviewRequests = () => {
                                 )}
                             </div>
 
+                            {/* Show original documents in the modal too */}
+                            {selectedRequest.files && selectedRequest.files.length > 0 && (
+                                <div className="mb-4">
+                                    <h6 style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '10px' }}>
+                                        Documents to Review:
+                                    </h6>
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {selectedRequest.files.map((file) => (
+                                            <a
+                                                key={file.id}
+                                                href={file.file_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="d-flex align-items-center gap-2 px-2 py-1 rounded border text-decoration-none"
+                                                style={{ fontSize: '12px', color: '#4B5563', backgroundColor: '#F9FAFB' }}
+                                            >
+                                                <FiFileText size={14} style={{ color: '#00C0C6' }} />
+                                                {file.file_name}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="mb-3">
                                 <label
                                     htmlFor="reviewComment"
@@ -379,6 +462,60 @@ const ReviewRequests = () => {
                                         borderColor: '#E5E7EB'
                                     }}
                                 />
+                            </div>
+
+                            <div className="mb-3">
+                                <label
+                                    className="form-label"
+                                    style={{
+                                        fontFamily: 'BasisGrotesquePro',
+                                        fontWeight: '500',
+                                        color: '#374151'
+                                    }}
+                                >
+                                    Upload Documents (Optional)
+                                </label>
+                                <div
+                                    className="p-3 border rounded text-center"
+                                    style={{
+                                        borderStyle: 'dashed !important',
+                                        borderColor: '#D1D5DB',
+                                        backgroundColor: '#F9FAFB'
+                                    }}
+                                >
+                                    <input
+                                        type="file"
+                                        multiple
+                                        className="form-control"
+                                        onChange={handleFileChange}
+                                        style={{ display: 'none' }}
+                                        id="review-file-upload"
+                                    />
+                                    <label
+                                        htmlFor="review-file-upload"
+                                        style={{ cursor: 'pointer', margin: 0 }}
+                                    >
+                                        <div className="mb-2">
+                                            <FiFileText size={24} style={{ color: '#00C0C6' }} />
+                                        </div>
+                                        <span style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#4B5563' }}>
+                                            Click to upload or drag and drop
+                                        </span>
+                                    </label>
+                                </div>
+                                {uploadFiles.length > 0 && (
+                                    <div className="mt-3">
+                                        <h6 style={{ fontSize: '12px', fontWeight: '600', color: '#374151' }}>Selected Files:</h6>
+                                        <ul className="list-unstyled mb-0">
+                                            {uploadFiles.map((file, index) => (
+                                                <li key={index} className="d-flex align-items-center gap-2 mb-1" style={{ fontSize: '13px', color: '#6B7280' }}>
+                                                    <FiFileText size={14} />
+                                                    {file.name}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
 
                             <div
