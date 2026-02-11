@@ -1070,9 +1070,8 @@ export default function ClientManage() {
       const token = getAccessToken();
 
       // Build payload based on whether it's a firm or tax preparer
-      const payload = isFirm
-        ? { firm_id: parseInt(selectedStaffId) }
-        : { tax_preparer_id: parseInt(selectedStaffId) };
+      // Always use tax_preparer_id since selectedStaffId is a User ID (even for firm admins)
+      const payload = { tax_preparer_id: parseInt(selectedStaffId) };
 
       const response = await fetchWithCors(`${API_BASE_URL}/firm/taxpayers/${clientId}/reassign-tax-preparer/`, {
         method: 'POST',
@@ -1875,7 +1874,7 @@ export default function ClientManage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h4 className="taxdashboardr-titler text-lg sm:text-xl">
-                  All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
+                  All Clients
                 </h4>
                 <h5 className="taxdashboard-subtitle text-sm sm:text-base">Complete list of firm clients with status and assignment information</h5>
               </div>

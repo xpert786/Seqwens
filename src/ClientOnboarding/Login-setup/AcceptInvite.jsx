@@ -75,6 +75,13 @@ export default function AcceptInvite() {
                     if (isClient && response.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.existing_grant);
                     }
+
+                    // Also check for existing grant from staff/general invites in the response data or root response
+                    if (response.existing_grant?.has_existing_grant) {
+                        setExistingGrant(response.existing_grant);
+                    } else if (response.data.existing_grant?.has_existing_grant) {
+                        setExistingGrant(response.data.existing_grant);
+                    }
                 } else {
                     // Handle error cases
                     const errorMessage = response.message || "Invalid invitation token.";
@@ -711,7 +718,7 @@ export default function AcceptInvite() {
                                 {invitationData && invitationData.is_valid !== false && !errors.token ? (
                                     <>
                                         {/* Password Field */}
-                                        {!invitationData.user_exists && (
+                                        {!invitationData.user_exists && !isLoggedIn && (
                                             <>
                                                 <div className="form-group mb-3">
                                                     <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>

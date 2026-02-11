@@ -23,6 +23,7 @@ const Billing = () => {
     // Split billing states
     const [splitBilling, setSplitBilling] = useState(null);
     const [splitBillingSections, setSplitBillingSections] = useState([]);
+    const [splitBillingSummary, setSplitBillingSummary] = useState(null);
     const [splitBillingLoading, setSplitBillingLoading] = useState(true);
     const [splitBillingError, setSplitBillingError] = useState('');
     const [savingSplitBilling, setSavingSplitBilling] = useState(false);
@@ -74,6 +75,31 @@ const Billing = () => {
         }
     }, []);
 
+    // Fetch split billing summary
+    const fetchSplitBillingSummary = useCallback(async () => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/split-billing/summary/`;
+
+            const response = await fetchWithCors(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    setSplitBillingSummary(result.data);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching split billing summary:', err);
+        }
+    }, []);
+
     // Fetch split billing settings
     const fetchSplitBilling = useCallback(async () => {
         try {
@@ -101,6 +127,7 @@ const Billing = () => {
             if (result.success && result.data) {
                 setSplitBilling(result.data.split_billing);
                 setSplitBillingSections(result.data.sections || []);
+                await fetchSplitBillingSummary();
             } else {
                 setSplitBilling(null);
                 setSplitBillingSections([]);
@@ -112,7 +139,7 @@ const Billing = () => {
         } finally {
             setSplitBillingLoading(false);
         }
-    }, []);
+    }, [fetchSplitBillingSummary]);
 
     // Update split billing settings
     const updateSplitBilling = useCallback(async (updatedData) => {
@@ -151,6 +178,7 @@ const Billing = () => {
             setSavingSplitBilling(false);
         }
     }, [fetchSplitBilling]);
+
 
     // Fetch spending by category
     const fetchSpendingByCategory = useCallback(async (year) => {
@@ -201,7 +229,7 @@ const Billing = () => {
     // Get the actual toggle value for a section
     const getToggleValue = (section) => {
         if (!splitBilling) return false;
-        
+
         if (section.title === 'Base Plan Coverage') {
             return splitBilling.base_plan_firm_pays || false;
         } else if (section.title === 'Staff Add-Ons') {
@@ -305,7 +333,7 @@ const Billing = () => {
             {/* Invoice Table */}
             <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6 overflow-x-auto mb-6">
                 <h6 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Invoices</h6>
-                
+
                 {invoicesError && (
                     <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                         {invoicesError}
@@ -355,7 +383,7 @@ const Billing = () => {
                                             </span>
                                         </td>
                                         <td className="py-3 px-4">
-                                            <button 
+                                            <button
                                                 className="text-gray-600 hover:text-gray-900 transition-colors"
                                                 title="Download Invoice"
                                             >
@@ -378,6 +406,31 @@ const Billing = () => {
                 <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6 shadow-sm">
                     <h6 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Split Billing Management</h6>
                     <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">Configure how costs are distributed between firm and staff</p>
+
+                    {splitBillingSummary && (
+                        <div className="mb-6 bg-[#F3F7FF] !rounded-lg p-5 !border border-[#E8F0FF]">
+                            <div className="flex items-center justify-between mb-4">
+                                <h7 className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro] uppercase tracking-wider">Estimated Monthly Recovery</h7>
+                                <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">Current Period</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-2xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">${splitBillingSummary.total_staff_contribution.toFixed(2)}</p>
+                                    <p className="text-[10px] text-gray-500 font-[BasisGrotesquePro] uppercase">From Staff Members</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">${splitBillingSummary.total_firm_cost.toFixed(2)}</p>
+                                    <p className="text-[10px] text-gray-500 font-[BasisGrotesquePro] uppercase">Firm Portion</p>
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-[#E8F0FF]">
+                                <div className="flex justify-between text-xs font-[BasisGrotesquePro]">
+                                    <span className="text-gray-600">Total Invoice Amount:</span>
+                                    <span className="font-bold text-gray-900">${splitBillingSummary.total_invoice_amount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {splitBillingError && (
                         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -412,14 +465,12 @@ const Billing = () => {
                                                 <button
                                                     onClick={() => handleSplitBillingToggle(index, !toggleValue)}
                                                     disabled={savingSplitBilling}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                        toggleValue ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                                    } ${savingSplitBilling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${toggleValue ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                                        } ${savingSplitBilling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                 >
                                                     <span
-                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                            toggleValue ? 'translate-x-6' : 'translate-x-1'
-                                                        }`}
+                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${toggleValue ? 'translate-x-6' : 'translate-x-1'
+                                                            }`}
                                                     />
                                                 </button>
                                             </div>
@@ -492,7 +543,7 @@ const Billing = () => {
                                                         {category.category}
                                                     </span>
                                                 </div>
-                                                
+
                                                 {/* Middle: Title and Subtitle */}
                                                 <div className="flex-1">
                                                     <h6 className="text-base font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">
@@ -502,7 +553,7 @@ const Billing = () => {
                                                         {category.transactions || 0} {category.transactions === 1 ? 'transaction' : 'transactions'}
                                                     </p>
                                                 </div>
-                                                
+
                                                 {/* Right: Amount and Percentage */}
                                                 <div className="text-right flex-shrink-0">
                                                     <p className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">

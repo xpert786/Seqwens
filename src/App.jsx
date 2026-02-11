@@ -257,6 +257,7 @@ export default function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/verify-phone" element={<VerifyPhone />} />
           <Route path="/invite" element={<AcceptInvite />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/select-role" element={<RoleSelectionScreen />} />
           {/* Tailwind test route */}
           <Route path="/tw-test" element={<TailwindTest />} />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
+import MembershipBilling from "./MembershipBilling";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import RoleManagement from "../../../ClientOnboarding/components/RoleManagement";
 import UserProfileWithRoles from "../../../ClientOnboarding/components/UserProfileWithRoles";
@@ -9,6 +10,7 @@ import UserProfileWithRoles from "../../../ClientOnboarding/components/UserProfi
 
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
+
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -53,6 +55,7 @@ export default function AccountSettings() {
         { id: "profile", label: "Profile" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
+        { id: "membership", label: "Membership" },
         { id: "roles", label: "Roles" },
     ];
 
@@ -146,6 +149,7 @@ export default function AccountSettings() {
                         {activeTab === "profile" && <Profile profileData={settings?.profile} companyProfile={settings?.company_profile} onUpdate={fetchSettings} />}
                         {activeTab === "notifications" && <Notifications notifications={settings?.notifications} onUpdate={fetchSettings} />}
                         {activeTab === "security" && <Security security={settings?.security} onUpdate={fetchSettings} />}
+                        {activeTab === "membership" && <MembershipBilling />}
                         {activeTab === "roles" && <UserProfileWithRoles />}
                     </>
                 )}
