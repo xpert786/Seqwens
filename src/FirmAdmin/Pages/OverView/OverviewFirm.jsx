@@ -26,7 +26,10 @@ import {
 } from 'recharts';
 
 // Helper function to get revenue data from API
-const getRevenueData = (dashboardData) => {
+const getRevenueData = (dashboardData, revenueData) => {
+  if (revenueData?.trend?.data) {
+    return revenueData.trend.data;
+  }
   if (!dashboardData?.revenue_analytics?.trend?.data) {
     return [];
   }
@@ -55,7 +58,10 @@ const getComplianceData = (dashboardData) => {
 };
 
 // Helper function to get breakdown data from API
-const getBreakdownData = (dashboardData) => {
+const getBreakdownData = (dashboardData, revenueData) => {
+  if (revenueData?.breakdown?.data) {
+    return revenueData.breakdown.data;
+  }
   if (!dashboardData?.revenue_analytics?.breakdown?.data) {
     return [];
   }
@@ -109,11 +115,14 @@ export default function FirmAdminDashboard() {
   const [scheduleFrequency, setScheduleFrequency] = useState('Weekly');
   const [recipients, setRecipients] = useState('');
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [revenuePeriod, setRevenuePeriod] = useState('monthly');
 
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [revenueData, setRevenueData] = useState(null);
+  const [revenueLoading, setRevenueLoading] = useState(false);
 
   // Refs for chart sections to capture as images
   const revenueChartRef = useRef(null);
@@ -165,6 +174,45 @@ export default function FirmAdminDashboard() {
       }
     }
   }, [dateRange]);
+
+  // Fetch only revenue data
+  const fetchRevenueData = React.useCallback(async (signal) => {
+    setRevenueLoading(true);
+    try {
+      const dateRangeMap = {
+        'Last 7 days': '7d',
+        'Last 30 days': '30d',
+        'Last 90 days': '90d',
+        'Last 6 months': '6m',
+        'Last year': '1y'
+      };
+      const apiDateRange = dateRangeMap[dateRange] || '30d';
+
+      const response = await firmAdminDashboardAPI.getRevenueAnalytics({
+        date_range: apiDateRange,
+        period: revenuePeriod
+      });
+
+      if (!signal?.aborted) {
+        setRevenueData(response?.data || response);
+      }
+    } catch (err) {
+      if (!signal?.aborted) {
+        console.error('Error fetching revenue data:', err);
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setRevenueLoading(false);
+      }
+    }
+  }, [dateRange, revenuePeriod]);
+
+  // Fetch revenue check
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchRevenueData(controller.signal);
+    return () => controller.abort();
+  }, [fetchRevenueData]);
 
   // Initial fetch on mount and dateRange change
   useEffect(() => {
@@ -280,8 +328,8 @@ export default function FirmAdminDashboard() {
       toast.info('Generating PDF with charts...', { autoClose: 2000 });
 
       // Get data from dashboard using helper functions
-      const revenueData = getRevenueData(dashboardData);
-      const breakdownData = getBreakdownData(dashboardData);
+      const revenueDataForPDF = getRevenueData(dashboardData, revenueData);
+      const breakdownData = getBreakdownData(dashboardData, revenueData);
       const clientEngagementData = getClientEngagementData(dashboardData);
       const complianceData = getComplianceData(dashboardData);
 
@@ -392,7 +440,7 @@ export default function FirmAdminDashboard() {
 
         autoTable(doc, {
           startY: yPosition,
-          head: [["Month", "Revenue", "Target"]],
+          head: [["Month/Year", "Revenue", "Target"]],
           body: revenueSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
@@ -1020,25 +1068,35 @@ export default function FirmAdminDashboard() {
                 <h4 className="font-semibold text-gray-800 font-[BasisGrotesquePro]">Revenue Analytics</h4>
                 <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">Your revenue contribution and trends </p>
               </div>
-              <button
-                onClick={() => setIsRevenueModalOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-200 transition-colors"
-              >
-                <CrossesIcon />
-              </button>
+              <div className="flex items-center gap-3">
+                <select
+                  value={revenuePeriod}
+                  onChange={(e) => setRevenuePeriod(e.target.value)}
+                  className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+                <button
+                  onClick={() => setIsRevenueModalOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-200 transition-colors"
+                >
+                  <CrossesIcon />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Modal Content - Large Chart */}
           <div className="p-6 flex-1 overflow-auto">
             <div className="h-[calc(90vh-180px)] min-h-[600px]">
-              {loading ? (
+              {revenueLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-gray-500">Loading revenue data...</div>
                 </div>
-              ) : getRevenueData(dashboardData)?.length > 0 ? (
+              ) : getRevenueData(dashboardData, revenueData)?.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={getRevenueData(dashboardData)}>
+                  <LineChart data={getRevenueData(dashboardData, revenueData)}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
                     <XAxis
                       dataKey="month"
@@ -1355,11 +1413,13 @@ export default function FirmAdminDashboard() {
                   <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <select className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-                    <option>Monthly</option>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                  <select
+                    value={revenuePeriod}
+                    onChange={(e) => setRevenuePeriod(e.target.value)}
+                    className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
                   </select>
 
                   <button
@@ -1376,31 +1436,41 @@ export default function FirmAdminDashboard() {
 
 
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={getRevenueData(dashboardData)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  />
-                  <Tooltip content={<RevenueTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#3AD6F2"
-                    strokeWidth={3}
-                    dot={{ fill: '#3AD6F2', stroke: '#3AD6F2', strokeWidth: 2, r: 5 }}
-                    activeDot={{ r: 7, stroke: '#3AD6F2', strokeWidth: 2, fill: '#3AD6F2' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {revenueLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-gray-500">Loading revenue analytics...</div>
+                </div>
+              ) : getRevenueData(dashboardData, revenueData)?.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={getRevenueData(dashboardData, revenueData)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    />
+                    <Tooltip content={<RevenueTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#3AD6F2"
+                      strokeWidth={3}
+                      dot={{ fill: '#3AD6F2', stroke: '#3AD6F2', strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 7, stroke: '#3AD6F2', strokeWidth: 2, fill: '#3AD6F2' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-gray-500">No revenue data available</div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1679,6 +1749,23 @@ export default function FirmAdminDashboard() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Suggestions Section */}
+              {dashboardData?.compliance_risk?.suggestions && dashboardData.compliance_risk.suggestions.length > 0 && (
+                <div className="mt-6 border-t pt-4">
+                  <h4 className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-3">Suggestions</h4>
+                  <ul className="space-y-2">
+                    {dashboardData.compliance_risk.suggestions.map((suggestion, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-[#6B7280]">
+                        <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
