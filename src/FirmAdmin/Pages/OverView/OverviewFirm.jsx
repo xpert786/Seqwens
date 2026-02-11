@@ -118,6 +118,8 @@ export default function FirmAdminDashboard() {
   const [leaderboardPage, setLeaderboardPage] = useState(1);
   const itemsPerPage = 5;
   const [revenuePeriod, setRevenuePeriod] = useState('monthly');
+  const [engagementLayout, setEngagementLayout] = useState('column'); // 'column' or 'row'
+  const [complianceLayout, setComplianceLayout] = useState('column'); // 'column' or 'row'
 
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState(null);
@@ -1246,6 +1248,7 @@ export default function FirmAdminDashboard() {
                  text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro]
                  hover:bg-gray-50 whitespace-nowrap flex items-center gap-1
                  max-md:flex-1 max-md:justify-center"
+              style={{ height: '38px' }}
             >
               <SceheIcon />
               Schedule
@@ -1429,14 +1432,21 @@ export default function FirmAdminDashboard() {
                   <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <select
-                    value={revenuePeriod}
-                    onChange={(e) => setRevenuePeriod(e.target.value)}
-                    className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={revenuePeriod}
+                      onChange={(e) => setRevenuePeriod(e.target.value)}
+                      className="px-3 py-2 pr-10 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 appearance-none cursor-pointer min-w-[120px]"
+                    >
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
 
                   <button
                     onClick={() => setIsRevenueModalOpen(true)}
@@ -1500,7 +1510,10 @@ export default function FirmAdminDashboard() {
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Lead conversion and client journey</p>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-500 hover:text-gray-700"
+                <button 
+                  className={`p-2 text-gray-500 hover:text-gray-700 ${engagementLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
+                  onClick={() => setEngagementLayout(engagementLayout === 'column' ? 'row' : 'column')}
+                  title="Toggle layout"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -1515,12 +1528,12 @@ export default function FirmAdminDashboard() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className={engagementLayout === 'column' ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4'}>
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Loading engagement data...</div>
               ) : getClientEngagementData(dashboardData).length > 0 ? (
                 getClientEngagementData(dashboardData).map((item, index) => (
-                  <div key={index} className="space-y-1">
+                  <div key={index} className={engagementLayout === 'column' ? 'space-y-1' : 'bg-gray-50 rounded-lg p-3'}>
                     <div className="flex justify-between items-center">
                       <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
                       <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.percentage}%</div>
@@ -1683,7 +1696,11 @@ export default function FirmAdminDashboard() {
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Current compliance metrics & alerts summary</p>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-500 hover:text-gray-700">
+                <button 
+                  className={`p-2 text-gray-500 hover:text-gray-700 ${complianceLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
+                  onClick={() => setComplianceLayout(complianceLayout === 'column' ? 'row' : 'column')}
+                  title="Toggle layout"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
@@ -1699,7 +1716,7 @@ export default function FirmAdminDashboard() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className={complianceLayout === 'column' ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 gap-4'}>
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Loading compliance data...</div>
               ) : getComplianceData(dashboardData).length > 0 ? (

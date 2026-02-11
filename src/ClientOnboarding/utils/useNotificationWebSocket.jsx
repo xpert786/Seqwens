@@ -159,17 +159,17 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
         setIsConnected(false);
 
         // Attempt to reconnect if not a normal closure
-        // if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
-        //   reconnectAttemptsRef.current += 1;
-        //   console.log(`🔄 Attempting to reconnect notification WebSocket (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
+        if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
+          reconnectAttemptsRef.current += 1;
+          console.log(`🔄 Attempting to reconnect notification WebSocket (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
 
-        //   reconnectTimeoutRef.current = setTimeout(() => {
-        //     connect();
-        //   }, reconnectDelay);
-        // } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-        //   console.error('❌ Failed to connect notification WebSocket after maximum attempts');
-        //   setError('Failed to connect. Please refresh the page.');
-        // }
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect();
+          }, reconnectDelay);
+        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+          console.error('❌ Failed to connect notification WebSocket after maximum attempts');
+          setError('Failed to connect. Please refresh the page.');
+        }
       };
 
       wsRef.current = ws;

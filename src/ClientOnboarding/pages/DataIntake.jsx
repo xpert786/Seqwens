@@ -3521,9 +3521,9 @@ export default function DataIntakeForm({ targetClientId }) {
               }}>
                 {/* Add Business Button */}
                 {!isAddingBusiness && (
-                  <div className="mb-3 text-center">
+                  <div className="mb-3">
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary btn-sm"
                       onClick={() => {
                         setEditingBusinessId(null);
                         setBusinessData({
@@ -3576,7 +3576,11 @@ export default function DataIntakeForm({ targetClientId }) {
                         fontFamily: "BasisGrotesquePro",
                         fontWeight: 500,
                         background: "#3B4A66",
-                        borderColor: "#3B4A66"
+                        borderColor: "#3B4A66",
+                        padding: "6px 16px",
+                        fontSize: "14px",
+                        height: "38px",
+                        lineHeight: "1.5"
                       }}
                     >
                       {businesses.length > 0 ? "Add Another Business" : "Add Business Info"}
@@ -3848,9 +3852,9 @@ export default function DataIntakeForm({ targetClientId }) {
               >
                 {/* Add Rental Property Button */}
                 {!isAddingRentalProperty && (
-                  <div className="mb-3 text-center">
+                  <div className="mb-3">
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary btn-sm"
                       onClick={() => {
                         setEditingRentalPropertyId(null);
                         setIsAddingRentalProperty(true);
@@ -3887,7 +3891,11 @@ export default function DataIntakeForm({ targetClientId }) {
                         fontFamily: "BasisGrotesquePro",
                         fontWeight: 500,
                         background: "#3B4A66",
-                        borderColor: "#3B4A66"
+                        borderColor: "#3B4A66",
+                        padding: "6px 16px",
+                        fontSize: "14px",
+                        height: "38px",
+                        lineHeight: "1.5"
                       }}
                     >
                       Add a Rental Property

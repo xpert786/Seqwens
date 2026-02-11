@@ -356,22 +356,22 @@ export default function CustomRolesManagement() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b-2 border-[#E8F0FF] bg-gradient-to-r from-[#F9FAFB] to-[#F0FDFF]">
-                    <th className="text-left py-4 px-6 text-sm font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Name
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Email
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Role
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Permissions
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Status
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Actions
                     </th>
                   </tr>
@@ -391,57 +391,57 @@ export default function CustomRolesManagement() {
                         setShowPermissionsModal(true);
                       }}
                     >
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2.5 rounded-lg transition-all duration-200 ${preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20 shadow-sm' : 'bg-gray-100 group-hover:bg-gray-200'
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded-lg transition-all duration-200 ${preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20 shadow-sm' : 'bg-gray-100 group-hover:bg-gray-200'
                             }`}>
                             <FiUsers
-                              size={18}
+                              size={14}
                               color={preparer.is_active ? "#32B582" : "#9CA3AF"}
                             />
                           </div>
-                          <div className="flex-1">
-                            <span className="text-sm font-semibold font-[BasisGrotesquePro] block transition-colors duration-200" style={{ color: '#3B4A66' }}>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] font-semibold font-[BasisGrotesquePro] block truncate transition-colors duration-200" style={{ color: '#3B4A66' }}>
                               {preparer.full_name || 'N/A'}
                             </span>
-                            <span className="text-xs font-[BasisGrotesquePro] transition-colors duration-200" style={{ color: '#6B7280' }}>
-                              Click to manage permissions
+                            <span className="text-[9px] font-[BasisGrotesquePro] block truncate transition-colors duration-200" style={{ color: '#6B7280' }}>
+                              Click to manage
                             </span>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className="text-sm font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                      <td className="py-2 px-3">
+                        <span className="text-[10px] font-[BasisGrotesquePro] truncate block" style={{ color: '#6B7280' }}>
                           {preparer.email || '—'}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className="px-3 py-1.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-xs font-semibold rounded-lg font-[BasisGrotesquePro] capitalize border border-gray-200 shadow-sm">
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-1 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] capitalize border border-gray-200 shadow-sm">
                           {preparer.role || 'N/A'}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           {preparer.has_permissions ? (
-                            <span className="px-3 py-1.5 bg-gradient-to-r from-[#E8F0FF] to-[#F0FDFF] text-xs font-semibold rounded-lg font-[BasisGrotesquePro] border border-[#00C0C6]/30 shadow-sm" style={{ color: '#00C0C6' }}>
+                            <span className="px-2 py-1 bg-gradient-to-r from-[#E8F0FF] to-[#F0FDFF] text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] border border-[#00C0C6]/30 shadow-sm" style={{ color: '#00C0C6' }}>
                               {preparer.permissions_count || 0} {preparer.permissions_count === 1 ? 'permission' : 'permissions'}
                             </span>
                           ) : (
-                            <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-lg font-[BasisGrotesquePro] border border-gray-200">
-                              No permissions set
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] border border-gray-200">
+                              No permissions
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg font-[BasisGrotesquePro] border shadow-sm ${preparer.is_active
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] border shadow-sm ${preparer.is_active
                           ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200'
                           : 'bg-gray-100 text-gray-600 border-gray-200'
                           }`}>
                           {preparer.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={(e) => {
@@ -454,10 +454,10 @@ export default function CustomRolesManagement() {
                               });
                               setShowPermissionsModal(true);
                             }}
-                            className="px-4 py-2 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white !rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-xs font-medium flex items-center gap-1.5 shadow-sm hover:shadow-md"
+                            className="px-3 py-1.5 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white !rounded-md hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-[10px] font-medium flex items-center gap-1 shadow-sm hover:shadow-md"
                             title="Manage Permissions"
                           >
-                            <FiEdit2 size={14} />
+                            <FiEdit2 size={12} />
                             Manage
                           </button>
                         </div>
