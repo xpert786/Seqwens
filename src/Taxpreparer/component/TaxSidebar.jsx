@@ -153,7 +153,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
             </li>
           )}
 
-          {hasTaxPreparerPermission('create_invoices') && (
+          {isFeatureVisible('billing') && (
             <li className="mb-2">
               <Link to="/taxdashboard/billing" className={linkClass("/taxdashboard/billing")}>
                 <span className={iconWrapperClass("/taxdashboard/billing")}>
@@ -165,7 +165,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
                     <path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
-                Billing & Invoices
+                Invoices
               </Link>
             </li>
           )}

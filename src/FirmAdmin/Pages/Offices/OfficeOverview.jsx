@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import sampleOffices from './sampleOffices';
 import { Link } from 'react-router-dom';
+import { getTimezoneLabel } from './constants';
 
 
 // Helper function to get initials from name
@@ -71,7 +72,7 @@ export default function OfficeOverview() {
     const [showTaxpayerModal, setShowTaxpayerModal] = useState(false);
     const [isPrimaryOffice, setIsPrimaryOffice] = useState(false);
     const [settingPrimary, setSettingPrimary] = useState(false);
-    
+
     // Edit office modal state
     const [showEditModal, setShowEditModal] = useState(false);
     const [removingManager, setRemovingManager] = useState(false);
@@ -323,11 +324,11 @@ export default function OfficeOverview() {
                 position: 'top-right',
                 autoClose: 3000
             });
-            } finally {
-                setSettingPrimary(false);
-                setShowSetPrimaryConfirm(false);
-            }
-        };
+        } finally {
+            setSettingPrimary(false);
+            setShowSetPrimaryConfirm(false);
+        }
+    };
 
     const handleTaxpayerUpdate = () => {
         // Refresh clients count when taxpayers are updated
@@ -621,121 +622,121 @@ export default function OfficeOverview() {
                 {activeTab === 'Overview' && (
                     <>
                         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-                                {/* Office Information */}
+                            {/* Office Information */}
                             <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
-                                    <h6 className="text-base font-semibold text-gray-900 mb-4">Office Information</h6>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 5C10 8 6 11 6 11C6 11 2 8 2 5C2 3.93913 2.42143 2.92172 3.17157 2.17157C3.92172 1.42143 4.93913 1 6 1C7.06087 1 8.07828 1.42143 8.82843 2.17157C9.57857 2.92172 10 3.93913 10 5Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M6 6.5C6.82843 6.5 7.5 5.82843 7.5 5C7.5 4.17157 6.82843 3.5 6 3.5C5.17157 3.5 4.5 4.17157 4.5 5C4.5 5.82843 5.17157 6.5 6 6.5Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
+                                <h6 className="text-base font-semibold text-gray-900 mb-4">Office Information</h6>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10 5C10 8 6 11 6 11C6 11 2 8 2 5C2 3.93913 2.42143 2.92172 3.17157 2.17157C3.92172 1.42143 4.93913 1 6 1C7.06087 1 8.07828 1.42143 8.82843 2.17157C9.57857 2.92172 10 3.93913 10 5Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M6 6.5C6.82843 6.5 7.5 5.82843 7.5 5C7.5 4.17157 6.82843 3.5 6 3.5C5.17157 3.5 4.5 4.17157 4.5 5C4.5 5.82843 5.17157 6.5 6 6.5Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
 
-                                            <div>
-                                                <p className="font-medium text-sm text-gray-700 mb-0">{officeData?.street_address || officeData?.address || 'N/A'}</p>
-                                                <p className="text-sm text-gray-700 mb-0">{officeData?.city || 'N/A'}</p>
-                                            </div>
+                                        <div>
+                                            <p className="font-medium text-sm text-gray-700 mb-0">{officeData?.street_address || officeData?.address || 'N/A'}</p>
+                                            <p className="text-sm text-gray-700 mb-0">{officeData?.city || 'N/A'}</p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M11.0007 8.46005V9.96005C11.0013 10.0993 10.9727 10.2371 10.917 10.3647C10.8612 10.4923 10.7793 10.6068 10.6767 10.701C10.5741 10.7951 10.453 10.8668 10.3211 10.9114C10.1892 10.956 10.0494 10.9726 9.9107 10.96C8.37212 10.7929 6.8942 10.2671 5.5957 9.42505C4.38761 8.65738 3.36337 7.63313 2.5957 6.42505C1.75069 5.12065 1.22482 3.63555 1.0607 2.09005C1.0482 1.95178 1.06464 1.81243 1.10895 1.68086C1.15326 1.54929 1.22448 1.42839 1.31808 1.32586C1.41168 1.22332 1.5256 1.1414 1.65259 1.08531C1.77959 1.02922 1.91687 1.00018 2.0557 1.00005H3.5557C3.79835 0.99766 4.03359 1.08359 4.21758 1.24181C4.40156 1.40004 4.52174 1.61977 4.5557 1.86005C4.61901 2.34008 4.73642 2.81141 4.9057 3.26505C4.97297 3.44401 4.98753 3.63851 4.94765 3.82549C4.90777 4.01247 4.81513 4.1841 4.6807 4.32005L4.0457 4.95505C4.75748 6.20682 5.79393 7.24327 7.0457 7.95505L7.6807 7.32005C7.81664 7.18562 7.98828 7.09297 8.17526 7.0531C8.36224 7.01322 8.55674 7.02778 8.7357 7.09505C9.18934 7.26432 9.66067 7.38174 10.1407 7.44505C10.3836 7.47931 10.6054 7.60165 10.764 7.7888C10.9225 7.97594 11.0068 8.21484 11.0007 8.46005Z" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.0007 8.46005V9.96005C11.0013 10.0993 10.9727 10.2371 10.917 10.3647C10.8612 10.4923 10.7793 10.6068 10.6767 10.701C10.5741 10.7951 10.453 10.8668 10.3211 10.9114C10.1892 10.956 10.0494 10.9726 9.9107 10.96C8.37212 10.7929 6.8942 10.2671 5.5957 9.42505C4.38761 8.65738 3.36337 7.63313 2.5957 6.42505C1.75069 5.12065 1.22482 3.63555 1.0607 2.09005C1.0482 1.95178 1.06464 1.81243 1.10895 1.68086C1.15326 1.54929 1.22448 1.42839 1.31808 1.32586C1.41168 1.22332 1.5256 1.1414 1.65259 1.08531C1.77959 1.02922 1.91687 1.00018 2.0557 1.00005H3.5557C3.79835 0.99766 4.03359 1.08359 4.21758 1.24181C4.40156 1.40004 4.52174 1.61977 4.5557 1.86005C4.61901 2.34008 4.73642 2.81141 4.9057 3.26505C4.97297 3.44401 4.98753 3.63851 4.94765 3.82549C4.90777 4.01247 4.81513 4.1841 4.6807 4.32005L4.0457 4.95505C4.75748 6.20682 5.79393 7.24327 7.0457 7.95505L7.6807 7.32005C7.81664 7.18562 7.98828 7.09297 8.17526 7.0531C8.36224 7.01322 8.55674 7.02778 8.7357 7.09505C9.18934 7.26432 9.66067 7.38174 10.1407 7.44505C10.3836 7.47931 10.6054 7.60165 10.764 7.7888C10.9225 7.97594 11.0068 8.21484 11.0007 8.46005Z" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
 
-                                            <p className="text-sm text-gray-700 mb-0">{officeData?.phone_number || officeData?.phone || 'N/A'}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 2H2C1.44772 2 1 2.44772 1 3V9C1 9.55228 1.44772 10 2 10H10C10.5523 10 11 9.55228 11 9V3C11 2.44772 10.5523 2 10 2Z" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M11 3.5L6.515 6.35C6.36064 6.44671 6.18216 6.49801 6 6.49801C5.81784 6.49801 5.63936 6.44671 5.485 6.35L1 3.5" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
+                                        <p className="text-sm text-gray-700 mb-0">{officeData?.phone_number || officeData?.phone || 'N/A'}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10 2H2C1.44772 2 1 2.44772 1 3V9C1 9.55228 1.44772 10 2 10H10C10.5523 10 11 9.55228 11 9V3C11 2.44772 10.5523 2 10 2Z" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M11 3.5L6.515 6.35C6.36064 6.44671 6.18216 6.49801 6 6.49801C5.81784 6.49801 5.63936 6.44671 5.485 6.35L1 3.5" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
 
 
-                                            <p className="text-sm text-gray-700 mb-0">{officeData?.email || 'N/A'}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333ZM8 13.3333C5.05933 13.3333 2.66667 10.9407 2.66667 8C2.66667 5.05933 5.05933 2.66667 8 2.66667C10.9407 2.66667 13.3333 5.05933 13.3333 8C13.3333 10.9407 10.9407 13.3333 8 13.3333Z" fill="#6B7280" />
-                                                <path d="M8.66667 4.66667V8.66667L11.3333 10.1333" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
+                                        <p className="text-sm text-gray-700 mb-0">{officeData?.email || 'N/A'}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333ZM8 13.3333C5.05933 13.3333 2.66667 10.9407 2.66667 8C2.66667 5.05933 5.05933 2.66667 8 2.66667C10.9407 2.66667 13.3333 5.05933 13.3333 8C13.3333 10.9407 10.9407 13.3333 8 13.3333Z" fill="#6B7280" />
+                                            <path d="M8.66667 4.66667V8.66667L11.3333 10.1333" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
                                         <p className="text-sm text-gray-700 mb-0">{officeData?.operation_hours_display || 'N/A'}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12.6667 2.66667H3.33333C2.59667 2.66667 2 3.26333 2 4V13.3333C2 14.07 2.59667 14.6667 3.33333 14.6667H12.6667C13.4033 14.6667 14 14.07 14 13.3333V4C14 3.26333 13.4033 2.66667 12.6667 2.66667Z" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M10.6667 1.33333V4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M5.33333 1.33333V4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M2 6.66667H14" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            <p className="text-sm text-gray-700 mb-0">Established: {officeData?.established_date || officeData?.established || 'N/A'}</p>
-                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12.6667 2.66667H3.33333C2.59667 2.66667 2 3.26333 2 4V13.3333C2 14.07 2.59667 14.6667 3.33333 14.6667H12.6667C13.4033 14.6667 14 14.07 14 13.3333V4C14 3.26333 13.4033 2.66667 12.6667 2.66667Z" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M10.6667 1.33333V4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M5.33333 1.33333V4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M2 6.66667H14" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <p className="text-sm text-gray-700 mb-0">Established: {officeData?.established_date || officeData?.established || 'N/A'}</p>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Office Performance - Map */}
+                            {/* Office Performance - Map */}
                             <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
-                                    <h6 className="text-base font-semibold text-gray-900 mb-4">Office Performance Map</h6>
-                                    <div className="relative h-64 bg-gray-100 rounded-lg overflow-hidden">
-                                        {(() => {
-                                            const address = officeData?.full_address || 
-                                                (officeData?.street_address || officeData?.city || officeData?.state || officeData?.zip_code
-                                                    ? `${officeData.street_address || ''}, ${officeData.city || ''}, ${officeData.state || ''} ${officeData.zip_code || ''}`.trim().replace(/^,\s*|,\s*$/g, '')
-                                                    : null);
-                                            
-                                            if (address) {
-                                                // Construct Google Maps embed URL
-                                                // Note: For production, add VITE_GOOGLE_MAPS_API_KEY to your .env file
-                                                const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-                                                const mapsUrl = googleMapsApiKey
-                                                    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${encodeURIComponent(address)}`
-                                                    : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
-                                                
-                                                return (
-                                                    <>
-                                                        <iframe
-                                                            width="100%"
-                                                            height="100%"
-                                                            style={{ border: 0 }}
-                                                            loading="lazy"
-                                                            allowFullScreen
-                                                            referrerPolicy="no-referrer-when-downgrade"
-                                                            src={mapsUrl}
-                                                            title="Office Location Map"
-                                                        />
-                                                        <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-[#3AD6F2]"></div>
-                                                            <span className="text-xs text-gray-700 font-medium">
-                                                                {officeData.name || 'Office Location'}
-                                                            </span>
-                                                        </div>
-                                                        <a
-                                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="absolute top-4 right-4 bg-white px-3 py-2 rounded-lg shadow-md text-xs text-[#3AD6F2] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-                                                        >
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#3AD6F2" />
-                                                            </svg>
-                                                            Open in Maps
-                                                        </a>
-                                                    </>
-                                                );
-                                            }
-                                            
+                                <h6 className="text-base font-semibold text-gray-900 mb-4">Office Performance Map</h6>
+                                <div className="relative h-64 bg-gray-100 rounded-lg overflow-hidden">
+                                    {(() => {
+                                        const address = officeData?.full_address ||
+                                            (officeData?.street_address || officeData?.city || officeData?.state || officeData?.zip_code
+                                                ? `${officeData.street_address || ''}, ${officeData.city || ''}, ${officeData.state || ''} ${officeData.zip_code || ''}`.trim().replace(/^,\s*|,\s*$/g, '')
+                                                : null);
+
+                                        if (address) {
+                                            // Construct Google Maps embed URL
+                                            // Note: For production, add VITE_GOOGLE_MAPS_API_KEY to your .env file
+                                            const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+                                            const mapsUrl = googleMapsApiKey
+                                                ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${encodeURIComponent(address)}`
+                                                : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+
                                             return (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="text-center">
-                                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-2 text-gray-400">
-                                                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#9CA3AF" />
-                                                        </svg>
-                                                        <p className="text-sm text-gray-500">Map View</p>
-                                                        <p className="text-xs text-gray-400 mt-1">Address not available</p>
+                                                <>
+                                                    <iframe
+                                                        width="100%"
+                                                        height="100%"
+                                                        style={{ border: 0 }}
+                                                        loading="lazy"
+                                                        allowFullScreen
+                                                        referrerPolicy="no-referrer-when-downgrade"
+                                                        src={mapsUrl}
+                                                        title="Office Location Map"
+                                                    />
+                                                    <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
+                                                        <div className="w-3 h-3 rounded-full bg-[#3AD6F2]"></div>
+                                                        <span className="text-xs text-gray-700 font-medium">
+                                                            {officeData.name || 'Office Location'}
+                                                        </span>
                                                     </div>
-                                                </div>
+                                                    <a
+                                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="absolute top-4 right-4 bg-white px-3 py-2 rounded-lg shadow-md text-xs text-[#3AD6F2] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                                                    >
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#3AD6F2" />
+                                                        </svg>
+                                                        Open in Maps
+                                                    </a>
+                                                </>
                                             );
-                                        })()}
-                                    </div>
+                                        }
+
+                                        return (
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="text-center">
+                                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-2 text-gray-400">
+                                                        <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#9CA3AF" />
+                                                    </svg>
+                                                    <p className="text-sm text-gray-500">Map View</p>
+                                                    <p className="text-xs text-gray-400 mt-1">Address not available</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
+                            </div>
                         </div>
                     </>
                 )}
@@ -1053,11 +1054,11 @@ export default function OfficeOverview() {
                         </div>
                     </div>
                 )}
-                
+
             </div>
             {activeTab === 'Settings' && (
                 <div className="space-y-6 p-6">
-                   
+
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <div className="space-y-6 rounded-xl bg-white p-6 border border-[#E4ECFF]">
@@ -1080,7 +1081,7 @@ export default function OfficeOverview() {
                                     <p className="text-base font-medium tracking-wide text-gray-700">
                                         Timezone
                                     </p>
-                                    <p className="mt-1 text-sm font-medium text-gray-600">{timezone}</p>
+                                    <p className="mt-1 text-sm font-medium text-gray-600">{getTimezoneLabel(timezone)}</p>
                                 </div>
                                 <div>
                                     <p className="text-base font-medium tracking-wide text-gray-500">
@@ -1277,10 +1278,14 @@ export default function OfficeOverview() {
                                         <button
                                             type="button"
                                             onClick={handleToggleWhiteLabel}
-                                            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors flex-shrink-0 ${whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'}`}
+                                            className={`relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'
+                                                }`}
+                                            aria-pressed={whiteLabelEnabled}
                                         >
+                                            <span className="sr-only">Toggle white-label</span>
                                             <span
-                                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${whiteLabelEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                                                className={`pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${whiteLabelEnabled ? 'translate-x-6' : 'translate-x-0'
+                                                    }`}
                                             />
                                         </button>
                                         <span className="text-base font-medium tracking-wide text-gray-500">Enable white-label for this office</span>

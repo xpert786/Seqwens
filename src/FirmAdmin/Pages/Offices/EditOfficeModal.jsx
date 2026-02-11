@@ -4,6 +4,7 @@ import 'react-phone-input-2/lib/bootstrap.css';
 import { toast } from 'react-toastify';
 import { CrossesIcon } from '../../Components/icons';
 import { firmOfficeAPI, handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { US_TIMEZONES } from './constants';
 
 export default function EditOfficeModal({ isOpen, onClose, officeId, officeData, onOfficeUpdated }) {
     const [formData, setFormData] = useState({
@@ -146,14 +147,14 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
         if (!timeString) return '';
         const match = timeString.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
         if (!match) return timeString;
-        
+
         let hours = parseInt(match[1]);
         const minutes = match[2];
         const period = match[3].toUpperCase();
-        
+
         if (period === 'PM' && hours !== 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
-        
+
         return `${hours.toString().padStart(2, '0')}:${minutes}`;
     };
 
@@ -183,7 +184,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
 
     const handleSubmit = async () => {
         setError(null);
-        
+
         if (!validateForm()) {
             return;
         }
@@ -256,15 +257,16 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
     const fetchStaffOptions = useCallback(async () => {
         setStaffLoading(true);
         try {
-            const response = await firmAdminStaffAPI.listBasicStaff();
+            const response = await firmAdminStaffAPI.listStaffWithAdmin();
             let staffList = [];
 
-            if (Array.isArray(response)) {
-                staffList = response;
-            } else if (Array.isArray(response?.data?.staff_members)) {
+            // Extract staff list from response
+            if (response?.success && Array.isArray(response?.data?.staff_members)) {
                 staffList = response.data.staff_members;
-            } else if (Array.isArray(response?.staff_members)) {
-                staffList = response.staff_members;
+            } else if (Array.isArray(response)) {
+                staffList = response;
+            } else if (Array.isArray(response?.data)) {
+                staffList = response.data;
             }
 
             setStaffOptions(staffList || []);
@@ -455,12 +457,11 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
                                 >
                                     <option value="">Select timezone</option>
-                                    <option value="America/New_York">Eastern Time</option>
-                                    <option value="America/Chicago">Central Time</option>
-                                    <option value="America/Denver">Mountain Time</option>
-                                    <option value="America/Los_Angeles">Pacific Time</option>
-                                    <option value="America/Phoenix">Mountain Time (Arizona)</option>
-                                    <option value="America/Alaska">Alaska Time</option>
+                                    {US_TIMEZONES.map((tz) => (
+                                        <option key={tz.value} value={tz.value}>
+                                            {tz.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -494,18 +495,18 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                             <div className="w-24 flex-shrink-0">
                                                 <span className="text-sm font-medium text-gray-700">{day}</span>
                                             </div>
-                                            <div className="flex items-center gap-3 flex-1">
+                                            <div className="flex items-center gap-4 flex-1">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDayToggle(day)}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                        dayData.isOpen ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                            dayData.isOpen ? 'translate-x-6' : 'translate-x-1'
+                                                    className={`relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${dayData.isOpen ? 'bg-[#3AD6F2]' : 'bg-gray-200'
                                                         }`}
+                                                    aria-pressed={dayData.isOpen}
+                                                >
+                                                    <span className="sr-only">Toggle {day}</span>
+                                                    <span
+                                                        className={`pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${dayData.isOpen ? 'translate-x-6' : 'translate-x-0'
+                                                            }`}
                                                     />
                                                 </button>
                                                 <span className="text-sm text-gray-600 min-w-[50px]">
@@ -538,9 +539,9 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                                 if (hour12 === 0) hour12 = 12;
                                                                 handleTimeChange(day, 'startTime', `${hour12}:${minutes} ${period}`);
                                                             }}
-                                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                            className="w-32 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent text-sm transition-all bg-white"
                                                         />
-                                                        <span className="text-gray-400">to</span>
+                                                        <span className="text-gray-400 font-medium px-1">to</span>
                                                         <input
                                                             type="time"
                                                             value={dayData.endTime ? (() => {
@@ -566,7 +567,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                                 if (hour12 === 0) hour12 = 12;
                                                                 handleTimeChange(day, 'endTime', `${hour12}:${minutes} ${period}`);
                                                             }}
-                                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                            className="w-32 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent text-sm transition-all bg-white"
                                                         />
                                                     </>
                                                 )}

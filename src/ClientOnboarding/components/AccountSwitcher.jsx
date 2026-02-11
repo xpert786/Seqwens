@@ -2,21 +2,27 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiChevronDown, FiCheck } from 'react-icons/fi';
 import { userAPI, handleAPIError } from '../utils/apiUtils';
-import { getStorage, setTokens } from '../utils/userUtils';
+import { getStorage, setTokens, getAccessToken } from '../utils/userUtils';
 import { getPathWithPrefix } from '../utils/urlUtils';
+import { getApiBaseUrl } from '../utils/corsConfig';
 import { toast } from 'react-toastify';
 import '../styles/AccountSwitcher.css';
 
 const ROLE_DISPLAY_NAMES = {
-  team_member: 'Team Member',
-  teammember: 'Team Member', // Handle camelCase from API
+  team_member: 'Tax Preparer',
+  teammember: 'Tax Preparer',
   tax_preparer: 'Tax Preparer',
-  taxpreparer: 'Tax Preparer', // Handle camelCase from API
-  taxpayer: 'Taxpayer',
+  taxpreparer: 'Tax Preparer',
+  staff: 'Tax Preparer',
+  taxpayer: 'Client',
+  client: 'Client',
   firm_admin: 'Firm Admin',
-  firmadmin: 'Firm Admin', // Handle camelCase from API
+  firmadmin: 'Firm Admin',
   admin: 'Firm Admin',
   firm: 'Firm Admin',
+  super_admin: 'Super Admin',
+  billing_admin: 'Billing Admin',
+  support_admin: 'Support Admin'
 };
 
 const STATUS_COLORS = {
@@ -28,415 +34,392 @@ const STATUS_COLORS = {
 export default function AccountSwitcher() {
   const navigate = useNavigate();
   const [memberships, setMemberships] = useState([]);
-  const [currentFirm, setCurrentFirm] = useState(null);
-  const [loading, setLoading] = useState(false); // Start as false to not block
+  const [currentMembership, setCurrentMembership] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [hasTriedFetch, setHasTriedFetch] = useState(false);
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // Load memberships from login response (firms array) stored in localStorage
-  const loadMembershipsFromStorage = useCallback(() => {
-    try {
-      setLoading(true);
+  // Normalize role string (snake_case)
+  const normalizeRole = (role) => {
+    if (!role) return '';
+    if (typeof role !== 'string') return String(role);
+    // Convert camelCase to snake_case
+    return role.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+  };
+
+  // Normalize status string
+  const normalizeStatus = (status) => {
+    if (!status) return 'active';
+    return String(status).toLowerCase();
+  };
+
+  // Process raw memberships data
+  const processMemberships = useCallback((rawFirms, currentFirmId = null, currentRole = null, activeUserType = null) => {
+    if (!Array.isArray(rawFirms)) return [];
+
+    return rawFirms.map(firm => {
+      // Handle various data structures from different API endpoints
+      const rawRole = firm.membership?.role || firm.role || 'team_member';
+      const role = normalizeRole(rawRole);
+      const status = normalizeStatus(firm.membership?.status || firm.status);
+      const firmId = parseInt(firm.membership?.firm_id || firm.firm_id || firm.id);
+      const firmName = firm.firm?.name || firm.name || 'Firm';
       
-      const storage = getStorage();
-      const firmsDataStr = storage?.getItem('firmsData');
-      const userDataStr = storage?.getItem('userData');
-      
-      // Try to get firms from stored login response
-      let firms = [];
-      if (firmsDataStr) {
-        try {
-          firms = JSON.parse(firmsDataStr);
-        } catch (e) {
-          // Silently handle parsing errors
-        }
+      // Determine if this is the current membership
+      // Prioritize strict client-side validation if we have context (to fix multi-tick bugs)
+      let isCurrent = false;
+
+      // 1. Strict validation: Matches Firm ID AND Active Role Type
+      if (currentFirmId && activeUserType) {
+         const isSameFirm = firmId === parseInt(currentFirmId);
+         let isRoleMatch = false;
+
+         // Map role to userType for comparison
+         if (activeUserType === 'client') {
+            isRoleMatch = ['client', 'taxpayer'].includes(role);
+         } else if (activeUserType === 'tax_preparer') {
+            isRoleMatch = ['team_member', 'teammember', 'tax_preparer', 'taxpreparer', 'staff'].includes(role);
+         } else if (activeUserType === 'admin') {
+            isRoleMatch = ['firm_admin', 'admin', 'firm', 'firmadmin'].includes(role);
+         } else if (activeUserType === 'super_admin') {
+            isRoleMatch = ['super_admin'].includes(role);
+         }
+
+         // Only fallback to currentRole string check if it doesn't conflict with userType awareness
+         if (!isRoleMatch && currentRole) {
+            // Extra safety: only allow if userType wasn't decisive
+             isRoleMatch = role === normalizeRole(currentRole);
+         }
+
+         isCurrent = isSameFirm && isRoleMatch;
       }
       
-      // If no firms data stored, try to get from userData (fallback)
-      if (firms.length === 0 && userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          // Check if firms are stored in userData
-          if (userData.firms && Array.isArray(userData.firms)) {
-            firms = userData.firms;
-          }
-        } catch (e) {
-          // Silently handle parsing errors
-        }
+      // 2. Fallback to API flag if strict validation wasn't possible (e.g. no userType yet)
+      else if (firm.is_current === true) {
+         isCurrent = true;
       }
       
-      // Map firms array to memberships format
-      const membershipsList = firms.map(firm => {
-        // Normalize role: "TeamMember" -> "team_member", "TaxPreparer" -> "tax_preparer", etc.
-        let role = firm.membership?.role || 'team_member';
-        if (typeof role === 'string') {
-          // Convert camelCase/PascalCase to snake_case
-          role = role.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-        }
-        
-        // Normalize status: "Active" -> "active", etc.
-        let status = firm.membership?.status || firm.status || 'active';
-        if (typeof status === 'string') {
-          status = status.toLowerCase();
-        }
-        
-        return {
-          id: firm.membership?.id || firm.id,
-          firm: {
-            id: firm.id,
-            name: firm.name
-          },
-          firm_id: firm.id,
-          role: role,
-          status: status,
-          office_scope: firm.membership?.office_location_scope?.offices || [],
-          offices: firm.membership?.office_location_scope?.offices || [],
-          is_current: firm.is_current || false
-        };
-      });
-      
-      if (membershipsList.length > 0) {
-        setMemberships(membershipsList);
-        
-        // Find current firm - prioritize is_current flag, then check userData.firm.id
-        let current = membershipsList.find(m => m.is_current);
-        
-        // If no is_current flag, check userData for current firm
-        if (!current) {
-          const storage = getStorage();
-          const userDataStr = storage?.getItem('userData');
-          if (userDataStr) {
-            try {
-              const userData = JSON.parse(userDataStr);
-              const currentFirmId = userData.firm?.id || userData.firm_id;
-              if (currentFirmId) {
-                current = membershipsList.find(
-                  (m) => m.firm?.id === currentFirmId || m.firm_id === currentFirmId
-                );
-              }
-            } catch (e) {
-              // Silently handle parsing errors
-            }
-          }
-        }
-        
-        // Fallback to first active membership
-        if (!current) {
-          current = membershipsList.find(m => m.status === 'active') || membershipsList[0];
-        }
-        
-        if (current) {
-          setCurrentFirm(current);
-        }
-      } else {
-        setMemberships([]);
-        setCurrentFirm(null);
+      // 3. Last resort fallback
+      else if (currentFirmId) {
+         isCurrent = firmId === parseInt(currentFirmId) && (!currentRole || role === normalizeRole(currentRole));
       }
-    } catch (error) {
-      // Silently handle errors
-      setMemberships([]);
-      setCurrentFirm(null);
-    } finally {
-      setLoading(false);
-    }
+
+      return {
+        id: firm.membership?.id || firm.id, // Membership ID or Firm ID
+        firm: {
+          id: firmId,
+          name: firmName
+        },
+        firm_id: firmId,
+        role: role,
+        user_type: firm.user_type, 
+        status: status,
+        office_scope: firm.membership?.office_location_scope?.offices || [],
+        offices: firm.membership?.office_location_scope?.offices || [],
+        is_current: isCurrent,
+        raw_data: firm
+      };
+    });
   }, []);
 
+  // Fetch memberships from API and Storage
   useEffect(() => {
-    // Only load once, and only if we haven't tried yet
-    if (hasTriedFetch) return;
-    
     let mounted = true;
-    
-    // Load memberships from storage (from login response)
-    const loadMemberships = () => {
-      if (!mounted) return;
-      
+
+    const loadData = async () => {
       try {
-        setHasTriedFetch(true);
-        loadMembershipsFromStorage();
-      } catch (error) {
-        // Silently fail - component will just not show
-        if (mounted) {
-          setLoading(false);
-          setMemberships([]);
-          setCurrentFirm(null);
+        setLoading(true);
+        const storage = getStorage();
+        const userDataStr = storage?.getItem('userData');
+        const userType = storage?.getItem('userType'); // Get active user type
+
+        let userData = null;
+        let currentFirmId = null;
+        let currentRole = null;
+
+        if (userDataStr) {
+          try {
+            userData = JSON.parse(userDataStr);
+            currentFirmId = userData.firm?.id || userData.firm_id;
+            currentRole = userData.role;
+          } catch (e) {
+            console.error("Error parsing userData", e);
+          }
         }
+
+        // 1. Try to load from "firmsData" storage (fastest)
+        const firmsDataStr = storage?.getItem('firmsData');
+        let initialMemberships = [];
+        if (firmsDataStr) {
+           try {
+             const storedFirms = JSON.parse(firmsDataStr);
+             initialMemberships = processMemberships(storedFirms, currentFirmId, currentRole, userType);
+           } catch(e) {}
+        }
+
+        // 2. Also check userData.firms (fallback)
+        if (initialMemberships.length === 0 && userData?.firms) {
+           initialMemberships = processMemberships(userData.firms, currentFirmId, currentRole, userType);
+        }
+
+        if (mounted && initialMemberships.length > 0) {
+          setMemberships(initialMemberships);
+          const current = initialMemberships.find(m => m.is_current) || initialMemberships[0];
+          setCurrentMembership(current);
+        }
+
+        // 3. Fetch fresh from API (background update)
+        try {
+          const response = await userAPI.getMemberships();
+          if (mounted && response.success && Array.isArray(response.data)) {
+             const freshMemberships = processMemberships(response.data, currentFirmId, currentRole, userType);
+             
+             // Sort: Active first, then by name
+             freshMemberships.sort((a, b) => {
+               if (a.is_current) return -1;
+               if (b.is_current) return 1;
+               return a.firm.name.localeCompare(b.firm.name);
+             });
+
+             setMemberships(freshMemberships);
+             
+             // Update current
+             const current = freshMemberships.find(m => m.is_current);
+             if (current) {
+               setCurrentMembership(current);
+               // Update storage with fresh data just in case
+               if (storage) {
+                 storage.setItem('firmsData', JSON.stringify(response.data));
+               }
+             } else if (initialMemberships.length === 0 && freshMemberships.length > 0) {
+               setCurrentMembership(freshMemberships[0]);
+             }
+          }
+        } catch (apiError) {
+          // Ignore API errors in background fetch
+        }
+
+      } catch (error) {
+        console.error("AccountSwitcher initialization error", error);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
-    
-    // Load immediately (no delay needed since it's from storage)
-    loadMemberships();
-    
-    return () => {
-      mounted = false;
-    };
-  }, [loadMembershipsFromStorage]); // Include dependency
 
-  // Handle firm switch
-  const handleSwitchFirm = async (membership) => {
-    if (switching || membership.firm?.id === currentFirm?.firm?.id) {
-      return;
+    loadData();
+
+    return () => { mounted = false; };
+  }, [processMemberships]);
+
+
+  const handleSwitch = async (targetMembership) => {
+    if (switching) return;
+    
+    // Don't switch if already current
+    if (targetMembership.is_current) {
+       setShowDropdown(false);
+       return;
     }
 
     try {
       setSwitching(true);
-      const firmId = membership.firm?.id || membership.firm_id;
+      const apiBaseUrl = getApiBaseUrl(); // Ensure we have base URL
+      const token = getAccessToken();
 
-      const response = await userAPI.switchFirm(firmId);
+      let responseData = null;
 
-      if (response.success && response.data) {
-        // Update tokens if provided
-        if (response.data.tokens) {
-          setTokens(
-            response.data.tokens.access,
-            response.data.tokens.refresh,
-            true
-          );
-        }
+      // Check if we are switching role within SAME firm
+      if (currentMembership && targetMembership.firm.id === currentMembership.firm.id && targetMembership.role !== currentMembership.role) {
+         // Same firm, different role -> Use Switch Role API
+         console.log('AccountSwitcher: Switching Role within same firm', targetMembership.role);
+         
+         const roleMapping = {
+            'team_member': 'tax_preparer',
+            'teammember': 'tax_preparer',
+            'staff': 'tax_preparer',
+            'taxpayer': 'client',
+            'firm_admin': 'firm',
+            'firmadmin': 'firm',
+            'admin': 'firm',
+            'client': 'client'
+         };
+         
+         const apiRole = roleMapping[targetMembership.role] || targetMembership.role;
+         
+         const res = await fetch(`${apiBaseUrl}/user/switch-role/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ role: apiRole })
+         });
+         
+         const json = await res.json();
+         if (!res.ok || !json.success) {
+            throw new Error(json.message || 'Role switch failed');
+         }
+         
+         // Standardize response to look like switchFirm response
+         responseData = {
+            user: json.user,
+            tokens: { access: json.access_token, refresh: json.refresh_token },
+            firms: json.firms
+         };
 
-        // Update user data
-        const storage = getStorage();
-        if (response.data.user) {
-          storage.setItem('userData', JSON.stringify(response.data.user));
-          storage.setItem('isLoggedIn', 'true');
-        }
-        
-        // Determine userType from membership role (not from user.user_type which might be wrong)
-        // This ensures tax preparers stay as tax_preparer even if user_type says something else
-        let determinedUserType = 'client'; // default
-        const membershipRole = membership.role || membership.user_type;
-        const membershipRoleLower = membershipRole ? String(membershipRole).toLowerCase() : '';
-        
-        // Map role to userType
-        if (membershipRoleLower === 'firm_admin' || membershipRoleLower === 'admin' || membershipRoleLower === 'firm' || membershipRoleLower === 'firmadmin') {
-          determinedUserType = 'admin';
-        } else if (membershipRoleLower === 'team_member' || membershipRoleLower === 'teammember' || membershipRoleLower === 'tax_preparer' || membershipRoleLower === 'taxpreparer' || membershipRoleLower === 'staff') {
-          determinedUserType = 'tax_preparer';
-        } else if (membershipRoleLower === 'taxpayer' || membershipRoleLower === 'client') {
-          determinedUserType = 'client';
-        } else if (response.data.user?.user_type) {
-          // Fallback to user_type from response if role mapping fails
-          determinedUserType = response.data.user.user_type;
-        }
-        
-        // Set userType based on membership role, not user.user_type
-        storage.setItem('userType', determinedUserType);
-        
-        // Update firms data if provided in response
-        // Also update the is_current flag for all firms based on the switched firm
-        const switchedFirmId = membership.firm?.id || membership.firm_id;
-        
-        if (response.data.firms && Array.isArray(response.data.firms)) {
-          // Mark the switched firm as current in the firms array
-          const updatedFirms = response.data.firms.map(firm => ({
-            ...firm,
-            is_current: firm.id === switchedFirmId
-          }));
-          storage.setItem('firmsData', JSON.stringify(updatedFirms));
-        } else {
-          // If no firms in response, update the existing firmsData in storage
-          const firmsDataStr = storage?.getItem('firmsData');
-          if (firmsDataStr) {
-            try {
-              const firms = JSON.parse(firmsDataStr);
-              const updatedFirms = firms.map(firm => ({
-                ...firm,
-                is_current: firm.id === switchedFirmId
-              }));
-              storage.setItem('firmsData', JSON.stringify(updatedFirms));
-            } catch (e) {
-              // Silently handle parsing errors
-            }
-          }
-        }
-        
-        // Also update the local memberships state to reflect the current firm
-        const updatedMemberships = memberships.map(m => ({
-          ...m,
-          is_current: (m.firm?.id === switchedFirmId) || (m.firm_id === switchedFirmId)
-        }));
-        setMemberships(updatedMemberships);
-
-        // Update current firm in state - mark the switched membership as current
-        const updatedMembership = {
-          ...membership,
-          is_current: true
-        };
-        setCurrentFirm(updatedMembership);
-        setShowDropdown(false);
-
-        toast.success(`Switched to ${membership.firm?.name || 'firm'}`, {
-          position: 'top-right',
-          autoClose: 2000,
-        });
-
-        // Navigate based on determinedUserType (from membership role) - this is the most reliable
-        // The determinedUserType was set based on the membership role, which is what we want
-        const determinedUserTypeLower = determinedUserType ? String(determinedUserType).toLowerCase() : '';
-        
-        let redirectPath = '/dashboard'; // default fallback
-
-        console.log('AccountSwitcher - Redirect logic:', {
-          determinedUserType,
-          determinedUserTypeLower,
-          membershipRole: membership.role,
-          membershipUserType: membership.user_type
-        });
-
-        // Use determinedUserType as primary source (from membership role)
-        if (determinedUserTypeLower === 'admin' || determinedUserTypeLower === 'firm') {
-          redirectPath = '/firmadmin';
-        } else if (determinedUserTypeLower === 'tax_preparer') {
-          redirectPath = '/taxdashboard';
-        } else if (determinedUserTypeLower === 'client' || determinedUserTypeLower === 'taxpayer') {
-          redirectPath = '/dashboard';
-        } else {
-          // Fallback: check membership role directly if determinedUserType didn't match
-          const membershipRole = membership.role || membership.user_type;
-          const membershipRoleLower = membershipRole ? String(membershipRole).toLowerCase() : '';
-          
-          console.log('AccountSwitcher - Fallback to membership role:', membershipRoleLower);
-          
-          if (membershipRoleLower === 'firm_admin' || membershipRoleLower === 'admin' || membershipRoleLower === 'firm' || membershipRoleLower === 'firmadmin') {
-            redirectPath = '/firmadmin';
-          } else if (membershipRoleLower === 'team_member' || membershipRoleLower === 'teammember' || membershipRoleLower === 'staff' || 
-                     membershipRoleLower === 'tax_preparer' || membershipRoleLower === 'taxpreparer') {
-            redirectPath = '/taxdashboard';
-          } else if (membershipRoleLower === 'taxpayer' || membershipRoleLower === 'client') {
-            redirectPath = '/dashboard';
-          }
-        }
-        
-        console.log('AccountSwitcher - Final redirect path:', redirectPath);
-
-        // Reload to update context
-        setTimeout(() => {
-          window.location.href = getPathWithPrefix(redirectPath);
-        }, 500);
       } else {
-        throw new Error(response.message || 'Failed to switch firm');
+         // Different firm (or fallback) -> Use Switch Firm API
+         console.log('AccountSwitcher: Switching Firm', targetMembership.firm.id);
+         const res = await userAPI.switchFirm(targetMembership.firm.id);
+         if (!res.success) {
+            throw new Error(res.message || 'Firm switch failed');
+         }
+         responseData = res.data;
       }
+
+      // Handle Successful Switch
+      if (responseData) {
+         // 1. Update Tokens
+         if (responseData.tokens) {
+            setTokens(responseData.tokens.access, responseData.tokens.refresh, true);
+         }
+
+         // 2. Get Fresh Storage Reference (Critical step!)
+         const storage = getStorage();
+         
+         // 3. Update User Data
+         if (responseData.user && storage) {
+            storage.setItem('userData', JSON.stringify(responseData.user));
+            storage.setItem('isLoggedIn', 'true');
+         }
+         
+         // 4. Update Firms Data
+         if (responseData.firms && Array.isArray(responseData.firms) && storage) {
+            // We store the raw response. is_current will be recalculated on next load.
+            // But we can help it by mapping active flag if needed.
+            // Actually, let's just store raw data. processMemberships handles the rest.
+            storage.setItem('firmsData', JSON.stringify(responseData.firms));
+         }
+
+         // 5. Determine Redirect Path & User Type
+         const role = normalizeRole(targetMembership.role);
+         let redirectPath = '/dashboard';
+         let userType = 'client';
+
+         if (['firm_admin', 'admin', 'firm', 'firmadmin'].includes(role)) {
+            redirectPath = '/firmadmin';
+            userType = 'admin';
+         } else if (['team_member', 'teammember', 'tax_preparer', 'taxpreparer', 'staff'].includes(role)) {
+            redirectPath = '/taxdashboard';
+            userType = 'tax_preparer';
+         } else if (['client', 'taxpayer'].includes(role)) {
+            redirectPath = '/dashboard';
+            userType = 'client';
+         } else if (['super_admin'].includes(role)) {
+            redirectPath = '/superadmin';
+            userType = 'super_admin'; 
+         }
+
+         // 6. Set User Type (CRITICAL for Route Protection)
+         if (storage) {
+            storage.setItem('userType', userType);
+         }
+
+         // 7. Feedback & Redirect
+         const displayRole = ROLE_DISPLAY_NAMES[role] || role;
+         toast.success(`Switched to ${targetMembership.firm.name} (${displayRole})`);
+         setShowDropdown(false);
+
+         // Force Reload to clear state/cache and ensure context update
+         setTimeout(() => {
+            window.location.href = getPathWithPrefix(redirectPath);
+         }, 500);
+      }
+
     } catch (error) {
-      // Silently handle errors - toast will show user-friendly message
-      toast.error(handleAPIError(error) || 'Failed to switch firm', {
-        position: 'top-right',
-        autoClose: 3000,
-      });
+       console.error("Switch failed", error);
+       toast.error(handleAPIError(error) || 'Failed to switch account');
     } finally {
-      setSwitching(false);
+       setSwitching(false);
     }
   };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && buttonRef.current && !buttonRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (showDropdown) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
-  // Don't show if no memberships or only one membership
-  // Always return null immediately if loading or if we don't have multiple memberships
-  // This prevents blocking the page
-  if (loading) {
-    // Still loading, but don't block - return null immediately
-    return null;
-  }
 
-  if (!memberships || memberships.length <= 1) {
-    return null;
-  }
+  if (!currentMembership) return null;
+  if (!memberships || memberships.length <= 1) return null;
 
-  if (!currentFirm) {
-    return null;
-  }
-
-  const currentFirmName = currentFirm.firm?.name || 'Firm';
-  const currentRole = ROLE_DISPLAY_NAMES[currentFirm.role] || currentFirm.role || 'Member';
-  const currentStatus = currentFirm.status || 'active';
-
+  // Use display names
+  // Use explicit mapping to ensure "Team Member" -> "Tax Preparer" visually
+  const normalizedCurrentRole = normalizeRole(currentMembership.role);
+  const currentRoleName = ROLE_DISPLAY_NAMES[normalizedCurrentRole] || 'Member';
+  
   return (
     <div className="position-relative account-switcher-container">
       <button
         ref={buttonRef}
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={() => !switching && setShowDropdown(!showDropdown)}
         className="account-switcher-button"
         disabled={switching}
       >
         <div className="account-switcher-content">
-          <div className="account-switcher-firm-name">{currentFirmName}</div>
+          <div className="account-switcher-firm-name">{currentMembership.firm.name}</div>
           <div className="account-switcher-meta">
-            <span className="account-switcher-role">{currentRole}</span>
+            <span className="account-switcher-role">{currentRoleName}</span>
             <span className="account-switcher-separator">•</span>
             <span
               className="account-switcher-status"
-              style={{ color: STATUS_COLORS[currentStatus] || STATUS_COLORS.active }}
+              style={{ color: STATUS_COLORS[currentMembership.status] || STATUS_COLORS.active }}
             >
-              {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
+              {currentMembership.status.charAt(0).toUpperCase() + currentMembership.status.slice(1)}
             </span>
           </div>
         </div>
-        <FiChevronDown
-          className={`account-switcher-arrow ${showDropdown ? 'open' : ''}`}
-        />
+        <FiChevronDown className={`account-switcher-arrow ${showDropdown ? 'open' : ''}`} />
       </button>
 
       {showDropdown && (
         <div ref={dropdownRef} className="account-switcher-dropdown">
-          <div className="account-switcher-dropdown-header">All Firms</div>
+          <div className="account-switcher-dropdown-header">Select Account</div>
           <div className="account-switcher-dropdown-list">
             {memberships.map((membership) => {
-              const isCurrent = membership.firm?.id === currentFirm.firm?.id;
-              const firmName = membership.firm?.name || 'Firm';
-              const role = ROLE_DISPLAY_NAMES[membership.role] || membership.role || 'Member';
-              const status = membership.status || 'active';
-              const officeScope = membership.office_scope || membership.offices || [];
-
+              const isCurrent = membership.is_current;
+              const roleCode = normalizeRole(membership.role);
+              const roleName = ROLE_DISPLAY_NAMES[roleCode] || membership.role;
+              const key = `${membership.firm.id}-${membership.role}`;
+              
               return (
                 <div
-                  key={membership.id || membership.firm?.id}
-                  className={`account-switcher-item ${isCurrent ? 'current' : ''} ${status === 'pending' ? 'pending' : ''}`}
-                  onClick={() => !isCurrent && handleSwitchFirm(membership)}
-                  style={{ cursor: isCurrent ? 'default' : 'pointer' }}
+                  key={key}
+                  className={`account-switcher-item ${isCurrent ? 'current' : ''}`}
+                  onClick={() => !isCurrent && handleSwitch(membership)}
                 >
                   <div className="account-switcher-item-header">
-                    {isCurrent && (
-                      <FiCheck className="account-switcher-check-icon" />
-                    )}
+                    {isCurrent && <FiCheck className="account-switcher-check-icon" />}
                     <div className="account-switcher-item-content">
-                      <div className="account-switcher-item-firm-name">{firmName}</div>
+                      <div className="account-switcher-item-firm-name">{membership.firm.name}</div>
                       <div className="account-switcher-item-meta">
-                        <span className="account-switcher-item-role">{role}</span>
+                        <span className="account-switcher-item-role">{roleName}</span>
                         <span className="account-switcher-separator">•</span>
-                        <span
-                          className="account-switcher-item-status"
-                          style={{ color: STATUS_COLORS[status] || STATUS_COLORS.active }}
-                        >
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </span>
+                           <span
+                              className="account-switcher-item-status"
+                              style={{ color: STATUS_COLORS[membership.status] || STATUS_COLORS.active }}
+                           >
+                              {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
+                           </span>
                       </div>
-                      {officeScope.length > 0 && (
-                        <div className="account-switcher-office-scope">
-                          Offices: {officeScope.map(o => o.name || o).join(', ')}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -448,4 +431,3 @@ export default function AccountSwitcher() {
     </div>
   );
 }
-

@@ -35,13 +35,13 @@ function AdminProtectedRoute({ children }) {
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
   }
-  
+
   // Check user type
   const storage = getStorage();
   const userType = storage?.getItem("userType");
-  
+
   console.log('Admin Protected Route - User type:', userType);
-  
+
   // Only allow admin, super_admin, and tax_preparer access
   if (userType !== 'admin' && userType !== 'super_admin' && userType !== 'tax_preparer') {
     console.warn('Unauthorized access attempt to Tax Dashboard');
@@ -52,7 +52,7 @@ function AdminProtectedRoute({ children }) {
       return <Navigate to="/login" replace />;
     }
   }
-  
+
   return children;
 }
 
@@ -64,26 +64,26 @@ function PermissionProtectedRoute({ children, requiredGroup }) {
   if (!userDataStr) {
     return children;
   }
-  
+
   try {
     const userData = JSON.parse(userDataStr);
     const customRole = userData?.custom_role;
-    
+
     // If no custom role, allow access
     if (!customRole || !customRole.permission_groups) {
       return children;
     }
-    
+
     // full_control grants access to everything
     if (customRole.permission_groups.includes('full_control')) {
       return children;
     }
-    
+
     // Check if user has the required permission group
     if (requiredGroup && !hasPermissionGroup(requiredGroup)) {
       return <Navigate to="/taxdashboard" replace />;
     }
-    
+
     return children;
   } catch (error) {
     console.error('Error checking permissions:', error);
@@ -97,7 +97,7 @@ function TaxPreparerPermissionRoute({ children, requiredPermission }) {
   if (requiredPermission && !hasTaxPreparerPermission(requiredPermission)) {
     return <Navigate to="/taxdashboard" replace />;
   }
-  
+
   return children;
 }
 
@@ -113,7 +113,7 @@ export default function TaxRoutes() {
         <Route index element={<TaxDashboard />} />
         <Route path="dashboard" element={<TaxDashboard />} />
         <Route path="dashboard-first" element={<TaxDashboardFirst />} />
-        
+
         {/* Documents routes */}
         <Route path="documents" element={
           <PermissionProtectedRoute requiredGroup="document">
@@ -127,52 +127,45 @@ export default function TaxRoutes() {
           </Route>
           <Route path="archived" element={<ArchivedFilesPage />} />
         </Route>
-         
+
         {/* Tasks */}
         <Route path="tasks" element={
           <PermissionProtectedRoute requiredGroup="todo">
             <TasksPage />
           </PermissionProtectedRoute>
         } />
-        
+
         {/* Messages */}
         <Route path="messages" element={
           <PermissionProtectedRoute requiredGroup="messages">
             <MessagePage />
           </PermissionProtectedRoute>
         } />
-        
+
         {/* Calendar */}
         <Route path="calendar" element={
           <PermissionProtectedRoute requiredGroup="appointment">
             <CalendarPage />
           </PermissionProtectedRoute>
         } />
-        
+
         {/* E-Signature Dashboard */}
         <Route path="e-signatures" element={
           <PermissionProtectedRoute requiredGroup="esign">
             <ESignatureDashboard />
           </PermissionProtectedRoute>
         } />
-        
+
         {/* Account Settings */}
         <Route path="account" element={<AccountSettings />} />
         <Route path="settings" element={<AccountSettings />} />
-        
+
         {/* Invoices */}
         <Route path="invoices" element={<InvoicesPage />} />
-        
+
         {/* Billing & Invoicing - Only accessible if user has create_invoices permission */}
-        <Route 
-          path="billing" 
-          element={
-            <TaxPreparerPermissionRoute requiredPermission="create_invoices">
-              <TaxPreparerBilling />
-            </TaxPreparerPermissionRoute>
-          } 
-        />
-        
+        <Route path="billing" element={<TaxPreparerBilling />} />
+
         {/* My Clients */}
         <Route path="clients" element={
           <PermissionProtectedRoute requiredGroup="client">
@@ -198,9 +191,9 @@ export default function TaxRoutes() {
           <Route index element={<TaxPreparerWorkflows />} />
           <Route path=":instanceId" element={<WorkflowInstanceView />} />
         </Route>
-        
+
         {/* Add more routes here as needed */}
-        
+
         {/* 404 - Not Found */}
         <Route path="*" element={<Navigate to="/taxdashboard" replace />} />
       </Route>

@@ -208,7 +208,19 @@ export default function Messages() {
           });
 
           const sortedChats = sortConversationsByRecent(transformedChats);
-          setConversations(sortedChats);
+          
+          // Preserve existing subjects when updating conversations
+          setConversations(prevConvs => {
+            const mergedChats = sortedChats.map(newChat => {
+              const existingChat = prevConvs.find(conv => conv.id === newChat.id);
+              // Preserve subject from existing conversation if new one doesn't have it
+              return {
+                ...newChat,
+                subject: newChat.subject || (existingChat ? existingChat.subject : null),
+              };
+            });
+            return sortConversationsByRecent(mergedChats);
+          });
 
           if (threadIdFromUrl || clientIdFromUrl) {
             let targetThread = null;
@@ -391,6 +403,8 @@ export default function Messages() {
                     time: formatRelativeTime(lastTimestamp),
                     lastMessageAt: lastTimestamp,
                     messages: transformedMessages,
+                    // Ensure subject is preserved
+                    subject: conv.subject || thread.subject,
                   }
                   : conv
               );
@@ -544,11 +558,13 @@ export default function Messages() {
             const updated = prevConvs.map(conv =>
               conv.id === activeConversationId
                 ? {
-                  ...conv,
-                  lastMessage: lastMessage.text,
-                  time: "Just now",
-                  lastMessageAt: lastMessage.date || new Date().toISOString(),
-                }
+                    ...conv,
+                    lastMessage: lastMessage.text,
+                    time: "Just now",
+                    lastMessageAt: lastMessage.date || new Date().toISOString(),
+                    // Ensure subject is preserved
+                    subject: conv.subject,
+                  }
                 : conv
             );
             return sortConversationsByRecent(updated);
@@ -636,6 +652,8 @@ export default function Messages() {
               lastMessage: messageText || (attachment ? `📎 ${attachment.name}` : ''),
               time: "Just now",
               lastMessageAt: optimisticTimestamp,
+              // Ensure subject is preserved
+              subject: conv.subject,
             }
             : conv
         );

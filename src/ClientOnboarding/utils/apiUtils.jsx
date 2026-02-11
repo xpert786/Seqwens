@@ -641,6 +641,11 @@ export const userAPI = {
       firm_id: firmId,
     };
     return await apiRequest('/user/switch-firm/', 'POST', payload);
+  },
+
+  // Get pending invites for the user
+  getPendingInvites: async () => {
+    return await apiRequest('/user/invites/pending/', 'GET');
   }
 };
 
@@ -4103,6 +4108,10 @@ export const firmAdminStaffAPI = {
   // Lightweight staff directory for assigning managers or participants
   listBasicStaff: async () => {
     return await apiRequest('/taxpayer/firm-admin/staff/', 'GET');
+  },
+  // List all staff members plus firm admin
+  listStaffWithAdmin: async () => {
+    return await apiRequest('/user/firm-admin/staff/list-with-admin/', 'GET');
   },
   // Get firm with tax preparers (for assign staff dropdown)
   getFirmWithTaxPreparers: async () => {
