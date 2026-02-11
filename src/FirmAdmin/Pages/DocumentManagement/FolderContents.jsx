@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Modal, Button } from "react-bootstrap";
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { FaEye, FaDownload, FaTrash } from "react-icons/fa";
 import { DocumentUpload, DocumentBrowseFolder, DocumentPdfIcon, DocumentTextIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentCriticalIssuesIcon, DocumentDownload } from '../../Components/icons';
 import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
@@ -35,6 +37,10 @@ export default function FolderContents() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
 
   // Pagination state
   const [documentsCurrentPage, setDocumentsCurrentPage] = useState(1);
@@ -350,24 +356,29 @@ export default function FolderContents() {
   };
 
   // Handle delete document
-  const handleDelete = async (doc) => {
+  // Handle delete document - Open Modal
+  const handleDelete = (doc) => {
     if (!doc.clientId) {
       console.error("Missing client information for deletion");
       toast.error("Cannot delete document: Missing client information");
       return;
     }
+    setDocumentToDelete(doc);
+    setShowDeleteModal(true);
+  };
 
-    // Confirm deletion
-    if (!window.confirm(`Are you sure you want to delete "${doc.name}"? This action cannot be undone.`)) {
-      return;
-    }
+  // Confirm deletion logic
+  const confirmDelete = async () => {
+    if (!documentToDelete) return;
 
     try {
-      await firmAdminDocumentsAPI.deleteDocument(doc.clientId, doc.id);
+      await firmAdminDocumentsAPI.deleteDocument(documentToDelete.clientId, documentToDelete.id);
       toast.success("Document deleted successfully");
 
       // Refresh the list
       fetchFolderContents();
+      setShowDeleteModal(false);
+      setDocumentToDelete(null);
     } catch (err) {
       console.error("Error deleting document:", err);
       toast.error(handleAPIError(err) || "Failed to delete document");
@@ -608,7 +619,7 @@ export default function FolderContents() {
                               <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
                             </td>
                             <td className="py-4 px-4">
-                              <div className="relative actions-menu-container">
+                              <div className={`relative actions-menu-container ${openActionsMenu === doc.id ? 'z-50' : ''}`}>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -624,16 +635,17 @@ export default function FolderContents() {
                                   </svg>
                                 </button>
                                 {openActionsMenu === doc.id && (
-                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 foldercontents-actions-menu" style={{ borderRadius: '8px' }}>
+                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-xl z-50 py-1 foldercontents-actions-menu overflow-hidden" style={{ borderRadius: '8px' }}>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleViewDetails(doc);
                                       }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#F56D2D] transition-colors"
+                                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                      View Details
+                                      <FaEye className="w-4 h-4" />
+                                      <span>View Details</span>
                                     </button>
                                     <button
                                       onClick={(e) => {
@@ -641,10 +653,11 @@ export default function FolderContents() {
                                         handleDownload(doc);
                                         setOpenActionsMenu(null);
                                       }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                      Download
+                                      <FaDownload className="w-4 h-4" />
+                                      <span>Download</span>
                                     </button>
                                     <button
                                       onClick={(e) => {
@@ -652,10 +665,11 @@ export default function FolderContents() {
                                         handleDelete(doc);
                                         setOpenActionsMenu(null);
                                       }}
-                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-3"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                      Delete
+                                      <FaTrash className="w-4 h-4" />
+                                      <span>Delete</span>
                                     </button>
                                   </div>
                                 )}
@@ -729,7 +743,28 @@ export default function FolderContents() {
       )}
 
       {/* Always render the Outlet so nested routes can render immediately */}
+      {/* Always render the Outlet so nested routes can render immediately */}
       <Outlet />
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro' }} className="text-lg font-semibold text-gray-900">Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Are you sure you want to delete <strong className="font-semibold text-gray-800">"{documentToDelete?.name}"</strong>? This action cannot be undone.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete} style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Delete Document
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

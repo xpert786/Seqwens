@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  getSavedCards, 
-  deleteCard, 
-  setDefaultCard 
+import { Modal, Button } from 'react-bootstrap';
+import {
+  getSavedCards,
+  deleteCard,
+  setDefaultCard
 } from "../../../utils/paymentMethodsService";
 import AddPaymentMethodModalWithStripe from './AddPaymentMethodModalWithStripe';
 import './styles/SavedPaymentMethods.css';
@@ -31,6 +32,10 @@ const SavedPaymentMethods = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [settingDefaultId, setSettingDefaultId] = useState(null);
 
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState(null);
+
   // Load saved cards on mount
   useEffect(() => {
     loadSavedCards();
@@ -43,9 +48,9 @@ const SavedPaymentMethods = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await getSavedCards();
-      
+
       if (response.success) {
         setCards(response.data.payment_methods || []);
         // Removed stripe_customer_id and default_payment_method_id for security
@@ -68,7 +73,7 @@ const SavedPaymentMethods = () => {
   const handleCardAdded = (newCard) => {
     setSuccess('Card added successfully!');
     loadSavedCards();
-    
+
     // Clear success message after 3 seconds
     setTimeout(() => {
       setSuccess('');
@@ -76,18 +81,24 @@ const SavedPaymentMethods = () => {
   };
 
   /**
-   * Delete a saved card
+   * Delete a saved card - Open Modal
    */
-  const handleDeleteCard = async (cardId) => {
-    if (!window.confirm('Are you sure you want to delete this card?')) {
-      return;
-    }
+  const handleDeleteCard = (cardId) => {
+    setCardToDelete(cardId);
+    setShowDeleteModal(true);
+  };
+
+  /**
+   * Confirm and process card deletion
+   */
+  const confirmDelete = async () => {
+    if (!cardToDelete) return;
 
     try {
-      setDeletingId(cardId);
+      setDeletingId(cardToDelete);
       setError('');
 
-      const response = await deleteCard(cardId);
+      const response = await deleteCard(cardToDelete);
 
       if (response.success) {
         setSuccess('Card deleted successfully');
@@ -105,6 +116,8 @@ const SavedPaymentMethods = () => {
       setError(err.message || 'Error deleting card. Please try again.');
     } finally {
       setDeletingId(null);
+      setShowDeleteModal(false);
+      setCardToDelete(null);
     }
   };
 
@@ -237,7 +250,7 @@ const SavedPaymentMethods = () => {
                     <p className="card-number">•••• {card.last4}</p>
                   </div>
                 </div>
-                
+
                 {card.is_default && (
                   <span className="badge badge-default">Default</span>
                 )}
@@ -300,7 +313,7 @@ const SavedPaymentMethods = () => {
         <div className="info-card">
           <h3 className="info-card-title">🔒 Security</h3>
           <p className="info-card-text">
-            Your card information is securely processed and stored by Stripe. 
+            Your card information is securely processed and stored by Stripe.
             We never store your full card details.
           </p>
         </div>
@@ -308,7 +321,7 @@ const SavedPaymentMethods = () => {
         <div className="info-card">
           <h3 className="info-card-title">⚙️ Auto-Renewal</h3>
           <p className="info-card-text">
-            Your default payment method will be used for automatic subscription renewals. 
+            Your default payment method will be used for automatic subscription renewals.
             You can change or update it anytime.
           </p>
         </div>
@@ -316,7 +329,7 @@ const SavedPaymentMethods = () => {
         <div className="info-card">
           <h3 className="info-card-title">🗑️ Deletion</h3>
           <p className="info-card-text">
-            Deleted cards are removed from your account and Stripe. 
+            Deleted cards are removed from your account and Stripe.
             You cannot use them for future charges.
           </p>
         </div>
@@ -328,6 +341,26 @@ const SavedPaymentMethods = () => {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleCardAdded}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro' }} className="text-lg font-semibold text-gray-900">Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Are you sure you want to delete this card? This action cannot be undone.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete} style={{ fontFamily: 'BasisGrotesquePro' }} disabled={deletingId}>
+            {deletingId ? 'Deleting...' : 'Delete Card'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

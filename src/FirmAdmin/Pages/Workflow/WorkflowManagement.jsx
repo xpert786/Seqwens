@@ -201,7 +201,6 @@ const WorkflowManagement = () => {
     setSelectedTemplate(null);
     fetchInstances();
     fetchStatistics();
-    toast.success('Workflow started successfully!');
   };
 
   const handleCloneTemplate = async (template) => {
@@ -309,7 +308,7 @@ const WorkflowManagement = () => {
           statistics={statistics}
           loading={statsLoading}
           onStatClick={(key) => {
-            if (key === 'active_workflows') setActiveTab('pipeline');
+            if (key === 'active_workflows') setActiveTab('active');
             else if (key === 'total_templates') setActiveTab('templates');
           }}
         />
@@ -322,8 +321,8 @@ const WorkflowManagement = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-[BasisGrotesquePro] transition-all !rounded-lg ${activeTab === tab.id
-                  ? 'bg-[#F56D2D] text-white'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-[#F56D2D] text-white shadow-sm'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-50'
                   }`}
               >
                 <span>{tab.icon}</span>

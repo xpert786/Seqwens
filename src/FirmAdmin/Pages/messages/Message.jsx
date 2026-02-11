@@ -430,7 +430,29 @@ const Messages = () => {
       const response = await firmAdminMessagingAPI.getActiveUsers(params);
 
       if (response.success && response.data && response.data.users) {
-        setActiveUsers(response.data.users || []);
+        let users = response.data.users || [];
+
+        // Filter out users who already have a conversation
+        if (conversations && conversations.length > 0) {
+          const existingThreadUserIds = new Set();
+
+          conversations.forEach(conv => {
+            // Check for client in conversation
+            if (conv.client && conv.client.id) {
+              existingThreadUserIds.add(conv.client.id);
+            }
+            // Check for staff in conversation
+            if (conv.assigned_staff && Array.isArray(conv.assigned_staff)) {
+              conv.assigned_staff.forEach(staff => {
+                if (staff && staff.id) existingThreadUserIds.add(staff.id);
+              });
+            }
+          });
+
+          users = users.filter(user => !existingThreadUserIds.has(user.id));
+        }
+
+        setActiveUsers(users);
       } else {
         setActiveUsers([]);
       }

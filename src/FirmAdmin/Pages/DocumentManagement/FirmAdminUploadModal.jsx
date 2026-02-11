@@ -653,6 +653,38 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                     />
                 </div>
 
+                {step === 1 && files.length > 0 && (
+                    <div className="mb-4">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                            <h6 className="m-0 text-sm font-semibold">Selected Files ({files.length})</h6>
+                            <Button variant="link" className="p-0 text-decoration-none small text-danger" onClick={() => setFiles([])}>Clear All</Button>
+                        </div>
+                        <div className="border rounded bg-light" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {files.map((file, idx) => (
+                                <div key={idx} className="d-flex justify-content-between align-items-center p-2 border-bottom bg-white m-1 rounded shadow-sm">
+                                    <div className="d-flex align-items-center text-truncate" style={{ flex: 1 }}>
+                                        <div className="me-2 text-primary">
+                                            <FaRegFileAlt />
+                                        </div>
+                                        <div className="text-truncate" style={{ maxWidth: '80%' }}>
+                                            <span className="fw-medium small">{file.name}</span>
+                                        </div>
+                                        <span className="text-muted ms-2 small border-start ps-2">{file.size}</span>
+                                    </div>
+                                    <span
+                                        className="cursor-pointer p-1 text-gray-400 hover:text-danger"
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => removeFile(idx)}
+                                        title="Remove file"
+                                    >
+                                        <CrossIcon />
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {step === 1 && (
                     <div className="d-flex justify-content-end gap-2">
                         <Button className="btn-cancel-custom" onClick={resetModal}>

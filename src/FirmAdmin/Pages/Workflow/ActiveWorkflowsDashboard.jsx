@@ -12,7 +12,7 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
 
   const filteredInstances = instances.filter(instance => {
     const matchesFilter = filter === 'all' || instance.status === filter;
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       (instance.tax_case_name || instance.tax_case?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (instance.template_name || instance.workflow_template?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (instance.tax_case_email || instance.tax_case?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -43,7 +43,7 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
 
   const handleDeleteConfirm = async () => {
     if (!instanceToDelete) return;
-    
+
     try {
       setDeleting(true);
       const response = await workflowAPI.deleteWorkflowInstance(instanceToDelete.id);
@@ -128,7 +128,7 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
           <div className="text-gray-400 text-6xl mb-4">📋</div>
           <p className="text-gray-500 text-lg">No active workflows found</p>
           <p className="text-gray-400 text-sm mt-2">
-            {searchTerm || filter !== 'all' 
+            {searchTerm || filter !== 'all'
               ? 'Try adjusting your filters'
               : 'Start a workflow for a tax case to see it here'}
           </p>
@@ -137,33 +137,33 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
         <div className="space-y-4">
           {filteredInstances.map((instance) => {
             // Use flat structure from API response, with fallback to details objects
-            const templateName = instance.template_name || 
-                               instance.workflow_template_details?.name || 
-                               instance.workflow_template?.name || 
-                               'Unknown Workflow';
-            const taxCaseName = instance.tax_case_name || 
-                              instance.tax_case_details?.name || 
-                              (instance.tax_case_details?.first_name && instance.tax_case_details?.last_name
-                                ? `${instance.tax_case_details.first_name} ${instance.tax_case_details.last_name}`.trim()
-                                : null) ||
-                              instance.tax_case?.name || 
-                              'Unknown Client';
-            const taxCaseEmail = instance.tax_case_email || 
-                               instance.tax_case_details?.email || 
-                               instance.tax_case?.email || 
-                               '';
-            const currentStageName = instance.current_stage_name || 
-                                   instance.current_stage_details?.name || 
-                                   instance.current_stage?.name || 
-                                   'N/A';
-            const assignedPreparer = instance.assigned_preparer_name || 
-                                   instance.assigned_preparer_details?.name ||
-                                   instance.assigned_preparer_details?.full_name || 
-                                   (instance.assigned_preparer_details?.first_name && instance.assigned_preparer_details?.last_name 
-                                     ? `${instance.assigned_preparer_details.first_name} ${instance.assigned_preparer_details.last_name}`.trim()
-                                     : null) ||
-                                   null;
-            
+            const templateName = instance.template_name ||
+              instance.workflow_template_details?.name ||
+              instance.workflow_template?.name ||
+              'Unknown Workflow';
+            const taxCaseName = instance.tax_case_name ||
+              instance.tax_case_details?.name ||
+              (instance.tax_case_details?.first_name && instance.tax_case_details?.last_name
+                ? `${instance.tax_case_details.first_name} ${instance.tax_case_details.last_name}`.trim()
+                : null) ||
+              instance.tax_case?.name ||
+              'Unknown Client';
+            const taxCaseEmail = instance.tax_case_email ||
+              instance.tax_case_details?.email ||
+              instance.tax_case?.email ||
+              '';
+            const currentStageName = instance.current_stage_name ||
+              instance.current_stage_details?.name ||
+              instance.current_stage?.name ||
+              'N/A';
+            const assignedPreparer = instance.assigned_preparer_name ||
+              instance.assigned_preparer_details?.name ||
+              instance.assigned_preparer_details?.full_name ||
+              (instance.assigned_preparer_details?.first_name && instance.assigned_preparer_details?.last_name
+                ? `${instance.assigned_preparer_details.first_name} ${instance.assigned_preparer_details.last_name}`.trim()
+                : null) ||
+              null;
+
             return (
               <div
                 key={instance.id}
@@ -256,29 +256,28 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
                   </div>
 
                   {/* Additional Details */}
+                  {/* Additional Details */}
                   {(instance.workflow_template_details?.description || instance.current_stage_details?.description) && (
-                    <div className="border-t border-[#E8F0FF] pt-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {/* Workflow Template Description */}
-                        {instance.workflow_template_details?.description && (
-                          <div>
-                            <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Template Description</p>
-                            <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                              {instance.workflow_template_details.description}
-                            </p>
-                          </div>
-                        )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      {/* Workflow Template Description */}
+                      {instance.workflow_template_details?.description && (
+                        <div className="bg-gray-50 rounded-lg p-3" style={{ borderRadius: '8px' }}>
+                          <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Template Description</p>
+                          <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                            {instance.workflow_template_details.description}
+                          </p>
+                        </div>
+                      )}
 
-                        {/* Current Stage Description */}
-                        {instance.current_stage_details?.description && (
-                          <div>
-                            <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Stage Description</p>
-                            <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                              {instance.current_stage_details.description}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      {/* Current Stage Description */}
+                      {instance.current_stage_details?.description && (
+                        <div className="bg-gray-50 rounded-lg p-3" style={{ borderRadius: '8px' }}>
+                          <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Stage Description</p>
+                          <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                            {instance.current_stage_details.description}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 

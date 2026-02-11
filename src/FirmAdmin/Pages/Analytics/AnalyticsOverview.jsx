@@ -112,19 +112,7 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
         </svg>
       )
     },
-    {
-      title: 'Refund Transfers',
-      value: analyticsData.kpis.refund_transfers?.formatted || '$0.00',
-      subtext: analyticsData.kpis.refund_transfers?.subtext || 'Bank Adoption 0%',
-      growth: 0,
-      isPositive: true,
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M23 6L13.5 15.5L8.5 10.5L1 18" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M17 6H23V12" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    },
+
     {
       title: 'Fees (Bank + Software)',
       value: analyticsData.kpis.fees_bank_software?.formatted || '$0.00',

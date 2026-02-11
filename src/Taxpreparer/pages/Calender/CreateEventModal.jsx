@@ -4,6 +4,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import { US_TIMEZONES } from '../../../utils/timezoneConstants';
 
 const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   const [formData, setFormData] = useState({
@@ -17,7 +18,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
     description: '',
     meeting_type: 'zoom'
   });
-  
+
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -114,7 +115,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.event_title.trim()) {
       toast.error('Please enter event title', {
@@ -319,11 +320,11 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
                 style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
                 required
               >
-                <option value="America/New_York">America/New_York (EST)</option>
-                <option value="America/Chicago">America/Chicago (CST)</option>
-                <option value="America/Denver">America/Denver (MST)</option>
-                <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
-                <option value="America/Phoenix">America/Phoenix (MST - No DST)</option>
+                {US_TIMEZONES.map((tz) => (
+                  <option key={tz.value} value={tz.value}>
+                    {tz.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

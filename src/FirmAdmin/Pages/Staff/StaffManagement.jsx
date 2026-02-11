@@ -3,7 +3,7 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaLink, FaEnvelope, FaSms, FaCopy } from 'react-icons/fa';
+import { FaLink, FaEnvelope, FaSms, FaCopy, FaUserCircle } from 'react-icons/fa';
 import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon, CrossesIcon, UserManage } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
@@ -1406,41 +1406,42 @@ export default function StaffManagement() {
                     Previous
                   </button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size) }, (_, i) => i + 1)
-                      .filter((page) => {
-                        const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
-                        return (
-                          page === 1 ||
-                          page === totalPages ||
-                          (page >= pendingInvitesPage - 1 && page <= pendingInvitesPage + 1)
-                        );
-                      })
-                      .map((page, index, array) => {
-                        const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
-                        const prevPage = array[index - 1];
-                        const showEllipsisBefore = prevPage && page - prevPage > 1;
-                        const showEllipsisAfter = index === array.length - 1 && page < totalPages;
+                    {(() => {
+                      const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
+                      return Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          return (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= pendingInvitesPage - 1 && page <= pendingInvitesPage + 1)
+                          );
+                        })
+                        .map((page, index, array) => {
+                          const prevPage = array[index - 1];
+                          const showEllipsisBefore = prevPage && page - prevPage > 1;
+                          const showEllipsisAfter = index === array.length - 1 && page < totalPages;
 
-                        return (
-                          <React.Fragment key={page}>
-                            {showEllipsisBefore && (
-                              <span className="px-2 text-gray-500">...</span>
-                            )}
-                            <button
-                              onClick={() => setPendingInvitesPage(page)}
-                              className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${pendingInvitesPage === page
-                                ? 'bg-[#F56D2D] text-white'
-                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                }`}
-                            >
-                              {page}
-                            </button>
-                            {showEllipsisAfter && (
-                              <span className="px-2 text-gray-500">...</span>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
+                          return (
+                            <React.Fragment key={page}>
+                              {showEllipsisBefore && (
+                                <span className="px-2 text-gray-500">...</span>
+                              )}
+                              <button
+                                onClick={() => setPendingInvitesPage(page)}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${pendingInvitesPage === page
+                                  ? 'bg-[#3B82F6] text-white border border-[#3B82F6]'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                  }`}
+                              >
+                                {page}
+                              </button>
+                              {showEllipsisAfter && (
+                                <span className="px-2 text-gray-500">...</span>
+                              )}
+                            </React.Fragment>
+                          );
+                        });
+                    })()}
                   </div>
                   <button
                     onClick={() => setPendingInvitesPage(prev => Math.min(Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size), prev + 1))}
@@ -1496,15 +1497,11 @@ export default function StaffManagement() {
                                   ) : null}
                                   {!mappedStaff.profilePicture ? (
                                     <div className="h-10 w-10 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] staff-avatar-fallback shadow-inner">
-                                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                                      </svg>
+                                      <FaUserCircle className="w-10 h-10 text-gray-300" />
                                     </div>
                                   ) : (
                                     <div className="h-10 w-10 rounded-full bg-[#E5E7EB] hidden items-center justify-center text-[#9CA3AF] staff-avatar-fallback shadow-inner">
-                                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                                      </svg>
+                                      <FaUserCircle className="w-10 h-10 text-gray-300" />
                                     </div>
                                   )}
                                 </div>
@@ -1623,18 +1620,42 @@ export default function StaffManagement() {
                         Previous
                       </button>
                       <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.ceil(staffData.length / staffPageSize) }, (_, i) => i + 1).map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => setStaffPage(page)}
-                            className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
-                              ? 'bg-[#F56D2D] text-white'
-                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                              }`}
-                          >
-                            {page}
-                          </button>
-                        ))}
+                        {(() => {
+                          const totalPages = Math.ceil(staffData.length / staffPageSize);
+                          return Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter((page) => {
+                              return (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= staffPage - 1 && page <= staffPage + 1)
+                              );
+                            })
+                            .map((page, index, array) => {
+                              const prevPage = array[index - 1];
+                              const showEllipsisBefore = prevPage && page - prevPage > 1;
+                              const showEllipsisAfter = index === array.length - 1 && page < totalPages;
+
+                              return (
+                                <React.Fragment key={page}>
+                                  {showEllipsisBefore && (
+                                    <span className="px-2 text-gray-500">...</span>
+                                  )}
+                                  <button
+                                    onClick={() => setStaffPage(page)}
+                                    className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
+                                      ? 'bg-[#3B82F6] text-white border border-[#3B82F6]'
+                                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                      }`}
+                                  >
+                                    {page}
+                                  </button>
+                                  {showEllipsisAfter && (
+                                    <span className="px-2 text-gray-500">...</span>
+                                  )}
+                                </React.Fragment>
+                              );
+                            });
+                        })()}
                       </div>
                       <button
                         onClick={() => setStaffPage(prev => Math.min(Math.ceil(staffData.length / staffPageSize), prev + 1))}

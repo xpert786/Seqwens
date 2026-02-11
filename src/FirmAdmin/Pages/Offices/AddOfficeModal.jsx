@@ -8,7 +8,8 @@ import { US_TIMEZONES } from './constants';
 
 const steps = [
     { id: 1, name: 'Basic Information' },
-    { id: 2, name: 'Operating Hours' }
+    { id: 2, name: 'Operating Hours' },
+    { id: 3, name: 'Branding' }
 ];
 
 const initialFormState = {
@@ -35,7 +36,15 @@ const initialFormState = {
         Friday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
         Saturday: { isOpen: true, startTime: '09:00 AM', endTime: '01:00 PM' },
         Sunday: { isOpen: false, startTime: '', endTime: '' }
-    }
+    },
+
+    // Branding
+    enable_office_branding: false,
+    logo: null,
+    favicon: null,
+    primary_color: '#F56D2D',
+    secondary_color: '#3AD6F2',
+    email_footer: ''
 };
 
 export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
@@ -220,8 +229,18 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                 payload.operation_hours = operationHours;
             }
 
-            // Prepare files (empty object since branding fields are removed)
+            // Branding fields
+            payload.enable_office_branding = formData.enable_office_branding;
+            payload.primary_color = formData.primary_color;
+            payload.secondary_color = formData.secondary_color;
+            if (formData.email_footer) {
+                payload.email_footer = formData.email_footer.trim();
+            }
+
+            // Files
             const files = {};
+            if (formData.logo) files.logo = formData.logo;
+            if (formData.favicon) files.favicon = formData.favicon;
 
             const response = await firmOfficeAPI.createOffice(payload, files);
 
@@ -331,10 +350,10 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                             <React.Fragment key={step.id}>
                                 <span
                                     className={`text-sm font-medium ${currentStep === step.id
+                                        ? 'text-[#F56D2D]'
+                                        : currentStep > step.id
                                             ? 'text-[#F56D2D]'
-                                            : currentStep > step.id
-                                                ? 'text-[#F56D2D]'
-                                                : 'text-gray-500'
+                                            : 'text-gray-500'
                                         }`}
                                 >
                                     {step.name}
@@ -618,6 +637,160 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </div>
                                 );
                             })}
+                        </div>
+                    )}
+                    {currentStep === 3 && (
+                        <div className="space-y-8 animate-in fade-in duration-300">
+                            {/* Branding Toggle */}
+                            <div className="flex items-center justify-between p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                <div>
+                                    <h5 className="text-sm font-bold text-gray-900">Enable Office-Level Branding</h5>
+                                    <p className="text-xs text-gray-500 mt-1">If enabled, this office will use its own logo, colors, and favicon instead of firm-wide branding.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(p => ({ ...p, enable_office_branding: !p.enable_office_branding }))}
+                                    className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${formData.enable_office_branding ? 'bg-[#F56D2D]' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${formData.enable_office_branding ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+
+                            <div className={`space-y-6 transition-all duration-300 ${!formData.enable_office_branding ? 'opacity-50 pointer-events-none' : ''}`}>
+                                {/* Image Uploads */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">Office Logo</label>
+                                        <div className="relative group">
+                                            <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all ${formData.logo ? 'border-primary-light bg-primary-50' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
+                                                {formData.logo ? (
+                                                    <div className="relative w-full h-full p-2 flex items-center justify-center">
+                                                        <img
+                                                            src={URL.createObjectURL(formData.logo)}
+                                                            alt="Logo Preview"
+                                                            className="max-w-full max-h-full object-contain"
+                                                        />
+                                                        <button
+                                                            onClick={() => setFormData(p => ({ ...p, logo: null }))}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+                                                        >
+                                                            <CrossesIcon className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center p-4">
+                                                        <div className="mx-auto w-10 h-10 bg-[#E8F0FF] rounded-full flex items-center justify-center text-[#F56D2D] mb-2">
+                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.585-1.585a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500">Click or drag to upload logo</p>
+                                                    </div>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    name="logo"
+                                                    onChange={handleInputChange}
+                                                    accept="image/*"
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">Office Favicon</label>
+                                        <div className="relative group">
+                                            <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all ${formData.favicon ? 'border-primary-light bg-primary-50' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
+                                                {formData.favicon ? (
+                                                    <div className="relative w-full h-full p-2 flex items-center justify-center">
+                                                        <img
+                                                            src={URL.createObjectURL(formData.favicon)}
+                                                            alt="Favicon Preview"
+                                                            className="w-12 h-12 object-contain"
+                                                        />
+                                                        <button
+                                                            onClick={() => setFormData(p => ({ ...p, favicon: null }))}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+                                                        >
+                                                            <CrossesIcon className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center p-4">
+                                                        <div className="mx-auto w-10 h-10 bg-[#E8F0FF] rounded-full flex items-center justify-center text-[#F56D2D] mb-2">
+                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
+                                                            </svg>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500">Click or drag to upload favicon</p>
+                                                    </div>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    name="favicon"
+                                                    onChange={handleInputChange}
+                                                    accept="image/*"
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Colors */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">Primary Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="color"
+                                                name="primary_color"
+                                                value={formData.primary_color}
+                                                onChange={handleInputChange}
+                                                className="w-12 h-12 !rounded-lg border border-gray-200 cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={formData.primary_color}
+                                                onChange={(e) => setFormData(p => ({ ...p, primary_color: e.target.value }))}
+                                                className="flex-1 px-4 py-2 border border-[#E8F0FF] !rounded-lg text-sm font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">Secondary Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="color"
+                                                name="secondary_color"
+                                                value={formData.secondary_color}
+                                                onChange={handleInputChange}
+                                                className="w-12 h-12 !rounded-lg border border-gray-200 cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={formData.secondary_color}
+                                                onChange={(e) => setFormData(p => ({ ...p, secondary_color: e.target.value }))}
+                                                className="flex-1 px-4 py-2 border border-[#E8F0FF] !rounded-lg text-sm font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Email Footer */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700">Custom Email Footer</label>
+                                    <textarea
+                                        name="email_footer"
+                                        value={formData.email_footer}
+                                        onChange={handleInputChange}
+                                        rows="4"
+                                        className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm resize-none"
+                                        placeholder="Add a custom footer to be appended to all office communications"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

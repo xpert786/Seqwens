@@ -3,14 +3,9 @@ import { toast } from "react-toastify";
 import { SaveIcon } from "../../Components/icons";
 import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
 import { superToastOptions } from "../../utils/toastConfig";
+import { US_TIMEZONES } from "../../../utils/timezoneConstants";
 import "../../style/Profile.css"
-const TIMEZONE_OPTIONS = [
-    { label: "Eastern (America/New_York)", value: "America/New_York" },
-    { label: "Central (America/Chicago)", value: "America/Chicago" },
-    { label: "Mountain (America/Denver)", value: "America/Denver" },
-    { label: "Pacific (America/Los_Angeles)", value: "America/Los_Angeles" },
-    { label: "UTC", value: "UTC" },
-];
+// Using central timezone constants
 
 const SESSION_TIMEOUT_OPTIONS = [15, 30, 45, 60, 90, 120, 240];
 
@@ -303,7 +298,7 @@ export default function Profile() {
                                     color: "#495057",
                                 }}
                             >
-                                {TIMEZONE_OPTIONS.map((option) => (
+                                {US_TIMEZONES.map((option) => (
                                     <option key={option.value} value={option.value}>
                                         {option.label}
                                     </option>

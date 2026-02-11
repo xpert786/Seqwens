@@ -4326,8 +4326,8 @@ export const firmOfficeAPI = {
     return await apiRequest(`/firm/office-locations/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
   createOffice: async (officeData, files = {}) => {
-    // Check if there are file uploads (logo, signature)
-    const hasFiles = files.logo || files.signature;
+    // Check if there are file uploads (logo, favicon, signature)
+    const hasFiles = files.logo || files.favicon || files.signature;
 
     if (hasFiles) {
       // Use FormData for multipart/form-data when files are present
@@ -4353,6 +4353,9 @@ export const firmOfficeAPI = {
       // Add files
       if (files.logo) {
         formData.append('logo', files.logo);
+      }
+      if (files.favicon) {
+        formData.append('favicon', files.favicon);
       }
       if (files.signature) {
         formData.append('signature', files.signature);
@@ -4407,6 +4410,34 @@ export const firmOfficeAPI = {
   },
   updateOffice: async (officeId, officeData) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', officeData);
+  },
+  updateOfficeBranding: async (officeId, brandingData, files = {}) => {
+    const hasFiles = files.logo || files.favicon || files.signature;
+
+    if (hasFiles) {
+      const formData = new FormData();
+
+      // Add all branding fields
+      Object.keys(brandingData).forEach(key => {
+        const value = brandingData[key];
+        if (value !== null && value !== undefined) {
+          if (typeof value === 'boolean') {
+            formData.append(key, value ? 'true' : 'false');
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      // Add files
+      if (files.logo) formData.append('logo', files.logo);
+      if (files.favicon) formData.append('favicon', files.favicon);
+      if (files.signature) formData.append('signature', files.signature);
+
+      return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', formData);
+    } else {
+      return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', brandingData);
+    }
   },
   deleteOffice: async (officeId) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'DELETE');
@@ -4901,9 +4932,14 @@ export const firmAdminAddonsAPI = {
     return await apiRequest('/user/firm-admin/add-ons/', 'GET');
   },
 
-  // List all available addon types (marketplace)
+  // List all available addon types (marketplace - filtered by plan)
   listMarketplaceAddons: async () => {
     return await apiRequest('/user/firm-admin/add-ons/types/', 'GET');
+  },
+
+  // Get full catalogue of addons (SuperAdmin created - unfiltered)
+  getCatalogueAddons: async () => {
+    return await apiRequest('/user/firm-admin/add-ons/catalogue/', 'GET');
   },
 
   // Add addon to firm subscription

@@ -26,8 +26,18 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
             Friday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
             Saturday: { isOpen: true, startTime: '09:00 AM', endTime: '01:00 PM' },
             Sunday: { isOpen: false, startTime: '', endTime: '' }
-        }
+        },
+        // Branding
+        email: '',
+        enable_office_branding: false,
+        logo: null,
+        favicon: null,
+        primary_color: '#F56D2D',
+        secondary_color: '#3AD6F2',
+        email_footer: ''
     });
+    const [logoPreview, setLogoPreview] = useState(null);
+    const [faviconPreview, setFaviconPreview] = useState(null);
     const [phoneCountry, setPhoneCountry] = useState('us');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -98,8 +108,18 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                 phone_number: officeData.phone_number || '',
                 timezone: officeData.timezone || '',
                 status: officeData.status || 'active',
-                operation_hours: parseOperationHours(officeData.operation_hours)
+                operation_hours: parseOperationHours(officeData.operation_hours),
+                // Branding
+                email: officeData.email || '',
+                enable_office_branding: officeData.enable_office_branding || false,
+                primary_color: officeData.primary_color || '#F56D2D',
+                secondary_color: officeData.secondary_color || '#3AD6F2',
+                email_footer: officeData.email_footer || ''
             });
+
+            // Set previews
+            setLogoPreview(officeData.logo_url || null);
+            setFaviconPreview(officeData.favicon_url || null);
 
             // Set phone country from phone number
             if (officeData.phone_number) {
@@ -110,11 +130,20 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
     }, [isOpen, officeData]);
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        const { name, value, type, files } = e.target;
+        if (type === 'file') {
+            const file = files[0];
+            if (file) {
+                setFormData(prev => ({ ...prev, [name]: file }));
+                if (name === 'logo') setLogoPreview(URL.createObjectURL(file));
+                if (name === 'favicon') setFaviconPreview(URL.createObjectURL(file));
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     const handleDayToggle = (day) => {
@@ -201,6 +230,11 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                 zip_code: formData.zip_code.trim(),
                 country: formData.country.trim(),
                 status: formData.status,
+                email: formData.email.trim(),
+                enable_office_branding: formData.enable_office_branding,
+                primary_color: formData.primary_color,
+                secondary_color: formData.secondary_color,
+                email_footer: formData.email_footer.trim(),
             };
 
             // Optional fields
@@ -228,7 +262,14 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
             });
             payload.operation_hours = operationHours;
 
-            const response = await firmOfficeAPI.updateBasicDetails(officeId, payload);
+            // Files handling
+            const files = {};
+            if (formData.logo instanceof File) files.logo = formData.logo;
+            if (formData.favicon instanceof File) files.favicon = formData.favicon;
+
+            const response = files.logo || files.favicon
+                ? await firmOfficeAPI.updateOfficeBranding(officeId, payload, files)
+                : await firmOfficeAPI.updateBasicDetails(officeId, payload);
 
             if (response.success) {
                 toast.success(response.message || 'Office updated successfully', {
@@ -482,98 +523,280 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                             </select>
                         </div>
 
-                        {/* Operating Hours */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-4">
-                                Operating Hours
-                            </label>
-                            <div className="space-y-4">
-                                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
-                                    const dayData = formData.operation_hours[day] || { isOpen: false, startTime: '', endTime: '' };
-                                    return (
-                                        <div key={day} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
-                                            <div className="w-24 flex-shrink-0">
-                                                <span className="text-sm font-medium text-gray-700">{day}</span>
-                                            </div>
-                                            <div className="flex items-center gap-4 flex-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDayToggle(day)}
-                                                    className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${dayData.isOpen ? 'bg-gradient-to-r from-[#F56D2D] to-[#ff8c57]' : 'bg-gray-200'
-                                                        }`}
-                                                >
-                                                    <span
-                                                        className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${dayData.isOpen ? 'translate-x-5.5' : 'translate-x-1'
-                                                            }`}
+                        {/* Branding Section */}
+                        <div className="pt-6 border-t border-gray-100">
+                            <h5 className="text-lg font-bold text-gray-900 mb-4">Branding & Email</h5>
+
+                            <div className="space-y-6">
+                                {/* Row: Office Email */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Office Contact Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all duration-200"
+                                        placeholder="office@example.com"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Defaults to manager or firm email if not set.</p>
+                                </div>
+
+                                {/* Branding Toggle */}
+                                <div className="flex items-center justify-between p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                    <div>
+                                        <h5 className="text-sm font-bold text-gray-900">Enable Office-Level Branding</h5>
+                                        <p className="text-xs text-gray-500 mt-1">Override firm-wide logo, colors, and favicon.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(p => ({ ...p, enable_office_branding: !p.enable_office_branding }))}
+                                        className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${formData.enable_office_branding ? 'bg-[#F56D2D]' : 'bg-gray-200'}`}
+                                    >
+                                        <span className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${formData.enable_office_branding ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                <div className={`space-y-6 transition-all duration-300 ${!formData.enable_office_branding ? 'opacity-50 pointer-events-none' : ''}`}>
+                                    {/* Image Uploads */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-gray-700">Office Logo</label>
+                                            <div className="relative group">
+                                                <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all ${logoPreview ? 'border-primary-light bg-primary-50' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
+                                                    {logoPreview ? (
+                                                        <div className="relative w-full h-full p-2 flex items-center justify-center">
+                                                            <img
+                                                                src={logoPreview}
+                                                                alt="Logo Preview"
+                                                                className="max-w-full max-h-full object-contain"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setFormData(p => ({ ...p, logo: null }));
+                                                                    setLogoPreview(null);
+                                                                }}
+                                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+                                                            >
+                                                                <CrossesIcon className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-center p-4">
+                                                            <div className="mx-auto w-10 h-10 bg-[#E8F0FF] rounded-full flex items-center justify-center text-[#F56D2D] mb-2">
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.585-1.585a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                            <p className="text-xs text-gray-500">Click to upload logo</p>
+                                                        </div>
+                                                    )}
+                                                    <input
+                                                        type="file"
+                                                        name="logo"
+                                                        onChange={handleInputChange}
+                                                        accept="image/*"
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
                                                     />
-                                                </button>
-                                                <span className="text-sm text-gray-600 min-w-[50px]">
-                                                    {dayData.isOpen ? 'Open' : 'Closed'}
-                                                </span>
-                                                {dayData.isOpen && (
-                                                    <>
-                                                        <input
-                                                            type="time"
-                                                            value={dayData.startTime ? (() => {
-                                                                const match = dayData.startTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-                                                                if (!match) return '';
-                                                                let hours = parseInt(match[1]);
-                                                                const minutes = match[2];
-                                                                const period = match[3].toUpperCase();
-                                                                if (period === 'PM' && hours !== 12) hours += 12;
-                                                                if (period === 'AM' && hours === 12) hours = 0;
-                                                                return `${hours.toString().padStart(2, '0')}:${minutes}`;
-                                                            })() : ''}
-                                                            onChange={(e) => {
-                                                                const time24 = e.target.value;
-                                                                if (!time24) {
-                                                                    handleTimeChange(day, 'startTime', '');
-                                                                    return;
-                                                                }
-                                                                const [hours, minutes] = time24.split(':');
-                                                                let hour12 = parseInt(hours);
-                                                                const period = hour12 >= 12 ? 'PM' : 'AM';
-                                                                if (hour12 > 12) hour12 -= 12;
-                                                                if (hour12 === 0) hour12 = 12;
-                                                                handleTimeChange(day, 'startTime', `${hour12}:${minutes} ${period}`);
-                                                            }}
-                                                            className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
-                                                        />
-                                                        <span className="text-gray-400 font-medium px-1">to</span>
-                                                        <input
-                                                            type="time"
-                                                            value={dayData.endTime ? (() => {
-                                                                const match = dayData.endTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-                                                                if (!match) return '';
-                                                                let hours = parseInt(match[1]);
-                                                                const minutes = match[2];
-                                                                const period = match[3].toUpperCase();
-                                                                if (period === 'PM' && hours !== 12) hours += 12;
-                                                                if (period === 'AM' && hours === 12) hours = 0;
-                                                                return `${hours.toString().padStart(2, '0')}:${minutes}`;
-                                                            })() : ''}
-                                                            onChange={(e) => {
-                                                                const time24 = e.target.value;
-                                                                if (!time24) {
-                                                                    handleTimeChange(day, 'endTime', '');
-                                                                    return;
-                                                                }
-                                                                const [hours, minutes] = time24.split(':');
-                                                                let hour12 = parseInt(hours);
-                                                                const period = hour12 >= 12 ? 'PM' : 'AM';
-                                                                if (hour12 > 12) hour12 -= 12;
-                                                                if (hour12 === 0) hour12 = 12;
-                                                                handleTimeChange(day, 'endTime', `${hour12}:${minutes} ${period}`);
-                                                            }}
-                                                            className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
-                                                        />
-                                                    </>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
-                                    );
-                                })}
+
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-gray-700">Office Favicon</label>
+                                            <div className="relative group">
+                                                <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all ${faviconPreview ? 'border-primary-light bg-primary-50' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
+                                                    {faviconPreview ? (
+                                                        <div className="relative w-full h-full p-2 flex items-center justify-center">
+                                                            <img
+                                                                src={faviconPreview}
+                                                                alt="Favicon Preview"
+                                                                className="w-12 h-12 object-contain"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setFormData(p => ({ ...p, favicon: null }));
+                                                                    setFaviconPreview(null);
+                                                                }}
+                                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+                                                            >
+                                                                <CrossesIcon className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-center p-4">
+                                                            <div className="mx-auto w-10 h-10 bg-[#E8F0FF] rounded-full flex items-center justify-center text-[#F56D2D] mb-2">
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
+                                                                </svg>
+                                                            </div>
+                                                            <p className="text-xs text-gray-500">Click to upload favicon</p>
+                                                        </div>
+                                                    )}
+                                                    <input
+                                                        type="file"
+                                                        name="favicon"
+                                                        onChange={handleInputChange}
+                                                        accept="image/*"
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Colors */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-gray-700">Primary Color</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    name="primary_color"
+                                                    value={formData.primary_color}
+                                                    onChange={handleInputChange}
+                                                    className="w-12 h-12 !rounded-lg border border-gray-200 cursor-pointer"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={formData.primary_color}
+                                                    onChange={(e) => setFormData(p => ({ ...p, primary_color: e.target.value }))}
+                                                    className="flex-1 px-4 py-2 border border-[#E8F0FF] !rounded-lg text-sm font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-gray-700">Secondary Color</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    name="secondary_color"
+                                                    value={formData.secondary_color}
+                                                    onChange={handleInputChange}
+                                                    className="w-12 h-12 !rounded-lg border border-gray-200 cursor-pointer"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={formData.secondary_color}
+                                                    onChange={(e) => setFormData(p => ({ ...p, secondary_color: e.target.value }))}
+                                                    className="flex-1 px-4 py-2 border border-[#E8F0FF] !rounded-lg text-sm font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Email Footer */}
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">Custom Email Footer</label>
+                                        <textarea
+                                            name="email_footer"
+                                            value={formData.email_footer}
+                                            onChange={handleInputChange}
+                                            rows="4"
+                                            className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm resize-none"
+                                            placeholder="Add a custom footer to be appended to all office communications"
+                                        />
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Operating Hours */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-4">
+                            Operating Hours
+                        </label>
+                        <div className="space-y-4">
+                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                                const dayData = formData.operation_hours[day] || { isOpen: false, startTime: '', endTime: '' };
+                                return (
+                                    <div key={day} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
+                                        <div className="w-24 flex-shrink-0">
+                                            <span className="text-sm font-medium text-gray-700">{day}</span>
+                                        </div>
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDayToggle(day)}
+                                                className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${dayData.isOpen ? 'bg-gradient-to-r from-[#F56D2D] to-[#ff8c57]' : 'bg-gray-200'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${dayData.isOpen ? 'translate-x-5.5' : 'translate-x-1'
+                                                        }`}
+                                                />
+                                            </button>
+                                            <span className="text-sm text-gray-600 min-w-[50px]">
+                                                {dayData.isOpen ? 'Open' : 'Closed'}
+                                            </span>
+                                            {dayData.isOpen && (
+                                                <>
+                                                    <input
+                                                        type="time"
+                                                        value={dayData.startTime ? (() => {
+                                                            const match = dayData.startTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                                                            if (!match) return '';
+                                                            let hours = parseInt(match[1]);
+                                                            const minutes = match[2];
+                                                            const period = match[3].toUpperCase();
+                                                            if (period === 'PM' && hours !== 12) hours += 12;
+                                                            if (period === 'AM' && hours === 12) hours = 0;
+                                                            return `${hours.toString().padStart(2, '0')}:${minutes}`;
+                                                        })() : ''}
+                                                        onChange={(e) => {
+                                                            const time24 = e.target.value;
+                                                            if (!time24) {
+                                                                handleTimeChange(day, 'startTime', '');
+                                                                return;
+                                                            }
+                                                            const [hours, minutes] = time24.split(':');
+                                                            let hour12 = parseInt(hours);
+                                                            const period = hour12 >= 12 ? 'PM' : 'AM';
+                                                            if (hour12 > 12) hour12 -= 12;
+                                                            if (hour12 === 0) hour12 = 12;
+                                                            handleTimeChange(day, 'startTime', `${hour12}:${minutes} ${period}`);
+                                                        }}
+                                                        className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
+                                                    />
+                                                    <span className="text-gray-400 font-medium px-1">to</span>
+                                                    <input
+                                                        type="time"
+                                                        value={dayData.endTime ? (() => {
+                                                            const match = dayData.endTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                                                            if (!match) return '';
+                                                            let hours = parseInt(match[1]);
+                                                            const minutes = match[2];
+                                                            const period = match[3].toUpperCase();
+                                                            if (period === 'PM' && hours !== 12) hours += 12;
+                                                            if (period === 'AM' && hours === 12) hours = 0;
+                                                            return `${hours.toString().padStart(2, '0')}:${minutes}`;
+                                                        })() : ''}
+                                                        onChange={(e) => {
+                                                            const time24 = e.target.value;
+                                                            if (!time24) {
+                                                                handleTimeChange(day, 'endTime', '');
+                                                                return;
+                                                            }
+                                                            const [hours, minutes] = time24.split(':');
+                                                            let hour12 = parseInt(hours);
+                                                            const period = hour12 >= 12 ? 'PM' : 'AM';
+                                                            if (hour12 > 12) hour12 -= 12;
+                                                            if (hour12 === 0) hour12 = 12;
+                                                            handleTimeChange(day, 'endTime', `${hour12}:${minutes} ${period}`);
+                                                        }}
+                                                        className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
+                                                    />
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
