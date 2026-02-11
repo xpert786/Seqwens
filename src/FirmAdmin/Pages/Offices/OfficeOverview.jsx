@@ -78,6 +78,13 @@ export default function OfficeOverview() {
     const [removingManager, setRemovingManager] = useState(false);
     const [showRemoveManagerConfirm, setShowRemoveManagerConfirm] = useState(false);
 
+    // Branding file upload state
+    const [logoFile, setLogoFile] = useState(null);
+    const [faviconFile, setFaviconFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
+    const [faviconPreview, setFaviconPreview] = useState(null);
+    const [savingBranding, setSavingBranding] = useState(false);
+
     // Fetch office details from API
     useEffect(() => {
         const fetchOfficeDetails = async () => {
@@ -129,9 +136,17 @@ export default function OfficeOverview() {
 
                 const response = await firmOfficeAPI.getOfficeClients(officeId);
 
+                console.log('Office Clients API Response:', response);
+
                 if (response.success && response.data) {
-                    setClients(response.data.clients || []);
-                    setClientsCount(response.data.clients_count || response.data.clients?.length || 0);
+                    const clientsData = response.data.clients || response.data || [];
+                    const count = response.data.clients_count || response.data.count || clientsData.length || 0;
+
+                    console.log('Clients data:', clientsData);
+                    console.log('Clients count:', count);
+
+                    setClients(clientsData);
+                    setClientsCount(count);
                 } else {
                     throw new Error(response.message || 'Failed to load clients');
                 }
@@ -254,8 +269,16 @@ export default function OfficeOverview() {
 
     useEffect(() => {
         setBranding(defaultBranding);
-        setWhiteLabelEnabled(Boolean(officeData?.branding?.whiteLabelEnabled));
+        setWhiteLabelEnabled(Boolean(officeData?.enable_office_branding));
         setTaxPrepUrl(officeData?.taxPrepUrl || 'https://www.grammarly.com/');
+
+        // Set existing logo and favicon previews
+        if (officeData?.logo) {
+            setLogoPreview(officeData.logo);
+        }
+        if (officeData?.favicon) {
+            setFaviconPreview(officeData.favicon);
+        }
     }, [defaultBranding, officeData]);
 
 
@@ -267,17 +290,91 @@ export default function OfficeOverview() {
         }));
     };
 
+    const handleLogoChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleFaviconChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setFaviconFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFaviconPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleToggleWhiteLabel = () => {
         setWhiteLabelEnabled((previous) => !previous);
     };
 
     const handleResetBranding = () => {
         setBranding(defaultBranding);
-        setWhiteLabelEnabled(Boolean(officeData?.branding?.whiteLabelEnabled));
+        setWhiteLabelEnabled(Boolean(officeData?.enable_office_branding));
+        setLogoFile(null);
+        setFaviconFile(null);
+        setLogoPreview(officeData?.logo || null);
+        setFaviconPreview(officeData?.favicon || null);
     };
 
-    const handleSaveBranding = () => {
-        console.log('Branding settings saved', { branding, whiteLabelEnabled });
+    const handleSaveBranding = async () => {
+        try {
+            setSavingBranding(true);
+
+            const brandingData = {
+                primary_color: branding.primaryColor,
+                secondary_color: branding.secondaryColor,
+                custom_domain: branding.customDomain,
+                enable_office_branding: whiteLabelEnabled
+            };
+
+            const files = {};
+            if (logoFile) {
+                files.logo = logoFile;
+            }
+            if (faviconFile) {
+                files.favicon = faviconFile;
+            }
+
+            const response = await firmOfficeAPI.updateOfficeBranding(officeId, brandingData, files);
+
+            if (response.success) {
+                toast.success('Office branding updated successfully', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+
+                // Refresh office data
+                const officeResponse = await firmOfficeAPI.getOffice(officeId);
+                if (officeResponse.success && officeResponse.data) {
+                    setOffice(officeResponse.data);
+                }
+
+                // Clear file states
+                setLogoFile(null);
+                setFaviconFile(null);
+            } else {
+                throw new Error(response.message || 'Failed to update branding');
+            }
+        } catch (error) {
+            const errorMessage = handleAPIError(error);
+            toast.error(errorMessage || 'Failed to update branding', {
+                position: 'top-right',
+                autoClose: 3000
+            });
+        } finally {
+            setSavingBranding(false);
+        }
     };
 
     const handleSaveTaxPrep = () => {
@@ -1172,25 +1269,49 @@ export default function OfficeOverview() {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-base font-medium tracking-wide text-gray-700">
-                                    Login URL
+                                    Office Logo
                                 </label>
-                                <input
-                                    type="url"
-                                    value={branding.loginUrl}
-                                    onChange={handleBrandingChange('loginUrl')}
-                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                                />
+                                <div className="space-y-2">
+                                    {logoPreview && (
+                                        <div className="relative w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden">
+                                            <img
+                                                src={logoPreview}
+                                                alt="Logo preview"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleLogoChange}
+                                        className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#3AD6F2] file:text-white hover:file:bg-[#2bc5db] cursor-pointer"
+                                    />
+                                    <p className="text-xs text-gray-500">Upload office logo (PNG, JPG, or SVG)</p>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-base font-medium tracking-wide text-gray-700">
-                                    Favicon URL
+                                    Favicon
                                 </label>
-                                <input
-                                    type="url"
-                                    value={branding.faviconUrl}
-                                    onChange={handleBrandingChange('faviconUrl')}
-                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                                />
+                                <div className="space-y-2">
+                                    {faviconPreview && (
+                                        <div className="relative w-16 h-16 border-2 border-gray-200 rounded-lg overflow-hidden">
+                                            <img
+                                                src={faviconPreview}
+                                                alt="Favicon preview"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFaviconChange}
+                                        className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#3AD6F2] file:text-white hover:file:bg-[#2bc5db] cursor-pointer"
+                                    />
+                                    <p className="text-xs text-gray-500">Upload favicon (16x16 or 32x32 px recommended)</p>
+                                </div>
                             </div>
                         </div>
 
@@ -1238,44 +1359,7 @@ export default function OfficeOverview() {
 
                         </div>
 
-                        <div className="flex flex-col gap-4">
-                            {/* Use a grid for the 6/6 column split on medium screens and up */}
-                            <div className="md:grid md:grid-cols-2 md:gap-4">
-                                {/* First Column (6/12 width on md screens) - Custom Domain Input */}
-                                <div className="flex flex-col gap-2 mb-4 md:mb-0">
-                                    <label className="text-base font-medium tracking-wide text-gray-700">
-                                        Custom Domain
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={branding.customDomain}
-                                        onChange={handleBrandingChange('customDomain')}
-                                        className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                                    />
-                                </div>
 
-                                {/* Second Column (6/12 width on md screens) - White-Label Toggle */}
-                                <div className="flex flex-col gap-2 justify-center">
-                                    <div className="flex items-center gap-3">
-
-                                        <button
-                                            type="button"
-                                            onClick={handleToggleWhiteLabel}
-                                            className={`relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'
-                                                }`}
-                                            aria-pressed={whiteLabelEnabled}
-                                        >
-                                            <span className="sr-only">Toggle white-label</span>
-                                            <span
-                                                className={`pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${whiteLabelEnabled ? 'translate-x-6' : 'translate-x-0'
-                                                    }`}
-                                            />
-                                        </button>
-                                        <span className="text-base font-medium tracking-wide text-gray-500">Enable white-label for this office</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                             <button
@@ -1289,10 +1373,11 @@ export default function OfficeOverview() {
                             <button
                                 type="button"
                                 onClick={handleSaveBranding}
-                                className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600"
+                                disabled={savingBranding}
+                                className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ borderRadius: '8px' }}
                             >
-                                Save Branding
+                                {savingBranding ? 'Saving...' : 'Save Branding'}
                             </button>
                         </div>
                     </div>

@@ -481,8 +481,10 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     onCountryChange={(countryCode) => {
                                         setPhoneCountry(countryCode.toLowerCase());
                                     }}
-                                    inputClass="!w-full !px-4 !py-5.5 !border !border-[#E8F0FF] !rounded-lg focus:!outline-none focus:!ring-2 focus:!ring-[#3AD6F2] !text-sm !font-[BasisGrotesquePro]"
-                                    containerClass="w-100 phone-input-container !rounded-lg overflow-hidden"
+                                    inputClass="!w-full !pl-14 !pr-4 !py-2.5 !border !border-[#E8F0FF] !rounded-lg focus:!outline-none focus:!ring-2 focus:!ring-[#3AD6F2] !text-sm !font-[BasisGrotesquePro]"
+                                    containerClass="w-100 phone-input-container !rounded-lg"
+                                    dropdownClass="!z-[10000] !max-h-[200px]"
+                                    buttonClass="!border-r !border-[#E8F0FF] !bg-white hover:!bg-gray-50"
                                     enableSearch={true}
                                     countryCodeEditable={false}
                                 />
