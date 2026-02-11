@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Profile from "./Profile";
+import Invites from "./Invites";
 import Notifications from "./Notifications";
 import Security from "./Security";
 import Billing from "./Billing";
@@ -21,6 +22,7 @@ export default function AccountSettings() {
 
     const tabs = [
         { id: "profile", label: "Profile" },
+        { id: "invites", label: "Invites" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
         { id: "roles", label: "Roles" },
@@ -110,6 +112,7 @@ export default function AccountSettings() {
                     gap: "28px"
                 }}>
                     {activeTab === "profile" && <Profile />}
+                    {activeTab === "invites" && <Invites />}
                     {activeTab === "notifications" && <Notifications />}
                     {activeTab === "security" && <Security />}
                     {activeTab === "roles" && <UserProfileWithRoles />}

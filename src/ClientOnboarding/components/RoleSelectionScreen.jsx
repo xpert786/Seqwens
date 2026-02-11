@@ -9,6 +9,8 @@ const ROLE_DISPLAY_NAMES = {
   client: "Client Dashboard",
   staff: "Tax Preparer Dashboard",
   tax_preparer: "Tax Preparer Dashboard",
+  team_member: "Tax Preparer Dashboard",
+  teammember: "Tax Preparer Dashboard",
   admin: "Firm Admin Dashboard",
   firm: "Firm Admin Dashboard",
   super_admin: "Super Admin Dashboard",
@@ -118,7 +120,7 @@ export default function RoleSelectionScreen() {
     setUserData(user);
   }, [location, navigate]);
 
-  const handleRoleSelection = (role) => {
+  const handleRoleSelection = async (role) => {
     if (isNavigating) return;
 
     setSelectedRole(role);
@@ -127,68 +129,121 @@ export default function RoleSelectionScreen() {
     const storage = getStorage();
     const user = userData;
 
-    // Map role to user_type and route
-    let userType = role;
-    let route = "";
+    try {
+      // Call backend API to switch role
+      const { getAccessToken } = await import('../utils/userUtils');
+      const { getApiBaseUrl } = await import('../utils/corsConfig');
 
-    // Map 'staff' role to 'tax_preparer' for routing
-    if (role === 'staff') {
-      userType = 'tax_preparer';
-    }
 
-    // Map 'firm' role to 'admin' for routing
-    if (role === 'firm') {
-      userType = 'admin';
-    }
+      const token = getAccessToken();
+      const apiBaseUrl = getApiBaseUrl();
 
-    // Check if user has custom role and selected role is tax_preparer
-    const customRole = user?.custom_role;
-    if (customRole && (role === 'staff' || role === 'tax_preparer')) {
-      // Store custom role data
-      if (storage) {
-        storage.setItem("customRole", JSON.stringify(customRole));
+      const fetchResponse = await fetch(`${apiBaseUrl}/user/switch-role/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: role })
+      });
+
+      const response = await fetchResponse.json();
+
+      if (!fetchResponse.ok || !response.success) {
+        console.error('Failed to switch role:', response.message);
+        alert(`Failed to switch role: ${response.message}`);
+        setIsNavigating(false);
+        return;
       }
-    }
 
-    // Determine route based on role
-    if (role === 'super_admin' || role === 'support_admin' || role === 'billing_admin') {
-      route = "/superadmin";
-    } else if (role === 'admin' || role === 'firm') {
-      route = "/firmadmin";
-    } else if (role === 'staff' || role === 'tax_preparer') {
-      userType = 'tax_preparer';
-      route = "/taxdashboard";
-    } else if (role === 'client') {
-      // Client routing - check verification status
-      const isEmailVerified = user.is_email_verified;
-      const isPhoneVerified = user.is_phone_verified;
-      const isCompleted = user.is_completed;
+      // Update tokens if provided
+      if (response.access_token && response.refresh_token) {
+        const { setTokens } = await import('../utils/userUtils');
+        setTokens(response.access_token, response.refresh_token, true);
+      }
 
-      // If neither email nor phone is verified, go to two-factor authentication
-      if (!isEmailVerified && !isPhoneVerified) {
-        route = "/two-auth";
-      } else {
-        // If either email or phone is verified, check completion status
-        if (isCompleted) {
-          route = "/dashboard";
-        } else {
-          route = "/dashboard-first";
+      // Map role to user_type and route
+      let userType = role;
+      let route = "";
+
+      // Map 'staff' role to 'tax_preparer' for routing
+      if (role === 'staff' || role === 'team_member' || role === 'teammember') {
+        userType = 'tax_preparer';
+      }
+
+      // Map 'firm' role to 'admin' for routing
+      if (role === 'firm') {
+        userType = 'admin';
+      }
+
+      // Check if user has custom role and selected role is tax_preparer
+      const customRole = user?.custom_role;
+
+      // Get fresh storage reference as setTokens might have changed it (e.g. to localStorage)
+      const currentStorage = getStorage();
+
+      if (customRole && (role === 'staff' || role === 'tax_preparer' || role === 'team_member' || role === 'teammember')) {
+        // Store custom role data
+        if (currentStorage) {
+          currentStorage.setItem("customRole", JSON.stringify(customRole));
         }
       }
-    } else {
-      // Fallback
-      route = "/dashboard";
-    }
 
-    // Store selected user type
-    if (storage) {
-      storage.setItem("userType", userType);
-    }
+      // Update user data in storage (using fresh reference)
+      // We do this here again to ensure it's in the correct storage (local vs session)
+      if (response.user && currentStorage) {
+        currentStorage.setItem("userData", JSON.stringify(response.user));
+      }
 
-    // Navigate to selected route
-    setTimeout(() => {
-      navigate(route, { replace: true });
-    }, 300);
+      // Update firms data in storage
+      if (response.firms && Array.isArray(response.firms) && currentStorage) {
+        currentStorage.setItem("firmsData", JSON.stringify(response.firms));
+      }
+
+      // Determine route based on role
+      if (role === 'super_admin' || role === 'support_admin' || role === 'billing_admin') {
+        route = "/superadmin";
+      } else if (role === 'admin' || role === 'firm') {
+        route = "/firmadmin";
+      } else if (role === 'staff' || role === 'tax_preparer' || role === 'team_member' || role === 'teammember') {
+        userType = 'tax_preparer';
+        route = "/taxdashboard";
+      } else if (role === 'client') {
+        // Client routing - check verification status
+        const isEmailVerified = user.is_email_verified;
+        const isPhoneVerified = user.is_phone_verified;
+        const isCompleted = user.is_completed;
+
+        // If neither email nor phone is verified, go to two-factor authentication
+        if (!isEmailVerified && !isPhoneVerified) {
+          route = "/two-auth";
+        } else {
+          // If either email or phone is verified, check completion status
+          if (isCompleted) {
+            route = "/dashboard";
+          } else {
+            route = "/dashboard-first";
+          }
+        }
+      } else {
+        // Fallback
+        route = "/dashboard";
+      }
+
+      // Store selected user type using the fresh storage reference
+      if (currentStorage) {
+        currentStorage.setItem("userType", userType);
+      }
+
+      // Navigate to selected route
+      setTimeout(() => {
+        navigate(route, { replace: true });
+      }, 300);
+    } catch (error) {
+      console.error('Error switching role:', error);
+      alert(`Error switching role: ${error.message}`);
+      setIsNavigating(false);
+    }
   };
 
   if (!userData || !userData.role || !Array.isArray(userData.role)) {

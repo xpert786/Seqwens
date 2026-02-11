@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
-import { FaEnvelope, FaSms, FaLink, FaCopy, FaTrash, FaExclamationTriangle } from "react-icons/fa";
+import { FaEnvelope, FaSms, FaLink, FaCopy, FaTrash, FaExclamationTriangle, FaListOl } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -980,39 +980,15 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
                 <div className="mb-4">
                   <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaLink size={14} /> Shareable Link
+                    <FaListOl size={14} /> Next Steps
                   </label>
-                  <div className="d-flex gap-2">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={activeInviteDetails.invite_link || ""}
-                      readOnly
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={handleCopyInviteLink}
-                      disabled={!activeInviteDetails.invite_link}
-                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
-                    >
-                      <FaCopy size={12} className="me-1" />
-                      Copy
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline-primary"
-                      onClick={handleRefreshInviteLink}
-                      disabled={inviteLinkRefreshing}
-                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
-                    >
-                      {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
-                    </button>
+                  <div className="p-3 bg-light rounded text-muted" style={{ fontSize: '14px', backgroundColor: '#F9FAFB', border: '1px solid #E8F0FF' }}>
+                    <ol className="mb-0 ps-3">
+                      <li className="mb-2">Send an invitation using the <strong>Email</strong> or <strong>SMS</strong> options below.</li>
+                      <li className="mb-2">The client will receive a secure link to verify their identity and set a password.</li>
+                      <li>Once verified, they will gain access to their client portal to upload documents.</li>
+                    </ol>
                   </div>
-                  <small className="text-muted d-block mt-1">
-                    Share this link with the taxpayer. They can use it anytime before it expires.
-                  </small>
                 </div>
 
                 <div className="mb-4">

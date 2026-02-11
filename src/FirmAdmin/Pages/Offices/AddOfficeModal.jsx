@@ -4,6 +4,7 @@ import 'react-phone-input-2/lib/bootstrap.css';
 import { toast } from 'react-toastify';
 import { CrossesIcon } from '../../Components/icons';
 import { firmOfficeAPI, handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { US_TIMEZONES } from './constants';
 
 const steps = [
     { id: 1, name: 'Basic Information' },
@@ -253,18 +254,30 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
         setStaffLoading(true);
         setStaffError(null);
         try {
-            const response = await firmAdminStaffAPI.listBasicStaff();
+            const response = await firmAdminStaffAPI.listStaffWithAdmin();
             let staffList = [];
 
-            if (Array.isArray(response)) {
-                staffList = response;
-            } else if (Array.isArray(response?.data?.staff_members)) {
+            // Extract staff list from response
+            if (response?.success && Array.isArray(response?.data?.staff_members)) {
                 staffList = response.data.staff_members;
-            } else if (Array.isArray(response?.staff_members)) {
-                staffList = response.staff_members;
+            } else if (Array.isArray(response)) {
+                staffList = response;
+            } else if (Array.isArray(response?.data)) {
+                staffList = response.data;
             }
 
             setStaffOptions(staffList || []);
+
+            // Default behavior: If no staff exists (only admin or none), 
+            // the dropdown will have options but we could auto-select if needed.
+            // As per requirements: "If no staff exists, auto-set Office Manager to Firm Admin"
+            if (staffList.length > 0 && !formData.manager_id) {
+                // Find first admin if available, or first person
+                const admin = staffList.find(s => s.role === 'firm' || s.role === 'admin');
+                if (admin && staffList.length === 1) {
+                    setFormData(prev => ({ ...prev, manager_id: admin.id }));
+                }
+            }
         } catch (err) {
             console.error('Error loading staff members:', err);
             setStaffError(handleAPIError(err));
@@ -272,7 +285,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
         } finally {
             setStaffLoading(false);
         }
-    }, []);
+    }, [formData.manager_id]);
 
     useEffect(() => {
         if (isOpen) {
@@ -508,12 +521,11 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer font-[BasisGrotesquePro] hover:border-[#3AD6F2]/50 transition-all duration-200"
                                 >
                                     <option value="">Select timezone</option>
-                                    <option value="America/New_York">Eastern Time</option>
-                                    <option value="America/Chicago">Central Time</option>
-                                    <option value="America/Denver">Mountain Time</option>
-                                    <option value="America/Los_Angeles">Pacific Time</option>
-                                    <option value="America/Phoenix">Mountain Time (Arizona)</option>
-                                    <option value="America/Alaska">Alaska Time</option>
+                                    {US_TIMEZONES.map((tz) => (
+                                        <option key={tz.value} value={tz.value}>
+                                            {tz.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -528,7 +540,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                         <div className="w-24 flex-shrink-0">
                                             <span className="text-sm font-medium text-gray-700">{day}</span>
                                         </div>
-                                        <div className="flex items-center gap-3 flex-1">
+                                        <div className="flex items-center gap-4 flex-1">
                                             <button
                                                 type="button"
                                                 onClick={() => handleDayToggle(day)}
@@ -572,7 +584,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                                         }}
                                                         className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
                                                     />
-                                                    <span className="text-gray-400">to</span>
+                                                    <span className="text-gray-400 font-medium px-1">to</span>
                                                     <input
                                                         type="time"
                                                         value={dayData.endTime ? (() => {

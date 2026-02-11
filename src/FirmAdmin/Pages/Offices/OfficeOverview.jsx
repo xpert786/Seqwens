@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import sampleOffices from './sampleOffices';
 import { Link } from 'react-router-dom';
+import { getTimezoneLabel } from './constants';
 
 
 // Helper function to get initials from name
@@ -1063,7 +1064,7 @@ export default function OfficeOverview() {
                                     <p className="text-base font-medium tracking-wide text-gray-700">
                                         Timezone
                                     </p>
-                                    <p className="mt-1 text-sm font-medium text-gray-600">{timezone}</p>
+                                    <p className="mt-1 text-sm font-medium text-gray-600">{getTimezoneLabel(timezone)}</p>
                                 </div>
                                 <div>
                                     <p className="text-base font-medium tracking-wide text-gray-500">
@@ -1260,10 +1261,14 @@ export default function OfficeOverview() {
                                         <button
                                             type="button"
                                             onClick={handleToggleWhiteLabel}
-                                            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors flex-shrink-0 ${whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'}`}
+                                            className={`relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'
+                                                }`}
+                                            aria-pressed={whiteLabelEnabled}
                                         >
+                                            <span className="sr-only">Toggle white-label</span>
                                             <span
-                                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${whiteLabelEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                                                className={`pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${whiteLabelEnabled ? 'translate-x-6' : 'translate-x-0'
+                                                    }`}
                                             />
                                         </button>
                                         <span className="text-base font-medium tracking-wide text-gray-500">Enable white-label for this office</span>
