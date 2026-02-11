@@ -260,9 +260,9 @@ export default function OfficeOverview() {
         () => ({
             loginUrl: officeData?.branding?.loginUrl || 'https://www.logo.com/',
             faviconUrl: officeData?.branding?.faviconUrl || 'https://www.favicon.com/',
-            primaryColor: officeData?.primary_color || officeData?.branding?.primaryColor || '#3AD6F2',
-            secondaryColor: officeData?.secondary_color || officeData?.branding?.secondaryColor || '#F56D2D',
-            customDomain: officeData?.custom_domain || officeData?.branding?.customDomain || 'sub.myfirm.com'
+            primaryColor: officeData?.stored_primary_color || officeData?.primary_color || '#3AD6F2',
+            secondaryColor: officeData?.stored_secondary_color || officeData?.secondary_color || '#F56D2D',
+            customDomain: officeData?.custom_domain || 'sub.myfirm.com'
         }),
         [officeData]
     );
@@ -332,8 +332,8 @@ export default function OfficeOverview() {
             setSavingBranding(true);
 
             const brandingData = {
-                primary_color: branding.primaryColor,
-                secondary_color: branding.secondaryColor,
+                primary_color: branding.primaryColor.startsWith('#') ? branding.primaryColor : `#${branding.primaryColor}`,
+                secondary_color: branding.secondaryColor.startsWith('#') ? branding.secondaryColor : `#${branding.secondaryColor}`,
                 custom_domain: branding.customDomain,
                 enable_office_branding: whiteLabelEnabled
             };
