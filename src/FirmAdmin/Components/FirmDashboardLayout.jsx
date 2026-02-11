@@ -16,9 +16,39 @@ export default function FirmDashboardLayout() {
   const [isImpersonating, setIsImpersonating] = useState(false);
 
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+
   // Check if screen is mobile (less than 768px) and close sidebar by default on mobile
-  const isMobileScreen = () => window.innerWidth < 768;
+  const isMobileScreen = () => window.innerWidth < 1130;  // Increased breakpoint for better tablet support
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobileScreen());
+
+  // Check if screen is mobile/tablet size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth <= 1130;
+      setIsMobile(mobile);
+      // On mobile, sidebar should be closed by default if it was open from desktop
+      if (mobile && isSidebarOpen && !isMobile) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, [isSidebarOpen, isMobile]);
+
+  // Lock body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobile, isSidebarOpen]);
 
   useEffect(() => {
     // Listen for sidebar width changes from FirmSidebar
@@ -29,18 +59,6 @@ export default function FirmDashboardLayout() {
     window.addEventListener('sidebarWidthChange', handleSidebarWidthChange);
     return () => window.removeEventListener('sidebarWidthChange', handleSidebarWidthChange);
   }, []);
-
-  useEffect(() => {
-    // Handle window resize to close sidebar on mobile screens
-    const handleResize = () => {
-      if (isMobileScreen() && isSidebarOpen) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isSidebarOpen]);
 
   // Apply primary color to buttons with orange color (#F56D2D) - handles Tailwind arbitrary values
   useEffect(() => {
@@ -351,22 +369,41 @@ export default function FirmDashboardLayout() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleCloseSidebar = () => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
     <SubscriptionStatusProvider>
       <div className="firm-dashboard-layout">
         <MaintenanceMode />
         <ForcedPasswordChangeModal />
         <ImpersonationBanner />
-        <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} sidebarWidth={sidebarWidth} />
+        <FirmHeader
+          onToggleSidebar={toggleSidebar}
+          isSidebarOpen={isSidebarOpen}
+          sidebarWidth={isMobile ? '0px' : sidebarWidth}
+        />
         <SubscriptionStatusBanner />
+
+        {/* Mobile/Tablet Overlay */}
+        {isMobile && isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[999] transition-opacity duration-300"
+            onClick={handleCloseSidebar}
+            aria-hidden="true"
+          />
+        )}
+
         <FirmSidebar isSidebarOpen={isSidebarOpen} />
         <main
           className="h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
           style={{
             marginTop: isImpersonating ? '110px' : '70px',
-            marginLeft: isSidebarOpen ? sidebarWidth : '0',
-
-            width: isSidebarOpen ? `calc(100% - ${sidebarWidth})` : '100%',
+            marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
+            width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
             backgroundColor: 'var(--firm-secondary-color, #F3F7FF)'
           }}
         >

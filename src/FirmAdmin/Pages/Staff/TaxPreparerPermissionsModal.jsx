@@ -309,7 +309,7 @@ export default function TaxPreparerPermissionsModal({
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors ml-4 flex-shrink-0"
+              className="w-10 h-10 flex items-center justify-center !rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors ml-4 flex-shrink-0"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -338,7 +338,7 @@ export default function TaxPreparerPermissionsModal({
                 {totalPermissions} Total Permissions
               </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#3AD6F2]/10 border border-[#3AD6F2]/30 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#3AD6F2]/10 border border-[#3AD6F2]/30 !rounded-lg">
               <FiInfo size={16} className="text-[#3AD6F2]" />
               <span className="text-xs text-[#3AD6F2] font-[BasisGrotesquePro] font-medium">
                 Changes apply only to this preparer
@@ -388,9 +388,9 @@ export default function TaxPreparerPermissionsModal({
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(categoryCodes, allSelected)}
-                        className={`px-4 py-1.5 rounded-lg font-[BasisGrotesquePro] text-sm font-medium transition-colors ${allSelected
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                            : 'bg-[#3AD6F2]/10 text-[#3AD6F2] hover:bg-[#3AD6F2]/20 border border-[#3AD6F2]/30'
+                        className={`px-4 py-1.5 !rounded-lg font-[BasisGrotesquePro] text-sm font-medium transition-colors ${allSelected
+                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                          : 'bg-[#3AD6F2]/10 text-[#3AD6F2] hover:bg-[#3AD6F2]/20 border border-[#3AD6F2]/30'
                           }`}
                       >
                         {allSelected ? 'Deselect All' : 'Select All'}
@@ -408,8 +408,8 @@ export default function TaxPreparerPermissionsModal({
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
                             className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
-                                ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
-                                : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
+                              ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
+                              : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
                               }`}
                           >
                             {/* Toggle Switch */}
@@ -429,8 +429,8 @@ export default function TaxPreparerPermissionsModal({
 
                             {/* Status Badge */}
                             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
-                                ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
-                                : 'bg-gray-100 text-gray-600 border-gray-300'
+                              ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
+                              : 'bg-gray-100 text-gray-600 border-gray-300'
                               }`}>
                               {isAllowed ? (
                                 <>
@@ -486,8 +486,8 @@ export default function TaxPreparerPermissionsModal({
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
                             className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
-                                ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
-                                : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
+                              ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
+                              : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
                               }`}
                           >
                             <div className={`relative w-12 h-6 rounded-full transition-colors ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
@@ -502,8 +502,8 @@ export default function TaxPreparerPermissionsModal({
                               </p>
                             </div>
                             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
-                                ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
-                                : 'bg-gray-100 text-gray-600 border-gray-300'
+                              ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
+                              : 'bg-gray-100 text-gray-600 border-gray-300'
                               }`}>
                               {isAllowed ? (
                                 <>
@@ -534,7 +534,7 @@ export default function TaxPreparerPermissionsModal({
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="px-6 py-2.5 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 border border-[#E8F0FF] bg-white text-gray-700 !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
@@ -546,7 +546,7 @@ export default function TaxPreparerPermissionsModal({
               type="button"
               onClick={handleSave}
               disabled={saving || loading}
-              className="px-6 py-2.5 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55D1D] transition-colors font-[BasisGrotesquePro] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55D1D] transition-colors font-[BasisGrotesquePro] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving ? (
                 <>

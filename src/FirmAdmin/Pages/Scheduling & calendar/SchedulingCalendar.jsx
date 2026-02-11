@@ -26,6 +26,7 @@ const SchedulingCalendar = () => {
         no_show_rate: 0,
         avg_duration_display: '0m'
     });
+    const [activeMetricFilter, setActiveMetricFilter] = useState(null);
     const [todayEvents, setTodayEvents] = useState({ date: '', date_display: '', events: [], count: 0 });
     const [upcomingEvents, setUpcomingEvents] = useState({ period: '', date_from: '', date_to: '', events: [], count: 0 });
     const [highlightDate, setHighlightDate] = useState(null);
@@ -944,6 +945,20 @@ const SchedulingCalendar = () => {
         }
     ];
 
+    // Add ref for calendar section
+    const calendarSectionRef = React.useRef(null);
+
+    // Handle metric card click
+    const handleMetricCardClick = (metricType) => {
+        if (!metricType) return; // Skip if no filter (e.g., no-show rate, avg duration)
+
+        // Update active metric filter
+        setActiveMetricFilter(metricType);
+
+        // Scroll to calendar section
+        calendarSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     // Navigation tabs
     const navTabs = ['Calendar', 'Appointments', 'Staff'];
 
@@ -1081,17 +1096,32 @@ const SchedulingCalendar = () => {
 
                     {/* Metric Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        {metricCards.map((card, index) => (
-                            <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex flex-col">
-                                        <div className="text-[#3AD6F2] mb-2">{card.icon}</div>
-                                        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-4">{card.label}</p>
+                        {metricCards.map((card, index) => {
+                            // Determine if this card is clickable
+                            const isClickable = index === 0 || index === 1; // Scheduled and Completed
+                            const metricType = index === 0 ? 'scheduled' : index === 1 ? 'completed' : null;
+                            const isActive = activeMetricFilter === metricType;
+
+                            return (
+                                <div
+                                    key={index}
+                                    onClick={() => handleMetricCardClick(metricType)}
+                                    className={`bg-white !rounded-lg !border pt-6 px-4 pb-4 transition-all ${isClickable ? 'cursor-pointer hover:shadow-md' : ''
+                                        } ${isActive
+                                            ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]'
+                                            : 'border-[#E8F0FF]'
+                                        }`}
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex flex-col">
+                                            <div className="text-[#3AD6F2] mb-2">{card.icon}</div>
+                                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-4">{card.label}</p>
+                                        </div>
+                                        <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-none">{card.value}</p>
                                     </div>
-                                    <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-none">{card.value}</p>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Navigation Tabs and Event Filters */}
@@ -1191,7 +1221,7 @@ const SchedulingCalendar = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex flex-col lg:flex-row gap-6">
+                <div ref={calendarSectionRef} className="flex flex-col lg:flex-row gap-6">
                     {/* Calendar Section */}
                     <div className="flex-1">
                         {/* View Controls */}

@@ -109,6 +109,8 @@ export default function FirmAdminDashboard() {
   const [scheduleFrequency, setScheduleFrequency] = useState('Weekly');
   const [recipients, setRecipients] = useState('');
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [leaderboardPage, setLeaderboardPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState(null);
@@ -684,10 +686,12 @@ export default function FirmAdminDashboard() {
                   onClick={() => setAutoRefresh(!autoRefresh)}
                   className={`relative inline-flex h-9 w-16 items-center rounded-full transition-colors ${autoRefresh ? 'bg-orange-500' : 'bg-gray-200'
                     }`}
+                  style={{ borderRadius: '999px' }}
                 >
                   <span
-                    className={`inline-block h-7 w-7 transform !rounded-full bg-white shadow-lg transition-transform ${autoRefresh ? 'translate-x-8' : 'translate-x-1'
+                    className={`inline-block h-7 w-7 transform rounded-full bg-white shadow-lg transition-transform ${autoRefresh ? 'translate-x-8' : 'translate-x-1'
                       }`}
+                    style={{ borderRadius: '999px' }}
                   />
                 </button>
                 <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Enabled</span>
@@ -762,7 +766,8 @@ export default function FirmAdminDashboard() {
                   handleApplyDateRange();
                   setIsCustomizeModalOpen(false);
                 }}
-                className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro] transition-colors"
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-xl hover:bg-orange-600 font-[BasisGrotesquePro] transition-colors shadow-sm"
+                style={{ borderRadius: '12px' }}
               >
                 Apply Date Range
               </button>
@@ -800,12 +805,14 @@ export default function FirmAdminDashboard() {
                       {/* Toggle Switch */}
                       <button
                         onClick={() => handleWidgetToggle(widget)}
-                        className={`relative inline-flex h-9 w-16 items-center !rounded-full transition-colors mr-6 ${widgetVisibility[widget] !== false ? 'bg-orange-500' : 'bg-gray-200'
+                        className={`relative inline-flex h-9 w-16 items-center rounded-full transition-colors mr-6 ${widgetVisibility[widget] !== false ? 'bg-orange-500' : 'bg-gray-200'
                           }`}
+                        style={{ borderRadius: '999px' }}
                       >
                         <span
-                          className={`inline-block h-7 w-7 transform !rounded-full bg-white shadow-lg transition-transform ${widgetVisibility[widget] !== false ? 'translate-x-8' : 'translate-x-1'
+                          className={`inline-block h-7 w-7 transform rounded-full bg-white shadow-lg transition-transform ${widgetVisibility[widget] !== false ? 'translate-x-8' : 'translate-x-1'
                             }`}
+                          style={{ borderRadius: '999px' }}
                         />
                       </button>
 
@@ -1195,7 +1202,10 @@ export default function FirmAdminDashboard() {
         {widgetVisibility.Kpi && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 mb-6 w-full">
             {/* My Revenue */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0">
+            <div
+              onClick={() => revenueChartRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0 cursor-pointer hover:border-orange-500 transition-all"
+            >
               <div className="absolute top-3 right-3">
                 <DolersIcon />
               </div>
@@ -1251,7 +1261,10 @@ export default function FirmAdminDashboard() {
             </div>
 
             {/* My Clients */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0">
+            <div
+              onClick={() => navigate('/firmadmin/clients')}
+              className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0 cursor-pointer hover:border-orange-500 transition-all"
+            >
               <div className="absolute top-3 right-3">
                 <DoublesIcon />
               </div>
@@ -1288,7 +1301,10 @@ export default function FirmAdminDashboard() {
             </div>
 
             {/* My Tasks */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0">
+            <div
+              onClick={() => navigate('/firmadmin/tasks')}
+              className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0 cursor-pointer hover:border-orange-500 transition-all"
+            >
               <div className="absolute top-3 right-3">
                 <FilessIcon />
               </div>
@@ -1499,23 +1515,57 @@ export default function FirmAdminDashboard() {
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Loading staff performance...</div>
               ) : dashboardData?.staff_performance?.leaderboard?.length > 0 ? (
-                dashboardData.staff_performance.leaderboard.map((staff, index) => (
-                  <div key={staff.staff_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#FEF3C7] rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-[#FBBF24]">{staff.rank}</span>
+                <>
+                  {dashboardData.staff_performance.leaderboard
+                    .slice((leaderboardPage - 1) * itemsPerPage, leaderboardPage * itemsPerPage)
+                    .map((staff, index) => (
+                      <div key={staff.staff_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-[#FEF3C7] rounded-full flex items-center justify-center">
+                            <span className="text-sm font-bold text-[#FBBF24]">
+                              {((leaderboardPage - 1) * itemsPerPage) + index + 1}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{staff.name}</div>
+                            <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">{staff.tasks_completed} Task. {staff.avg_days} days Avg</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue?.toLocaleString() || '0'}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{staff.name}</div>
-                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">{staff.tasks_completed} Task. {staff.avg_days} days Avg</div>
+                    ))}
+
+                  {/* Pagination Controls */}
+                  {dashboardData.staff_performance.leaderboard.length > itemsPerPage && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                      <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                        Showing {Math.min(dashboardData.staff_performance.leaderboard.length, (leaderboardPage - 1) * itemsPerPage + 1)} to {Math.min(dashboardData.staff_performance.leaderboard.length, leaderboardPage * itemsPerPage)} of {dashboardData.staff_performance.leaderboard.length} staff members
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setLeaderboardPage(prev => Math.max(1, prev - 1))}
+                          disabled={leaderboardPage === 1}
+                          className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setLeaderboardPage(prev => Math.min(Math.ceil(dashboardData.staff_performance.leaderboard.length / itemsPerPage), prev + 1))}
+                          disabled={leaderboardPage >= Math.ceil(dashboardData.staff_performance.leaderboard.length / itemsPerPage)}
+                          className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue?.toLocaleString() || '0'}</div>
-                      {/* <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.performance_percentage}%</div> */}
-                    </div>
-                  </div>
-                ))
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 text-gray-500">No staff performance data available</div>
               )}
@@ -1652,9 +1702,8 @@ export default function FirmAdminDashboard() {
                       <div
                         className="h-3 rounded-full"
                         style={{
-                          width: dashboardData?.key_metrics?.tasks?.target
-                            ? `${Math.min((dashboardData.key_metrics.tasks.current / dashboardData.key_metrics.tasks.target) * 100, 100)}%`
-                            : '0%'
+                          width: `${dashboardData?.compliance_risk?.metrics?.overall_compliance_score || 0}%`,
+                          backgroundColor: '#3AD6F2'
                         }}
                       ></div>
                     </div>
@@ -1716,8 +1765,8 @@ export default function FirmAdminDashboard() {
               </div>
               <button
                 onClick={() => navigate('/firmadmin/subscription')}
-                className="px-4 py-2 bg-white border border-[#dee2e6] text-[#343a40] rounded text-sm font-[BasisGrotesquePro] hover:bg-gray-50"
-                style={{ borderRadius: '8px' }}
+                className="px-4 py-2 bg-white border border-[#dee2e6] text-[#343a40] text-sm font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2"
+                style={{ borderRadius: '12px' }}
               >
                 Manage Subscription
               </button>

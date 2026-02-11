@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding, FaCopy, FaLink, FaSms } from 'react-icons/fa';
 import PhoneInput from 'react-phone-input-2';
@@ -45,6 +45,7 @@ export default function ClientManage() {
   const [reassigning, setReassigning] = useState(false);
   const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
   const [selectedClientForWorkflow, setSelectedClientForWorkflow] = useState(null);
+  const clientsListRef = useRef(null);
 
   // Staff members state
   const [staffMembers, setStaffMembers] = useState([]);
@@ -1418,7 +1419,14 @@ export default function ClientManage() {
             label: "Active Clients",
             value: dashboardLoading ? '...' : dashboardStats.active_clients?.count || 0,
             change: dashboardStats.active_clients?.vs_last_month,
-            isCurrency: false
+            isCurrency: false,
+            clickable: true,
+            onClick: () => {
+              handleTabChange('clients');
+              setTimeout(() => {
+                clientsListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }
           },
           {
             label: "Total Billed",
@@ -1445,8 +1453,8 @@ export default function ClientManage() {
           const isNeutral = changeValue === 0 || changeValue === null;
 
           return (
-            <div className="w-full h-full" key={index}>
-              <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full flex flex-col">
+            <div className={`w-full h-full ${card.clickable ? 'cursor-pointer' : ''}`} key={index} onClick={card.onClick}>
+              <div className={`bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full flex flex-col transition-all duration-200 ${card.clickable ? 'hover:shadow-md hover:border-blue-300' : ''}`}>
                 <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <div className="text-xs sm:text-sm font-medium text-gray-600">{card.label}</div>
                   {card.icon}
@@ -1861,7 +1869,7 @@ export default function ClientManage() {
 
       {/* Client List Section - Only show for clients tab */}
       {activeTab === 'clients' && (
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div ref={clientsListRef} className="bg-white rounded-lg border border-gray-200">
           {/* Section Header */}
           <div className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

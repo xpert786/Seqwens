@@ -50,7 +50,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
       if (!idToFetch) {
         throw new Error('No instance ID available');
       }
-      
+
       // Use the description-logs endpoint to get full details
       const response = await workflowAPI.getInstanceDescriptionLogs(idToFetch);
       if (response.success && response.data) {
@@ -58,12 +58,12 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
         // Extract execution logs
         setExecutionLogs(response.data.execution_logs || []);
         // Extract descriptions
-        setTemplateDescription(response.data.template_description || 
-                              response.data.workflow_template_details?.description || 
-                              '');
-        setStageDescription(response.data.current_stage_description || 
-                          response.data.current_stage_details?.description || 
-                          '');
+        setTemplateDescription(response.data.template_description ||
+          response.data.workflow_template_details?.description ||
+          '');
+        setStageDescription(response.data.current_stage_description ||
+          response.data.current_stage_details?.description ||
+          '');
       } else {
         // Fallback to regular getInstance if description-logs fails
         const fallbackResponse = await workflowAPI.getInstance(idToFetch);
@@ -106,7 +106,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
 
   const handleDeleteConfirm = async () => {
     if (!instance) return;
-    
+
     try {
       setDeleting(true);
       const response = await workflowAPI.deleteWorkflowInstance(instance.id);
@@ -205,7 +205,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
 
   return (
     <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -289,14 +289,14 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
             </h4>
             <div className="space-y-3">
               {executionLogs.map((log) => {
-                const performedByName = log.performed_by_name || 
-                                      log.performed_by_details?.name ||
-                                      (log.performed_by_details?.first_name && log.performed_by_details?.last_name
-                                        ? `${log.performed_by_details.first_name} ${log.performed_by_details.last_name}`.trim()
-                                        : 'Unknown');
+                const performedByName = log.performed_by_name ||
+                  log.performed_by_details?.name ||
+                  (log.performed_by_details?.first_name && log.performed_by_details?.last_name
+                    ? `${log.performed_by_details.first_name} ${log.performed_by_details.last_name}`.trim()
+                    : 'Unknown');
                 const actionType = log.action_type_display || log.action_type || 'Action';
                 const stageName = log.details?.stage_name || 'N/A';
-                
+
                 return (
                   <div
                     key={log.id}
@@ -345,11 +345,10 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 return (
                   <div
                     key={stageInstance.id}
-                    className={`border-l-4 pl-4 pb-4 ${
-                      isCurrent ? 'border-blue-500 bg-blue-50' :
-                      isCompleted ? 'border-green-500' :
-                      'border-gray-300'
-                    }`}
+                    className={`border-l-4 pl-4 pb-4 ${isCurrent ? 'border-blue-500 bg-blue-50' :
+                        isCompleted ? 'border-green-500' :
+                          'border-gray-300'
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -387,9 +386,8 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                                   ) : (
                                     <span className="text-yellow-600">⏳</span>
                                   )}
-                                  <span className={`font-[BasisGrotesquePro] ${
-                                    action.status === 'completed' ? 'text-gray-700' : 'text-gray-500'
-                                  }`}>
+                                  <span className={`font-[BasisGrotesquePro] ${action.status === 'completed' ? 'text-gray-700' : 'text-gray-500'
+                                    }`}>
                                     {action.action_type_display || action.action_type} - {action.configuration?.title || action.configuration?.subject || 'Action'}
                                   </span>
                                 </div>

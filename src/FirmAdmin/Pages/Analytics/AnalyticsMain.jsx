@@ -205,11 +205,12 @@ export default function AnalyticsMain() {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             {/* Date Range Dropdown */}
-            <div className="relative w-full sm:w-auto">
-              <select 
+            <div className="relative w-full sm:w-64">
+              <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-10 text-sm focus:outline-none"
+                className="w-full appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-4 py-2.5 pr-10 text-sm font-medium focus:outline-none cursor-pointer shadow-sm hover:border-[#3AD6F2] transition-colors"
+                style={{ borderRadius: '7px' }}
               >
                 <option value="1m">Last 1 month</option>
                 <option value="3m">Last 3 months</option>
@@ -218,7 +219,7 @@ export default function AnalyticsMain() {
                 <option value="all">All time</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -226,9 +227,9 @@ export default function AnalyticsMain() {
 
             {/* Export Report Button */}
             {!advancedReportingEnabled && (
-              <button 
+              <button
                 onClick={exportAnalyticsToPDF}
-                className="w-full sm:w-auto bg-white text-[#3B4A66] border-1 border-[#E8F0FF] px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors" 
+                className="w-full sm:w-auto bg-white text-[#3B4A66] border-1 border-[#E8F0FF] px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors"
                 style={{ borderRadius: '7px' }}
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

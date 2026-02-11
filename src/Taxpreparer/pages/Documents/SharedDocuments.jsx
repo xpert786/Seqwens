@@ -23,12 +23,12 @@ export default function SharedDocuments() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {};
       if (searchQuery.trim()) params.search = searchQuery.trim();
-      
+
       const response = await taxPreparerSharedDocumentsAPI.getSharedDocuments(params);
-      
+
       if (response.success && response.data) {
         setDocuments(response.data.documents || []);
       } else {
@@ -83,7 +83,7 @@ export default function SharedDocuments() {
       a.click();
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
-      
+
       toast.success('Document downloaded successfully', {
         position: "top-right",
         autoClose: 2000,
@@ -198,7 +198,7 @@ export default function SharedDocuments() {
           </button>
         </div>
       ) : documents.length === 0 ? (
-        <div className="text-center py-5 bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
           <FiFile size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
           <p style={{ color: '#6B7280', fontSize: '16px', marginBottom: '8px' }}>
             No shared documents found
@@ -228,7 +228,7 @@ export default function SharedDocuments() {
                 {documents.map((doc) => {
                   const ext = getDocumentExtension(doc);
                   const canPreview = SUPPORTED_PREVIEW_TYPES.has(ext);
-                  
+
                   return (
                     <tr key={doc.id}>
                       <td>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { DocumentUpload, DocumentBrowseFolder, DocumentPdfIcon } from '../../Components/icons';
+import { DocumentUpload, DocumentBrowseFolder, DocumentPdfIcon, DocumentTextIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentCriticalIssuesIcon, DocumentDownload } from '../../Components/icons';
 import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
@@ -431,14 +431,7 @@ export default function FolderContents() {
             )}
           </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-12 foldercontents-loading">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          )}
+          {/* Loading State - REMOVED redundant check that clears screen */}
 
           {/* Error State */}
           {error && !loading && (
@@ -454,40 +447,85 @@ export default function FolderContents() {
           )}
 
           {/* Summary Cards */}
-          {!loading && !error && (
-            <div className="grid grid-cols-5 gap-4 mb-6 foldercontents-summary-cards">
-              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
-                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
-                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
+          {(loading && !statistics.total_documents) ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm animate-pulse h-24"></div>
+              ))}
+            </div>
+          ) : !error && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 foldercontents-summary-cards">
+              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <DocumentTextIcon width={18} height={18} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-[#3B4A66] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
-                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
-                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
+
+              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
+                  <div className="p-2 bg-amber-50 rounded-lg">
+                    <DocumentWarningIcon width={18} height={18} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-[#F59E0B] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
-                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
-                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
+
+              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <DocumentSuccessIcon width={18} height={18} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-[#22C55E] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
-                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
-                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+
+              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
+                  <div className="p-2 bg-red-50 rounded-lg">
+                    <DocumentCriticalIssuesIcon width={18} height={18} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-gray-400 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
-                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
-                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+
+              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <DocumentDownload width={18} height={18} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-gray-400 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+                </div>
               </div>
             </div>
           )}
 
           {/* Document List Section */}
-          {!loading && !error && (
+          {!error && (
             <div className="bg-white rounded-lg p-6 foldercontents-document-section">
               <div className="mb-6 foldercontents-document-header">
                 <h4 className="text-xl font-semibold text-gray-800 mb-1 foldercontents-document-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
                   All Documents ({showAllDocuments ? documents.length : `${displayedDocuments.length} of ${documents.length}`})
                 </h4>
                 <p className="text-sm text-gray-600 foldercontents-document-subtitle" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Complete list of documents with review status and metadata jjj
+                  Complete list of documents with review status and metadata
                 </p>
               </div>
 
@@ -502,125 +540,139 @@ export default function FolderContents() {
                     placeholder="Search documents by name, client, or uploader..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 foldercontents-search-input"
+                    className="w-full sm:w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 foldercontents-search-input"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
                   />
+                  {loading && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Document Table */}
-              <div className="overflow-x-auto foldercontents-table-container">
-                <table className="w-full foldercontents-table">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedDocuments.map((doc, index) => (
-                      <tr
-                        key={doc.id}
-                        onClick={() => handleViewDetails(doc)}
-                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${index < displayedDocuments.length - 1 ? '' : ''}`}
-                      >
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-3 foldercontents-document-name">
-                            <div className="flex-shrink-0 foldercontents-document-icon">
-                              <FileIcon />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
-                              <p className="text-xs text-gray-500 foldercontents-document-type" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.clientName}</p>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 foldercontents-category-badge" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            {doc.category}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
-                        </td>
-                        <td className="py-4 px-4">
-                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
-                        </td>
-                        <td className="py-4 px-4">
-                          <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="relative actions-menu-container">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
-                              }}
-                              className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
-                              title="Actions"
-                            >
-                              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </button>
-                            {openActionsMenu === doc.id && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 foldercontents-actions-menu" style={{ borderRadius: '8px' }}>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewDetails(doc);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#F56D2D] transition-colors"
-                                  style={{ fontFamily: 'BasisGrotesquePro' }}
-                                >
-                                  View Details
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDownload(doc);
-                                    setOpenActionsMenu(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                  style={{ fontFamily: 'BasisGrotesquePro' }}
-                                >
-                                  Download
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(doc);
-                                    setOpenActionsMenu(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
-                                  style={{ fontFamily: 'BasisGrotesquePro' }}
-                                >
-                                  Delete
-                                </button>
+              <div className="overflow-x-auto foldercontents-table-container relative">
+                {loading && documents.length === 0 ? (
+                  <div className="text-center py-12 foldercontents-loading">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading folder contents...</p>
+                  </div>
+                ) : (
+                  <>
+                    <table className={`w-full foldercontents-table ${loading ? 'opacity-50' : ''} transition-opacity`}>
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {displayedDocuments.map((doc, index) => (
+                          <tr
+                            key={doc.id}
+                            onClick={() => handleViewDetails(doc)}
+                            className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer`}
+                          >
+                            <td className="py-4 px-4">
+                              <div className="flex items-center gap-3 foldercontents-document-name">
+                                <div className="flex-shrink-0 foldercontents-document-icon">
+                                  <FileIcon />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
+                                  <p className="text-xs text-gray-500 foldercontents-document-type" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </td>
+                            <td className="py-4 px-4">
+                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.clientName}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 foldercontents-category-badge" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                {doc.category}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="relative actions-menu-container">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
+                                  }}
+                                  className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
+                                  title="Actions"
+                                >
+                                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                                {openActionsMenu === doc.id && (
+                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 foldercontents-actions-menu" style={{ borderRadius: '8px' }}>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewDetails(doc);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#F56D2D] transition-colors"
+                                      style={{ fontFamily: 'BasisGrotesquePro' }}
+                                    >
+                                      View Details
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownload(doc);
+                                        setOpenActionsMenu(null);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                      style={{ fontFamily: 'BasisGrotesquePro' }}
+                                    >
+                                      Download
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(doc);
+                                        setOpenActionsMenu(null);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                                      style={{ fontFamily: 'BasisGrotesquePro' }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!loading && documents.length === 0 && (
+                      <div className="text-center py-12 foldercontents-empty-state">
+                        <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-              {documents.length === 0 && (
-                <div className="text-center py-12 foldercontents-empty-state">
-                  <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
-                </div>
-              )}
 
               {/* Pagination Controls */}
               {documents.length > DOCUMENTS_PER_PAGE && (

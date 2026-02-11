@@ -225,7 +225,7 @@ const StartWorkflowModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
-      <div className="bg-white !rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-white !rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[#E8F0FF] flex-shrink-0">
           <div>

@@ -1549,20 +1549,54 @@ export default function ESignatureManagement() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+            <div
+              onClick={() => {
+                setEsignFilters(prev => ({ ...prev, status: '' }));
+                setEsignCurrentPage(1);
+              }}
+              className={`cursor-pointer bg-white border ${esignFilters.status === '' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+            >
+              <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.total}</div>
+              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Total</div>
+            </div>
+            <div
+              onClick={() => {
+                setEsignFilters(prev => ({ ...prev, status: 'pending' }));
+                setEsignCurrentPage(1);
+              }}
+              className={`cursor-pointer bg-white border ${esignFilters.status === 'pending' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+            >
               <div className="text-2xl font-bold text-yellow-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.pending}</div>
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending</div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+            <div
+              onClick={() => {
+                setEsignFilters(prev => ({ ...prev, status: 'signed' }));
+                setEsignCurrentPage(1);
+              }}
+              className={`cursor-pointer bg-white border ${esignFilters.status === 'signed' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+            >
               <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.signed}</div>
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Signed</div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+            <div
+              onClick={() => {
+                setEsignFilters(prev => ({ ...prev, status: 'completed' }));
+                setEsignCurrentPage(1);
+              }}
+              className={`cursor-pointer bg-white border ${esignFilters.status === 'completed' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+            >
               <div className="text-2xl font-bold text-green-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.completed}</div>
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Completed</div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+            <div
+              onClick={() => {
+                setEsignFilters(prev => ({ ...prev, status: 'expired' }));
+                setEsignCurrentPage(1);
+              }}
+              className={`cursor-pointer bg-white border ${esignFilters.status === 'expired' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+            >
               <div className="text-2xl font-bold text-red-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.expired}</div>
               <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Expired</div>
             </div>

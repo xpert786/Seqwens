@@ -12,10 +12,12 @@ export default function CustomRolesManagement() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [selectedPreparer, setSelectedPreparer] = useState(null);
-  
+  const [typeFilter, setTypeFilter] = useState('all'); // 'all', 'active', 'permissions'
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10; // Fixed page size
+  const [pageSize, setPageSize] = useState(5);
+  const [isViewAll, setIsViewAll] = useState(false);
   const [pagination, setPagination] = useState({
     total_count: 0,
     total_pages: 1,
@@ -23,17 +25,21 @@ export default function CustomRolesManagement() {
     has_previous: false
   });
 
-  // Handle search - trigger on button click or Enter key
-  const handleSearch = () => {
-    setDebouncedSearchTerm(searchTerm);
-    setCurrentPage(1); // Reset to first page when search changes
-  };
+  // Handle live search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Clear search
   const handleClearSearch = () => {
     setSearchTerm('');
     setDebouncedSearchTerm('');
     setCurrentPage(1);
+    setTypeFilter('all');
   };
 
   // Also allow Enter key to trigger search
@@ -51,25 +57,25 @@ export default function CustomRolesManagement() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         page: currentPage,
         page_size: pageSize
       };
-      
+
       if (debouncedSearchTerm.trim()) {
         params.search = debouncedSearchTerm.trim();
       }
-      
+
       const response = await firmAdminStaffAPI.listTaxPreparers(params);
-      
+
       if (response.success) {
         // Handle different response structures
         if (response.data && Array.isArray(response.data)) {
           // Response with data as array and total_count at root level
           const totalCount = response.total_count !== undefined ? response.total_count : response.data.length;
           const totalPages = Math.ceil(totalCount / pageSize);
-          
+
           setTaxPreparers(response.data);
           setPagination({
             total_count: totalCount,
@@ -130,31 +136,57 @@ export default function CustomRolesManagement() {
     }
   };
 
-  // Apply client-side filtering if search term exists (fallback if API doesn't filter)
-  const filteredPreparers = debouncedSearchTerm.trim() 
-    ? taxPreparers.filter(preparer => {
-        const searchLower = debouncedSearchTerm.toLowerCase();
-        const nameMatch = preparer.full_name?.toLowerCase().includes(searchLower);
-        const emailMatch = preparer.email?.toLowerCase().includes(searchLower);
-        return nameMatch || emailMatch;
-      })
-    : taxPreparers;
+  // Switch to view all mode
+  const handleViewAll = () => {
+    setIsViewAll(true);
+    setPageSize(1000); // Set to a large enough number
+    setCurrentPage(1);
+  };
+
+  const handleResetPagination = (size = 5) => {
+    setIsViewAll(false);
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  // Apply client-side filtering
+  const filteredPreparers = taxPreparers.filter(preparer => {
+    // Search filter
+    let searchMatch = true;
+    if (debouncedSearchTerm.trim()) {
+      const searchLower = debouncedSearchTerm.toLowerCase();
+      const name = (preparer.full_name || preparer.name || preparer.staff_member?.name || '').toLowerCase();
+      const email = (preparer.email || preparer.staff_member?.email || '').toLowerCase();
+      searchMatch = name.includes(searchLower) || email.includes(searchLower);
+    }
+
+    // Type filter (from metric cards)
+    let typeMatch = true;
+    if (typeFilter === 'active') {
+      typeMatch = !!preparer.is_active;
+    } else if (typeFilter === 'permissions') {
+      typeMatch = !!preparer.has_permissions;
+    }
+
+    return searchMatch && typeMatch;
+  });
 
   // Calculate summary statistics
   const summary = {
-    total_preparers: taxPreparers.length,
-    active_preparers: taxPreparers.filter(p => p.is_active).length,
-    with_permissions: taxPreparers.filter(p => p.has_permissions).length,
+    total_preparers: pagination.total_count || taxPreparers.length,
+    active_preparers: taxPreparers.filter(p => !!p.is_active).length,
+    with_permissions: taxPreparers.filter(p => !!p.has_permissions).length,
     total_permissions: taxPreparers.reduce((sum, p) => sum + (p.permissions_count || 0), 0)
   };
 
+  // Only show the full-page loader on initial load if no data exists
   if (loading && taxPreparers.length === 0) {
     return (
-      <div className="flex justify-center items-center" style={{ minHeight: '400px' }}>
+      <div className="flex justify-center items-center" style={{ minHeight: '100vh', background: '#F3F7FF' }}>
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#32B582]"></div>
-          <p className="mt-3 text-sm text-gray-600 font-[BasisGrotesquePro]">
-            Loading tax preparers...
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#32B582] border-t-transparent"></div>
+          <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">
+            Initializing firm data...
           </p>
         </div>
       </div>
@@ -173,9 +205,12 @@ export default function CustomRolesManagement() {
         </p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}>
+        <div
+          onClick={() => setTypeFilter('all')}
+          className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'all' ? 'border-[#00C0C6] ring-1 ring-[#00C0C6]' : 'border-[#E8F0FF]'}`}
+          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
+        >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Total Tax Preparers</p>
             <div className="w-10 h-10 rounded-lg bg-[#00C0C6]/10 flex items-center justify-center">
@@ -183,12 +218,16 @@ export default function CustomRolesManagement() {
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>
-            {loading ? '...' : summary.total_preparers}
+            {summary.total_preparers}
           </p>
-          <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">In your firm</p>
+          <p className="text-xs sm:text-sm text-blue-600 font-medium font-[BasisGrotesquePro] hover:underline">View All Firm</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}>
+        <div
+          onClick={() => setTypeFilter('active')}
+          className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'active' ? 'border-[#32B582] ring-1 ring-[#32B582]' : 'border-[#E8F0FF]'}`}
+          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
+        >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Active Preparers</p>
             <div className="w-10 h-10 rounded-lg bg-[#32B582]/10 flex items-center justify-center">
@@ -196,12 +235,16 @@ export default function CustomRolesManagement() {
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>
-            {loading ? '...' : summary.active_preparers}
+            {summary.active_preparers}
           </p>
-          <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">Currently active</p>
+          <p className="text-xs sm:text-sm text-green-600 font-medium font-[BasisGrotesquePro] hover:underline">View Currently active</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}>
+        <div
+          onClick={() => setTypeFilter('permissions')}
+          className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'permissions' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-[#E8F0FF]'}`}
+          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
+        >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">With Permissions</p>
             <div className="w-10 h-10 rounded-lg bg-[#3AD6F2]/10 flex items-center justify-center">
@@ -211,10 +254,13 @@ export default function CustomRolesManagement() {
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>
             {loading ? '...' : summary.with_permissions}
           </p>
-          <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">Have custom permissions</p>
+          <p className="text-xs sm:text-sm text-cyan-600 font-medium font-[BasisGrotesquePro] hover:underline">View Custom permissions</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}>
+        <div
+          className="bg-white rounded-xl border border-[#E8F0FF] p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
+        >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Total Permissions</p>
             <div className="w-10 h-10 rounded-lg bg-[#00C0C6]/10 flex items-center justify-center">
@@ -240,12 +286,12 @@ export default function CustomRolesManagement() {
                   <FiSearch className="text-[#00C0C6]" size={18} />
                 </div>
                 <input
+                  id="search-input"
                   type="text"
                   placeholder="Search tax preparers by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full pl-10 pr-10 py-2.5 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00C0C6] focus:border-[#00C0C6] font-[BasisGrotesquePro] text-sm transition-all duration-200 bg-white hover:border-[#00C0C6]/50"
+                  className="w-full pl-10 pr-10 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00C0C6] focus:border-[#00C0C6] font-[BasisGrotesquePro] text-sm transition-all duration-200 bg-white hover:border-[#00C0C6]/50"
                   style={{ backgroundColor: '#FFFFFF' }}
                 />
                 {searchTerm && (
@@ -259,23 +305,13 @@ export default function CustomRolesManagement() {
                 )}
               </div>
               <button
-                onClick={handleSearch}
-                className="px-6 py-2.5 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
+                onClick={() => setDebouncedSearchTerm(searchTerm)}
+                className="px-6 py-2.5 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white !rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
                 title="Search"
               >
                 <FiSearch size={16} />
                 Search
               </button>
-              {searchTerm && (
-                <button
-                  onClick={handleClearSearch}
-                  className="px-4 py-2.5 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
-                  title="Clear search"
-                >
-                  <FiX size={16} />
-                  Clear
-                </button>
-              )}
             </div>
 
           </div>
@@ -304,7 +340,7 @@ export default function CustomRolesManagement() {
                 {searchTerm ? 'No tax preparers found' : 'No Tax Preparers Found'}
               </h5>
               <p className="text-sm text-[#6B7280] mb-6 font-[BasisGrotesquePro] max-w-md mx-auto">
-                {searchTerm 
+                {searchTerm
                   ? 'Try adjusting your search terms to find what you\'re looking for.'
                   : 'No tax preparers have been added to your firm yet.'
                 }
@@ -357,9 +393,8 @@ export default function CustomRolesManagement() {
                     >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2.5 rounded-lg transition-all duration-200 ${
-                            preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20 shadow-sm' : 'bg-gray-100 group-hover:bg-gray-200'
-                          }`}>
+                          <div className={`p-2.5 rounded-lg transition-all duration-200 ${preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20 shadow-sm' : 'bg-gray-100 group-hover:bg-gray-200'
+                            }`}>
                             <FiUsers
                               size={18}
                               color={preparer.is_active ? "#32B582" : "#9CA3AF"}
@@ -399,11 +434,10 @@ export default function CustomRolesManagement() {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg font-[BasisGrotesquePro] border shadow-sm ${
-                          preparer.is_active
-                            ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200'
-                            : 'bg-gray-100 text-gray-600 border-gray-200'
-                        }`}>
+                        <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg font-[BasisGrotesquePro] border shadow-sm ${preparer.is_active
+                          ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200'
+                          : 'bg-gray-100 text-gray-600 border-gray-200'
+                          }`}>
                           {preparer.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
@@ -420,7 +454,7 @@ export default function CustomRolesManagement() {
                               });
                               setShowPermissionsModal(true);
                             }}
-                            className="px-4 py-2 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-xs font-medium flex items-center gap-1.5 shadow-sm hover:shadow-md"
+                            className="px-4 py-2 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white !rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-xs font-medium flex items-center gap-1.5 shadow-sm hover:shadow-md"
                             title="Manage Permissions"
                           >
                             <FiEdit2 size={14} />
@@ -432,7 +466,7 @@ export default function CustomRolesManagement() {
                   ))}
                 </tbody>
               </table>
-              
+
               {/* Pagination */}
               {pagination.total_count > 0 && (
                 <div className="p-6 border-t border-[#E8F0FF] bg-gradient-to-r from-[#F9FAFB] to-[#F0FDFF] flex items-center justify-between">
@@ -441,54 +475,61 @@ export default function CustomRolesManagement() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={!pagination.has_previous || currentPage === 1}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${
-                        !pagination.has_previous || currentPage === 1
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                          : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
-                        }`}
+                      onClick={isViewAll ? () => handleResetPagination(5) : handleViewAll}
+                      className="px-4 py-2 text-sm font-semibold !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] bg-[#F0FDFF] border border-[#00C0C6]/30 text-[#00C0C6] hover:bg-[#00C0C6] hover:text-white shadow-sm"
                     >
-                      Previous
+                      {isViewAll ? 'Paginate' : 'View All'}
                     </button>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                        let pageNum;
-                        if (pagination.total_pages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= pagination.total_pages - 2) {
-                          pageNum = pagination.total_pages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${
-                              currentPage === pageNum
-                                ? 'bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white shadow-md'
-                                : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
-                              }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
-                      disabled={!pagination.has_next || currentPage === pagination.total_pages}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${
-                        !pagination.has_next || currentPage === pagination.total_pages
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                          : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
-                        }`}
-                    >
-                      Next
-                    </button>
+                    {!isViewAll && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={!pagination.has_previous || currentPage === 1}
+                          className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${!pagination.has_previous || currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                            : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
+                            }`}
+                        >
+                          Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                            let pageNum;
+                            if (pagination.total_pages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= pagination.total_pages - 2) {
+                              pageNum = pagination.total_pages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => setCurrentPage(pageNum)}
+                                className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${currentPage === pageNum
+                                  ? 'bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white shadow-md'
+                                  : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
+                                  }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
+                          disabled={!pagination.has_next || currentPage === pagination.total_pages}
+                          className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${!pagination.has_next || currentPage === pagination.total_pages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                            : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
+                            }`}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

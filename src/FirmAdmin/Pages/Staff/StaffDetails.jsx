@@ -73,7 +73,7 @@ export default function StaffDetails() {
 
   // Helper function to construct full profile picture URL
   const getProfilePictureUrl = (url) => {
-    if (!url) return null;
+    if (!url || url === 'undefined') return null;
     // If URL already starts with http:// or https://, return as is
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
@@ -96,7 +96,7 @@ export default function StaffDetails() {
   // Map API data to component format
   const staffMember = staffData ? {
     id: staffData.profile?.id || id,
-    name: staffData.profile?.name || 'N/A',
+    name: (staffData.profile?.name && staffData.profile?.name !== 'undefined') ? staffData.profile.name : 'N/A',
     title: staffData.profile?.role_display || staffData.profile?.role || 'N/A',
     status: staffData.profile?.status ? staffData.profile.status.charAt(0).toUpperCase() + staffData.profile.status.slice(1) : 'Active',
     email: staffData.profile?.email || staffData.contact_information?.email || 'N/A',
@@ -111,7 +111,7 @@ export default function StaffDetails() {
     hours: staffData.kpis?.hours || 0,
     efficiency: staffData.kpis?.efficiency || 0,
     specialties: staffData.specialties || [],
-    initials: staffData.profile?.initials || 'NA',
+    initials: (staffData.profile?.initials && staffData.profile?.initials !== 'undefined' && staffData.profile?.initials !== 'UNDEFINED') ? staffData.profile.initials : 'NA',
     profilePicture: getProfilePictureUrl(staffData.profile?.profile_picture_url)
   } : null;
 
@@ -224,8 +224,10 @@ export default function StaffDetails() {
                 onError={() => setProfilePictureError(true)}
               />
             ) : (
-              <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
-                {staffMember.initials}
+              <div className="h-16 w-16 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] shadow-inner">
+                <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                </svg>
               </div>
             )}
 
@@ -283,7 +285,7 @@ export default function StaffDetails() {
             </button>
 
             {/* Permissions Button - White with shield icon */}
-            <button 
+            <button
               onClick={() => setShowPermissionsModal(true)}
               className="px-3 py-1.5 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs text-gray-700 whitespace-nowrap"
             >
@@ -293,10 +295,10 @@ export default function StaffDetails() {
               Permissions
             </button>
 
-            
+
 
             {/* Edit Staff Button - White with pencil icon */}
-            
+
           </div>
         </div>
       </div>
