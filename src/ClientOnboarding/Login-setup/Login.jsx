@@ -143,22 +143,17 @@ export default function Login() {
       localStorage.removeItem("rememberedEmail");
     }
 
-    // Check for returnTo in location state
-    if (location.state && location.state.returnTo) {
-      // Clear any previous session data (except what we just set)
-      // Store tokens using the utility function
-      const accessToken = response.access_token || response.data?.access;
-      const refreshToken = response.refresh_token || response.data?.refresh;
-      setTokens(accessToken, refreshToken, rememberMe);
+    const accessToken = response.access_token || response.data?.access;
+    const refreshToken = response.refresh_token || response.data?.refresh;
+    // Set tokens first so they are available for the new route
+    setTokens(accessToken, refreshToken, rememberMe);
 
+    // Check for returnTo in location state - do this BEFORE any other navigation
+    if (location.state && location.state.returnTo) {
+      console.log(`Redirecting to returnTo path: ${location.state.returnTo}`);
       navigate(location.state.returnTo);
       return;
     }
-
-    // Store tokens using the utility function
-    const accessToken = response.access_token || response.data?.access;
-    const refreshToken = response.refresh_token || response.data?.refresh;
-    setTokens(accessToken, refreshToken, rememberMe);
 
     // Check user type and navigate to appropriate dashboard
     const user = response.user || response.data?.user;
