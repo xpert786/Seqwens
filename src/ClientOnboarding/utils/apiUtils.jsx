@@ -2215,6 +2215,15 @@ export const firmAdminDashboardAPI = {
     return await apiRequest(endpoint, 'GET');
   },
 
+  getRevenueAnalytics: async (params = {}) => {
+    const { date_range = '30d', period = 'monthly' } = params;
+    const queryParams = new URLSearchParams();
+    if (date_range) queryParams.append('date_range', date_range);
+    if (period) queryParams.append('period', period);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/firm-admin/dashboard/revenue-analytics/?${queryString}`, 'GET');
+  },
+
   // Get client engagement data
   // GET /taxpayer/firm-admin/clients/engagement/
   getEngagementData: async () => {

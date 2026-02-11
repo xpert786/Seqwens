@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/Login.css";
@@ -10,6 +10,7 @@ import TwoFactorCodeInput from "../components/TwoFactorCodeInput";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -140,6 +141,18 @@ export default function Login() {
       sessionStorage.setItem("rememberedEmail", email);
       // Clear from localStorage if it exists
       localStorage.removeItem("rememberedEmail");
+    }
+
+    // Check for returnTo in location state
+    if (location.state && location.state.returnTo) {
+      // Clear any previous session data (except what we just set)
+      // Store tokens using the utility function
+      const accessToken = response.access_token || response.data?.access;
+      const refreshToken = response.refresh_token || response.data?.refresh;
+      setTokens(accessToken, refreshToken, rememberMe);
+
+      navigate(location.state.returnTo);
+      return;
     }
 
     // Store tokens using the utility function
