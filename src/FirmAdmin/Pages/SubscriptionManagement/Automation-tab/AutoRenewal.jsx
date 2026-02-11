@@ -158,18 +158,20 @@ const AutoRenewal = () => {
                 </div>
 
                 {/* Retry Failed Payments Days */}
-                <div>
-                    <label className="block text-base font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">Days to Retry Failed Payments</label>
-                    <input
-                        type="number"
-                        min="0"
-                        max="30"
-                        className="px-3 py-2 bg-white !border border-gray-300 !rounded-lg text-sm text-gray-700 font-[BasisGrotesquePro] w-full max-w-xs"
-                        value={retryFailedPaymentsDays}
-                        onChange={(e) => setRetryFailedPaymentsDays(parseInt(e.target.value) || 0)}
-                        placeholder="3"
-                    />
-                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">Number of days to retry failed payments before suspension</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                        <label className="block text-base font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">Days to Retry Failed Payments</label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="30"
+                            className="px-3 py-2 bg-white !border border-gray-300 !rounded-lg text-sm text-gray-700 font-[BasisGrotesquePro] w-full"
+                            value={retryFailedPaymentsDays}
+                            onChange={(e) => setRetryFailedPaymentsDays(parseInt(e.target.value) || 0)}
+                            placeholder="3"
+                        />
+                        <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">Number of days to retry failed payments before suspension</p>
+                    </div>
                 </div>
 
                 {/* Save Button */}

@@ -996,6 +996,9 @@ const Messages = () => {
     return `${avg_response_time_hours?.toFixed(1) || '0.0'}h`;
   };
 
+  // Add ref for conversations section
+  const conversationsSectionRef = useRef(null);
+
   // Calculate summary stats
   const unreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
   const clientConversations = conversations.filter(conv => !conv.is_staff_conversation).length;
@@ -1004,21 +1007,36 @@ const Messages = () => {
   const updatedSummaryCards = [
     {
       ...summaryCards[0],
-      value: unreadCount.toString()
+      value: unreadCount.toString(),
+      filter: 'unread'
     },
     {
       ...summaryCards[1],
-      value: clientConversations.toString()
+      value: clientConversations.toString(),
+      filter: 'client'
     },
     {
       ...summaryCards[2],
-      value: internalConversations.toString()
+      value: internalConversations.toString(),
+      filter: 'staff'
     },
     {
       ...summaryCards[3],
-      value: responseTimeLoading ? '...' : formatResponseTime(avgResponseTime)
+      value: responseTimeLoading ? '...' : formatResponseTime(avgResponseTime),
+      filter: null // No filter for response time
     }
   ];
+
+  // Handle summary card click
+  const handleSummaryCardClick = (filter) => {
+    if (!filter) return; // Skip if no filter (e.g., response time card)
+
+    // Update the message filter
+    setMessageFilter(filter);
+
+    // Scroll to conversations section
+    conversationsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="min-h-screen bg-[#F3F7FF] p-6">
@@ -1071,7 +1089,15 @@ const Messages = () => {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {updatedSummaryCards.map((card, index) => (
-              <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4">
+              <div
+                key={index}
+                onClick={() => handleSummaryCardClick(card.filter)}
+                className={`bg-white !rounded-lg !border pt-6 px-4 pb-4 transition-all ${card.filter ? 'cursor-pointer hover:shadow-md' : ''
+                  } ${card.filter && messageFilter === card.filter
+                    ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]'
+                    : 'border-[#E8F0FF]'
+                  }`}
+              >
                 <div className="flex items-start justify-between">
                   {/* Left Side - Icon and Label */}
                   <div className="flex flex-col">
@@ -1123,7 +1149,7 @@ const Messages = () => {
         </div>
 
         {/* Main Content Area - Two Separate Cards */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div ref={conversationsSectionRef} className="flex flex-col lg:flex-row gap-6">
           {/* Left Panel - Conversations Card */}
           <div className="w-full lg:w-1/3 bg-white rounded-lg  !border border-[#E8F0FF] p-6 h-[600px] flex flex-col">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]">Conversations</h3>
@@ -1161,6 +1187,15 @@ const Messages = () => {
               ) : (
                 conversations
                   .filter(conv => {
+                    // Apply message filter (unread, client, staff, all)
+                    if (messageFilter === 'unread') {
+                      if (!conv.unread_count || conv.unread_count === 0) return false;
+                    } else if (messageFilter === 'client') {
+                      if (conv.is_staff_conversation) return false;
+                    } else if (messageFilter === 'staff') {
+                      if (!conv.is_staff_conversation) return false;
+                    }
+                    // Apply conversation search
                     if (conversationSearch) {
                       const searchLower = conversationSearch.toLowerCase();
                       return (

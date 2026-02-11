@@ -83,71 +83,81 @@ const officePerformance = [
     },
 ];
 
-const EnterpriseOverview = () => (
-    <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {enterpriseStats.map((stat) => (
-                <div
-                    key={stat.label}
-                    className="flex h-full flex-col justify-between rounded-lg border border-[#E8F0FF] bg-white px-3 py-4"
-                >
-                    <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap">{stat.label}</p>
-                        <span className="flex min-h-[24px] min-w-[24px] items-center justify-center text-xl text-[#3AD6F2]">
-                            {typeof stat.icon === 'string' ? stat.icon : stat.icon}
-                        </span>
-                    </div>
-                    <p className="mt-4 text-2xl font-semibold text-[#1E293B] font-[BasisGrotesquePro]">{stat.value}</p>
-                </div>
-            ))}
-        </div>
+const EnterpriseOverview = () => {
+    // Define background colors for each stat card
+    const cardColors = [
+        'bg-gradient-to-br from-blue-50 to-blue-100', // Total Offices
+        'bg-gradient-to-br from-green-50 to-green-100', // Total Staff
+        'bg-gradient-to-br from-purple-50 to-purple-100', // Monthly Revenue
+        'bg-gradient-to-br from-orange-50 to-orange-100', // Total Clients
+    ];
 
-        <div className="overflow-hidden rounded-lg border border-[#E8F0FF] bg-white">
-            <div className="border-b border-[#E8F0FF] px-4 py-3">
-                <h4 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">
-                    Office Performance Comparison
-                </h4>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                    Revenue and cost analysis across all offices
-                </p>
-            </div>
-            <div>
-                {officePerformance.map((office) => (
-                    <div key={`${office.name}-${office.revenue}`} className="flex flex-col gap-1.5 px-4 py-3">
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {enterpriseStats.map((stat, index) => (
+                    <div
+                        key={stat.label}
+                        className={`flex h-full flex-col justify-between rounded-lg border-2 border-[#E8F0FF] px-3 py-4 shadow-md ${cardColors[index]}`}
+                    >
                         <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <p className="text-sm font-regular text-[#1E293B] font-[BasisGrotesquePro]">{office.name}</p>
-                                <span className="rounded-full bg-[#22C55E] px-3 py-0.5 text-xs font-[BasisGrotesquePro] uppercase tracking-wide text-white">
-                                    {office.status}
-                                </span>
-                            </div>
-                            <div className="text-right font-[BasisGrotesquePro] text-sm font-semibold leading-tight text-[#1E293B]">
-                                {office.revenue}
-                                <p className="text-[12px] font-medium text-[#3B4A66]">{office.margin}</p>
-                            </div>
+                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap">{stat.label}</p>
+                            <span className="flex min-h-[24px] min-w-[24px] items-center justify-center text-xl text-[#3AD6F2]">
+                                {typeof stat.icon === 'string' ? stat.icon : stat.icon}
+                            </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-[#ECF3FF]">
-                            <div
-                                className="h-full rounded-full bg-[#20D3D3]"
-                                style={{ width: `${office.progress}%` }}
-                            />
-                        </div>
-                        <div className="mt-0.5 flex items-center justify-between text-[11px] font-[BasisGrotesquePro] text-[#3B4A66]">
-                            <span className="font-medium">{office.staff}</span>
-                            <span className="font-medium">{office.cost}</span>
-                        </div>
+                        <p className="mt-4 text-2xl font-semibold text-[#1E293B] font-[BasisGrotesquePro]">{stat.value}</p>
                     </div>
                 ))}
             </div>
-        </div>
 
-        <div className="pt-2">
-            <button className="!rounded-lg bg-[#F56D2D] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#EA580C] font-[BasisGrotesquePro]">
-                Save Notification Settings
-            </button>
+            <div className="overflow-hidden rounded-lg border border-[#E8F0FF] bg-white">
+                <div className="border-b border-[#E8F0FF] px-4 py-3">
+                    <h4 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                        Office Performance Comparison
+                    </h4>
+                    <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                        Revenue and cost analysis across all offices
+                    </p>
+                </div>
+                <div>
+                    {officePerformance.map((office) => (
+                        <div key={`${office.name}-${office.revenue}`} className="flex flex-col gap-1.5 px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <p className="text-sm font-regular text-[#1E293B] font-[BasisGrotesquePro]">{office.name}</p>
+                                    <span className="rounded-full bg-[#22C55E] px-3 py-0.5 text-xs font-[BasisGrotesquePro] uppercase tracking-wide text-white">
+                                        {office.status}
+                                    </span>
+                                </div>
+                                <div className="text-right font-[BasisGrotesquePro] text-sm font-semibold leading-tight text-[#1E293B]">
+                                    {office.revenue}
+                                    <p className="text-[12px] font-medium text-[#3B4A66]">{office.margin}</p>
+                                </div>
+                            </div>
+                            <div className="h-2 w-full rounded-full bg-[#ECF3FF]">
+                                <div
+                                    className="h-full rounded-full bg-[#20D3D3]"
+                                    style={{ width: `${office.progress}%` }}
+                                />
+                            </div>
+                            <div className="mt-0.5 flex items-center justify-between text-[11px] font-[BasisGrotesquePro] text-[#3B4A66]">
+                                <span className="font-medium">{office.staff}</span>
+                                <span className="font-medium">{office.cost}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="pt-2">
+                <button className="!rounded-lg bg-[#F56D2D] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#EA580C] font-[BasisGrotesquePro]">
+                    Save Notification Settings
+                </button>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default EnterpriseOverview;
 

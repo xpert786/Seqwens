@@ -181,7 +181,6 @@ export default function Revenue() {
   const handleRetry = () => {
     setReloadKey((count) => count + 1);
   };
-
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0];

@@ -475,23 +475,21 @@ export default function OfficeOverview() {
                             <button
                                 onClick={handleSetPrimaryOffice}
                                 disabled={settingPrimary}
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#00C0C6] rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-                                style={{ borderRadius: '8px' }}
+                                className="px-4 py-2 text-sm font-semibold text-white bg-[#00C0C6] !rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
                             >
                                 <FaStar className="w-4 h-4" />
                                 {settingPrimary ? 'Setting...' : 'Set as Primary Office'}
                             </button>
                         )}
                         {isPrimaryOffice && (
-                            <span className="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg flex items-center gap-2" style={{ borderRadius: '8px' }}>
+                            <span className="px-4 py-2 text-sm font-semibold text-white bg-yellow-500 !rounded-lg flex items-center gap-2 shadow-sm">
                                 <FaStar className="w-4 h-4" />
                                 Primary Office
                             </span>
                         )}
                         <button
                             onClick={() => setShowTaxpayerModal(true)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
-                            style={{ borderRadius: '8px' }}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-[#3AD6F2] !rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2"
                         >
                             <FaUsers className="w-4 h-4" />
                             Manage Taxpayers
@@ -502,8 +500,7 @@ export default function OfficeOverview() {
                         </div> */}
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-                            style={{ borderRadius: '8px' }}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#F56D2D] to-[#ff8c57] !rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2"
                         >
                             <FaEdit className="w-4 h-4" />
                             Edit Office
@@ -514,87 +511,76 @@ export default function OfficeOverview() {
                 {/* Summary Metrics Section */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {/* Staff Members */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className='flex items-center justify-between gap-3'>
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10.6673 14V12.6667C10.6673 11.9594 10.3864 11.2811 9.88627 10.781C9.38617 10.281 8.70789 10 8.00065 10H4.00065C3.29341 10 2.61513 10.281 2.11503 10.781C1.61494 11.2811 1.33398 11.9594 1.33398 12.6667V14M14.6673 14V12.6667C14.6669 12.0758 14.4702 11.5018 14.1082 11.0349C13.7462 10.5679 13.2394 10.2344 12.6673 10.0867M10.6673 2.08667C11.2409 2.23353 11.7493 2.56713 12.1124 3.03487C12.4755 3.50261 12.6725 4.07789 12.6725 4.67C12.6725 5.26211 12.4755 5.83739 12.1124 6.30513C11.7493 6.77287 11.2409 7.10647 10.6673 7.25333M8.66732 4.66667C8.66732 6.13943 7.47341 7.33333 6.00065 7.33333C4.52789 7.33333 3.33398 6.13943 3.33398 4.66667C3.33398 3.19391 4.52789 2 6.00065 2C7.47341 2 8.66732 3.19391 8.66732 4.66667Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M10.6673 14V12.6667C10.6673 11.9594 10.3864 11.2811 9.88627 10.781C9.38617 10.281 8.70789 10 8.00065 10H4.00065C3.29341 10 2.61513 10.281 2.11503 10.781C1.61494 11.2811 1.33398 11.9594 1.33398 12.6667V14M14.6673 14V12.6667C14.6669 12.0758 14.4702 11.5018 14.1082 11.0349C13.7462 10.5679 13.2394 10.2344 12.6673 10.0867M10.6673 2.08667C11.2409 2.23353 11.7493 2.56713 12.1124 3.03487C12.4755 3.50261 12.6725 4.07789 12.6725 4.67C12.6725 5.26211 12.4755 5.83739 12.1124 6.30513C11.7493 6.77287 11.2409 7.10647 10.6673 7.25333M8.66732 4.66667C8.66732 6.13943 7.47341 7.33333 6.00065 7.33333C4.52789 7.33333 3.33398 6.13943 3.33398 4.66667C3.33398 3.19391 4.52789 2 6.00065 2C7.47341 2 8.66732 3.19391 8.66732 4.66667Z" stroke="#3AD6F2" strokeWidth="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-
-
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{officeData.staff_count || officeData.staff || 0}</p>
-
+                                <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{officeData.staff_count || officeData.staff || 0}</p>
                             </div>
-
                         </div>
-                        <div className="flex flex-col pl-3">
-                            <p className="text-sm text-gray-600 mt-2">Staff Members</p>
+                        <div className="flex flex-col mt-3">
+                            <p className="text-sm font-medium text-gray-500">Staff Members</p>
                         </div>
                     </div>
 
                     {/* Active Clients */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10.6673 14V12.6667C10.6673 11.9594 10.3864 11.2811 9.88627 10.781C9.38617 10.281 8.70789 10 8.00065 10H4.00065C3.29341 10 2.61513 10.281 2.11503 10.781C1.61494 11.2811 1.33398 11.9594 1.33398 12.6667V14M14.6673 14V12.6667C14.6669 12.0758 14.4702 11.5018 14.1082 11.0349C13.7462 10.5679 13.2394 10.2344 12.6673 10.0867M10.6673 2.08667C11.2409 2.23353 11.7493 2.56713 12.1124 3.03487C12.4755 3.50261 12.6725 4.07789 12.6725 4.67C12.6725 5.26211 12.4755 5.83739 12.1124 6.30513C11.7493 6.77287 11.2409 7.10647 10.6673 7.25333M8.66732 4.66667C8.66732 6.13943 7.47341 7.33333 6.00065 7.33333C4.52789 7.33333 3.33398 6.13943 3.33398 4.66667C3.33398 3.19391 4.52789 2 6.00065 2C7.47341 2 8.66732 3.19391 8.66732 4.66667Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M10.6673 14V12.6667C10.6673 11.9594 10.3864 11.2811 9.88627 10.781C9.38617 10.281 8.70789 10 8.00065 10H4.00065C3.29341 10 2.61513 10.281 2.11503 10.781C1.61494 11.2811 1.33398 11.9594 1.33398 12.6667V14M14.6673 14V12.6667C14.6669 12.0758 14.4702 11.5018 14.1082 11.0349C13.7462 10.5679 13.2394 10.2344 12.6673 10.0867M10.6673 2.08667C11.2409 2.23353 11.7493 2.56713 12.1124 3.03487C12.4755 3.50261 12.6725 4.07789 12.6725 4.67C12.6725 5.26211 12.4755 5.83739 12.1124 6.30513C11.7493 6.77287 11.2409 7.10647 10.6673 7.25333M8.66732 4.66667C8.66732 6.13943 7.47341 7.33333 6.00065 7.33333C4.52789 7.33333 3.33398 6.13943 3.33398 4.66667C3.33398 3.19391 4.52789 2 6.00065 2C7.47341 2 8.66732 3.19391 8.66732 4.66667Z" stroke="#3AD6F2" strokeWidth="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{officeData.clients_count || officeData.clients || 0}</p>
-
+                                <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{officeData.clients_count || officeData.clients || 0}</p>
                             </div>
-
                         </div>
-                        <div className="flex flex-col pl-3">
-                            <p className="text-sm text-gray-600 mt-2">Active Clients</p>
+                        <div className="flex flex-col mt-3">
+                            <p className="text-sm font-medium text-gray-500">Active Clients</p>
                         </div>
                     </div>
 
                     {/* Monthly Revenue */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M10 2V18M14 6H9.5C8.57174 6 7.6815 6.36875 7.02513 7.02513C6.36875 7.6815 6 8.57174 6 9.5C6 10.4283 6.36875 11.3185 7.02513 11.9749C7.6815 12.6313 8.57174 13 9.5 13H14.5C15.4283 13 16.3185 13.3687 16.9749 14.0251C17.6313 14.6815 18 15.5717 18 16.5C18 17.4283 17.6313 18.3185 16.9749 18.9749C16.3185 19.6313 15.4283 20 14.5 20H5" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">
+                                <p className="text-2xl font-bold text-gray-900 leading-none mb-0 font-[BasisGrotesquePro]">
                                     {officeData.monthly_revenue?.formatted || formatCurrency(officeData.monthly_revenue?.value || officeData.monthlyRevenue || 0)}
                                 </p>
-
                             </div>
-
                         </div>
 
-                        <div className="flex flex-col pl-3">
-                            <p className="text-sm text-gray-600 mt-2">Monthly Revenue</p>
+                        <div className="flex flex-col mt-3">
+                            <p className="text-sm font-medium text-gray-500">Monthly Revenue</p>
                         </div>
                     </div>
 
                     {/* Growth Rate */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-[#FFF5F0] flex items-center justify-center flex-shrink-0">
                                 <svg width="21" height="11" viewBox="0 0 21 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20.5 0.5L12 9L7 4L0.5 10.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M20.5 0.5L12 9L7 4L0.5 10.5" stroke="#F56D2D" strokeWidth="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">
+                                <p className="text-2xl font-bold text-gray-900 leading-none mb-0 font-[BasisGrotesquePro]">
                                     {officeData.growth_rate?.display || (officeData.growth_rate?.percentage ? `+${officeData.growth_rate.percentage}%` : officeData.growthRate ? `+${officeData.growthRate}%` : 'N/A')}
                                 </p>
-
                             </div>
-
                         </div>
 
-                        <div className="flex flex-col pl-3">
-                            <p className="text-sm text-gray-600 mt-2">Growth Rate</p>
+                        <div className="flex flex-col mt-3">
+                            <p className="text-sm font-medium text-gray-500">Growth Rate</p>
                         </div>
                     </div>
                 </div>
@@ -606,11 +592,10 @@ export default function OfficeOverview() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`px-4 py-2 text-sm font-xs rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-[#3AD6F2] text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                                className={`px-4 py-2 text-sm font-semibold !rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
+                                    ? 'bg-[#3AD6F2] text-white shadow-md'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-transparent hover:border-gray-200'
                                     }`}
-                                style={{ borderRadius: '8px' }}
                             >
                                 {tab.label}
                             </button>
@@ -623,8 +608,8 @@ export default function OfficeOverview() {
                     <>
                         <div className="flex flex-col lg:flex-row gap-6 mb-6">
                             {/* Office Information */}
-                            <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
-                                <h6 className="text-base font-semibold text-gray-900 mb-4">Office Information</h6>
+                            <div className="flex-1 bg-white !rounded-xl p-6 border border-[#E8F0FF] shadow-sm">
+                                <h6 className="text-lg font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">Office Information</h6>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2">
                                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -673,8 +658,8 @@ export default function OfficeOverview() {
                             </div>
 
                             {/* Office Performance - Map */}
-                            <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
-                                <h6 className="text-base font-semibold text-gray-900 mb-4">Office Performance Map</h6>
+                            <div className="flex-1 bg-white !rounded-xl p-6 border border-[#E8F0FF] shadow-sm">
+                                <h6 className="text-lg font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">Office Performance Map</h6>
                                 <div className="relative h-64 bg-gray-100 rounded-lg overflow-hidden">
                                     {(() => {
                                         const address = officeData?.full_address ||
@@ -799,7 +784,7 @@ export default function OfficeOverview() {
 
                                 <div className="space-y-3">
                                     {clients.map((client) => (
-                                        <div key={client.id} className="bg-white border border-gray-100 rounded-lg p-4">
+                                        <div key={client.id} className="bg-white border border-[#E8F0FF] !rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                                             {/* Mobile Layout */}
                                             <div className="md:hidden space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -880,16 +865,14 @@ export default function OfficeOverview() {
                 {activeTab === 'Performance' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Monthly Performance Chart */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <p className="text-lg font-medium text-gray-600 mb-6">Monthly Performance</p>
-
+                        <div className="bg-white !rounded-xl p-6 border border-[#E8F0FF] shadow-sm">
+                            <h6 className="text-lg font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">Monthly Performance</h6>
                             {/* Loading State */}
                             {performanceLoading && (
                                 <div className="flex justify-center items-center" style={{ height: '300px' }}>
                                     <div className="text-gray-500">Loading performance data...</div>
                                 </div>
                             )}
-
                             {/* Error State */}
                             {performanceError && !performanceLoading && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
@@ -986,8 +969,8 @@ export default function OfficeOverview() {
                         </div>
 
                         {/* Key Metrics */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <p className="text-lg font-medium text-gray-600 mb-6">Key Metrics</p>
+                        <div className="bg-white !rounded-xl p-6 border border-[#E8F0FF] shadow-sm">
+                            <h6 className="text-lg font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">Key Metrics</h6>
 
                             {/* Loading State */}
                             {performanceLoading && (
@@ -1061,7 +1044,7 @@ export default function OfficeOverview() {
 
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                        <div className="space-y-6 rounded-xl bg-white p-6 border border-[#E4ECFF]">
+                        <div className="space-y-6 !rounded-xl bg-white p-6 border border-[#E8F0FF] shadow-sm">
                             <div>
                                 <h5 className="text-lg font-semibold text-gray-500">Office Settings</h5>
                                 <p className="text-sm text-[#64748B]">

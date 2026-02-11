@@ -236,7 +236,7 @@
 
 @media (max-height: 700px) {
   .client-sidebar-container {
-    width: 240px !important;
+    width: 200px !important;
   }
 
   .sidebar-top {

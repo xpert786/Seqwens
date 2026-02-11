@@ -685,7 +685,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                     search: clientSearch,
                     page_size: 10
                 });
-                
+
                 if (response.success && response.data?.clients) {
                     setClients(response.data.clients);
                 }
@@ -913,7 +913,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between px-1">
                             <label className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B4A66] opacity-70">Personalization</label>
-                            <button 
+                            <button
                                 onClick={() => setIsAdvancedMode(!isAdvancedMode)}
                                 className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full transition-all ${isAdvancedMode ? 'bg-[#1F2A55] text-white shadow-lg' : 'bg-white/50 text-[#3B4A66] hover:bg-white border border-white/50 shadow-sm'}`}
                             >
@@ -932,7 +932,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                                 {variablesError && (
                                     <div className="text-xs text-red-500 flex items-center gap-2 font-bold px-2 bg-red-500/10 py-2 rounded-lg">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                                         </svg>
                                         SYNTAX ERROR: {variablesError}
                                     </div>
@@ -967,8 +967,8 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                                     <div className="flex items-center gap-3">
                                         <p className="text-[11px] font-black text-[#7B8AB2] uppercase tracking-[0.2em]">Email Context</p>
                                         <div className="h-[1px] flex-1 bg-gradient-to-r from-[#E8F0FF] to-transparent"></div>
-                                        <button 
-                                            onClick={loadVariables} 
+                                        <button
+                                            onClick={loadVariables}
                                             className="p-1.5 text-[#3AD6F2] hover:bg-[#3AD6F2]/10 rounded-full transition-all"
                                             disabled={variablesLoading}
                                             title="Sync variables"
@@ -978,7 +978,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                                             </svg>
                                         </button>
                                     </div>
-                                    
+
                                     {variablesLoading ? (
                                         <div className="py-6 flex flex-col items-center gap-2">
                                             <div className="w-6 h-6 border-3 border-[#3AD6F2] border-t-transparent rounded-full animate-spin"></div>
@@ -1036,7 +1036,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                             <>
                                 <span>SEND TEMPLATE</span>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
-                                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                    <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
                                 </svg>
                             </>
                         )}
@@ -1598,7 +1598,7 @@ function TemplatesView({
     const [showSendModal, setShowSendModal] = useState(false);
     const [showDuplicateModal, setShowDuplicateModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
 
     const transformedTemplates = templates.map(transformTemplateData);
 

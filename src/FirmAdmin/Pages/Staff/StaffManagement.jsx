@@ -4,7 +4,7 @@ import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaLink, FaEnvelope, FaSms, FaCopy } from 'react-icons/fa';
-import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon, CrossesIcon } from "../../Components/icons";
+import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon, CrossesIcon, UserManage } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -67,6 +67,9 @@ export default function StaffManagement() {
   const [showReactivateConfirmModal, setShowReactivateConfirmModal] = useState(false);
   const [selectedStaffForAction, setSelectedStaffForAction] = useState(null);
   const [processingStatus, setProcessingStatus] = useState(false);
+  const [staffPage, setStaffPage] = useState(1);
+  const staffPageSize = 5;
+  const teamMembersRef = useRef(null);
 
   const handleInviteCreated = (inviteData) => {
     fetchPendingInvites();
@@ -814,9 +817,11 @@ export default function StaffManagement() {
 
   // Map API data to UI format
   const mapStaffData = (staff) => {
-    const name = staff.staff_member?.name || 'N/A';
+    const rawName = staff.staff_member?.name;
+    const name = (rawName && rawName !== 'undefined') ? rawName : 'N/A';
     const tags = staff.staff_member?.tags || [];
-    const profilePicture = staff.staff_member?.profile_picture;
+    const rawProfilePicture = staff.staff_member?.profile_picture;
+    const profilePicture = (rawProfilePicture && rawProfilePicture !== 'undefined') ? rawProfilePicture : null;
 
     return {
       id: staff.id,
@@ -1167,16 +1172,21 @@ export default function StaffManagement() {
 
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
-          <div className="w-full h-full">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
+          <div className="w-full h-full cursor-pointer" onClick={() => {
+            setActiveFilter('all');
+            setTimeout(() => {
+              teamMembersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          }}>
+            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card hover:shadow-md transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] staff-metric-label">Active Staff</div>
               </div>
               <h5 className="text-3xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro] staff-metric-value">{summary.active_staff}</h5>
             </div>
           </div>
-          <div className="w-full h-full">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
+          <div className="w-full h-full cursor-pointer" onClick={() => setActiveFilter('pending_invites')}>
+            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card hover:shadow-md transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] staff-metric-label">Pending Invites</div>
               </div>
@@ -1219,7 +1229,7 @@ export default function StaffManagement() {
         )}
 
         {/* Team Members Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 staff-team-section">
+        <div ref={teamMembersRef} className="bg-white rounded-lg shadow-sm border border-gray-200 staff-team-section">
           <div className="p-4 lg:p-6 border-b border-gray-200 staff-team-header">
             <h4 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] staff-team-title">
               {activeFilter === 'pending_invites'
@@ -1464,7 +1474,7 @@ export default function StaffManagement() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {staffData.map((staff) => {
+                      {staffData.slice((staffPage - 1) * staffPageSize, staffPage * staffPageSize).map((staff) => {
                         const mappedStaff = mapStaffData(staff);
                         return (
                           <tr key={mappedStaff.id} className="hover:bg-gray-50">
@@ -1477,10 +1487,24 @@ export default function StaffManagement() {
                                       src={mappedStaff.profilePicture}
                                       alt={mappedStaff.name}
                                       className="h-10 w-10 rounded-full object-cover"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.style.display = 'none';
+                                        e.target.nextSibling.style.display = 'flex';
+                                      }}
                                     />
+                                  ) : null}
+                                  {!mappedStaff.profilePicture ? (
+                                    <div className="h-10 w-10 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] staff-avatar-fallback shadow-inner">
+                                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                                      </svg>
+                                    </div>
                                   ) : (
-                                    <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                                      {mappedStaff.avatar}
+                                    <div className="h-10 w-10 rounded-full bg-[#E5E7EB] hidden items-center justify-center text-[#9CA3AF] staff-avatar-fallback shadow-inner">
+                                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                                      </svg>
                                     </div>
                                   )}
                                 </div>
@@ -1582,6 +1606,45 @@ export default function StaffManagement() {
                       })}
                     </tbody>
                   </table>
+                )}
+
+                {/* Staff Pagination */}
+                {activeFilter !== 'pending_invites' && staffData.length > staffPageSize && (
+                  <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between staff-pagination">
+                    <div className="text-sm text-gray-600 font-[BasisGrotesquePro] staff-pagination-info">
+                      Showing {((staffPage - 1) * staffPageSize) + 1} to {Math.min(staffPage * staffPageSize, staffData.length)} of {staffData.length} members
+                    </div>
+                    <div className="flex items-center gap-2 staff-pagination-buttons">
+                      <button
+                        onClick={() => setStaffPage(prev => Math.max(1, prev - 1))}
+                        disabled={staffPage === 1}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                      >
+                        Previous
+                      </button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.ceil(staffData.length / staffPageSize) }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setStaffPage(page)}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
+                              ? 'bg-[#F56D2D] text-white'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                              }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setStaffPage(prev => Math.min(Math.ceil(staffData.length / staffPageSize), prev + 1))}
+                        disabled={staffPage >= Math.ceil(staffData.length / staffPageSize)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
                 )}
               </>
             )}

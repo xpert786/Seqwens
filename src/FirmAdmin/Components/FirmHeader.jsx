@@ -59,6 +59,53 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
     const searchRef = useRef(null);
     const logoRef = useRef(null);
 
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+
+    const navigationItems = [
+        { title: "Dashboard Overview", path: "/firmadmin" },
+        { title: "Analytics & Reports", path: "/firmadmin/analytics" },
+        { title: "Client Management", path: "/firmadmin/clients" },
+        { title: "Staff Management", path: "/firmadmin/staff" },
+        { title: "Task Management", path: "/firmadmin/tasks" },
+        { title: "Document Management", path: "/firmadmin/documents" },
+        { title: "E-Signatures", path: "/firmadmin/esignature" },
+        { title: "Messaging & Notifications", path: "/firmadmin/messages" },
+        { title: "Scheduling & Calendar", path: "/firmadmin/calendar" },
+        { title: "Billing & Payments", path: "/firmadmin/billing" },
+        { title: "Workflow Templates", path: "/firmadmin/workflow" },
+        { title: "Subscription Management", path: "/firmadmin/subscription" },
+        { title: "Offices", path: "/firmadmin/offices" },
+        { title: "Email Templates", path: "/firmadmin/email-templates" },
+        { title: "Security & Compliance", path: "/firmadmin/security" },
+        { title: "Firm Settings & Branding", path: "/firmadmin/settings" },
+        { title: "Custom Roles", path: "/firmadmin/custom-roles" },
+        { title: "Account Settings", path: "/firmadmin/account-settings" },
+    ];
+
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim().length > 0) {
+            const filtered = navigationItems.filter(item =>
+                item.title.toLowerCase().includes(query.toLowerCase())
+            );
+            setFilteredSuggestions(filtered);
+            setShowSuggestions(true);
+        } else {
+            setShowSuggestions(false);
+            setFilteredSuggestions([]);
+        }
+    };
+
+    const handleSuggestionClick = (path) => {
+        navigate(path);
+        setSearchQuery("");
+        setShowSuggestions(false);
+    };
+
     // Check if currently impersonating a firm
     const checkImpersonationStatus = useCallback(() => {
         const { isImpersonating: impersonating, info } = getImpersonationStatus();
@@ -275,13 +322,25 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                     setShowNotifications(false);
                 } else if (showProfileMenu) {
                     closeProfileMenu();
+                } else if (showSuggestions) {
+                    setShowSuggestions(false);
                 }
             }
         };
 
+        const handleClickOutsideSearch = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutsideSearch);
         document.addEventListener("keydown", handleEscKey);
-        return () => document.removeEventListener("keydown", handleEscKey);
-    }, [showNotifications, showProfileMenu, closeProfileMenu]);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutsideSearch);
+            document.removeEventListener("keydown", handleEscKey);
+        };
+    }, [showNotifications, showProfileMenu, closeProfileMenu, showSuggestions]);
 
     const toggleNotifications = () => {
         setShowNotifications((prev) => {
@@ -324,43 +383,93 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                     {/* Left Section */}
                     <div className="d-flex align-items-center h-full">
                         <div
-                            className="d-flex align-items-center px-4 border-end"
+                            className="d-flex align-items-center border-end"
                             style={{
                                 width: sidebarWidth,
                                 height: '100%',
                                 transition: 'width 0.3s ease'
                             }}
                         >
-                            <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
-                                <img
-                                    ref={logoRef}
-                                    src={logoUrl || logo}
-                                    alt="Logo"
-                                    crossOrigin="anonymous"
-                                    className="firm-topbar-logo"
-                                    style={{ maxHeight: "35px", width: "auto" }}
-                                />
-                            </Link>
-                        </div>
+                            <div className="d-flex align-items-center px-4 flex-grow-1">
+                                <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
+                                    <img
+                                        ref={logoRef}
+                                        src={logoUrl || logo}
+                                        alt="Logo"
+                                        crossOrigin="anonymous"
+                                        className="firm-topbar-logo"
+                                        style={{ maxHeight: "35px", width: "auto" }}
+                                    />
+                                </Link>
+                            </div>
 
-                        {/* Sidebar Toggle */}
-                        <div
-                            onClick={onToggleSidebar}
-                            className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors border-end"
-                            style={{
-                                width: '60px'
-                            }}
-                        >
+                            {/* Sidebar Toggle - Now inside the sidebar width container at the edge */}
                             <div
+                                onClick={onToggleSidebar}
+                                className="d-flex align-items-center justify-content-center h-full cursor-pointer hover:bg-gray-50 transition-colors"
                                 style={{
-                                    transition: "transform 0.3s ease",
-                                    transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
+                                    width: '50px',
+                                    flexShrink: 0
                                 }}
                             >
-                                <LogoIcon />
+                                <div
+                                    style={{
+                                        transition: "transform 0.3s ease",
+                                        transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
+                                    }}
+                                >
+                                    <LogoIcon />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="ms-4 d-none d-md-block" style={{ width: '350px' }}>
+                            <div className="position-relative" ref={searchRef}>
+                                <div className="d-flex align-items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 transition-all focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+                                    <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <input
+                                        type="text"
+                                        placeholder="Search navigation items..."
+                                        className="bg-transparent border-0 w-100 outline-none shadow-none text-sm"
+                                        value={searchQuery}
+                                        onChange={handleSearchChange}
+                                        onFocus={() => {
+                                            if (searchQuery.trim().length > 0) setShowSuggestions(true);
+                                        }}
+                                        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                                    />
+                                </div>
+
+                                {/* Suggestions Dropdown */}
+                                {showSuggestions && filteredSuggestions.length > 0 && (
+                                    <div className="position-absolute w-100 bg-white shadow-xl border border-gray-200 rounded-lg mt-2 overflow-hidden" style={{ zIndex: 1100 }}>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {filteredSuggestions.map((item, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="px-4 py-2 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+                                                    onClick={() => handleSuggestionClick(item.path)}
+                                                >
+                                                    <div className="text-sm font-medium text-gray-700">{item.title}</div>
+                                                    <div className="text-[10px] text-gray-400 font-mono text-orange-400">{item.path}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {showSuggestions && filteredSuggestions.length === 0 && searchQuery.trim() !== "" && (
+                                    <div className="position-absolute w-100 bg-white shadow-xl border border-gray-200 rounded-lg mt-2 p-4 text-center text-sm text-gray-500" style={{ zIndex: 1100 }}>
+                                        No results found for "{searchQuery}"
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+
 
                     {/* Right Section */}
                     <div

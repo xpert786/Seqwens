@@ -1892,14 +1892,14 @@ export default function DocumentManagement() {
               <button
                 onClick={() => setEnableWatermarking(!enableWatermarking)}
                 disabled={loadingWatermark}
-                className={`relative inline-flex h-6 w-11 items-center transition-colors ${enableWatermarking ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enableWatermarking ? 'bg-[#3AD6F2]' : 'bg-gray-300'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ borderRadius: '10px' }}
+                style={{ borderRadius: '999px' }}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform bg-white transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'
+                  className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'
                     }`}
-                  style={{ borderRadius: '8px' }}
+                  style={{ borderRadius: '999px' }}
                 />
               </button>
             </div>
@@ -2059,14 +2059,14 @@ export default function DocumentManagement() {
                 <button
                   onClick={() => setIncludeUserInfo(!includeUserInfo)}
                   disabled={loadingWatermark}
-                  className={`relative inline-flex h-6 w-11 items-center transition-colors ${includeUserInfo ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeUserInfo ? 'bg-[#3AD6F2]' : 'bg-gray-300'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ borderRadius: '10px' }}
+                  style={{ borderRadius: '999px' }}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform bg-white transition-transform ${includeUserInfo ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${includeUserInfo ? 'translate-x-6' : 'translate-x-1'
                       }`}
-                    style={{ borderRadius: '8px' }}
+                    style={{ borderRadius: '999px' }}
                   />
                 </button>
               </div>
@@ -2081,14 +2081,14 @@ export default function DocumentManagement() {
                 <button
                   onClick={() => setIncludeTimestamp(!includeTimestamp)}
                   disabled={loadingWatermark}
-                  className={`relative inline-flex h-6 w-11 items-center transition-colors ${includeTimestamp ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeTimestamp ? 'bg-[#3AD6F2]' : 'bg-gray-300'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ borderRadius: '10px' }}
+                  style={{ borderRadius: '999px' }}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform bg-white transition-transform ${includeTimestamp ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${includeTimestamp ? 'translate-x-6' : 'translate-x-1'
                       }`}
-                    style={{ borderRadius: '8px' }}
+                    style={{ borderRadius: '999px' }}
                   />
                 </button>
               </div>
@@ -2103,14 +2103,14 @@ export default function DocumentManagement() {
                 <button
                   onClick={() => setIncludeDocumentInfo(!includeDocumentInfo)}
                   disabled={loadingWatermark}
-                  className={`relative inline-flex h-6 w-11 items-center transition-colors ${includeDocumentInfo ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeDocumentInfo ? 'bg-[#3AD6F2]' : 'bg-gray-300'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ borderRadius: '10px' }}
+                  style={{ borderRadius: '999px' }}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform bg-white transition-transform ${includeDocumentInfo ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${includeDocumentInfo ? 'translate-x-6' : 'translate-x-1'
                       }`}
-                    style={{ borderRadius: '8px' }}
+                    style={{ borderRadius: '999px' }}
                   />
                 </button>
               </div>

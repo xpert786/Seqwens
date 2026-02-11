@@ -32,7 +32,8 @@ export default function BillingManagement() {
     client_id: ""
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 4; // Changed from 5 to 4 to show top 4
+  const [activeMetricFilter, setActiveMetricFilter] = useState(null);
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -136,6 +137,36 @@ export default function BillingManagement() {
       amount = parseFloat(amount);
     }
     return amount ? `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00";
+  };
+
+  // Add ref for invoice list section
+  const invoiceListRef = React.useRef(null);
+
+  // Handle metric card click
+  const handleMetricCardClick = (metricType) => {
+    if (!metricType) return; // Skip if no filter
+
+    // Update active metric filter
+    setActiveMetricFilter(metricType);
+
+    // Update filters based on metric type
+    if (metricType === 'outstanding') {
+      setFilters(prev => ({ ...prev, status: '' })); // Show all invoices
+    } else if (metricType === 'overdue') {
+      setFilters(prev => ({ ...prev, status: 'overdue' }));
+    } else if (metricType === 'paid') {
+      setFilters(prev => ({ ...prev, status: 'paid' }));
+    } else if (metricType === 'total') {
+      setFilters(prev => ({ ...prev, status: '' }));
+    }
+
+    // Reset to page 1
+    setCurrentPage(1);
+
+    // Scroll to invoice list
+    setTimeout(() => {
+      invoiceListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   // Export invoices to PDF
@@ -454,11 +485,10 @@ export default function BillingManagement() {
         <div className="flex gap-8">
           <button
             onClick={() => setActiveTab("invoices")}
-            className={`pb-4 px-2 font-medium transition-colors ${
-              activeTab === "invoices"
-                ? "border-b-2 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`pb-4 px-2 font-medium transition-colors ${activeTab === "invoices"
+              ? "border-b-2 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
+              }`}
             style={
               activeTab === "invoices"
                 ? { borderColor: '#3B82F6', color: '#3B82F6' }
@@ -472,14 +502,13 @@ export default function BillingManagement() {
               Invoices
             </span>
           </button>
-          
+
           <button
             onClick={() => setActiveTab("payment-methods")}
-            className={`pb-4 px-2 font-medium transition-colors ${
-              activeTab === "payment-methods"
-                ? "border-b-2 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`pb-4 px-2 font-medium transition-colors ${activeTab === "payment-methods"
+              ? "border-b-2 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
+              }`}
             style={
               activeTab === "payment-methods"
                 ? { borderColor: '#3B82F6', color: '#3B82F6' }
@@ -500,32 +529,42 @@ export default function BillingManagement() {
       {activeTab === "invoices" && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div
+              onClick={() => handleMetricCardClick('outstanding')}
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'outstanding' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+                }`}
+            >
               <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Balance</h6>
               <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
                 {formatCurrency(summary.outstanding_balance || 0)}
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <div
+              onClick={() => handleMetricCardClick('paid')}
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'paid' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+                }`}
+            >
               <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Paid This Year</h6>
               <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
                 {formatCurrency(summary.paid_this_year || 0)}
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <div
+              onClick={() => handleMetricCardClick('total')}
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'total' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+                }`}
+            >
               <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Total Invoices</h6>
               <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
                 {summary.total_invoices || invoices.length}
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Invoices</h6>
-              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
-                {summary.outstanding_count || 0}
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <div
+              onClick={() => handleMetricCardClick('overdue')}
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'overdue' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+                }`}
+            >
               <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Overdue Invoices</h6>
               <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
                 {summary.overdue_count || 0}
@@ -546,197 +585,196 @@ export default function BillingManagement() {
             </div>
           )}
 
-      {/* Invoice List */}
-      <div className="bg-white rounded-lg p-6">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
-              All Invoices ({invoices.length})
-            </h5>
-            <p className="text-sm" style={{ color: '#6B7280' }}>
-              Complete list of invoices with payment status and details
-            </p>
-          </div>
-          {invoices.length > itemsPerPage && (
-            <div className="text-sm" style={{ color: '#6B7280' }}>
-              Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
-            </div>
-          )}
-        </div>
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-sm" style={{ color: '#6B7280' }}>Loading invoices...</p>
-          </div>
-        ) : invoices.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-sm" style={{ color: '#6B7280' }}>No invoices found</p>
-          </div>
-        ) : (
-          /* Table */
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b" style={{ borderColor: '#E5E7EB' }}>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Invoice #</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Client</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Amount</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Paid</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Remaining</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Issue Date</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Due Date</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedInvoices.map((invoice) => {
-                  // Map API response fields to display fields
-                  const invoiceNumber = invoice.invoice_number || invoice.invoiceNumber || `INV-${invoice.id}`;
-                  const clientName = invoice.client_name ||
-                    (invoice.client ? `${invoice.client.first_name || ''} ${invoice.client.last_name || ''}`.trim() : '') ||
-                    invoice.client || 'N/A';
-                  const amount = parseFloat(invoice.amount || invoice.total_amount || 0);
-                  const paidAmount = parseFloat(invoice.paid_amount || 0);
-                  const remainingAmount = parseFloat(invoice.remaining_amount || invoice.remainingAmount || amount - paidAmount);
-                  const issueDate = invoice.formatted_issue_date || formatDate(invoice.issue_date || invoice.issueDate);
-                  const dueDate = invoice.formatted_due_date || formatDate(invoice.due_date || invoice.dueDate);
-                  const description = invoice.description || '';
-
-                  return (
-                    <tr
-                      key={invoice.id}
-                      onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
-                      className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                      style={{ borderColor: '#F3F4F6' }}
-                    >
-                      <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
-                        {invoiceNumber}
-                      </td>
-                      <td className="py-4 px-4 text-sm" style={{ color: '#1F2937' }}>
-                        {clientName}
-                      </td>
-                      <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
-                        {formatCurrency(amount)}
-                      </td>
-                      <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
-                        {formatCurrency(paidAmount)}
-                      </td>
-                      <td className="py-4 px-4 text-sm font-medium" style={{ color: remainingAmount > 0 ? '#EF4444' : '#22C55E' }}>
-                        {formatCurrency(remainingAmount)}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        {getStatusBadge(invoice)}
-                      </td>
-                      <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
-                        {issueDate}
-                      </td>
-                      <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
-                        {dueDate}
-                      </td>
-                      <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
-                          className="p-2 hover:bg-gray-100 !rounded-lg transition"
-                          title="View Details"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#3B82F6' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination Controls */}
-        {!loading && invoices.length > itemsPerPage && (
-          <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: '#E5E7EB' }}>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
-                  color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
-                  backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white'
-                }}
-              >
-                Previous
-              </button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first page, last page, current page, and pages around current
-                  if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-2 !rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === page
-                            ? 'text-white'
-                            : 'border'
-                        }`}
-                        style={
-                          currentPage === page
-                            ? { backgroundColor: '#3B82F6' }
-                            : {
-                                borderColor: '#D1D5DB',
-                                color: '#6B7280',
-                                backgroundColor: 'white'
-                              }
-                        }
-                      >
-                        {page}
-                      </button>
-                    );
-                  } else if (
-                    page === currentPage - 2 ||
-                    page === currentPage + 2
-                  ) {
-                    return (
-                      <span key={page} className="px-2 text-sm" style={{ color: '#6B7280' }}>
-                        ...
-                      </span>
-                    );
-                  }
-                  return null;
-                })}
+          {/* Invoice List */}
+          <div ref={invoiceListRef} className="bg-white rounded-lg p-6">
+            <div className="mb-6 flex justify-between items-center">
+              <div>
+                <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
+                  All Invoices ({invoices.length})
+                </h5>
+                <p className="text-sm" style={{ color: '#6B7280' }}>
+                  Complete list of invoices with payment status and details
+                </p>
               </div>
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
-                  color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
-                  backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white'
-                }}
-              >
-                Next
-              </button>
+              {invoices.length > itemsPerPage && (
+                <div className="text-sm" style={{ color: '#6B7280' }}>
+                  Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
+                </div>
+              )}
             </div>
 
-            <div className="text-sm" style={{ color: '#6B7280' }}>
-              Page {currentPage} of {totalPages}
-            </div>
+            {/* Loading State */}
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-4 text-sm" style={{ color: '#6B7280' }}>Loading invoices...</p>
+              </div>
+            ) : invoices.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-sm" style={{ color: '#6B7280' }}>No invoices found</p>
+              </div>
+            ) : (
+              /* Table */
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b" style={{ borderColor: '#E5E7EB' }}>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Invoice #</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Client</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Amount</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Paid</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Remaining</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Issue Date</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Due Date</th>
+                      <th className="text-right py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedInvoices.map((invoice) => {
+                      // Map API response fields to display fields
+                      const invoiceNumber = invoice.invoice_number || invoice.invoiceNumber || `INV-${invoice.id}`;
+                      const clientName = invoice.client_name ||
+                        (invoice.client ? `${invoice.client.first_name || ''} ${invoice.client.last_name || ''}`.trim() : '') ||
+                        invoice.client || 'N/A';
+                      const amount = parseFloat(invoice.amount || invoice.total_amount || 0);
+                      const paidAmount = parseFloat(invoice.paid_amount || 0);
+                      const remainingAmount = parseFloat(invoice.remaining_amount || invoice.remainingAmount || amount - paidAmount);
+                      const issueDate = invoice.formatted_issue_date || formatDate(invoice.issue_date || invoice.issueDate);
+                      const dueDate = invoice.formatted_due_date || formatDate(invoice.due_date || invoice.dueDate);
+                      const description = invoice.description || '';
+
+                      return (
+                        <tr
+                          key={invoice.id}
+                          onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
+                          className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                          style={{ borderColor: '#F3F4F6' }}
+                        >
+                          <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
+                            {invoiceNumber}
+                          </td>
+                          <td className="py-4 px-4 text-sm" style={{ color: '#1F2937' }}>
+                            {clientName}
+                          </td>
+                          <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
+                            {formatCurrency(amount)}
+                          </td>
+                          <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
+                            {formatCurrency(paidAmount)}
+                          </td>
+                          <td className="py-4 px-4 text-sm font-medium" style={{ color: remainingAmount > 0 ? '#EF4444' : '#22C55E' }}>
+                            {formatCurrency(remainingAmount)}
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            {getStatusBadge(invoice)}
+                          </td>
+                          <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
+                            {issueDate}
+                          </td>
+                          <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
+                            {dueDate}
+                          </td>
+                          <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
+                              className="p-2 hover:bg-gray-100 !rounded-lg transition"
+                              title="View Details"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#3B82F6' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!loading && invoices.length > itemsPerPage && (
+              <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: '#E5E7EB' }}>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
+                      color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
+                      backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white'
+                    }}
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-2 !rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                              ? 'text-white'
+                              : 'border'
+                              }`}
+                            style={
+                              currentPage === page
+                                ? { backgroundColor: '#3B82F6' }
+                                : {
+                                  borderColor: '#D1D5DB',
+                                  color: '#6B7280',
+                                  backgroundColor: 'white'
+                                }
+                            }
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <span key={page} className="px-2 text-sm" style={{ color: '#6B7280' }}>
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
+                      color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
+                      backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white'
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+
+                <div className="text-sm" style={{ color: '#6B7280' }}>
+                  Page {currentPage} of {totalPages}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
         </>
       )}
 

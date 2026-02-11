@@ -477,7 +477,7 @@ export default function FirmSharedDocuments() {
           </button>
         </div>
       ) : documents.length === 0 ? (
-        <div className="text-center py-5 bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
           <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
             <FiFile size={24} style={{ color: '#D1D5DB' }} />
             <p style={{ color: '#6B7280', fontSize: '16px', margin: 0 }}>

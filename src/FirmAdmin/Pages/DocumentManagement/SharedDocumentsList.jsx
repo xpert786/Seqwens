@@ -29,13 +29,13 @@ export default function SharedDocumentsList() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {};
       if (documentFilter) params.document_id = parseInt(documentFilter);
       if (taxPreparerFilter) params.tax_preparer_id = parseInt(taxPreparerFilter);
-      
+
       const response = await firmAdminDocumentsAPI.listSharedDocuments(params);
-      
+
       if (response.success && response.data) {
         setShares(response.data.shares || []);
       } else {
@@ -110,17 +110,17 @@ export default function SharedDocumentsList() {
 
   const filteredShares = shares.filter(share => {
     if (!searchQuery.trim()) return true;
-    
+
     const query = searchQuery.toLowerCase();
     const docName = (share.document?.name || '').toLowerCase();
     const preparerName = (share.shared_with?.name || '').toLowerCase();
     const preparerEmail = (share.shared_with?.email || '').toLowerCase();
     const notes = (share.notes || '').toLowerCase();
-    
-    return docName.includes(query) || 
-           preparerName.includes(query) || 
-           preparerEmail.includes(query) ||
-           notes.includes(query);
+
+    return docName.includes(query) ||
+      preparerName.includes(query) ||
+      preparerEmail.includes(query) ||
+      notes.includes(query);
   });
 
   return (
@@ -245,7 +245,7 @@ export default function SharedDocumentsList() {
           </button>
         </div>
       ) : filteredShares.length === 0 ? (
-        <div className="text-center py-5 bg-white rounded-lg p-4 shareddocs-empty-state" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 bg-white rounded-lg p-4 shareddocs-empty-state" style={{ border: '1px solid #E5E7EB' }}>
           <FiFile size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
           <p style={{ color: '#6B7280', fontSize: '16px', marginBottom: '8px' }}>
             No shared documents found
@@ -357,8 +357,8 @@ export default function SharedDocumentsList() {
           // setSelectedDocumentsForShare([]);
         }}
         onSelectDocuments={(docs) => {
-          console.log(docs,'checkdocs hereeee')
-          if(docs.length){
+          console.log(docs, 'checkdocs hereeee')
+          if (docs.length) {
 
             setSelectedDocumentsForShare(docs);
           }

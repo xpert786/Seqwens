@@ -19,8 +19,11 @@ import { securityAPI, handleAPIError, firmAdminBlockedAccountsAPI, firmAdminGeoR
 import { FiSearch, FiUnlock, FiClock, FiUser, FiShield, FiAlertCircle, FiLock, FiCheck, FiX, FiGlobe } from 'react-icons/fi';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { toast } from 'react-toastify';
+import Pagination from '../../ClientOnboarding/components/Pagination';
 const tabs = [
     'Security Overview',
+    'Security Settings',
+    'Compliance Readiness',
     'Active Sessions',
     'Audits Logs',
     'Blocked Accounts',
@@ -337,6 +340,8 @@ export default function SecurityCompliance() {
     const [soc2Aligned, setSoc2Aligned] = useState(true);
     const [hipaaAligned, setHipaaAligned] = useState(true);
     const [eSignConsent, setESignConsent] = useState(false);
+    const [consentLogs, setConsentLogs] = useState(false);
+    const [marketingConsent, setMarketingConsent] = useState(false);
     const [enableActiveSessionsView, setEnableActiveSessionsView] = useState(false);
     const [allowForceLogout, setAllowForceLogout] = useState(true);
     const [enableStaffReports, setEnableStaffReports] = useState(false);
@@ -391,7 +396,14 @@ export default function SecurityCompliance() {
     const [auditLogsError, setAuditLogsError] = useState('');
     const [auditLogsPagination, setAuditLogsPagination] = useState({
         page: 1,
-        page_size: 50,
+        page_size: 5,
+        total_count: 0,
+        total_pages: 0
+    });
+
+    const [activeSessionsPagination, setActiveSessionsPagination] = useState({
+        page: 1,
+        page_size: 5,
         total_count: 0,
         total_pages: 0
     });
@@ -422,7 +434,7 @@ export default function SecurityCompliance() {
     });
     const [securityAlertsPagination, setSecurityAlertsPagination] = useState({
         page: 1,
-        page_size: 50,
+        page_size: 5,
         total_count: 0,
         total_pages: 0
     });
@@ -517,6 +529,23 @@ export default function SecurityCompliance() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auditLogFilters, auditLogsPagination.page, activeTab]);
+
+    // Fetch security alerts when filters or page changes
+    useEffect(() => {
+        if (activeTab === 'Security Overview') {
+            fetchSecurityAlerts();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [securityAlertsFilters, securityAlertsPagination.page, activeTab]);
+
+    // Update active sessions pagination when data changes
+    useEffect(() => {
+        setActiveSessionsPagination(prev => ({
+            ...prev,
+            total_count: activeSessions.length,
+            total_pages: Math.ceil(activeSessions.length / prev.page_size)
+        }));
+    }, [activeSessions]);
 
     // Fetch blocked accounts
     const fetchBlockedAccounts = async () => {
@@ -803,7 +832,19 @@ export default function SecurityCompliance() {
             <>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
                     {calculatedMetrics.map((metric) => (
-                        <div key={metric.label} className="rounded-2xl bg-white p-4">
+                        <div
+                            key={metric.label}
+                            className="
+    bg-white
+    border border-[#dee2e6]
+    rounded-2xl
+    p-4
+    shadow-sm
+    hover:shadow-md
+    transition-all
+    duration-200
+  "
+                        >
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium tracking-wide text-[#6B7280]">{metric.label}</span>
                                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0F9FF] text-[#3AD6F2]">
@@ -935,6 +976,18 @@ export default function SecurityCompliance() {
                             </tbody>
                         </table>
                     </div>
+                    {/* Security Alerts Pagination */}
+                    {(securityAlertsPagination.total_count > 5 || securityAlertsPagination.total_pages > 1) && (
+                        <div className="mt-4 border-t border-[#E5E7EB] pt-4">
+                            <Pagination
+                                currentPage={securityAlertsPagination.page}
+                                totalPages={securityAlertsPagination.total_pages}
+                                onPageChange={(page) => setSecurityAlertsPagination(prev => ({ ...prev, page }))}
+                                totalItems={securityAlertsPagination.total_count}
+                                itemsPerPage={securityAlertsPagination.page_size}
+                            />
+                        </div>
+                    )}
                 </div>
             </>
         );
@@ -1042,51 +1095,65 @@ export default function SecurityCompliance() {
                                     </td>
                                 </tr>
                             )}
-                            {activeSessions.map((session) => (
-                                <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
-                                    <td className="px-4 py-3">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-semibold text-gray-600">{session.user}</span>
-                                            {session.email && (
-                                                <span className="text-xs text-[#6B7280]">{session.email}</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex flex-col gap-1">
-                                            {session.role && (
-                                                <span className="text-xs font-medium text-[#4B5563]">{session.role}</span>
-                                            )}
-                                            {session.userType && (
-                                                <span className="inline-flex items-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-xs font-medium text-[#6B7280]">
-                                                    {session.userType.replace('_', ' ')}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{session.device}</td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm text-gray-600 font-mono">{session.ipAddress}</span>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{session.loginAt}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{session.lastActivity}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{session.duration}</td>
-                                    <td className="px-4 py-3 text-right">
-                                        <button
-                                            className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            style={{ borderRadius: '8px' }}
-                                            type="button"
-                                            onClick={() => handleTerminateSession(session.sessionKey)}
-                                            disabled={!session.sessionKey || isLoadingSessions}
-                                        >
-                                            Terminate
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {activeSessions
+                                .slice((activeSessionsPagination.page - 1) * activeSessionsPagination.page_size, activeSessionsPagination.page * activeSessionsPagination.page_size)
+                                .map((session) => (
+                                    <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-semibold text-gray-600">{session.user}</span>
+                                                {session.email && (
+                                                    <span className="text-xs text-[#6B7280]">{session.email}</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-col gap-1">
+                                                {session.role && (
+                                                    <span className="text-xs font-medium text-[#4B5563]">{session.role}</span>
+                                                )}
+                                                {session.userType && (
+                                                    <span className="inline-flex items-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-xs font-medium text-[#6B7280]">
+                                                        {session.userType.replace('_', ' ')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{session.device}</td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm text-gray-600 font-mono">{session.ipAddress}</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{session.loginAt}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{session.lastActivity}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-600">{session.duration}</td>
+                                        <td className="px-4 py-3 text-right">
+                                            <button
+                                                className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                style={{ borderRadius: '8px' }}
+                                                type="button"
+                                                onClick={() => handleTerminateSession(session.sessionKey)}
+                                                disabled={!session.sessionKey || isLoadingSessions}
+                                            >
+                                                Terminate
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>
+                {/* Active Sessions Pagination */}
+                {activeSessionsPagination.total_pages > 1 && (
+                    <div className="mt-4 border-t border-[#E5E7EB] pt-4">
+                        <Pagination
+                            currentPage={activeSessionsPagination.page}
+                            totalPages={activeSessionsPagination.total_pages}
+                            onPageChange={(page) => setActiveSessionsPagination(prev => ({ ...prev, page }))}
+                            totalItems={activeSessionsPagination.total_count}
+                            itemsPerPage={activeSessionsPagination.page_size}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -1152,10 +1219,12 @@ export default function SecurityCompliance() {
                                 disabled={auditLogSettingsSaving}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     } ${auditLogSettingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                style={{ borderRadius: '999px' }}
                             >
                                 <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 />
                             </button>
                         </div>
@@ -1171,36 +1240,27 @@ export default function SecurityCompliance() {
                         <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-4">
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                        <select
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] outline-none transition-colors hover:bg-[#F3F7FF]"
                             style={{ borderRadius: '8px' }}
-                            type="button"
+                            value={auditLogFilters.action}
+                            onChange={(e) => setAuditLogFilters(prev => ({ ...prev, action: e.target.value }))}
                         >
-
-                            Date Range
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g clip-path="url(#clip0_5150_36810)">
-                                    <path d="M12.6875 14H1.3125C0.58625 14 0 13.4137 0 12.6875V2.1875C0 1.46125 0.58625 0.875 1.3125 0.875H12.6875C13.4137 0.875 14 1.46125 14 2.1875V12.6875C14 13.4137 13.4137 14 12.6875 14ZM1.3125 1.75C1.0675 1.75 0.875 1.9425 0.875 2.1875V12.6875C0.875 12.9325 1.0675 13.125 1.3125 13.125H12.6875C12.9325 13.125 13.125 12.9325 13.125 12.6875V2.1875C13.125 1.9425 12.9325 1.75 12.6875 1.75H1.3125Z" fill="#3B4A66" />
-                                    <path d="M3.9375 3.5C3.6925 3.5 3.5 3.3075 3.5 3.0625V0.4375C3.5 0.1925 3.6925 0 3.9375 0C4.1825 0 4.375 0.1925 4.375 0.4375V3.0625C4.375 3.3075 4.1825 3.5 3.9375 3.5ZM10.0625 3.5C9.8175 3.5 9.625 3.3075 9.625 3.0625V0.4375C9.625 0.1925 9.8175 0 10.0625 0C10.3075 0 10.5 0.1925 10.5 0.4375V3.0625C10.5 3.3075 10.3075 3.5 10.0625 3.5ZM13.5625 5.25H0.4375C0.1925 5.25 0 5.0575 0 4.8125C0 4.5675 0.1925 4.375 0.4375 4.375H13.5625C13.8075 4.375 14 4.5675 14 4.8125C14 5.0575 13.8075 5.25 13.5625 5.25Z" fill="#3B4A66" />
-                                </g>
-                                <defs>
-                                    <clipPath id="clip0_5150_36810">
-                                        <rect width="14" height="14" fill="white" />
-                                    </clipPath>
-                                </defs>
-                            </svg>
-
-                        </button>
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Actions
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </button>
+                            <option value="">All Actions</option>
+                            <option value="invite_sent">Invite Sent</option>
+                            <option value="data_sharing_selection">Data Sharing Selection</option>
+                            <option value="invite_created">Invite Created</option>
+                            <option value="access_grant">Access Grant</option>
+                            {/* Dynamically add other actions found in data but not in static list */}
+                            {[...new Set(auditLogsData.map(log => log.action_display || log.action))]
+                                .filter(Boolean)
+                                .filter(action => !['invite_sent', 'data_sharing_selection', 'invite_created', 'access_grant'].includes(action))
+                                .sort()
+                                .map(action => (
+                                    <option key={action} value={action}>{action}</option>
+                                ))
+                            }
+                        </select>
                         <button
                             className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ borderRadius: '8px' }}
@@ -1212,7 +1272,6 @@ export default function SecurityCompliance() {
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M2.14664 7.58334L1.83864 7.89367C1.92057 7.97489 2.03127 8.02046 2.14664 8.02046C2.26201 8.02046 2.37271 7.97489 2.45464 7.89367L2.14664 7.58334ZM3.43464 6.92184C3.5171 6.84 3.56367 6.72875 3.56411 6.61257C3.56455 6.49639 3.51881 6.3848 3.43697 6.30234C3.39645 6.26151 3.34828 6.22906 3.29522 6.20685C3.24215 6.18463 3.18523 6.17309 3.12771 6.17287C3.01153 6.17243 2.89993 6.21816 2.81747 6.30001L3.43464 6.92184ZM1.47464 6.30001C1.3918 6.22059 1.28108 6.1769 1.16633 6.17836C1.05159 6.17981 0.942005 6.22629 0.861206 6.30778C0.780407 6.38927 0.734859 6.49924 0.734379 6.61399C0.733899 6.72875 0.778525 6.83909 0.85864 6.92126L1.47464 6.30001ZM10.8593 4.31201C10.8886 4.3625 10.9278 4.40662 10.9744 4.44175C11.0211 4.47689 11.0743 4.50233 11.1309 4.51657C11.1875 4.53082 11.2464 4.53359 11.3042 4.52471C11.3619 4.51583 11.4172 4.49548 11.467 4.46488C11.5167 4.43427 11.5598 4.39401 11.5937 4.34648C11.6276 4.29895 11.6517 4.24511 11.6645 4.18813C11.6773 4.13116 11.6786 4.07219 11.6682 4.01472C11.6578 3.95725 11.6361 3.90244 11.6042 3.85351L10.8593 4.31201ZM7.04606 1.31251C4.10197 1.31251 1.70856 3.68142 1.70856 6.61092H2.58356C2.58356 4.17142 4.57856 2.18751 7.04606 2.18751V1.31251ZM1.70856 6.61092V7.58334H2.58356V6.61092H1.70856ZM2.45522 7.89426L3.43464 6.92184L2.81747 6.30001L1.83747 7.27242L2.45522 7.89426ZM2.45522 7.27301L1.47464 6.30001L0.858056 6.92126L1.83806 7.89309L2.45522 7.27301ZM11.6042 3.85467C11.1253 3.07664 10.4548 2.43441 9.65689 1.98935C8.85898 1.54429 7.9597 1.31125 7.04606 1.31251V2.18751C7.81035 2.18603 8.56282 2.38062 9.23044 2.75268C9.89806 3.12474 10.4591 3.66182 10.8599 4.31259L11.6042 3.85467ZM11.8498 6.41667L12.1572 6.10576C12.0753 6.02489 11.9649 5.97954 11.8498 5.97954C11.7347 5.97954 11.6243 6.02489 11.5424 6.10576L11.8498 6.41667ZM10.5583 7.07759C10.5174 7.118 10.4849 7.16606 10.4626 7.21903C10.4403 7.27201 10.4287 7.32885 10.4284 7.38632C10.4277 7.50239 10.4732 7.61397 10.5548 7.69651C10.6364 7.77904 10.7475 7.82578 10.8635 7.82644C10.9796 7.82709 11.0912 7.78161 11.1737 7.70001L10.5583 7.07759ZM12.5259 7.70001C12.5665 7.74147 12.615 7.77443 12.6685 7.79697C12.722 7.81951 12.7794 7.83118 12.8375 7.8313C12.8955 7.83141 12.953 7.81997 13.0066 7.79765C13.0602 7.77532 13.1088 7.74255 13.1496 7.70125C13.1904 7.65995 13.2226 7.61095 13.2443 7.55709C13.2659 7.50323 13.2766 7.4456 13.2758 7.38756C13.275 7.32951 13.2626 7.27221 13.2394 7.21899C13.2162 7.16578 13.1827 7.11771 13.1407 7.07759L12.5259 7.70001ZM3.10214 9.68684C3.04118 9.58806 2.94348 9.51754 2.83053 9.49079C2.71758 9.46404 2.59863 9.48326 2.49985 9.54421C2.40107 9.60517 2.33054 9.70287 2.3038 9.81582C2.27705 9.92877 2.29627 10.0477 2.35722 10.1465L3.10214 9.68684ZM6.93172 12.6875C9.88456 12.6875 12.2867 10.3203 12.2867 7.38909H11.4117C11.4117 9.82742 9.41089 11.8125 6.93172 11.8125V12.6875ZM12.2867 7.38909V6.41667H11.4117V7.38909H12.2867ZM11.5424 6.10576L10.5583 7.07759L11.1737 7.70001L12.1572 6.72759L11.5424 6.10576ZM11.5424 6.72759L12.5259 7.70001L13.1407 7.07759L12.1572 6.10576L11.5424 6.72759ZM2.35664 10.1459C2.83884 10.9248 3.51237 11.5672 4.31311 12.0121C5.11384 12.457 6.01512 12.6895 6.93114 12.6875V11.8125C6.16446 11.8145 5.41003 11.6202 4.73969 11.2481C4.06935 10.876 3.50599 10.3385 3.10214 9.68684L2.35664 10.1459Z" fill="#3B4A66" />
                             </svg>
-
                         </button>
                     </div>
                 </div>
@@ -1251,64 +1310,35 @@ export default function SecurityCompliance() {
                                     </td>
                                 </tr>
                             )}
-                            {auditLogsData
-                                .filter((log) => {
-                                    if (!searchQuery.trim()) return true;
-                                    const query = searchQuery.toLowerCase();
-                                    return (
-                                        (log.user_email && log.user_email.toLowerCase().includes(query)) ||
-                                        (log.action_display && log.action_display.toLowerCase().includes(query)) ||
-                                        (log.action && log.action.toLowerCase().includes(query)) ||
-                                        (log.ip_address && log.ip_address.toLowerCase().includes(query))
-                                    );
-                                })
-                                .map((log) => (
-                                    <tr key={log.id || log.log_id} className="hover:bg-[#F8FAFF]">
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.log_id || `LOG-${log.id}`}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.action_display || log.action || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.user_email || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.resource || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.timestamp_formatted || log.timestamp || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.ip_address || 'N/A'}</td>
-                                    </tr>
-                                ))}
+                            {auditLogsData.map((log) => (
+                                <tr key={log.id || log.log_id} className="hover:bg-[#F8FAFF]">
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.log_id || `LOG-${log.id}`}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.action_display || log.action || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.user_email || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.resource || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.timestamp_formatted || log.timestamp || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.ip_address || 'N/A'}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                {auditLogsPagination.total_pages > 1 && (
-                    <div className="mt-6 flex items-center justify-between border-t border-[#E5E7EB] pt-4">
-                        <div className="text-sm text-[#6B7280]">
-                            Showing {((auditLogsPagination.page - 1) * auditLogsPagination.page_size) + 1} to {Math.min(auditLogsPagination.page * auditLogsPagination.page_size, auditLogsPagination.total_count)} of {auditLogsPagination.total_count} results
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setAuditLogsPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                                disabled={auditLogsPagination.page === 1 || auditLogsLoading}
-                                className="px-3 py-2 text-sm font-medium text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Previous
-                            </button>
-                            <span className="px-3 py-2 text-sm font-medium text-[#4B5563]">
-                                Page {auditLogsPagination.page} of {auditLogsPagination.total_pages}
-                            </span>
-                            <button
-                                onClick={() => setAuditLogsPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                                disabled={auditLogsPagination.page >= auditLogsPagination.total_pages || auditLogsLoading}
-                                className="px-3 py-2 text-sm font-medium text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Next
-                            </button>
-                        </div>
+                {(auditLogsPagination.total_count > 5 || auditLogsPagination.total_pages > 1) && (
+                    <div className="mt-6 border-t border-[#E5E7EB] pt-4">
+                        <Pagination
+                            currentPage={auditLogsPagination.page}
+                            totalPages={auditLogsPagination.total_pages}
+                            onPageChange={(page) => setAuditLogsPagination(prev => ({ ...prev, page }))}
+                            totalItems={auditLogsPagination.total_count}
+                            itemsPerPage={auditLogsPagination.page_size}
+                        />
                     </div>
                 )}
             </div>
-
-
         </div>
     );
-
     const renderCompliance = () => (
         <div className="flex flex-col gap-6">
             {/* Header Section - Search and Export */}
@@ -1535,10 +1565,12 @@ export default function SecurityCompliance() {
                                 onClick={() => setRequire2FA(!require2FA)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${require2FA ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
                                 <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${require2FA ? 'translate-x-6' : 'translate-x-1'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 />
                             </button>
                         </div>
@@ -1558,10 +1590,12 @@ export default function SecurityCompliance() {
                                 onClick={() => setEnableSSO(!enableSSO)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableSSO ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
                                 <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableSSO ? 'translate-x-6' : 'translate-x-1'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 />
                             </button>
                         </div>
@@ -1738,8 +1772,12 @@ export default function SecurityCompliance() {
                                     onClick={() => setEnableWatermarking(!enableWatermarking)}
                                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableWatermarking ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'}`}
+                                        style={{ borderRadius: '999px' }}
+                                    />
                                 </button>
                             </div>
                             <input
@@ -1774,8 +1812,12 @@ export default function SecurityCompliance() {
                                     onClick={() => setEnableRedaction(!enableRedaction)}
                                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableRedaction ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableRedaction ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableRedaction ? 'translate-x-6' : 'translate-x-1'}`}
+                                        style={{ borderRadius: '999px' }}
+                                    />
                                 </button>
                             </div>
                             <div className="flex gap-4">
@@ -1802,7 +1844,7 @@ export default function SecurityCompliance() {
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${securePortalOnly ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
                             >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${securePortalOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${securePortalOnly ? 'translate-x-6' : 'translate-x-1'}`} style={{ borderRadius: '999px' }} />
                             </button>
                         </div>
                     </div>
@@ -1831,10 +1873,12 @@ export default function SecurityCompliance() {
                                 onClick={() => setSoc2Enabled(!soc2Enabled)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
                                 <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Enabled ? 'translate-x-6' : 'translate-x-1'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 />
                             </button>
                         </div>
@@ -1854,10 +1898,12 @@ export default function SecurityCompliance() {
                                 onClick={() => setHipaaEnabled(!hipaaEnabled)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${hipaaEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
                                 <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hipaaEnabled ? 'translate-x-6' : 'translate-x-1'
                                         }`}
+                                    style={{ borderRadius: '999px' }}
                                 />
                             </button>
                         </div>
@@ -1938,10 +1984,12 @@ export default function SecurityCompliance() {
                                         onClick={() => setGlbaAligned(!glbaAligned)}
                                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${glbaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                             }`}
+                                        style={{ borderRadius: '999px' }}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-6' : 'translate-x-1'
                                                 }`}
+                                            style={{ borderRadius: '999px' }}
                                         />
                                     </button>
                                 </div>
@@ -1954,10 +2002,12 @@ export default function SecurityCompliance() {
                                         onClick={() => setSoc2Aligned(!soc2Aligned)}
                                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Aligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                             }`}
+                                        style={{ borderRadius: '999px' }}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-6' : 'translate-x-1'
                                                 }`}
+                                            style={{ borderRadius: '999px' }}
                                         />
                                     </button>
                                 </div>
@@ -1976,13 +2026,15 @@ export default function SecurityCompliance() {
                                     <span className="text-sm font-semibold text-gray-500">HIPAA-Aligned</span>
                                     <button
                                         type="button"
-                                        onClick={() => setGlbaAligned(!glbaAligned)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${glbaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        onClick={() => setHipaaAligned(!hipaaAligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${hipaaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                             }`}
+                                        style={{ borderRadius: '999px' }}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hipaaAligned ? 'translate-x-6' : 'translate-x-1'
                                                 }`}
+                                            style={{ borderRadius: '999px' }}
                                         />
                                     </button>
                                 </div>
@@ -1993,13 +2045,15 @@ export default function SecurityCompliance() {
                                     <span className="text-sm font-semibold text-gray-500">Consent Logs</span>
                                     <button
                                         type="button"
-                                        onClick={() => setSoc2Aligned(!soc2Aligned)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Aligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        onClick={() => setConsentLogs(!consentLogs)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${consentLogs ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                             }`}
+                                        style={{ borderRadius: '999px' }}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${consentLogs ? 'translate-x-6' : 'translate-x-1'
                                                 }`}
+                                            style={{ borderRadius: '999px' }}
                                         />
                                     </button>
                                 </div>
@@ -2016,13 +2070,15 @@ export default function SecurityCompliance() {
                                     <span className="text-sm font-semibold text-gray-500">E-sign consent</span>
                                     <button
                                         type="button"
-                                        onClick={() => setGlbaAligned(!glbaAligned)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${glbaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        onClick={() => setESignConsent(!eSignConsent)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${eSignConsent ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                             }`}
+                                        style={{ borderRadius: '999px' }}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${eSignConsent ? 'translate-x-6' : 'translate-x-1'
                                                 }`}
+                                            style={{ borderRadius: '999px' }}
                                         />
                                     </button>
                                 </div>
@@ -2033,13 +2089,15 @@ export default function SecurityCompliance() {
                                     <span className="text-sm font-semibold text-gray-500">Marketing consent</span>
                                     <button
                                         type="button"
-                                        onClick={() => setSoc2Aligned(!soc2Aligned)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Aligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        onClick={() => setMarketingConsent(!marketingConsent)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${marketingConsent ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                             }`}
+                                        style={{ borderRadius: '999px' }}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${marketingConsent ? 'translate-x-6' : 'translate-x-1'
                                                 }`}
+                                            style={{ borderRadius: '999px' }}
                                         />
                                     </button>
                                 </div>
@@ -2061,8 +2119,9 @@ export default function SecurityCompliance() {
                                 onClick={() => setEnableActiveSessionsView(!enableActiveSessionsView)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableActiveSessionsView ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableActiveSessionsView ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableActiveSessionsView ? 'translate-x-6' : 'translate-x-1'}`} style={{ borderRadius: '999px' }} />
                             </button>
                         </div>
 
@@ -2073,8 +2132,9 @@ export default function SecurityCompliance() {
                                 onClick={() => setAllowForceLogout(!allowForceLogout)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${allowForceLogout ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowForceLogout ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowForceLogout ? 'translate-x-6' : 'translate-x-1'}`} style={{ borderRadius: '999px' }} />
                             </button>
                         </div>
 
@@ -2085,8 +2145,9 @@ export default function SecurityCompliance() {
                                 onClick={() => setEnableStaffReports(!enableStaffReports)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableStaffReports ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '999px' }}
                             >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableStaffReports ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableStaffReports ? 'translate-x-6' : 'translate-x-1'}`} style={{ borderRadius: '999px' }} />
                             </button>
                         </div>
                     </div>
@@ -3154,11 +3215,13 @@ export default function SecurityCompliance() {
                 </div>
 
                 {activeTab === 'Security Overview' && renderSecurityOverview()}
+                {activeTab === 'Security Settings' && renderSecuritySettings()}
+                {activeTab === 'Compliance Readiness' && renderCompliance()}
                 {activeTab === 'Active Sessions' && renderActiveSessions()}
                 {activeTab === 'Audits Logs' && renderAuditLogs()}
                 {activeTab === 'Blocked Accounts' && renderBlockedAccounts()}
                 {activeTab === 'Geo Restrictions' && renderGeoRestrictions()}
-                {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && activeTab !== 'Audits Logs' && activeTab !== 'Blocked Accounts' && activeTab !== 'Geo Restrictions' && renderPlaceholder()}
+                {!tabs.includes(activeTab) && renderPlaceholder()}
             </div>
             {renderReviewModal()}
         </div>

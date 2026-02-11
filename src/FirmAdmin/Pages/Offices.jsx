@@ -148,8 +148,7 @@ export default function Offices() {
                 </div>
                 <button
                     onClick={() => setShowAddOfficeModal(true)}
-                    className="mt-4 sm:mt-0 px-4 py-2.5 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2 font-semibold"
-                    style={{ borderRadius: '10px' }}
+                    className="mt-4 sm:mt-0 px-4 py-2.5 bg-gradient-to-r from-[#F56D2D] to-[#ff8c57] text-white !rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2 font-semibold"
                 >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -157,13 +156,12 @@ export default function Offices() {
                     Add Office
                 </button>
             </div>
-
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                 {/* Total Offices */}
-                <div className="bg-white rounded-lg p-4 gap-3">
+                <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                     <div className='flex items-center justify-between gap-3'>
-                        <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M6 22V4C6 3.46957 6.21071 2.96086 6.58579 2.58579C6.96086 2.21071 7.46957 2 8 2H16C16.5304 2 17.0391 2.21071 17.4142 2.58579C17.7893 2.96086 18 3.46957 18 4V22H6Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path d="M6 12H4C3.46957 12 2.96086 12.2107 2.58579 12.5858C2.21071 12.9609 2 13.4696 2 14V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H6" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
@@ -173,23 +171,20 @@ export default function Offices() {
                                 <path d="M10 14H14" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path d="M10 18H14" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
-
                         </div>
                         <div>
-                            <p className="text-xl font-bold text-gray-900 leading-none mb-0">{summary.total_offices || offices.length}</p>
-
+                            <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{summary.total_offices || offices.length}</p>
                         </div>
-
                     </div>
-                    <div className="flex flex-col pl-3">
-                        <p className="text-sm text-gray-600 mt-2">Total Offices</p>
+                    <div className="flex flex-col mt-3">
+                        <p className="text-sm font-medium text-gray-500">Total Offices</p>
                     </div>
                 </div>
 
                 {/* Active Offices */}
-                <div className="bg-white rounded-lg p-4 gap-3">
+                <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                     <div className='flex items-center justify-between gap-3'>
-                        <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M6 22V4C6 3.46957 6.21071 2.96086 6.58579 2.58579C6.96086 2.21071 7.46957 2 8 2H16C16.5304 2 17.0391 2.21071 17.4142 2.58579C17.7893 2.96086 18 3.46957 18 4V22H6Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path d="M6 12H4C3.46957 12 2.96086 12.2107 2.58579 12.5858C2.21071 12.9609 2 13.4696 2 14V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H6" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
@@ -199,65 +194,64 @@ export default function Offices() {
                                 <path d="M10 14H14" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path d="M10 18H14" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
-
                         </div>
                         <div>
-                            <p className="text-xl font-bold text-gray-900 leading-none mb-0">{summary.active_offices || offices.filter(o => (o.status || '').toLowerCase() === 'active').length}</p>
+                            <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{summary.active_offices || offices.filter(o => (o.status || '').toLowerCase() === 'active').length}</p>
                         </div>
                     </div>
-                    <div className="flex flex-col pl-3">
-                        <p className="text-sm text-gray-600 mt-2">Active Offices</p>
+                    <div className="flex flex-col mt-3">
+                        <p className="text-sm font-medium text-gray-500">Active Offices</p>
                     </div>
                 </div>
 
                 {/* Total Staff */}
-                <div className="bg-white rounded-lg p-4  gap-3 ">
+                <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                     <div className='flex items-center justify-between gap-3'>
-                        <div className="w-12 h-12 rounded-lg  flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </div>
                         <div>
-                            <p className="text-xl font-bold text-gray-900 leading-none mb-0">{summary.total_staff || offices.reduce((sum, o) => sum + (o.staff_count || o.staff || 0), 0)}</p>
+                            <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{summary.total_staff || offices.reduce((sum, o) => sum + (o.staff_count || o.staff || 0), 0)}</p>
                         </div>
                     </div>
-                    <div className="flex flex-col pl-3">
-                        <p className="text-sm text-gray-600 mt-2">Total Staff</p>
+                    <div className="flex flex-col mt-3">
+                        <p className="text-sm font-medium text-gray-500">Total Staff</p>
                     </div>
                 </div>
 
                 {/* Total Clients */}
-                <div className="bg-white rounded-lg p-4 gap-3">
+                <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                     <div className='flex items-center justify-between gap-3'>
-                        <div className="w-12 h-12 rounded-lg  flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </div>
                         <div>
-                            <p className="text-xl font-bold text-gray-900 leading-none mb-0">{summary.total_clients || offices.reduce((sum, o) => sum + (o.clients_count || o.clients || 0), 0)}</p>
+                            <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{summary.total_clients || offices.reduce((sum, o) => sum + (o.clients_count || o.clients || 0), 0)}</p>
                         </div>
                     </div>
-                    <div className="flex flex-col pl-3">
-                        <p className="text-sm text-gray-600 mt-2">Total Clients</p>
+                    <div className="flex flex-col mt-3">
+                        <p className="text-sm font-medium text-gray-500">Total Clients</p>
                     </div>
                 </div>
 
                 {/* Monthly Revenue */}
-                <div className="bg-white rounded-lg p-4 gap-3">
+                <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                     <div className='flex items-center justify-between gap-3'>
-                        <div className="w-12 h-12 rounded-lg  flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </div>
                         <div>
-                            <p className="text-xl font-bold text-gray-900 leading-none mb-0">{formatCurrency(summary.monthly_revenue || offices.reduce((sum, o) => sum + (o.monthly_revenue || o.monthlyRevenue || 0), 0))}</p>
+                            <p className="text-2xl font-bold text-gray-900 leading-none mb-0">{formatCurrency(summary.monthly_revenue || offices.reduce((sum, o) => sum + (o.monthly_revenue || o.monthlyRevenue || 0), 0))}</p>
                         </div>
                     </div>
-                    <div className="flex flex-col pl-3">
-                        <p className="text-sm text-gray-600 mt-2">Monthly Revenue</p>
+                    <div className="flex flex-col mt-3">
+                        <p className="text-sm font-medium text-gray-500">Monthly Revenue</p>
                     </div>
                 </div>
             </div>
@@ -349,7 +343,7 @@ export default function Offices() {
                                                     </svg>
 
                                                     <div>
-                                                        <div 
+                                                        <div
                                                             className="font-semibold text-gray-500 cursor-pointer hover:text-[#3AD6F2] transition-colors"
                                                             onClick={() => navigate(`/firmadmin/offices/${formattedOffice.id}`)}
                                                         >
@@ -459,7 +453,7 @@ export default function Offices() {
                                                                 >
                                                                     View Details
                                                                 </button>
-                                                               
+
                                                                 <button
                                                                     onClick={() => {
                                                                         setSelectedOfficeForTaxpayers({ id: formattedOffice.id, name: formattedOffice.name });

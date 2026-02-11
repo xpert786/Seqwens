@@ -301,14 +301,14 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                 style={{ fontFamily: 'BasisGrotesquePro' }}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white px-6 py-4 flex justify-between items-start border-b border-gray-200">
+                <div className="sticky top-0 bg-white px-6 py-4 flex justify-between items-start border-b border-gray-200 z-20">
                     <div>
                         <h4 className="text-2xl font-bold text-gray-900 mb-1">Edit Office Location</h4>
                         <p className="text-sm text-gray-600">Update office location details</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="w-10 h-10 flex items-center justify-center !rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors ml-4 flex-shrink-0"
                         aria-label="Close modal"
                     >
                         <CrossesIcon className="w-5 h-5" />
@@ -336,7 +336,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all duration-200"
                                     placeholder="Enter office name"
                                     required
                                 />
@@ -349,7 +349,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     name="manager_id"
                                     value={formData.manager_id}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
+                                    className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer font-[BasisGrotesquePro] hover:border-[#3AD6F2]/50 transition-all duration-200"
                                     disabled={staffLoading}
                                 >
                                     <option value="">No Manager</option>
@@ -373,7 +373,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                 name="street_address"
                                 value={formData.street_address}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all duration-200"
                                 placeholder="Enter street address"
                                 required
                             />
@@ -390,7 +390,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     name="city"
                                     value={formData.city}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all duration-200"
                                     placeholder="Enter city"
                                     required
                                 />
@@ -404,7 +404,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     name="state"
                                     value={formData.state}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all duration-200"
                                     placeholder="State"
                                     required
                                 />
@@ -418,7 +418,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     name="zip_code"
                                     value={formData.zip_code}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all duration-200"
                                     placeholder="Enter zip code"
                                     required
                                 />
@@ -440,8 +440,8 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     onCountryChange={(countryCode) => {
                                         setPhoneCountry(countryCode.toLowerCase());
                                     }}
-                                    inputClass="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                    containerClass="w-100 phone-input-container"
+                                    inputClass="!w-full !px-4 !py-5.5 !border !border-[#E8F0FF] !rounded-lg focus:!outline-none focus:!ring-2 focus:!ring-[#3AD6F2] !text-sm !font-[BasisGrotesquePro]"
+                                    containerClass="w-100 phone-input-container !rounded-lg overflow-hidden"
                                     enableSearch={true}
                                     countryCodeEditable={false}
                                 />
@@ -454,7 +454,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     name="timezone"
                                     value={formData.timezone}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
+                                    className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer font-[BasisGrotesquePro] hover:border-[#3AD6F2]/50 transition-all duration-200"
                                 >
                                     <option value="">Select timezone</option>
                                     {US_TIMEZONES.map((tz) => (
@@ -475,7 +475,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                 name="status"
                                 value={formData.status}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
+                                className="w-full px-4 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer font-[BasisGrotesquePro] hover:border-[#3AD6F2]/50 transition-all duration-200"
                             >
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
@@ -499,13 +499,11 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDayToggle(day)}
-                                                    className={`relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${dayData.isOpen ? 'bg-[#3AD6F2]' : 'bg-gray-200'
+                                                    className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${dayData.isOpen ? 'bg-gradient-to-r from-[#F56D2D] to-[#ff8c57]' : 'bg-gray-200'
                                                         }`}
-                                                    aria-pressed={dayData.isOpen}
                                                 >
-                                                    <span className="sr-only">Toggle {day}</span>
                                                     <span
-                                                        className={`pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${dayData.isOpen ? 'translate-x-6' : 'translate-x-0'
+                                                        className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${dayData.isOpen ? 'translate-x-5.5' : 'translate-x-1'
                                                             }`}
                                                     />
                                                 </button>
@@ -539,7 +537,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                                 if (hour12 === 0) hour12 = 12;
                                                                 handleTimeChange(day, 'startTime', `${hour12}:${minutes} ${period}`);
                                                             }}
-                                                            className="w-32 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent text-sm transition-all bg-white"
+                                                            className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
                                                         />
                                                         <span className="text-gray-400 font-medium px-1">to</span>
                                                         <input
@@ -567,7 +565,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                                 if (hour12 === 0) hour12 = 12;
                                                                 handleTimeChange(day, 'endTime', `${hour12}:${minutes} ${period}`);
                                                             }}
-                                                            className="w-32 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent text-sm transition-all bg-white"
+                                                            className="px-3 py-2 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-xs font-[BasisGrotesquePro] bg-white hover:border-[#3AD6F2]/50 transition-all"
                                                         />
                                                     </>
                                                 )}
@@ -585,8 +583,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        style={{ borderRadius: '8px' }}
+                        className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-[BasisGrotesquePro]"
                     >
                         Cancel
                     </button>
@@ -594,9 +591,9 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                         type="button"
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
-                        style={{ borderRadius: '8px' }}
+                        className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#F56D2D] to-[#ff8c57] !rounded-lg hover:shadow-md transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
                     >
+                        {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                         {loading ? 'Updating...' : 'Update Office'}
                     </button>
                 </div>

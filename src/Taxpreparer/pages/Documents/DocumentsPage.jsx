@@ -598,12 +598,21 @@ export default function DocumentsPage() {
     archived_documents: 0
   });
   const [fileManagerSearchQuery, setFileManagerSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [fileManagerSelectedFolderId, setFileManagerSelectedFolderId] = useState(null);
   const [fileManagerShowArchived, setFileManagerShowArchived] = useState(false);
   const [fileManagerCreatingFolder, setFileManagerCreatingFolder] = useState(false);
   const [fileManagerNewFolderName, setFileManagerNewFolderName] = useState("");
   const [fileManagerNewFolderDescription, setFileManagerNewFolderDescription] = useState("");
   const [fileManagerCreatingFolderLoading, setFileManagerCreatingFolderLoading] = useState(false);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(fileManagerSearchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [fileManagerSearchQuery]);
 
   // Assign for E-Sign states
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -723,10 +732,10 @@ export default function DocumentsPage() {
   // Fetch file manager documents on component mount and when folder/search changes
   useEffect(() => {
     if (!isNestedUnderClient) {
-      fetchFileManagerDocuments(fileManagerSelectedFolderId, fileManagerSearchQuery);
+      fetchFileManagerDocuments(fileManagerSelectedFolderId, debouncedSearchQuery);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileManagerSelectedFolderId, fileManagerSearchQuery, fileManagerShowArchived, isNestedUnderClient]);
+  }, [fileManagerSelectedFolderId, debouncedSearchQuery, fileManagerShowArchived, isNestedUnderClient]);
 
   // Create folder in file manager
   const handleFileManagerCreateFolder = async () => {
@@ -1032,283 +1041,295 @@ export default function DocumentsPage() {
 
               </div>
 
-              {/* Loading State */}
-              {fileManagerLoading && (
-                <div className="text-center py-5">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+
+              <div className="position-relative">
+                {/* Loading Grid Spinner - Only show overlay if we already have documents */}
+                {fileManagerLoading && (fileManagerDocuments.length > 0 || fileManagerFolders.length > 0) && (
+                  <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ zIndex: 10, backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
                   </div>
-                  <p className="mt-3">Loading documents...</p>
-                </div>
-              )}
+                )}
 
-              {/* Error State */}
-              {fileManagerError && !fileManagerLoading && (
-                <div className="alert alert-danger" role="alert">
-                  <strong>Error:</strong> {fileManagerError}
-                  <button className="btn  btn-outline-danger ms-2" onClick={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, fileManagerSearchQuery)}>
-                    Retry
-                  </button>
-                </div>
-              )}
+                {/* Loading State - Only show full page loader if no content yet */}
+                {fileManagerLoading && fileManagerDocuments.length === 0 && fileManagerFolders.length === 0 && (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3">Loading documents...</p>
+                  </div>
+                )}
 
-              {/* Folders and Documents */}
-              {!fileManagerLoading && !fileManagerError && (
-                <>
-                  {/* Folders */}
-                  {fileManagerFolders.length > 0 && (
-                    <div className="mb-4">
-                      <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Folders</h6>
-                      <div className={fileManagerView === "grid" ? "row g-3" : ""}>
-                        {fileManagerFolders.map((folder) => (
-                          <div
-                            key={folder.id}
-                            className={fileManagerView === "grid" ? "col-md-3 col-sm-4 col-6" : "mb-2"}
-                            onClick={() => setFileManagerSelectedFolderId(folder.id)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <div className={`border rounded p-3 ${fileManagerView === "grid" ? "" : "d-flex align-items-center gap-3"}`} style={{ borderColor: "#E8F0FF", transition: "all 0.2s" }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#F9FAFB";
-                                e.currentTarget.style.borderColor = "#00C0C6";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = "white";
-                                e.currentTarget.style.borderColor = "#E8F0FF";
-                              }}
+                {/* Error State */}
+                {fileManagerError && !fileManagerLoading && (
+                  <div className="alert alert-danger" role="alert">
+                    <strong>Error:</strong> {fileManagerError}
+                    <button className="btn  btn-outline-danger ms-2" onClick={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, debouncedSearchQuery)}>
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {/* Folders and Documents */}
+                {!fileManagerError && (fileManagerDocuments.length > 0 || fileManagerFolders.length > 0 || !fileManagerLoading) && (
+                  <div style={{ opacity: fileManagerLoading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                    {/* Folders */}
+                    {fileManagerFolders.length > 0 && (
+                      <div className="mb-4">
+                        <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Folders</h6>
+                        <div className={fileManagerView === "grid" ? "row g-3" : ""}>
+                          {fileManagerFolders.map((folder) => (
+                            <div
+                              key={folder.id}
+                              className={fileManagerView === "grid" ? "col-md-3 col-sm-4 col-6" : "mb-2"}
+                              onClick={() => setFileManagerSelectedFolderId(folder.id)}
+                              style={{ cursor: "pointer" }}
                             >
-                              {/* <FaFolder style={{ color: "#F59E0B", fontSize: fileManagerView === "grid" ? "32px" : "24px" }} /> */}
-                              <div className={fileManagerView === "grid" ? "mt-2" : "flex-grow-1"}>
-                                <div className="fw-semibold small" style={{ color: "#3B4A66" }}>{folder.title}</div>
-                                {fileManagerView === "grid" && (
-                                  <div className="text-muted" style={{ fontSize: "12px" }}>
-                                    {folder.document_count || 0} documents
-                                    {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
-                                  </div>
-                                )}
-                                {fileManagerView === "list" && (
-                                  <div className="text-muted small">
-                                    {folder.document_count || 0} documents
-                                    {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
-                                    {folder.description && ` • ${folder.description}`}
-                                  </div>
-                                )}
+                              <div className={`border rounded p-3 ${fileManagerView === "grid" ? "" : "d-flex align-items-center gap-3"}`} style={{ borderColor: "#E8F0FF", transition: "all 0.2s" }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#F9FAFB";
+                                  e.currentTarget.style.borderColor = "#00C0C6";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "white";
+                                  e.currentTarget.style.borderColor = "#E8F0FF";
+                                }}
+                              >
+                                {/* <FaFolder style={{ color: "#F59E0B", fontSize: fileManagerView === "grid" ? "32px" : "24px" }} /> */}
+                                <div className={fileManagerView === "grid" ? "mt-2" : "flex-grow-1"}>
+                                  <div className="fw-semibold small" style={{ color: "#3B4A66" }}>{folder.title}</div>
+                                  {fileManagerView === "grid" && (
+                                    <div className="text-muted" style={{ fontSize: "12px" }}>
+                                      {folder.document_count || 0} documents
+                                      {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
+                                    </div>
+                                  )}
+                                  {fileManagerView === "list" && (
+                                    <div className="text-muted small">
+                                      {folder.document_count || 0} documents
+                                      {folder.subfolder_count > 0 && ` • ${folder.subfolder_count} subfolders`}
+                                      {folder.description && ` • ${folder.description}`}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Documents */}
-                  {fileManagerDocuments.length > 0 && (
-                    <div>
-                      <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Documents</h6>
-                      <div className="table-responsive">
-                        <table className="table table-hover">
-                          <thead>
-                            <tr>
-                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Name</th>
-                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
-                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
-                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
+                    {/* Documents */}
+                    {fileManagerDocuments.length > 0 && (
+                      <div>
+                        <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Documents</h6>
+                        <div className="table-responsive">
+                          <table className="table table-hover">
+                            <thead>
+                              <tr>
+                                <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Name</th>
+                                <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
+                                <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
+                                <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
 
-                              <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {fileManagerDocuments.map((doc, index) => {
-                              const meta = getDocumentMeta(doc);
-                              const docStatus = getDocumentStatus(doc);
-                              const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
-                              const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
-                              const typeLabel = getDocumentTypeLabel(doc);
+                                <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {fileManagerDocuments.map((doc, index) => {
+                                const meta = getDocumentMeta(doc);
+                                const docStatus = getDocumentStatus(doc);
+                                const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
+                                const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
+                                const typeLabel = getDocumentTypeLabel(doc);
 
-                              return (
-                                <tr
-                                  key={doc.id || doc.document_id || meta.name}
-                                  style={{ cursor: meta.url ? "pointer" : "default" }}
-                                  onClick={() => {
-                                    if (meta.url && showMenuIndex !== index) {
-                                      window.open(meta.url, "_blank", "noopener,noreferrer");
-                                    }
-                                  }}
-                                >
-                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-                                    <div className="d-flex align-items-center gap-2">
-                                      <FileIcon />
-                                      <span>{meta.name}</span>
-                                    </div>
-                                  </td>
-                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
-                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
-                                  <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
+                                return (
+                                  <tr
+                                    key={doc.id || doc.document_id || meta.name}
+                                    style={{ cursor: meta.url ? "pointer" : "default" }}
+                                    onClick={() => {
+                                      if (meta.url && showMenuIndex !== index) {
+                                        window.open(meta.url, "_blank", "noopener,noreferrer");
+                                      }
+                                    }}
+                                  >
+                                    <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <FileIcon />
+                                        <span>{meta.name}</span>
+                                      </div>
+                                    </td>
+                                    <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
+                                    <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
+                                    <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
 
-                                  <td style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} onClick={(e) => e.stopPropagation()}>
-                                    <div style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} data-menu-container>
-                                      <button
-                                        type="button"
-                                        className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
-                                        style={{
-                                          width: "32px",
-                                          height: "32px",
-                                          borderRadius: "50%",
-                                          fontFamily: "BasisGrotesquePro",
-                                          backgroundColor: showMenuIndex === index ? '#F3F4F6' : 'transparent',
-                                          border: '1px solid #E5E7EB',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.backgroundColor = '#F3F4F6';
-                                          e.currentTarget.style.borderColor = '#D1D5DB';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          if (showMenuIndex !== index) {
-                                            e.currentTarget.style.backgroundColor = 'transparent';
-                                            e.currentTarget.style.borderColor = '#E5E7EB';
-                                          }
-                                        }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowMenuIndex(showMenuIndex === index ? null : index);
-                                        }}
-                                        title="More options"
-                                      >
-                                        <i className="bi bi-three-dots-vertical" style={{
-                                          fontSize: '18px',
-                                          color: '#6B7280',
-                                          fontWeight: 'bold'
-                                        }} />
-                                      </button>
-                                      {showMenuIndex === index && (
-                                        <div
+                                    <td style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                      <div style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} data-menu-container>
+                                        <button
+                                          type="button"
+                                          className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
                                           style={{
-                                            position: 'absolute',
-                                            right: 0,
-                                            top: '100%',
-                                            marginTop: '4px',
-                                            backgroundColor: 'white',
+                                            width: "32px",
+                                            height: "32px",
+                                            borderRadius: "50%",
+                                            fontFamily: "BasisGrotesquePro",
+                                            backgroundColor: showMenuIndex === index ? '#F3F4F6' : 'transparent',
                                             border: '1px solid #E5E7EB',
-                                            borderRadius: '8px',
-                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                            zIndex: 9999,
-                                            minWidth: '150px',
-                                            padding: '4px 0'
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
                                           }}
-                                          onClick={(e) => e.stopPropagation()}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#F3F4F6';
+                                            e.currentTarget.style.borderColor = '#D1D5DB';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            if (showMenuIndex !== index) {
+                                              e.currentTarget.style.backgroundColor = 'transparent';
+                                              e.currentTarget.style.borderColor = '#E5E7EB';
+                                            }
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowMenuIndex(showMenuIndex === index ? null : index);
+                                          }}
+                                          title="More options"
                                         >
-                                          {meta.canPreview && (
-                                            <button
-                                              className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                              style={{
-                                                fontFamily: 'BasisGrotesquePro',
-                                                fontSize: '14px',
-                                                color: '#3B4A66',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid #E5E7EB'
-                                              }}
-                                              onMouseEnter={(e) => {
-                                                e.target.style.backgroundColor = '#F9FAFB';
-                                              }}
-                                              onMouseLeave={(e) => {
-                                                e.target.style.backgroundColor = 'white';
-                                              }}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowMenuIndex(null);
-                                                if (meta.canPreview) {
-                                                  openPreviewModal(doc, e.currentTarget);
-                                                }
-                                              }}
-                                            >
-                                              <i className="bi bi-eye me-2"></i>
-                                              Preview
-                                            </button>
-                                          )}
-                                          {isFile(doc) && (
-                                            <button
-                                              className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                              style={{
-                                                fontFamily: 'BasisGrotesquePro',
-                                                fontSize: '14px',
-                                                color: '#00C0C6',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid #E5E7EB'
-                                              }}
-                                              onMouseEnter={(e) => {
-                                                e.target.style.backgroundColor = '#F0FDFF';
-                                              }}
-                                              onMouseLeave={(e) => {
-                                                e.target.style.backgroundColor = 'white';
-                                              }}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowMenuIndex(null);
-                                                handleOpenAssignModal(doc);
-                                              }}
-                                            >
-                                              <i className="bi bi-pen me-2"></i>
-                                              Assign
-                                            </button>
-                                          )}
-                                          <button
-                                            className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                          <i className="bi bi-three-dots-vertical" style={{
+                                            fontSize: '18px',
+                                            color: '#6B7280',
+                                            fontWeight: 'bold'
+                                          }} />
+                                        </button>
+                                        {showMenuIndex === index && (
+                                          <div
                                             style={{
-                                              fontFamily: 'BasisGrotesquePro',
-                                              fontSize: '14px',
-                                              color: '#EF4444',
-                                              cursor: 'pointer'
+                                              position: 'absolute',
+                                              right: 0,
+                                              top: '100%',
+                                              marginTop: '4px',
+                                              backgroundColor: 'white',
+                                              border: '1px solid #E5E7EB',
+                                              borderRadius: '8px',
+                                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                              zIndex: 9999,
+                                              minWidth: '150px',
+                                              padding: '4px 0'
                                             }}
-                                            onMouseEnter={(e) => {
-                                              e.target.style.backgroundColor = '#FEF2F2';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                              e.target.style.backgroundColor = 'white';
-                                            }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setShowMenuIndex(null);
-                                              handleDeleteDocument(doc);
-                                            }}
+                                            onClick={(e) => e.stopPropagation()}
                                           >
-                                            <i className="bi bi-trash me-2"></i>
-                                            Delete
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                            {meta.canPreview && (
+                                              <button
+                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                style={{
+                                                  fontFamily: 'BasisGrotesquePro',
+                                                  fontSize: '14px',
+                                                  color: '#3B4A66',
+                                                  cursor: 'pointer',
+                                                  borderBottom: '1px solid #E5E7EB'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                  e.target.style.backgroundColor = '#F9FAFB';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                  e.target.style.backgroundColor = 'white';
+                                                }}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setShowMenuIndex(null);
+                                                  if (meta.canPreview) {
+                                                    openPreviewModal(doc, e.currentTarget);
+                                                  }
+                                                }}
+                                              >
+                                                <i className="bi bi-eye me-2"></i>
+                                                Preview
+                                              </button>
+                                            )}
+                                            {isFile(doc) && (
+                                              <button
+                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                style={{
+                                                  fontFamily: 'BasisGrotesquePro',
+                                                  fontSize: '14px',
+                                                  color: '#00C0C6',
+                                                  cursor: 'pointer',
+                                                  borderBottom: '1px solid #E5E7EB'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                  e.target.style.backgroundColor = '#F0FDFF';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                  e.target.style.backgroundColor = 'white';
+                                                }}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setShowMenuIndex(null);
+                                                  handleOpenAssignModal(doc);
+                                                }}
+                                              >
+                                                <i className="bi bi-pen me-2"></i>
+                                                Assign
+                                              </button>
+                                            )}
+                                            <button
+                                              className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                              style={{
+                                                fontFamily: 'BasisGrotesquePro',
+                                                fontSize: '14px',
+                                                color: '#EF4444',
+                                                cursor: 'pointer'
+                                              }}
+                                              onMouseEnter={(e) => {
+                                                e.target.style.backgroundColor = '#FEF2F2';
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                e.target.style.backgroundColor = 'white';
+                                              }}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowMenuIndex(null);
+                                                handleDeleteDocument(doc);
+                                              }}
+                                            >
+                                              <i className="bi bi-trash me-2"></i>
+                                              Delete
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Empty State */}
-                  {fileManagerFolders.length === 0 && fileManagerDocuments.length === 0 && (
-                    <div className="text-center py-5">
-                      {/* <FaFolder style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "16px" }} /> */}
-                      <p className="text-muted mb-0">
-                        {fileManagerSearchQuery ? 'No documents or folders found matching your search' : 'No folders or documents in this location'}
-                      </p>
-                      {!fileManagerSearchQuery && (
-                        <button
-                          className="btn btn-primary mt-3"
-                          onClick={() => setFileManagerCreatingFolder(true)}
-                          style={{ backgroundColor: "#00C0C6", border: "none" }}
-                        >
-                          Create Your First Folder
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
+                    {/* Empty State */}
+                    {fileManagerFolders.length === 0 && fileManagerDocuments.length === 0 && (
+                      <div className="text-center py-5">
+                        {/* <FaFolder style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "16px" }} /> */}
+                        <p className="text-muted mb-0">
+                          {fileManagerSearchQuery ? 'No documents or folders found matching your search' : 'No folders or documents in this location'}
+                        </p>
+                        {!fileManagerSearchQuery && (
+                          <button
+                            className="btn btn-primary mt-3"
+                            onClick={() => setFileManagerCreatingFolder(true)}
+                            style={{ backgroundColor: "#00C0C6", border: "none" }}
+                          >
+                            Create Your First Folder
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1363,8 +1384,7 @@ export default function DocumentsPage() {
             </div>
           )}
         </>
-      )
-      }
+      )}
 
       {/* Create Folder Modal */}
       <Modal
@@ -1692,6 +1712,6 @@ export default function DocumentsPage() {
         confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
         isLoading={!!deletingDocumentId}
       />
-    </div >
+    </div>
   );
 }
