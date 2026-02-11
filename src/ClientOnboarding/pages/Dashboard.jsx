@@ -197,14 +197,14 @@ export default function Dashboard() {
   const paginatedActivity = recentActivityTasks.slice(activityStartIndex, activityEndIndex);
 
   return (
-    <div className="w-full px-2 sm:px-4 lg:px-6">
+    <div className="w-full">
       <DashboardWidgets dashboardData={dashboardData} loading={loading} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mt-2 px-2 sm:px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mt-2 items-stretch">
         {/* What's Due Section */}
-        <div className="w-full">
-          <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm">
-            <div className="mb-3 sm:mb-4">
+        <div className="w-full h-full">
+          <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm h-full flex flex-col">
+            <div className="mb-3 sm:mb-4 flex-shrink-0">
               <h3 className="text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro] mb-1">Tasks</h3>
               <p className="text-[#4B5563] text-xs sm:text-sm font-normal font-[BasisGrotesquePro] m-0">Your latest interactions</p>
             </div>
@@ -218,7 +218,7 @@ export default function Dashboard() {
               </div>
             ) : whatsDueTasks.length > 0 ? (
               <>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 flex-grow">
                   {paginatedTasks.map((task, i) => (
                     <TaskCard key={task.id || i} {...task} />
                   ))}
@@ -244,9 +244,9 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activity Section */}
-        <div className="w-full">
-          <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm">
-            <div className="mb-3 sm:mb-4">
+        <div className="w-full h-full">
+          <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm h-full flex flex-col">
+            <div className="mb-3 sm:mb-4 flex-shrink-0">
               <h3 className="text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro] mb-1">Recent Activity</h3>
               <p className="text-[#4B5563] text-xs sm:text-sm font-normal font-[BasisGrotesquePro] m-0">Your latest interactions</p>
             </div>
@@ -260,7 +260,7 @@ export default function Dashboard() {
               </div>
             ) : recentActivityTasks.length > 0 ? (
               <>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 flex-grow">
                   {paginatedActivity.map((activity, i) => (
                     <TaskCard key={activity.id || i} {...activity} isRecentActivity={true} />
                   ))}

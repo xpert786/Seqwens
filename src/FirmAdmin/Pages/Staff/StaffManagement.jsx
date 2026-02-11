@@ -781,7 +781,7 @@ export default function StaffManagement() {
     fetchStaffMembers();
   }, [fetchStaffMembers]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside or scrolling
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showDropdown !== null) {
@@ -796,12 +796,22 @@ export default function StaffManagement() {
       }
     };
 
+    const handleScroll = () => {
+      if (showDropdown !== null) {
+        setShowDropdown(null);
+      }
+    };
+
     if (showDropdown !== null) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('scroll', handleScroll, true);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('scroll', handleScroll, true);
     };
   }, [showDropdown]);
 
@@ -1693,18 +1703,7 @@ export default function StaffManagement() {
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
               >
                 Edit Task
-              </button> */}
-              <button
-                onClick={() => setShowDropdown(null)}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-              >
-                Send Message
               </button>
-              {/* <button
-                onClick={() => setShowDropdown(null)}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-              >
-                Reassign Clients
               </button> */}
               {(() => {
                 const staff = staffData.find(s => {

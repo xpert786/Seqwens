@@ -39,7 +39,7 @@ import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
 import { useSubscriptionStatus } from "../Context/SubscriptionStatusContext";
 
-export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidth = '320px' }) {
+export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidth = '280px' }) {
     const { logoUrl } = useFirmPortalColors();
     const { status, statusDisplay, isTrialActive, trialDaysRemaining } = useSubscriptionStatus();
     const navigate = useNavigate();
@@ -385,7 +385,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                         <div
                             className="d-flex align-items-center border-end"
                             style={{
-                                width: sidebarWidth,
+                                width: "281px",
                                 height: '100%',
                                 transition: 'width 0.3s ease'
                             }}
@@ -402,14 +402,15 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                     />
                                 </Link>
                             </div>
-
-                            {/* Sidebar Toggle - Now inside the sidebar width container at the edge */}
+                            
+                            {/* Sidebar Toggle - Positioned at the right edge corner */}
                             <div
                                 onClick={onToggleSidebar}
-                                className="d-flex align-items-center justify-content-center h-full cursor-pointer hover:bg-gray-50 transition-colors"
+                                className="d-flex align-items-center justify-content-center h-full cursor-pointer hover:bg-gray-50 transition-colors border-start"
                                 style={{
                                     width: '50px',
-                                    flexShrink: 0
+                                    flexShrink: 0,
+                                    marginRight: '2px'
                                 }}
                             >
                                 <div

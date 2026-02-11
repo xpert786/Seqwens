@@ -458,7 +458,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                 <div className="p-4">
                     {/* Select Client Field */}
                     <Form.Group className="mb-4">
-                        <Form.Label>Select Client <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className="text-black">Select Client <span className="text-danger">*</span></Form.Label>
                         <Form.Select
                             value={internalClientId || ""}
                             onChange={(e) => {

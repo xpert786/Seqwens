@@ -227,49 +227,53 @@ const ReviewRequests = () => {
                             >
                                 <div className="d-flex justify-content-between align-items-start mb-3">
                                     <div className="flex-grow-1">
-                                        <h6
-                                            className="mb-2"
-                                            style={{
-                                                color: '#1F2937',
-                                                fontWeight: '600',
-                                                fontSize: '16px',
-                                                fontFamily: 'BasisGrotesquePro'
-                                            }}
-                                        >
-                                            {request.task_title}
-                                        </h6>
-                                        {request.description && (
-                                            <p
-                                                className="mb-2"
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <h6
                                                 style={{
-                                                    color: '#6B7280',
-                                                    fontSize: '14px',
-                                                    fontFamily: 'BasisGrotesquePro'
+                                                    color: '#1F2937',
+                                                    fontWeight: '600',
+                                                    fontSize: '16px',
+                                                    fontFamily: 'BasisGrotesquePro',
+                                                    margin: 0
                                                 }}
                                             >
-                                                {request.description}
-                                            </p>
-                                        )}
-                                        <div className="d-flex align-items-center gap-3 flex-wrap">
+                                                {request.task_title}
+                                            </h6>
+                                            {request.description && (
+                                                <span
+                                                    style={{
+                                                        color: '#6B7280',
+                                                        fontSize: '14px',
+                                                        fontFamily: 'BasisGrotesquePro'
+                                                    }}
+                                                >
+                                                    {request.description}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="d-flex align-items-center gap-3">
                                             <span
+                                                className="d-flex align-items-center gap-1"
                                                 style={{
                                                     color: '#9CA3AF',
                                                     fontSize: '13px',
                                                     fontFamily: 'BasisGrotesquePro'
                                                 }}
                                             >
-                                                <FiClock size={14} className="me-1" />
+                                                <FiClock size={14} />
                                                 Due: {formatDate(request.due_date)}
                                             </span>
                                             {request.assigned_to_name && (
                                                 <span
+                                                    className="d-flex align-items-center gap-1"
                                                     style={{
                                                         color: '#9CA3AF',
                                                         fontSize: '13px',
                                                         fontFamily: 'BasisGrotesquePro'
                                                     }}
                                                 >
-                                                    From: {request.assigned_to_name}
+                                                    <span>From:</span>
+                                                    {request.assigned_to_name}
                                                 </span>
                                             )}
                                         </div>
@@ -329,9 +333,9 @@ const ReviewRequests = () => {
                                 )}
 
                                 {request.status !== 'completed' && request.status !== 'cancelled' && (
-                                    <div className="d-flex justify-content-end gap-2">
+                                    <div className="d-flex justify-content-end gap-2 mt-3">
                                         <button
-                                            className="btn btn-sm d-flex align-items-center gap-2"
+                                            className="btn btn-sm d-flex align-items-center gap-1"
                                             onClick={() => handleCompleteTask(request)}
                                             disabled={submitting}
                                             style={{
@@ -340,16 +344,16 @@ const ReviewRequests = () => {
                                                 border: '1px solid #E5E7EB',
                                                 fontFamily: 'BasisGrotesquePro',
                                                 fontWeight: '500',
-                                                padding: '8px 16px',
+                                                padding: '6px 12px',
                                                 borderRadius: '6px',
-                                                fontSize: '14px'
+                                                fontSize: '12px'
                                             }}
                                         >
-                                            <FiCheckCircle size={14} />
+                                            <FiCheckCircle size={12} />
                                             {submitting ? 'Completing...' : 'Mark as Completed'}
                                         </button>
                                         <button
-                                            className="btn btn-sm d-flex align-items-center gap-2"
+                                            className="btn btn-sm d-flex align-items-center gap-1"
                                             onClick={() => handleOpenReviewModal(request)}
                                             style={{
                                                 backgroundColor: '#00C0C6',
@@ -357,12 +361,12 @@ const ReviewRequests = () => {
                                                 border: 'none',
                                                 fontFamily: 'BasisGrotesquePro',
                                                 fontWeight: '500',
-                                                padding: '8px 16px',
+                                                padding: '6px 12px',
                                                 borderRadius: '6px',
-                                                fontSize: '14px'
+                                                fontSize: '12px'
                                             }}
                                         >
-                                            <FiMessageSquare size={14} />
+                                            <FiMessageSquare size={12} />
                                             Review &amp; Submit
                                         </button>
                                     </div>

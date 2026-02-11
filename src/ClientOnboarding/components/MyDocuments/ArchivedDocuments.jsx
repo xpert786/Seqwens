@@ -368,23 +368,7 @@ export default function ArchivedDocuments() {
                                 />
                             </div>
 
-                            <select
-                                className="form-select"
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                style={{
-                                    width: "140px",
-                                    fontFamily: "BasisGrotesquePro",
-                                    fontSize: "14px"
-                                }}
-                            >
-                                <option>General</option>
-                                {categories.map((category, index) => (
-                                    <option key={index} value={category}>
-                                        {category}
-                                    </option>
-                                ))}
-                            </select>
+                           
 
                             <select
                                 className="form-select"

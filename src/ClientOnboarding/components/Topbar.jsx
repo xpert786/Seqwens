@@ -283,11 +283,18 @@ export default function Topbar({
     // Connect to WebSocket for real-time notifications
     useNotificationWebSocket(true, handleNewNotification, handleUnreadCountUpdate);
 
-    // Fetch unread count only once on component mount
+    // Fetch unread count on mount and every 30 seconds as fallback
     useEffect(() => {
         fetchUnreadCount();
+
+        // Polling interval as fallback (30 seconds)
+        const intervalId = setInterval(() => {
+            fetchUnreadCount();
+        }, 30000);
+
+        return () => clearInterval(intervalId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Empty dependency array - only run once on mount
+    }, []);
 
     // Fetch profile picture and user info on component mount
     useEffect(() => {

@@ -43,8 +43,8 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
   // Calculate if any sections are expanded
   const hasExpandedSections = Object.values(expandedSections).some(expanded => expanded);
 
-  // Dynamic width based on expanded state
-  const sidebarWidth = hasExpandedSections ? '320px' : '280px';
+  // Dynamic width based on expanded state - matching TaxPreparer panel
+  const sidebarWidth = hasExpandedSections ? '280px' : '240px';
 
   const toggleSection = (section) => {
     setExpandedSections(prev => {
@@ -53,9 +53,9 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
         [section]: !prev[section]
       };
 
-      // Calculate new width and dispatch event
+      // Calculate new width and dispatch event - matching TaxPreparer panel
       const hasExpanded = Object.values(newState).some(expanded => expanded);
-      const newWidth = hasExpanded ? '320px' : '280px';
+      const newWidth = hasExpanded ? '280px' : '240px';
 
       // Dispatch custom event for layout to listen
       window.dispatchEvent(new CustomEvent('sidebarWidthChange', {
@@ -92,7 +92,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
   };
 
   const linkClass = (path) =>
-    `flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap text-left no-underline group ${isActive(path)
+    `flex items-center px-3 py-2 text-[10px] font-medium transition-all duration-200 whitespace-nowrap text-left no-underline group ${isActive(path)
       ? "bg-white text-black rounded-lg font-medium"
       : "text-white hover:bg-white/10 hover:text-white rounded-lg"
     }`;
@@ -159,13 +159,13 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                   <span className={iconWrapperClass("/firmadmin")} style={getIconWrapperStyle("/firmadmin")}>
                     <DashIconed />
                   </span>
-                  Overview
+                  <span className="text-left">Overview</span>
                 </Link>
                 <Link to="/firmadmin/analytics" className={linkClass("/firmadmin/analytics")}>
                   <span className={iconWrapperClass("/firmadmin/analytics")} style={getIconWrapperStyle("/firmadmin/analytics")}>
                     <AnalyticsIconed />
                   </span>
-                  Analytics & Reports
+                  <span className="text-left">Analytics & Reports</span>
                 </Link>
               </div>
             )}
@@ -208,19 +208,19 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                   <span className={iconWrapperClass("/firmadmin/clients")} style={getIconWrapperStyle("/firmadmin/clients")}>
                     <ClientManagae />
                   </span>
-                  Client Management
+                  <span className="text-left">Client Management</span>
                 </Link>
                 <Link to="/firmadmin/staff" className={linkClass("/firmadmin/staff")}>
                   <span className={iconWrapperClass("/firmadmin/staff")} style={getIconWrapperStyle("/firmadmin/staff")}>
                     <StaffManagementIcon />
                   </span>
-                  Staff Management
+                  <span className="text-left">Staff Management</span>
                 </Link>
                 <Link to="/firmadmin/tasks" className={linkClass("/firmadmin/tasks")}>
                   <span className={iconWrapperClass("/firmadmin/tasks")} style={getIconWrapperStyle("/firmadmin/tasks")}>
                     <TaskManagementIcon />
                   </span>
-                  Task Management
+                  <span className="text-left">Task Management</span>
                 </Link>
               </div>
             )}
@@ -252,7 +252,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                     </svg>
 
                   </span>
-                  E-Signatures
+                  <span className="text-left">E-Signatures</span>
                 </Link>
                 <Link to="/firmadmin/messages" className={linkClass("/firmadmin/messages")}>
                   <span className={iconWrapperClass("/firmadmin/messages")} style={getIconWrapperStyle("/firmadmin/messages")}>
@@ -365,10 +365,10 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                   Firm Settings & Branding
                 </Link>
                 <Link to="/firmadmin/custom-roles" className={linkClass("/firmadmin/custom-roles")}>
-                  <span className={iconWrapperClass("/firmadmin/custom-roles")}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8.00065 1.32812L2.66602 4.32812V7.66146C2.66602 10.3281 4.66602 12.6615 8.00065 13.9948C11.3353 12.6615 13.3353 10.3281 13.3353 7.66146V4.32812L8.00065 1.32812Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M6.00065 8.66146L7.33398 9.99479L10.0007 6.66146" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                  <span className={iconWrapperClass("/firmadmin/custom-roles")} style={getIconWrapperStyle("/firmadmin/custom-roles")}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-colors duration-200">
+                      <path d="M8.00065 1.32812L2.66602 4.32812V7.66146C2.66602 10.3281 4.66602 12.6615 8.00065 13.9948C11.3353 12.6615 13.3353 10.3281 13.3353 7.66146V4.32812L8.00065 1.32812Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6.00065 8.66146L7.33398 9.99479L10.0007 6.66146" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </span>
                   Custom Roles
