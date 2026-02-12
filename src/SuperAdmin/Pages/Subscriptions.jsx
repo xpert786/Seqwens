@@ -716,8 +716,8 @@ export default function Subscriptions() {
             </div>
 
             {/* Active Subscribers */}
-            <div 
-              className="bg-white p-4 cursor-pointer hover:shadow-md transition-shadow group relative" 
+            <div
+              className="bg-white p-4 cursor-pointer hover:shadow-md transition-shadow group relative"
               style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
               onClick={handleActiveSubscribersClick}
               title="Click to view all active subscribers"
@@ -1593,8 +1593,7 @@ const SubscriptionInvoicesTab = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page: currentPage,
-        limit: 20,
+        limit: 'all',
         search: searchTerm,
         status: statusFilter,
         invoice_type: typeFilter,
@@ -1612,7 +1611,7 @@ const SubscriptionInvoicesTab = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, statusFilter, typeFilter]);
+  }, [searchTerm, statusFilter, typeFilter]);
 
   const fetchStats = useCallback(async () => {
     try {

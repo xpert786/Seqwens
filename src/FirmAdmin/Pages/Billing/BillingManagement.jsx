@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { formatDateForAPI } from "../../../ClientOnboarding/utils/dateUtils";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import SavedPaymentMethods from "./SavedPaymentMethods";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from "../../Context/FirmSettingsContext";
+import DatePicker from "../../../components/DatePicker";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -29,7 +31,9 @@ export default function BillingManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
-    client_id: ""
+    client_id: "",
+    issue_date: "",
+    due_date: ""
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4; // Changed from 5 to 4 to show top 4
@@ -43,12 +47,10 @@ export default function BillingManagement() {
       const token = getAccessToken();
       const queryParams = new URLSearchParams();
 
-      if (filters.status) {
-        queryParams.append("status", filters.status);
-      }
-      if (filters.client_id) {
-        queryParams.append("client_id", filters.client_id);
-      }
+      if (filters.status) queryParams.append("status", filters.status);
+      if (filters.client_id) queryParams.append("client_id", filters.client_id);
+      if (filters.issue_date) queryParams.append("issue_date", formatDateForAPI(filters.issue_date));
+      if (filters.due_date) queryParams.append("due_date", formatDateForAPI(filters.due_date));
 
       const url = `${API_BASE_URL}/firm/invoices/${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
@@ -587,7 +589,7 @@ export default function BillingManagement() {
 
           {/* Invoice List */}
           <div ref={invoiceListRef} className="bg-white rounded-lg p-6">
-            <div className="mb-6 flex justify-between items-center">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
                   All Invoices ({invoices.length})
@@ -596,11 +598,40 @@ export default function BillingManagement() {
                   Complete list of invoices with payment status and details
                 </p>
               </div>
-              {invoices.length > itemsPerPage && (
-                <div className="text-sm" style={{ color: '#6B7280' }}>
-                  Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date:</span>
+                  <DatePicker
+                    value={filters.issue_date}
+                    onChange={(e) => setFilters(prev => ({ ...prev, issue_date: e.target.value }))}
+                    placeholder="Filter by Issue Date"
+                    className="w-40 !border border-[#E8F0FF] rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date:</span>
+                  <DatePicker
+                    value={filters.due_date}
+                    onChange={(e) => setFilters(prev => ({ ...prev, due_date: e.target.value }))}
+                    placeholder="Filter by Due Date"
+                    className="w-40 !border border-[#E8F0FF] rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                {(filters.status || filters.client_id || filters.issue_date || filters.due_date) && (
+                  <button
+                    onClick={() => setFilters({ status: "", client_id: "", issue_date: "", due_date: "" })}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+                {invoices.length > itemsPerPage && (
+                  <div className="text-sm border-l pl-3 ml-1" style={{ color: '#6B7280', borderColor: '#E5E7EB' }}>
+                    Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Loading State */}

@@ -457,26 +457,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
                 <div className="p-4">
                     {/* Select Client Field */}
-                    <Form.Group className="mb-4">
-                        <Form.Label className="text-black">Select Client <span className="text-danger">*</span></Form.Label>
-                        <Form.Select
-                            value={internalClientId || ""}
-                            onChange={(e) => {
-                                setInternalClientId(e.target.value);
-                                setFolderTree([]);
-                                setFiles((prev) => prev.map(f => ({ ...f, folderId: null, folderPath: "", issues: [] })));
-                            }}
-                            disabled={loadingClients}
-                        >
-                            <option value="">-- Select Client --</option>
-                            {availableClients.map(client => (
-                                <option key={client.id} value={client.id}>
-                                    {client.first_name} {client.last_name} ({client.email})
-                                </option>
-                            ))}
-                        </Form.Select>
-                        {loadingClients && <div className="text-muted small mt-1">Loading clients...</div>}
-                    </Form.Group>
+                   
 
                     {/* Error Summary Panel */}
                     {modalErrors.length > 0 && (
