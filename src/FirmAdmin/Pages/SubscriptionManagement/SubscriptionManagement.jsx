@@ -840,7 +840,7 @@ const SubscriptionManagement = () => {
 
                                             return (
                                                 <>
-                                                    {renderUsageBar('Active Clients', subscriptionOverview.overview.usage.clients.used, subscriptionOverview.overview.usage.clients.limit)}
+                                                    {renderUsageBar('Client Accounts', subscriptionOverview.overview.usage.clients.used, subscriptionOverview.overview.usage.clients.limit)}
                                                     {renderUsageBar('Staff Members', subscriptionOverview.overview.usage.staff_users.used, subscriptionOverview.overview.usage.staff_users.limit, 'bg-indigo-500')}
                                                 </>
                                             );

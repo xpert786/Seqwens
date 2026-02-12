@@ -15,7 +15,7 @@ import {
     Bar
 } from 'recharts';
 import { useFirmSettings } from '../Context/FirmSettingsContext';
-import { securityAPI, handleAPIError, firmAdminBlockedAccountsAPI, firmAdminGeoRestrictionsAPI } from '../../ClientOnboarding/utils/apiUtils';
+import { securityAPI, handleAPIError, firmAdminBlockedAccountsAPI, firmAdminGeoRestrictionsAPI, firmComplianceAPI } from '../../ClientOnboarding/utils/apiUtils';
 import { FiSearch, FiUnlock, FiClock, FiUser, FiShield, FiAlertCircle, FiLock, FiCheck, FiX, FiGlobe } from 'react-icons/fi';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { toast } from 'react-toastify';
@@ -214,76 +214,7 @@ const statusBadgeStyles = {
     Dismissed: 'bg-[#6B7280] text-white'
 };
 
-// Issue Breakdown data for pie chart
-const issueBreakdownData = [
-    { name: 'Missing docs', value: 6, color: '#3B82F6' },
-    { name: 'Other', value: 3, color: '#F56D2D' },
-    { name: 'Critical', value: 5, color: '#EF4444' }
-];
 
-// ROI Comparison data for bar chart
-const roiComparisonData = [
-    { name: 'EIC', complete: 6, background: 6.5 },
-    { name: 'CTC', complete: 4, background: 4 },
-    { name: 'HOH', complete: 5, background: 5 }
-];
-
-const auditLogs = [
-    {
-        logId: 'LOG-001',
-        action: 'Document Access',
-        user: 'john.smith@example.com',
-        resource: 'Tax Return - ABC Corp',
-        timestamp: '2024-01-15 15:30:00',
-        ipAddress: '192.168.1.50',
-        status: 'Resolved'
-    },
-    {
-        logId: 'LOG-002',
-        action: 'User Login',
-        user: 'jane.doe@example.com',
-        resource: 'Dashboard',
-        timestamp: '2024-01-15 15:30:00',
-        ipAddress: '192.168.1.51',
-        status: 'Resolved'
-    },
-    {
-        logId: 'LOG-003',
-        action: 'Settings Change',
-        user: 'admin@example.com',
-        resource: 'Security Settings',
-        timestamp: '2024-01-15 15:20:00',
-        ipAddress: '192.168.1.52',
-        status: 'Resolved'
-    }
-];
-
-const complianceDetails = [
-    {
-        client: 'John Doe',
-        type: 'Individual',
-        issue: 'Missing Docs',
-        status: 'Open',
-        lastUpdated: '2025-09-10',
-        action: 'Review'
-    },
-    {
-        client: 'Jane Smith',
-        type: 'Individual',
-        issue: 'Unsigned 8879',
-        status: 'Resolved',
-        lastUpdated: '2025-09-10',
-        action: 'Review'
-    },
-    {
-        client: 'Acme LLC',
-        type: 'Business',
-        issue: 'Missing W-2',
-        status: 'Open',
-        lastUpdated: '2025-09-10',
-        action: 'Review'
-    }
-];
 
 export default function SecurityCompliance() {
     const { advancedReportingEnabled } = useFirmSettings();
@@ -328,9 +259,7 @@ export default function SecurityCompliance() {
     const [enforce2FARoles, setEnforce2FARoles] = useState({ owner: true, admin: true, manager: true, preparer: false, staff: false, viewer: false });
     const [encryptionAtRest, setEncryptionAtRest] = useState('Policy Control only');
     const [encryptionInTransit, setEncryptionInTransit] = useState('Policy Control only');
-    const [enableWatermarking, setEnableWatermarking] = useState(true);
-    const [watermarkText, setWatermarkText] = useState('[ClientName] [timestamp]');
-    const [watermarkOpacity, setWatermarkOpacity] = useState(15);
+
     const [enableRedaction, setEnableRedaction] = useState(true);
     const [redactionTypes, setRedactionTypes] = useState({ ssn: true, itin: true, acct: true });
     const [securePortalOnly, setSecurePortalOnly] = useState(false);
@@ -443,6 +372,39 @@ export default function SecurityCompliance() {
         alert_category: '',
         status: 'active'
     });
+
+    // Compliance Readiness State
+    const [complianceData, setComplianceData] = useState({
+        issueBreakdown: [],
+        roiComparison: [],
+        complianceDetails: []
+    });
+    const [isLoadingCompliance, setIsLoadingCompliance] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === 'Compliance Readiness') {
+            fetchComplianceData();
+        }
+    }, [activeTab]);
+
+    const fetchComplianceData = async () => {
+        try {
+            setIsLoadingCompliance(true);
+            const response = await firmComplianceAPI.getComplianceReadiness();
+            if (response && response.success) {
+                setComplianceData({
+                    issueBreakdown: response.data.issue_breakdown || [],
+                    roiComparison: response.data.roi_comparison || [],
+                    complianceDetails: response.data.compliance_details || []
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching compliance data:', error);
+            handleAPIError(error);
+        } finally {
+            setIsLoadingCompliance(false);
+        }
+    };
 
     // Handle body scroll lock when modal is open
     useEffect(() => {
@@ -1390,39 +1352,41 @@ export default function SecurityCompliance() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         {/* Pie Chart Representation */}
                         <div className="relative w-full sm:w-64 h-64 flex-shrink-0">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={issueBreakdownData}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        label={({ value }) => value}
-                                        outerRadius={100}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                    >
-                                        {issueBreakdownData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            {isLoadingCompliance ? (
+                                <div className="flex h-full items-center justify-center">Loading...</div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={complianceData.issueBreakdown}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ value }) => value}
+                                            outerRadius={100}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {complianceData.issueBreakdown.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                         <div className="flex flex-col gap-3">
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-[#3B82F6]"></div>
-                                <span className="text-sm text-[#4B5563]">Missing docs: 6</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-[#F56D2D]"></div>
-                                <span className="text-sm text-[#4B5563]">3</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-[#EF4444]"></div>
-                                <span className="text-sm text-[#4B5563]">5</span>
-                            </div>
+                            {isLoadingCompliance ? (
+                                <span>Loading details...</span>
+                            ) : (
+                                complianceData.issueBreakdown.map((item, idx) => (
+                                    <div key={idx} className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                        <span className="text-sm text-[#4B5563]">{item.name}: {item.value}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1433,7 +1397,7 @@ export default function SecurityCompliance() {
                     <div className="w-full" style={{ height: '300px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
-                                data={roiComparisonData}
+                                data={complianceData.roiComparison}
                                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                 barCategoryGap="60%" // Increases space between bars → thinner bars
                             >
@@ -1496,35 +1460,43 @@ export default function SecurityCompliance() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E5E7EB] bg-white">
-                            {complianceDetails.map((detail, index) => (
-                                <tr key={index} className="hover:bg-[#F8FAFF]">
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.client}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.type}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.issue}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${detail.status === 'Resolved'
-                                            ? 'bg-[#22C55E] text-white'
-                                            : 'bg-[#FBBF24] text-white'
-                                            }`}>
-                                            {detail.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.lastUpdated}</td>
-                                    <td className="px-4 py-3">
-                                        <button
-                                            onClick={() => {
-                                                setSelectedCompliance(detail);
-                                                setIsReviewModalOpen(true);
-                                            }}
-                                            className="inline-flex items-center rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
-                                            style={{ borderRadius: '8px' }}
-                                            type="button"
-                                        >
-                                            {detail.action}
-                                        </button>
+                            {isLoadingCompliance ? (
+                                <tr>
+                                    <td colSpan="6" className="px-4 py-8 text-center text-sm text-gray-500">
+                                        Loading compliance details...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                complianceData.complianceDetails.map((detail, index) => (
+                                    <tr key={index} className="hover:bg-[#F8FAFF]">
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.client}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.type}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.issue}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${detail.status === 'Resolved'
+                                                ? 'bg-[#22C55E] text-white'
+                                                : 'bg-[#FBBF24] text-white'
+                                                }`}>
+                                                {detail.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.lastUpdated}</td>
+                                        <td className="px-4 py-3">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedCompliance(detail);
+                                                    setIsReviewModalOpen(true);
+                                                }}
+                                                className="inline-flex items-center rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
+                                                style={{ borderRadius: '8px' }}
+                                                type="button"
+                                            >
+                                                {detail.action}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -1720,7 +1692,7 @@ export default function SecurityCompliance() {
                 {/* Data Protection Card */}
                 <div className="rounded-xl bg-white p-6">
                     <p className="text-base font-semibold text-gray-600 mb-1">Data Protection</p>
-                    <p className="text-sm text-[#6B7280] mb-4">Policy-only demonstration controls for encryption, redaction, watermarking, and sharing.</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Policy-only demonstration controls for encryption, redaction, and sharing.</p>
 
                     <div className="space-y-4">
                         {/* Encryption policies */}
@@ -1763,45 +1735,7 @@ export default function SecurityCompliance() {
                             </div>
                         </div>
 
-                        {/* Watermarking */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
-                                <span className="text-sm font-medium text-gray-500">Enable Watermarking On Downloads</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setEnableWatermarking(!enableWatermarking)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableWatermarking ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                        }`}
-                                    style={{ borderRadius: '999px' }}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'}`}
-                                        style={{ borderRadius: '999px' }}
-                                    />
-                                </button>
-                            </div>
-                            <input
-                                type="text"
-                                value={watermarkText}
-                                onChange={(e) => setWatermarkText(e.target.value)}
-                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                style={{ borderRadius: '8px' }}
-                            />
-                            <div className="flex flex-col gap-2 mt-2">
-                                <label className="text-sm font-medium text-gray-500">
-                                    Opacity: {watermarkOpacity}%
-                                </label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={watermarkOpacity}
-                                    onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
-                                    className="w-full appearance-none h-2 rounded-lg bg-gray-200 accent-[#3AD6F2] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#3AD6F2] [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#3AD6F2]"
-                                />
-                            </div>
 
-                        </div>
 
                         {/* PII Redaction */}
                         <div className="space-y-3">
@@ -3188,6 +3122,8 @@ export default function SecurityCompliance() {
         );
     };
 
+
+
     return (
         <div className="bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
             <div className="mx-auto flex w-full flex-col gap-6">
@@ -3223,6 +3159,7 @@ export default function SecurityCompliance() {
                 {activeTab === 'Geo Restrictions' && renderGeoRestrictions()}
                 {!tabs.includes(activeTab) && renderPlaceholder()}
             </div>
+
             {renderReviewModal()}
         </div>
     );

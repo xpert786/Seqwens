@@ -87,7 +87,6 @@ const FinalizeSubscription = () => {
                 sessionStorage.setItem("userData", JSON.stringify(userData));
 
                 console.log('Active subscription found, redirecting to firmadmin');
-                toast.success('Your subscription is active. Welcome back!');
 
                 // Redirect to firm admin dashboard
                 navigate('/firmadmin', { replace: true });

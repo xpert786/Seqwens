@@ -433,7 +433,7 @@ export default function ClientManage() {
                   return 'DocumentIcon';
                 })(),
                 totalBilled: '$0', // Can be calculated from invoices if available
-                compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+                compliance: (client.status || profile.account_status?.toLowerCase() || 'new').charAt(0).toUpperCase() + (client.status || profile.account_status?.toLowerCase() || 'new').slice(1),
                 pendingTasks: client.pending_tasks_count || 0,
                 documentsCount: client.documents_count || 0,
                 assignedStaff: client.assigned_staff || [],
@@ -1223,7 +1223,7 @@ export default function ClientManage() {
               status: client.status || profile.account_status?.toLowerCase() || 'new',
               lastActivity: client.last_activity?.last_active_display || client.next_due_date || 'N/A',
               totalBilled: '$0',
-              compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+              compliance: (client.status || profile.account_status?.toLowerCase() || 'new').charAt(0).toUpperCase() + (client.status || profile.account_status?.toLowerCase() || 'new').slice(1),
               assignedStaff: client.assigned_staff || [],
               is_linked: client.is_linked !== undefined ? client.is_linked : true,
               link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked')
@@ -1308,7 +1308,6 @@ export default function ClientManage() {
           client.phone || 'N/A',
           client.company || client.type || 'N/A',
           (client.status || 'N/A').charAt(0).toUpperCase() + (client.status || 'N/A').slice(1),
-          client.compliance || 'N/A',
           client.lastActivity || 'N/A',
         ];
       });
@@ -1316,20 +1315,19 @@ export default function ClientManage() {
       // Create table
       autoTable(doc, {
         startY: yPosition,
-        head: [["Client Name", "Email", "Phone", "Type", "Status", "Compliance", "Last Activity"]],
+        head: [["Client Name", "Email", "Phone", "Type", "Status", "Last Activity"]],
         body: tableData,
         theme: "grid",
         headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
         styles: { fontSize: 7, overflow: 'linebreak', cellPadding: 2 },
         margin: { left: 14, right: 14 },
         columnStyles: {
-          0: { cellWidth: 30, overflow: 'linebreak' },
-          1: { cellWidth: 35, overflow: 'linebreak' },
-          2: { cellWidth: 25, overflow: 'linebreak' },
-          3: { cellWidth: 20, overflow: 'linebreak' },
-          4: { cellWidth: 18, overflow: 'linebreak' },
-          5: { cellWidth: 22, overflow: 'linebreak' },
-          6: { cellWidth: 25, overflow: 'linebreak' }
+          0: { cellWidth: 35, overflow: 'linebreak' },
+          1: { cellWidth: 40, overflow: 'linebreak' },
+          2: { cellWidth: 30, overflow: 'linebreak' },
+          3: { cellWidth: 25, overflow: 'linebreak' },
+          4: { cellWidth: 25, overflow: 'linebreak' },
+          5: { cellWidth: 25, overflow: 'linebreak' }
         },
         alternateRowStyles: { fillColor: [249, 250, 251] },
         didDrawPage: (data) => {
@@ -2073,7 +2071,7 @@ export default function ClientManage() {
                   <th className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                   <th className="w-[120px] sm:w-[150px] md:w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                   <th className="w-[100px] sm:w-[120px] md:w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
-                  <th className="w-[90px] sm:w-[100px] md:w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
+                  <th className="w-[90px] sm:w-[100px] md:w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Status</th>
                   <th className="w-[120px] sm:w-[140px] md:w-[160px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Staff</th>
                   <th className="w-[70px] sm:w-[80px] md:w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -2170,23 +2168,28 @@ export default function ClientManage() {
                               </div>
                             </div>
 
-                            {/* Compliance Column */}
+                            {/* Client Status Column */}
                             <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
                               <span
-                                className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getComplianceColor(client.compliance)}`}
-                                style={client.compliance === 'Complete' || client.compliance === 'Active' ? {
+                                className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-white`}
+                                style={client.compliance === 'Active' ? {
                                   background: '#22C55E',
                                   border: '0.5px solid #22C55E'
                                 } : client.compliance === 'Pending' ? {
                                   background: 'var(--color-yellow-400, #FBBF24)',
                                   border: '0.5px solid var(--color-yellow-400, #FBBF24)'
-                                } : client.compliance === 'Missing' ? {
+                                } : client.compliance === 'Inactive' ? {
                                   background: 'var(--color-red-500, #EF4444)',
                                   border: '0.5px solid var(--color-red-500, #EF4444)'
-                                } : {}}
+                                } : {
+                                  background: '#6B7280',
+                                  border: '0.5px solid #6B7280'
+                                }}
                               >
-                                {getComplianceIcon(client.compliance)}
-                                <span className="ml-1">{client.compliance}</span>
+                                {client.compliance === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                {client.compliance === 'Inactive' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                {client.compliance === 'Pending' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                <span className="">{client.compliance}</span>
                               </span>
                             </div>
 

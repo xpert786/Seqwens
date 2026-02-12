@@ -5807,6 +5807,44 @@ export const taxPreparerDocumentsAPI = {
   }
 };
 
+export const watermarkToolAPI = {
+  // Preview watermark
+  previewWatermark: async (formData) => {
+    const token = getAccessToken();
+    if (!token) throw new Error('No authentication token found');
+
+    const response = await fetchWithCors(`${getApiBaseUrl()}/firm/tools/watermark/preview/`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to generate preview');
+    }
+    return await response.blob();
+  },
+
+  // Apply and download watermark
+  applyWatermark: async (formData) => {
+    const token = getAccessToken();
+    if (!token) throw new Error('No authentication token found');
+
+    const response = await fetchWithCors(`${getApiBaseUrl()}/firm/tools/watermark/apply/`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to apply watermark');
+    }
+    return await response.blob();
+  }
+};
+
 export const taxPreparerThreadsAPI = {
   // List clients assigned to the authenticated staff member
   listAssignedClients: async () => {
@@ -8033,4 +8071,10 @@ export const subscriptionAPI = {
 
 // Re-export utility functions for convenience
 export { clearUserData } from './userUtils';
+export const firmComplianceAPI = {
+  getComplianceReadiness: async () => {
+    return await apiRequest('/firm/compliance-readiness/', 'GET');
+  }
+};
 export { getLoginUrl } from './urlUtils';
+
