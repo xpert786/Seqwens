@@ -1135,12 +1135,7 @@ export default function PdfAnnotationModal({
       backdrop="static"
       className="pdf-annotation-modal"
       scrollable
-      size="md"
-      style={{ 
-        maxWidth: '500px', 
-        margin: 'auto',
-        maxHeight: '85vh'
-      }}
+      size="xl"
     >
       <Modal.Header style={{ borderBottom: '2px solid #E5E7EB', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 1000, backgroundColor: 'white' }}>
         <div className="d-flex justify-content-between align-items-center w-100">
@@ -1157,7 +1152,7 @@ export default function PdfAnnotationModal({
         </div>
       </Modal.Header>
 
-      <Modal.Body style={{ padding: 0, display: 'flex', flexDirection: 'column', maxHeight: '65vh', overflowY: 'auto' }}>
+      <Modal.Body className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '60vh', overflowY: 'auto' }}>
         {/* Toolbox */}
         <div className="annotation-toolbox" style={{
           borderBottom: '2px solid #E5E7EB',
@@ -1446,10 +1441,10 @@ export default function PdfAnnotationModal({
                   Saving...
                 </>
               ) : (
-                <>
+                <div className="d-flex align-items-center">
                   <FiSave className="me-2" />
                   Save Annotations
-                </>
+                </div>
               )}
             </button>
           </div>

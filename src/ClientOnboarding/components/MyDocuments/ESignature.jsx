@@ -886,6 +886,19 @@ export default function ESignature() {
         />
       )}
 
+      <style>{`
+        .pdf-preview-modal .modal-dialog {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin: 0 auto !important;
+          max-width: 600px !important;
+        }
+        .pdf-preview-modal .modal-content {
+          max-height: 90vh !important;
+          overflow: hidden !important;
+        }
+      `}</style>
       {/* PDF Preview Modal */}
       <Modal
         show={showPreviewModal}
@@ -896,7 +909,7 @@ export default function ESignature() {
         size="lg"
         centered
         scrollable
-        fullscreen="lg-down"
+        dialogClassName="pdf-preview-modal"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
 
@@ -912,7 +925,7 @@ export default function ESignature() {
             ) : 'E-Signature – Document Preview'}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="custom-scrollbar" style={{ padding: 0, overflowY: 'auto' }}>
+        <Modal.Body style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>
           {selectedIndex !== null && signatureRequests[selectedIndex] ? (
             <>
               {(() => {
@@ -923,11 +936,14 @@ export default function ESignature() {
                   : request.document_url;
 
                 return pdfUrl ? (
-                  <PDFViewer
-                    pdfUrl={pdfUrl}
-                    height="35vh"
-                    showThumbnails={false}
-                  />
+                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                    <PDFViewer
+                      pdfUrl={pdfUrl}
+                      height="50vh"
+                      showThumbnails={false}
+                      className="w-100"
+                    />
+                  </div>
                 ) : (
                   <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
                     <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>

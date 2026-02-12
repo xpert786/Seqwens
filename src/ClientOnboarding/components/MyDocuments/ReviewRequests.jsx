@@ -4,6 +4,7 @@ import { handleAPIError } from '../../utils/apiUtils';
 import { tasksAPI } from '../../utils/apiUtils';
 import { Modal, Button } from 'react-bootstrap';
 import { FiFileText, FiCheckCircle, FiClock, FiMessageSquare } from 'react-icons/fi';
+import '../../styles/MyDocuments.css';
 
 const ReviewRequests = () => {
     const [reviewRequests, setReviewRequests] = useState([]);
@@ -384,160 +385,162 @@ const ReviewRequests = () => {
                 onHide={handleCloseReviewModal}
                 centered
                 size="md"
-                scrollable
             >
                 <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
                     <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', color: '#1F2937' }}>
                         Submit Document Review
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="custom-scrollbar" style={{ padding: '24px', overflowY: 'auto' }}>
-                    {selectedRequest && (
-                        <>
-                            <div className="mb-4">
-                                <h6
-                                    style={{
-                                        fontFamily: 'BasisGrotesquePro',
-                                        fontWeight: '600',
-                                        color: '#374151',
-                                        marginBottom: '8px'
-                                    }}
-                                >
-                                    {selectedRequest.task_title}
-                                </h6>
-                                {selectedRequest.description && (
-                                    <p
+                <Modal.Body style={{ padding: 0 }}>
+                    <div className="custom-scrollbar" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
+                        {selectedRequest && (
+                            <>
+                                <div className="mb-4">
+                                    <h6
                                         style={{
                                             fontFamily: 'BasisGrotesquePro',
-                                            color: '#6B7280',
-                                            fontSize: '14px',
-                                            marginBottom: '0'
+                                            fontWeight: '600',
+                                            color: '#374151',
+                                            marginBottom: '8px'
                                         }}
                                     >
-                                        {selectedRequest.description}
-                                    </p>
-                                )}
-                            </div>
 
-                            {/* Show original documents in the modal too */}
-                            {selectedRequest.files && selectedRequest.files.length > 0 && (
-                                <div className="mb-4">
-                                    <h6 style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '10px' }}>
-                                        Documents to Review:
+                                        {selectedRequest.task_title}
                                     </h6>
-                                    <div className="d-flex flex-wrap gap-2">
-                                        {selectedRequest.files.map((file) => (
-                                            <a
-                                                key={file.id}
-                                                href={file.file_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="d-flex align-items-center gap-2 px-2 py-1 rounded border text-decoration-none"
-                                                style={{ fontSize: '12px', color: '#4B5563', backgroundColor: '#F9FAFB' }}
-                                            >
-                                                <FiFileText size={14} style={{ color: '#00C0C6' }} />
-                                                {file.file_name}
-                                            </a>
-                                        ))}
-                                    </div>
+                                    {selectedRequest.description && (
+                                        <p
+                                            style={{
+                                                fontFamily: 'BasisGrotesquePro',
+                                                color: '#6B7280',
+                                                fontSize: '14px',
+                                                marginBottom: '0'
+                                            }}
+                                        >
+                                            {selectedRequest.description}
+                                        </p>
+                                    )}
                                 </div>
-                            )}
 
-                            <div className="mb-3">
-                                <label
-                                    htmlFor="reviewComment"
-                                    className="form-label"
-                                    style={{
-                                        fontFamily: 'BasisGrotesquePro',
-                                        fontWeight: '500',
-                                        color: '#374151'
-                                    }}
-                                >
-                                    Your Review Comments *
-                                </label>
-                                <textarea
-                                    id="reviewComment"
-                                    className="form-control"
-                                    rows="6"
-                                    value={reviewComment}
-                                    onChange={(e) => setReviewComment(e.target.value)}
-                                    placeholder="Please provide your comments, feedback, or approval for this document review..."
-                                    style={{
-                                        fontFamily: 'BasisGrotesquePro',
-                                        fontSize: '14px',
-                                        borderColor: '#E5E7EB'
-                                    }}
-                                />
-                            </div>
-
-                            <div className="mb-3">
-                                <label
-                                    className="form-label"
-                                    style={{
-                                        fontFamily: 'BasisGrotesquePro',
-                                        fontWeight: '500',
-                                        color: '#374151'
-                                    }}
-                                >
-                                    Upload Documents (Optional)
-                                </label>
-                                <div
-                                    className="p-3 border rounded text-center"
-                                    style={{
-                                        borderStyle: 'dashed !important',
-                                        borderColor: '#D1D5DB',
-                                        backgroundColor: '#F9FAFB'
-                                    }}
-                                >
-                                    <input
-                                        type="file"
-                                        multiple
-                                        className="form-control"
-                                        onChange={handleFileChange}
-                                        style={{ display: 'none' }}
-                                        id="review-file-upload"
-                                    />
-                                    <label
-                                        htmlFor="review-file-upload"
-                                        className="d-flex flex-row align-items-center justify-content-center gap-2 p-3"
-                                        style={{ cursor: 'pointer', margin: 0, width: '100%' }}
-                                    >
-                                        <FiFileText size={20} style={{ color: '#00C0C6' }} />
-                                        <span style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#4B5563' }}>
-                                            Click to upload or drag and drop
-                                        </span>
-                                    </label>
-                                </div>
-                                {uploadFiles.length > 0 && (
-                                    <div className="mt-3">
-                                        <h6 style={{ fontSize: '12px', fontWeight: '600', color: '#374151' }}>Selected Files:</h6>
-                                        <ul className="list-unstyled mb-0">
-                                            {uploadFiles.map((file, index) => (
-                                                <li key={index} className="d-flex align-items-center gap-2 mb-1" style={{ fontSize: '13px', color: '#6B7280' }}>
-                                                    <FiFileText size={14} />
-                                                    {file.name}
-                                                </li>
+                                {/* Show original documents in the modal too */}
+                                {selectedRequest.files && selectedRequest.files.length > 0 && (
+                                    <div className="mb-4">
+                                        <h6 style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '10px' }}>
+                                            Documents to Review:
+                                        </h6>
+                                        <div className="d-flex flex-wrap gap-2">
+                                            {selectedRequest.files.map((file) => (
+                                                <a
+                                                    key={file.id}
+                                                    href={file.file_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="d-flex align-items-center gap-2 px-2 py-1 rounded border text-decoration-none"
+                                                    style={{ fontSize: '12px', color: '#4B5563', backgroundColor: '#F9FAFB' }}
+                                                >
+                                                    <FiFileText size={14} style={{ color: '#00C0C6' }} />
+                                                    {file.file_name}
+                                                </a>
                                             ))}
-                                        </ul>
+                                        </div>
                                     </div>
                                 )}
-                            </div>
 
-                            <div
-                                className="alert"
-                                style={{
-                                    backgroundColor: '#EFF6FF',
-                                    border: '1px solid #BFDBFE',
-                                    color: '#1E40AF',
-                                    fontFamily: 'BasisGrotesquePro',
-                                    fontSize: '13px'
-                                }}
-                            >
-                                <FiCheckCircle size={16} className="me-2" />
-                                Once submitted, this review request will be marked as completed and your tax preparer will be notified.
-                            </div>
-                        </>
-                    )}
+                                <div className="mb-3">
+                                    <label
+                                        htmlFor="reviewComment"
+                                        className="form-label"
+                                        style={{
+                                            fontFamily: 'BasisGrotesquePro',
+                                            fontWeight: '500',
+                                            color: '#374151'
+                                        }}
+                                    >
+                                        Your Review Comments *
+                                    </label>
+                                    <textarea
+                                        id="reviewComment"
+                                        className="form-control"
+                                        rows="6"
+                                        value={reviewComment}
+                                        onChange={(e) => setReviewComment(e.target.value)}
+                                        placeholder="Please provide your comments, feedback, or approval for this document review..."
+                                        style={{
+                                            fontFamily: 'BasisGrotesquePro',
+                                            fontSize: '14px',
+                                            borderColor: '#E5E7EB'
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="mb-3">
+                                    <label
+                                        className="form-label"
+                                        style={{
+                                            fontFamily: 'BasisGrotesquePro',
+                                            fontWeight: '500',
+                                            color: '#374151'
+                                        }}
+                                    >
+                                        Upload Documents (Optional)
+                                    </label>
+                                    <div
+                                        className="p-3 border rounded text-center"
+                                        style={{
+                                            borderStyle: 'dashed !important',
+                                            borderColor: '#D1D5DB',
+                                            backgroundColor: '#F9FAFB'
+                                        }}
+                                    >
+                                        <input
+                                            type="file"
+                                            multiple
+                                            className="form-control"
+                                            onChange={handleFileChange}
+                                            style={{ display: 'none' }}
+                                            id="review-file-upload"
+                                        />
+                                        <label
+                                            htmlFor="review-file-upload"
+                                            className="d-flex flex-row align-items-center justify-content-center gap-2 p-3"
+                                            style={{ cursor: 'pointer', margin: 0, width: '100%' }}
+                                        >
+                                            <FiFileText size={20} style={{ color: '#00C0C6' }} />
+                                            <span style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#4B5563' }}>
+                                                Click to upload or drag and drop
+                                            </span>
+                                        </label>
+                                    </div>
+                                    {uploadFiles.length > 0 && (
+                                        <div className="mt-3">
+                                            <h6 style={{ fontSize: '12px', fontWeight: '600', color: '#374151' }}>Selected Files:</h6>
+                                            <ul className="list-unstyled mb-0">
+                                                {uploadFiles.map((file, index) => (
+                                                    <li key={index} className="d-flex align-items-center gap-2 mb-1" style={{ fontSize: '13px', color: '#6B7280' }}>
+                                                        <FiFileText size={14} />
+                                                        {file.name}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div
+                                    className="alert"
+                                    style={{
+                                        backgroundColor: '#EFF6FF',
+                                        border: '1px solid #BFDBFE',
+                                        color: '#1E40AF',
+                                        fontFamily: 'BasisGrotesquePro',
+                                        fontSize: '13px'
+                                    }}
+                                >
+                                    <FiCheckCircle size={16} className="me-2" />
+                                    Once submitted, this review request will be marked as completed and your tax preparer will be notified.
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </Modal.Body>
                 <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
                     <Button
