@@ -314,16 +314,16 @@ export default function DocumentManagement() {
 
         // Initialize Manual Tool Settings with Firm Defaults
         setWmToolSettings(prev => ({
-            ...prev,
-            watermark_text: settings.watermark_text || '',
-            opacity: settings.opacity || 30,
-            text_size: settings.text_size || 20,
-            rotation: settings.rotation || -45,
-            color: settings.color || '#FF0000',
-            position: settings.position || 'center',
-            include_user_info: settings.include_user_info !== undefined ? settings.include_user_info : false,
-            include_timestamp: settings.include_timestamp !== undefined ? settings.include_timestamp : false,
-            include_document_info: settings.include_document_info !== undefined ? settings.include_document_info : false
+          ...prev,
+          watermark_text: settings.watermark_text || '',
+          opacity: settings.opacity || 30,
+          text_size: settings.text_size || 20,
+          rotation: settings.rotation || -45,
+          color: settings.color || '#FF0000',
+          position: settings.position || 'center',
+          include_user_info: settings.include_user_info !== undefined ? settings.include_user_info : false,
+          include_timestamp: settings.include_timestamp !== undefined ? settings.include_timestamp : false,
+          include_document_info: settings.include_document_info !== undefined ? settings.include_document_info : false
         }));
       }
     } catch (err) {
@@ -2297,182 +2297,184 @@ export default function DocumentManagement() {
                 <p className="text-sm docmanage-preview-subtitle" style={{ fontFamily: 'BasisGrotesquePro', color: '#6B7280' }}>
                   How the watermark will appear on the document
                 </p>
-            </div>
+              </div>
 
-            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex flex-col lg:flex-row gap-8">
                 {/* Left Column: Settings */}
                 <div className="w-full lg:w-1/2 space-y-6">
-                    {/* File Upload */}
+                  {/* File Upload */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Document (PDF)</label>
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#E5E7EB] border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                          </svg>
+                          <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span></p>
+                          <p className="text-xs text-gray-500">{wmToolFile ? wmToolFile.name : 'PDF only'}</p>
+                        </div>
+                        <input type="file" className="hidden" accept=".pdf" onChange={handleWmToolFileChange} />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Controls Grid */}
+                  <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
                     <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Document (PDF)</label>
-                        <div className="flex items-center justify-center w-full">
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#E5E7EB] border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                    </svg>
-                                    <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span></p>
-                                    <p className="text-xs text-gray-500">{wmToolFile ? wmToolFile.name : 'PDF only'}</p>
-                                </div>
-                                <input type="file" className="hidden" accept=".pdf" onChange={handleWmToolFileChange} />
-                            </label>
-                        </div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Watermark Text</label>
+                      <input
+                        type="text"
+                        value={wmToolSettings.watermark_text}
+                        onChange={(e) => setWmToolSettings({ ...wmToolSettings, watermark_text: e.target.value })}
+                        className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm focus:ring-2 focus:ring-[#3AD6F2]"
+                        placeholder="Confidential"
+                      />
                     </div>
 
-                    {/* Controls Grid */}
-                    <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Watermark Text</label>
-                            <input
-                                type="text"
-                                value={wmToolSettings.watermark_text}
-                                onChange={(e) => setWmToolSettings({...wmToolSettings, watermark_text: e.target.value})}
-                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="Confidential"
-                            />
-                        </div>
-
-                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Position</label>
-                                <select
-                                    value={wmToolSettings.position}
-                                    onChange={(e) => setWmToolSettings({...wmToolSettings, position: e.target.value})}
-                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm bg-white"
-                                >
-                                    <option value="top_left">Top Left</option>
-                                    <option value="top_center">Top Center</option>
-                                    <option value="top_right">Top Right</option>
-                                    <option value="center">Center</option>
-                                    <option value="bottom_left">Bottom Left</option>
-                                    <option value="bottom_center">Bottom Center</option>
-                                    <option value="bottom_right">Bottom Right</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Color</label>
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="color"
-                                        value={wmToolSettings.color}
-                                        onChange={(e) => setWmToolSettings({...wmToolSettings, color: e.target.value})}
-                                        className="h-10 w-full rounded-lg border border-[#E5E7EB] p-1 cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                         <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Opacity ({wmToolSettings.opacity}%)</label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={wmToolSettings.opacity}
-                                    onChange={(e) => setWmToolSettings({...wmToolSettings, opacity:Number(e.target.value)})}
-                                    className="w-full accent-[#3AD6F2]"
-                                />
-                            </div>
-                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Rotation ({wmToolSettings.rotation}°)</label>
-                                <input
-                                    type="range"
-                                    min="-180"
-                                    max="180"
-                                    value={wmToolSettings.rotation}
-                                    onChange={(e) => setWmToolSettings({...wmToolSettings, rotation:Number(e.target.value)})}
-                                    className="w-full accent-[#3AD6F2]"
-                                />
-                            </div>
-                         </div>
-                          <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Size ({wmToolSettings.text_size}px)</label>
-                            <input
-                                type="range"
-                                min="10"
-                                max="200"
-                                value={wmToolSettings.text_size}
-                                onChange={(e) => setWmToolSettings({...wmToolSettings, text_size:Number(e.target.value)})}
-                                className="w-full accent-[#3AD6F2]"
-                            />
-                        </div>
-
-
-                        <div className="flex flex-wrap gap-4 pt-2">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={wmToolSettings.include_user_info}
-                                    onChange={(e) => setWmToolSettings({...wmToolSettings, include_user_info: e.target.checked})}
-                                    className="rounded border-gray-300 text-[#3AD6F2] focus:ring-[#3AD6F2]"
-                                />
-                                <span className="text-sm text-gray-700">Include User</span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={wmToolSettings.include_timestamp}
-                                    onChange={(e) => setWmToolSettings({...wmToolSettings, include_timestamp: e.target.checked})}
-                                    className="rounded border-gray-300 text-[#3AD6F2] focus:ring-[#3AD6F2]"
-                                />
-                                <span className="text-sm text-gray-700">Include Date</span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={wmToolSettings.include_document_info}
-                                    onChange={(e) => setWmToolSettings({...wmToolSettings, include_document_info: e.target.checked})}
-                                    className="rounded border-gray-300 text-[#3AD6F2] focus:ring-[#3AD6F2]"
-                                />
-                                <span className="text-sm text-gray-700">Include Doc Name</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div className="flex gap-4">
-                         <button
-                            onClick={handleWmToolPreview}
-                            disabled={wmToolLoading || !wmToolFile}
-                            className="flex-1 rounded-lg border border-[#D1D5DB] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Position</label>
+                        <select
+                          value={wmToolSettings.position}
+                          onChange={(e) => setWmToolSettings({ ...wmToolSettings, position: e.target.value })}
+                          className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm bg-white"
                         >
-                            Generate Preview
-                        </button>
-                        <button
-                            onClick={handleWmToolDownload}
-                            disabled={wmToolLoading || !wmToolFile}
-                            className="flex-1 rounded-lg bg-[#3AD6F2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#34c3db] disabled:opacity-50 transition-colors shadow-sm"
-                        >
-                            Download Watermarked File
-                        </button>
+                          <option value="top_left">Top Left</option>
+                          <option value="top_center">Top Center</option>
+                          <option value="top_right">Top Right</option>
+                          <option value="center">Center</option>
+                          <option value="bottom_left">Bottom Left</option>
+                          <option value="bottom_center">Bottom Center</option>
+                          <option value="bottom_right">Bottom Right</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Color</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={wmToolSettings.color}
+                            onChange={(e) => setWmToolSettings({ ...wmToolSettings, color: e.target.value })}
+                            className="h-10 w-full rounded-lg border border-[#E5E7EB] p-1 cursor-pointer"
+                          />
+                        </div>
+                      </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Opacity ({wmToolSettings.opacity}%)</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={wmToolSettings.opacity}
+                          onChange={(e) => setWmToolSettings({ ...wmToolSettings, opacity: Number(e.target.value) })}
+                          className="w-full accent-[#3AD6F2]"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Rotation ({wmToolSettings.rotation}°)</label>
+                        <input
+                          type="range"
+                          min="-180"
+                          max="180"
+                          value={wmToolSettings.rotation}
+                          onChange={(e) => setWmToolSettings({ ...wmToolSettings, rotation: Number(e.target.value) })}
+                          className="w-full accent-[#3AD6F2]"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Size ({wmToolSettings.text_size}px)</label>
+                      <input
+                        type="range"
+                        min="10"
+                        max="200"
+                        value={wmToolSettings.text_size}
+                        onChange={(e) => setWmToolSettings({ ...wmToolSettings, text_size: Number(e.target.value) })}
+                        className="w-full accent-[#3AD6F2]"
+                      />
+                    </div>
+
+
+                    <div className="flex flex-wrap gap-4 pt-2">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wmToolSettings.include_user_info}
+                          onChange={(e) => setWmToolSettings({ ...wmToolSettings, include_user_info: e.target.checked })}
+                          className="rounded border-gray-300 text-[#3AD6F2] focus:ring-[#3AD6F2]"
+                        />
+                        <span className="text-sm text-gray-700">Include User</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wmToolSettings.include_timestamp}
+                          onChange={(e) => setWmToolSettings({ ...wmToolSettings, include_timestamp: e.target.checked })}
+                          className="rounded border-gray-300 text-[#3AD6F2] focus:ring-[#3AD6F2]"
+                        />
+                        <span className="text-sm text-gray-700">Include Date</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wmToolSettings.include_document_info}
+                          onChange={(e) => setWmToolSettings({ ...wmToolSettings, include_document_info: e.target.checked })}
+                          className="rounded border-gray-300 text-[#3AD6F2] focus:ring-[#3AD6F2]"
+                        />
+                        <span className="text-sm text-gray-700">Include Doc Name</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleWmToolPreview}
+                      disabled={wmToolLoading || !wmToolFile}
+                      className="flex-1 rounded-lg border border-[#D1D5DB] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    >
+                      Generate Preview
+                    </button>
+                    <button
+                      onClick={handleWmToolDownload}
+                      disabled={wmToolLoading || !wmToolFile}
+                      className="flex-1 rounded-lg bg-[#3AD6F2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#34c3db] disabled:opacity-50 transition-colors shadow-sm"
+                    >
+                      Download Watermarked File
+                    </button>
+                  </div>
 
                 </div>
 
                 {/* Right Column: Preview */}
                 <div className="w-full lg:w-1/2">
-                      <div className="flex flex-col h-full bg-gray-50 rounded-xl p-4 border border-[#E5E7EB]">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3 block">Live Preview</h4>
-                            <div className="flex-1 w-full bg-white rounded-lg border border-[#E5E7EB] overflow-hidden flex items-center justify-center min-h-[500px] shadow-inner relative">
-                                {wmToolLoading ? (
-                                    <div className="flex flex-col items-center">
-                                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#3AD6F2] border-t-transparent"></div>
-                                        <p className="mt-3 text-sm text-gray-500 font-medium">Processing...</p>
-                                    </div>
-                                ) : wmToolPreviewUrl ? (
-                                    <iframe src={wmToolPreviewUrl + "#toolbar=0"} className="w-full h-full absolute inset-0" title="Watermark Preview" />
-                                ) : (
-                                    <div className="text-center p-6">
-                                        <div className="mx-auto h-12 w-12 text-gray-300 mb-3 flex justify-center">
-                                            <DocumentEye width={48} height={48} />
-                                        </div>
-                                        <p className="text-gray-400 text-sm">Upload a PDF and click 'Generate Preview' to see the result here.</p>
-                                    </div>
-                                )}
-                            </div>
+                  <div className="flex flex-col h-full bg-gray-50 rounded-xl p-4 border border-[#E5E7EB]">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 block">Live Preview</h4>
+                    <div className="flex-1 w-full bg-white rounded-lg border border-[#E5E7EB] overflow-hidden flex items-center justify-center min-h-[500px] shadow-inner relative">
+                      {wmToolLoading ? (
+                        <div className="flex flex-col items-center">
+                          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#3AD6F2] border-t-transparent"></div>
+                          <p className="mt-3 text-sm text-gray-500 font-medium">Processing...</p>
                         </div>
+                      ) : wmToolPreviewUrl ? (
+                        <iframe src={wmToolPreviewUrl + "#toolbar=0"} className="w-full h-full absolute inset-0" title="Watermark Preview" />
+                      ) : (
+                        <div className="text-center p-6">
+                          <div className="mx-auto h-12 w-12 text-gray-300 mb-3 flex justify-center">
+                            <DocumentEye width={48} height={48} />
+                          </div>
+                          <p className="text-gray-400 text-sm">Upload a PDF and click 'Generate Preview' to see the result here.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              </div>
             </div>
+          )}
         </div>
       )}
 
