@@ -217,34 +217,36 @@ const AddOns = () => {
                     </div>
                 )}
 
-                <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                    <div>
-                        <div className="text-lg font-bold text-gray-900">
+                <div className="pt-6 border-t border-gray-50 flex flex-col gap-4">
+                    <div className="flex flex-col text-left">
+                        <div className="text-2xl font-bold text-gray-900">
                             {isIncluded ? 'Free' : (addon.price_display ? addon.price_display.split('/')[0] : `$${parseFloat(addon.price || 0).toFixed(0)}`)}
                         </div>
-                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
-                            {addon.billing_frequency === 'monthly' ? 'per month' : 'one-time'}
+                        <div className="text-xs text-gray-400 uppercase font-bold tracking-widest mt-1">
+                            {addon.billing_frequency === 'monthly' ? 'PER MONTH' : 'ONE-TIME'}
                         </div>
                     </div>
 
                     {!isIncluded && (
-                        addon.is_available === false ? (
-                            <button disabled className="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-400 text-[11px] font-bold border border-gray-100 cursor-not-allowed">
-                                Upgrade Plan
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => handleAddAddon(addon.id, addon.name)}
-                                disabled={addon.is_added || addingAddon === addon.id}
-                                className={`px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all ${addon.is_added
-                                    ? 'bg-gray-50 text-gray-400 border border-gray-100 cursor-not-allowed'
-                                    : 'bg-[#F56D2D] text-white hover:bg-[#EA580C]'
-                                    }`}
-                                style={{ borderRadius: "8px" }}
-                            >
-                                {addingAddon === addon.id ? 'Starting...' : addon.is_added ? 'Enabled' : 'Activate'}
-                            </button>
-                        )
+                        <div className="w-full">
+                            {addon.is_available === false ? (
+                                <button disabled className="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-400 text-sm font-bold border border-gray-100 cursor-not-allowed">
+                                    Upgrade Plan
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => handleAddAddon(addon.id, addon.name)}
+                                    disabled={addon.is_added || addingAddon === addon.id}
+                                    className={`w-full px-6 py-3 rounded-lg text-sm font-bold transition-all ${addon.is_added
+                                        ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                                        : 'bg-[#007EAF] text-white hover:bg-[#006a94] shadow-sm'
+                                        }`}
+                                    style={{ borderRadius: "8px" }}
+                                >
+                                    {addingAddon === addon.id ? 'Starting...' : addon.is_added ? 'Activated' : 'Activate'}
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
@@ -297,27 +299,28 @@ const AddOns = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Simplified Sidebar */}
                     <div className="lg:col-span-3">
-                        <div className="bg-white border border-gray-100 rounded-xl p-5 sticky top-24">
-                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Categories</h4>
-                            <div className="space-y-1">
+                        <div className="bg-white border border-gray-100 rounded-xl p-6 sticky top-24 shadow-sm">
+                            <h4 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-6 text-left" style={{ fontFamily: 'BasisGrotesquePro' }}>CATEGORIES</h4>
+                            <div className="flex flex-col space-y-1">
                                 {CATEGORIES.map(category => (
                                     <button
                                         key={category.id}
                                         onClick={() => setSelectedCategory(category.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${selectedCategory === category.id
-                                            ? 'bg-gray-50 text-gray-900'
-                                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                                        className={`w-full flex items-center px-3 py-3 rounded-lg text-[14px] font-bold transition-all text-left justify-start group ${selectedCategory === category.id
+                                            ? 'bg-blue-50 text-[#007EAF]'
+                                            : 'text-gray-600 hover:bg-gray-50'}`}
+                                        style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                        <div className={selectedCategory === category.id ? 'text-[#3AD6F2]' : 'text-gray-400'}>
+                                        <div className={`w-8 flex-shrink-0 flex items-center justify-start transition-colors ${selectedCategory === category.id ? 'text-[#007EAF]' : 'text-gray-400 group-hover:text-gray-600'}`}>
                                             {category.icon}
                                         </div>
-                                        {category.label}
+                                        <span className="whitespace-nowrap">{category.label}</span>
                                     </button>
                                 ))}
                             </div>
 
-                            <div className="mt-8 pt-8 border-t border-gray-50">
-                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Search</h4>
+                            <div className="mt-10 pt-10 border-t border-gray-100">
+                                <h4 className="text-xl font-bold text-[#3B4A66]/80 uppercase tracking-tight mb-6" style={{ fontFamily: 'BasisGrotesquePro' }}>SEARCH</h4>
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -344,7 +347,7 @@ const AddOns = () => {
                                 </button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {filteredAddons.map(addon => (
                                     <MarketplaceCard key={addon.id} addon={addon} />
                                 ))}

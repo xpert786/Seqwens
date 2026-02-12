@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Modal, Button } from "react-bootstrap";
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { FaEye, FaDownload, FaTrash } from "react-icons/fa";
@@ -37,6 +38,7 @@ export default function FolderContents() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -204,7 +206,7 @@ export default function FolderContents() {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.actions-menu-container')) {
+      if (!event.target.closest('.actions-menu-container') && !event.target.closest('.foldercontents-actions-menu')) {
         setOpenActionsMenu(null);
       }
     };
@@ -619,10 +621,15 @@ export default function FolderContents() {
                               <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
                             </td>
                             <td className="py-4 px-4">
-                              <div className={`relative actions-menu-container ${openActionsMenu === doc.id ? 'z-50' : ''}`}>
+                              <div className="relative actions-menu-container">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setMenuPosition({
+                                      top: rect.bottom + window.scrollY,
+                                      left: rect.right + window.scrollX - 192, // 192px is w-48
+                                    });
                                     setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
                                   }}
                                   className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
@@ -634,17 +641,25 @@ export default function FolderContents() {
                                     <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </button>
-                                {openActionsMenu === doc.id && (
-                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-xl z-50 py-1 foldercontents-actions-menu overflow-hidden" style={{ borderRadius: '8px' }}>
+                                {openActionsMenu === doc.id && createPortal(
+                                  <div
+                                    className="absolute w-40 bg-white rounded-lg border border-gray-200 shadow-xl z-[9999] py-1 foldercontents-actions-menu overflow-hidden"
+                                    style={{
+                                      borderRadius: '8px',
+                                      top: `${menuPosition.top}px`,
+                                      left: `${menuPosition.left}px`,
+                                      position: 'absolute'
+                                    }}
+                                  >
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleViewDetails(doc);
                                       }}
-                                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0"
+                                      className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                      <FaEye className="w-4 h-4" />
+                                      <FaEye className="w-3.5 h-3.5" />
                                       <span>View Details</span>
                                     </button>
                                     <button
@@ -653,10 +668,10 @@ export default function FolderContents() {
                                         handleDownload(doc);
                                         setOpenActionsMenu(null);
                                       }}
-                                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0"
+                                      className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                      <FaDownload className="w-4 h-4" />
+                                      <FaDownload className="w-3.5 h-3.5" />
                                       <span>Download</span>
                                     </button>
                                     <button
@@ -665,13 +680,14 @@ export default function FolderContents() {
                                         handleDelete(doc);
                                         setOpenActionsMenu(null);
                                       }}
-                                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-3"
+                                      className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-2.5"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
-                                      <FaTrash className="w-4 h-4" />
+                                      <FaTrash className="w-3.5 h-3.5" />
                                       <span>Delete</span>
                                     </button>
-                                  </div>
+                                  </div>,
+                                  document.body
                                 )}
                               </div>
                             </td>

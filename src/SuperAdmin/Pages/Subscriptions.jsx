@@ -676,11 +676,11 @@ export default function Subscriptions() {
           {/* Metric Cards and main subscriptions content */}
           <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
             {/* Total Revenue */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white px-4 py-2" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Total Revenue</p>
-                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Total Revenue</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                     {metrics?.total_revenue?.formatted || '$0.00'}
                   </p>
                   {/* {metrics?.total_revenue && (
@@ -716,16 +716,16 @@ export default function Subscriptions() {
             </div>
 
             {/* Active Subscribers */}
-            <div 
-              className="bg-white p-4 cursor-pointer hover:shadow-md transition-shadow group relative" 
+            <div
+              className="bg-white px-4 py-2 cursor-pointer hover:shadow-md transition-shadow group relative"
               style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
               onClick={handleActiveSubscribersClick}
               title="Click to view all active subscribers"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-medium mb-2 group-hover:text-blue-500 transition-colors" style={{ color: '#3B4A66' }}>Active Subscribers</p>
-                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 group-hover:text-blue-500 transition-colors uppercase tracking-tight" style={{ color: '#3B4A66' }}>Active Subscribers</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                     {metrics?.active_subscribers?.formatted || '0'}
                   </p>
 
@@ -738,11 +738,11 @@ export default function Subscriptions() {
             </div>
 
             {/* Most Popular Plan */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white px-4 py-2" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
-                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                     {metrics?.most_popular_plan?.plan_label || 'N/A'}
                   </p>
                   {metrics?.most_popular_plan && (
@@ -783,11 +783,11 @@ export default function Subscriptions() {
             </div>
 
             {/* Average Growth */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white px-4 py-2" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Average Growth</p>
-                  <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Average Growth</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                     {metrics?.average_growth?.formatted || '+0.00%'}
                   </p>
                   {metrics?.average_growth && (
@@ -833,7 +833,7 @@ export default function Subscriptions() {
           </div>
 
           {/* Plan and Alerts Section */}
-          <div className="grid gap-8 mb-8 subscriptions-plan-grid" style={{ gridTemplateColumns: '60% 35%' }}>
+          <div className="grid gap-8 mb-8 subscriptions-plan-grid" style={{ gridTemplateColumns: '70% 25%' }}>
             {/* Plan Section */}
             <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-center mb-3 ">
@@ -863,7 +863,7 @@ export default function Subscriptions() {
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex items-start gap-3">
-                            <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
+                            <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-xs font-medium`}>
                               {plan.plan_display || label}
                             </span>
                             <div>
@@ -900,7 +900,7 @@ export default function Subscriptions() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-bold mb-1" style={{ color: '#3B4A66' }}>
+                            <p className="text-xs font-bold mb-1" style={{ color: '#3B4A66' }}>
                               {plan.formatted_price}/month
                             </p>
                             <p className="text-xs" style={{ color: '#3B4A66' }}>
@@ -1088,8 +1088,8 @@ export default function Subscriptions() {
 
             {planPerformance ? (
               <div className="grid gap-6 lg:grid-cols-2 subscriptions-plan-performance-grid">
-                <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
-                  <h4 className="text-sm sm:text-base font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
+                <div className="border border-[#E8F0FF] rounded-[10px] p-3 subscriptions-plan-card">
+                  <h4 className="text-xs font-bold text-[#3B4A66] mb-2 uppercase tracking-tight">Monthly Recurring Revenue</h4>
                   {mrrTrend.length > 0 ? (() => {
                     const svgWidth = 400;
                     const svgHeight = 180;
@@ -1122,7 +1122,7 @@ export default function Subscriptions() {
                                   x={paddingX - 8}
                                   y={y + 4}
                                   textAnchor="end"
-                                  fontSize="12"
+                                  fontSize="10"
                                   fill="#6B7280"
                                 >
                                   {formatCurrency(labelValue)}
@@ -1149,7 +1149,7 @@ export default function Subscriptions() {
                                   x={x + barWidth / 2}
                                   y={y - 6}
                                   textAnchor="middle"
-                                  fontSize="12"
+                                  fontSize="10"
                                   fill="#3B4A66"
                                   fontWeight="600"
                                 >
@@ -1159,7 +1159,7 @@ export default function Subscriptions() {
                                   x={x + barWidth / 2}
                                   y={svgHeight - 8}
                                   textAnchor="middle"
-                                  fontSize="12"
+                                  fontSize="10"
                                   fill="#6B7280"
                                 >
                                   {item.month || `M${index + 1}`}
@@ -1175,8 +1175,8 @@ export default function Subscriptions() {
                   )}
                 </div>
 
-                <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
-                  <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
+                <div className="border border-[#E8F0FF] rounded-[10px] p-3 subscriptions-plan-card">
+                  <h4 className="text-xs font-bold text-[#3B4A66] mb-2 uppercase tracking-tight">Churn Rate</h4>
                   {churnTrend.length > 0 ? (() => {
                     const svgWidth = 400;
                     const svgHeight = 180;
@@ -1260,8 +1260,8 @@ export default function Subscriptions() {
                   )}
                 </div>
 
-                <div className="border border-[#E8F0FF] rounded-[10px] p-4 lg:col-span-2 subscriptions-plan-card-full">
-                  <h4 className="text-sm font-semibold text-[#3B4A66] mb-4">Plan Distribution</h4>
+                <div className="border border-[#E8F0FF] rounded-[10px] p-3 lg:col-span-2 subscriptions-plan-card-full">
+                  <h4 className="text-xs font-bold text-[#3B4A66] mb-4 uppercase tracking-tight">Plan Distribution</h4>
                   <div className="space-y-3">
                     {planDistributionData.length > 0 ? planDistributionData.map((item) => {
                       const width = distributionMax ? Math.max((item.firms / distributionMax) * 100, 6) : 0;

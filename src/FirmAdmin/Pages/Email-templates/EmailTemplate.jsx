@@ -454,7 +454,7 @@ export default function EmailTemplate() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => openEditor(null)}
-                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg px-4 font-semibold text-white hover:opacity-90 transition-colors"
+                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-[10px] px-4 font-semibold text-white hover:opacity-90 transition-colors"
                                 style={{ backgroundColor: 'var(--firm-primary-color)' }}
                             >
                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -579,13 +579,13 @@ const DuplicateModal = ({ template, onClose, onSubmit }) => {
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={() => onSubmit(newName)}
-                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D]"
+                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white !rounded-[10px] hover:bg-[#E55A1D]"
                     >
                         Duplicate
                     </button>
@@ -1049,28 +1049,36 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
 
 const PreviewModal = ({ template, onClose }) => {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-[#1F2A55]">Template Preview</h3>
-                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55]">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1300] p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-[#1F2A55]">Template Preview</h3>
+                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55] hover:bg-gray-100 p-2 rounded-full transition-all">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-1">Subject</label>
-                        <p className="text-sm text-[#1F2A55]">{template.subject || 'No subject'}</p>
+                <div className="space-y-6">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-[#E8F0FF]">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-[#7B8AB2] mb-1">Subject</label>
+                        <p className="text-sm font-semibold text-[#1F2A55]">{template.subject || 'No subject'}</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-1">Body</label>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-[#7B8AB2] mb-2 ml-1">Email Content</label>
                         <div
-                            className="text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg p-4 bg-gray-50"
+                            className="text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-2xl p-6 bg-white shadow-inner min-h-[200px]"
                             dangerouslySetInnerHTML={{ __html: template.body_html || template.body || '<p>No content</p>' }}
                         />
                     </div>
+                </div>
+                <div className="mt-8 flex justify-end">
+                    <button
+                        onClick={onClose}
+                        className="px-8 py-2.5 bg-[#1F2A55] text-white !rounded-[10px] font-bold text-sm hover:opacity-90 transition-all active:scale-95"
+                    >
+                        Close Preview
+                    </button>
                 </div>
             </div>
         </div>
@@ -1329,7 +1337,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1200]">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-7xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex-1">
                         <h3 className="text-xl font-bold text-[#1F2A55]">
@@ -1344,7 +1352,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55] p-1">
+                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55] hover:bg-gray-100 p-2 rounded-full transition-all">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
@@ -1469,7 +1477,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                         <button
                             type="button"
                             onClick={handlePreview}
-                            className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                            className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 disabled:opacity-50"
                             disabled={previewLoading}
                         >
                             {previewLoading ? 'Generating preview...' : 'Preview'}
@@ -1481,21 +1489,21 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                                 type="button"
                                 onClick={handleRevert}
                                 disabled={submitting}
-                                className="px-4 py-2 text-sm text-[#F56D2D] bg-[#FFF5F2] border border-[#F56D2D] rounded-lg hover:bg-[#FFE0D4] disabled:opacity-50"
+                                className="px-4 py-2 text-sm text-[#F56D2D] bg-[#FFF5F2] border border-[#F56D2D] !rounded-[10px] hover:bg-[#FFE0D4] disabled:opacity-50"
                             >
                                 Reset to Default
                             </button>
                         )}
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                            className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] disabled:opacity-50"
+                            className="px-4 py-2 text-sm bg-[#F56D2D] text-white !rounded-[10px] hover:bg-[#E55A1D] disabled:opacity-50"
                         >
                             {submitting ? 'Saving...' : isEdit ? 'Update Template' : 'Create Template'}
                         </button>
@@ -1678,7 +1686,7 @@ function TemplatesView({
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
                     onClick={onRefresh}
-                    className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0]"
+                    className="px-6 py-2 bg-[#3AD6F2] text-white !rounded-[10px] hover:bg-[#2BC4E0] shadow-md transition-all font-semibold"
                 >
                     Retry
                 </button>
@@ -1696,7 +1704,7 @@ function TemplatesView({
                     </div>
                 </div>
 
-                <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 text-sm font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8">
+                <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-3 text-xs font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8 bg-gray-50/50">
                     <span>Template</span>
                     <span>Category</span>
                     <span className="ml-3">Subject</span>
@@ -1715,27 +1723,27 @@ function TemplatesView({
                             {paginatedTemplates.map((template, index) => (
                                 <div
                                     key={template.id}
-                                    className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-6 sm:px-6 lg:px-8 text-sm ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
+                                    className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 sm:px-6 lg:px-8 text-xs ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
                                 >
                                     <div>
-                                        <p className="font-semibold text-[#1F2A55]">{template.title}</p>
-                                        <p className="mt-1 text-xs font-medium text-[#7B8AB2]">{template.description}</p>
+                                        <p className="font-semibold text-[#1F2A55] whitespace-nowrap overflow-hidden text-ellipsis">{template.title}</p>
+                                        <p className="mt-0.5 text-[10px] font-medium text-[#7B8AB2] whitespace-nowrap overflow-hidden text-ellipsis">{template.description}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="flex h-8 w-8 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
-                                            {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
+                                        <span className="flex h-6 w-6 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
+                                            {React.createElement(template.category.icon, { className: 'h-3 w-3' })}
                                         </span>
                                         <span
-                                            className={`inline-flex items-center gap-1.5 !rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
+                                            className={`inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold !rounded-full ${template.category.pill}`}
                                         >
                                             <span>{template.category.label}</span>
                                         </span>
                                     </div>
-                                    <p className="text-sm font-medium text-[#3D4C70]">{template.subject}</p>
+                                    <p className="text-xs font-medium text-[#3D4C70] whitespace-nowrap overflow-hidden text-ellipsis">{template.subject}</p>
                                     <p className="font-medium text-[#1F2A55]">{template.usage}</p>
                                     <p className="ml-3 text-[#3D4C70] font-medium">{template.lastUsed}</p>
                                     <span
-                                        className={`inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
+                                        className={`inline-flex items-center justify-center !rounded-full px-2 py-[2px] text-[10px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
                                     >
                                         {template.status.label}
                                     </span>

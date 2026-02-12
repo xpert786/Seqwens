@@ -30,7 +30,7 @@
     justify-content: center;
     background-color: #f3f6fd;
     border: none;
-    border-radius: 6px;
+    border-radius: 50%;
     cursor: pointer;
     font-size: 20px;
     color: #6e7dae;
@@ -68,7 +68,7 @@
     width: 100%;
     padding: 10px 12px;
     border: 2px solid #e8f0ff;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 14px;
     font-family: inherit;
     color: #1f2a55;
@@ -99,7 +99,7 @@
     height: 40px;
     padding: 4px;
     border: 2px solid #e8f0ff;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     background-color: #ffffff;
 }
@@ -121,7 +121,7 @@
     padding: 8px 16px;
     background-color: #f3f6fd;
     border: 2px solid #e8f0ff;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 12px;
     font-weight: 600;
     color: #1f2a55;
@@ -156,7 +156,7 @@
     gap: 8px;
     padding: 12px;
     background-color: #f9fbff;
-    border-radius: 6px;
+    border-radius: 12px;
 }
 
 .social-platform {

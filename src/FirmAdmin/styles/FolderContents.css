@@ -2,6 +2,7 @@
 
 /* Responsive for screens below 767px */
 @media (max-width: 767px) {
+
   /* Main container */
   .foldercontents-main-container {
     padding: 1rem !important;
@@ -244,4 +245,3 @@
     justify-content: center !important;
   }
 }
-

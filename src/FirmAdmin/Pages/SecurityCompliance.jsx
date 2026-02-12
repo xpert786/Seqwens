@@ -847,16 +847,16 @@ export default function SecurityCompliance() {
                     </div>
                     <div className="mt-6 overflow-x-auto">
                         <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                            <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
+                            <thead className="bg-[#F8FAFF] text-[10px] font-semibold tracking-wide text-[#6B7280]">
                                 <tr>
-                                    <th className="px-4 py-3">Alert ID</th>
-                                    <th className="px-4 py-3">Type</th>
-                                    <th className="px-4 py-3">Category</th>
-                                    <th className="px-4 py-3">Title</th>
-                                    <th className="px-4 py-3">Description</th>
-                                    <th className="px-4 py-3">Timestamp</th>
-                                    <th className="px-4 py-3">Status</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
+                                    <th className="px-2 py-3">Alert ID</th>
+                                    <th className="px-2 py-3">Type</th>
+                                    <th className="px-2 py-3">Category</th>
+                                    <th className="px-2 py-3">Title</th>
+                                    <th className="px-2 py-3">Description</th>
+                                    <th className="px-2 py-3">Timestamp</th>
+                                    <th className="px-2 py-3">Status</th>
+                                    <th className="px-2 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#E5E7EB] bg-white">
@@ -876,22 +876,22 @@ export default function SecurityCompliance() {
                                 )}
                                 {securityAlerts.map((alert) => (
                                     <tr key={alert.id || alert.alert_id} className="hover:bg-[#F8FAFF]">
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.alert_id || `ALT-${alert.id}`}</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${typeBadgeStyles[alert.alert_type] || 'border border-gray-300 text-gray-400'}`}>
+                                        <td className="px-2 py-3 text-[11px] font-semibold text-gray-600 whitespace-nowrap">{alert.alert_id || `ALT-${alert.id}`}</td>
+                                        <td className="px-2 py-3 whitespace-nowrap">
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${typeBadgeStyles[alert.alert_type] || 'border border-gray-300 text-gray-400'}`}>
                                                 {alert.alert_type_display || alert.alert_type || 'N/A'}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{alert.alert_category_display || alert.alert_category || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.title || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{alert.description || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{alert.timestamp_formatted || alert.timestamp || 'N/A'}</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeStyles[alert.status] || 'bg-gray-300 text-white'}`}>
+                                        <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{alert.alert_category_display || alert.alert_category || 'N/A'}</td>
+                                        <td className="px-2 py-3 text-[11px] font-semibold text-gray-600 whitespace-nowrap">{alert.title || 'N/A'}</td>
+                                        <td className="px-2 py-3 text-[11px] text-gray-600">{alert.description || 'N/A'}</td>
+                                        <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{alert.timestamp_formatted || alert.timestamp || 'N/A'}</td>
+                                        <td className="px-2 py-3 whitespace-nowrap">
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusBadgeStyles[alert.status] || 'bg-gray-300 text-white'}`}>
                                                 {alert.status_display || alert.status || 'N/A'}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-2 py-3 text-right whitespace-nowrap">
                                             <div className="flex items-center justify-end gap-2">
                                                 {alert.status === 'active' && (
                                                     <>
@@ -1029,16 +1029,16 @@ export default function SecurityCompliance() {
 
                 <div className="mt-6 overflow-x-auto">
                     <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                        <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
+                        <thead className="bg-[#F8FAFF] text-[10px] font-semibold tracking-wide text-[#6B7280]">
                             <tr>
-                                <th className="px-4 py-3">User</th>
-                                <th className="px-4 py-3">Role / Type</th>
-                                <th className="px-4 py-3">Device</th>
-                                <th className="px-4 py-3">IP Address</th>
-                                <th className="px-4 py-3">Login Time</th>
-                                <th className="px-4 py-3">Last Activity</th>
-                                <th className="px-4 py-3">Time Since Last Activity</th>
-                                <th className="px-4 py-3 text-right">Actions</th>
+                                <th className="px-2 py-3">User</th>
+                                <th className="px-2 py-3">Role / Type</th>
+                                <th className="px-2 py-3">Device</th>
+                                <th className="px-2 py-3">IP Address</th>
+                                <th className="px-2 py-3">Login Time</th>
+                                <th className="px-2 py-3">Last Activity</th>
+                                <th className="px-2 py-3">Time Since Last Activity</th>
+                                <th className="px-2 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E5E7EB] bg-white">
@@ -1060,36 +1060,36 @@ export default function SecurityCompliance() {
                                 .slice((activeSessionsPagination.page - 1) * activeSessionsPagination.page_size, activeSessionsPagination.page * activeSessionsPagination.page_size)
                                 .map((session) => (
                                     <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
-                                        <td className="px-4 py-3">
+                                        <td className="px-2 py-3 whitespace-nowrap">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-semibold text-gray-600">{session.user}</span>
+                                                <span className="text-[11px] font-semibold text-gray-600">{session.user}</span>
                                                 {session.email && (
-                                                    <span className="text-xs text-[#6B7280]">{session.email}</span>
+                                                    <span className="text-[10px] text-[#6B7280]">{session.email}</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex flex-col gap-1">
+                                        <td className="px-2 py-3 whitespace-nowrap">
+                                            <div className="flex flex-col gap-1 items-center">
                                                 {session.role && (
-                                                    <span className="text-xs font-medium text-[#4B5563]">{session.role}</span>
+                                                    <span className="text-[10px] font-medium text-[#4B5563] text-center">{session.role}</span>
                                                 )}
                                                 {session.userType && (
-                                                    <span className="inline-flex items-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-xs font-medium text-[#6B7280]">
+                                                    <span className="inline-flex items-center justify-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-1 py-0.5 text-[10px] font-medium text-[#6B7280] w-[75px]">
                                                         {session.userType.replace('_', ' ')}
                                                     </span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{session.device}</td>
-                                        <td className="px-4 py-3">
-                                            <span className="text-sm text-gray-600 font-mono">{session.ipAddress}</span>
+                                        <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{session.device}</td>
+                                        <td className="px-2 py-3 whitespace-nowrap">
+                                            <span className="text-[11px] text-gray-600 font-mono">{session.ipAddress}</span>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{session.loginAt}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{session.lastActivity}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{session.duration}</td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{session.loginAt}</td>
+                                        <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{session.lastActivity}</td>
+                                        <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{session.duration}</td>
+                                        <td className="px-2 py-3 text-right whitespace-nowrap">
                                             <button
-                                                className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="text-[11px] font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 style={{ borderRadius: '8px' }}
                                                 type="button"
                                                 onClick={() => handleTerminateSession(session.sessionKey)}
@@ -1300,33 +1300,8 @@ export default function SecurityCompliance() {
     );
     const renderCompliance = () => (
         <div className="flex flex-col gap-6">
-            {/* Header Section - Search and Export */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center flex-1">
-                    <div className="flex-1 max-w-md">
-                        <input
-                            type="text"
-                            placeholder="Search client or issue"
-                            value={complianceSearch}
-                            onChange={(e) => setComplianceSearch(e.target.value)}
-                            className="w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                            style={{ borderRadius: '8px' }}
-                        />
-                    </div>
-                    <div className="relative">
-                        <select
-                            className="appearance-none rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
-                            style={{ borderRadius: '8px', minWidth: '100px' }}
-                        >
-                            <option>All</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+            {/* Header Section - Export only */}
+            <div className="flex justify-end mb-4">
                 {!advancedReportingEnabled && (
                     <button
                         className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
@@ -2623,7 +2598,7 @@ export default function SecurityCompliance() {
                 <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Configure session timeouts and restrictions by geographic region
                 </p>
-            </div>  
+            </div>
 
             {/* Error Message */}
             {geoRestrictionsError && (

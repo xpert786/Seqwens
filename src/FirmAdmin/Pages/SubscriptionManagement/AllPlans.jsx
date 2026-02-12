@@ -162,10 +162,10 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
         if (!currentPlanName) return false;
 
         const currentPlan = currentPlanName.trim().toLowerCase();
-        
+
         // Check against subscription_type
         const planType = (plan.subscription_type || '').toLowerCase();
-        
+
         // Also check against display name fields as currentPlanName often comes from the display name
         const displayName = (plan.display_name || '').toLowerCase();
         const computedDisplayName = (plan.display_name_computed || '').toLowerCase();
@@ -173,11 +173,11 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
         let nameMatch = false;
 
         // Direct match with any of the naming fields
-        if (planType === currentPlan || 
-            displayName === currentPlan || 
+        if (planType === currentPlan ||
+            displayName === currentPlan ||
             computedDisplayName === currentPlan) {
             nameMatch = true;
-        } 
+        }
         // Check if normalized types match
         else if (formatPlanType(planType).toLowerCase() === currentPlan) {
             nameMatch = true;
@@ -414,11 +414,11 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                     <p className="text-sm text-gray-600">No subscription plans available</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-6">
                     {plans.map((plan) => {
-                        // Use price from API response (already filtered by billing_cycle)
                         const price = parseFloat(plan.price || plan.monthly_price || plan.yearly_price || 0);
-                        const priceDisplay = plan.price_display || `$${price.toFixed(2)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
+                        const priceValue = `$${price.toFixed(2)}`;
+                        const priceUnit = `/${billingCycle === 'monthly' ? 'month' : 'year'}`;
                         const isCustomPricing = plan.custom_pricing === 'enabled';
                         const isMostPopular = plan.most_popular || false;
                         const discountPercentage = plan.discount_percentage || plan.discount_percentage_yearly || 0;
@@ -428,8 +428,8 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                         return (
                             <div
                                 key={plan.id}
-                                className={`bg-white !rounded-lg !border p-4 sm:p-5 lg:p-6 relative shadow-sm ${isCurrent
-                                    ? '!border-2 border-[#3AD6F2] ring-2 ring-[#3AD6F2] ring-opacity-20'
+                                className={`bg-white !rounded-lg !border p-3 sm:p-4 relative shadow-sm transition-all duration-200 hover:shadow-md ${isCurrent
+                                    ? '!border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2] ring-opacity-20'
                                     : isMostPopular
                                         ? '!border-2 border-[#F56D2D]'
                                         : 'border-[#E8F0FF]'
@@ -437,14 +437,14 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                             >
                                 {/* Current Plan Badge */}
                                 {isCurrent && (
-                                    <span className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#3AD6F2] text-white !rounded-full text-[10px] sm:text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10">
+                                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-[#3AD6F2] text-white !rounded-full text-[9px] sm:text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider whitespace-nowrap z-10">
                                         Current Plan
                                     </span>
                                 )}
                                 {/* Custom Badge or Most Popular Badge */}
                                 {!isCurrent && (plan.badge_text || isMostPopular) && (
                                     <span
-                                        className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 text-white !rounded-full text-[10px] sm:text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap"
+                                        className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-white !rounded-full text-[9px] sm:text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider whitespace-nowrap"
                                         style={{ backgroundColor: plan.badge_color || '#F56D2D' }}
                                     >
                                         {plan.badge_text || 'Most Popular'}
@@ -453,19 +453,22 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
 
                                 {/* Plan Header */}
                                 <div className={(isMostPopular || isCurrent) ? 'mt-2' : ''}>
-                                    <h5 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
+                                    <h5 className="text-base sm:text-lg font-bold text-gray-900 mb-1 font-[BasisGrotesquePro] truncate">
                                         {getDisplayName(plan)}
                                     </h5>
                                     <div className="mb-2">
                                         {isCustomPricing ? (
-                                            <span className="text-base sm:text-lg font-semibold text-gray-600 font-[BasisGrotesquePro]">
+                                            <span className="text-sm sm:text-base font-semibold text-gray-600 font-[BasisGrotesquePro]">
                                                 Custom pricing
                                             </span>
                                         ) : (
                                             <>
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                        {priceDisplay}
+                                                <div className="flex items-baseline gap-1 flex-wrap">
+                                                    <span className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                        {priceValue}
+                                                    </span>
+                                                    <span className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">
+                                                        {priceUnit}
                                                     </span>
                                                 </div>
                                                 {billingCycle === 'yearly' && plan.monthly_equivalent && (
@@ -488,25 +491,25 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                             </>
                                         )}
                                     </div>
-                                    <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] mb-4 sm:mb-6">
+                                    <p className="text-[10px] sm:text-[11px] text-gray-600 font-[BasisGrotesquePro] mb-3 min-h-[32px] leading-tight">
                                         {getPlanDescription(plan)}
                                     </p>
                                 </div>
 
                                 {/* Features List */}
                                 <div className="mb-4 sm:mb-6">
-                                    <h6 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3 font-[BasisGrotesquePro]">
+                                    <h6 className="text-[11px] sm:text-xs font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
                                         Features
                                     </h6>
-                                    <div className="space-y-1.5 sm:space-y-2">
+                                    <div className="space-y-1 sm:space-y-1.5">
                                         {(plan.features_list && plan.features_list.length > 0) ? (
                                             <>
                                                 {plan.features_list.map((feature, index) => (
-                                                    <div key={index} className="flex items-center gap-1.5 sm:gap-2">
-                                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div key={index} className="flex items-start gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
-                                                        <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                        <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
                                                             {feature}
                                                         </span>
                                                     </div>
@@ -514,12 +517,12 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                                 {/* Add included_offices if not in features_list */}
                                                 {plan.included_offices !== undefined && plan.included_offices !== null &&
                                                     !plan.features_list.some(f => f.toLowerCase().includes('office')) && (
-                                                        <div className="flex items-center gap-1.5 sm:gap-2">
-                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <div className="flex items-start gap-1.5">
+                                                            <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                             </svg>
-                                                            <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
-                                                                {plan.included_offices} {plan.included_offices === 1 ? 'Office Location' : 'Office Locations'} Included
+                                                            <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
+                                                                {plan.included_offices} {plan.included_offices === 1 ? 'Office' : 'Offices'} Included
                                                             </span>
                                                         </div>
                                                     )}
@@ -527,22 +530,22 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                         ) : getDefaultFeatures(plan.subscription_type).length > 0 ? (
                                             <>
                                                 {getDefaultFeatures(plan.subscription_type).map((feature, index) => (
-                                                    <div key={index} className="flex items-center gap-1.5 sm:gap-2">
-                                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div key={index} className="flex items-start gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
-                                                        <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                        <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
                                                             {feature}
                                                         </span>
                                                     </div>
                                                 ))}
                                                 {/* Add included_offices if available */}
                                                 {plan.included_offices !== undefined && plan.included_offices !== null && (
-                                                    <div className="flex items-center gap-1.5 sm:gap-2">
-                                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div className="flex items-start gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
-                                                        <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                        <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
                                                             {plan.included_offices} {plan.included_offices === 1 ? 'Office Location' : 'Office Locations'} Included
                                                         </span>
                                                     </div>
@@ -550,16 +553,16 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                             </>
                                         ) : (
                                             <>
-                                                <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">
+                                                <p className="text-[10px] sm:text-[11px] text-gray-500 font-[BasisGrotesquePro]">
                                                     Standard features included
                                                 </p>
                                                 {/* Add included_offices if available */}
                                                 {plan.included_offices !== undefined && plan.included_offices !== null && (
-                                                    <div className="flex items-center gap-1.5 sm:gap-2">
-                                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div className="flex items-start gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
-                                                        <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                        <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
                                                             {plan.included_offices} {plan.included_offices === 1 ? 'Office Location' : 'Office Locations'} Included
                                                         </span>
                                                     </div>
@@ -649,97 +652,100 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                         );
                     })}
                 </div>
-            )}
+            )
+            }
 
             {/* Upgrade Confirmation Modal */}
-            {showUpgradeConfirmModal && selectedPlanForUpgrade && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-                    onClick={() => {
-                        if (!processing) {
-                            setShowUpgradeConfirmModal(false);
-                            setSelectedPlanForUpgrade(null);
-                        }
-                    }}
-                >
+            {
+                showUpgradeConfirmModal && selectedPlanForUpgrade && (
                     <div
-                        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
-                        style={{
-                            borderRadius: '12px',
-                            border: '1px solid #E8F0FF'
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+                        onClick={() => {
+                            if (!processing) {
+                                setShowUpgradeConfirmModal(false);
+                                setSelectedPlanForUpgrade(null);
+                            }
                         }}
-                        onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header */}
-                        <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
-                            <h4 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-                                Upgrade Plan
-                            </h4>
-                            <button
-                                onClick={() => {
-                                    if (!processing) {
+                        <div
+                            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+                            style={{
+                                borderRadius: '12px',
+                                border: '1px solid #E8F0FF'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
+                                <h4 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                                    Upgrade Plan
+                                </h4>
+                                <button
+                                    onClick={() => {
+                                        if (!processing) {
+                                            setShowUpgradeConfirmModal(false);
+                                            setSelectedPlanForUpgrade(null);
+                                        }
+                                    }}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                                    disabled={processing}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15 5L5 15M5 5L15 15" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-6">
+                                <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-2">
+                                    Are you sure you want to upgrade to the <span className="font-semibold">{getDisplayName(selectedPlanForUpgrade)}</span> plan?
+                                </p>
+                                <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Billing Cycle:</span>
+                                        <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro capitalize">{billingCycle}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Price:</span>
+                                        <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                                            ${(billingCycle === 'monthly'
+                                                ? parseFloat(selectedPlanForUpgrade.monthly_price || 0)
+                                                : parseFloat(selectedPlanForUpgrade.yearly_price || 0)
+                                            ).toFixed(2)} per {billingCycle === 'monthly' ? 'month' : 'year'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-4">
+                                    Your subscription will be changed immediately and you will be charged accordingly.
+                                </p>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+                                <button
+                                    onClick={() => {
                                         setShowUpgradeConfirmModal(false);
                                         setSelectedPlanForUpgrade(null);
-                                    }
-                                }}
-                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                                disabled={processing}
-                            >
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M15 5L5 15M5 5L15 15" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Body */}
-                        <div className="p-6">
-                            <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-2">
-                                Are you sure you want to upgrade to the <span className="font-semibold">{getDisplayName(selectedPlanForUpgrade)}</span> plan?
-                            </p>
-                            <div className="bg-gray-50 rounded-lg p-4 mt-4">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Billing Cycle:</span>
-                                    <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro capitalize">{billingCycle}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Price:</span>
-                                    <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
-                                        ${(billingCycle === 'monthly'
-                                            ? parseFloat(selectedPlanForUpgrade.monthly_price || 0)
-                                            : parseFloat(selectedPlanForUpgrade.yearly_price || 0)
-                                        ).toFixed(2)} per {billingCycle === 'monthly' ? 'month' : 'year'}
-                                    </span>
-                                </div>
+                                    }}
+                                    disabled={processing}
+                                    className="px-6 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpgradeConfirm}
+                                    disabled={processing}
+                                    className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {processing ? 'Processing...' : 'Confirm Upgrade'}
+                                </button>
                             </div>
-                            <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-4">
-                                Your subscription will be changed immediately and you will be charged accordingly.
-                            </p>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
-                            <button
-                                onClick={() => {
-                                    setShowUpgradeConfirmModal(false);
-                                    setSelectedPlanForUpgrade(null);
-                                }}
-                                disabled={processing}
-                                className="px-6 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleUpgradeConfirm}
-                                disabled={processing}
-                                className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {processing ? 'Processing...' : 'Confirm Upgrade'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -725,7 +725,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     <p className="text-sm text-gray-600">No subscription plans available</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                                     {plans.map((plan) => {
                                         const price = billingCycle === 'monthly'
                                             ? parseFloat(plan.monthly_price || 0)
@@ -740,10 +740,10 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                             <div
                                                 key={plan.id}
                                                 onClick={() => !isCurrent && setSelectedPlan(plan)}
-                                                className={`bg-white rounded-lg border p-5 relative cursor-pointer transition-all ${isCurrent
-                                                    ? 'border-2 border-firm-primary ring-2 ring-firm-primary ring-opacity-20 opacity-60 cursor-not-allowed'
+                                                className={`bg-white rounded-lg border p-4 relative cursor-pointer transition-all ${isCurrent
+                                                    ? 'border-2 border-firm-primary ring-1 ring-firm-primary ring-opacity-20 opacity-60 cursor-not-allowed'
                                                     : isSelected
-                                                        ? 'border-2 border-firm-primary ring-2 ring-firm-primary ring-opacity-20 shadow-lg'
+                                                        ? 'border-2 border-firm-primary ring-1 ring-firm-primary ring-opacity-20 shadow-lg'
                                                         : isMostPopular
                                                             ? 'border-2 border-firm-primary hover:border-firm-primary hover:shadow-md'
                                                             : 'border-[#E8F0FF] hover:border-firm-primary hover:shadow-md'
@@ -768,7 +768,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 {/* Custom Badge or Most Popular Badge */}
                                                 {!isCurrent && (plan.badge_text || isMostPopular) && (
                                                     <span
-                                                        className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 text-white rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10"
+                                                        className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-white !rounded-full text-[9px] sm:text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider whitespace-nowrap z-10"
                                                         style={{ backgroundColor: plan.badge_color || 'var(--firm-primary-color)' }}
                                                     >
                                                         {plan.badge_text || 'Most Popular'}
@@ -777,22 +777,22 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
 
                                                 {/* Plan Header */}
                                                 <div className={isMostPopular || isCurrent ? 'mt-2' : ''}>
-                                                    <h5 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
+                                                    <h5 className="text-base sm:text-lg font-bold text-gray-900 mb-1 font-[BasisGrotesquePro] truncate">
                                                         {getDisplayName(plan)}
                                                     </h5>
                                                     <div className="mb-2">
                                                         {isCustomPricing ? (
-                                                            <span className="text-lg font-semibold text-gray-600 font-[BasisGrotesquePro]">
+                                                            <span className="text-sm sm:text-base font-semibold text-gray-600 font-[BasisGrotesquePro]">
                                                                 Custom pricing
                                                             </span>
                                                         ) : (
                                                             <>
-                                                                <div className="flex items-baseline gap-2">
-                                                                    <span className="text-3xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                                <div className="flex items-baseline gap-1 flex-wrap">
+                                                                    <span className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
                                                                         ${price.toFixed(2)}
                                                                     </span>
-                                                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                                                                        per {billingCycle === 'monthly' ? 'month' : 'year'}
+                                                                    <span className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">
+                                                                        /{billingCycle === 'monthly' ? 'month' : 'year'}
                                                                     </span>
                                                                 </div>
                                                                 {billingCycle === 'yearly' && discountPercentage > 0 && (
@@ -805,38 +805,49 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                             </>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">
+                                                    <p className="text-[10px] sm:text-[11px] text-gray-600 font-[BasisGrotesquePro] mb-3 min-h-[32px] leading-tight">
                                                         {getPlanDescription(plan)}
                                                     </p>
                                                 </div>
 
                                                 {/* Features List */}
                                                 <div className="mb-4">
-                                                    <h6 className="text-sm font-semibold text-gray-900 mb-3 font-[BasisGrotesquePro]">
+                                                    <h6 className="text-[11px] sm:text-xs font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
                                                         Features
                                                     </h6>
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-1.5 opacity-80">
                                                         {(plan.features_list && plan.features_list.length > 0) ? (
                                                             plan.features_list.slice(0, 5).map((feature, index) => (
-                                                                <div key={index} className="flex items-center gap-2">
-                                                                    <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <div key={index} className="flex items-start gap-1.5">
+                                                                    <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                                     </svg>
-                                                                    <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                                    <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
                                                                         {feature}
                                                                     </span>
                                                                 </div>
                                                             ))
                                                         ) : getDefaultFeatures(plan.subscription_type).slice(0, 5).map((feature, index) => (
-                                                            <div key={index} className="flex items-center gap-2">
-                                                                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <div key={index} className="flex items-start gap-1.5">
+                                                                <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                                 </svg>
-                                                                <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                                <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
                                                                     {feature}
                                                                 </span>
                                                             </div>
                                                         ))}
+                                                        {/* Included Offices */}
+                                                        {plan.included_offices !== undefined && plan.included_offices !== null && (
+                                                            <div className="flex items-start gap-1.5">
+                                                                <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight">
+                                                                    {plan.included_offices} {plan.included_offices === 1 ? 'Office' : 'Offices'} Included
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

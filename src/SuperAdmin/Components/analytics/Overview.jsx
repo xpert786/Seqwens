@@ -36,9 +36,9 @@ const formatNumber = (value) => {
 // Format month label for x-axis display
 const formatMonthLabel = (label) => {
   if (!label) return '';
-  
+
   const labelStr = String(label).trim();
-  
+
   // Try to parse various formats
   // Format: "Sep 2024" or "September 2024"
   const monthYearMatch = labelStr.match(/(\w+)\s+(\d{4})/i);
@@ -48,61 +48,61 @@ const formatMonthLabel = (label) => {
     const shortMonth = monthName.substring(0, 3);
     return shortMonth;
   }
-  
+
   // Format: "2024-09" or "2024-9"
   const dateMatch = labelStr.match(/(\d{4})-(\d{1,2})/);
   if (dateMatch) {
     const monthIndex = parseInt(dateMatch[2]) - 1;
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return monthNames[monthIndex] || labelStr;
   }
-  
+
   // Format: "09/2024" or "9/2024"
   const slashMatch = labelStr.match(/(\d{1,2})\/(\d{4})/);
   if (slashMatch) {
     const monthIndex = parseInt(slashMatch[1]) - 1;
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return monthNames[monthIndex] || labelStr;
   }
-  
+
   // If it's already a short month name, return as is
-  const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   if (monthAbbrs.some(abbr => labelStr.toLowerCase().startsWith(abbr.toLowerCase()))) {
     return labelStr.substring(0, 3);
   }
-  
+
   // Return first 3 characters if it looks like a month name
   if (labelStr.length > 3) {
     return labelStr.substring(0, 3);
   }
-  
+
   return labelStr;
 };
 
 // Generate last 6 months for dropdown
 const getLast6Months = () => {
   const months = [];
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
   const currentDate = new Date();
-  
+
   for (let i = 5; i >= 0; i--) {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
     const monthIndex = date.getMonth();
     const year = date.getFullYear();
     const monthName = monthNames[monthIndex];
     const monthValue = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-    
+
     months.push({
       value: monthValue,
       label: `${monthName} ${year}`,
       shortLabel: monthName
     });
   }
-  
+
   return months;
 };
 
@@ -185,7 +185,7 @@ export default function Overview() {
   // Process revenue trend data from API
   const revenueData = useMemo(() => {
     if (!analytics?.revenue_trend || !Array.isArray(analytics.revenue_trend)) return [];
-    
+
     return analytics.revenue_trend.map((item) => ({
       month: item.month || '',
       value: item.revenue ?? 0,
@@ -205,7 +205,7 @@ export default function Overview() {
 
   // Get KPIs
   const kpis = analytics?.kpis;
-  
+
   // Calculate total revenue from revenue_trend (sum all months if multiple, or use first entry)
   const totalRevenue = useMemo(() => {
     if (!analytics?.revenue_trend || !Array.isArray(analytics.revenue_trend)) {
@@ -492,65 +492,65 @@ export default function Overview() {
                 }}
                 style={{ filter: 'drop-shadow(0 0 0 transparent)' }}
               >
-              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
-              <XAxis
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                tickFormatter={(value) => formatMonthLabel(value)}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                domain={[0, 'auto']}
-              />
-              <Tooltip content={<MultiLineTooltip />} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tickFormatter={(value) => formatMonthLabel(value)}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  domain={[0, 'auto']}
+                />
+                <Tooltip content={<MultiLineTooltip />} />
 
-              {/* Active Users Line - Blue */}
-              <Line
-                type="monotone"
-                dataKey="activeUsers"
-                stroke="#3B82F6"
-                strokeWidth={3}
-                dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
-                activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
-                connectNulls={false}
-                isAnimationActive={true}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                {/* Active Users Line - Blue */}
+                <Line
+                  type="monotone"
+                  dataKey="activeUsers"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
+                  activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
+                  connectNulls={false}
+                  isAnimationActive={true}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
 
-              {/* New Users Line - Orange */}
-              <Line
-                type="monotone"
-                dataKey="newUsers"
-                stroke="#FF7043"
-                strokeWidth={3}
-                dot={{ fill: 'white', stroke: '#FF7043', strokeWidth: 3, r: 5 }}
-                activeDot={{ r: 7, stroke: '#FF7043', strokeWidth: 2, fill: 'white' }}
-                connectNulls={false}
-                isAnimationActive={true}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                {/* New Users Line - Orange */}
+                <Line
+                  type="monotone"
+                  dataKey="newUsers"
+                  stroke="#FF7043"
+                  strokeWidth={3}
+                  dot={{ fill: 'white', stroke: '#FF7043', strokeWidth: 3, r: 5 }}
+                  activeDot={{ r: 7, stroke: '#FF7043', strokeWidth: 2, fill: 'white' }}
+                  connectNulls={false}
+                  isAnimationActive={true}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
 
-              {/* Sessions Line - Green */}
-              <Line
-                type="monotone"
-                dataKey="sessions"
-                stroke="#10B981"
-                strokeWidth={3}
-                dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
-                activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
-                connectNulls={false}
-                isAnimationActive={true}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+                {/* Sessions Line - Green */}
+                <Line
+                  type="monotone"
+                  dataKey="sessions"
+                  stroke="#10B981"
+                  strokeWidth={3}
+                  dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
+                  activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
+                  connectNulls={false}
+                  isAnimationActive={true}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
               No data available
