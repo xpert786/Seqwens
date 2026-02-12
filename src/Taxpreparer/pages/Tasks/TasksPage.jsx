@@ -227,7 +227,7 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
                   {d.day}
                 </div>
                 {dayTasks.length > 0 && (
-                  <span className="badge bg-light text-secondary border rounded-pill" style={{ fontSize: '0.65rem' }}>
+                  <span className="badge border rounded-pill" style={{ fontSize: '0.65rem', backgroundColor: '#3B4A66', color: '#FFFFFF' }}>
                     {dayTasks.length}
                   </span>
                 )}
@@ -2130,8 +2130,8 @@ export default function TasksPage() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '90vh', overflow: 'auto' }}>
-              <div className="modal-header" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10, borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div className="modal-header" style={{ backgroundColor: 'white', zIndex: 10, borderBottom: '1px solid #E5E7EB', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', fontSize: '1.125rem' }}>{selectedTask.title}</h5>
                 <button
                   type="button"
@@ -2140,7 +2140,7 @@ export default function TasksPage() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body" style={{ padding: '1.5rem' }}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
                 <div className="mb-3">
                   <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
                     <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Client:</span>
@@ -2581,7 +2581,7 @@ export default function TasksPage() {
             position: 'relative',
             maxHeight: '90vh',
             overflowY: 'auto'
-          }}>
+          }} className="custom-scrollbar">
             {/* Header */}
             <div style={{
               padding: '20px 24px',
@@ -3415,8 +3415,8 @@ export default function TasksPage() {
       {showDocumentUploadModal && selectedTask && (
         <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content" style={{ borderRadius: '16px' }}>
-              <div className="modal-header">
+            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E5E7EB' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
                   Upload Documents for {selectedTask.title}
                 </h5>
@@ -3432,7 +3432,7 @@ export default function TasksPage() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body custom-scrollbar" style={{ overflowY: 'auto', flex: 1, padding: '1.5rem' }}>
                 <div className="mb-3">
                   <p className="text-muted small mb-3">
                     Upload documents for this document request. Files will be associated with the client and folder from the task.

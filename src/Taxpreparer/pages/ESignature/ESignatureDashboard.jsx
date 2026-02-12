@@ -1299,10 +1299,10 @@ export default function ESignatureDashboard() {
                           return (
                             <div className="mb-2">
                               <span style={{
-                                color: '#00C0C6',
+                                color: '#FFFFFF',
                                 fontSize: '13px',
                                 fontWeight: '500',
-                                backgroundColor: '#E0F7FA',
+                                backgroundColor: '#00C0C6',
                                 padding: '4px 8px',
                                 borderRadius: '4px',
                                 display: 'inline-block'

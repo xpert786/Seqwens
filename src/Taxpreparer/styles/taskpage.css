@@ -6,1126 +6,1149 @@
     }
   }
 
-/* Container for all task columns */
-.tasks-container {
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  /* prevent horizontal scroll */
-}
-
-/* Grid for task columns */
-.tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  /* shrink to 280px on small screens */
-  gap: 12px;
-  align-items: start;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Individual column card */
-.task-column-card {
-  border-radius: 12px;
-  border: 1px solid #E8F0FF;
-  background: #F8FAFC;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Card body */
-.task-column-body {
-  padding: 1rem;
-}
-
-/* Column header */
-.task-column-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  font-size: 16px;
-  color: #3B4A66;
-  flex-wrap: wrap;
-  /* wrap icon/text if needed */
-}
-
-/* Individual task item */
-.task-item {
-  border-radius: 10px;
-  border: 1px solid #E8F0FF;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  width: 100%;
-  box-sizing: border-box;
-  cursor: pointer;
-  overflow-wrap: break-word;
-  background: #ffffff;
-  box-shadow: 0 2px 4px rgba(59, 74, 102, 0.04);
-  transition: all 0.2s ease;
-}
-
-.task-item:hover {
-  box-shadow: 0 4px 12px rgba(59, 74, 102, 0.08);
-  border-color: #00C0C6;
-  transform: translateY(-2px);
-}
-
-/* Task inner content */
-.task-item-content {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  /* wrap icon/text on small screens */
-}
-
-/* Icon circle */
-.icon-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: #EAF7FF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #00C0C6;
-  flex-shrink: 0;
-}
-
-/* Task text wrapper */
-.task-text {
-  flex: 1 1 0;
-  min-width: 0;
-  /* allows flex to shrink */
-}
-
-/* Task title */
-.task-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E293B;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  margin-bottom: 0.5rem;
-}
-
-/* Task meta */
-.task-meta {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  /* wrap on small screens */
-  font-size: 12px;
-  color: #718096;
-  margin-top: 4px;
-}
-
-/* Priority badge */
-.priority-badge {
-  border-radius: 20px;
-  padding: 3px 9px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.priority-badge.high {
-  background: #EF4444;
-}
-
-.priority-badge.medium {
-  background: #F59E0B;
-}
-
-.priority-badge.low {
-  background: #10B981;
-}
-
-.priority-badge.other {
-  background: #6B7280;
-}
-
-/* More button */
-.more-btn {
-  border-radius: 8px;
-  border: 1px solid #E8F0FF;
-  padding: 4px 8px;
-  background: #fff;
-  flex-shrink: 0;
-}
-
-/* No tasks text */
-.no-tasks {
-  text-align: center;
-  color: #718096;
-  font-size: 13px;
-  padding: 0.25rem 0;
-}
-
-/* Stat cards responsive - switch to list view on smaller screens */
-.tasks-stats-row {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.stat-card-body {
-  min-height: 120px;
-}
-
-@media (max-width: 991px) {
-  .tasks-stats-row {
-    flex-direction: column;
-    display: flex !important;
+  /* Container for all task columns */
+  .tasks-container {
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    /* prevent horizontal scroll */
   }
 
-  .tasks-stats-row>div {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 100% !important;
+  /* Grid for task columns */
+  .tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    /* shrink to 280px on small screens */
+    gap: 12px;
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Individual column card */
+  .task-column-card {
+    border-radius: 12px;
+    border: 1px solid #E8F0FF;
+    background: #F8FAFC;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Card body */
+  .task-column-body {
+    padding: 1rem;
+  }
+
+  /* Column header */
+  .task-column-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 16px;
+    color: #3B4A66;
+    flex-wrap: wrap;
+    /* wrap icon/text if needed */
+  }
+
+  /* Individual task item */
+  .task-item {
+    border-radius: 10px;
+    border: 1px solid #E8F0FF;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    overflow-wrap: break-word;
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(59, 74, 102, 0.04);
+    transition: all 0.2s ease;
+  }
+
+  .task-item:hover {
+    box-shadow: 0 4px 12px rgba(59, 74, 102, 0.08);
+    border-color: #00C0C6;
+    transform: translateY(-2px);
+  }
+
+  /* Task inner content */
+  .task-item-content {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    /* wrap icon/text on small screens */
+  }
+
+  /* Icon circle */
+  .icon-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #EAF7FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00C0C6;
+    flex-shrink: 0;
+  }
+
+  /* Task text wrapper */
+  .task-text {
+    flex: 1 1 0;
+    min-width: 0;
+    /* allows flex to shrink */
+  }
+
+  /* Task title */
+  .task-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E293B;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Task meta */
+  .task-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    /* wrap on small screens */
+    font-size: 12px;
+    color: #718096;
+    margin-top: 4px;
+  }
+
+  /* Priority badge */
+  .priority-badge {
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .priority-badge.high {
+    background: #EF4444;
+  }
+
+  .priority-badge.medium {
+    background: #F59E0B;
+  }
+
+  .priority-badge.low {
+    background: #10B981;
+  }
+
+  .priority-badge.other {
+    background: #6B7280;
+  }
+
+  /* More button */
+  .more-btn {
+    border-radius: 8px;
+    border: 1px solid #E8F0FF;
+    padding: 4px 8px;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  /* No tasks text */
+  .no-tasks {
+    text-align: center;
+    color: #718096;
+    font-size: 13px;
+    padding: 0.25rem 0;
+  }
+
+  /* Stat cards responsive - switch to list view on smaller screens */
+  .tasks-stats-row {
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .stat-card-body {
-    min-height: auto;
+    min-height: 120px;
+  }
+
+  @media (max-width: 991px) {
+    .tasks-stats-row {
+      flex-direction: column;
+      display: flex !important;
+    }
+
+    .tasks-stats-row>div {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex: 0 0 100% !important;
+    }
+
+    .stat-card-body {
+      min-height: auto;
+    }
+
+    .stat-card-header {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+
+  /* Tablet Screens (max-width: 767px) */
+  @media (max-width: 767px) {
+    .tasks-header-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .tasks-header-wrapper h3 {
+      font-size: 20px;
+    }
+
+    .tasks-header-wrapper small {
+      font-size: 13px;
+    }
+
+    .tasks-header-wrapper .btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 14px;
+      padding: 8px 12px;
+    }
+
+    /* Ensure stat cards are in list view */
+    .tasks-stats-row {
+      flex-direction: column;
+    }
+
+    .tasks-stats-row>div {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex: 0 0 100% !important;
+    }
+
+    .options-wrapper .d-flex {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .btn-group-custom {
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .view-btn {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .customize-btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .customize-modal {
+      right: 16px;
+      top: 80px;
+      width: 240px;
+      max-width: 90vw;
+    }
+
+    /* KANBAN BOARD MOBILE RESPONSIVE - Keep columns in same row */
+    .tasks-container {
+      overflow-x: auto !important;
+      /* Enable horizontal scrolling */
+      overflow-y: hidden;
+      /* Prevent vertical scrolling */
+      -webkit-overflow-scrolling: touch;
+      /* Smooth scrolling on iOS */
+      scrollbar-width: thin;
+      /* Thin scrollbar */
+    }
+
+    .tasks-grid {
+      display: flex !important;
+      /* Use flexbox instead of grid for horizontal layout */
+      flex-direction: row !important;
+      /* Keep columns in horizontal row */
+      gap: 12px !important;
+      align-items: stretch;
+      min-width: max-content;
+      /* Prevent shrinking */
+      padding-bottom: 8px;
+      /* Space for scrollbar */
+    }
+
+    .task-column {
+      min-width: 280px !important;
+      /* Fixed width for columns */
+      max-width: 280px !important;
+      flex: 0 0 auto !important;
+      /* Don't shrink or grow */
+      width: 280px !important;
+    }
+
+    /* Make task cards smaller on mobile */
+    .task-column-card {
+      border-radius: 8px !important;
+    }
+
+    .task-column-body {
+      padding: 0.75rem !important;
+    }
+
+    .task-column-title {
+      font-size: 14px !important;
+      margin-bottom: 0.75rem !important;
+      gap: 6px !important;
+    }
+
+    .task-item {
+      border-radius: 8px !important;
+      padding: 0.75rem !important;
+      margin-bottom: 0.5rem !important;
+      box-shadow: 0 1px 2px rgba(59, 74, 102, 0.04) !important;
+    }
+
+    .task-item:hover {
+      box-shadow: 0 2px 6px rgba(59, 74, 102, 0.08) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    .task-title {
+      font-size: 12px !important;
+      margin-bottom: 0.4rem !important;
+      line-height: 1.3 !important;
+    }
+
+    .task-meta {
+      font-size: 11px !important;
+      gap: 4px !important;
+      margin-top: 2px !important;
+    }
+
+    .priority-badge {
+      font-size: 9px !important;
+      padding: 2px 6px !important;
+      height: 18px !important;
+      border-radius: 12px !important;
+    }
+
+    .icon-circle {
+      width: 20px !important;
+      height: 20px !important;
+      border-radius: 6px !important;
+    }
+
+    /* Modal alignment */
+    .task-modal-mobile {
+      align-items: flex-start !important;
+      padding: 12px !important;
+    }
+
+    /* Full-width modal */
+    .task-modal-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 100vh !important;
+      border-radius: 12px !important;
+    }
+
+    /* Header spacing */
+    .task-modal-box>div:first-child {
+      padding: 16px !important;
+    }
+
+    /* Form padding */
+    .task-modal-box>div:nth-child(2) {
+      padding: 16px !important;
+    }
+
+    /* Stack priority / due date / hours */
+    .task-modal-row {
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+
+    /* Inputs tap-friendly */
+    .task-modal-box input,
+    .task-modal-box select,
+    .task-modal-box textarea {
+      font-size: 14px;
+      min-height: 44px;
+    }
+
+    /* Client chips wrap cleanly */
+    .task-modal-box span {
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    /* Dropdowns stay inside viewport */
+    .task-modal-box [style*="position: absolute"] {
+      max-height: 220px !important;
+    }
+
+    /* Footer buttons stack */
+    .task-modal-footer {
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+
+    .task-modal-footer button {
+      width: 100%;
+    }
+
+    /* Sticky footer safe area */
+    .task-modal-footer {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+
+  /* Small Mobile Screens (max-width: 480px) */
+  @media (max-width: 480px) {
+    .tasks-header-wrapper h3 {
+      font-size: 18px;
+    }
+
+    .tasks-header-wrapper small {
+      font-size: 12px;
+    }
+
+    .tasks-header-wrapper .btn {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .view-btn,
+    .customize-btn {
+      font-size: 12px;
+      padding: 5px 8px;
+    }
+
+    /* Keep Kanban columns in same row on small mobile too */
+    .tasks-container {
+      overflow-x: auto !important;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .tasks-grid {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 8px !important;
+      align-items: stretch;
+      min-width: max-content;
+      padding-bottom: 8px;
+    }
+
+    .task-column {
+      min-width: 260px !important;
+      max-width: 260px !important;
+      flex: 0 0 auto !important;
+      width: 260px !important;
+    }
+
+    /* Even smaller cards on small mobile */
+    .task-column-card {
+      border-radius: 6px !important;
+    }
+
+    .task-column-body {
+      padding: 0.5rem !important;
+    }
+
+    .task-column-title {
+      font-size: 13px !important;
+      margin-bottom: 0.5rem !important;
+      gap: 4px !important;
+    }
+
+    .task-item {
+      border-radius: 6px !important;
+      padding: 0.5rem !important;
+      margin-bottom: 0.4rem !important;
+      box-shadow: 0 1px 2px rgba(59, 74, 102, 0.04) !important;
+    }
+
+    .task-item:hover {
+      box-shadow: 0 2px 4px rgba(59, 74, 102, 0.08) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    .task-title {
+      font-size: 11px !important;
+      margin-bottom: 0.3rem !important;
+      line-height: 1.2 !important;
+    }
+
+    .task-meta {
+      font-size: 10px !important;
+      gap: 3px !important;
+      margin-top: 2px !important;
+    }
+
+    .priority-badge {
+      font-size: 8px !important;
+      padding: 1px 4px !important;
+      height: 16px !important;
+      border-radius: 10px !important;
+    }
+
+    .icon-circle {
+      width: 18px !important;
+      height: 18px !important;
+      border-radius: 4px !important;
+    }
+
+    .customize-modal {
+      position: fixed;
+      z-index: 1050;
+      right: 50% !important;
+      top: 50% !important;
+      transform: translate(50%, -50%) !important;
+      /* center modal */
+      width: 90vw !important;
+      /* almost full screen */
+      padding: 16px !important;
+      max-height: 80vh !important;
+      overflow-y: auto !important;
+      /* scroll if content is long */
+    }
+  }
+
+  /* Extra Small Mobile Screens (max-width: 350px / 320px) */
+  @media (max-width: 350px) {
+    .tasks-header-wrapper h3 {
+      font-size: 16px;
+    }
+
+    .tasks-header-wrapper small {
+      font-size: 11px;
+    }
+
+    .tasks-header-wrapper .btn {
+      font-size: 12px;
+      padding: 5px 8px;
+    }
+
+    /* Keep Kanban columns in same row on extra small mobile too */
+    .tasks-container {
+      overflow-x: auto !important;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .tasks-grid {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 6px !important;
+      align-items: stretch;
+      min-width: max-content;
+      padding-bottom: 8px;
+    }
+
+    .task-column {
+      min-width: 240px !important;
+      max-width: 240px !important;
+      flex: 0 0 auto !important;
+      width: 240px !important;
+    }
+
+    /* Ultra compact cards on extra small mobile */
+    .task-column-card {
+      border-radius: 4px !important;
+    }
+
+    .task-column-body {
+      padding: 0.4rem !important;
+    }
+
+    .task-column-title {
+      font-size: 12px !important;
+      margin-bottom: 0.4rem !important;
+      gap: 3px !important;
+    }
+
+    .task-item {
+      border-radius: 4px !important;
+      padding: 0.4rem !important;
+      margin-bottom: 0.3rem !important;
+      box-shadow: 0 1px 2px rgba(59, 74, 102, 0.04) !important;
+    }
+
+    .task-item:hover {
+      box-shadow: 0 2px 4px rgba(59, 74, 102, 0.08) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    .task-title {
+      font-size: 10px !important;
+      margin-bottom: 0.2rem !important;
+      line-height: 1.2 !important;
+    }
+
+    .task-meta {
+      font-size: 9px !important;
+      gap: 2px !important;
+      margin-top: 1px !important;
+    }
+
+    .priority-badge {
+      font-size: 7px !important;
+      padding: 1px 3px !important;
+      height: 14px !important;
+      border-radius: 8px !important;
+    }
+
+    .icon-circle {
+      width: 16px !important;
+      height: 16px !important;
+      border-radius: 3px !important;
+    }
+  }
+
+  /* Calendar View Mobile Responsive */
+  @media (max-width: 767px) {
+
+    /* Calendar container */
+    .calendar-grid {
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      margin: 0 -8px !important;
+      width: calc(100vw + 16px) !important;
+    }
+
+    /* Calendar header */
+    .calendar-grid .d-flex.justify-content-between {
+      padding: 8px 12px !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between h3 {
+      font-size: 14px !important;
+      line-height: 1.2 !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between span {
+      font-size: 12px !important;
+    }
+
+    /* Calendar navigation buttons */
+    .calendar-grid .d-flex.align-items-center.gap-2 {
+      flex-wrap: wrap !important;
+      gap: 4px !important;
+      justify-content: center !important;
+    }
+
+    .calendar-grid .d-flex.align-items-center.gap-2 button {
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 10px !important;
+      padding: 6px !important;
+      border-radius: 6px !important;
+    }
+
+    .calendar-grid .d-flex.align-items-center.gap-2 .btn-light {
+      font-size: 10px !important;
+      padding: 6px 12px !important;
+      min-height: 32px !important;
+    }
+
+    /* Days header */
+    .calendar-grid .d-flex[style*="grid-template-columns"] {
+      font-size: 9px !important;
+      gap: 1px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns"] .small {
+      padding: 6px 2px !important;
+      font-weight: 600 !important;
+    }
+
+    /* Calendar days */
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div {
+      min-height: 60px !important;
+      padding: 4px 2px !important;
+      font-size: 10px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .d-flex {
+      width: 18px !important;
+      height: 18px !important;
+      font-size: 9px !important;
+      border-radius: 50% !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .badge {
+      font-size: 7px !important;
+      padding: 1px 3px !important;
+      border-radius: 8px !important;
+      min-width: 16px !important;
+      height: 16px !important;
+    }
+
+    /* Calendar task items */
+    .calendar-task-item {
+      font-size: 7px !important;
+      padding: 1px 2px !important;
+      margin-bottom: 1px !important;
+      border-radius: 3px !important;
+      line-height: 1.1 !important;
+    }
+
+    /* Today indicator */
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .d-flex[style*="backgroundColor"] {
+      width: 22px !important;
+      height: 22px !important;
+      font-size: 10px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .calendar-grid {
+      border-radius: 4px !important;
+      font-size: 10px !important;
+      margin: 0 -12px !important;
+      width: calc(100vw + 24px) !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between {
+      padding: 6px 8px !important;
+      gap: 6px !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between h3 {
+      font-size: 12px !important;
+      line-height: 1.1 !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between span {
+      font-size: 10px !important;
+    }
+
+    .calendar-grid .d-flex.align-items-center.gap-2 button {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 9px !important;
+      padding: 4px !important;
+      border-radius: 4px !important;
+    }
+
+    .calendar-grid .d-flex.align-items-center.gap-2 .btn-light {
+      font-size: 9px !important;
+      padding: 4px 8px !important;
+      min-height: 28px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns"] {
+      font-size: 8px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns"] .small {
+      padding: 4px 1px !important;
+      font-weight: 600 !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div {
+      min-height: 45px !important;
+      padding: 2px 1px !important;
+      font-size: 9px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .d-flex {
+      width: 16px !important;
+      height: 16px !important;
+      font-size: 8px !important;
+      border-radius: 50% !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .badge {
+      font-size: 6px !important;
+      padding: 1px 2px !important;
+      border-radius: 6px !important;
+      min-width: 14px !important;
+      height: 14px !important;
+    }
+
+    .calendar-task-item {
+      font-size: 6px !important;
+      padding: 1px 2px !important;
+      margin-bottom: 0px !important;
+      border-radius: 2px !important;
+      line-height: 1.0 !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .d-flex[style*="backgroundColor"] {
+      width: 18px !important;
+      height: 18px !important;
+      font-size: 9px !important;
+    }
+  }
+
+  @media (max-width: 350px) {
+    .calendar-grid {
+      border-radius: 3px !important;
+      font-size: 9px !important;
+      margin: 0 -16px !important;
+      width: calc(100vw + 32px) !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between {
+      padding: 4px 6px !important;
+      gap: 4px !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between h3 {
+      font-size: 11px !important;
+      line-height: 1.0 !important;
+    }
+
+    .calendar-grid .d-flex.justify-content-between span {
+      font-size: 9px !important;
+    }
+
+    .calendar-grid .d-flex.align-items-center.gap-2 button {
+      width: 24px !important;
+      height: 24px !important;
+      font-size: 8px !important;
+      padding: 3px !important;
+      border-radius: 3px !important;
+    }
+
+    .calendar-grid .d-flex.align-items-center.gap-2 .btn-light {
+      font-size: 8px !important;
+      padding: 3px 6px !important;
+      min-height: 24px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns"] {
+      font-size: 7px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns"] .small {
+      padding: 3px 1px !important;
+      font-weight: 600 !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div {
+      min-height: 35px !important;
+      padding: 2px 1px !important;
+      font-size: 8px !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .d-flex {
+      width: 14px !important;
+      height: 14px !important;
+      font-size: 7px !important;
+      border-radius: 50% !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .badge {
+      font-size: 5px !important;
+      padding: 0px 2px !important;
+      border-radius: 4px !important;
+      min-width: 12px !important;
+      height: 12px !important;
+    }
+
+    .calendar-task-item {
+      font-size: 5px !important;
+      padding: 0px 1px !important;
+      margin-bottom: 0px !important;
+      border-radius: 2px !important;
+      line-height: 1.0 !important;
+    }
+
+    .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"]>div .d-flex[style*="backgroundColor"] {
+      width: 16px !important;
+      height: 16px !important;
+      font-size: 8px !important;
+    }
+  }
+
+  /* Tasks Page Calendar View Mobile Responsive */
+  @media (max-width: 767px) {
+
+    /* Calendar View Container */
+    .bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden.font-sans {
+      border-radius: 8px !important;
+      margin: 0 -8px !important;
+      width: calc(100% + 16px) !important;
+    }
+
+    /* Calendar Header */
+    .bg-white.rounded-xl .d-flex.justify-content-between.align-items-center.p-4.border-bottom {
+      flex-direction: column !important;
+      gap: 12px !important;
+      padding: 12px 16px !important;
+      align-items: center !important;
+    }
+
+    /* Month/Year Title */
+    .bg-white.rounded-xl .d-flex.justify-content-between h3 {
+      font-size: 1.125rem !important;
+    }
+
+    .bg-white.rounded-xl .d-flex.justify-content-between span {
+      font-size: 1.125rem !important;
+    }
+
+    /* Calendar Navigation Buttons Container (Today button wrapper) */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2.bg-light.rounded-pill.p-1.border {
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      padding: 4px !important;
+      border-radius: 8px !important;
+      width: 100% !important;
+    }
+
+    /* Navigation arrows */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2 button[style*="width: '32px'"] {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 10px !important;
+    }
+
+    /* TODAY BUTTON - Mobile Responsive */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2 .btn-white.shadow-sm.rounded-pill {
+      font-size: 12px !important;
+      padding: 6px 12px !important;
+      min-height: 32px !important;
+      border-radius: 16px !important;
+      font-weight: 600 !important;
+    }
+
+    /* Days Header */
+    .bg-white.rounded-xl [style*="gridTemplateColumns: 'repeat(7, 1fr)'"] {
+      gap: 1px !important;
+    }
+
+    .bg-white.rounded-xl .py-3.text-center.text-secondary.small.fw-bold {
+      padding: 8px 2px !important;
+      font-size: 10px !important;
+    }
+
+    /* Calendar Day Cells */
+    .bg-white.rounded-xl [style*="minHeight: '130px'"] {
+      min-height: 70px !important;
+      padding: 4px 2px !important;
+    }
+
+    /* Day number circle */
+    .bg-white.rounded-xl [style*="width: '28px'"] {
+      width: 22px !important;
+      height: 22px !important;
+      font-size: 11px !important;
+    }
+
+    /* Task count badge */
+    .bg-white.rounded-xl .badge.bg-light.text-secondary.border.rounded-pill {
+      font-size: 9px !important;
+      padding: 1px 4px !important;
+    }
+
+    /* Task items in calendar */
+    .bg-white.rounded-xl .px-2.py-1.rounded {
+      font-size: 9px !important;
+      padding: 1px 3px !important;
+      margin-bottom: 1px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+
+    /* Calendar View Container - Extra Small */
+    .bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden.font-sans {
+      border-radius: 6px !important;
+      margin: 0 -12px !important;
+      width: calc(100% + 24px) !important;
+    }
+
+    /* Calendar Header - Extra Small */
+    .bg-white.rounded-xl .d-flex.justify-content-between.align-items-center.p-4.border-bottom {
+      padding: 8px 12px !important;
+      gap: 8px !important;
+    }
+
+    /* Month/Year Title - Extra Small */
+    .bg-white.rounded-xl .d-flex.justify-content-between h3 {
+      font-size: 1rem !important;
+    }
+
+    .bg-white.rounded-xl .d-flex.justify-content-between span {
+      font-size: 1rem !important;
+    }
+
+    /* Calendar Navigation - Extra Small */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2.bg-light.rounded-pill.p-1.border {
+      gap: 3px !important;
+      padding: 3px !important;
+      border-radius: 6px !important;
+    }
+
+    /* Navigation arrows - Extra Small */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2 button[style*="width: '32px'"] {
+      width: 24px !important;
+      height: 24px !important;
+      font-size: 9px !important;
+    }
+
+    /* TODAY BUTTON - Extra Small */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2 .btn-white.shadow-sm.rounded-pill {
+      font-size: 11px !important;
+      padding: 5px 10px !important;
+      min-height: 28px !important;
+      border-radius: 14px !important;
+    }
+
+    /* Days Header - Extra Small */
+    .bg-white.rounded-xl .py-3.text-center.text-secondary.small.fw-bold {
+      padding: 6px 1px !important;
+      font-size: 9px !important;
+    }
+
+    /* Calendar Day Cells - Extra Small */
+    .bg-white.rounded-xl [style*="minHeight: '130px'"] {
+      min-height: 55px !important;
+      padding: 2px 1px !important;
+    }
+
+    /* Day number circle - Extra Small */
+    .bg-white.rounded-xl [style*="width: '28px'"] {
+      width: 18px !important;
+      height: 18px !important;
+      font-size: 10px !important;
+    }
+
+    /* Task count badge - Extra Small */
+    .bg-white.rounded-xl .badge.bg-light.text-secondary.border.rounded-pill {
+      font-size: 8px !important;
+      padding: 0px 3px !important;
+    }
+
+    /* Task items in calendar - Extra Small */
+    .bg-white.rounded-xl .px-2.py-1.rounded {
+      font-size: 8px !important;
+      padding: 1px 2px !important;
+      margin-bottom: 0px !important;
+    }
+  }
+
+  @media (max-width: 350px) {
+
+    /* Calendar View Container - Ultra Small */
+    .bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden.font-sans {
+      border-radius: 4px !important;
+      margin: 0 -16px !important;
+      width: calc(100% + 32px) !important;
+    }
+
+    /* Calendar Header - Ultra Small */
+    .bg-white.rounded-xl .d-flex.justify-content-between.align-items-center.p-4.border-bottom {
+      padding: 6px 8px !important;
+      gap: 6px !important;
+    }
+
+    /* Month/Year Title - Ultra Small */
+    .bg-white.rounded-xl .d-flex.justify-content-between h3 {
+      font-size: 0.875rem !important;
+    }
+
+    .bg-white.rounded-xl .d-flex.justify-content-between span {
+      font-size: 0.875rem !important;
+    }
+
+    /* Calendar Navigation - Ultra Small */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2.bg-light.rounded-pill.p-1.border {
+      gap: 2px !important;
+      padding: 2px !important;
+      border-radius: 4px !important;
+    }
+
+    /* Navigation arrows - Ultra Small */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2 button[style*="width: '32px'"] {
+      width: 20px !important;
+      height: 20px !important;
+      font-size: 8px !important;
+    }
+
+    /* TODAY BUTTON - Ultra Small */
+    .bg-white.rounded-xl .d-flex.align-items-center.gap-2 .btn-white.shadow-sm.rounded-pill {
+      font-size: 10px !important;
+      padding: 4px 8px !important;
+      min-height: 24px !important;
+      border-radius: 12px !important;
+    }
+
+    /* Days Header - Ultra Small */
+    .bg-white.rounded-xl .py-3.text-center.text-secondary.small.fw-bold {
+      padding: 4px 1px !important;
+      font-size: 8px !important;
+    }
+
+    /* Calendar Day Cells - Ultra Small */
+    .bg-white.rounded-xl [style*="minHeight: '130px'"] {
+      min-height: 45px !important;
+      padding: 2px 1px !important;
+    }
+
+    /* Day number circle - Ultra Small */
+    .bg-white.rounded-xl [style*="width: '28px'"] {
+      width: 16px !important;
+      height: 16px !important;
+      font-size: 9px !important;
+    }
+
+    /* Task count badge - Ultra Small */
+    .bg-white.rounded-xl .badge.bg-light.text-secondary.border.rounded-pill {
+      font-size: 7px !important;
+      padding: 0px 2px !important;
+    }
+
+    /* Task items in calendar - Ultra Small */
+    .bg-white.rounded-xl .px-2.py-1.rounded {
+      font-size: 7px !important;
+      padding: 0px 2px !important;
+    }
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
-
-  .stat-card-header {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-}
-
-/* Tablet Screens (max-width: 767px) */
-@media (max-width: 767px) {
-  .tasks-header-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .tasks-header-wrapper h3 {
-    font-size: 20px;
-  }
-
-  .tasks-header-wrapper small {
-    font-size: 13px;
-  }
-
-  .tasks-header-wrapper .btn {
-    width: 100%;
-    justify-content: center;
-    font-size: 14px;
-    padding: 8px 12px;
-  }
-
-  /* Ensure stat cards are in list view */
-  .tasks-stats-row {
-    flex-direction: column;
-  }
-
-  .tasks-stats-row>div {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 100% !important;
-  }
-
-  .options-wrapper .d-flex {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .btn-group-custom {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .view-btn {
-    flex: 1;
-    text-align: center;
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-
-  .customize-btn {
-    width: 100%;
-    justify-content: center;
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-
-  .customize-modal {
-    right: 16px;
-    top: 80px;
-    width: 240px;
-    max-width: 90vw;
-  }
-
-  /* KANBAN BOARD MOBILE RESPONSIVE - Keep columns in same row */
-  .tasks-container {
-    overflow-x: auto !important;
-    /* Enable horizontal scrolling */
-    overflow-y: hidden;
-    /* Prevent vertical scrolling */
-    -webkit-overflow-scrolling: touch;
-    /* Smooth scrolling on iOS */
-    scrollbar-width: thin;
-    /* Thin scrollbar */
-  }
-
-  .tasks-grid {
-    display: flex !important;
-    /* Use flexbox instead of grid for horizontal layout */
-    flex-direction: row !important;
-    /* Keep columns in horizontal row */
-    gap: 12px !important;
-    align-items: stretch;
-    min-width: max-content;
-    /* Prevent shrinking */
-    padding-bottom: 8px;
-    /* Space for scrollbar */
-  }
-
-  .task-column {
-    min-width: 280px !important;
-    /* Fixed width for columns */
-    max-width: 280px !important;
-    flex: 0 0 auto !important;
-    /* Don't shrink or grow */
-    width: 280px !important;
-  }
-
-  /* Make task cards smaller on mobile */
-  .task-column-card {
-    border-radius: 8px !important;
-  }
-
-  .task-column-body {
-    padding: 0.75rem !important;
-  }
-
-  .task-column-title {
-    font-size: 14px !important;
-    margin-bottom: 0.75rem !important;
-    gap: 6px !important;
-  }
-
-  .task-item {
-    border-radius: 8px !important;
-    padding: 0.75rem !important;
-    margin-bottom: 0.5rem !important;
-    box-shadow: 0 1px 2px rgba(59, 74, 102, 0.04) !important;
-  }
-
-  .task-item:hover {
-    box-shadow: 0 2px 6px rgba(59, 74, 102, 0.08) !important;
-    transform: translateY(-1px) !important;
-  }
-
-  .task-title {
-    font-size: 12px !important;
-    margin-bottom: 0.4rem !important;
-    line-height: 1.3 !important;
-  }
-
-  .task-meta {
-    font-size: 11px !important;
-    gap: 4px !important;
-    margin-top: 2px !important;
-  }
-
-  .priority-badge {
-    font-size: 9px !important;
-    padding: 2px 6px !important;
-    height: 18px !important;
-    border-radius: 12px !important;
-  }
-
-  .icon-circle {
-    width: 20px !important;
-    height: 20px !important;
-    border-radius: 6px !important;
-  }
-
-  /* Modal alignment */
-  .task-modal-mobile {
-    align-items: flex-start !important;
-    padding: 12px !important;
-  }
-
-  /* Full-width modal */
-  .task-modal-box {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 100vh !important;
-    border-radius: 12px !important;
-  }
-
-  /* Header spacing */
-  .task-modal-box>div:first-child {
-    padding: 16px !important;
-  }
-
-  /* Form padding */
-  .task-modal-box>div:nth-child(2) {
-    padding: 16px !important;
-  }
-
-  /* Stack priority / due date / hours */
-  .task-modal-row {
-    flex-direction: column !important;
-    gap: 12px !important;
-  }
-
-  /* Inputs tap-friendly */
-  .task-modal-box input,
-  .task-modal-box select,
-  .task-modal-box textarea {
-    font-size: 14px;
-    min-height: 44px;
-  }
-
-  /* Client chips wrap cleanly */
-  .task-modal-box span {
-    max-width: 100%;
-    word-break: break-word;
-  }
-
-  /* Dropdowns stay inside viewport */
-  .task-modal-box [style*="position: absolute"] {
-    max-height: 220px !important;
-  }
-
-  /* Footer buttons stack */
-  .task-modal-footer {
-    flex-direction: column !important;
-    gap: 10px !important;
-  }
-
-  .task-modal-footer button {
-    width: 100%;
-  }
-
-  /* Sticky footer safe area */
-  .task-modal-footer {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* Small Mobile Screens (max-width: 480px) */
-@media (max-width: 480px) {
-  .tasks-header-wrapper h3 {
-    font-size: 18px;
-  }
-
-  .tasks-header-wrapper small {
-    font-size: 12px;
-  }
-
-  .tasks-header-wrapper .btn {
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-
-  .view-btn,
-  .customize-btn {
-    font-size: 12px;
-    padding: 5px 8px;
-  }
-
-  /* Keep Kanban columns in same row on small mobile too */
-  .tasks-container {
-    overflow-x: auto !important;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-  }
-
-  .tasks-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    align-items: stretch;
-    min-width: max-content;
-    padding-bottom: 8px;
-  }
-
-  .task-column {
-    min-width: 260px !important;
-    max-width: 260px !important;
-    flex: 0 0 auto !important;
-    width: 260px !important;
-  }
-
-  /* Even smaller cards on small mobile */
-  .task-column-card {
-    border-radius: 6px !important;
-  }
-
-  .task-column-body {
-    padding: 0.5rem !important;
-  }
-
-  .task-column-title {
-    font-size: 13px !important;
-    margin-bottom: 0.5rem !important;
-    gap: 4px !important;
-  }
-
-  .task-item {
-    border-radius: 6px !important;
-    padding: 0.5rem !important;
-    margin-bottom: 0.4rem !important;
-    box-shadow: 0 1px 2px rgba(59, 74, 102, 0.04) !important;
-  }
-
-  .task-item:hover {
-    box-shadow: 0 2px 4px rgba(59, 74, 102, 0.08) !important;
-    transform: translateY(-1px) !important;
-  }
-
-  .task-title {
-    font-size: 11px !important;
-    margin-bottom: 0.3rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .task-meta {
-    font-size: 10px !important;
-    gap: 3px !important;
-    margin-top: 2px !important;
-  }
-
-  .priority-badge {
-    font-size: 8px !important;
-    padding: 1px 4px !important;
-    height: 16px !important;
-    border-radius: 10px !important;
-  }
-
-  .icon-circle {
-    width: 18px !important;
-    height: 18px !important;
-    border-radius: 4px !important;
-  }
-
-  .customize-modal {
-    position: fixed;
-    z-index: 1050;
-    right: 50% !important;
-    top: 50% !important;
-    transform: translate(50%, -50%) !important;
-    /* center modal */
-    width: 90vw !important;
-    /* almost full screen */
-    padding: 16px !important;
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-    /* scroll if content is long */
-  }
-}
-
-/* Extra Small Mobile Screens (max-width: 350px / 320px) */
-@media (max-width: 350px) {
-  .tasks-header-wrapper h3 {
-    font-size: 16px;
-  }
-
-  .tasks-header-wrapper small {
-    font-size: 11px;
-  }
-
-  .tasks-header-wrapper .btn {
-    font-size: 12px;
-    padding: 5px 8px;
-  }
-
-  /* Keep Kanban columns in same row on extra small mobile too */
-  .tasks-container {
-    overflow-x: auto !important;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-  }
-
-  .tasks-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 6px !important;
-    align-items: stretch;
-    min-width: max-content;
-    padding-bottom: 8px;
-  }
-
-  .task-column {
-    min-width: 240px !important;
-    max-width: 240px !important;
-    flex: 0 0 auto !important;
-    width: 240px !important;
-  }
-
-  /* Ultra compact cards on extra small mobile */
-  .task-column-card {
-    border-radius: 4px !important;
-  }
-
-  .task-column-body {
-    padding: 0.4rem !important;
-  }
-
-  .task-column-title {
-    font-size: 12px !important;
-    margin-bottom: 0.4rem !important;
-    gap: 3px !important;
-  }
-
-  .task-item {
-    border-radius: 4px !important;
-    padding: 0.4rem !important;
-    margin-bottom: 0.3rem !important;
-    box-shadow: 0 1px 2px rgba(59, 74, 102, 0.04) !important;
-  }
-
-  .task-item:hover {
-    box-shadow: 0 2px 4px rgba(59, 74, 102, 0.08) !important;
-    transform: translateY(-1px) !important;
-  }
-
-  .task-title {
-    font-size: 10px !important;
-    margin-bottom: 0.2rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .task-meta {
-    font-size: 9px !important;
-    gap: 2px !important;
-    margin-top: 1px !important;
-  }
-
-  .priority-badge {
-    font-size: 7px !important;
-    padding: 1px 3px !important;
-    height: 14px !important;
-    border-radius: 8px !important;
-  }
-
-  .icon-circle {
-    width: 16px !important;
-    height: 16px !important;
-    border-radius: 3px !important;
-  }
-}
-
-/* Calendar View Mobile Responsive */
-@media (max-width: 767px) {
-  /* Calendar container */
-  .calendar-grid {
-    border-radius: 6px !important;
-    font-size: 11px !important;
-    margin: 0 -8px !important;
-    width: calc(100vw + 16px) !important;
-  }
-
-  /* Calendar header */
-  .calendar-grid .d-flex.justify-content-between {
-    padding: 8px 12px !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between h3 {
-    font-size: 14px !important;
-    line-height: 1.2 !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between span {
-    font-size: 12px !important;
-  }
-
-  /* Calendar navigation buttons */
-  .calendar-grid .d-flex.align-items-center.gap-2 {
-    flex-wrap: wrap !important;
-    gap: 4px !important;
-    justify-content: center !important;
-  }
-
-  .calendar-grid .d-flex.align-items-center.gap-2 button {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 10px !important;
-    padding: 6px !important;
-    border-radius: 6px !important;
-  }
-
-  .calendar-grid .d-flex.align-items-center.gap-2 .btn-light {
-    font-size: 10px !important;
-    padding: 6px 12px !important;
-    min-height: 32px !important;
-  }
-
-  /* Days header */
-  .calendar-grid .d-flex[style*="grid-template-columns"] {
-    font-size: 9px !important;
-    gap: 1px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns"] .small {
-    padding: 6px 2px !important;
-    font-weight: 600 !important;
-  }
-
-  /* Calendar days */
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div {
-    min-height: 60px !important;
-    padding: 4px 2px !important;
-    font-size: 10px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .d-flex {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 9px !important;
-    border-radius: 50% !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .badge {
-    font-size: 7px !important;
-    padding: 1px 3px !important;
-    border-radius: 8px !important;
-    min-width: 16px !important;
-    height: 16px !important;
-  }
-
-  /* Calendar task items */
-  .calendar-task-item {
-    font-size: 7px !important;
-    padding: 1px 2px !important;
-    margin-bottom: 1px !important;
-    border-radius: 3px !important;
-    line-height: 1.1 !important;
-  }
-
-  /* Today indicator */
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .d-flex[style*="backgroundColor"] {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 10px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .calendar-grid {
-    border-radius: 4px !important;
-    font-size: 10px !important;
-    margin: 0 -12px !important;
-    width: calc(100vw + 24px) !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between {
-    padding: 6px 8px !important;
-    gap: 6px !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between h3 {
-    font-size: 12px !important;
-    line-height: 1.1 !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between span {
-    font-size: 10px !important;
-  }
-
-  .calendar-grid .d-flex.align-items-center.gap-2 button {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 9px !important;
-    padding: 4px !important;
-    border-radius: 4px !important;
-  }
-
-  .calendar-grid .d-flex.align-items-center.gap-2 .btn-light {
-    font-size: 9px !important;
-    padding: 4px 8px !important;
-    min-height: 28px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns"] {
-    font-size: 8px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns"] .small {
-    padding: 4px 1px !important;
-    font-weight: 600 !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div {
-    min-height: 45px !important;
-    padding: 2px 1px !important;
-    font-size: 9px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .d-flex {
-    width: 16px !important;
-    height: 16px !important;
-    font-size: 8px !important;
-    border-radius: 50% !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .badge {
-    font-size: 6px !important;
-    padding: 1px 2px !important;
-    border-radius: 6px !important;
-    min-width: 14px !important;
-    height: 14px !important;
-  }
-
-  .calendar-task-item {
-    font-size: 6px !important;
-    padding: 1px 2px !important;
-    margin-bottom: 0px !important;
-    border-radius: 2px !important;
-    line-height: 1.0 !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .d-flex[style*="backgroundColor"] {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 9px !important;
-  }
-}
-
-@media (max-width: 350px) {
-  .calendar-grid {
-    border-radius: 3px !important;
-    font-size: 9px !important;
-    margin: 0 -16px !important;
-    width: calc(100vw + 32px) !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between {
-    padding: 4px 6px !important;
-    gap: 4px !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between h3 {
-    font-size: 11px !important;
-    line-height: 1.0 !important;
-  }
-
-  .calendar-grid .d-flex.justify-content-between span {
-    font-size: 9px !important;
-  }
-
-  .calendar-grid .d-flex.align-items-center.gap-2 button {
-    width: 24px !important;
-    height: 24px !important;
-    font-size: 8px !important;
-    padding: 3px !important;
-    border-radius: 3px !important;
-  }
-
-  .calendar-grid .d-flex.align-items-center.gap-2 .btn-light {
-    font-size: 8px !important;
-    padding: 3px 6px !important;
-    min-height: 24px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns"] {
-    font-size: 7px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns"] .small {
-    padding: 3px 1px !important;
-    font-weight: 600 !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div {
-    min-height: 35px !important;
-    padding: 2px 1px !important;
-    font-size: 8px !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .d-flex {
-    width: 14px !important;
-    height: 14px !important;
-    font-size: 7px !important;
-    border-radius: 50% !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .badge {
-    font-size: 5px !important;
-    padding: 0px 2px !important;
-    border-radius: 4px !important;
-    min-width: 12px !important;
-    height: 12px !important;
-  }
-
-  .calendar-task-item {
-    font-size: 5px !important;
-    padding: 0px 1px !important;
-    margin-bottom: 0px !important;
-    border-radius: 2px !important;
-    line-height: 1.0 !important;
-  }
-
-  .calendar-grid .d-flex[style*="grid-template-columns: repeat(7, 1fr)"] > div .d-flex[style*="backgroundColor"] {
-    width: 16px !important;
-    height: 16px !important;
-    font-size: 8px !important;
-  }
-}
-
-/* Tasks Page Calendar View Mobile Responsive */
-@media (max-width: 767px) {
-  /* Calendar View Container */
-  .bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden.font-sans {
-    border-radius: 8px !important;
-    margin: 0 -8px !important;
-    width: calc(100% + 16px) !important;
-  }
-
-  /* Calendar Header */
-  .bg-white.rounded-xl .d-flex.justify-content-between.align-items-center.p-4.border-bottom {
-    flex-direction: column !important;
-    gap: 12px !important;
-    padding: 12px 16px !important;
-    align-items: center !important;
-  }
-
-  /* Month/Year Title */
-  .bg-white.rounded-xl .d-flex.justify-content-between h3 {
-    font-size: 1.125rem !important;
-  }
-
-  .bg-white.rounded-xl .d-flex.justify-content-between span {
-    font-size: 1.125rem !important;
-  }
-
-  /* Calendar Navigation Buttons Container (Today button wrapper) */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2.bg-light.rounded-pill.p-1.border {
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    padding: 4px !important;
-    border-radius: 8px !important;
-    width: 100% !important;
-  }
-
-  /* Navigation arrows */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2 button[style*="width: '32px'"] {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 10px !important;
-  }
-
-  /* TODAY BUTTON - Mobile Responsive */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2 .btn-white.shadow-sm.rounded-pill {
-    font-size: 12px !important;
-    padding: 6px 12px !important;
-    min-height: 32px !important;
-    border-radius: 16px !important;
-    font-weight: 600 !important;
-  }
-
-  /* Days Header */
-  .bg-white.rounded-xl [style*="gridTemplateColumns: 'repeat(7, 1fr)'"] {
-    gap: 1px !important;
-  }
-
-  .bg-white.rounded-xl .py-3.text-center.text-secondary.small.fw-bold {
-    padding: 8px 2px !important;
-    font-size: 10px !important;
-  }
-
-  /* Calendar Day Cells */
-  .bg-white.rounded-xl [style*="minHeight: '130px'"] {
-    min-height: 70px !important;
-    padding: 4px 2px !important;
-  }
-
-  /* Day number circle */
-  .bg-white.rounded-xl [style*="width: '28px'"] {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 11px !important;
-  }
-
-  /* Task count badge */
-  .bg-white.rounded-xl .badge.bg-light.text-secondary.border.rounded-pill {
-    font-size: 9px !important;
-    padding: 1px 4px !important;
-  }
-
-  /* Task items in calendar */
-  .bg-white.rounded-xl .px-2.py-1.rounded {
-    font-size: 9px !important;
-    padding: 1px 3px !important;
-    margin-bottom: 1px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Calendar View Container - Extra Small */
-  .bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden.font-sans {
-    border-radius: 6px !important;
-    margin: 0 -12px !important;
-    width: calc(100% + 24px) !important;
-  }
-
-  /* Calendar Header - Extra Small */
-  .bg-white.rounded-xl .d-flex.justify-content-between.align-items-center.p-4.border-bottom {
-    padding: 8px 12px !important;
-    gap: 8px !important;
-  }
-
-  /* Month/Year Title - Extra Small */
-  .bg-white.rounded-xl .d-flex.justify-content-between h3 {
-    font-size: 1rem !important;
-  }
-
-  .bg-white.rounded-xl .d-flex.justify-content-between span {
-    font-size: 1rem !important;
-  }
-
-  /* Calendar Navigation - Extra Small */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2.bg-light.rounded-pill.p-1.border {
-    gap: 3px !important;
-    padding: 3px !important;
-    border-radius: 6px !important;
-  }
-
-  /* Navigation arrows - Extra Small */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2 button[style*="width: '32px'"] {
-    width: 24px !important;
-    height: 24px !important;
-    font-size: 9px !important;
-  }
-
-  /* TODAY BUTTON - Extra Small */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2 .btn-white.shadow-sm.rounded-pill {
-    font-size: 11px !important;
-    padding: 5px 10px !important;
-    min-height: 28px !important;
-    border-radius: 14px !important;
-  }
-
-  /* Days Header - Extra Small */
-  .bg-white.rounded-xl .py-3.text-center.text-secondary.small.fw-bold {
-    padding: 6px 1px !important;
-    font-size: 9px !important;
-  }
-
-  /* Calendar Day Cells - Extra Small */
-  .bg-white.rounded-xl [style*="minHeight: '130px'"] {
-    min-height: 55px !important;
-    padding: 2px 1px !important;
-  }
-
-  /* Day number circle - Extra Small */
-  .bg-white.rounded-xl [style*="width: '28px'"] {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 10px !important;
-  }
-
-  /* Task count badge - Extra Small */
-  .bg-white.rounded-xl .badge.bg-light.text-secondary.border.rounded-pill {
-    font-size: 8px !important;
-    padding: 0px 3px !important;
-  }
-
-  /* Task items in calendar - Extra Small */
-  .bg-white.rounded-xl .px-2.py-1.rounded {
-    font-size: 8px !important;
-    padding: 1px 2px !important;
-    margin-bottom: 0px !important;
-  }
-}
-
-@media (max-width: 350px) {
-  /* Calendar View Container - Ultra Small */
-  .bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden.font-sans {
-    border-radius: 4px !important;
-    margin: 0 -16px !important;
-    width: calc(100% + 32px) !important;
-  }
-
-  /* Calendar Header - Ultra Small */
-  .bg-white.rounded-xl .d-flex.justify-content-between.align-items-center.p-4.border-bottom {
-    padding: 6px 8px !important;
-    gap: 6px !important;
-  }
-
-  /* Month/Year Title - Ultra Small */
-  .bg-white.rounded-xl .d-flex.justify-content-between h3 {
-    font-size: 0.875rem !important;
-  }
-
-  .bg-white.rounded-xl .d-flex.justify-content-between span {
-    font-size: 0.875rem !important;
-  }
-
-  /* Calendar Navigation - Ultra Small */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2.bg-light.rounded-pill.p-1.border {
-    gap: 2px !important;
-    padding: 2px !important;
-    border-radius: 4px !important;
-  }
-
-  /* Navigation arrows - Ultra Small */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2 button[style*="width: '32px'"] {
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 8px !important;
-  }
-
-  /* TODAY BUTTON - Ultra Small */
-  .bg-white.rounded-xl .d-flex.align-items-center.gap-2 .btn-white.shadow-sm.rounded-pill {
-    font-size: 10px !important;
-    padding: 4px 8px !important;
-    min-height: 24px !important;
-    border-radius: 12px !important;
-  }
-
-  /* Days Header - Ultra Small */
-  .bg-white.rounded-xl .py-3.text-center.text-secondary.small.fw-bold {
-    padding: 4px 1px !important;
-    font-size: 8px !important;
-  }
-
-  /* Calendar Day Cells - Ultra Small */
-  .bg-white.rounded-xl [style*="minHeight: '130px'"] {
-    min-height: 45px !important;
-    padding: 2px 1px !important;
-  }
-
-  /* Day number circle - Ultra Small */
-  .bg-white.rounded-xl [style*="width: '28px'"] {
-    width: 16px !important;
-    height: 16px !important;
-    font-size: 9px !important;
-  }
-
-  /* Task count badge - Ultra Small */
-  .bg-white.rounded-xl .badge.bg-light.text-secondary.border.rounded-pill {
-    font-size: 7px !important;
-    padding: 0px 2px !important;
-  }
-
-  /* Task items in calendar - Ultra Small */
-  .bg-white.rounded-xl .px-2.py-1.rounded {
-    font-size: 7px !important;
-    padding: 0px 2px !important;
-  }
-}

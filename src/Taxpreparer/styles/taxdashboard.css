@@ -203,9 +203,9 @@ p.card-contented {
   font-size: 10px;
   display: flex;
   align-items: center;
-  border: 0.5px solid #E8F0FF;
-  background: #FFFFFF;
-  color: black;
+  border: 0.5px solid #00C0C6;
+  background: #00C0C6;
+  color: #FFFFFF;
 }
 
 .name-role-circle {
