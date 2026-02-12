@@ -429,23 +429,27 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
     try {
       const response = await notificationAPI.markAllAsRead();
       if (response.success) {
-        setNotifications((prev) =>
-          prev.map((notification) => ({ ...notification, read: true }))
-        );
+        const updatedNotifications = notifications.map((notification) => ({
+          ...notification,
+          read: true,
+        }));
+
+        setNotifications(updatedNotifications);
         setUnreadCount(0);
+
         if (typeof onChange === "function") {
           onChange({
-            notifications: notifications.map((n) => ({ ...n, read: true })),
+            notifications: updatedNotifications,
             unreadCount: 0,
           });
         }
-        // Refetch notifications to get updated state
+        // Refetch notifications to get updated state from server
         fetchNotifications();
       }
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
     }
-  }, [notifications, onChange, fetchNotifications]);
+  }, [notifications, onChange, fetchNotifications, notificationAPI]);
 
   const handleNotificationAction = useCallback((notification) => {
     // Mark as read when clicked
