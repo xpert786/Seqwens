@@ -39,7 +39,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
       const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
       // Remove /seqwens/api from the path, keep just the host
       const wsHost = `${wsProtocol}//${url.host}`;
-      
+
       // Use the new WebSocket endpoint format
       // WebSocket endpoint should be at the root, not under /seqwens/api
       return `${wsHost}/ws/chat-thread/${threadId}/?token=${token}`;
@@ -253,7 +253,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
     try {
       const token = getAccessToken();
       const apiBaseUrl = getApiBaseUrl();
-      
+
       const response = await fetch(
         `${apiBaseUrl}/taxpayer/chat-threads/${threadId}/send_message/`,
         {
@@ -262,9 +262,9 @@ export const useChatWebSocket = (threadId, enabled = true) => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             content: content.trim(),
-            is_internal: isInternal 
+            is_internal: isInternal
           })
         }
       );
@@ -290,7 +290,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
   }, []);
 
   // Send message via WebSocket (with REST API fallback)
-  const sendMessage = useCallback((content, isInternal = false) => {
+  const sendMessage = useCallback(async (content, isInternal = false) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       try {
         const message = {
@@ -305,7 +305,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
         console.error('Error sending message via WebSocket:', err);
         // Fallback to REST API
         if (threadId) {
-          sendMessageViaAPI(threadId, content, isInternal);
+          return await sendMessageViaAPI(threadId, content, isInternal);
         }
         return false;
       }
@@ -313,8 +313,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
       // WebSocket not connected, use REST API fallback
       console.log('WebSocket not connected, using REST API fallback');
       if (threadId) {
-        sendMessageViaAPI(threadId, content, isInternal);
-        return true;
+        return await sendMessageViaAPI(threadId, content, isInternal);
       }
       return false;
     }
@@ -382,7 +381,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
           // Mark all messages (no specific message_id)
         };
         wsRef.current.send(JSON.stringify(message));
-        
+
         // Optimistically update local state
         setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })));
         return true;

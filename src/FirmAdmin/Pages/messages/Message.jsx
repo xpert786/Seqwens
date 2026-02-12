@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { firmAdminMessagingAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
@@ -11,6 +12,8 @@ import '../../styles/Message.css';
 const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [selectedThreadId, setSelectedThreadId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const threadIdFromUrl = searchParams.get('threadId');
   const [searchTerm, setSearchTerm] = useState('');
   const [conversationSearch, setConversationSearch] = useState('');
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
@@ -43,6 +46,7 @@ const Messages = () => {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedUserRole, setSelectedUserRole] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const recipientInputRef = useRef(null);
@@ -69,6 +73,7 @@ const Messages = () => {
 
   // Fetch average response time
   useEffect(() => {
+    // console.log('Messages component mounted', { role: getUserData()?.role, threadIdFromUrl });
     const fetchResponseTime = async () => {
       try {
         setResponseTimeLoading(true);
@@ -125,7 +130,8 @@ const Messages = () => {
         if (response.success && response.data) {
           const threadsArray = Array.isArray(response.data) ? response.data : [];
           setConversations(threadsArray.map(thread => ({
-            id: thread.id || thread.thread_id,
+            id: thread.thread_id || thread.id, // Prefer thread_id from newer system or associated thread
+            legacy_id: thread.id, // Keep original ID for reference if needed
             subject: thread.subject,
             client_name: thread.client?.name || thread.client_name || null,
             client_email: thread.client?.email || thread.client_email || null,
@@ -145,11 +151,13 @@ const Messages = () => {
         console.log('New chat API failed, trying old API:', newApiError);
       }
 
-      // Fallback to old API
-      response = await firmAdminMessagingAPI.listConversations(params);
-
       if (response.success && response.data) {
-        setConversations(response.data.conversations || []);
+        const conversationsArray = response.data.conversations || [];
+        setConversations(conversationsArray.map(conv => ({
+          ...conv,
+          id: conv.thread_id || conv.id, // Prefer thread_id for modern components
+          legacy_id: conv.id
+        })));
       } else {
         throw new Error(response.message || 'Failed to load conversations');
       }
@@ -171,6 +179,20 @@ const Messages = () => {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  // Handle thread selection from URL
+  useEffect(() => {
+    if (threadIdFromUrl && conversations.length > 0) {
+      const threadId = Number(threadIdFromUrl);
+      if (selectedThreadId !== threadId) {
+        const conv = conversations.find(c => c.id === threadId);
+        if (conv) {
+          setSelectedConversation(conv);
+          setSelectedThreadId(threadId);
+        }
+      }
+    }
+  }, [threadIdFromUrl, conversations, selectedThreadId]);
 
   // Fetch thread messages when conversation is selected
   useEffect(() => {
@@ -562,21 +584,32 @@ const Messages = () => {
       setSending(true);
 
       const targetUserId = Number(userId);
+
+      // Determine chat type based on selected user's role
+      const preparer_roles = ['staff', 'accountant', 'bookkeeper', 'assistant', 'tax_preparer', 'admin', 'firm'];
+      const isStaff = preparer_roles.includes(selectedUserRole?.toLowerCase());
+      const chatType = isStaff ? 'firm_tax_preparer' : 'tax_preparer_client';
+      const category = isStaff ? 'Staff' : 'Client';
+
       // Use unified chatService to create chat with opening message and metadata
       const response = await chatService.createTaxPreparerChat(targetUserId, {
+        chat_type: chatType,
         opening_message: message.trim(),
         subject: '', // Can be added to form later if needed
-        category: 'Client',
+        category: category,
         priority: 'Medium'
       });
 
-      if (response.success) {
+      if (response.success && response.data) {
         toast.success('Message sent successfully');
         setIsComposeModalOpen(false);
+        const newThreadId = response.data.thread_id || response.data.id;
+        setSelectedThreadId(newThreadId);
         // Reset form
         setMessage('');
         setSelectedStaffId('');
         setSelectedUserId('');
+        setSelectedUserRole('');
         setUserSearchQuery('');
         setUserRoleFilter('');
         setRecipientInput('');
@@ -599,6 +632,7 @@ const Messages = () => {
   // Handle user selection
   const handleUserSelect = (user) => {
     setSelectedUserId(user.id);
+    setSelectedUserRole(user.role || '');
     setUserSearchQuery(user.full_name || `${user.first_name} ${user.last_name}`.trim() || user.email);
     setShowUserDropdown(false);
   };
@@ -653,8 +687,11 @@ const Messages = () => {
   // Handle thread file attachment
   const handleThreadFileSelect = (e) => {
     const file = e.target.files[0];
+    console.log('File selected for thread:', file ? file.name : 'none');
     if (file) {
       setThreadAttachment(file);
+      // Clear value so the same file can be selected again
+      e.target.value = '';
     }
   };
 
@@ -679,7 +716,8 @@ const Messages = () => {
       // Skip WebSocket if attachment is present - WebSocket doesn't support file attachments
       // Try WebSocket first only if no attachment and WebSocket is connected
       if (wsConnected && !threadAttachment) {
-        const sent = wsSendMessage(messageText, false);
+        console.log('Attempting to send message via WebSocket...', { messageText });
+        const sent = await wsSendMessage(messageText, false);
         if (sent) {
           console.log('✅ Message sent via WebSocket');
           toast.success('Message sent successfully');
@@ -692,6 +730,8 @@ const Messages = () => {
           }, 100);
           setSendingThreadMessage(false);
           return;
+        } else {
+          console.log('WebSocket send failed, falling back to REST API');
         }
       }
 
@@ -1406,7 +1446,10 @@ const Messages = () => {
                 className="hidden"
               />
               <button
-                onClick={() => threadFileInputRef.current?.click()}
+                onClick={() => {
+                  console.log('Paperclip clicked', { threadFileInputRef: !!threadFileInputRef.current, selectedThreadId, sendingThreadMessage });
+                  threadFileInputRef.current?.click();
+                }}
                 disabled={!selectedThreadId || sendingThreadMessage}
                 className="w-10 h-10 !rounded-lg border border-[#E8F0FF] flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed message-thread-attach-btn"
                 title="Attach file"
@@ -1424,10 +1467,13 @@ const Messages = () => {
                 type="text"
                 value={threadMessageInput}
                 onChange={(e) => setThreadMessageInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && (threadMessageInput.trim() || threadAttachment) && !sendingThreadMessage && selectedThreadId) {
-                    e.preventDefault();
-                    handleSendThreadMessage();
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    console.log('Enter key pressed', { hasInput: !!threadMessageInput.trim(), hasAttachment: !!threadAttachment, sendingThreadMessage, selectedThreadId });
+                    if ((threadMessageInput.trim() || threadAttachment) && !sendingThreadMessage && selectedThreadId) {
+                      e.preventDefault();
+                      handleSendThreadMessage();
+                    }
                   }
                 }}
                 placeholder={selectedThreadId ? "Write your messages here..." : "Select a conversation to send messages"}
@@ -1444,7 +1490,10 @@ const Messages = () => {
                 </button>
               )}
               <button
-                onClick={handleSendThreadMessage}
+                onClick={() => {
+                  console.log('Send button clicked', { selectedThreadId, hasInput: !!threadMessageInput.trim(), hasAttachment: !!threadAttachment, sendingThreadMessage });
+                  handleSendThreadMessage();
+                }}
                 disabled={!selectedThreadId || !(threadMessageInput.trim() || threadAttachment) || sendingThreadMessage}
                 className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed message-thread-send-btn"
               >

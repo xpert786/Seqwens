@@ -14,6 +14,7 @@ import BulkTaxpayerImportModal from './BulkTaxpayerImportModal';
 import AddClientModal from "./AddClientModal";
 import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 import StartWorkflowModal from '../Workflow/StartWorkflowModal';
+import ClientMessageModal from './ClientMessageModal';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminStaffAPI, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -21,12 +22,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
 import { getToastOptions } from '../../../utils/toastConfig';
-import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 const API_BASE_URL = getApiBaseUrl();
 
 export default function ClientManage() {
-  const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showDropdown, setShowDropdown] = useState(null);
@@ -45,6 +44,8 @@ export default function ClientManage() {
   const [reassigning, setReassigning] = useState(false);
   const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
   const [selectedClientForWorkflow, setSelectedClientForWorkflow] = useState(null);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [selectedClientForMessage, setSelectedClientForMessage] = useState(null);
   const clientsListRef = useRef(null);
 
   // Staff members state
@@ -433,8 +434,8 @@ export default function ClientManage() {
                   return 'DocumentIcon';
                 })(),
                 totalBilled: '$0', // Can be calculated from invoices if available
-                clientStatus: client.is_active !== undefined 
-                  ? (client.is_active ? 'Active' : 'Inactive') 
+                clientStatus: client.is_active !== undefined
+                  ? (client.is_active ? 'Active' : 'Inactive')
                   : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
                 pendingTasks: client.pending_tasks_count || 0,
                 documentsCount: client.documents_count || 0,
@@ -1003,8 +1004,8 @@ export default function ClientManage() {
                 return 'DocumentIcon';
               })(),
               totalBilled: '$0',
-              clientStatus: client.is_active !== undefined 
-                ? (client.is_active ? 'Active' : 'Inactive') 
+              clientStatus: client.is_active !== undefined
+                ? (client.is_active ? 'Active' : 'Inactive')
                 : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
               pendingTasks: client.pending_tasks_count || 0,
               documentsCount: client.documents_count || 0,
@@ -1209,8 +1210,8 @@ export default function ClientManage() {
               status: client.status || profile.account_status?.toLowerCase() || 'new',
               lastActivity: client.last_activity?.last_active_display || client.next_due_date || 'N/A',
               totalBilled: '$0',
-              clientStatus: client.is_active !== undefined 
-                ? (client.is_active ? 'Active' : 'Inactive') 
+              clientStatus: client.is_active !== undefined
+                ? (client.is_active ? 'Active' : 'Inactive')
                 : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
               assignedStaff: client.assigned_staff || [],
               is_linked: client.is_linked !== undefined ? client.is_linked : true,
@@ -1361,15 +1362,13 @@ export default function ClientManage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 clientmanage-buttons-container">
           {/* Top Row - 2-3 buttons */}
           <div className="flex flex-wrap items-center gap-2 clientmanage-actions-top-row">
-            {!advancedReportingEnabled && (
-              <button
-                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
-                onClick={() => setShowBulkTaxpayerImportModal(true)}
-              >
-                <BulkImport />
-                Bulk Import Taxpayers
-              </button>
-            )}
+            <button
+              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              onClick={() => setShowBulkTaxpayerImportModal(true)}
+            >
+              <BulkImport />
+              Bulk Import Taxpayers
+            </button>
             <button
               className="px-3 py-2 text-white bg-firm-primary !rounded-[7px] hover:brightness-90 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
               onClick={() => setShowAddClientModal(true)}
@@ -1381,15 +1380,13 @@ export default function ClientManage() {
 
           {/* Bottom Row - 1 button */}
           <div className="flex items-center clientmanage-actions-bottom-row">
-            {!advancedReportingEnabled && (
-              <button
-                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
-                onClick={exportClientsToPDF}
-              >
-                <ExportReport />
-                Export Report
-              </button>
-            )}
+            <button
+              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              onClick={exportClientsToPDF}
+            >
+              <ExportReport />
+              Export Report
+            </button>
           </div>
         </div>
       </div>
@@ -2264,6 +2261,19 @@ export default function ClientManage() {
                                     >
                                       Start Workflow
                                     </button>
+                                    <button
+                                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setSelectedClientForMessage({
+                                          id: client.id,
+                                          name: client.name || 'Client'
+                                        });
+                                        setIsMessageModalOpen(true);
+                                        setShowDropdown(null);
+                                      }}
+                                    >
+                                      Send Message
+                                    </button>
                                     <div style={{ borderTop: '0.2px solid #000000' }}></div>
                                     <button
                                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -2350,6 +2360,14 @@ export default function ClientManage() {
         </div>
       )
       }
+
+      {/* Client Message Modal */}
+      <ClientMessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
+        clientId={selectedClientForMessage?.id}
+        clientName={selectedClientForMessage?.name}
+      />
 
       {/* Filters Modal */}
       {

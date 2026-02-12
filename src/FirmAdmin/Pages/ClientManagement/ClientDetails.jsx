@@ -7,6 +7,7 @@ import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { MailIcon, CallIcon, WatIcon, DollerIcon, AppointIcon, DoccIcon } from '../../Components/icons';
+import ClientMessageModal from './ClientMessageModal';
 import OverviewTab from './ClientTabs/OverviewTab';
 import DocumentsTab from './ClientTabs/DocumentsTab';
 import BillingTab from './ClientTabs/BillingTab';
@@ -37,6 +38,7 @@ export default function ClientDetails() {
   const [originalFormData, setOriginalFormData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [phoneCountry, setPhoneCountry] = useState('us');
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   // Fetch client details from API
   const fetchClientDetails = useCallback(async () => {
@@ -482,13 +484,7 @@ export default function ClientDetails() {
                   Edit
                 </button>
                 <button
-                  onClick={() => {
-                    if (id) {
-                      navigate(`/firmadmin/messages?clientId=${id}`);
-                    } else {
-                      navigate('/firmadmin/messages');
-                    }
-                  }}
+                  onClick={() => setIsMessageModalOpen(true)}
                   className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -615,6 +611,14 @@ export default function ClientDetails() {
       {activeTab === 'Security' && (
         <SecurityTab client={clientData} />
       )}
+
+      {/* Message Modal */}
+      <ClientMessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
+        clientId={clientData?.id}
+        clientName={clientData?.name}
+      />
     </div>
   );
 }

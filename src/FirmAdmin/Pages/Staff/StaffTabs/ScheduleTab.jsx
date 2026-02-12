@@ -2,13 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import CreateAppointmentModal from './CreateAppointmentModal';
 
-export default function ScheduleTab({ staffId }) {
+export default function ScheduleTab({ staffId, staffName }) {
   const [currentView, setCurrentView] = useState('Week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [modalInitialDate, setModalInitialDate] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   useEffect(() => {
     if (staffId) {
@@ -61,22 +67,24 @@ export default function ScheduleTab({ staffId }) {
     }
   };
 
+  const handleCreateEvent = (date = new Date()) => {
+    setModalInitialDate(date);
+    setSelectedAppointment(null);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEditEvent = (appointment) => {
+    setSelectedAppointment(appointment);
+    setModalInitialDate(null);
+    setIsCreateModalOpen(true);
+  };
+
   // Helper function to check if a date matches an appointment date
   const getAppointmentsForDate = (date) => {
     if (!scheduleData || !scheduleData.schedule) return [];
-    
+
     const dateStr = date.toISOString().split('T')[0];
     return scheduleData.schedule.filter(apt => apt.date === dateStr);
-  };
-
-  // Helper function to get appointments for a specific hour
-  const getAppointmentsForHour = (date, hour) => {
-    const appointments = getAppointmentsForDate(date);
-    return appointments.filter(apt => {
-      if (!apt.start_time) return false;
-      const startHour = parseInt(apt.start_time.split(':')[0]);
-      return startHour === hour;
-    });
   };
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -84,8 +92,8 @@ export default function ScheduleTab({ staffId }) {
   const today = new Date();
   const isToday = (date) => {
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   };
 
   const getWeekStart = (date) => {
@@ -113,21 +121,21 @@ export default function ScheduleTab({ staffId }) {
     const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - startDate.getDay());
-    
+
     const dates = [];
     const currentDate = new Date(startDate);
-    
+
     while (dates.length < 42) {
       dates.push(new Date(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    
+
     return dates;
   };
 
   const navigateDate = (direction) => {
     const newDate = new Date(currentDate);
-    
+
     if (currentView === 'Day') {
       newDate.setDate(newDate.getDate() + direction);
     } else if (currentView === 'Week') {
@@ -137,7 +145,7 @@ export default function ScheduleTab({ staffId }) {
     } else if (currentView === 'Years') {
       newDate.setFullYear(newDate.getFullYear() + direction);
     }
-    
+
     setCurrentDate(newDate);
   };
 
@@ -164,7 +172,7 @@ export default function ScheduleTab({ staffId }) {
   const renderDayView = () => {
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const appointments = getAppointmentsForDate(currentDate);
-    
+
     return (
       <div className="space-y-2">
         {hours.map((hour) => {
@@ -173,23 +181,34 @@ export default function ScheduleTab({ staffId }) {
             const startHour = parseInt(apt.start_time.split(':')[0]);
             return startHour === hour;
           });
-          
+
           return (
-            <div key={hour} className="flex border-b border-gray-200 py-2">
+            <div
+              key={hour}
+              className="flex border-b border-gray-200 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={() => handleCreateEvent(new Date(currentDate.setHours(hour, 0, 0, 0)))}
+            >
               <div className="w-20 text-sm text-gray-600 font-[BasisGrotesquePro]">{hour.toString().padStart(2, '0')}:00</div>
               <div className="flex-1 space-y-2">
                 {hourAppointments.map((apt) => {
                   const startTime = apt.start_time ? apt.start_time.substring(0, 5) : '';
                   const endTime = apt.end_time ? apt.end_time.substring(0, 5) : '';
-                  const statusColor = apt.status === 'confirmed' ? 'bg-blue-50 border-blue-400' : 
-                                     apt.status === 'pending' ? 'bg-yellow-50 border-yellow-400' : 
-                                     'bg-gray-50 border-gray-400';
-                  const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' : 
-                                        apt.status === 'pending' ? 'bg-yellow-500' : 
-                                        'bg-gray-500';
-                  
+                  const statusColor = apt.status === 'confirmed' ? 'bg-blue-50 border-blue-400' :
+                    apt.status === 'pending' ? 'bg-yellow-50 border-yellow-400' :
+                      'bg-gray-50 border-gray-400';
+                  const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' :
+                    apt.status === 'pending' ? 'bg-yellow-500' :
+                      'bg-gray-500';
+
                   return (
-                    <div key={apt.id} className={`${statusColor} border rounded-lg p-2`}>
+                    <div
+                      key={apt.id}
+                      className={`${statusColor} border rounded-lg p-2 cursor-pointer hover:shadow-sm transition-shadow`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditEvent(apt);
+                      }}
+                    >
                       <div className="flex items-start gap-2">
                         <div className={`w-2 h-2 rounded-full ${statusDotColor} mt-1 flex-shrink-0`}></div>
                         <div className="flex-1 min-w-0">
@@ -232,9 +251,13 @@ export default function ScheduleTab({ staffId }) {
           {weekDates.map((date, index) => {
             const dateAppointments = getAppointmentsForDate(date);
             const isCurrentDate = isToday(date);
-            
+
             return (
-              <div key={index} className="p-2 border border-gray-200 rounded min-h-[80px] relative">
+              <div
+                key={index}
+                className="p-2 border border-gray-200 rounded min-h-[80px] relative hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => handleCreateEvent(date)}
+              >
                 <div className="flex items-center justify-end mb-1">
                   {isCurrentDate ? (
                     <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -247,15 +270,21 @@ export default function ScheduleTab({ staffId }) {
                 <div className="space-y-1 mt-2">
                   {dateAppointments.slice(0, 2).map((apt) => {
                     const startTime = apt.start_time ? apt.start_time.substring(0, 5) : '';
-                    const statusColor = apt.status === 'confirmed' ? 'bg-blue-50 border-blue-400' : 
-                                       apt.status === 'pending' ? 'bg-yellow-50 border-yellow-400' : 
-                                       'bg-gray-50 border-gray-400';
-                    const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' : 
-                                          apt.status === 'pending' ? 'bg-yellow-500' : 
-                                          'bg-gray-500';
-                    
+                    const statusColor = apt.status === 'confirmed' ? 'bg-blue-50 border-blue-400' :
+                      apt.status === 'pending' ? 'bg-yellow-50 border-yellow-400' :
+                        'bg-gray-50 border-gray-400';
+                    const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' :
+                      apt.status === 'pending' ? 'bg-yellow-500' :
+                        'bg-gray-500';
                     return (
-                      <div key={apt.id} className={`${statusColor} border rounded-lg p-1.5`}>
+                      <div
+                        key={apt.id}
+                        className={`${statusColor} border rounded-lg p-1.5 cursor-pointer hover:shadow-sm`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditEvent(apt);
+                        }}
+                      >
                         <div className="flex items-start gap-1">
                           <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor} mt-0.5 flex-shrink-0`}></div>
                           <div className="flex-1 min-w-0">
@@ -298,9 +327,15 @@ export default function ScheduleTab({ staffId }) {
             const isCurrentMonth = date.getMonth() === currentDate.getMonth();
             const dateAppointments = getAppointmentsForDate(date);
             const hasAppointments = dateAppointments.length > 0;
-            
+
             return (
-              <div key={index} className={`p-1 border border-gray-200 rounded text-center min-h-[60px] ${!isCurrentMonth ? 'opacity-40' : ''}`}>
+              <div
+                key={index}
+                className={`p-1 border border-gray-200 rounded text-center min-h-[60px] ${!isCurrentMonth ? 'opacity-40' : 'hover:bg-gray-50 cursor-pointer transition-colors'}`}
+                onClick={() => {
+                  if (isCurrentMonth) handleCreateEvent(date);
+                }}
+              >
                 <div className="flex items-center justify-center mb-1">
                   {isToday(date) ? (
                     <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -313,9 +348,9 @@ export default function ScheduleTab({ staffId }) {
                 {hasAppointments && isCurrentMonth && (
                   <div className="flex items-center justify-center gap-1 mt-1">
                     {dateAppointments.slice(0, 3).map((apt, aptIndex) => {
-                      const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' : 
-                                            apt.status === 'pending' ? 'bg-yellow-500' : 
-                                            'bg-gray-500';
+                      const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' :
+                        apt.status === 'pending' ? 'bg-yellow-500' :
+                          'bg-gray-500';
                       return (
                         <div key={apt.id || aptIndex} className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`}></div>
                       );
@@ -341,9 +376,8 @@ export default function ScheduleTab({ staffId }) {
         {years.map((y) => (
           <div
             key={y}
-            className={`p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:bg-gray-50 ${
-              y === today.getFullYear() ? 'bg-blue-50 border-blue-300' : ''
-            }`}
+            className={`p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:bg-gray-50 ${y === today.getFullYear() ? 'bg-blue-50 border-blue-300' : ''
+              }`}
             onClick={() => {
               const newDate = new Date(currentDate);
               newDate.setFullYear(y);
@@ -374,7 +408,7 @@ export default function ScheduleTab({ staffId }) {
     return 'Appointments and availability';
   };
 
-  if (loading) {
+  if (loading && !scheduleData) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="text-center py-12">
@@ -397,42 +431,49 @@ export default function ScheduleTab({ staffId }) {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <div className="mb-4">
-        <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">{getTitle()}</h5>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
-          {scheduleData?.total_meetings ? `${scheduleData.total_meetings} meeting${scheduleData.total_meetings !== 1 ? 's' : ''} scheduled` : getSubtitle()}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+        <div>
+          <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">{getTitle()}</h5>
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+            {scheduleData?.total_meetings ? `${scheduleData.total_meetings} meeting${scheduleData.total_meetings !== 1 ? 's' : ''} scheduled` : getSubtitle()}
+          </p>
+        </div>
+        <button
+          onClick={() => handleCreateEvent()}
+          className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Appointment
+        </button>
       </div>
       <div className="flex items-center gap-2 mb-4">
         <button
           onClick={() => setCurrentView('Day')}
-          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${
-            currentView === 'Day' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
-          }`}
+          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Day' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
+            }`}
         >
           Day
         </button>
         <button
           onClick={() => setCurrentView('Week')}
-          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${
-            currentView === 'Week' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
-          }`}
+          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Week' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
+            }`}
         >
           Week
         </button>
         <button
           onClick={() => setCurrentView('Monthly')}
-          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${
-            currentView === 'Monthly' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
-          }`}
+          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Monthly' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
+            }`}
         >
           Monthly
         </button>
         <button
           onClick={() => setCurrentView('Years')}
-          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${
-            currentView === 'Years' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
-          }`}
+          className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Years' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
+            }`}
         >
           Years
         </button>
@@ -470,7 +511,19 @@ export default function ScheduleTab({ staffId }) {
         {currentView === 'Monthly' && renderMonthlyView()}
         {currentView === 'Years' && renderYearsView()}
       </div>
+
+      {/* Create Appointment Modal */}
+      <CreateAppointmentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          fetchSchedule();
+        }}
+        staffId={staffId}
+        staffName={staffName}
+        initialDate={modalInitialDate}
+        appointment={selectedAppointment}
+      />
     </div>
   );
 }
-

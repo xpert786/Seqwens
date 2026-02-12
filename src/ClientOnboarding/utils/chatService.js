@@ -190,7 +190,7 @@ export const chatService = {
 
     const requestBody = {
       participant2: clientUserId,
-      chat_type: 'tax_preparer_client',
+      chat_type: chatData.chat_type || 'tax_preparer_client',
       subject: chatData.subject || '',
       category: chatData.category || 'Client',
       priority: chatData.priority || 'Medium',

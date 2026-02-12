@@ -6,7 +6,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { toast } from 'react-toastify';
 import { FaTimes, FaChevronDown, FaChevronRight, FaFolder, FaFileUpload } from 'react-icons/fa';
 
-const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
+const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
   const [loading, setLoading] = useState(false);
   const [loadingTaxPreparers, setLoadingTaxPreparers] = useState(false);
   const [loadingClients, setLoadingClients] = useState(false);
@@ -65,14 +65,14 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
 
   const resetForm = () => {
     setFormData({
-      task_type: 'client_onboarding',
-      task_title: '',
-      tax_preparer_id: '',
-      client_ids: [],
-      folder_id: '',
-      due_date: '',
-      priority: 'medium',
-      description: ''
+      task_type: prefillData?.task_type || 'client_onboarding',
+      task_title: prefillData?.task_title || '',
+      tax_preparer_id: prefillData?.tax_preparer_id?.toString() || '',
+      client_ids: prefillData?.client_ids || [],
+      folder_id: prefillData?.folder_id || '',
+      due_date: prefillData?.due_date || '',
+      priority: prefillData?.priority || 'medium',
+      description: prefillData?.description || ''
     });
     setSelectedFiles([]);
     setErrors({});

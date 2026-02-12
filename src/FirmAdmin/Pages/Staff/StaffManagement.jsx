@@ -12,6 +12,7 @@ import BulkImportModal from './BulkImportModal';
 import BulkTaxPreparerImportModal from './BulkTaxPreparerImportModal';
 import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
+import StaffMessageModal from './StaffMessageModal';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
@@ -70,6 +71,8 @@ export default function StaffManagement() {
   const [staffPage, setStaffPage] = useState(1);
   const staffPageSize = 5;
   const teamMembersRef = useRef(null);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [selectedStaffForMessage, setSelectedStaffForMessage] = useState(null);
 
   const handleInviteCreated = (inviteData) => {
     fetchPendingInvites();
@@ -1714,33 +1717,66 @@ export default function StaffManagement() {
                 const mappedStaff = mapStaffData(staff);
                 const isActive = mappedStaff.isActive || mappedStaff.statusValue === 'active';
 
-                if (isActive) {
-                  return (
+                return (
+                  <>
                     <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
                       onClick={() => {
-                        setSelectedStaffForAction(staff.id);
-                        setShowInactiveConfirmModal(true);
+                        // Assuming you have a state for selected staff for permissions
+                        // setSelectedStaffForPermissions(mappedStaff.id);
+                        // setShowPermissionsModal(true);
                         setShowDropdown(null);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
                     >
-                      Set Inactive
+                      Edit Permissions
                     </button>
-                  );
-                } else {
-                  return (
                     <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
                       onClick={() => {
-                        setSelectedStaffForAction(staff.id);
-                        setShowReactivateConfirmModal(true);
+                        setSelectedStaffForMessage({
+                          id: mappedStaff.id,
+                          name: mappedStaff.name || 'Staff'
+                        });
+                        setIsMessageModalOpen(true);
                         setShowDropdown(null);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 font-[BasisGrotesquePro] rounded transition-colors"
                     >
-                      Reactivate
+                      Send Message
                     </button>
-                  );
-                }
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                      onClick={() => {
+                        navigate(`/firmadmin/staff/${mappedStaff.id}`);
+                        setShowDropdown(null);
+                      }}
+                    >
+                      View Details
+                    </button>
+                    {isActive ? (
+                      <button
+                        onClick={() => {
+                          setSelectedStaffForAction(staff.id);
+                          setShowInactiveConfirmModal(true);
+                          setShowDropdown(null);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
+                      >
+                        Set Inactive
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedStaffForAction(staff.id);
+                          setShowReactivateConfirmModal(true);
+                          setShowDropdown(null);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 font-[BasisGrotesquePro] rounded transition-colors"
+                      >
+                        Reactivate
+                      </button>
+                    )}
+                  </>
+                );
               })()}
             </div>
           </div>
@@ -2042,6 +2078,12 @@ export default function StaffManagement() {
         cancelText="Keep Invitation"
         isLoading={!!processingInviteId}
         isDestructive={true}
+      />
+      <StaffMessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
+        staffId={selectedStaffForMessage?.id}
+        staffName={selectedStaffForMessage?.name}
       />
     </>
   );

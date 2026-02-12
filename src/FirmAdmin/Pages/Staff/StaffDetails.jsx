@@ -10,6 +10,8 @@ import PerformanceTab from './StaffTabs/PerformanceTab';
 import ScheduleTab from './StaffTabs/ScheduleTab';
 import ActivityLogTab from './StaffTabs/ActivityLogTab';
 import TaxPreparerPermissionsModal from './TaxPreparerPermissionsModal';
+import CreateTaskModal from '../TaskManagement/CreateTaskModal';
+import StaffMessageModal from './StaffMessageModal';
 
 export default function StaffDetails() {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ export default function StaffDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showStaffMessageModal, setShowStaffMessageModal] = useState(false);
 
   // Fetch staff details from API
   useEffect(() => {
@@ -256,11 +260,26 @@ export default function StaffDetails() {
               {/* Action Buttons - Mobile & Small Laptop: Below title */}
               <div className="flex flex-wrap items-center gap-2 lg:hidden mt-2">
                 {/* Send Message Button - Orange gradient */}
-                <button className="px-3 py-1.5 bg-[#F56D2D] text-white !rounded-lg hover:from-orange-500 hover:to-orange-700 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs whitespace-nowrap">
+                <button
+                  onClick={() => setShowStaffMessageModal(true)}
+                  className="px-3 py-1.5 bg-[#F56D2D] text-white !rounded-lg hover:from-orange-500 hover:to-orange-700 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs whitespace-nowrap"
+                >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12.8334 1.16797L8.91673 12.3585C8.85689 12.5295 8.61877 12.5392 8.5452 12.3736L6.41675 7.58464M12.8334 1.16797L1.64289 5.08465C1.47193 5.14449 1.46221 5.38262 1.62774 5.45619L6.41675 7.58464M12.8334 1.16797L6.41675 7.58464" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Send Message
+                </button>
+
+                {/* Create Task Button - Blue gradient */}
+                <button
+                  onClick={() => setShowCreateTaskModal(true)}
+                  className="px-3 py-1.5 bg-[#3AD6F2] text-white !rounded-lg hover:bg-[#32c2db] transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs whitespace-nowrap"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Create Task
                 </button>
 
                 {/* Edit Staff Button - White with pencil icon */}
@@ -277,11 +296,26 @@ export default function StaffDetails() {
           {/* Action Buttons - Desktop: Right side */}
           <div className="hidden lg:flex items-center gap-2">
             {/* Send Message Button - Orange gradient */}
-            <button className="px-2 py-1.5 bg-[#F56D2D] text-white !rounded-lg hover:from-orange-500 hover:to-orange-700 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs shadow-sm whitespace-nowrap">
+            <button
+              onClick={() => setShowStaffMessageModal(true)}
+              className="px-2 py-1.5 bg-[#F56D2D] text-white !rounded-lg hover:from-orange-500 hover:to-orange-700 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs shadow-sm whitespace-nowrap"
+            >
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12.8334 1.16797L8.91673 12.3585C8.85689 12.5295 8.61877 12.5392 8.5452 12.3736L6.41675 7.58464M12.8334 1.16797L1.64289 5.08465C1.47193 5.14449 1.46221 5.38262 1.62774 5.45619L6.41675 7.58464M12.8334 1.16797L6.41675 7.58464" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Send Message
+            </button>
+
+            {/* Create Task Button - Blue gradient */}
+            <button
+              onClick={() => setShowCreateTaskModal(true)}
+              className="px-3 py-1.5 bg-[#3AD6F2] text-white !rounded-lg hover:bg-[#32c2db] transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs shadow-sm whitespace-nowrap"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Create Task
             </button>
 
             {/* Permissions Button - White with shield icon */}
@@ -383,41 +417,77 @@ export default function StaffDetails() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'Overview' && (
-        <OverviewTab staffMember={staffMember} />
-      )}
+      {
+        activeTab === 'Overview' && (
+          <OverviewTab staffMember={staffMember} />
+        )
+      }
 
-      {activeTab === 'Assigned Clients' && (
-        <AssignedClientsTab staffId={id} />
-      )}
+      {
+        activeTab === 'Assigned Clients' && (
+          <AssignedClientsTab staffId={id} />
+        )
+      }
 
-      {activeTab === 'Current Tasks' && (
-        <CurrentTasksTab staffId={id} />
-      )}
+      {
+        activeTab === 'Current Tasks' && (
+          <CurrentTasksTab staffId={id} />
+        )
+      }
 
-      {activeTab === 'Performance' && (
-        <PerformanceTab staffId={id} />
-      )}
+      {
+        activeTab === 'Performance' && (
+          <PerformanceTab staffId={id} />
+        )
+      }
 
-      {activeTab === 'Schedule' && (
-        <ScheduleTab staffId={id} />
-      )}
+      {
+        activeTab === 'Schedule' && (
+          <ScheduleTab staffId={id} />
+        )
+      }
 
 
-      {activeTab === 'Activity log' && (
-        <ActivityLogTab staffId={id} staffMember={staffMember} />
-      )}
+      {
+        activeTab === 'Activity log' && (
+          <ActivityLogTab staffId={id} staffMember={staffMember} />
+        )
+      }
 
       {/* Permissions Modal */}
-      {staffData && (
-        <TaxPreparerPermissionsModal
-          isOpen={showPermissionsModal}
-          onClose={() => setShowPermissionsModal(false)}
-          preparerId={staffData.profile?.id || staffData.id || id}
-          preparerName={staffData.profile?.full_name || staffData.profile?.name || staffMember?.name || 'Tax Preparer'}
-          preparerEmail={staffData.profile?.email || staffData.email || staffMember?.email || ''}
-        />
-      )}
+      {
+        staffData && (
+          <TaxPreparerPermissionsModal
+            isOpen={showPermissionsModal}
+            onClose={() => setShowPermissionsModal(false)}
+            preparerId={staffData.profile?.id || staffData.id || id}
+            preparerName={staffData.profile?.full_name || staffData.profile?.name || staffMember?.name || 'Tax Preparer'}
+            preparerEmail={staffData.profile?.email || staffData.email || staffMember?.email || ''}
+          />
+        )
+      }
+
+      <CreateTaskModal
+        isOpen={showCreateTaskModal}
+        onClose={() => setShowCreateTaskModal(false)}
+        prefillData={{
+          tax_preparer_id: id
+        }}
+        onTaskCreated={() => {
+          setShowCreateTaskModal(false);
+          // Optionally refresh tasks if we were on the tasks tab
+          if (activeTab === 'Current Tasks') {
+            // This might require a refresh function from CurrentTasksTab or re-mounting it
+          }
+        }}
+      />
+
+      <StaffMessageModal
+        isOpen={showStaffMessageModal}
+        onClose={() => setShowStaffMessageModal(false)}
+        staffId={staffData?.profile?.id || staffData?.id || id}
+        staffName={staffMember?.name || 'Staff Member'}
+      />
     </div>
   );
 }
