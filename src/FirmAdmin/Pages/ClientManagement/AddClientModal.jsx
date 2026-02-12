@@ -815,7 +815,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                     type="button"
                     onClick={confirmLinkCreate}
                     disabled={loading}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium font-[BasisGrotesquePro] flex items-center"
+                    className="px-4 py-2 text-white rounded-lg hover:brightness-90 font-medium font-[BasisGrotesquePro] flex items-center"
+                    style={{ backgroundColor: 'var(--firm-primary-color, #ea580c)' }}
                   >
                     {loading ? (
                       <>
@@ -918,7 +919,11 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                       type="checkbox"
                       checked={sendInvite}
                       onChange={(e) => setSendInvite(e.target.checked)}
-                      className="focus:ring-[#F56D2D] h-4 w-4 text-[#F56D2D] border-gray-300 rounded cursor-pointer"
+                      className="focus:ring-2 h-4 w-4 border-gray-300 rounded cursor-pointer"
+                      style={{
+                        color: 'var(--firm-primary-color, #F56D2D)',
+                        '--tw-ring-color': 'var(--firm-primary-color, #F56D2D)'
+                      }}
                     />
                   </div>
                   <div className="ml-2 text-sm">
@@ -943,8 +948,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
-                    style={{ borderRadius: '8px' }}
+                    className="px-6 py-2 text-white hover:brightness-90 transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
+                    style={{ borderRadius: '8px', backgroundColor: 'var(--firm-primary-color, #F56D2D)' }}
                   >
                     {loading ? 'Creating...' : 'Add Client'}
                   </button>

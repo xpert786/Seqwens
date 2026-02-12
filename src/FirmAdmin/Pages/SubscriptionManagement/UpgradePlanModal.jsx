@@ -644,7 +644,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                     onClick={handleUseSavedPaymentMethod}
                                                     disabled={!selectedPaymentMethodId || processing}
                                                     className="flex-1 px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
-                                                    style={{ backgroundColor: '#F97316' }}
+                                                    style={{ backgroundColor: 'var(--firm-primary-color)' }}
                                                 >
                                                     {processing ? 'Processing...' : 'Use Selected Card'}
                                                 </button>
@@ -684,7 +684,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     <button
                                         onClick={() => setBillingCycle('monthly')}
                                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'monthly'
-                                            ? 'bg-[#3AD6F2] text-white'
+                                            ? 'bg-firm-primary text-white'
                                             : 'bg-transparent text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
@@ -693,7 +693,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     <button
                                         onClick={() => setBillingCycle('yearly')}
                                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'yearly'
-                                            ? 'bg-[#3AD6F2] text-white'
+                                            ? 'bg-firm-primary text-white'
                                             : 'bg-transparent text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
@@ -741,17 +741,17 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 key={plan.id}
                                                 onClick={() => !isCurrent && setSelectedPlan(plan)}
                                                 className={`bg-white rounded-lg border p-5 relative cursor-pointer transition-all ${isCurrent
-                                                    ? 'border-2 border-[#3AD6F2] ring-2 ring-[#3AD6F2] ring-opacity-20 opacity-60 cursor-not-allowed'
+                                                    ? 'border-2 border-firm-primary ring-2 ring-firm-primary ring-opacity-20 opacity-60 cursor-not-allowed'
                                                     : isSelected
-                                                        ? 'border-2 border-[#F56D2D] ring-2 ring-[#F56D2D] ring-opacity-20 shadow-lg'
+                                                        ? 'border-2 border-firm-primary ring-2 ring-firm-primary ring-opacity-20 shadow-lg'
                                                         : isMostPopular
-                                                            ? 'border-2 border-[#F56D2D] hover:border-[#F56D2D] hover:shadow-md'
-                                                            : 'border-[#E8F0FF] hover:border-[#F56D2D] hover:shadow-md'
+                                                            ? 'border-2 border-firm-primary hover:border-firm-primary hover:shadow-md'
+                                                            : 'border-[#E8F0FF] hover:border-firm-primary hover:shadow-md'
                                                     }`}
                                             >
                                                 {/* Selection Indicator */}
                                                 {isSelected && !isCurrent && (
-                                                    <div className="absolute top-3 right-3 w-6 h-6 bg-[#F56D2D] rounded-full flex items-center justify-center">
+                                                    <div className="absolute top-3 right-3 w-6 h-6 bg-firm-primary rounded-full flex items-center justify-center">
                                                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
@@ -760,7 +760,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
 
                                                 {/* Current Plan Badge */}
                                                 {isCurrent && (
-                                                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#3AD6F2] text-white rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10">
+                                                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-firm-primary text-white rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10">
                                                         Current Plan
                                                     </span>
                                                 )}
@@ -769,7 +769,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 {!isCurrent && (plan.badge_text || isMostPopular) && (
                                                     <span
                                                         className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 text-white rounded-full text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10"
-                                                        style={{ backgroundColor: plan.badge_color || '#F56D2D' }}
+                                                        style={{ backgroundColor: plan.badge_color || 'var(--firm-primary-color)' }}
                                                     >
                                                         {plan.badge_text || 'Most Popular'}
                                                     </span>
@@ -862,7 +862,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                             onClick={handlePayNow}
                             disabled={!selectedPlan || processing || isCurrentPlan(selectedPlan)}
                             className="px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
-                            style={{ backgroundColor: '#F97316' }}
+                            style={{ backgroundColor: 'var(--firm-primary-color)' }}
                         >
                             Pay Now
                         </button>

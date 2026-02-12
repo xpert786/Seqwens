@@ -194,7 +194,7 @@ export default function CustomRolesManagement() {
   }
 
   return (
-    <div className="p-6 bg-[rgb(243,247,255)] min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
+    <div className="p-6 bg-white min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
@@ -209,7 +209,6 @@ export default function CustomRolesManagement() {
         <div
           onClick={() => setTypeFilter('all')}
           className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'all' ? 'border-[#00C0C6] ring-1 ring-[#00C0C6]' : 'border-[#E8F0FF]'}`}
-          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Total Tax Preparers</p>
@@ -226,7 +225,6 @@ export default function CustomRolesManagement() {
         <div
           onClick={() => setTypeFilter('active')}
           className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'active' ? 'border-[#32B582] ring-1 ring-[#32B582]' : 'border-[#E8F0FF]'}`}
-          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Active Preparers</p>
@@ -243,7 +241,6 @@ export default function CustomRolesManagement() {
         <div
           onClick={() => setTypeFilter('permissions')}
           className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'permissions' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-[#E8F0FF]'}`}
-          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">With Permissions</p>
@@ -259,7 +256,6 @@ export default function CustomRolesManagement() {
 
         <div
           className="bg-white rounded-xl border border-[#E8F0FF] p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
-          style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFF 100%)' }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Total Permissions</p>
@@ -277,7 +273,7 @@ export default function CustomRolesManagement() {
       {/* Main Content Card */}
       <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-md overflow-hidden">
         {/* Toolbar */}
-        <div className="p-6 border-b border-[#E8F0FF] bg-gradient-to-r from-[#F0FDFF] to-white">
+        <div className="p-6 border-b border-[#E8F0FF] bg-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Search Bar */}
             <div className="relative flex-1 max-w-2xl flex gap-2">
@@ -306,7 +302,8 @@ export default function CustomRolesManagement() {
               </div>
               <button
                 onClick={() => setDebouncedSearchTerm(searchTerm)}
-                className="px-6 py-2.5 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white !rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
+                className="px-6 py-2.5 text-white !rounded-lg hover:shadow-md transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm"
+                style={{ backgroundColor: 'var(--firm-primary-color)' }}
                 title="Search"
               >
                 <FiSearch size={16} />
@@ -348,14 +345,14 @@ export default function CustomRolesManagement() {
             </div>
           ) : (
             <>
-              <div className="px-6 py-3 bg-gradient-to-r from-[#E8F0FF] to-[#F0FDFF] border-b border-[#E8F0FF]">
+              <div className="px-6 py-3 bg-[#F3F7FF] border-b border-[#E8F0FF]">
                 <p className="text-xs font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                   💡 <strong>Tip:</strong> Click on any tax preparer row or use the "Manage" button to customize their individual permissions. Changes only affect the selected preparer.
                 </p>
               </div>
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-2 border-[#E8F0FF] bg-gradient-to-r from-[#F9FAFB] to-[#F0FDFF]">
+                  <tr className="border-b-2 border-[#E8F0FF] bg-[#F9FAFB]">
                     <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                       Name
                     </th>
@@ -380,7 +377,7 @@ export default function CustomRolesManagement() {
                   {filteredPreparers.map((preparer) => (
                     <tr
                       key={preparer.id}
-                      className="border-b border-[#E8F0FF] hover:bg-gradient-to-r hover:from-[#F0FDFF] hover:to-white transition-all duration-200 cursor-pointer group"
+                      className="border-b border-[#E8F0FF] hover:bg-gray-50 transition-all duration-200 cursor-pointer group"
                       onClick={() => {
                         setSelectedPreparer({
                           id: preparer.id,
@@ -454,7 +451,8 @@ export default function CustomRolesManagement() {
                               });
                               setShowPermissionsModal(true);
                             }}
-                            className="px-3 py-1.5 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white !rounded-md hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-[10px] font-medium flex items-center gap-1 shadow-sm hover:shadow-md"
+                            className="px-3 py-1.5 text-white !rounded-md hover:shadow-md transition-all duration-200 font-[BasisGrotesquePro] text-[10px] font-medium flex items-center gap-1 shadow-sm"
+                            style={{ backgroundColor: 'var(--firm-primary-color)' }}
                             title="Manage Permissions"
                           >
                             <FiEdit2 size={12} />

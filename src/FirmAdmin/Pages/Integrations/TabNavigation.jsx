@@ -29,7 +29,7 @@ const TabNavigation = ({
   inactiveTabClassName = ""
 }) => {
   const defaultTabClassName = "px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-center flex-shrink-0 whitespace-nowrap flex items-center justify-center gap-2 transition-all duration-200 font-[BasisGrotesquePro]";
-  const defaultActiveTabClassName = "bg-[#3AD6F2] text-white !rounded-lg";
+  const defaultActiveTabClassName = "text-white !rounded-lg";
   const defaultInactiveTabClassName = "text-[#1F2A55]";
 
   return (
@@ -44,20 +44,21 @@ const TabNavigation = ({
               key={tab}
               onClick={() => onTabChange(tab)}
               className={`${defaultTabClassName} ${tabClassName} ${isActive
-                  ? `${defaultActiveTabClassName} ${activeTabClassName}`
-                  : `${defaultInactiveTabClassName} ${inactiveTabClassName}`
+                ? `${defaultActiveTabClassName} ${activeTabClassName}`
+                : `${defaultInactiveTabClassName} ${inactiveTabClassName}`
                 }`}
+              style={isActive ? { backgroundColor: 'var(--firm-primary-color, #3AD6F2)' } : undefined}
             >
               {iconPath && (
                 <svg
                   className="w-4 h-4 transition-all flex-shrink-0"
                   fill="none"
-                  stroke={isActive ? '#ffffff' : '#3AD6F2'}
+                  stroke={isActive ? '#ffffff' : 'var(--firm-primary-color, #3AD6F2)'}
                   viewBox="0 0 24 24"
                   onMouseEnter={(e) => e.currentTarget.style.stroke = '#000000'}
-                  onMouseLeave={(e) => e.currentTarget.style.stroke = isActive ? '#ffffff' : '#3AD6F2'}
+                  onMouseLeave={(e) => e.currentTarget.style.stroke = isActive ? '#ffffff' : 'var(--firm-primary-color, #3AD6F2)'}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={iconPath} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getTabIconPath(tab)} />
                 </svg>
               )}
               {tab}

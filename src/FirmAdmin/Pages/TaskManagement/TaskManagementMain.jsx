@@ -47,7 +47,7 @@ const TaskManagementMain = () => {
 
       const params = {
         page: currentPage,
-        page_size: 20 // Show 20 tasks per page (matching API default)
+        page_size: 3 // Show 3 tasks per page
       };
 
       // Add filters if needed
@@ -688,7 +688,7 @@ const TaskManagementMain = () => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   style={{
-                    backgroundColor: currentPage === 1 ? '#E5E7EB' : '#F56D2D',
+                    backgroundColor: currentPage === 1 ? '#E5E7EB' : 'var(--firm-primary-color)',
                     color: currentPage === 1 ? '#9CA3AF' : '#FFFFFF',
                     border: 'none',
                     borderRadius: '6px',
@@ -709,7 +709,7 @@ const TaskManagementMain = () => {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= pagination.total_pages}
                   style={{
-                    backgroundColor: currentPage >= pagination.total_pages ? '#E5E7EB' : '#F56D2D',
+                    backgroundColor: currentPage >= pagination.total_pages ? '#E5E7EB' : 'var(--firm-primary-color)',
                     color: currentPage >= pagination.total_pages ? '#9CA3AF' : '#FFFFFF',
                     border: 'none',
                     borderRadius: '6px',

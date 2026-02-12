@@ -304,7 +304,7 @@ const TaskDetails = () => {
                 return (
                     <svg width="27" height="25" viewBox="0 0 27 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect width="27" height="25" rx="8" fill="#E8F0FF" />
-                        <path d="M14.8337 6.25391V8.75391C14.8337 9.08543 14.9741 9.40337 15.2242 9.63779C15.4742 9.87221 15.8134 10.0039 16.167 10.0039H18.8337M12.167 10.6289H10.8337M16.167 13.1289H10.8337M16.167 15.6289H10.8337M15.5003 6.25391H9.50033C9.1467 6.25391 8.80756 6.3856 8.55752 6.62002C8.30747 6.85444 8.16699 7.17239 8.16699 7.50391V17.5039C8.16699 17.8354 8.30747 18.1534 8.55752 18.3878C8.80756 18.6222 9.1467 18.7539 9.50033 18.7539H17.5003C17.8539 18.7539 18.1931 18.6222 18.4431 18.3878C18.6932 18.1534 18.8337 17.8354 18.8337 17.5039V9.37891L15.5003 6.25391Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M14.8337 6.25391V8.75391C14.8337 9.08543 14.9741 9.40337 15.2242 9.63779C15.4742 9.87221 15.8134 10.0039 16.167 10.0039H18.8337M12.167 10.6289H10.8337M16.167 13.1289H10.8337M16.167 15.6289H10.8337M15.5003 6.25391H9.50033C9.1467 6.25391 8.80756 6.3856 8.55752 6.62002C8.30747 6.85444 8.16699 7.17239 8.16699 7.50391V17.5039C8.16699 17.8354 8.30747 18.1534 8.55752 18.3878C8.80756 18.6222 9.1467 18.7539 9.50033 18.7539H17.5003C17.8539 18.7539 18.1931 18.6222 18.4431 18.3878C18.6932 18.1534 18.8337 17.8354 18.8337 17.5039V9.37891L15.5003 6.25391Z" stroke="var(--firm-primary-color)" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
 
                 );
@@ -312,7 +312,7 @@ const TaskDetails = () => {
                 return (
                     <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect width="27" height="27" rx="8" fill="#E8F0FF" />
-                        <path d="M19.125 15.375C19.125 15.7065 18.9933 16.0245 18.7589 16.2589C18.5245 16.4933 18.2065 16.625 17.875 16.625H10.375L7.875 19.125V9.125C7.875 8.79348 8.0067 8.47554 8.24112 8.24112C8.47554 8.0067 8.79348 7.875 9.125 7.875H17.875C18.2065 7.875 18.5245 8.0067 18.7589 8.24112C18.9933 8.47554 19.125 8.79348 19.125 9.125V15.375Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M19.125 15.375C19.125 15.7065 18.9933 16.0245 18.7589 16.2589C18.5245 16.4933 18.2065 16.625 17.875 16.625H10.375L7.875 19.125V9.125C7.875 8.79348 8.0067 8.47554 8.24112 8.24112C8.47554 8.0067 8.79348 7.875 9.125 7.875H17.875C18.2065 7.875 18.5245 8.0067 18.7589 8.24112C18.9933 8.47554 19.125 8.79348 19.125 9.125V15.375Z" stroke="var(--firm-primary-color)" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
 
                 );
@@ -320,7 +320,7 @@ const TaskDetails = () => {
                 return (
                     <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect width="27" height="27" rx="8" fill="#E8F0FF" />
-                        <path d="M11 7.25V9.75M16 7.25V9.75M7.875 12.25H19.125M9.125 8.5H17.875C18.5654 8.5 19.125 9.05964 19.125 9.75V18.5C19.125 19.1904 18.5654 19.75 17.875 19.75H9.125C8.43464 19.75 7.875 19.1904 7.875 18.5V9.75C7.875 9.05964 8.43464 8.5 9.125 8.5Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M11 7.25V9.75M16 7.25V9.75M7.875 12.25H19.125M9.125 8.5H17.875C18.5654 8.5 19.125 9.05964 19.125 9.75V18.5C19.125 19.1904 18.5654 19.75 17.875 19.75H9.125C8.43464 19.75 7.875 19.1904 7.875 18.5V9.75C7.875 9.05964 8.43464 8.5 9.125 8.5Z" stroke="var(--firm-primary-color)" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
 
                 );
@@ -406,8 +406,8 @@ const TaskDetails = () => {
                             <p className="text-xs text-gray-500 font-[BasisGrotesquePro] taskdetails-info-card-label">Assigned To</p>
                             <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
 
                             </div>
@@ -420,8 +420,8 @@ const TaskDetails = () => {
                             <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Time Spent</p>
                             <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12 6V12L16 14" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 6V12L16 14" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
 
                             </div>
@@ -434,8 +434,8 @@ const TaskDetails = () => {
                             <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Progress</p>
                             <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12 6V12L16 14" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 6V12L16 14" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                         </div>
@@ -447,10 +447,10 @@ const TaskDetails = () => {
                             <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Client</p>
                             <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M8 2V6" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M16 2V6" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M3 10H21" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M8 2V6" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M16 2V6" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M3 10H21" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
 
                             </div>
@@ -876,7 +876,7 @@ const TaskDetails = () => {
                                         <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Attachments</label>
                                         <div className="w-full px-3 py-3 bg-white border-1 border-dashed border-[#E8F0FF] rounded-lg flex flex-col items-center justify-center gap-2 font-[BasisGrotesquePro] cursor-pointer hover:bg-gray-50 transition-colors">
                                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M19 13V17C19 17.5304 18.7893 18.0391 18.4142 18.4142C18.0391 18.7893 17.5304 19 17 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V13M15 6L10 1M10 1L5 6M10 1V13" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M19 13V17C19 17.5304 18.7893 18.0391 18.4142 18.4142C18.0391 18.7893 17.5304 19 17 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V13M15 6L10 1M10 1L5 6M10 1V13" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
 
                                             <span className="text-xs text-gray-700">Choose File</span>

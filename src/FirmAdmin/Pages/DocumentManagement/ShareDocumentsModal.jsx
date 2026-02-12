@@ -22,7 +22,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
       console.log('ShareDocumentsModal opened - selectedDocuments length:', selectedDocuments?.length);
     }
   }, [show]);
-  
+
   // Separate effect to log when selectedDocuments changes
   useEffect(() => {
     console.log('ShareDocumentsModal - selectedDocuments changed:', selectedDocuments);
@@ -32,19 +32,19 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
     try {
       setLoadingTaxPreparers(true);
       // Use the API endpoint with all parameters as specified
-      const response = await firmAdminStaffAPI.listStaff({ 
+      const response = await firmAdminStaffAPI.listStaff({
         status: 'all',
         search: '',
         role: 'all',
         performance: 'all'
       });
-      
+
       console.log('Tax Preparers API Response:', response);
-      
+
       if (response.success && response.data) {
         // The API returns data.staff_members array
         let staffMembers = [];
-        
+
         if (Array.isArray(response.data.staff_members)) {
           staffMembers = response.data.staff_members;
         } else if (Array.isArray(response.data.staff)) {
@@ -54,14 +54,14 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
         } else if (Array.isArray(response.data.tax_preparers)) {
           staffMembers = response.data.tax_preparers;
         }
-        
+
         console.log('Extracted staff_members array:', staffMembers);
-        
+
         // Ensure staffMembers is an array
         if (!Array.isArray(staffMembers)) {
           staffMembers = [];
         }
-        
+
         // Map the response structure to a simpler format for the dropdown
         // Response structure: { id, staff_member: { name, profile_picture }, contact: { email, phone }, ... }
         const preparers = staffMembers
@@ -76,7 +76,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             status: s.status?.display || s.status || '',
             profile_picture: s.staff_member?.profile_picture || s.profile_picture || null
           }));
-        
+
         console.log('Mapped preparers:', preparers);
         setTaxPreparers(preparers);
       } else {
@@ -99,7 +99,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
   const handleTaxPreparerChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions);
     const selectedIds = selectedOptions.map(option => parseInt(option.value));
-    
+
     // Limit to maximum 2 tax preparers
     if (selectedIds.length > 2) {
       toast.warning('You can select a maximum of 2 tax preparers', {
@@ -109,7 +109,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
       // Keep only the first 2 selected
       const limitedIds = selectedIds.slice(0, 2);
       setSelectedTaxPreparerIds(limitedIds);
-      
+
       // Update the select element to reflect the limit
       const selectElement = e.target;
       Array.from(selectElement.options).forEach(option => {
@@ -154,12 +154,12 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
 
     try {
       setSubmitting(true);
-      
+
       // Show loading toast
       const loadingToast = toast.loading('Preparing files for sharing...', {
         position: "top-right",
       });
-      
+
       // Fetch files from document URLs and convert to File objects
       const files = await Promise.all(
         selectedDocuments.map(async (doc, index) => {
@@ -171,7 +171,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
           try {
             // Use proxy URL if needed to avoid CORS issues
             const proxiedUrl = getProxyUrl(fileUrl);
-            
+
             // Fetch the file
             const response = await fetch(proxiedUrl);
             if (!response.ok) {
@@ -180,14 +180,14 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
 
             // Get the blob
             const blob = await response.blob();
-            
+
             // Get filename from URL or use document name
             const urlParts = fileUrl.split('/');
             const urlFilename = urlParts[urlParts.length - 1];
             // Remove query parameters from filename if any
             const cleanFilename = urlFilename.split('?')[0];
             const filename = doc.name || doc.file_name || cleanFilename || `document_${doc.id || doc.document_id}.pdf`;
-            
+
             // Convert blob to File object
             const file = new File([blob], filename, { type: blob.type || 'application/pdf' });
             return file;
@@ -236,7 +236,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
     }
   };
 
-  const selectedTaxPreparers = taxPreparers.filter(p => 
+  const selectedTaxPreparers = taxPreparers.filter(p =>
     selectedTaxPreparerIds.includes(p.id)
   );
 
@@ -256,10 +256,10 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             </p>
             <div className="d-flex flex-wrap gap-2">
               {selectedDocuments.map((doc, index) => {
-                const docName = doc.name || 
-                               doc.file_name || 
-                               (doc.tax_documents ? doc.tax_documents.split('/').pop() : null) ||
-                               `Document ${doc.id || doc.document_id || index + 1}`;
+                const docName = doc.name ||
+                  doc.file_name ||
+                  (doc.tax_documents ? doc.tax_documents.split('/').pop() : null) ||
+                  `Document ${doc.id || doc.document_id || index + 1}`;
                 return (
                   <span
                     key={doc.id || doc.document_id || index}
@@ -414,7 +414,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
           onClick={handleSubmit}
           disabled={submitting || selectedTaxPreparerIds.length === 0}
           style={{
-            backgroundColor: submitting || selectedTaxPreparerIds.length === 0 ? '#D1D5DB' : '#00C0C6',
+            backgroundColor: submitting || selectedTaxPreparerIds.length === 0 ? '#D1D5DB' : 'var(--firm-primary-color)',
             border: 'none',
             color: 'white',
             fontFamily: 'BasisGrotesquePro',

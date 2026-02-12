@@ -514,7 +514,7 @@ export default function DocumentManagement() {
             {/* Buttons Section */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mt-3 lg:mt-0 w-full sm:w-auto">
               <button
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium docmanage-upload-button"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-firm-primary text-white hover:brightness-90 transition-all text-sm font-medium docmanage-upload-button"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
                 onClick={() => setShowUploadModal(true)}
               >
@@ -536,7 +536,7 @@ export default function DocumentManagement() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative docmanage-tab-button ${activeTab === tab
-                  ? 'text-white bg-[#3AD6F2]'
+                  ? 'text-white bg-firm-primary'
                   : 'text-gray-600 hover:text-gray-900'
                   }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
@@ -572,7 +572,7 @@ export default function DocumentManagement() {
                 placeholder="Search Folder..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full lg:w-1/2 lg:pl-10 lg:pr-4 lg:py-2.5 sm:p-2 sm:text-center md:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 bg-blue-50 search-folder-document-management docmanage-search-input"
+                className="w-full lg:w-1/2 lg:pl-10 lg:pr-4 lg:py-2.5 sm:p-2 sm:text-center md:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] bg-blue-50 search-folder-document-management docmanage-search-input"
                 style={{ fontFamily: 'BasisGrotesquePro' }}
               />
             </div>
@@ -640,7 +640,7 @@ export default function DocumentManagement() {
                               <span
                                 key={idx}
                                 className={`px-2 py-0.5 text-xs font-medium rounded-full docmanage-folder-badge ${idx === 0
-                                  ? 'bg-[#f49c2d] text-white'
+                                  ? 'bg-firm-primary text-white'
                                   : 'bg-white text-gray-800 border border-gray-300'
                                   }`}
                                 style={{ fontFamily: 'BasisGrotesquePro' }}
@@ -746,7 +746,7 @@ export default function DocumentManagement() {
                     key={tab}
                     onClick={() => setComplianceSubTab(tab)}
                     className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative ${complianceSubTab === tab
-                      ? 'text-white bg-[#3AD6F2]'
+                      ? 'text-white bg-firm-primary'
                       : 'text-gray-600 hover:text-gray-900'
                       }`}
                     style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
@@ -779,7 +779,7 @@ export default function DocumentManagement() {
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-[#3AD6F2] h-3 rounded-full" style={{ width: '30%' }}></div>
+                    <div className="bg-firm-primary h-3 rounded-full" style={{ width: '30%' }}></div>
                   </div>
                 </div>
 
@@ -950,7 +950,7 @@ export default function DocumentManagement() {
                       <option>Next 60 Days</option>
                       <option>Next 90 Days</option>
                     </select>
-                    <button className="px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                    <button className="px-4 py-2.5 bg-firm-primary text-white rounded-lg hover:brightness-90 transition-all text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                       Configure
                     </button>
                   </div>
@@ -1953,13 +1953,349 @@ export default function DocumentManagement() {
 
       {/* Security Tab Content */}
       {!isNestedRoute && activeTab === 'Security' && (
-        <div className="bg-white rounded-lg lg:p-5 md:p-3 sm:p-1 border border-gray-100 overflow-hidden">
-            <div className="mb-6">
-                <h5 className="text-xl font-semibold mb-1" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
-                    Manual Watermark Tool
-                </h5>
-                <p className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#6B7280' }}>
-                    Safely distribute documents by applying custom watermarks before sharing or downloading.
+        <div className="bg-white rounded-lg lg:p-5 md:p-3 sm:p-1 border border-gray-100 docmanage-security-section">
+          {/* Header */}
+          <div className="mb-6 docmanage-security-header">
+            <h5 className="text-xl font-semibold mb-1 docmanage-folders-title" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+              Document Watermarking
+            </h5>
+            <p className="text-sm docmanage-folders-subtitle" style={{ fontFamily: 'BasisGrotesquePro', color: '#6B7280' }}>
+              Protect documents with customizable watermarks for secure distribution
+            </p>
+          </div>
+
+          {/* Enable Watermarking Section */}
+          <div className="rounded-lg mb-6 p-4" style={{ backgroundColor: '#F3F7FF', border: '1px solid #E8F0FF', borderRadius: '10px' }}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 docmanage-watermark-toggle">
+              <div className="flex items-center gap-4">
+                <div>
+                  <label className="text-base font-medium mb-1 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                    Enable Watermarking
+                  </label>
+                  <p className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#6B7280' }}>
+                    Automatically apply watermarks to downloaded documents
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEnableWatermarking(!enableWatermarking)}
+                disabled={loadingWatermark}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enableWatermarking ? 'bg-[var(--firm-primary-color)]' : 'bg-gray-300'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ borderRadius: '999px' }}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  style={{ borderRadius: '999px' }}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Watermark Settings Section */}
+          <div className="mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 docmanage-watermark-settings-grid">
+              {/* Watermark Text */}
+              <div>
+                <label className="text-sm font-medium mb-2 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Watermark Text
+                </label>
+                <input
+                  type="text"
+                  value={watermarkText}
+                  onChange={(e) => setWatermarkText(e.target.value)}
+                  placeholder="Enter watermark text"
+                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
+                  style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+                  disabled={loadingWatermark}
+                />
+              </div>
+
+              {/* Position */}
+              <div>
+                <label className="text-sm font-medium mb-2 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Position
+                </label>
+                <div className="relative">
+                  <select
+                    value={watermarkPosition}
+                    onChange={(e) => setWatermarkPosition(e.target.value)}
+                    className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm appearance-none docmanage-watermark-select"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+                    disabled={loadingWatermark}
+                  >
+                    <option>Top Left</option>
+                    <option>Top Center</option>
+                    <option>Top Right</option>
+                    <option>Center</option>
+                    <option>Bottom Left</option>
+                    <option>Bottom Center</option>
+                    <option>Bottom Right</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opacity */}
+              <div>
+                <label className="text-sm font-medium mb-2 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Opacity (1-100)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={parseInt(watermarkOpacity.replace('%', '')) || 30}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 30;
+                      setWatermarkOpacity(`${Math.min(100, Math.max(1, value))}%`);
+                    }}
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+                    disabled={loadingWatermark}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#6B7280' }}>%</span>
+                </div>
+              </div>
+
+              {/* Text Size */}
+              <div>
+                <label className="text-sm font-medium mb-2 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Text Size (8-200px)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="8"
+                    max="200"
+                    value={parseInt(watermarkTextSize.replace('px', '')) || 22}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 22;
+                      setWatermarkTextSize(`${Math.min(200, Math.max(8, value))}px`);
+                    }}
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+                    disabled={loadingWatermark}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#6B7280' }}>px</span>
+                </div>
+              </div>
+
+              {/* Rotation */}
+              <div>
+                <label className="text-sm font-medium mb-2 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Rotation (-180° to 180°)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="-180"
+                    max="180"
+                    value={parseInt(watermarkRotation.replace('°', '')) || -45}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || -45;
+                      setWatermarkRotation(`${Math.min(180, Math.max(-180, value))}°`);
+                    }}
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+                    disabled={loadingWatermark}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#6B7280' }}>°</span>
+                </div>
+              </div>
+
+              {/* Color */}
+              <div>
+                <label className="text-sm font-medium mb-2 block docmanage-watermark-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Color
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={watermarkColor}
+                    onChange={(e) => setWatermarkColor(e.target.value)}
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <div className="w-5 h-5 rounded border" style={{ backgroundColor: watermarkColor, borderColor: '#E8F0FF' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="mb-6 p-4" style={{ backgroundColor: '#F3F7FF', border: '1px solid #E8F0FF', borderRadius: '10px' }}>
+            <h5 className="text-base font-semibold mb-4" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+              Additional Information
+            </h5>
+            <div className="space-y-3">
+              {/* Include User Information */}
+              <div className="flex items-center justify-between docmanage-info-toggle">
+                <div className="flex items-center gap-3">
+                  <label className="text-base font-medium" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                    Include User Information
+                  </label>
+                </div>
+                <button
+                  onClick={() => setIncludeUserInfo(!includeUserInfo)}
+                  disabled={loadingWatermark}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeUserInfo ? 'bg-[var(--firm-primary-color)]' : 'bg-gray-300'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  style={{ borderRadius: '999px' }}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${includeUserInfo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    style={{ borderRadius: '999px' }}
+                  />
+                </button>
+              </div>
+
+              {/* Include Timestamp */}
+              <div className="flex items-center justify-between docmanage-info-toggle">
+                <div className="flex items-center gap-3">
+                  <label className="text-base font-medium" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                    Include Timestamp
+                  </label>
+                </div>
+                <button
+                  onClick={() => setIncludeTimestamp(!includeTimestamp)}
+                  disabled={loadingWatermark}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeTimestamp ? 'bg-[var(--firm-primary-color)]' : 'bg-gray-300'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  style={{ borderRadius: '999px' }}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${includeTimestamp ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    style={{ borderRadius: '999px' }}
+                  />
+                </button>
+              </div>
+
+              {/* Include Document Info */}
+              <div className="flex items-center justify-between docmanage-info-toggle">
+                <div className="flex items-center gap-3">
+                  <label className="text-base font-medium" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                    Include Document Info
+                  </label>
+                </div>
+                <button
+                  onClick={() => setIncludeDocumentInfo(!includeDocumentInfo)}
+                  disabled={loadingWatermark}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeDocumentInfo ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  style={{ borderRadius: '999px' }}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform ${includeDocumentInfo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    style={{ borderRadius: '999px' }}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Watermark Preview Info Section */}
+          <div className="rounded-lg p-4 mb-6 docmanage-preview-info-section" style={{ backgroundColor: '#F3F7FF', border: '1px solid #E8F0FF', borderRadius: '10px' }}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+              <div className="flex items-center gap-4">
+                <div>
+                  <label className="text-base font-medium mb-1 block docmanage-preview-info-label" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                    Watermark Settings Summary
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 docmanage-preview-info">
+              {/* Text */}
+              <div className="flex items-center gap-2 docmanage-preview-info-item">
+                <DocumentTextIcon width={20} height={20} />
+                <span className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Text: <span className="font-medium">{watermarkText}</span>
+                </span>
+              </div>
+
+              {/* Position */}
+              <div className="flex items-center gap-2 docmanage-preview-info-item">
+                <DocumentPostion width={20} height={20} />
+                <span className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Position: <span className="font-medium">{watermarkPosition}</span>
+                </span>
+              </div>
+
+              {/* Opacity */}
+              <div className="flex items-center gap-2 docmanage-preview-info-item">
+                <DocumentOpacity width={20} height={20} />
+                <span className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Opacity: <span className="font-medium">{watermarkOpacity}</span>
+                </span>
+              </div>
+
+              {/* Rotation */}
+              <div className="flex items-center gap-2 docmanage-preview-info-item">
+                <DocumentRotation width={20} height={20} />
+                <span className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Rotation: <span className="font-medium">{watermarkRotation}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 docmanage-action-buttons">
+            <button
+              onClick={handleSaveWatermarkSettings}
+              disabled={savingWatermark || loadingWatermark}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2FC5DF] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed docmanage-action-button"
+              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+            >
+              {savingWatermark ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Save Settings
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 border text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium docmanage-action-button"
+              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+            >
+              {showPreview ? <DocumentEye width={20} height={20} /> : <DocumentEye width={20} height={20} />}
+              {showPreview ? 'Hide Preview' : 'Show Preview'}
+            </button>
+          </div>
+
+          {/* Watermark Preview Section */}
+          {showPreview && (
+            <div className="border-t pt-6 docmanage-preview-section" style={{ borderColor: '#E8F0FF' }}>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-1 docmanage-preview-title" style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                  Watermark Preview
+                </h3>
+                <p className="text-sm docmanage-preview-subtitle" style={{ fontFamily: 'BasisGrotesquePro', color: '#6B7280' }}>
+                  How the watermark will appear on the document
                 </p>
             </div>
 

@@ -3,6 +3,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 /* Global font: use BasisGrotesquePro from fonts.css, with sensible fallbacks */
+:root {
+  --firm-primary-color: #3AD6F2;
+  --firm-secondary-color: #22C55E;
+  --firm-accent-color: #F56D2D;
+  --firm-font-family: 'Inter', sans-serif;
+}
+
 html,
 body,
 #root,
@@ -644,11 +651,225 @@ div[style*="z-index"][style*="fixed"] {
 
 /* Spinner animation for loading states */
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* Dynamic Firm Branding Utilities */
+.bg-firm-primary {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.text-firm-primary {
+  color: var(--firm-primary-color) !important;
+}
+
+.border-firm-primary {
+  border-color: var(--firm-primary-color) !important;
+}
+
+/* Hover variants */
+.hover\:bg-firm-primary:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.95);
+}
+
+.group:hover .group-hover\:text-firm-primary {
+  color: var(--firm-primary-color) !important;
+}
+
+/* Secondary & Accent utilities */
+.bg-firm-secondary {
+  background-color: var(--firm-secondary-color) !important;
+}
+
+.bg-firm-accent {
+  background-color: var(--firm-accent-color) !important;
+}
+
+.text-firm-accent {
+  color: var(--firm-accent-color) !important;
+}
+
+/* Specific component overrides for firm branding */
+/* Toggle switches */
+.peer:checked~.peer-checked\:bg-\[\#3AD6F2\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.peer:focus~.peer-focus\:ring-\[\#3AD6F2\]\/20 {
+  --tw-ring-color: color-mix(in srgb, var(--firm-primary-color), transparent 80%) !important;
+}
+
+/* Pagination number active states */
+button[class*="bg-[#3AD6F2]"] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+/* Progress bars */
+div[class*="bg-[#3AD6F2]"] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+/* Badges and small tags */
+span[class*="bg-[#3AD6F2]"] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+span[class*="text-[#3AD6F2]"] {
+  color: var(--firm-primary-color) !important;
+}
+
+
+
+/* Override hardcoded tailwind classes used frequently */
+.bg-\[\#3AD6F2\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.text-\[\#3AD6F2\] {
+  color: var(--firm-primary-color) !important;
+}
+
+.border-\[\#3AD6F2\] {
+  border-color: var(--firm-primary-color) !important;
+}
+
+/* Orange Overrides (#F56D2D) */
+.bg-\[\#F56D2D\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.text-\[\#F56D2D\] {
+  color: var(--firm-primary-color) !important;
+}
+
+.border-\[\#F56D2D\] {
+  border-color: var(--firm-primary-color) !important;
+}
+
+.ring-\[\#F56D2D\] {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+.hover\:bg-\[\#E55A1D\]:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.9);
+}
+
+/* Teal Overrides (#00C0C6) */
+.bg-\[\#00C0C6\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.text-\[\#00C0C6\] {
+  color: var(--firm-primary-color) !important;
+}
+
+.border-\[\#00C0C6\] {
+  border-color: var(--firm-primary-color) !important;
+}
+
+.ring-\[\#00C0C6\] {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+.hover\:bg-\[\#00C0C6\]:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.9);
+}
+
+.hover\:bg-\[\#00A8AE\]:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.9);
+}
+
+/* Focus Ring Overrides */
+.focus\:ring-\[\#F56D2D\]:focus {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+.focus\:ring-\[\#3AD6F2\]:focus {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+.focus\:ring-\[\#00C0C6\]:focus {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+/* Hover Border Overrides */
+.hover\:border-\[\#F56D2D\]:hover {
+  border-color: var(--firm-primary-color) !important;
+}
+
+.hover\:border-\[\#3AD6F2\]:hover {
+  border-color: var(--firm-primary-color) !important;
+}
+
+.hover\:border-\[\#00C0C6\]:hover {
+  border-color: var(--firm-primary-color) !important;
+}
+
+.hover\:bg-\[\#3AD6F2\]:hover {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.hover\:text-\[\#3AD6F2\]:hover {
+  color: var(--firm-primary-color) !important;
+}
+
+/* Background with opacity */
+.bg-\[\#3AD6F2\]\/10 {
+  background-color: color-mix(in srgb, var(--firm-primary-color), transparent 90%) !important;
+}
+
+.bg-\[\#3AD6F2\]\/5 {
+  background-color: color-mix(in srgb, var(--firm-primary-color), transparent 95%) !important;
+}
+
+/* Hover variants with opacity */
+.hover\:bg-\[\#3AD6F2\]\/10:hover {
+  background-color: color-mix(in srgb, var(--firm-primary-color), transparent 90%) !important;
+}
+
+.hover\:bg-\[\#2BC5E0\]:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.9);
+}
+
+.hover\:bg-\[\#2BC4E0\]:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.9);
+}
+
+.hover\:bg-\[\#2FC5DF\]:hover {
+  background-color: var(--firm-primary-color) !important;
+  filter: brightness(0.9);
+}
+
+/* Peer Checked Overrides */
+.peer:checked~.peer-checked\:bg-\[\#3AD6F2\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.peer:checked~.peer-checked\:bg-\[\#F56D2D\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+.peer:checked~.peer-checked\:bg-\[\#00C0C6\] {
+  background-color: var(--firm-primary-color) !important;
+}
+
+/* Peer Focus Overrides */
+.peer:focus~.peer-focus\:ring-\[\#3AD6F2\] {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+.peer:focus~.peer-focus\:ring-\[\#F56D2D\] {
+  --tw-ring-color: var(--firm-primary-color) !important;
+}
+
+.peer:focus~.peer-focus\:ring-\[\#00C0C6\] {
+  --tw-ring-color: var(--firm-primary-color) !important;
 }
