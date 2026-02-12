@@ -744,6 +744,11 @@ export default function ESignatureManagement() {
       return;
     }
 
+    if (preparerSign && selectedPreparerIds.length === 0) {
+      toast.error('Please select at least one tax preparer');
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -1997,6 +2002,16 @@ export default function ESignatureManagement() {
                                   setSelectedClientIds(prev => prev.filter(id => id !== clientId.toString()));
                                 } else {
                                   setSelectedClientIds(prev => [...prev, clientId.toString()]);
+
+                                  // Auto-select assigned tax preparer
+                                  if (client.assigned_staff && client.assigned_staff.length > 0) {
+                                    setPreparerSign(true);
+                                    const assignedPreparerIds = client.assigned_staff.map(staff => staff.id?.toString());
+                                    setSelectedPreparerIds(prev => {
+                                      const newIds = new Set([...prev, ...assignedPreparerIds]);
+                                      return Array.from(newIds);
+                                    });
+                                  }
                                 }
                               }}
                               className={`p-3 cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${isSelected ? 'bg-blue-50' : ''
