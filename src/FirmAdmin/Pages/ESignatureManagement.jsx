@@ -7,7 +7,7 @@ import { getAccessToken, getUserData } from '../../ClientOnboarding/utils/userUt
 import { toast } from 'react-toastify';
 
 export default function ESignatureManagement() {
-  const [activeTab, setActiveTab] = useState('Signature Request');
+  //   const [activeTab, setActiveTab] = useState('Signature Request');
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedEsignRequest, setSelectedEsignRequest] = useState(null);
@@ -141,13 +141,13 @@ export default function ESignatureManagement() {
 
   // Memoize PDF options to prevent unnecessary reloads
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    // Close mobile navbar after selecting a tab (only on mobile screens ≤767px)
-    if (window.innerWidth <= 767) {
-      setShowMobileNav(false);
-    }
-  };
+  //   const handleTabChange = (tab) => {
+  //     setActiveTab(tab);
+  //     // Close mobile navbar after selecting a tab (only on mobile screens ≤767px)
+  //     if (window.innerWidth <= 767) {
+  //       setShowMobileNav(false);
+  //     }
+  //   };
 
   // Handle PDF load success
   const onDocumentLoadSuccess = ({ numPages }) => {
@@ -720,12 +720,10 @@ export default function ESignatureManagement() {
     }
   }, [esignCurrentPage, esignFilters]);
 
-  // Fetch e-signature requests when tab is active or filters/page change
+  // Fetch e-signature requests when component mounts or filters/page change
   useEffect(() => {
-    if (activeTab === 'Signature Request') {
-      fetchEsignRequests();
-    }
-  }, [activeTab, esignCurrentPage, esignFilters, fetchEsignRequests]);
+    fetchEsignRequests();
+  }, [esignCurrentPage, esignFilters, fetchEsignRequests]);
 
   // Create signature request
   const createSignatureRequest = async () => {
@@ -1035,10 +1033,10 @@ export default function ESignatureManagement() {
 
   // Fetch templates when tab is active or filters/page change
   useEffect(() => {
-    if (activeTab === 'Templates') {
+    // if (activeTab === 'Templates') {
       fetchTemplates();
-    }
-  }, [activeTab, templatesCurrentPage, templatesFilters, fetchTemplates]);
+    // }
+  }, [templatesCurrentPage, templatesFilters, fetchTemplates]);
 
   // Reset client-side pagination when templates change
   useEffect(() => {
@@ -1192,11 +1190,7 @@ export default function ESignatureManagement() {
           </div>
           <button
             onClick={() => {
-              if (activeTab === 'Templates') {
-                setShowCreateTemplateModal(true);
-              } else {
-                setShowCreateModal(true);
-              }
+              setShowCreateModal(true);
             }}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium w-full sm:w-auto"
             style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
@@ -1210,619 +1204,293 @@ export default function ESignatureManagement() {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="mb-4 md:mb-6">
-        {/* Desktop Navigation - Always visible on screens ≥ 768px */}
-        <div className="hidden md:block mb-6 w-fit">
-          <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Signature Request'/*, 'Templates'*/].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
 
 
-        {/* Mobile Navigation - Only visible on screens < 768px */}
-        <div className="block md:hidden">
-          {/* Logo Icon Toggle Button */}
-          <div className="flex items-center gap-3 mb-3">
-            <button
-              onClick={() => setShowMobileNav(!showMobileNav)}
-              className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-blue-50 text-gray-700 hover:bg-gray-50 transition-colors"
-              aria-label="Toggle Navigation"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={`transition-transform duration-300 ${showMobileNav ? 'rotate-180' : ''}`}
-              >
-                <path
-                  d="M12 2L2 7L12 12L22 7L12 2Z"
-                  fill="#3AD6F2"
-                />
-                <path
-                  d="M2 17L12 22L22 17"
-                  stroke="#3AD6F2"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 12L12 17L22 12"
-                  stroke="#3AD6F2"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {/* Current Active Tab Display */}
-            <div className="flex-1">
-              <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                {activeTab === 'Signature Request' ? 'Signature Request' :
-                  activeTab === 'Templates' ? 'Templates' : 'Signature Request'}
-              </span>
-            </div>
-          </div>
 
-          {/* Collapsible Menu - Only visible when showMobileNav is true */}
-          {showMobileNav && (
-            <div className="bg-white rounded-lg border border-blue-50 shadow-lg overflow-hidden">
-              <button
-                onClick={() => handleTabChange('Signature Request')}
-                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'Signature Request'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>Signature Request</span>
-                  {activeTab === 'Signature Request' && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M13.3333 4L6 11.3333L2.66667 8"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button>
-              {/* <button
-                onClick={() => handleTabChange('Templates')}
-                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'Templates'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>Templates</span>
-                  {activeTab === 'Templates' && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M13.3333 4L6 11.3333L2.66667 8"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button> */}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Templates Tab Content */}
-      {/* {activeTab === 'Templates' && (
-        <div className="bg-white rounded-lg p-4 sm:p-6">
-          <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Signature Templates
-              </h5>
-              <p className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Manage reusable signature templates
-              </p>
-            </div>
-            <button
-              onClick={() => setShowCreateTemplateModal(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium w-full sm:w-auto"
-              style={{ fontFamily: 'BasisGrotesquePro' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Add Template
-            </button>
-          </div>
-
-          <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Status</label>
-              <select
-                value={templatesFilters.is_active}
-                onChange={(e) => {
-                  setTemplatesFilters(prev => ({ ...prev, is_active: e.target.value }));
-                  setTemplatesCurrentPage(1);
-                }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                <option value="">All Templates</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Search</label>
-              <input
-                type="text"
-                value={templatesFilters.search}
-                onChange={(e) => {
-                  setTemplatesFilters(prev => ({ ...prev, search: e.target.value }));
-                  setTemplatesCurrentPage(1);
-                }}
-                placeholder="Search templates..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              />
-            </div>
-          </div>
-
-          {templatesLoading ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Loading templates...</p>
-            </div>
-          ) : templatesError ? (
-            <div className="text-center py-8">
-              <p className="text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>{templatesError}</p>
-            </div>
-          ) : templates.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>No templates found</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-                {templates.slice(
-                  (templateCardsCurrentPage - 1) * TEMPLATE_CARDS_PER_PAGE,
-                  templateCardsCurrentPage * TEMPLATE_CARDS_PER_PAGE
-                ).map((template) => (
-                  <div
-                    key={template.id}
-                    className="bg-white rounded-lg p-4 sm:p-5"
-                    style={{
-                      border: '1px solid #E8F0FF',
-                      borderRadius: '10px',
-                      padding: '10px',
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h5 className="text-base sm:text-lg font-semibold text-gray-800 flex-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        {template.name}
-                      </h5>
-                      {template.is_active ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {template.description || 'No description'}
-                    </p>
-
-                    <div className="space-y-2 mb-3 sm:mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          Signature Fields:
-                        </span>
-                        <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          {template.signature_fields_count || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          Created by:
-                        </span>
-                        <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          {template.created_by_name || 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          Created:
-                        </span>
-                        <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                          {template.created_at ? new Date(template.created_at).toLocaleDateString() : 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
-                      {template.document_url && (
-                        <button
-                          onClick={() => window.open(template.document_url, '_blank')}
-                          className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                          style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-                        >
-                          View Document
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          setSelectedTemplateForDelete(template.id);
-                          setShowDeleteTemplateModal(true);
-                        }}
-                        className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
-                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {templates.length > TEMPLATE_CARDS_PER_PAGE && (
-                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-                  <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                    Showing {((templateCardsCurrentPage - 1) * TEMPLATE_CARDS_PER_PAGE) + 1} to {Math.min(templateCardsCurrentPage * TEMPLATE_CARDS_PER_PAGE, templates.length)} of {templates.length} templates
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setTemplateCardsCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={templateCardsCurrentPage === 1}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${templateCardsCurrentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      style={{ borderRadius: '8px' }}
-                    >
-                      Previous
-                    </button>
-                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                      Page {templateCardsCurrentPage} of {Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)}
-                    </span>
-                    <button
-                      onClick={() => setTemplateCardsCurrentPage(prev => Math.min(Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE), prev + 1))}
-                      disabled={templateCardsCurrentPage >= Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${templateCardsCurrentPage >= Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      style={{ borderRadius: '8px' }}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )} */}
 
       {/* Signature Request Tab Content */}
-      {activeTab === 'Signature Request' && (
-        <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-          {/* Header Section */}
-          <div className="mb-6">
-            <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Active Signature Requests
-            </h5>
-            <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Track and manage document signature requests
-            </p>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-            <div
-              onClick={() => {
-                setEsignFilters(prev => ({ ...prev, status: '' }));
-                setEsignCurrentPage(1);
-              }}
-              className={`cursor-pointer bg-white border ${esignFilters.status === '' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
-            >
-              <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.total}</div>
-              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Total</div>
-            </div>
-            <div
-              onClick={() => {
-                setEsignFilters(prev => ({ ...prev, status: 'pending' }));
-                setEsignCurrentPage(1);
-              }}
-              className={`cursor-pointer bg-white border ${esignFilters.status === 'pending' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
-            >
-              <div className="text-2xl font-bold text-yellow-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.pending}</div>
-              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending</div>
-            </div>
-            <div
-              onClick={() => {
-                setEsignFilters(prev => ({ ...prev, status: 'signed' }));
-                setEsignCurrentPage(1);
-              }}
-              className={`cursor-pointer bg-white border ${esignFilters.status === 'signed' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
-            >
-              <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.signed}</div>
-              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Signed</div>
-            </div>
-            <div
-              onClick={() => {
-                setEsignFilters(prev => ({ ...prev, status: 'completed' }));
-                setEsignCurrentPage(1);
-              }}
-              className={`cursor-pointer bg-white border ${esignFilters.status === 'completed' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
-            >
-              <div className="text-2xl font-bold text-green-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.completed}</div>
-              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Completed</div>
-            </div>
-            <div
-              onClick={() => {
-                setEsignFilters(prev => ({ ...prev, status: 'expired' }));
-                setEsignCurrentPage(1);
-              }}
-              className={`cursor-pointer bg-white border ${esignFilters.status === 'expired' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
-            >
-              <div className="text-2xl font-bold text-red-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.expired}</div>
-              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Expired</div>
-            </div>
-          </div>
-
-          {/* Signature Requests Table */}
-          <div className="overflow-x-auto">
-            {/* Desktop Table View */}
-            <div className="hidden md:block">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Request ID
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Document
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Client
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Status
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Progress
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Expires At
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {esignLoading ? (
-                    <tr>
-                      <td colSpan="7" className="py-8 text-center text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : esignError ? (
-                    <tr>
-                      <td colSpan="7" className="py-8 text-center text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        {esignError}
-                      </td>
-                    </tr>
-                  ) : esignRequests.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="py-8 text-center text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        No signature requests found
-                      </td>
-                    </tr>
-                  ) : (
-                    esignRequests.map((request) => {
-                      const getStatusColor = (status) => {
-                        switch (status) {
-                          case 'pending': return { bg: '#FBBF24', text: 'white', icon: 'pending' };
-                          case 'sent': return { bg: '#3B82F6', text: 'white', icon: 'sent' };
-                          case 'viewed': return { bg: '#6366F1', text: 'white', icon: 'viewed' };
-                          case 'signed': return { bg: '#8B5CF6', text: 'white', icon: 'signed' };
-                          case 'completed': return { bg: '#22C55E', text: 'white', icon: 'completed' };
-                          case 'cancelled': return { bg: '#6B7280', text: 'white', icon: 'cancelled' };
-                          case 'expired': return { bg: '#EF4444', text: 'white', icon: 'expired' };
-                          default: return { bg: '#6B7280', text: 'white', icon: 'default' };
-                        }
-                      };
-                      const statusStyle = getStatusColor(request.status);
-                      const expiresDate = request.expires_at ? new Date(request.expires_at).toLocaleDateString() : 'N/A';
-                      const progress = `${request.completed_fields || 0}/${request.total_fields || 0}`;
-
-                      return (
-                        <tr key={request.id}
-                          onClick={() => {
-                            setSelectedEsignRequest(request);
-                            setShowDetailModal(true);
-                          }}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
-                          <td className="py-4 px-4">
-                            <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                              #{request.id}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                              {request.title || request.document_name || 'N/A'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                              {request.client_name || 'N/A'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500', backgroundColor: statusStyle.bg }}>
-                              {request.status_display || request.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>{progress}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                              {expiresDate}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-2">
-                              {request.document_url && (
-                                <button
-                                  onClick={() => window.open(request.document_url, '_blank')}
-                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                                  aria-label="View"
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
-                              )}
-                              {request.document_url && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const link = document.createElement('a');
-                                    link.href = request.document_url;
-                                    link.download = request.document_name || 'document.pdf';
-                                    link.click();
-                                  }}
-                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                                  aria-label="Download"
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
-                              )}
-                              {request.status === 'signed' && (
-                                <button
-                                  onClick={(e) => handleCompleteRequest(request.id, e)}
-                                  className="p-1.5 hover:bg-green-50 text-green-600 rounded transition-colors"
-                                  title="Mark as Completed"
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {esignPagination.total_count > 0 && (
-            <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-              <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                Showing {((esignPagination.page - 1) * esignPagination.page_size) + 1} to {Math.min(esignPagination.page * esignPagination.page_size, esignPagination.total_count)} of {esignPagination.total_count} requests
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setEsignCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={!esignPagination.has_previous || esignCurrentPage === 1}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!esignPagination.has_previous || esignCurrentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                >
-                  Previous
-                </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, esignPagination.total_pages) }, (_, i) => {
-                    let pageNum;
-                    if (esignPagination.total_pages <= 5) {
-                      pageNum = i + 1;
-                    } else if (esignCurrentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (esignCurrentPage >= esignPagination.total_pages - 2) {
-                      pageNum = esignPagination.total_pages - 4 + i;
-                    } else {
-                      pageNum = esignCurrentPage - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setEsignCurrentPage(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${esignCurrentPage === pageNum
-                          ? 'bg-[#F56D2D] text-white'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={() => setEsignCurrentPage(prev => Math.min(esignPagination.total_pages, prev + 1))}
-                  disabled={!esignPagination.has_next || esignCurrentPage === esignPagination.total_pages}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!esignPagination.has_next || esignCurrentPage === esignPagination.total_pages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+        {/* Header Section */}
+        <div className="mb-6">
+          <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Active Signature Requests
+          </h5>
+          <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            Track and manage document signature requests
+          </p>
         </div>
-      )}
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+          <div
+            onClick={() => {
+              setEsignFilters(prev => ({ ...prev, status: '' }));
+              setEsignCurrentPage(1);
+            }}
+            className={`cursor-pointer bg-white border ${esignFilters.status === '' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+          >
+            <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.total}</div>
+            <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Total</div>
+          </div>
+          <div
+            onClick={() => {
+              setEsignFilters(prev => ({ ...prev, status: 'pending' }));
+              setEsignCurrentPage(1);
+            }}
+            className={`cursor-pointer bg-white border ${esignFilters.status === 'pending' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+          >
+            <div className="text-2xl font-bold text-yellow-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.pending}</div>
+            <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending</div>
+          </div>
+          <div
+            onClick={() => {
+              setEsignFilters(prev => ({ ...prev, status: 'signed' }));
+              setEsignCurrentPage(1);
+            }}
+            className={`cursor-pointer bg-white border ${esignFilters.status === 'signed' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+          >
+            <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.signed}</div>
+            <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Signed</div>
+          </div>
+          <div
+            onClick={() => {
+              setEsignFilters(prev => ({ ...prev, status: 'completed' }));
+              setEsignCurrentPage(1);
+            }}
+            className={`cursor-pointer bg-white border ${esignFilters.status === 'completed' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+          >
+            <div className="text-2xl font-bold text-green-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.completed}</div>
+            <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Completed</div>
+          </div>
+          <div
+            onClick={() => {
+              setEsignFilters(prev => ({ ...prev, status: 'expired' }));
+              setEsignCurrentPage(1);
+            }}
+            className={`cursor-pointer bg-white border ${esignFilters.status === 'expired' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-gray-200'} rounded-lg p-3 text-center hover:shadow-md transition-all`}
+          >
+            <div className="text-2xl font-bold text-red-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.expired}</div>
+            <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Expired</div>
+          </div>
+        </div>
+
+        {/* Signature Requests Table */}
+        <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Request ID
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Document
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Client
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Status
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Progress
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Expires At
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {esignLoading ? (
+                  <tr>
+                    <td colSpan="7" className="py-8 text-center text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      Loading...
+                    </td>
+                  </tr>
+                ) : esignError ? (
+                  <tr>
+                    <td colSpan="7" className="py-8 text-center text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      {esignError}
+                    </td>
+                  </tr>
+                ) : esignRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="py-8 text-center text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      No signature requests found
+                    </td>
+                  </tr>
+                ) : (
+                  esignRequests.map((request) => {
+                    const getStatusColor = (status) => {
+                      switch (status) {
+                        case 'pending': return { bg: '#FBBF24', text: 'white', icon: 'pending' };
+                        case 'sent': return { bg: '#3B82F6', text: 'white', icon: 'sent' };
+                        case 'viewed': return { bg: '#6366F1', text: 'white', icon: 'viewed' };
+                        case 'signed': return { bg: '#8B5CF6', text: 'white', icon: 'signed' };
+                        case 'completed': return { bg: '#22C55E', text: 'white', icon: 'completed' };
+                        case 'cancelled': return { bg: '#6B7280', text: 'white', icon: 'cancelled' };
+                        case 'expired': return { bg: '#EF4444', text: 'white', icon: 'expired' };
+                        default: return { bg: '#6B7280', text: 'white', icon: 'default' };
+                      }
+                    };
+                    const statusStyle = getStatusColor(request.status);
+                    const expiresDate = request.expires_at ? new Date(request.expires_at).toLocaleDateString() : 'N/A';
+                    const progress = `${request.completed_fields || 0}/${request.total_fields || 0}`;
+
+                    return (
+                      <tr key={request.id}
+                        onClick={() => {
+                          setSelectedEsignRequest(request);
+                          setShowDetailModal(true);
+                        }}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <td className="py-4 px-4">
+                          <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            #{request.id}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                            {request.title || request.document_name || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                            {request.client_name || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500', backgroundColor: statusStyle.bg }}>
+                            {request.status_display || request.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>{progress}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                            {expiresDate}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-2">
+                            {request.document_url && (
+                              <button
+                                onClick={() => window.open(request.document_url, '_blank')}
+                                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                aria-label="View"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            )}
+                            {request.document_url && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const link = document.createElement('a');
+                                  link.href = request.document_url;
+                                  link.download = request.document_name || 'document.pdf';
+                                  link.click();
+                                }}
+                                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                aria-label="Download"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            )}
+                            {request.status === 'signed' && (
+                              <button
+                                onClick={(e) => handleCompleteRequest(request.id, e)}
+                                className="p-1.5 hover:bg-green-50 text-green-600 rounded transition-colors"
+                                title="Mark as Completed"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        {esignPagination.total_count > 0 && (
+          <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+              Showing {((esignPagination.page - 1) * esignPagination.page_size) + 1} to {Math.min(esignPagination.page * esignPagination.page_size, esignPagination.total_count)} of {esignPagination.total_count} requests
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setEsignCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={!esignPagination.has_previous || esignCurrentPage === 1}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!esignPagination.has_previous || esignCurrentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, esignPagination.total_pages) }, (_, i) => {
+                  let pageNum;
+                  if (esignPagination.total_pages <= 5) {
+                    pageNum = i + 1;
+                  } else if (esignCurrentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (esignCurrentPage >= esignPagination.total_pages - 2) {
+                    pageNum = esignPagination.total_pages - 4 + i;
+                  } else {
+                    pageNum = esignCurrentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setEsignCurrentPage(pageNum)}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${esignCurrentPage === pageNum
+                        ? 'bg-[#F56D2D] text-white'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setEsignCurrentPage(prev => Math.min(esignPagination.total_pages, prev + 1))}
+                disabled={!esignPagination.has_next || esignCurrentPage === esignPagination.total_pages}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!esignPagination.has_next || esignCurrentPage === esignPagination.total_pages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
 
       {/* Create Signature Request Modal */}
       {showCreateModal && (

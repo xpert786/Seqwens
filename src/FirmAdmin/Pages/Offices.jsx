@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { handleAPIError, firmOfficeAPI } from '../../ClientOnboarding/utils/apiUtils';
 import AddOfficeModal from './Offices/AddOfficeModal';
 import TaxpayerManagementModal from './Offices/TaxpayerManagementModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import { toast } from 'react-toastify';
 
 export default function Offices() {
     const navigate = useNavigate();
@@ -23,6 +25,9 @@ export default function Offices() {
     const [showAddOfficeModal, setShowAddOfficeModal] = useState(false);
     const [showTaxpayerModal, setShowTaxpayerModal] = useState(false);
     const [selectedOfficeForTaxpayers, setSelectedOfficeForTaxpayers] = useState(null);
+    const [officeToDelete, setOfficeToDelete] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const dropdownRefs = useRef({});
 
     // Fetch offices from API
@@ -136,6 +141,44 @@ export default function Offices() {
 
     const handleDropdownToggle = (officeId) => {
         setShowDropdown(showDropdown === officeId ? null : officeId);
+    };
+
+    const handleDeleteClick = (office) => {
+        setOfficeToDelete(office);
+        setShowDeleteConfirm(true);
+        setShowDropdown(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!officeToDelete) return;
+
+        try {
+            setIsDeleting(true);
+            await firmOfficeAPI.deleteOffice(officeToDelete.id);
+            toast.success('Office deleted successfully');
+            fetchOffices(); // Refresh list
+            setShowDeleteConfirm(false);
+            setOfficeToDelete(null);
+        } catch (error) {
+            console.error('Error deleting office:', error);
+            const errorMsg = handleAPIError(error);
+            toast.error(errorMsg || 'Failed to delete office');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleStatusUpdate = async (office, newStatus) => {
+        try {
+            await firmOfficeAPI.updateOffice(office.id, { status: newStatus });
+            toast.success(`Office marked as ${newStatus}`);
+            fetchOffices(); // Refresh list
+            setShowDropdown(null);
+        } catch (error) {
+            console.error('Error updating office status:', error);
+            const errorMsg = handleAPIError(error);
+            toast.error(errorMsg || 'Failed to update office status');
+        }
     };
 
     return (
@@ -285,7 +328,6 @@ export default function Offices() {
                     >
                         <option>All Status</option>
                         <option>Active</option>
-                        <option>Opening Soon</option>
                         <option>Inactive</option>
                     </select>
                     <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -484,7 +526,18 @@ export default function Offices() {
                                                                 >
                                                                     Manage Taxpayers
                                                                 </button>
-                                                                <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+
+                                                                <button
+                                                                    onClick={() => handleStatusUpdate(formattedOffice, (formattedOffice.status || '').toLowerCase() === 'active' ? 'inactive' : 'active')}
+                                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                >
+                                                                    {(formattedOffice.status || '').toLowerCase() === 'active' ? 'Set as Inactive' : 'Set as Active'}
+                                                                </button>
+
+                                                                <button
+                                                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 uppercase"
+                                                                    onClick={() => handleDeleteClick(formattedOffice)}
+                                                                >
                                                                     Delete Office
                                                                 </button>
                                                             </div>
@@ -521,6 +574,24 @@ export default function Offices() {
                     onUpdate={fetchOffices}
                 />
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onClose={() => {
+                    if (!isDeleting) {
+                        setShowDeleteConfirm(false);
+                        setOfficeToDelete(null);
+                    }
+                }}
+                onConfirm={handleConfirmDelete}
+                title="Delete Office"
+                message={officeToDelete ? `Are you sure you want to delete the office "${officeToDelete.name}"? This action cannot be undone and may affect assigned staff and clients.` : "Are you sure you want to delete this office?"}
+                confirmText="Delete Office"
+                cancelText="Cancel"
+                isLoading={isDeleting}
+                isDestructive={true}
+            />
         </div>
     );
 }

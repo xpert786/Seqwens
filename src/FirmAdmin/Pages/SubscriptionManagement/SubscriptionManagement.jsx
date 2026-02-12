@@ -808,18 +808,7 @@ const SubscriptionManagement = () => {
                                     </div>
 
                                     {/* Additional Info Row */}
-                                    <div className="mt-6 grid grid-cols-2 gap-4">
-                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
-                                            <div className={`w-2 h-2 rounded-full ${subscriptionOverview?.overview?.automatic_payment_failover ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Failover: {subscriptionOverview?.overview?.automatic_payment_failover ? 'Active' : 'Disabled'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6 2V10M2 6H10" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Add-ons: {subscriptionOverview?.overview?.addons?.count || 0} (${subscriptionOverview?.overview?.addons?.total_monthly_cost || 0}/mo)</span>
-                                        </div>
-                                    </div>
+                                   
                                 </div>
                             </div>
 
