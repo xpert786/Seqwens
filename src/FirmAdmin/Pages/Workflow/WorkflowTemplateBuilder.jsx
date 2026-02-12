@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Upload, Eye, HelpCircle, FileText, CheckCircle, Search, ThumbsUp, Send, Mail,
+  User, Briefcase, ShieldCheck, List
+} from 'lucide-react';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { USER_TYPE_GROUPS, TAX_FORM_TYPES } from './workflowConstants';
@@ -37,17 +41,17 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
   const [formTypes, setFormTypes] = useState([]);
   const [loadingFormTypes, setLoadingFormTypes] = useState(false);
 
-  // Common stage templates - these are just suggestions
+  // Common stage templates with simple, standardized icons
   const COMMON_STAGES = [
-    { name: 'Client Uploads Documents', who: 'taxpayer', days: 7, icon: '📤', desc: 'Client uploads W-2s, 1099s, receipts, and other tax documents' },
-    { name: 'Review Documents', who: 'preparer', days: 2, icon: '👀', desc: 'Tax preparer checks if all required documents are present' },
-    { name: 'Request Missing Info', who: 'preparer', days: 3, icon: '❓', desc: 'Ask client for any missing documents or information' },
-    { name: 'Prepare Tax Return', who: 'preparer', days: 5, icon: '📝', desc: 'Tax preparer completes the tax return' },
-    { name: 'Internal Review', who: 'admin', days: 2, icon: '✅', desc: 'Senior reviewer checks the return for accuracy' },
-    { name: 'Client Reviews Return', who: 'taxpayer', days: 3, icon: '🔍', desc: 'Client reviews the completed return and asks questions' },
-    { name: 'Client Approves', who: 'taxpayer', days: 1, icon: '👍', desc: 'Client gives final approval to file' },
-    { name: 'E-File Return', who: 'preparer', days: 1, icon: '🚀', desc: 'Submit the return to the IRS electronically' },
-    { name: 'Send Confirmation', who: 'preparer', days: 1, icon: '✉️', desc: 'Send filing confirmation and copies to client' },
+    { name: 'Client Uploads Documents', who: 'taxpayer', days: 7, icon: <Upload size={20} />, desc: 'Client uploads W-2s, 1099s, receipts, and other tax documents' },
+    { name: 'Review Documents', who: 'preparer', days: 2, icon: <Eye size={20} />, desc: 'Tax preparer checks if all required documents are present' },
+    { name: 'Request Missing Info', who: 'preparer', days: 3, icon: <HelpCircle size={20} />, desc: 'Ask client for any missing documents or information' },
+    { name: 'Prepare Tax Return', who: 'preparer', days: 5, icon: <FileText size={20} />, desc: 'Tax preparer completes the tax return' },
+    { name: 'Internal Review', who: 'admin', days: 2, icon: <CheckCircle size={20} />, desc: 'Senior reviewer checks the return for accuracy' },
+    { name: 'Client Reviews Return', who: 'taxpayer', days: 3, icon: <Search size={20} />, desc: 'Client reviews the completed return and asks questions' },
+    { name: 'Client Approves', who: 'taxpayer', days: 1, icon: <ThumbsUp size={20} />, desc: 'Client gives final approval to file' },
+    { name: 'E-File Return', who: 'preparer', days: 1, icon: <Send size={20} />, desc: 'Submit the return to the IRS electronically' },
+    { name: 'Send Confirmation', who: 'preparer', days: 1, icon: <Mail size={20} />, desc: 'Send filing confirmation and copies to client' },
   ];
 
   // Load existing template data
@@ -199,10 +203,10 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
 
   const getUserTypeLabel = (type) => {
     switch (type) {
-      case 'taxpayer': return { label: 'Client', color: 'bg-blue-100 text-blue-700', icon: '👤' };
-      case 'preparer': return { label: 'Tax Preparer', color: 'bg-green-100 text-green-700', icon: '👨‍💼' };
-      case 'admin': return { label: 'Admin', color: 'bg-purple-100 text-purple-700', icon: '👔' };
-      default: return { label: 'All', color: 'bg-gray-100 text-gray-700', icon: '👥' };
+      case 'taxpayer': return { label: 'Client', color: 'bg-blue-50 text-blue-700', icon: <User size={14} /> };
+      case 'preparer': return { label: 'Tax Preparer', color: 'bg-green-50 text-green-700', icon: <Briefcase size={14} /> };
+      case 'admin': return { label: 'Admin', color: 'bg-purple-50 text-purple-700', icon: <ShieldCheck size={14} /> };
+      default: return { label: 'All', color: 'bg-gray-100 text-gray-700', icon: <User size={14} /> };
     }
   };
 
@@ -379,7 +383,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                     }`}
                 >
                   <div className="flex items-start gap-2 mb-2">
-                    <span className="text-xl">{stage.icon}</span>
+                    <span className="text-gray-500">{stage.icon}</span>
                     <div className="flex-1">
                       <div className="font-medium text-sm text-gray-900 font-[BasisGrotesquePro]">
                         {stage.name}
@@ -426,8 +430,10 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
           </p>
 
           {stages.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-[#E8F0FF] !rounded-lg">
-              <div className="text-4xl mb-3">📋</div>
+            <div className="text-center py-12 border-2 border-dashed border-[#E8F0FF] !rounded-lg bg-gray-50/50">
+              <div className="flex justify-center mb-3 text-gray-400">
+                <List size={48} strokeWidth={1} />
+              </div>
               <p className="text-gray-500 font-[BasisGrotesquePro]">
                 No stages yet. Add some from above!
               </p>

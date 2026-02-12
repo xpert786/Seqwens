@@ -224,15 +224,15 @@ const StartWorkflowModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
-      <div className="bg-white !rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
+      <div className="bg-white !rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#E8F0FF] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#E8F0FF] flex-shrink-0">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+            <h3 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
               Start Workflow
             </h3>
-            <p className="text-sm text-gray-500 mt-1 font-[BasisGrotesquePro]">
+            <p className="text-[10px] text-gray-500 mt-0.5 font-[BasisGrotesquePro]">
               Start a tracking workflow for a client
             </p>
           </div>
@@ -258,7 +258,7 @@ const StartWorkflowModal = ({
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
+              <label className="block text-xs font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">
                 Select Client <span className="text-red-500">*</span>
               </label>
               {loadingClients ? (
@@ -273,12 +273,12 @@ const StartWorkflowModal = ({
                     placeholder="Search clients..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] mb-2"
+                    className="w-full px-3 py-1.5 text-xs !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] mb-2"
                   />
                   <select
                     value={selectedClientId}
                     onChange={(e) => setSelectedClientId(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white"
+                    className="w-full px-3 py-1.5 text-xs !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white"
                     disabled={starting}
                   >
                     <option value="">Select a client</option>
@@ -295,7 +295,7 @@ const StartWorkflowModal = ({
 
           {/* Workflow Template Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
+            <label className="block text-xs font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">
               Workflow Template <span className="text-red-500">*</span>
             </label>
             {loadingTemplates ? (
@@ -307,7 +307,7 @@ const StartWorkflowModal = ({
               <select
                 value={selectedTemplateId}
                 onChange={(e) => setSelectedTemplateId(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
+                className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
                 disabled={starting}
               >
                 <option value="">Select a workflow template</option>
@@ -345,8 +345,8 @@ const StartWorkflowModal = ({
 
           {/* Assigned Preparer (Optional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
-              Assigned Tax Preparer <span className="text-gray-400">(Optional)</span>
+            <label className="block text-xs font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">
+              Assigned Tax Preparer <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             {loadingPreparers ? (
               <div className="text-center py-4">
@@ -356,7 +356,7 @@ const StartWorkflowModal = ({
               <select
                 value={selectedPreparerId}
                 onChange={(e) => setSelectedPreparerId(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
+                className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
                 disabled={starting}
               >
                 <option value="">Auto-assign based on rules</option>
@@ -388,17 +388,17 @@ const StartWorkflowModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-[#E8F0FF] flex-shrink-0">
+        <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E8F0FF] flex-shrink-0">
           <button
             onClick={handleClose}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            className="px-4 py-2 text-xs font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
             disabled={starting}
           >
             Cancel
           </button>
           <button
             onClick={handleStartWorkflow}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 text-xs font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             disabled={starting || !selectedTemplateId || (!clientId && !selectedClientId) || loadingTemplates}
           >
             {starting ? (

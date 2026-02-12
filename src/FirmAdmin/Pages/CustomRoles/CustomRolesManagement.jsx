@@ -197,7 +197,7 @@ export default function CustomRolesManagement() {
     <div className="p-6 bg-white min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
+        <h1 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
           Tax Preparer Permissions Management
         </h1>
         <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
@@ -507,7 +507,7 @@ export default function CustomRolesManagement() {
                                 key={pageNum}
                                 onClick={() => setCurrentPage(pageNum)}
                                 className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${currentPage === pageNum
-                                  ? 'bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white shadow-md'
+                                  ? 'bg-[#F56D2D] text-white shadow-md'
                                   : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
                                   }`}
                               >

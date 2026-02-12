@@ -7,7 +7,7 @@ import { getAccessToken, getUserData } from '../../ClientOnboarding/utils/userUt
 import { toast } from 'react-toastify';
 
 export default function ESignatureManagement() {
-  const [activeTab, setActiveTab] = useState('Signature Request');
+  const [activeTab, setActiveTab] = useState('Requests');
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedEsignRequest, setSelectedEsignRequest] = useState(null);
@@ -1178,17 +1178,11 @@ export default function ESignatureManagement() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 bg-[rgb(243,247,255)] min-h-screen">
+    <div className="p-3 sm:p-4 md:p-6 min-h-screen">
       {/* Header Section */}
       <div className="mb-4 md:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex-1">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              E-Signature Management
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Manage document signatures and templates
-            </p>
           </div>
           <button
             onClick={() => {
@@ -1198,13 +1192,13 @@ export default function ESignatureManagement() {
                 setShowCreateModal(true);
               }
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium w-full sm:w-auto"
-            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg transition-colors text-sm font-medium w-full sm:w-auto"
+            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px', backgroundColor: 'var(--firm-primary-color, #3AD6F2)' }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span className="hidden sm:inline">New Signature Request</span>
+            <span className="hidden sm:inline">New Request</span>
             <span className="sm:hidden">New Request</span>
           </button>
         </div>
@@ -1215,7 +1209,7 @@ export default function ESignatureManagement() {
         {/* Desktop Navigation - Always visible on screens ≥ 768px */}
         <div className="hidden md:block mb-6 w-fit">
           <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Signature Request'/*, 'Templates'*/].map((tab) => (
+            {['Requests'/*, 'Templates'*/].map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -1272,8 +1266,8 @@ export default function ESignatureManagement() {
             {/* Current Active Tab Display */}
             <div className="flex-1">
               <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                {activeTab === 'Signature Request' ? 'Signature Request' :
-                  activeTab === 'Templates' ? 'Templates' : 'Signature Request'}
+                {activeTab === 'Requests' ? 'Requests' :
+                  activeTab === 'Templates' ? 'Templates' : 'Requests'}
               </span>
             </div>
           </div>
@@ -1282,16 +1276,16 @@ export default function ESignatureManagement() {
           {showMobileNav && (
             <div className="bg-white rounded-lg border border-blue-50 shadow-lg overflow-hidden">
               <button
-                onClick={() => handleTabChange('Signature Request')}
-                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'Signature Request'
+                onClick={() => handleTabChange('Requests')}
+                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'Requests'
                   ? 'text-white bg-[#3AD6F2]'
                   : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 style={{ fontFamily: 'BasisGrotesquePro' }}
               >
                 <div className="flex items-center justify-between">
-                  <span>Signature Request</span>
-                  {activeTab === 'Signature Request' && (
+                  <span>Requests</span>
+                  {activeTab === 'Requests' && (
                     <svg
                       width="16"
                       height="16"
@@ -1546,10 +1540,10 @@ export default function ESignatureManagement() {
           {/* Header Section */}
           <div className="mb-6">
             <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Active Signature Requests
+              Active Requests
             </h5>
             <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Track and manage document signature requests
+              Track and manage document requests
             </p>
           </div>
 

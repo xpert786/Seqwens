@@ -123,8 +123,7 @@ export default function OfficeDashboardView() {
                         </div>
                         <button
                             onClick={() => navigate(`/firmadmin/offices/${officeId}/edit`)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-                            style={{ borderRadius: '8px' }}
+                            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] hover:bg-[#E54A1B] transition-colors flex items-center gap-2 !rounded-lg"
                         >
                             <FaEdit className="w-4 h-4" />
                             Edit Office

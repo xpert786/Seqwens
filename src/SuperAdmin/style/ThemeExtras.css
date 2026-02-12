@@ -50,14 +50,27 @@
 }
 
 /* Border overrides */
+.light-mode .border,
+.light-mode .border-gray-100,
+.light-mode .border-gray-200,
+.light-mode .border-gray-300,
+.light-mode .border-\[\#E8F0FF\],
+.light-mode .border-\[\#E5E7EB\],
+.light-mode .border-slate-200 {
+    border-color: #94a3b8 !important;
+    /* Much darker gray for light mode */
+}
+
 .dark-mode .border,
 .dark-mode .border-gray-100,
 .dark-mode .border-gray-200,
 .dark-mode .border-gray-300,
 .dark-mode .border-\[\#E8F0FF\],
 .dark-mode .border-\[\#E5E7EB\],
-.dark-mode .border-slate-200 {
-    border-color: var(--sa-border-color) !important;
+.dark-mode .border-slate-200,
+.dark-mode hr {
+    border-color: #576881 !important;
+    /* Brighter, visible border for dark mode */
 }
 
 /* SVG Icon overrides */
@@ -214,17 +227,28 @@
 
 /* Icon glow animations */
 @keyframes sunGlow {
-    0% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)) brightness(1); }
-    100% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)) brightness(1.2); }
+    0% {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)) brightness(1);
+    }
+
+    100% {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)) brightness(1.2);
+    }
 }
 
 @keyframes moonGlow {
-    0% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)) brightness(1); }
-    100% { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)) brightness(1.1); }
+    0% {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) brightness(1);
+    }
+
+    100% {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) brightness(1.1);
+    }
 }
 
 /* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
+
     .theme-toggle-container,
     .theme-toggle-container svg,
     .theme-toggle-container::before {

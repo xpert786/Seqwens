@@ -353,27 +353,29 @@ export default function SubdomainTab() {
               <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                 Primary Color
               </label>
-              <div className="flex items-center gap-2">
-                <div className="relative rounded-lg !border border-[#E8F0FF] p-1 flex-shrink-0">
-                  <div
-                    className="w-12 h-8 !rounded-lg cursor-pointer"
-                    style={{ backgroundColor: formData.primary_color }}
-                  />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative rounded-lg !border border-[#E8F0FF] p-1 flex-shrink-0">
+                    <div
+                      className="w-12 h-8 !rounded-lg cursor-pointer"
+                      style={{ backgroundColor: formData.primary_color }}
+                    />
+                    <input
+                      type="color"
+                      name="primary_color"
+                      value={formData.primary_color}
+                      onChange={handleInputChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
                   <input
-                    type="color"
+                    type="text"
                     name="primary_color"
                     value={formData.primary_color}
                     onChange={handleInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="flex-1 rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
                   />
                 </div>
-                <input
-                  type="text"
-                  name="primary_color"
-                  value={formData.primary_color}
-                  onChange={handleInputChange}
-                  className="flex-1 rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
-                />
               </div>
             </div>
 
@@ -381,37 +383,39 @@ export default function SubdomainTab() {
               <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                 Secondary Color
               </label>
-              <div className="flex items-center gap-2">
-                <div className="relative rounded-lg !border border-[#E8F0FF] p-1 flex-shrink-0">
-                  <div
-                    className="w-12 h-8 !rounded-lg cursor-pointer"
-                    style={{ backgroundColor: formData.secondary_color }}
-                  />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative rounded-lg !border border-[#E8F0FF] p-1 flex-shrink-0">
+                    <div
+                      className="w-12 h-8 !rounded-lg cursor-pointer"
+                      style={{ backgroundColor: formData.secondary_color }}
+                    />
+                    <input
+                      type="color"
+                      name="secondary_color"
+                      value={formData.secondary_color}
+                      onChange={handleInputChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
                   <input
-                    type="color"
+                    type="text"
                     name="secondary_color"
                     value={formData.secondary_color}
                     onChange={handleInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="flex-1 rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
                   />
                 </div>
-                <input
-                  type="text"
-                  name="secondary_color"
-                  value={formData.secondary_color}
-                  onChange={handleInputChange}
-                  className="flex-1 rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
-                />
               </div>
             </div>
           </div>
 
           {/* Apply Button */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6">
             <button
               onClick={handleApplyColors}
               disabled={savingColors}
-              className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="w-full px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {savingColors ? (
                 <>
@@ -439,19 +443,19 @@ export default function SubdomainTab() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {/* Logo */}
             <div>
               <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                 Logo
               </label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-center">
                   {logoPreview ? (
                     <img
                       src={logoPreview}
                       alt="Logo preview"
-                      className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
+                      className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
                       crossOrigin="anonymous"
                       onError={(e) => {
                         console.warn('Failed to load logo preview from B2');
@@ -459,7 +463,7 @@ export default function SubdomainTab() {
                       }}
                     />
                   ) : (
-                    <svg width="80" height="80" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="48" height="48" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="0.5" y="0.5" width="69" height="69" rx="9.5" fill="#E8F0FF" />
                       <rect x="0.5" y="0.5" width="69" height="69" rx="9.5" stroke="#E8F0FF" />
                       <path d="M26.5 49.1693V23.6693C26.5 22.9178 26.7985 22.1972 27.3299 21.6658C27.8612 21.1344 28.5819 20.8359 29.3333 20.8359H40.6667C41.4181 20.8359 42.1388 21.1344 42.6701 21.6658C43.2015 22.1972 43.5 22.9178 43.5 23.6693V49.1693H26.5Z" stroke="#3AD6F2" strokeLinecap="round" strokeLinejoin="round" />
@@ -476,7 +480,7 @@ export default function SubdomainTab() {
                   />
                   <button
                     onClick={() => logoInputRef.current?.click()}
-                    className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="w-full px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
@@ -495,7 +499,7 @@ export default function SubdomainTab() {
               <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                 Favicon
               </label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-center">
                   {faviconPreview ? (
                     <img
@@ -509,7 +513,7 @@ export default function SubdomainTab() {
                       }}
                     />
                   ) : (
-                    <svg width="50" height="50" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="48" height="48" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="0.5" y="0.5" width="29" height="29" rx="14.5" fill="#E8F0FF" />
                       <rect x="0.5" y="0.5" width="29" height="29" rx="14.5" stroke="#E8F0FF" />
                     </svg>
@@ -525,7 +529,7 @@ export default function SubdomainTab() {
                   />
                   <button
                     onClick={() => faviconInputRef.current?.click()}
-                    className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center justify-center gap-2"
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
@@ -540,11 +544,11 @@ export default function SubdomainTab() {
             </div>
 
             {/* Apply Button */}
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6">
               <button
                 onClick={handleApplyAssets}
                 disabled={savingAssets || (!logoFile && !faviconFile)}
-                className="mt-4 px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full mt-4 px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {savingAssets ? (
                   <>

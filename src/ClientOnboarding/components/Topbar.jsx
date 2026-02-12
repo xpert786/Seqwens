@@ -105,6 +105,7 @@ export default function Topbar({
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
+    const lastActionTimeRef = useRef(0);
     const navigate = useNavigate();
 
     const setClientAvatar = (value) => {
@@ -259,6 +260,11 @@ export default function Topbar({
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
+        // Don't poll if we just had a manual update (prevents reverting to old count)
+        if (Date.now() - lastActionTimeRef.current < 5000) {
+            return;
+        }
+
         try {
             const response = await clientNotificationAPI.getUnreadCount();
             if (response.success && response.data) {
@@ -707,7 +713,7 @@ export default function Topbar({
                     onClose={() => setShowNotifications(false)}
                     onChange={({ unreadCount }) => {
                         setUnreadNotifications(unreadCount);
-                        // Don't call fetchUnreadCount here - the unreadCount is already updated from onChange
+                        lastActionTimeRef.current = Date.now();
                     }}
                 />
             )}

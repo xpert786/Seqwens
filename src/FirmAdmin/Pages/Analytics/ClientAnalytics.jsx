@@ -319,7 +319,7 @@ export default function ClientAnalytics({ activeTab, setActiveTab, tabs, period 
       </div>
 
       {/* Charts Section - Second Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Retention & CLV */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Retention & CLV</h3>

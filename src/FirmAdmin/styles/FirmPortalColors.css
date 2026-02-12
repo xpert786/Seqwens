@@ -7,11 +7,11 @@
 
 /* Main background theme uses secondary color */
 .firm-dashboard-layout main {
-  background-color: var(--firm-secondary-color, #ffffff) !important;
+  /* background-color: var(--firm-secondary-color, #ffffff) !important; */
 }
 
 /* Target specific background color classes and replace with secondary color */
-.firm-dashboard-layout [class*="bg-[#F3F7FF]"],
+/* .firm-dashboard-layout [class*="bg-[#F3F7FF]"],
 .firm-dashboard-layout [class*="bg-[rgb(243,247,255)]"],
 .firm-dashboard-layout [class*="bg-[#F6F7FF]"],
 .firm-dashboard-layout [class*="bg-\\[\\#F3F7FF\\]"],
@@ -21,7 +21,7 @@
 .firm-dashboard-layout [class*="F6F7FF"],
 .firm-dashboard-layout [class*="243,247,255"] {
   background-color: var(--firm-secondary-color, #F3F7FF) !important;
-}
+} */
 
 /* Target inline styles with specific background colors */
 .firm-dashboard-layout [style*="background-color: rgb(243, 247, 255)"],
@@ -138,4 +138,3 @@
 .firm-panel [aria-current="page"] {
   background-color: var(--firm-secondary-color, #ffffff) !important;
 }
-

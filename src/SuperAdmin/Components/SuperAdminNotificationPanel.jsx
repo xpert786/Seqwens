@@ -74,7 +74,7 @@ const formatTimeAgo = (dateString) => {
   return `${diffInYears} year${diffInYears > 1 ? "s" : ""} ago`;
 };
 
-const SuperAdminNotificationPanel = ({ onClose }) => {
+const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
   const navigate = useNavigate();
   const panelRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState("all");
@@ -84,6 +84,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const lastActionTimeRef = useRef(0);
 
   // Limit for recent notifications
   const RECENT_NOTIFICATIONS_LIMIT = 3;
@@ -91,6 +92,11 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     try {
+      // Don't fetch if we just had a manual update (prevents reverting to old data)
+      if (Date.now() - lastActionTimeRef.current < 5000) {
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -108,9 +114,14 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
       const response = await superAdminNotificationAPI.listNotifications(params);
 
       if (response.success && response.data) {
+        const newUnreadCount = response.data.unread_count || 0;
         setNotifications(response.data.notifications || []);
-        setUnreadCount(response.data.unread_count || 0);
+        setUnreadCount(newUnreadCount);
         setTotal(response.data.total || 0);
+
+        if (typeof onChange === "function") {
+          onChange({ unreadCount: newUnreadCount });
+        }
       } else {
         setError("Failed to load notifications");
       }
@@ -124,10 +135,19 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
 
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
+    // Don't fetch if we just had a manual update
+    if (Date.now() - lastActionTimeRef.current < 5000) {
+      return;
+    }
+
     try {
       const response = await superAdminNotificationAPI.getUnreadCount();
       if (response.success && response.data) {
-        setUnreadCount(response.data.unread_count || 0);
+        const newUnreadCount = response.data.unread_count || 0;
+        setUnreadCount(newUnreadCount);
+        if (typeof onChange === "function") {
+          onChange({ unreadCount: newUnreadCount });
+        }
       }
     } catch (err) {
       console.error("Error fetching unread count:", err);
@@ -211,13 +231,24 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
       e.stopPropagation();
     }
     try {
+      lastActionTimeRef.current = Date.now();
+
       await superAdminNotificationAPI.markAsRead(notificationId);
+
       setNotifications((prev) =>
         prev.map((notif) =>
           notif.id === notificationId ? { ...notif, is_read: true } : notif
         )
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      setUnreadCount((prev) => {
+        const nextCount = Math.max(0, prev - 1);
+        if (typeof onChange === "function") {
+          onChange({ unreadCount: nextCount });
+        }
+        return nextCount;
+      });
+
       toast.success("Notification marked as read");
     } catch (err) {
       console.error("Error marking notification as read:", err);
@@ -231,11 +262,18 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
       e.stopPropagation();
     }
     try {
+      lastActionTimeRef.current = Date.now();
+
       const response = await superAdminNotificationAPI.markAllAsRead();
       if (response.success) {
         toast.success(response.message || "All notifications marked as read");
-        fetchNotifications();
-        fetchUnreadCount();
+
+        setNotifications((prev) => prev.map(notif => ({ ...notif, is_read: true })));
+        setUnreadCount(0);
+
+        if (typeof onChange === "function") {
+          onChange({ unreadCount: 0 });
+        }
       }
     } catch (err) {
       console.error("Error marking all as read:", err);
@@ -249,8 +287,24 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
       e.stopPropagation();
     }
     try {
+      lastActionTimeRef.current = Date.now();
+
+      const notificationToDelete = notifications.find(n => n.id === notificationId);
+      const wasUnread = notificationToDelete && !notificationToDelete.is_read;
+
       await superAdminNotificationAPI.deleteNotification(notificationId);
       setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+
+      if (wasUnread) {
+        setUnreadCount((prev) => {
+          const nextCount = Math.max(0, prev - 1);
+          if (typeof onChange === "function") {
+            onChange({ unreadCount: nextCount });
+          }
+          return nextCount;
+        });
+      }
+
       toast.success("Notification deleted");
     } catch (err) {
       console.error("Error deleting notification:", err);
@@ -263,13 +317,29 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
     try {
       const response = await superAdminNotificationAPI.getNotificationDetails(notificationId);
       if (response.success && response.data) {
+        const notification = response.data;
+
         // Mark as read when viewing details
-        if (!response.data.is_read) {
+        if (!notification.is_read) {
           await handleMarkAsRead(notificationId);
         }
-        // Navigate to full notifications page
-        navigate("/superadmin/notifications");
-        onClose();
+
+        // Handle navigation based on notification type
+        const type = (notification.notification_type || "").toLowerCase();
+
+        if (type === "new_client") {
+          navigate("/superadmin/firms");
+          onClose();
+        } else if (type === "subscription_expiring" || type === "payment_received") {
+          navigate("/superadmin/subscriptions");
+          onClose();
+        } else {
+          // Default: Navigate to full notifications page and pass ID to open modal
+          navigate("/superadmin/notifications", {
+            state: { notificationId: notificationId }
+          });
+          onClose();
+        }
       } else {
         toast.error("Failed to load notification details");
       }

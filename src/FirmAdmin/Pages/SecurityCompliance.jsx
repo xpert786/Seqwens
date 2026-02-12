@@ -1169,11 +1169,27 @@ export default function SecurityCompliance() {
                 </div>
 
                 {/* Enable Audit Logging */}
-                <div className="mb-8 pb-8 border-b border-[#E5E7EB]">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="mb-8 pb-8 border-b border-[#E5E7EB]" style={{ visibility: 'visible', opacity: 1, display: 'block' }}>
+                    <div className="flex flex-col gap-4">
                         <div className="flex-1">
                             <div className="flex items-center justify-between mb-4">
                                 <h6 className="text-sm font-semibold text-[#1F2937]">Enable Audit Logging</h6>
+                                <div className="flex items-center" style={{ visibility: 'visible', opacity: 1, display: 'flex' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleAuditLoggingToggle(!auditLoggingEnabled)}
+                                        disabled={auditLogSettingsSaving}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-400'
+                                            } ${auditLogSettingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        style={{ borderRadius: '999px', visibility: 'visible', display: 'inline-flex' }}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
+                                            style={{ borderRadius: '999px', visibility: 'visible' }}
+                                        />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Grid to divide 6/6 columns */}
@@ -1209,24 +1225,6 @@ export default function SecurityCompliance() {
 
                             </div>
 
-                        </div>
-
-                        {/* Toggle button */}
-                        <div className="flex items-start sm:items-center pt-1">
-                            <button
-                                type="button"
-                                onClick={() => handleAuditLoggingToggle(!auditLoggingEnabled)}
-                                disabled={auditLogSettingsSaving}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                    } ${auditLogSettingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                style={{ borderRadius: '999px' }}
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
-                                        }`}
-                                    style={{ borderRadius: '999px' }}
-                                />
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -3189,7 +3187,7 @@ export default function SecurityCompliance() {
     };
 
     return (
-        <div className="bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
+        <div className="bg-[rgb(243,247,255)] px-4 pt-0 pb-6 md:px-6">
             <div className="mx-auto flex w-full flex-col gap-6">
                 <div className="rounded-xl">
                     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -3198,15 +3196,15 @@ export default function SecurityCompliance() {
                             <p className="text-sm text-[#6B7280]">Monitor security, manage access, and ensure compliance</p>
                         </div>
                     </div>
-                    <div className="mt-6 flex flex-wrap gap-2 w-fit bg-white rounded-lg p-1 border border-blue-50">
+                    <div className="mt-4 flex flex-nowrap gap-1.5 w-full bg-white rounded-lg p-1 border border-blue-50 overflow-hidden">
                         {tabs.map((tab) => (
                             <button
                                 key={tab}
                                 type="button"
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === tab ? 'bg-[#3AD6F2] text-white' : 'text-[#4B5563]'
+                                className={`flex-1 px-1 py-1.5 text-[7px] font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab ? 'bg-[#3AD6F2] text-white shadow-sm' : 'text-[#4B5563] hover:text-[#3AD6F2]'
                                     }`}
-                                style={{ borderRadius: '8px' }}
+                                style={{ borderRadius: '6px' }}
                             >
                                 {tab}
                             </button>

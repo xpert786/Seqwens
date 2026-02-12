@@ -615,12 +615,42 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         });
 
     return (
-        <Modal show={show} onHide={resetModal} centered backdrop="static" size={step === 1 ? "md" : "xl"} className="upload-modal">
-            <Modal.Body className="p-4">
-                <h5 className="upload-heading">Upload Documents</h5>
-                <p className="upload-subheading">Upload your tax documents securely</p>
+        <Modal
+            show={show}
+            onHide={resetModal}
+            centered
+            backdrop="static"
+            scrollable
+            dialogClassName="upload-modal-custom"
+        >
+            <style>
+                {`
+                    .upload-modal-custom {
+                        max-width: 650px;
+                        width: 95%;
+                        margin: 1.75rem auto;
+                    }
+                    .modal-body-scroll::-webkit-scrollbar {
+                        width: 6px;
+                    }
+                    .modal-body-scroll::-webkit-scrollbar-track {
+                        background: #f1f1f1;
+                    }
+                    .modal-body-scroll::-webkit-scrollbar-thumb {
+                        background: #ccc;
+                        border-radius: 10px;
+                    }
+                `}
+            </style>
+            <Modal.Body className="p-3 modal-body-scroll" style={{
+                overflowY: 'auto',
+                maxHeight: '65vh',
+                fontSize: '12px'
+            }}>
+                <h5 className="upload-heading" style={{ fontSize: '18px', fontWeight: '600' }}>Upload Documents</h5>
+                <p className="upload-subheading" style={{ fontSize: '13px' }}>Upload your tax documents securely</p>
 
-                <p className="upload-section-title">Add Files</p>
+                <p className="upload-section-title" style={{ fontSize: '14px', fontWeight: '500' }}>Add Files</p>
 
                 <div
                     ref={dropzoneRef}
@@ -637,10 +667,10 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                     }}
                 >
                     <UploadsIcon className="upload-icon" />
-                    <p className="upload-text">
+                    <p className="upload-text" style={{ fontSize: '13px' }}>
                         <strong className="texts">Drop files here or click to browse</strong>
                     </p>
-                    <p className="upload-hint">
+                    <p className="upload-hint" style={{ fontSize: '11px' }}>
                         Supported formats: All files supported - Max 50MB per file
                     </p>
                     <input
@@ -694,6 +724,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                             className="btn-upload-custom"
                             onClick={proceedToConfigure}
                             disabled={files.length === 0}
+                            style={{ fontSize: '13px' }}
                         >
                             Upload Documents
                         </Button>

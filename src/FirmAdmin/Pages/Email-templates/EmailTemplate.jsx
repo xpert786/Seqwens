@@ -441,7 +441,7 @@ export default function EmailTemplate() {
 
     return (
         <>
-            <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
+            <div className="w-full px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
                 <div className="mx-auto space-y-6">
                     <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>

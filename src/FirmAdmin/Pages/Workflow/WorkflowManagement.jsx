@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Kanban, PlayCircle, FileText, LayoutTemplate } from 'lucide-react';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import WorkflowTemplateList from './WorkflowTemplateList';
@@ -239,9 +240,9 @@ const WorkflowManagement = () => {
 
   // Tabs configuration
   const tabs = [
-    { id: 'pipeline', label: 'Pipeline View', icon: '🔄' },
-    { id: 'active', label: 'Active Workflows', icon: '▶️' },
-    { id: 'templates', label: 'Templates', icon: '📋' },
+    { id: 'pipeline', label: 'Pipeline View', icon: <Kanban size={18} /> },
+    { id: 'active', label: 'Active Workflows', icon: <PlayCircle size={18} /> },
+    { id: 'templates', label: 'Templates', icon: <LayoutTemplate size={18} /> },
   ];
 
   // Render template builder view
@@ -315,20 +316,30 @@ const WorkflowManagement = () => {
 
         {/* Navigation Tabs */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex gap-2 bg-white !rounded-lg !border border-[#E8F0FF] p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-[BasisGrotesquePro] transition-all !rounded-lg ${activeTab === tab.id
-                  ? 'bg-[#F56D2D] text-white shadow-sm'
-                  : 'bg-transparent text-gray-600 hover:bg-gray-50'
-                  }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
+          <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2.5 text-sm font-[BasisGrotesquePro] transition-all !rounded-lg border ${isActive
+                        ? 'shadow-md transform scale-[1.02]'
+                        : 'hover:bg-gray-50'
+                      }`}
+                    style={{
+                      backgroundColor: isActive ? '#F56D2D' : 'white',
+                      borderColor: isActive ? '#F56D2D' : '#E5E7EB', // Gray-200 for inactive
+                      color: isActive ? 'white' : '#4B5563' // Gray-600 for inactive
+                    }}
+                  >
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

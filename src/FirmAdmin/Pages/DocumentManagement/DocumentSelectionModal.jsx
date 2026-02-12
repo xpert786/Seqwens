@@ -46,9 +46,9 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
       const params = {};
       if (folderId) params.folder_id = folderId;
       if (searchQuery.trim()) params.search = searchQuery.trim();
-      
+
       const response = await firmAdminDocumentsAPI.getDocumentsByFolders(params);
-      
+
       if (response.success && response.data) {
         const docs = response.data.documents || [];
         setDocuments(docs);
@@ -115,30 +115,62 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
   };
 
   const getDocumentName = (doc) => {
-    return doc.name || 
-           doc.file_name || 
-           (doc.tax_documents ? doc.tax_documents.split('/').pop() : '') ||
-           `Document ${doc.id}`;
+    return doc.name ||
+      doc.file_name ||
+      (doc.tax_documents ? doc.tax_documents.split('/').pop() : '') ||
+      `Document ${doc.id}`;
   };
 
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered>
+    <Modal
+      show={show}
+      onHide={onClose}
+      centered
+      scrollable
+      dialogClassName="modal-600w"
+    >
+      <style>
+        {`
+          .modal-600w {
+            max-width: 600px;
+            width: 95%;
+            margin: 1.75rem auto;
+          }
+          .modal-body-scroll::-webkit-scrollbar {
+            width: 8px;
+          }
+          .modal-body-scroll::-webkit-scrollbar-track {
+            background: #f8fafc;
+          }
+          .modal-body-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 2px solid #f8fafc;
+          }
+        `}
+      </style>
       <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
         <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
           Select Documents to Share
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body style={{ fontFamily: 'BasisGrotesquePro' }}>
+      <Modal.Body className="modal-body-scroll" style={{
+        fontFamily: 'BasisGrotesquePro',
+        overflowY: 'auto',
+        maxHeight: '75vh',
+        fontSize: '14px',
+        padding: '1.5rem'
+      }}>
         {/* Folder Filter */}
-        <div className="mb-3">
-          <label className="form-label" style={{ fontWeight: '500', color: '#3B4A66' }}>
+        <div className="mb-2">
+          <label className="form-label mb-1" style={{ fontSize: '14px', fontWeight: '500', color: '#3B4A66' }}>
             Filter by Folder (Optional)
           </label>
           <select
             className="form-select"
             value={folderId || ''}
             onChange={(e) => setFolderId(e.target.value ? parseInt(e.target.value) : null)}
-            style={{ borderColor: '#E5E7EB' }}
+            style={{ borderColor: '#E5E7EB', fontSize: '13px' }}
           >
             <option value="">All Folders</option>
             {folders.map(folder => (
@@ -170,7 +202,8 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 paddingLeft: '40px',
-                borderColor: '#E5E7EB'
+                borderColor: '#E5E7EB',
+                fontSize: '13px'
               }}
             />
           </div>
@@ -196,7 +229,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
           <>
             {multiple && (
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <p className="mb-0" style={{ fontSize: '13px', color: '#6B7280' }}>
+                <p className="mb-0" style={{ fontSize: '12px', color: '#6B7280' }}>
                   {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} found
                 </p>
                 <button
@@ -207,8 +240,8 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
                     backgroundColor: 'transparent',
                     border: '1px solid #E5E7EB',
                     color: '#3B4A66',
-                    fontSize: '12px',
-                    padding: '4px 12px'
+                    fontSize: '11px',
+                    padding: '3px 10px'
                   }}
                 >
                   {selectedDocumentIds.length === filteredDocuments.length ? 'Deselect All' : 'Select All'}
@@ -217,8 +250,6 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
             )}
             <div
               style={{
-                maxHeight: '400px',
-                overflowY: 'auto',
                 border: '1px solid #E5E7EB',
                 borderRadius: '8px',
                 padding: '8px'
@@ -226,13 +257,13 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
             >
               {filteredDocuments.map((doc) => {
                 const isSelected = selectedDocumentIds.includes(doc.id);
-                
+
                 return (
                   <div
                     key={doc.id}
                     onClick={() => toggleDocument(doc.id)}
                     style={{
-                      padding: '12px',
+                      padding: '8px',
                       marginBottom: '4px',
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -273,7 +304,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
                           <p className="mb-0" style={{ fontSize: '14px', fontWeight: '500', color: '#3B4A66' }}>
                             {getDocumentName(doc)}
                           </p>
-                          <div className="d-flex gap-3 mt-1">
+                          <div className="d-flex gap-2 mt-1">
                             {doc.category?.name && (
                               <span style={{ fontSize: '12px', color: '#6B7280' }}>
                                 Category: {doc.category.name}
@@ -304,7 +335,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
           </div>
         )}
       </Modal.Body>
-      <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+      <Modal.Footer style={{ borderTop: '1px solid #E5E7EB', padding: '1rem 1.5rem' }}>
         <button
           className="btn"
           onClick={onClose}
@@ -312,7 +343,9 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
             backgroundColor: '#F9FAFB',
             border: '1px solid #E5E7EB',
             color: '#3B4A66',
-            fontFamily: 'BasisGrotesquePro'
+            fontFamily: 'BasisGrotesquePro',
+            fontSize: '14px',
+            padding: '6px 16px'
           }}
         >
           Cancel
@@ -326,7 +359,9 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
             border: 'none',
             color: 'white',
             fontFamily: 'BasisGrotesquePro',
-            fontWeight: '500'
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '6px 20px'
           }}
         >
           Select {selectedDocumentIds.length > 0 ? `(${selectedDocumentIds.length})` : ''}

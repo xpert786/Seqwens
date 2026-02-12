@@ -1336,7 +1336,7 @@ export default function Subscriptions() {
                   <>
                     {/* Header for list view */}
                     <div className="px-6 py-3 mb-2 subscriptions-table-header">
-                      <div className="grid grid-cols-6 gap-4 text-xs font-bold uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                      <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 text-xs font-bold uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                         <div>Firm</div>
                         <div>Plan</div>
                         <div>Amount</div>
@@ -1351,45 +1351,45 @@ export default function Subscriptions() {
                       const statusClasses = getStatusBadgeClasses(subscription.status);
                       return (
                         <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
-                          <div className="grid grid-cols-6 gap-4 items-center subscriptions-table-row-grid">
-                            <div>
-                              <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 items-center subscriptions-table-row-grid">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold truncate" style={{ color: '#3B4A66' }}>
                                 {subscription.firm_name || '—'}
                               </p>
-                              <p className="text-xs" style={{ color: '#6C757D' }}>
+                              <p className="text-xs truncate" style={{ color: '#6C757D' }}>
                                 {subscription.firm_owner || '—'}
                               </p>
                             </div>
-                            <div>
+                            <div className="whitespace-nowrap">
                               <span
-                                className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
+                                className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
                                 style={{ borderRadius: '12px' }}
                               >
                                 {subscription.plan_label || subscription.plan || '—'}
                               </span>
                             </div>
-                            <div>
+                            <div className="whitespace-nowrap">
                               <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
                                 {subscription.amount_formatted || formatCurrency(subscription.amount)}
                               </p>
-                              <p className="text-xs" style={{ color: '#6C757D', fontWeight: 600 }}>
+                              <p className="text-[10px]" style={{ color: '#6C757D', fontWeight: 600 }}>
                                 {subscription.billing_frequency || '—'}
                               </p>
                             </div>
-                            <div>
+                            <div className="whitespace-nowrap">
                               <span
-                                className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusClasses}`}
+                                className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${statusClasses}`}
                                 style={{ borderRadius: '12px' }}
                               >
                                 {subscription.status_label || subscription.status || '—'}
                               </span>
                             </div>
-                            <div>
+                            <div className="whitespace-nowrap">
                               <p className="text-sm" style={{ color: '#3B4A66' }}>
                                 {formatDateDisplay(subscription.next_billing_date)}
                               </p>
                             </div>
-                            <div>
+                            <div className="whitespace-nowrap">
                               <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
                                 {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
                               </p>

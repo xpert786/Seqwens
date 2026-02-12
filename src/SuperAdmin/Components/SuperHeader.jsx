@@ -16,9 +16,15 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
   const [showSearch, setShowSearch] = useState(false);
   const notificationButtonRef = useRef(null);
   const searchRef = useRef(null);
+  const lastActionTimeRef = useRef(0);
 
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
+    // Don't poll if we just had a manual update (prevents reverting to old count)
+    if (Date.now() - lastActionTimeRef.current < 5000) {
+      return;
+    }
+
     try {
       const response = await superAdminNotificationAPI.getUnreadCount();
       if (response.success && response.data) {
@@ -47,6 +53,13 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
     }
     // Refresh unread count when closing
     fetchUnreadCount();
+  };
+
+  const handleNotificationChange = (data) => {
+    if (data && typeof data.unreadCount !== 'undefined') {
+      setUnreadCount(data.unreadCount);
+      lastActionTimeRef.current = Date.now();
+    }
   };
 
   return (
@@ -205,7 +218,10 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
                 )}
               </div>
               {showNotifications && (
-                <SuperAdminNotificationPanel onClose={closeNotifications} />
+                <SuperAdminNotificationPanel
+                  onClose={closeNotifications}
+                  onChange={handleNotificationChange}
+                />
               )}
             </div>
             <UserIconBuild />

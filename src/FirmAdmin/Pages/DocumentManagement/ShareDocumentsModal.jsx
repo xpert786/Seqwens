@@ -241,17 +241,68 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
   );
 
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered>
+    <Modal
+      show={show}
+      onHide={onClose}
+      centered
+      // Removing 'scrollable' prop to use manual maxHeight on body for better control
+      dialogClassName="modal-650w"
+    >
+      <style>
+        {`
+          .modal-650w {
+            max-width: 650px;
+            width: 95%;
+            margin: 1.75rem auto;
+          }
+          .modal-650w .modal-content {
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 12px;
+          }
+          .modal-body-scroll {
+            overflow-y: auto !important;
+            flex: 1 1 auto;
+          }
+          /* Scrollbar Styling */
+          .modal-body-scroll::-webkit-scrollbar {
+            width: 8px;
+            display: block !important;
+          }
+          .modal-body-scroll::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 0 0 12px 0;
+          }
+          .modal-body-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 2px solid #f8fafc;
+          }
+          .modal-body-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+        `}
+      </style>
       <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
         <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
           Share Documents with Tax Preparers
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body style={{ fontFamily: 'BasisGrotesquePro' }}>
+      <Modal.Body
+        className="modal-body-scroll"
+        style={{
+          fontFamily: 'BasisGrotesquePro',
+          fontSize: '14px',
+          padding: '1.5rem',
+          backgroundColor: '#fff'
+        }}
+      >
         {/* Selected Documents Info */}
         {selectedDocuments && Array.isArray(selectedDocuments) && selectedDocuments.length > 0 ? (
-          <div className="mb-4 p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-            <p className="mb-2" style={{ fontSize: '14px', fontWeight: '600', color: '#3B4A66' }}>
+          <div className="mb-3 p-2" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+            <p className="mb-2" style={{ fontSize: '13px', fontWeight: '600', color: '#3B4A66' }}>
               Selected Documents ({selectedDocuments.length})
             </p>
             <div className="d-flex flex-wrap gap-2">
@@ -290,7 +341,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
 
         {/* Select Tax Preparers Dropdown */}
         <div className="mb-3">
-          <label className="form-label" style={{ fontWeight: '500', color: '#3B4A66' }}>
+          <label className="form-label mb-1" style={{ fontSize: '14px', fontWeight: '500', color: '#3B4A66' }}>
             Select Tax Preparers <span className="text-danger">*</span>
           </label>
           {loadingTaxPreparers ? (
@@ -312,12 +363,14 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             <select
               className="form-select"
               multiple
-              size={Math.min(taxPreparers.length, 8)}
+              size={5}
               value={selectedTaxPreparerIds.map(id => id.toString())}
               onChange={handleTaxPreparerChange}
               style={{
                 borderColor: '#E5E7EB',
-                fontFamily: 'BasisGrotesquePro'
+                fontFamily: 'BasisGrotesquePro',
+                fontSize: '13px',
+                minHeight: '150px'
               }}
             >
               {taxPreparers.map((preparer) => {
@@ -330,7 +383,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
                     key={preparerId}
                     value={preparerId}
                     style={{
-                      padding: '8px 12px'
+                      padding: '6px 10px'
                     }}
                   >
                     {preparerName} {preparerEmail ? `(${preparerEmail})` : ''} {preparerRole ? `- ${preparerRole}` : ''}
@@ -340,15 +393,14 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             </select>
           )}
           {taxPreparers.length > 0 && (
-            <small className="text-muted d-block mt-2" style={{ fontSize: '12px' }}>
+            <small className="text-muted d-block mt-1" style={{ fontSize: '11px' }}>
               Hold Ctrl (Windows) or Cmd (Mac) to select multiple tax preparers. Maximum 2 selections allowed.
             </small>
           )}
         </div>
 
-        {/* Selected Tax Preparers Display */}
         {selectedTaxPreparerIds.length > 0 && (
-          <div className="mt-3 p-3" style={{ backgroundColor: '#E0F2FE', borderRadius: '6px', border: '1px solid #BAE6FD' }}>
+          <div className="mt-2 p-2" style={{ backgroundColor: '#E0F2FE', borderRadius: '6px', border: '1px solid #BAE6FD' }}>
             <p className="mb-2" style={{ fontSize: '13px', color: '#0369A1', fontWeight: '600' }}>
               Selected Tax Preparers ({selectedTaxPreparerIds.length})
             </p>
@@ -377,8 +429,8 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
         )}
 
         {/* Notes */}
-        <div className="mt-4">
-          <label className="form-label" style={{ fontWeight: '500', color: '#3B4A66' }}>
+        <div className="mt-3">
+          <label className="form-label mb-1" style={{ fontSize: '14px', fontWeight: '500', color: '#3B4A66' }}>
             Notes (Optional)
           </label>
           <textarea
@@ -389,12 +441,13 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             onChange={(e) => setNotes(e.target.value)}
             style={{
               borderColor: '#E5E7EB',
-              resize: 'vertical'
+              resize: 'vertical',
+              fontSize: '14px'
             }}
           />
         </div>
       </Modal.Body>
-      <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+      <Modal.Footer style={{ borderTop: '1px solid #E5E7EB', padding: '0.75rem 1.25rem' }}>
         <button
           className="btn"
           onClick={onClose}
@@ -404,7 +457,9 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             border: '1px solid #E5E7EB',
             color: '#3B4A66',
             fontFamily: 'BasisGrotesquePro',
-            borderRadius: '8px'
+            borderRadius: '6px',
+            fontSize: '14px',
+            padding: '6px 16px'
           }}
         >
           Cancel
@@ -418,11 +473,13 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             border: 'none',
             color: 'white',
             fontFamily: 'BasisGrotesquePro',
-            borderRadius: '8px',
-            fontWeight: '500'
+            borderRadius: '6px',
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '6px 20px'
           }}
         >
-          {submitting ? 'Sharing...' : `Share with ${selectedTaxPreparerIds.length} Tax Preparer${selectedTaxPreparerIds.length !== 1 ? 's' : ''}`}
+          {submitting ? 'Sharing...' : `Share`}
         </button>
       </Modal.Footer>
     </Modal>

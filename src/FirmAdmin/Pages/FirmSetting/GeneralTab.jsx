@@ -157,10 +157,10 @@ export default function GeneralTab() {
         <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
           <div className="mb-5">
             <h3 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-              Firm Information
+              Information
             </h3>
             <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-              Manage your firm's identity and primary contact details
+              Manage your identity and primary contact details
             </p>
           </div>
 
@@ -168,7 +168,7 @@ export default function GeneralTab() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-                  Firm Name <span className="text-red-500">*</span>
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -197,7 +197,7 @@ export default function GeneralTab() {
                   className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro] bg-gray-50 cursor-not-allowed"
                 />
                 <p className="text-xs text-[#7B8AB2] mt-1 font-[BasisGrotesquePro]">
-                  This is the primary contact (account owner) associated with the firm. To update this, go to Account Settings.
+                  This is the primary contact (account owner) associated with the account. To update this, go to Account Settings.
                 </p>
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function GeneralTab() {
               Contact Information
             </h3>
             <p className="text-sm text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-              How clients can reach your firm
+              How clients can reach you
             </p>
           </div>
 
