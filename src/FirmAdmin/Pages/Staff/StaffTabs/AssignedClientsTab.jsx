@@ -3,8 +3,11 @@ import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 
+import ReassignClientsModal from './ReassignClientsModal';
+
 export default function AssignedClientsTab({ staffId }) {
   const [clients, setClients] = useState([]);
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [staffName, setStaffName] = useState('');
@@ -105,14 +108,17 @@ export default function AssignedClientsTab({ staffId }) {
             {staffName ? `Clients currently managed by ${staffName}` : 'Clients currently managed by this staff member'}
           </p>
         </div>
-        <button className="px-4 py-2 !border border-[#E8F0FF] text-gray-700 !rounded-lg hover:bg-gray-200 transition font-[BasisGrotesquePro] flex items-center gap-2 text-sm">
+        <button
+          onClick={() => setIsReassignModalOpen(true)}
+          className="px-4 py-2 !border border-[#E8F0FF] text-gray-700 !rounded-lg hover:bg-gray-200 transition font-[BasisGrotesquePro] flex items-center gap-2 text-sm"
+        >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10.6668 14V12.6667C10.6668 11.9594 10.3859 11.2811 9.88578 10.781C9.38568 10.281 8.70741 10 8.00016 10H4.00016C3.29292 10 2.61464 10.281 2.11454 10.781C1.61445 11.2811 1.3335 11.9594 1.3335 12.6667V14M12.6668 5.33333V9.33333M14.6668 7.33333H10.6668M8.66683 4.66667C8.66683 6.13943 7.47292 7.33333 6.00016 7.33333C4.5274 7.33333 3.3335 6.13943 3.3335 4.66667C3.3335 3.19391 4.5274 2 6.00016 2C7.47292 2 8.66683 3.19391 8.66683 4.66667Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M10.6668 14V12.6667C10.6668 11.9594 10.3859 11.2811 9.88578 10.781C9.38568 10.281 8.70741 10 8.00016 10H4.00016C3.29292 10 2.61464 10.281 2.11454 10.781C1.61445 11.2811 1.3335 11.9594 1.3335 12.6667V14M12.6668 5.33333V9.33333M14.6668 7.33333H10.6668M8.66683 4.66667C8.66683 6.13943 7.47292 7.33333 6.00016 7.33333C4.5274 7.33333 3.3335 6.13943 3.3335 4.66667C3.3335 3.19391 4.5274 2 6.00016 2C7.47292 2 8.66683 3.19391 8.66683 4.66667Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Reassign Clients
         </button>
       </div>
-      
+
       {mappedClients.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No assigned clients found</p>
@@ -128,7 +134,7 @@ export default function AssignedClientsTab({ staffId }) {
               <div className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">Status</div>
               <div className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">Last Contact</div>
             </div>
-            
+
             {/* Table Body */}
             <div className="space-y-3">
               {mappedClients.map((client) => (
@@ -143,11 +149,10 @@ export default function AssignedClientsTab({ staffId }) {
                     <span className="text-sm !text-[#3B4A66] font-[BasisGrotesquePro] font-medium">{client.company}</span>
                   </div>
                   <div>
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ml-3 ${
-                      client.status === 'Active' 
-                        ? 'bg-[#22C55E] text-white' 
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ml-3 ${client.status === 'Active'
+                        ? 'bg-[#22C55E] text-white'
                         : 'bg-[#FBBF24] text-white'
-                    } font-[BasisGrotesquePro]`}>
+                      } font-[BasisGrotesquePro]`}>
                       {client.status}
                     </span>
                   </div>
@@ -160,6 +165,13 @@ export default function AssignedClientsTab({ staffId }) {
           </div>
         </>
       )}
+      <ReassignClientsModal 
+        isOpen={isReassignModalOpen}
+        onClose={() => setIsReassignModalOpen(false)}
+        onSuccess={fetchAssignedClients}
+        currentStaffId={staffId}
+        clients={mappedClients}
+      />
     </div>
   );
 }
