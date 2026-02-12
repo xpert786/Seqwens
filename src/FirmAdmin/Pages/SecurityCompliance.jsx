@@ -22,7 +22,6 @@ import { toast } from 'react-toastify';
 import Pagination from '../../ClientOnboarding/components/Pagination';
 const tabs = [
     'Security Overview',
-    'Security Settings',
     'Compliance Readiness',
     'Active Sessions',
     'Audits Logs',
@@ -2626,7 +2625,7 @@ export default function SecurityCompliance() {
                 <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Configure session timeouts and restrictions by geographic region
                 </p>
-            </div>
+            </div>  
 
             {/* Error Message */}
             {geoRestrictionsError && (
@@ -3151,7 +3150,6 @@ export default function SecurityCompliance() {
                 </div>
 
                 {activeTab === 'Security Overview' && renderSecurityOverview()}
-                {activeTab === 'Security Settings' && renderSecuritySettings()}
                 {activeTab === 'Compliance Readiness' && renderCompliance()}
                 {activeTab === 'Active Sessions' && renderActiveSessions()}
                 {activeTab === 'Audits Logs' && renderAuditLogs()}
