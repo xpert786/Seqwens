@@ -1239,7 +1239,16 @@ export default function ESignatureDashboard() {
 
               const userData = getUserData();
               const currentUserId = userData?.id || userData?.user?.id;
-              const isCreator = currentUserId === request.requested_by;
+
+              // Robust check for creator status - ensure IDs exist and convert to strings for comparison
+              const isCreator = currentUserId && request.requested_by && String(currentUserId) === String(request.requested_by);
+
+              // Check for firm admin role
+              const isFirmAdmin = userData?.role === 'FirmAdmin' || userData?.user?.role === 'FirmAdmin' || userData?.is_firm_admin;
+
+              // Allow management if user is creator or firm admin
+              const canManage = isCreator || isFirmAdmin;
+
               const isAssignedPreparer = request.assigned_preparer_ids?.includes(currentUserId);
 
               return (
@@ -1427,7 +1436,7 @@ export default function ESignatureDashboard() {
                             {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
                             {request.status?.toLowerCase() !== 'completed' &&
                               request.status?.toLowerCase() !== 'processed' &&
-                              isCreator && (
+                              canManage && (
                                 <>
                                   {/* Mark as Completed Button */}
                                   <button
@@ -1514,7 +1523,8 @@ export default function ESignatureDashboard() {
               );
             })}
           </div>
-        )}
+        )
+        }
       </div>
 
       {/* Summary */}

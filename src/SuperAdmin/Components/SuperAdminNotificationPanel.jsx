@@ -77,7 +77,7 @@ const formatTimeAgo = (dateString) => {
 const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
   const navigate = useNavigate();
   const panelRef = useRef(null);
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("unread");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -434,33 +434,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
       </div>
 
       {/* Tabs */}
-      <div
-        className="d-flex gap-2 px-3 pt-2"
-        style={{ borderBottom: "1px solid #E5E7EB" }}
-      >
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setSelectedTab(tab.key)}
-            className="btn "
-            style={{
-              backgroundColor: "transparent",
-              border: "none",
-              borderBottom:
-                selectedTab === tab.key ? "2px solid #F56D2D" : "2px solid transparent",
-              color: selectedTab === tab.key ? "#F56D2D" : "#4B5563",
-              fontWeight: selectedTab === tab.key ? "500" : "400",
-              fontSize: "12px",
-              fontFamily: "BasisGrotesquePro",
-              padding: "8px 12px",
-              marginBottom: "-1px",
-              borderRadius: "0",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Tabs removed - defaulting to unread view */}
 
       {/* Content */}
       <div
@@ -590,7 +564,8 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
       </div>
 
       {/* View All Button */}
-      {!loading && !error && hasMoreNotifications && !showAllNotifications && (
+      {/* View All Button - Toggles to show all notifications in the panel */}
+      {!loading && !error && !showAllNotifications && (
         <div
           className="text-center p-2"
           style={{
@@ -599,7 +574,10 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
         >
           <button
             className="btn "
-            onClick={() => setShowAllNotifications(true)}
+            onClick={() => {
+              setSelectedTab("all");
+              setShowAllNotifications(true);
+            }}
             style={{
               backgroundColor: "#F56D2D",
               color: "#FFFFFF",
@@ -611,11 +589,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
               fontWeight: "500",
             }}
           >
-            View All ({filteredNotifications.length > RECENT_NOTIFICATIONS_LIMIT ?
-              (selectedTab === "unread" ? notifications.filter((n) => !n.is_read).length :
-                selectedTab === "read" ? notifications.filter((n) => n.is_read).length :
-                  notifications.filter((n) => (n.notification_type || "").toLowerCase().includes("message")).length)
-              : filteredNotifications.length} notifications)
+            {selectedTab === "unread" ? "View All Notifications" : "Show All"}
           </button>
         </div>
       )}
@@ -630,7 +604,10 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
         >
           <button
             className="btn "
-            onClick={() => setShowAllNotifications(false)}
+            onClick={() => {
+              setSelectedTab("unread");
+              setShowAllNotifications(false);
+            }}
             style={{
               backgroundColor: "#F56D2D",
               color: "#FFFFFF",
@@ -642,7 +619,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
               fontWeight: "500",
             }}
           >
-            Show Less
+            Show Less (Unread Only)
           </button>
         </div>
       )}

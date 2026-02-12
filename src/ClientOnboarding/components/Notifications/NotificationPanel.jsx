@@ -352,8 +352,18 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
   // Check if there are more notifications than displayed
   const hasMoreNotifications = useMemo(() => {
+    // If we're in "unread" mode, we have "more" if there are >5 unread OR if there any read notifications at all
+    if (selectedTab === "unread") {
+      return filteredNotifications.length > MAX_INITIAL_NOTIFICATIONS || notifications.some(n => n.read);
+    }
+    // If we're already in "all" mode, we have more if total > current shown
     return filteredNotifications.length > MAX_INITIAL_NOTIFICATIONS;
-  }, [filteredNotifications]);
+  }, [filteredNotifications.length, notifications, selectedTab]);
+
+  const handleViewAll = () => {
+    setSelectedTab("all");
+    setShowAllNotifications(true);
+  };
 
   const markAsRead = useCallback(async (notificationId) => {
     try {
@@ -540,21 +550,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
       <div className="bg-white mb-3 mx-2">
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div className="bg-white p-1 rounded-2 d-flex gap-3 bor">
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setSelectedTab(tab.key);
-                  setShowAllNotifications(false); // Reset when changing tabs
-                }}
-                className={`btn  ${selectedTab === tab.key ? "active-tab" : "inactive-tab"
-                  }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {/* Tab selector removed - defaulting to unread view */}
 
           <div className="colour4 p-1 rounded-2">
             <button
@@ -660,9 +656,33 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
               fontWeight: "500",
               cursor: "pointer"
             }}
-            onClick={() => setShowAllNotifications(true)}
+            onClick={handleViewAll}
           >
-            View All ({filteredNotifications.length} notifications)
+            {selectedTab === "unread" ? "View All Notifications" : `View More (${filteredNotifications.length} notifications)`}
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && showAllNotifications && (
+        <div className="text-center mt-3 mb-2">
+          <button
+            className="btn "
+            style={{
+              backgroundColor: "transparent",
+              color: "#F56D2D",
+              border: "1px solid #F56D2D",
+              borderRadius: "8px",
+              padding: "8px 24px",
+              fontFamily: "BasisGrotesquePro",
+              fontWeight: "500",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              setShowAllNotifications(false);
+              setSelectedTab("unread");
+            }}
+          >
+            Show Less (Unread Only)
           </button>
         </div>
       )}

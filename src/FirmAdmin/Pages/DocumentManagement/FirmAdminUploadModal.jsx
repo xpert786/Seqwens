@@ -86,49 +86,34 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
 
         try {
             setLoadingFolders(true);
-            // Use listFoldersWithSync to get latest folder structure from B2
-            const response = await firmAdminDocumentsAPI.listFoldersWithSync();
+            // Use browseDocuments for consistency with the main page
+            const response = await firmAdminDocumentsAPI.browseDocuments({});
 
-            if (response.folders && Array.isArray(response.folders)) {
-                // New API response format: { folders: [...] }
-                const foldersTree = response.folders
-                    .filter(folder => folder.id) // Filter out folders without IDs
-                    .map(folder => ({
-                        id: folder.id,
-                        name: folder.title || folder.name,
-                        title: folder.title || folder.name,
-                        description: folder.description || '',
-                        children: [],
-                        expanded: false,
-                        loaded: false,
-                    }));
-                setFolderTree(foldersTree);
-                setExpandedFolders(new Set());
-            } else if (response.success && response.data) {
-                // Fallback to old response structure
-                const rootFolders = response.data.folders || [];
-                const foldersTree = rootFolders
-                    .filter(folder => folder.id) // Filter out folders without IDs
-                    .map(folder => ({
-                        id: folder.id,
-                        name: folder.title,
-                        title: folder.title,
-                        description: folder.description || '',
-                        children: [],
-                        expanded: false,
-                        loaded: false,
-                    }));
-                setFolderTree(foldersTree);
-                setExpandedFolders(new Set());
-            } else {
-                setFolderTree([]);
+            let folders = [];
+            if (response.success && response.data && Array.isArray(response.data.folders)) {
+                folders = response.data.folders;
+            } else if (response.folders && Array.isArray(response.folders)) {
+                folders = response.folders;
+            } else if (response.data && Array.isArray(response.data)) {
+                folders = response.data;
             }
+
+            const foldersTree = folders
+                .filter(folder => folder && (folder.id || folder.name || folder.title))
+                .map(folder => ({
+                    id: folder.id,
+                    name: folder.title || folder.name || "Untitled Folder",
+                    title: folder.title || folder.name || "Untitled Folder",
+                    description: folder.description || '',
+                    children: [],
+                    expanded: false,
+                    loaded: false,
+                }));
+
+            setFolderTree(foldersTree);
+            setExpandedFolders(new Set());
         } catch (error) {
             console.error('Error fetching root folders:', error);
-            toast.error('Failed to load folders. Please refresh the page.', {
-                position: "top-right",
-                autoClose: 3000,
-            });
             setFolderTree([]);
         } finally {
             setLoadingFolders(false);
@@ -621,7 +606,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             centered
             backdrop="static"
             scrollable
-            dialogClassName="upload-modal-custom"
+            dialogClassName={step === 1 ? "upload-modal-custom" : "upload-modal-custom-wide"}
         >
             <style>
                 {`
@@ -629,6 +614,13 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         max-width: 650px;
                         width: 95%;
                         margin: 1.75rem auto;
+                        transition: max-width 0.3s ease-in-out;
+                    }
+                    .upload-modal-custom-wide {
+                        max-width: 1100px;
+                        width: 95%;
+                        margin: 1.75rem auto;
+                        transition: max-width 0.3s ease-in-out;
                     }
                     .modal-body-scroll::-webkit-scrollbar {
                         width: 6px;
@@ -640,12 +632,18 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         background: #ccc;
                         border-radius: 10px;
                     }
+                    .doc-scroll {
+                        max-height: 60vh !important;
+                    }
+                    .config-scroll {
+                        max-height: 60vh !important;
+                    }
                 `}
             </style>
-            <Modal.Body className="p-3 modal-body-scroll" style={{
+            <Modal.Body className="p-4 modal-body-scroll" style={{
                 overflowY: 'auto',
-                maxHeight: '65vh',
-                fontSize: '12px'
+                maxHeight: '85vh',
+                fontSize: '13px'
             }}>
                 <h5 className="upload-heading" style={{ fontSize: '18px', fontWeight: '600' }}>Upload Documents</h5>
                 <p className="upload-subheading" style={{ fontSize: '13px' }}>Upload your tax documents securely</p>
@@ -733,8 +731,8 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
 
                 {step === 2 && (
                     <>
-                        <div className="d-flex flex-wrap gap-4 mt-4">
-                            <div className="doc-scroll">
+                        <div className="d-flex flex-column flex-md-row gap-4 mt-4">
+                            <div className="doc-scroll" style={{ flex: '0 0 320px' }}>
                                 <h6 className="mb-1 custom-doc-header">Documents ({files.length})</h6>
                                 <p className="small text-muted custom-doc-subtext">Click on a document to configure it</p>
 
@@ -782,7 +780,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                 ))}
                             </div>
 
-                            <div className="flex-grow-1 d-flex flex-column">
+                            <div className="flex-grow-1 d-flex flex-column" style={{ minWidth: 0 }}>
                                 <div className="d-flex gap-2 mb-3">
                                     <Button className={`toggle-btn ${!previewMode ? "active" : ""}`} onClick={() => setPreviewMode(false)}>Configure</Button>
                                     <Button className={`toggle-btn ${previewMode ? "active" : ""}`} onClick={() => setPreviewMode(true)}>Preview</Button>
@@ -911,7 +909,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                                             border: '1px solid #E5E7EB',
                                                             borderRadius: '8px',
                                                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                                            maxHeight: '300px',
+                                                            maxHeight: '450px',
                                                             overflowY: 'auto',
                                                             zIndex: 1000,
                                                             padding: '8px'
@@ -943,7 +941,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                             </Form.Group>
                                         </div>
                                     ) : (
-                                        <div className="preview-panel border rounded p-3 d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '400px', backgroundColor: '#f8f9fa' }}>
+                                        <div className="preview-panel border rounded p-3 d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '450px', maxHeight: '600px', backgroundColor: '#f8f9fa' }}>
                                             {(() => {
                                                 const selectedFile = files[selectedIndex];
                                                 if (!selectedFile) return <p className="text-muted">No file selected</p>;

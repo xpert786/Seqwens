@@ -254,7 +254,7 @@
   padding: 1rem;
   border-radius: 8px;
   background-color: #fff;
-  height: 20vmax !important;
+  min-height: 250px;
 }
 
 .config-scroll {
@@ -338,7 +338,7 @@
   gap: 6px;
   margin-bottom: 6px;
   line-height: 1.4;
-  width: 150%;
+  width: 100%;
   font-family: 'BasisGrotesquePro';
 }
 

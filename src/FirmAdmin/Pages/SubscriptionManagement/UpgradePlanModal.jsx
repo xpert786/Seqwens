@@ -4,7 +4,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminSubscriptionAPI, firmAdminPaymentMethodsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import StripePaymentForm from './StripePaymentForm';
+import StripePaymentForm from '../../../components/StripePaymentForm';
 
 const API_BASE_URL = getApiBaseUrl();
 

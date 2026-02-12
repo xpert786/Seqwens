@@ -7,8 +7,8 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 import { toast } from 'react-toastify';
-import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getApiBaseUrl, fetchWithCors } from '../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../ClientOnboarding/utils/userUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
