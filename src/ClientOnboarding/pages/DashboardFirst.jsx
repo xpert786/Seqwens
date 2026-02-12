@@ -125,7 +125,7 @@ export default function DashboardFirst() {
       case "Complete Data Intake Form":
         return <UploadIcon {...iconProps} />;
       case "Upload Tax Documents":
-        return <FileTaskIcon {...iconProps} />;
+        return <ConverIcon {...iconProps} />;
       case "Schedule a Consultation":
         return <SignIcon {...iconProps} />;
       default:

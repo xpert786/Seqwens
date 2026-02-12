@@ -196,15 +196,15 @@ const TaxPreparerWorkflows = () => {
     const s = status?.toLowerCase();
     switch (s) {
       case 'active':
-        return { bg: '#D1FAE5', text: '#065F46', icon: <Activity size={14} className="mr-1" /> };
+        return { bg: '#10B981', text: '#FFFFFF', icon: <Activity size={14} className="mr-1" /> };
       case 'completed':
-        return { bg: '#DBEAFE', text: '#1E40AF', icon: <CheckCircle size={14} className="mr-1" /> };
+        return { bg: '#3B82F6', text: '#FFFFFF', icon: <CheckCircle size={14} className="mr-1" /> };
       case 'paused':
-        return { bg: '#FEF3C7', text: '#92400E', icon: <Pause size={14} className="mr-1" /> };
+        return { bg: '#F59E0B', text: '#FFFFFF', icon: <Pause size={14} className="mr-1" /> };
       case 'cancelled':
-        return { bg: '#FEE2E2', text: '#991B1B', icon: <AlertCircle size={14} className="mr-1" /> };
+        return { bg: '#EF4444', text: '#FFFFFF', icon: <AlertCircle size={14} className="mr-1" /> };
       default:
-        return { bg: '#F3F4F6', text: '#374151', icon: <Clock size={14} className="mr-1" /> };
+        return { bg: '#6B7280', text: '#FFFFFF', icon: <Clock size={14} className="mr-1" /> };
     }
   };
 

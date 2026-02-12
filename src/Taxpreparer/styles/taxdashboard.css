@@ -268,12 +268,7 @@ p.card-contented {
 }
 
 .dashboard-main-container {
-  padding: 0 32px;
   width: 100%;
-}
-
-.dashboard-sections-wrapper {
-  margin: 0 !important;
 }
 
 /* Recent Messages */
@@ -399,6 +394,7 @@ p.card-contented {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 180px;
 }
 
 .task-status-group {
@@ -523,10 +519,6 @@ p.card-contented {
   .taxdashboard-title {
     font-size: 22px;
   }
-
-  .dashboard-main-container {
-    padding: 0 20px;
-  }
 }
 
 @media (max-width: 1024px) {
@@ -568,9 +560,6 @@ p.card-contented {
 }
 
 @media (max-width: 480px) {
-  .dashboard-main-container {
-    padding: 0 12px;
-  }
 
   .dashboard-sections-wrapper {
     gap: 1rem !important;
@@ -641,7 +630,7 @@ p.card-contented {
   }
 
   /* Ensure cards row has proper spacing */
-  .row.g-3 > [class*="col-"] {
+  .row.g-3>[class*="col-"] {
     padding-left: 8px;
     padding-right: 8px;
   }

@@ -311,7 +311,7 @@ const IntakeFormTab = ({ onOpenFillModal }) => {
                     <button
                         onClick={onOpenFillModal}
                         className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-                        style={{ backgroundColor: "var(--Palette2-TealBlue-900, #00C0C6)" }}
+                        style={{ backgroundColor: "var(--Palette2-TealBlue-900, #00C0C6)", borderRadius: '8px' }}
                     >
                         Fill Intake Form
                     </button>
@@ -330,6 +330,7 @@ const IntakeFormTab = ({ onOpenFillModal }) => {
                         onClick={handleDownload}
                         disabled={downloading}
                         className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ borderRadius: '8px' }}
                     >
                         {downloading ? (
                             <>

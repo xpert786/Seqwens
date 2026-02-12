@@ -425,36 +425,38 @@ export default function Topbar({
         <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
           <div className="d-flex align-items-center h-full flex-grow-1">
             <div
-              className={`d-flex align-items-center topbar-logo-wrapper ${isSidebarOpen ? 'px-4 sidebar-open' : 'px-3 sidebar-closed'}`}
+              className={`d-flex align-items-center topbar-logo-wrapper ${isSidebarOpen ? 'px-4 sidebar-open justify-content-between' : 'px-0 sidebar-closed justify-content-center'}`}
               style={{
                 height: '100%',
                 transition: 'all 0.3s ease',
                 flexShrink: 0
               }}
             >
-              <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-                <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" />
-              </Link>
-            </div>
+              {isSidebarOpen && (
+                <Link to="/" className="navbar-brand d-flex align-items-center m-0">
+                  <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" />
+                </Link>
+              )}
 
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors"
-              aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-              style={{ background: "transparent", border: "none", width: '40px', marginLeft: isSidebarOpen ? '-20px' : '0', flexShrink: 0 }}
-            >
-              <span
-                className={`sidebar-toggle-icon ${isSidebarOpen ? "" : "collapsed"
-                  }`}
-                style={{
-                  transition: "transform 0.3s ease",
-                  transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
-                }}
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors"
+                aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                style={{ background: "transparent", border: "none", width: '40px', flexShrink: 0 }}
               >
-                <LogoIcond />
-              </span>
-            </button>
+                <span
+                  className={`sidebar-toggle-icon ${isSidebarOpen ? "" : "collapsed"
+                    }`}
+                  style={{
+                    transition: "transform 0.3s ease",
+                    transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
+                  }}
+                >
+                  <LogoIcond />
+                </span>
+              </button>
+            </div>
 
             <div className="topbar-search position-relative ms-4" ref={searchRef}>
               <i className="bi bi-search"></i>

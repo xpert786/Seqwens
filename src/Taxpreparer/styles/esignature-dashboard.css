@@ -130,43 +130,43 @@
 }
 
 .status-badge-pending {
-  background-color: #FEF3C7;
-  color: #92400E;
+  background-color: #F59E0B;
+  color: #FFFFFF;
 }
 
 .status-badge-sent {
-  background-color: #DBEAFE;
-  color: #1E40AF;
+  background-color: #3B82F6;
+  color: #FFFFFF;
 }
 
 .status-badge-viewed {
-  background-color: #E0E7FF;
-  color: #3730A3;
+  background-color: #8B5CF6;
+  color: #FFFFFF;
 }
 
 .status-badge-signed {
-  background-color: #D1FAE5;
-  color: #065F46;
+  background-color: #10B981;
+  color: #FFFFFF;
 }
 
 .status-badge-completed {
-  background-color: #D1FAE5;
-  color: #065F46;
+  background-color: #10B981;
+  color: #FFFFFF;
 }
 
 .status-badge-declined {
-  background-color: #FEE2E2;
-  color: #991B1B;
+  background-color: #EF4444;
+  color: #FFFFFF;
 }
 
 .status-badge-expired {
-  background-color: #F3F4F6;
-  color: #374151;
+  background-color: #6B7280;
+  color: #FFFFFF;
 }
 
 .status-badge-default {
-  background-color: #F3F4F6;
-  color: #6B7280;
+  background-color: #3B4A66;
+  color: #FFFFFF;
 }
 
 /* Signature Requests List */

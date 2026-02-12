@@ -398,7 +398,7 @@ export default function Dashboard() {
 
         {/* Upcoming Deadlines */}
         <div className="col-12 col-md-6">
-          <div className="card custom-card upcoming-deadlines-card">
+          <div className="card custom-card upcoming-deadlines-card p-3 p-md-4 rounded-3 h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h4 className="section-title mb-1">Upcoming Deadlines</h4>
@@ -418,7 +418,7 @@ export default function Dashboard() {
                 {showAllDeadlines ? 'Show Less' : 'View All'}
               </button>
             </div>
-            <div className="upcoming-deadlines-container">
+            <div className="d-flex flex-column gap-3">
               {loading ? (
                 <div className="text-center py-3">Loading deadlines...</div>
               ) : upcomingDeadlines.length === 0 ? (
@@ -532,7 +532,7 @@ export default function Dashboard() {
 
         {/* Recent Activity */}
         <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-4">
+          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
             <div className="mb-3">
               <h4 className="section-title mb-1">Quick Actions</h4>
               <p className="section-subtitle m-0">Common tasks and shortcuts</p>
