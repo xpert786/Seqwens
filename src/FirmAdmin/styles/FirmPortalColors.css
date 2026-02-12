@@ -102,6 +102,7 @@
   background-color: var(--firm-secondary-color, #ffffff) !important;
 }
 
+
 /* Text colors use secondary color - apply to body text and labels */
 .firm-dashboard-layout,
 .firm-dashboard-layout p,
@@ -137,4 +138,17 @@
 .firm-panel .active,
 .firm-panel [aria-current="page"] {
   background-color: var(--firm-secondary-color, #ffffff) !important;
+}
+
+/* Sidebar Hover Overrides - Force white text on hover */
+.firm-sidebar a:hover,
+.firm-sidebar [class*="hover"]:hover,
+.firm-dashboard-layout .firm-sidebar a:hover {
+  color: white !important;
+}
+
+.firm-sidebar a:hover svg,
+.firm-sidebar [class*="hover"]:hover svg {
+  color: white !important;
+  fill: currentColor;
 }

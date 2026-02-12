@@ -94,7 +94,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
   const iconWrapperClass = (path) =>
     `inline-flex items-center justify-center mr-3 transition-all duration-200 ${isActive(path)
       ? "w-8 h-8 rounded-full [&>svg]:!text-white [&>svg]:w-5 [&>svg]:h-5"
-      : "w-8 h-8 rounded-full [&>svg]:!text-white [&>svg]:w-5 [&>svg]:h-5 group-hover:[&>svg]:!text-black"
+      : "w-8 h-8 rounded-full [&>svg]:!text-white [&>svg]:w-5 [&>svg]:h-5 group-hover:[&>svg]:!text-white"
     }`;
 
   const getIconWrapperStyle = (path) => {
@@ -114,7 +114,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
 
   return (
     <div
-      className="h-[calc(100vh-70px)] fixed top-[70px] left-0 z-[1000] transition-all duration-300"
+      className="firm-sidebar h-[calc(100vh-70px)] fixed top-[70px] left-0 z-[1000] transition-all duration-300"
       style={{
         backgroundColor: 'var(--firm-primary-color, #32B582)',
         width: sidebarWidth,
