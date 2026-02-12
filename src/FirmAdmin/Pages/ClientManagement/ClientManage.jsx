@@ -433,7 +433,9 @@ export default function ClientManage() {
                   return 'DocumentIcon';
                 })(),
                 totalBilled: '$0', // Can be calculated from invoices if available
-                compliance: (client.status || profile.account_status?.toLowerCase() || 'new').charAt(0).toUpperCase() + (client.status || profile.account_status?.toLowerCase() || 'new').slice(1),
+                clientStatus: client.is_active !== undefined 
+                  ? (client.is_active ? 'Active' : 'Inactive') 
+                  : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
                 pendingTasks: client.pending_tasks_count || 0,
                 documentsCount: client.documents_count || 0,
                 assignedStaff: client.assigned_staff || [],
@@ -1001,7 +1003,9 @@ export default function ClientManage() {
                 return 'DocumentIcon';
               })(),
               totalBilled: '$0',
-              compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+              clientStatus: client.is_active !== undefined 
+                ? (client.is_active ? 'Active' : 'Inactive') 
+                : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
               pendingTasks: client.pending_tasks_count || 0,
               documentsCount: client.documents_count || 0,
               assignedStaff: client.assigned_staff || [],
@@ -1129,25 +1133,7 @@ export default function ClientManage() {
     }
   };
 
-  const getComplianceColor = (compliance) => {
-    switch (compliance) {
-      case 'Complete': return 'text-white';
-      case 'Pending': return 'text-white';
-      case 'Missing': return 'text-white';
-      case 'Active': return 'text-white';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  const getComplianceIcon = (compliance) => {
-    switch (compliance) {
-      case 'Complete': return;
-      case 'Pending': return;
-      case 'Missing': return;
-      case 'Active': return;
-      default: return null;
-    }
-  };
 
   const getActivityIcon = (iconName) => {
     switch (iconName) {
@@ -1223,7 +1209,9 @@ export default function ClientManage() {
               status: client.status || profile.account_status?.toLowerCase() || 'new',
               lastActivity: client.last_activity?.last_active_display || client.next_due_date || 'N/A',
               totalBilled: '$0',
-              compliance: (client.status || profile.account_status?.toLowerCase() || 'new').charAt(0).toUpperCase() + (client.status || profile.account_status?.toLowerCase() || 'new').slice(1),
+              clientStatus: client.is_active !== undefined 
+                ? (client.is_active ? 'Active' : 'Inactive') 
+                : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
               assignedStaff: client.assigned_staff || [],
               is_linked: client.is_linked !== undefined ? client.is_linked : true,
               link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked')
@@ -1308,6 +1296,7 @@ export default function ClientManage() {
           client.phone || 'N/A',
           client.company || client.type || 'N/A',
           (client.status || 'N/A').charAt(0).toUpperCase() + (client.status || 'N/A').slice(1),
+          client.clientStatus || 'Inactive',
           client.lastActivity || 'N/A',
         ];
       });
@@ -1315,7 +1304,7 @@ export default function ClientManage() {
       // Create table
       autoTable(doc, {
         startY: yPosition,
-        head: [["Client Name", "Email", "Phone", "Type", "Status", "Last Activity"]],
+        head: [["Client Name", "Email", "Phone", "Type", "Status", "Client Status", "Last Activity"]],
         body: tableData,
         theme: "grid",
         headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
@@ -1327,7 +1316,8 @@ export default function ClientManage() {
           2: { cellWidth: 30, overflow: 'linebreak' },
           3: { cellWidth: 25, overflow: 'linebreak' },
           4: { cellWidth: 25, overflow: 'linebreak' },
-          5: { cellWidth: 25, overflow: 'linebreak' }
+          5: { cellWidth: 22, overflow: 'linebreak' },
+          6: { cellWidth: 25, overflow: 'linebreak' }
         },
         alternateRowStyles: { fillColor: [249, 250, 251] },
         didDrawPage: (data) => {
@@ -2168,28 +2158,20 @@ export default function ClientManage() {
                               </div>
                             </div>
 
-                            {/* Client Status Column */}
                             <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
                               <span
                                 className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-white`}
-                                style={client.compliance === 'Active' ? {
+                                style={client.clientStatus === 'Active' ? {
                                   background: '#22C55E',
                                   border: '0.5px solid #22C55E'
-                                } : client.compliance === 'Pending' ? {
-                                  background: 'var(--color-yellow-400, #FBBF24)',
-                                  border: '0.5px solid var(--color-yellow-400, #FBBF24)'
-                                } : client.compliance === 'Inactive' ? {
+                                } : {
                                   background: 'var(--color-red-500, #EF4444)',
                                   border: '0.5px solid var(--color-red-500, #EF4444)'
-                                } : {
-                                  background: '#6B7280',
-                                  border: '0.5px solid #6B7280'
                                 }}
                               >
-                                {client.compliance === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
-                                {client.compliance === 'Inactive' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
-                                {client.compliance === 'Pending' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
-                                <span className="">{client.compliance}</span>
+                                {client.clientStatus === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                {client.clientStatus === 'Inactive' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                <span className="">{client.clientStatus}</span>
                               </span>
                             </div>
 
