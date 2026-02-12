@@ -45,7 +45,7 @@ export default function ESignature() {
     completed: 0,
     cancelled: 0
   });
-  const [filter, setFilter] = useState(null); // null = all, 'pending', 'inprogress', 'expired'
+  const [filter, setFilter] = useState(null); // null = all, 'pending', 'completed', 'expired'
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
@@ -469,12 +469,12 @@ export default function ESignature() {
             </button>
             <button
               onClick={() => {
-                setFilter('inprogress');
+                setFilter('completed');
               }}
               className="btn "
               style={{
-                backgroundColor: filter === 'inprogress' ? "#00C0C6" : "#fff",
-                color: filter === 'inprogress' ? "#fff" : "#3B4A66",
+                backgroundColor: filter === 'completed' ? "#00C0C6" : "#fff",
+                color: filter === 'completed' ? "#fff" : "#3B4A66",
                 border: "1px solid #E8F0FF",
                 borderRadius: "8px",
                 fontSize: "12px",
@@ -486,23 +486,7 @@ export default function ESignature() {
             </button>
 
 
-            <button
-              onClick={() => {
-                setFilter('expired');
-              }}
-              className="btn "
-              style={{
-                backgroundColor: filter === 'expired' ? "#00C0C6" : "#fff",
-                color: filter === 'expired' ? "#fff" : "#3B4A66",
-                border: "1px solid #E8F0FF",
-                borderRadius: "8px",
-                fontSize: "12px",
-                fontWeight: "500",
-                padding: "6px 12px"
-              }}
-            >
-              Expired
-            </button>
+
           </div>
         </div>
 

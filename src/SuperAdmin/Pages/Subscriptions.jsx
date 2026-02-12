@@ -1593,8 +1593,7 @@ const SubscriptionInvoicesTab = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page: currentPage,
-        limit: 20,
+        limit: 'all',
         search: searchTerm,
         status: statusFilter,
         invoice_type: typeFilter,
@@ -1612,7 +1611,7 @@ const SubscriptionInvoicesTab = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, statusFilter, typeFilter]);
+  }, [searchTerm, statusFilter, typeFilter]);
 
   const fetchStats = useCallback(async () => {
     try {

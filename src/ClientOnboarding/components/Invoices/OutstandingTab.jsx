@@ -399,6 +399,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                             >
                                 <div className="d-flex justify-content-between align-items-start flex-column flex-md-row">
                                     {/* Left Info */}
+
                                     <div className="mb-3 mb-md-0 flex-grow-1">
                                         <div className="d-flex align-items-start justify-content-between">
                                             <div>
@@ -422,6 +423,16 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                                 </div>
                                                 <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
                                                     Due: {inv.due}
+                                                </div>
+                                            </div>
+                                            <div className="text-center flex-grow-1 mb-3 mb-md-0">
+                                                <div className="mb-0">
+                                                    <span style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                                        {inv.isPaid ? 'Paid Invoice:' : 'Pay Invoice:'}
+                                                    </span>{' '}
+                                                    <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                                        ${inv.isPaid ? inv.paid_amount.toFixed(2) : (inv.remaining_amount || inv.amount).toFixed(2)}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="d-flex gap-2 ms-2">
@@ -466,16 +477,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                     </div>
 
 
-                                    <div className="text-center flex-grow-1 mb-3 mb-md-0">
-                                        <div className="mb-0">
-                                            <span style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                                {inv.isPaid ? 'Paid Invoice:' : 'Pay Invoice:'}
-                                            </span>{' '}
-                                            <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                                ${inv.isPaid ? inv.paid_amount.toFixed(2) : (inv.remaining_amount || inv.amount).toFixed(2)}
-                                            </span>
-                                        </div>
-                                    </div>
+
 
 
                                     <div className="text-end d-none d-md-block">

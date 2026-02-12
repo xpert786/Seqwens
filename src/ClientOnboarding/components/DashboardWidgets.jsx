@@ -119,7 +119,7 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
                 </p>
               </div>
               <div>
-                <div className="dashboard-card-label">{card.label}</div>
+                <div className="dashboard-card-label" style={{ textAlign: "center" }}>{card.label}</div>
                 <button
                   className="btn dashboard-card-btn"
                   onClick={card.onClick}

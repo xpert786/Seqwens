@@ -442,14 +442,17 @@ export default function Security() {
 
                 {/* Summary */}
                 {summary && (summary.total > 0 || summary.active > 0 || summary.inactive > 0) && (
-                    <div style={{
-                        display: "flex",
-                        gap: "16px",
-                        marginBottom: "16px",
-                        padding: "12px",
-                        backgroundColor: "#F9FAFB",
-                        borderRadius: "8px"
-                    }}>
+                    <div
+                        className="security-summary"
+                        style={{
+                            display: "flex",
+                            gap: "16px",
+                            marginBottom: "16px",
+                            padding: "12px",
+                            backgroundColor: "#F9FAFB",
+                            borderRadius: "8px"
+                        }}
+                    >
                         <div style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
                             <strong>Total:</strong> {summary.total}
                         </div>
@@ -492,7 +495,8 @@ export default function Security() {
                         <table style={{
                             width: "100%",
                             borderCollapse: "collapse",
-                            margin: "0"
+                            margin: "0",
+                            tableLayout: "fixed"
                         }}>
                             <thead>
                                 <tr style={{ borderBottom: "1px solid #E8F0FF" }}>
@@ -503,7 +507,8 @@ export default function Security() {
                                         fontFamily: "BasisGrotesquePro",
                                         padding: "12px 0",
                                         border: "none",
-                                        textAlign: "left"
+                                        textAlign: "left",
+                                        width: "25%"
                                     }}>Service</th>
                                     <th style={{
                                         color: "#3B4A66",
@@ -512,7 +517,8 @@ export default function Security() {
                                         fontFamily: "BasisGrotesquePro",
                                         padding: "12px 0",
                                         border: "none",
-                                        textAlign: "left"
+                                        textAlign: "left",
+                                        width: "35%"
                                     }}>Key</th>
                                     <th style={{
                                         color: "#3B4A66",
@@ -521,7 +527,8 @@ export default function Security() {
                                         fontFamily: "BasisGrotesquePro",
                                         padding: "12px 0",
                                         border: "none",
-                                        textAlign: "left"
+                                        textAlign: "left",
+                                        width: "15%"
                                     }}>Status</th>
                                     <th style={{
                                         color: "#3B4A66",
@@ -530,7 +537,8 @@ export default function Security() {
                                         fontFamily: "BasisGrotesquePro",
                                         padding: "12px 0",
                                         border: "none",
-                                        textAlign: "left"
+                                        textAlign: "left",
+                                        width: "15%"
                                     }}>Last Used</th>
                                     <th style={{
                                         color: "#3B4A66",
@@ -539,14 +547,15 @@ export default function Security() {
                                         fontFamily: "BasisGrotesquePro",
                                         padding: "12px 0",
                                         border: "none",
-                                        textAlign: "left"
+                                        textAlign: "left",
+                                        width: "10%"
                                     }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {apiKeys.map((apiKey) => (
                                     <tr key={apiKey.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                                        <td style={{ padding: "12px 0", border: "none" }}>
+                                        <td style={{ padding: "12px 0", border: "none", verticalAlign: "middle" }}>
                                             <div>
                                                 <div style={{
                                                     color: "#3B4A66",
@@ -569,17 +578,21 @@ export default function Security() {
                                                 )}
                                             </div>
                                         </td>
-                                        <td style={{ padding: "12px 0", border: "none" }}>
+                                        <td style={{ padding: "12px 0", border: "none", verticalAlign: "middle" }}>
                                             <div style={{
                                                 color: "#6B7280",
                                                 fontSize: "14px",
                                                 fontWeight: "400",
-                                                fontFamily: "monospace"
-                                            }}>
+                                                fontFamily: "monospace",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                maxWidth: "100%"
+                                            }} title={apiKey.masked_key || apiKey.key}>
                                                 {maskAPIKey(apiKey.masked_key || apiKey.key)}
                                             </div>
                                         </td>
-                                        <td style={{ padding: "12px 0", border: "none" }}>
+                                        <td style={{ padding: "12px 0", border: "none", verticalAlign: "middle" }}>
                                             <span
                                                 style={{
                                                     backgroundColor: getStatusColor(apiKey.status),
@@ -594,7 +607,7 @@ export default function Security() {
                                                 {apiKey.status_display || apiKey.status || "N/A"}
                                             </span>
                                         </td>
-                                        <td style={{ padding: "12px 0", border: "none" }}>
+                                        <td style={{ padding: "12px 0", border: "none", verticalAlign: "middle" }}>
                                             <div style={{
                                                 color: "#6B7280",
                                                 fontSize: "14px",
@@ -604,7 +617,7 @@ export default function Security() {
                                                 {apiKey.last_used_relative || apiKey.last_used_display || apiKey.last_used || "Never"}
                                             </div>
                                         </td>
-                                        <td style={{ padding: "12px 0", border: "none" }}>
+                                        <td style={{ padding: "12px 0", border: "none", verticalAlign: "middle" }}>
                                             <div style={{ display: "flex", gap: "8px" }}>
                                                 <button
                                                     type="button"
