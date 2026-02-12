@@ -1,0 +1,86 @@
+/* Dark Mode Overrides for Blocked Accounts */
+
+.dark-mode .blocked-accounts-container .bg-white {
+    background-color: var(--sa-bg-card) !important;
+}
+
+/* Headers and Primary Text */
+.dark-mode .blocked-accounts-container h3,
+.dark-mode .blocked-accounts-container .text-\[\#1F2A55\],
+.dark-mode .blocked-accounts-container .text-\[\#3B4A66\] {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Secondary Text */
+.dark-mode .blocked-accounts-container p,
+.dark-mode .blocked-accounts-container .text-\[\#6B7280\],
+.dark-mode .blocked-accounts-container .text-\[\#9CA3AF\] {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Inputs */
+.dark-mode .blocked-accounts-container input {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Search Icon */
+.dark-mode .blocked-accounts-container .text-\[\#6B7280\] {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Table Header */
+.dark-mode .blocked-accounts-container thead.bg-\[\#F6F7FF\] {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+.dark-mode .blocked-accounts-container th {
+    color: var(--sa-text-primary) !important;
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Table Borders */
+.dark-mode .blocked-accounts-container .divide-\[\#E8F0FF\]> :not([hidden])~ :not([hidden]) {
+    border-color: var(--sa-border-color) !important;
+}
+
+.dark-mode .blocked-accounts-container .border-\[\#E8F0FF\] {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* User Avatar Circle */
+.dark-mode .blocked-accounts-container .bg-\[\#E8F0FF\] {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+.dark-mode .blocked-accounts-container .bg-\[\#E8F0FF\] .text-\[\#3B4A66\] {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Row Hover */
+.dark-mode .blocked-accounts-container tr.hover\:bg-gray-50:hover {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Pagination Buttons */
+.dark-mode .blocked-accounts-container button.border-\[\#E8F0FF\] {
+    border-color: var(--sa-border-color) !important;
+    color: var(--sa-text-secondary) !important;
+}
+
+.dark-mode .blocked-accounts-container button.border-\[\#E8F0FF\]:hover {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+}
+
+/* Primary Search Button */
+.dark-mode .blocked-accounts-container button.bg-\[\#3AD6F2\] {
+    border: none !important;
+    /* Ensure no border override issues */
+}
+
+/* Empty State */
+.dark-mode .blocked-accounts-container .text-\[\#9CA3AF\] {
+    color: var(--sa-text-secondary) !important;
+}

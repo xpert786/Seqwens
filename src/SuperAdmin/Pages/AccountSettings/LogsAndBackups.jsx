@@ -322,7 +322,7 @@ export default function LogsAndBackups() {
     ];
 
     return (
-        <div className="min-h-screen">
+        <div className="logs-backups-container min-h-screen">
             {/* System Logs Section */}
             <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
                 <div className="mb-6">
@@ -371,7 +371,7 @@ export default function LogsAndBackups() {
                         </div>
                     </div>
 
-                    
+
                 </div>
 
                 {/* Error Message */}
@@ -526,7 +526,7 @@ export default function LogsAndBackups() {
                                 </div>
                             </div>
 
-        
+
                             <button
                                 onClick={handleCreateBackup}
                                 disabled={submittingBackup}

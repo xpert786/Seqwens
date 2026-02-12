@@ -5,7 +5,7 @@ import Billing from "./Billing";
 import SystemHealth from "./SystemHealth";
 import PlatformControl from "./PlatformControl";
 import LogsAndBackups from "./LogsAndBackups";
-import ArchivedMonitoring from "./ArchivedMonitoring";          
+import ArchivedMonitoring from "./ArchivedMonitoring";
 import "../../style/AccountSetting.css"
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
@@ -13,10 +13,10 @@ export default function AccountSettings() {
     const tabs = [
         { id: "profile", label: "General" },
         { id: "Security", label: "Security" },
-        { id: "systemHealth", label: "System Health" },     
-        {id: "platformControl", label: "Platform Control" },
-        {id: "logsAndBackups", label: "Logs and Backups" },
-        {id: "archiveMonitoring", label: "Archived Monitoring" },
+        { id: "systemHealth", label: "System Health" },
+        { id: "platformControl", label: "Platform Control" },
+        { id: "logsAndBackups", label: "Logs and Backups" },
+        { id: "archiveMonitoring", label: "Archived Monitoring" },
     ];
 
     return (
@@ -43,7 +43,7 @@ export default function AccountSettings() {
                         fontFamily: "BasisGrotesquePro",
                     }}
                 >
-                   Manage your profile and preferences
+                    Manage your profile and preferences
                 </p>
             </div>
 
@@ -67,6 +67,7 @@ export default function AccountSettings() {
                         <li key={tab.id}>
                             <button
                                 onClick={() => setActiveTab(tab.id)}
+                                className={`account-tab-btn ${activeTab === tab.id ? "active-tab" : ""}`}
                                 style={{
                                     padding: "8px 6px",
                                     borderRadius: "8px",

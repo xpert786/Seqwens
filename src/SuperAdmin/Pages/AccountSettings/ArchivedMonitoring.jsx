@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
 import { FiSearch, FiDownload, FiLoader, FiInfo } from "react-icons/fi";
+import "../../style/ArchivedMonitoring.css";
 
 export default function ArchivedMonitoring() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -171,7 +172,7 @@ export default function ArchivedMonitoring() {
     ];
 
     return (
-        <div className="min-h-screen ">
+        <div className="archived-monitoring-container min-h-screen ">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Panel - Archive Monitoring */}
                 <div className="lg:col-span-2 bg-white rounded-lg p-6 border border-[#E8F0FF] h-fit">
@@ -376,6 +377,7 @@ export default function ArchivedMonitoring() {
                             <button
                                 onClick={handleSaveRetentionRule}
                                 disabled={submittingRetention}
+                                style={{ borderRadius: "10px" }}
                                 className="w-full bg-[#F56D2D] hover:bg-[#E45C1C] text-white px-6 py-3 rounded-xl text-sm font-bold font-[BasisGrotesquePro] transition-all transform hover:translate-y-[-1px] active:translate-y-[0] shadow-md hover:shadow-lg disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-2"
                             >
                                 {submittingRetention ? (

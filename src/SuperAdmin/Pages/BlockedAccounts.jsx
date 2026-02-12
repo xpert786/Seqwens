@@ -3,6 +3,7 @@ import { FiSearch, FiUnlock, FiClock, FiUser, FiMail, FiShield, FiAlertCircle } 
 import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import "../style/BlockedAccounts.css";
 
 export default function BlockedAccounts() {
   const [blockedAccounts, setBlockedAccounts] = useState([]);
@@ -146,7 +147,7 @@ export default function BlockedAccounts() {
     : 0;
 
   return (
-    <div className="p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
+    <div className="blocked-accounts-container p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 ">

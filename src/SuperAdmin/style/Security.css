@@ -1,0 +1,87 @@
+/* Dark Mode Overrides for Security Page */
+
+.dark-mode .security-settings-container {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Cards */
+.dark-mode .security-card {
+    background-color: var(--sa-bg-card) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Typography Overrides */
+.dark-mode .security-card h5 {
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .security-card p,
+.dark-mode .security-card .text-muted,
+.dark-mode .security-card label {
+    color: var(--sa-text-secondary) !important;
+    /* Determine if labels should be primary or secondary. Usually primary for inputs. */
+}
+
+.dark-mode .security-card label {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Inputs and Selects */
+.dark-mode .security-card input.form-control,
+.dark-mode .security-card select,
+.dark-mode .security-card input[type="text"],
+.dark-mode .security-card input[type="password"] {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+.dark-mode .security-card input::placeholder {
+    color: var(--sa-text-secondary) !important;
+    opacity: 0.6;
+}
+
+/* Alert Box */
+.dark-mode .security-alert {
+    background-color: rgba(69, 26, 3, 0.4) !important;
+    /* Dark brownish/orange */
+    border-color: #92400E !important;
+    color: #FDE047 !important;
+    /* Light yellow text */
+}
+
+/* Table Styles */
+.dark-mode .security-card table th {
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .security-card table tr {
+    border-bottom-color: var(--sa-border-color) !important;
+}
+
+.dark-mode .security-card table td {
+    color: var(--sa-text-secondary) !important;
+    border-bottom-color: var(--sa-border-color) !important;
+}
+
+/* Specific text elements in table */
+/* First div in td is usually the main text (Service Name) */
+.dark-mode .security-card table td>div>div:first-child {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Second div is usually secondary text (Env var) */
+.dark-mode .security-card table td>div>div:last-child {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Filters section input/selects are handled by general input rules above */
+
+/* Modals (if they are children of this container, but usually Modals are ported to body) */
+/* Bootstrap Modals are usually at the root level. They might need global overrides in ThemeExtras.css */
+/* Let's check ThemeExtras.css again. It has modal overrides. */
+
+/* Checkbox label */
+.dark-mode .security-card label {
+    color: var(--sa-text-primary) !important;
+}

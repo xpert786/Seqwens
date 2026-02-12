@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BillIcon, DelIcon, CrossIcon } from "../../Components/icons";
 import { Modal, Button, Form } from "react-bootstrap";
 import "../../../Taxpreparer/styles/icon.css";
+import "../../style/Billing.css";
 
 const Billing = () => {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -63,12 +64,14 @@ const Billing = () => {
   const handleCardClick = (id) => setSelectedId(id);
 
   return (
-    <div style={{
-      backgroundColor: "#F3F7FF",
-      padding: "10px",
-      borderRadius: "12px",
-      border: "none"
-    }}>
+    <div
+      className="billing-container min-h-screen"
+      style={{
+        backgroundColor: "#F3F7FF",
+        padding: "10px",
+        borderRadius: "12px",
+        border: "none"
+      }}>
       <div className="flex flex-col gap-4 border border-[#E8F0FF] p-4 rounded-lg bg-white">
         <div className="align-items-center mb-3">
           <h3 className="mb-0 me-3" style={{ color: "#3B4A66", fontSize: "24px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Billing Information</h3>
@@ -351,7 +354,7 @@ const Billing = () => {
                   fontFamily: "BasisGrotesquePro",
                   fontSize: "14px",
                   fontWeight: "400",
-                 
+
                   marginLeft: "8px",
                   marginBottom: "0",
                 }}

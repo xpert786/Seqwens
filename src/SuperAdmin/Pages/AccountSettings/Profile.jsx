@@ -180,6 +180,7 @@ export default function Profile() {
 
     return (
         <div
+            className="profile-settings-container min-h-screen"
             style={{
                 backgroundColor: "#F3F7FF",
                 padding: "10px",

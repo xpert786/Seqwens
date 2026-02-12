@@ -32,3 +32,98 @@
         align-items: flex-start;
     }
 }
+
+/* Dark Mode Overrides */
+
+.dark-mode .logs-backups-container .bg-white {
+    background-color: var(--sa-bg-card) !important;
+}
+
+.dark-mode .logs-backups-container .border-\[\#E8F0FF\],
+.dark-mode .logs-backups-container .border-gray-200,
+.dark-mode .logs-backups-container .border-gray-300 {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Typography */
+.dark-mode .logs-backups-container h3,
+.dark-mode .logs-backups-container h4,
+.dark-mode .logs-backups-container .text-gray-800,
+.dark-mode .logs-backups-container .text-gray-900,
+.dark-mode .logs-backups-container .text-\[\#3B4A66\] {
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .logs-backups-container p,
+.dark-mode .logs-backups-container .text-gray-600,
+.dark-mode .logs-backups-container .text-gray-700 {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Selects and Inputs */
+.dark-mode .logs-backups-container select {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Table Section */
+.dark-mode .logs-backups-container .bg-gray-50 {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+.dark-mode .logs-backups-container .hover\:bg-gray-50:hover {
+    background-color: var(--sa-bg-secondary) !important;
+    /* Maybe need a distinct hover color */
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Buttons */
+.dark-mode .logs-backups-container button.bg-white {
+    background-color: var(--sa-bg-secondary) !important;
+    border-color: var(--sa-border-color) !important;
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .logs-backups-container button.bg-gray-100 {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .logs-backups-container button.bg-gray-100:hover {
+    background-color: var(--sa-bg-active) !important;
+}
+
+/* Pagination */
+.dark-mode .logs-backups-container .border-t.border-gray-200 {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Error Messages */
+.dark-mode .logs-backups-container .bg-red-50 {
+    background-color: rgba(127, 29, 29, 0.2) !important;
+    border-color: #991b1b !important;
+}
+
+.dark-mode .logs-backups-container .text-red-700 {
+    color: #fca5a5 !important;
+}
+
+.dark-mode .logs-backups-container .text-red-600 {
+    color: #f87171 !important;
+}
+
+/* Modal Content (assuming they are rendered inside or targeted globally) */
+.dark-mode .modal-content {
+    background-color: var(--sa-bg-card) !important;
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-footer {
+    border-color: var(--sa-border-color) !important;
+}
+
+.dark-mode hr.border-\[\#E8F0FF\] {
+    border-color: var(--sa-border-color) !important;
+}

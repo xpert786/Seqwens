@@ -1,0 +1,70 @@
+/* Dark Mode Overrides for Platform Control */
+
+.dark-mode .platform-control-container .bg-white {
+    background-color: var(--sa-bg-card) !important;
+}
+
+.dark-mode .platform-control-container .border-\[\#E8F0FF\] {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Text Colors */
+.dark-mode .platform-control-container h3,
+.dark-mode .platform-control-container .text-gray-800,
+.dark-mode .platform-control-container .text-\[\#3B4A66\],
+.dark-mode .platform-control-container .text-\[\#4B5563\] {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Secondary Text */
+.dark-mode .platform-control-container .text-gray-600,
+.dark-mode .platform-control-container .text-gray-500,
+.dark-mode .platform-control-container .text-\[\#6B7280\] {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Inputs and Selects */
+/* Targeting by element type inside the container */
+.dark-mode .platform-control-container input:not([type="checkbox"]),
+.dark-mode .platform-control-container select,
+.dark-mode .platform-control-container textarea {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Specific overrides for IP cards */
+.dark-mode .platform-control-container .hover\:bg-gray-50:hover {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+.dark-mode .platform-control-container .bg-gray-50 {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Tags/Badges */
+.dark-mode .platform-control-container .bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: #93C5FD !important;
+}
+
+.dark-mode .platform-control-container .bg-purple-100 {
+    background-color: rgba(168, 85, 247, 0.2) !important;
+    color: #D8B4FE !important;
+}
+
+.dark-mode .platform-control-container .bg-green-100 {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    color: #86EFAC !important;
+}
+
+.dark-mode .platform-control-container .bg-red-100 {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #FCA5A5 !important;
+}
+
+/* Modal Content is usually outside this container, but if inside: */
+.dark-mode .modal-content {
+    background-color: var(--sa-bg-card) !important;
+    color: var(--sa-text-primary) !important;
+}

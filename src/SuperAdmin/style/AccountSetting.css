@@ -16,6 +16,7 @@
     /* Reduce text size only on mobile */
     .account-title {
         font-size: 22px !important;
+        line-height: 1.3 !important;
     }
 
     .account-subtitle {
@@ -26,21 +27,68 @@
     /* Make tabs scrollable horizontally */
     .account-tabs {
         width: 100%;
+        overflow-x: auto;
     }
 
     .account-tabs-list {
-        overflow-x: auto;
+        display: flex;
+        /* Ensure flex behavior */
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
+        padding-left: 4px;
+        /* Slight padding for scroll cue */
     }
 
     .account-tabs-list::-webkit-scrollbar {
         display: none;
     }
 
+    /* Button specific overrides for mobile */
     .account-tab-btn {
         white-space: nowrap;
-        padding: 6px 10px !important;
+        padding: 6px 12px !important;
+        /* Slightly wider touch target */
         font-size: 13px !important;
+        flex-shrink: 0;
+        /* Prevent shrinking */
     }
+}
+
+/* Dark Mode Overrides for Account Settings Page */
+
+/* Header Title */
+.dark-mode .account-title {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Header Subtitle */
+.dark-mode .account-subtitle {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Tabs Container: Background and Shadow */
+.dark-mode .account-tabs {
+    background-color: var(--sa-bg-card) !important;
+    box-shadow: 0 0 0 1px var(--sa-border-color) !important;
+    /* Use border variable for shadow/outline */
+}
+
+/* Inactive Tab Buttons text color */
+.dark-mode .account-tab-btn:not(.active-tab) {
+    color: var(--sa-text-secondary) !important;
+    background-color: transparent !important;
+}
+
+/* Active Tab Button Background and Text */
+/* Using !important to override inline styles set by React */
+.dark-mode .account-tab-btn.active-tab {
+    background-color: var(--sa-bg-active) !important;
+    color: #ffffff !important;
+    /* Keep white text for contrast on active bg */
+}
+
+/* Hover state for inactive tabs in dark mode */
+.dark-mode .account-tab-btn:not(.active-tab):hover {
+    color: var(--sa-text-primary) !important;
+    background-color: var(--sa-bg-secondary) !important;
 }

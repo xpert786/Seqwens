@@ -260,3 +260,8 @@
         transform: none !important;
     }
 }
+
+/* Modal Close Button */
+.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
