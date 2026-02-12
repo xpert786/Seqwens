@@ -358,9 +358,9 @@ export default function ESignature() {
   };
 
   const cardData = [
-    { label: "Pending Signature", icon: <SignatureIcon />, count: stats.pending, color: "#00bcd4" },
-    { label: "Completed", icon: <CompletedIcon />, count: stats.completed, color: "#4caf50" },
-    { label: "Awaiting others", icon: <AwaitingIcon />, count: stats.awaiting, color: "#3f51b5" },
+    { label: "Pending Signature", icon: <SignatureIcon />, count: stats.pending, color: "#00bcd4", filterKey: 'pending' },
+    { label: "Completed", icon: <CompletedIcon />, count: stats.completed, color: "#4caf50", filterKey: 'completed' },
+    { label: "Awaiting others", icon: <AwaitingIcon />, count: stats.awaiting, color: "#3f51b5", filterKey: null },
   ];
 
   return (
@@ -370,8 +370,15 @@ export default function ESignature() {
         {cardData.map((item, index) => (
           <div className="col-md-4" key={index}>
             <div
-              className="bg-white rounded p-3 d-flex flex-column justify-content-between"
-              style={{ borderRadius: "12px", height: "130px" }}
+              className={`bg-white rounded p-3 d-flex flex-column justify-content-between ${item.filterKey ? 'cursor-pointer' : ''}`}
+              style={{
+                borderRadius: "12px",
+                height: "130px",
+                cursor: item.filterKey ? 'pointer' : 'default',
+                border: filter === item.filterKey ? `1px solid ${item.color}` : '1px solid transparent',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => item.filterKey && setFilter(item.filterKey)}
             >
               <div className="d-flex justify-content-between align-items-start">
                 <div

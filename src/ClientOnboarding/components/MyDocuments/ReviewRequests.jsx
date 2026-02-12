@@ -5,6 +5,7 @@ import { tasksAPI } from '../../utils/apiUtils';
 import { Modal, Button } from 'react-bootstrap';
 import { FiFileText, FiCheckCircle, FiClock, FiMessageSquare } from 'react-icons/fi';
 import '../../styles/MyDocuments.css';
+import Pagination from '../Pagination';
 
 const ReviewRequests = () => {
     const [reviewRequests, setReviewRequests] = useState([]);
@@ -14,6 +15,8 @@ const ReviewRequests = () => {
     const [reviewComment, setReviewComment] = useState('');
     const [uploadFiles, setUploadFiles] = useState([]);
     const [submitting, setSubmitting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 3;
 
     // Fetch review requests
     const fetchReviewRequests = async () => {
@@ -123,11 +126,11 @@ const ReviewRequests = () => {
 
     const getStatusBadge = (status) => {
         const statusStyles = {
-            'to_do': { bg: '#F59E0B', color: '#FFFFFF', text: 'To Do' },
-            'pending': { bg: '#F59E0B', color: '#FFFFFF', text: 'Pending' },
+            'to_do': { bg: '#F59E0B', color: '#000000', text: 'To Do' },
+            'pending': { bg: '#F59E0B', color: '#000000', text: 'Pending' },
             'submitted': { bg: '#3B82F6', color: '#FFFFFF', text: 'Submitted' },
             'in_progress': { bg: '#3B82F6', color: '#FFFFFF', text: 'In Progress' },
-            'waiting_for_client': { bg: '#F59E0B', color: '#FFFFFF', text: 'Waiting' },
+            'waiting_for_client': { bg: '#F59E0B', color: '#000000', text: 'Waiting' },
             'completed': { bg: '#10B981', color: '#FFFFFF', text: 'Completed' },
             'cancelled': { bg: '#EF4444', color: '#FFFFFF', text: 'Cancelled' }
         };
@@ -139,7 +142,7 @@ const ReviewRequests = () => {
                 className="px-3 py-1 rounded-pill review-status-badge"
                 style={{
                     backgroundColor: style.bg,
-                    color: '#FFFFFF',
+                    color: style.color,
                     fontSize: '12px',
                     fontWeight: '700',
                     fontFamily: 'BasisGrotesquePro',
@@ -193,6 +196,12 @@ const ReviewRequests = () => {
         );
     }
 
+    // Pagination logic
+    const totalPages = Math.ceil(reviewRequests.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, reviewRequests.length);
+    const displayedRequests = reviewRequests.slice(startIndex, endIndex);
+
     return (
         <>
             <div className="bg-white p-4 rounded">
@@ -209,7 +218,7 @@ const ReviewRequests = () => {
                 </h5>
 
                 <div className="row g-3">
-                    {reviewRequests.map((request) => (
+                    {displayedRequests.map((request) => (
                         <div key={request.id} className="col-12">
                             <div
                                 className="p-4 rounded border"
@@ -279,60 +288,63 @@ const ReviewRequests = () => {
                                                 </span>
                                             )}
                                         </div>
+
+                                        {request.files && request.files.length > 0 && (
+                                            <div className="mt-3">
+                                                <h6
+                                                    style={{
+                                                        fontSize: '13px',
+                                                        fontWeight: '600',
+                                                        color: '#374151',
+                                                        marginBottom: '8px',
+                                                        fontFamily: 'BasisGrotesquePro'
+                                                    }}
+                                                >
+                                                    Documents:
+                                                </h6>
+                                                <div className="d-flex flex-wrap gap-2">
+                                                    {request.files.map((file) => (
+                                                        <a
+                                                            key={file.id}
+                                                            href={file.file_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 border bg-light"
+                                                            style={{
+                                                                textDecoration: 'none',
+                                                                color: '#4B5563',
+                                                                fontSize: '13px',
+                                                                borderColor: '#E5E7EB',
+                                                                transition: 'all 0.2s ease',
+                                                                fontFamily: 'BasisGrotesquePro',
+                                                                maxWidth: '300px'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.borderColor = '#00C0C6';
+                                                                e.currentTarget.style.backgroundColor = '#F0FDFA';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.borderColor = '#E5E7EB';
+                                                                e.currentTarget.style.backgroundColor = '#F8F9FA';
+                                                            }}
+                                                        >
+                                                            <FiFileText size={16} style={{ color: '#00C0C6', flexShrink: 0 }} />
+                                                            <span title={file.file_name} className="text-truncate">
+                                                                {file.file_name}
+                                                            </span>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
+                                    <div className="d-flex flex-column align-items-end gap-2" style={{ minWidth: 'fit-content' }}>
                                         {getStatusBadge(request.status)}
                                     </div>
                                 </div>
 
                                 {/* Task Files */}
-                                {request.files && request.files.length > 0 && (
-                                    <div className="mb-4">
-                                        <h6
-                                            style={{
-                                                fontSize: '14px',
-                                                fontWeight: '600',
-                                                color: '#374151',
-                                                marginBottom: '12px',
-                                                fontFamily: 'BasisGrotesquePro'
-                                            }}
-                                        >
-                                            Documents for Review:
-                                        </h6>
-                                        <div className="d-flex flex-wrap gap-2">
-                                            {request.files.map((file) => (
-                                                <a
-                                                    key={file.id}
-                                                    href={file.file_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 border bg-light"
-                                                    style={{
-                                                        textDecoration: 'none',
-                                                        color: '#4B5563',
-                                                        fontSize: '13px',
-                                                        borderColor: '#E5E7EB',
-                                                        transition: 'all 0.2s ease',
-                                                        fontFamily: 'BasisGrotesquePro'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.borderColor = '#00C0C6';
-                                                        e.currentTarget.style.backgroundColor = '#F0FDFA';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.borderColor = '#E5E7EB';
-                                                        e.currentTarget.style.backgroundColor = '#F8F9FA';
-                                                    }}
-                                                >
-                                                    <FiFileText size={16} style={{ color: '#00C0C6' }} />
-                                                    <span style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                        {file.file_name}
-                                                    </span>
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+
 
                                 {request.status !== 'completed' && request.status !== 'cancelled' && (
                                     <div className="d-flex justify-content-end gap-2 mt-3">
@@ -377,6 +389,16 @@ const ReviewRequests = () => {
                         </div>
                     ))}
                 </div>
+
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    totalItems={reviewRequests.length}
+                    itemsPerPage={itemsPerPage}
+                    startIndex={startIndex}
+                    endIndex={endIndex}
+                />
             </div>
 
             {/* Review Modal */}
@@ -386,13 +408,13 @@ const ReviewRequests = () => {
                 centered
                 size="md"
             >
-                <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
+                <Modal.Header closeButton style={{ borderBottom: 'none' }}>
                     <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', color: '#1F2937' }}>
                         Submit Document Review
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ padding: 0 }}>
-                    <div className="custom-scrollbar" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
+                    <div className="custom-scrollbar" style={{ padding: '24px 32px', maxHeight: '60vh', overflowY: 'auto' }}>
                         {selectedRequest && (
                             <>
                                 <div className="mb-4">
@@ -542,7 +564,7 @@ const ReviewRequests = () => {
                         )}
                     </div>
                 </Modal.Body>
-                <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+                <Modal.Footer style={{ borderTop: 'none' }}>
                     <Button
                         variant="secondary"
                         onClick={handleCloseReviewModal}
