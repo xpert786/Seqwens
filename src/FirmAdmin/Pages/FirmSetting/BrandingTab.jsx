@@ -152,6 +152,7 @@ export default function BrandingTab() {
         // Clear file selections after successful upload
         setLogoFile(null);
         setFaviconFile(null);
+        refreshBranding(response.data);
       } else {
         throw new Error(response.message || 'Failed to update branding information');
       }
@@ -162,7 +163,6 @@ export default function BrandingTab() {
       toast.error(errorMsg || 'Failed to update branding information');
     } finally {
       setSaving(false);
-      refreshBranding();
     }
   };
 
@@ -192,6 +192,7 @@ export default function BrandingTab() {
           ...defaultData
         });
         toast.success('Branding reset to default values');
+        refreshBranding(response.data || defaultData);
       } else {
         throw new Error(response.message || 'Failed to reset branding');
       }
@@ -201,7 +202,6 @@ export default function BrandingTab() {
       toast.error(errorMsg || 'Failed to reset branding');
     } finally {
       setSaving(false);
-      refreshBranding();
     }
   };
 

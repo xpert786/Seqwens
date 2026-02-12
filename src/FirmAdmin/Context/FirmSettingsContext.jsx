@@ -31,26 +31,35 @@ export const FirmSettingsProvider = ({ children }) => {
     }
   }, []);
 
-  const refreshBranding = useCallback(async () => {
+  const refreshBranding = useCallback(async (data = null) => {
     try {
-      const response = await firmAdminSettingsAPI.getBrandingInfo();
-      if (response?.success && response?.data) {
-        setBranding(response.data);
-        localStorage.setItem('firm_branding', JSON.stringify(response.data));
+      let brandingData = data;
+      if (!brandingData) {
+        const response = await firmAdminSettingsAPI.getBrandingInfo();
+        if (response?.success && response?.data) {
+          brandingData = response.data;
+        }
+      }
 
-        // Apply CSS variables
-        const root = document.documentElement;
-        if (response.data.primary_color) {
-          root.style.setProperty('--firm-primary-color', response.data.primary_color);
-        }
-        if (response.data.secondary_color) {
-          root.style.setProperty('--firm-secondary-color', response.data.secondary_color);
-        }
-        if (response.data.accent_color) {
-          root.style.setProperty('--firm-accent-color', response.data.accent_color);
-        }
-        if (response.data.font_family) {
-          root.style.setProperty('--firm-font-family', response.data.font_family);
+      if (brandingData) {
+        setBranding(brandingData);
+        localStorage.setItem('firm_branding', JSON.stringify(brandingData));
+
+        // Apply CSS variables to the firm admin root element only
+        const root = document.getElementById('firm-admin-root');
+        if (root) {
+          if (brandingData.primary_color) {
+            root.style.setProperty('--firm-primary-color', brandingData.primary_color);
+          }
+          if (brandingData.secondary_color) {
+            root.style.setProperty('--firm-secondary-color', brandingData.secondary_color);
+          }
+          if (brandingData.accent_color) {
+            root.style.setProperty('--firm-accent-color', brandingData.accent_color);
+          }
+          if (brandingData.font_family) {
+            root.style.setProperty('--firm-font-family', brandingData.font_family);
+          }
         }
       }
     } catch (error) {
@@ -65,11 +74,18 @@ export const FirmSettingsProvider = ({ children }) => {
       try {
         const data = JSON.parse(savedBranding);
         setBranding(data);
-        const root = document.documentElement;
-        if (data.primary_color) root.style.setProperty('--firm-primary-color', data.primary_color);
-        if (data.secondary_color) root.style.setProperty('--firm-secondary-color', data.secondary_color);
-        if (data.accent_color) root.style.setProperty('--firm-accent-color', data.accent_color);
-        if (data.font_family) root.style.setProperty('--firm-font-family', data.font_family);
+        // We need to wait for the element to exist, or use a MutationObserver, but usually on mount it might be rendered or soon to be.
+        // Since this provider wraps the routes, the div inside routes might not be ready yet if it's a child.
+        // However, we can try to find it.
+        setTimeout(() => {
+          const root = document.getElementById('firm-admin-root');
+          if (root) {
+            if (data.primary_color) root.style.setProperty('--firm-primary-color', data.primary_color);
+            if (data.secondary_color) root.style.setProperty('--firm-secondary-color', data.secondary_color);
+            if (data.accent_color) root.style.setProperty('--firm-accent-color', data.accent_color);
+            if (data.font_family) root.style.setProperty('--firm-font-family', data.font_family);
+          }
+        }, 0);
       } catch (e) {
         console.error('Failed to parse saved branding:', e);
       }

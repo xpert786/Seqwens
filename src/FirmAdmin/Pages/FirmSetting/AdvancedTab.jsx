@@ -120,21 +120,30 @@ export default function AdvancedTab() {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-          {saving ? (
-            <>
-              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Saving...</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              <span>Save Changes</span>
-            </>
-          )}
-        </button>
-      </div>
+     <div className="flex justify-end">
+ <button
+  onClick={handleSave}
+  disabled={saving}
+  style={{ borderRadius: '8px' }}
+  className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+>
+  {saving ? (
+    <>
+      <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+      <span>Saving...</span>
+    </>
+  ) : (
+    <>
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
+      <span>Save Changes</span>
+    </>
+  )}
+</button>
+
+</div>
+
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]">
