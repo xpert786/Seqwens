@@ -46,17 +46,20 @@
 }
 
 .mydocs-badge-priority {
-    background-color: #EF4444;
-    font-size: 12px;
+    background-color: #EF4444 !important;
+    font-size: 10px !important;
     color: #FFFFFF !important;
-    font-family: "BasisGrotesquePro";
+    font-family: "BasisGrotesquePro" !important;
+    font-weight: 700 !important;
 }
 
 .mydocs-badge-status {
-    background-color: #854D0E;
-    font-size: 12px;
+    background-color: #854D0E !important;
+    font-size: 10px !important;
     color: #FFFFFF !important;
-    font-family: "BasisGrotesquePro";
+    font-family: "BasisGrotesquePro" !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
 }
 
 .mydocs-icon-wrapper {

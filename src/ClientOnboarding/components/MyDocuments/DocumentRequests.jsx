@@ -443,10 +443,10 @@ export default function DocumentRequests() {
                             const colors = priorityColors[priorityLower] || { bg: '#6B7280', color: '#FFFFFF' };
                             return (
                               <span
-                                className="badge"
+                                className="badge mydocs-badge-priority"
                                 style={{
                                   backgroundColor: colors.bg,
-                                  color: colors.color,
+                                  color: '#FFFFFF',
                                   fontSize: "10px",
                                   fontWeight: "700",
                                   textTransform: "uppercase",
@@ -463,7 +463,7 @@ export default function DocumentRequests() {
                               </span>
                             );
                           })()}
-                          <span className="badge mydocs-badge-status">
+                          <span className="badge mydocs-badge-status" style={{ color: '#FFFFFF', textTransform: 'capitalize' }}>
                             {doc.status || 'Pending'}
                           </span>
                         </div>
@@ -518,14 +518,16 @@ export default function DocumentRequests() {
                       </div>
 
                       {overdueDays > 0 && (
-                        <div className="mydocs-overdue">
-                          Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
+                        <div className="mt-2 mb-3">
+                          <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '11px', borderRadius: '4px', color: '#FFFFFF' }}>
+                            Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
+                          </span>
                         </div>
                       )}
 
                       {(doc.instructions || doc.description) && (
                         <div className="mydocs-instructions">
-                          <span className="mydocs-instructions-title">Instructions:</span>
+                          <span className="mydocs-instructions-title d-block mb-1">Instructions:</span>
                           <p className="mydocs-instructions-text">{doc.instructions || doc.description}</p>
                         </div>
                       )}

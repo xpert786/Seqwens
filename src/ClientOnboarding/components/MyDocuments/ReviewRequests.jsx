@@ -122,26 +122,27 @@ const ReviewRequests = () => {
 
     const getStatusBadge = (status) => {
         const statusStyles = {
-            'to_do': { bg: '#FEF3C7', color: '#92400E', text: 'To Do' },
-            'pending': { bg: '#FEF3C7', color: '#92400E', text: 'Pending' },
-            'submitted': { bg: '#DBEAFE', color: '#1E40AF', text: 'Submitted' },
-            'in_progress': { bg: '#DBEAFE', color: '#1E40AF', text: 'In Progress' },
-            'waiting_for_client': { bg: '#FEF3C7', color: '#92400E', text: 'Waiting' },
-            'completed': { bg: '#D1FAE5', color: '#065F46', text: 'Completed' },
-            'cancelled': { bg: '#FEE2E2', color: '#991B1B', text: 'Cancelled' }
+            'to_do': { bg: '#F59E0B', color: '#FFFFFF', text: 'To Do' },
+            'pending': { bg: '#F59E0B', color: '#FFFFFF', text: 'Pending' },
+            'submitted': { bg: '#3B82F6', color: '#FFFFFF', text: 'Submitted' },
+            'in_progress': { bg: '#3B82F6', color: '#FFFFFF', text: 'In Progress' },
+            'waiting_for_client': { bg: '#F59E0B', color: '#FFFFFF', text: 'Waiting' },
+            'completed': { bg: '#10B981', color: '#FFFFFF', text: 'Completed' },
+            'cancelled': { bg: '#EF4444', color: '#FFFFFF', text: 'Cancelled' }
         };
 
         const style = statusStyles[status] || { bg: '#F3F4F6', color: '#374151', text: status };
 
         return (
             <span
-                className="px-3 py-1 rounded-pill"
+                className="px-3 py-1 rounded-pill review-status-badge"
                 style={{
                     backgroundColor: style.bg,
-                    color: style.color,
+                    color: '#FFFFFF',
                     fontSize: '12px',
-                    fontWeight: '500',
-                    fontFamily: 'BasisGrotesquePro'
+                    fontWeight: '700',
+                    fontFamily: 'BasisGrotesquePro',
+                    display: 'inline-block'
                 }}
             >
                 {style.text}
@@ -381,8 +382,9 @@ const ReviewRequests = () => {
             <Modal
                 show={showReviewModal}
                 onHide={handleCloseReviewModal}
-                size="lg"
                 centered
+                size="md"
+                scrollable
             >
                 <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
                     <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', color: '#1F2937' }}>
@@ -497,11 +499,10 @@ const ReviewRequests = () => {
                                     />
                                     <label
                                         htmlFor="review-file-upload"
-                                        style={{ cursor: 'pointer', margin: 0 }}
+                                        className="d-flex flex-row align-items-center justify-content-center gap-2 p-3"
+                                        style={{ cursor: 'pointer', margin: 0, width: '100%' }}
                                     >
-                                        <div className="mb-2">
-                                            <FiFileText size={24} style={{ color: '#00C0C6' }} />
-                                        </div>
+                                        <FiFileText size={20} style={{ color: '#00C0C6' }} />
                                         <span style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#4B5563' }}>
                                             Click to upload or drag and drop
                                         </span>
@@ -558,23 +559,26 @@ const ReviewRequests = () => {
                         style={{
                             fontFamily: 'BasisGrotesquePro',
                             backgroundColor: '#00C0C6',
-                            border: 'none'
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
                         }}
                     >
                         {submitting ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Submitting...
-                            </>
+                            <div className="d-flex align-items-center gap-2">
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Submitting...</span>
+                            </div>
                         ) : (
-                            <>
-                                <FiCheckCircle size={16} className="me-2" />
-                                Submit Review
-                            </>
+                            <div className="d-flex align-items-center gap-2">
+                                <FiCheckCircle size={16} />
+                                <span>Submit Review</span>
+                            </div>
                         )}
                     </Button>
                 </Modal.Footer>
-            </Modal>
+            </Modal >
         </>
     );
 };
