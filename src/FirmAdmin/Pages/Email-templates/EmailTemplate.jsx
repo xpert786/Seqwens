@@ -301,7 +301,6 @@ const VARIABLE_GROUPS = {
         ]
     }
 };
-
 // Flatten all variables for backward compatibility
 const ESSENTIAL_VARIABLES = Object.values(VARIABLE_GROUPS)
     .flatMap(group => group.variables);

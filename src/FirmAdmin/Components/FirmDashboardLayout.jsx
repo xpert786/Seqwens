@@ -70,7 +70,8 @@ export default function FirmDashboardLayout() {
       isApplying = true;
 
       try {
-        const primaryColor = getComputedStyle(document.documentElement)
+        const rootElement = document.getElementById('firm-admin-root') || document.documentElement;
+        const primaryColor = getComputedStyle(rootElement)
           .getPropertyValue('--firm-primary-color')?.trim() || '#32B582';
 
         // Find all buttons in firm dashboard layout that haven't been processed
@@ -153,13 +154,14 @@ export default function FirmDashboardLayout() {
       });
     }
 
-    // Listen for color changes (only on document root, not on buttons)
+    // Listen for color changes (only on firm admin root, not on buttons)
     const colorObserver = new MutationObserver((mutations) => {
       // Only react to actual color variable changes, not our own attribute changes
+      const rootElement = document.getElementById('firm-admin-root') || document.documentElement;
       const hasColorChange = mutations.some(mutation =>
         mutation.type === 'attributes' &&
         mutation.attributeName === 'style' &&
-        mutation.target === document.documentElement
+        mutation.target === rootElement
       );
 
       if (hasColorChange) {
@@ -175,7 +177,8 @@ export default function FirmDashboardLayout() {
       }
     });
 
-    colorObserver.observe(document.documentElement, {
+    const rootElement = document.getElementById('firm-admin-root') || document.documentElement;
+    colorObserver.observe(rootElement, {
       attributes: true,
       attributeFilter: ['style']
     });
@@ -198,7 +201,8 @@ export default function FirmDashboardLayout() {
       isApplying = true;
 
       try {
-        const secondaryColor = getComputedStyle(document.documentElement)
+        const rootElement = document.getElementById('firm-admin-root') || document.documentElement;
+        const secondaryColor = getComputedStyle(rootElement)
           .getPropertyValue('--firm-secondary-color')?.trim() || '#F3F7FF';
 
         // Colors to replace with secondary color
@@ -318,13 +322,14 @@ export default function FirmDashboardLayout() {
       });
     }
 
-    // Listen for color changes (only on document root, not on elements)
+    // Listen for color changes (only on firm admin root, not on elements)
     const colorObserver = new MutationObserver((mutations) => {
       // Only react to actual color variable changes, not our own attribute changes
+      const rootElement = document.getElementById('firm-admin-root') || document.documentElement;
       const hasColorChange = mutations.some(mutation =>
         mutation.type === 'attributes' &&
         mutation.attributeName === 'style' &&
-        mutation.target === document.documentElement
+        mutation.target === rootElement
       );
 
       if (hasColorChange) {
@@ -340,7 +345,8 @@ export default function FirmDashboardLayout() {
       }
     });
 
-    colorObserver.observe(document.documentElement, {
+    const rootElement = document.getElementById('firm-admin-root') || document.documentElement;
+    colorObserver.observe(rootElement, {
       attributes: true,
       attributeFilter: ['style']
     });

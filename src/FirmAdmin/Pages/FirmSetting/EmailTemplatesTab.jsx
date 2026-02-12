@@ -206,7 +206,7 @@ export default function EmailTemplatesTab() {
                       <button
                         onClick={() => handleRevertToDefault(emailType.id)}
                         disabled={saving || !typeData.active_template}
-                        className={`px-3 py-2 rounded-lg text-xs font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ml-3 ${!typeData.active_template
+                        className={`px-3 py-2 !rounded-lg text-xs font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ml-3 ${!typeData.active_template
                             ? 'bg-gray-200 text-gray-500 cursor-default'
                             : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
@@ -249,7 +249,7 @@ export default function EmailTemplatesTab() {
                             <button
                               onClick={() => handleAssignTemplate(template.id, emailType.id)}
                               disabled={saving || template.is_active}
-                              className={`px-3 py-2 rounded-lg text-xs font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ${template.is_active
+                              className={`px-3 py-2 !rounded-lg text-xs font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ${template.is_active
                                 ? 'bg-[#DCFCE7] text-[#166534] cursor-default'
                                 : 'bg-[#F56D2D] text-white hover:bg-[#E55A1D] disabled:opacity-50 disabled:cursor-not-allowed'
                                 }`}
