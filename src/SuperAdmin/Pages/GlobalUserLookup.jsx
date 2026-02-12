@@ -290,6 +290,7 @@ export default function GlobalUserLookup() {
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1 || loading}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                style={{ borderRadius: '8px' }}
               >
                 Previous
               </button>
@@ -297,6 +298,7 @@ export default function GlobalUserLookup() {
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
                 disabled={currentPage === pagination.total_pages || loading}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                style={{ borderRadius: '8px' }}
               >
                 Next
               </button>

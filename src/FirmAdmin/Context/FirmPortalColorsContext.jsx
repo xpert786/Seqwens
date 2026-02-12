@@ -68,6 +68,14 @@ export const FirmPortalColorsProvider = ({ children }) => {
         setLogoUrl(logo);
         setFaviconUrl(favicon);
 
+        // Save to localStorage to prevent flicker on refresh
+        localStorage.setItem('firm_portal_colors', JSON.stringify({
+          primaryColor: primary,
+          secondaryColor: secondary,
+          logoUrl: logo,
+          faviconUrl: favicon
+        }));
+
         // Apply colors to CSS variables
         applyColorsToDocument(primary, secondary);
 
@@ -142,6 +150,22 @@ export const FirmPortalColorsProvider = ({ children }) => {
 
   // Fetch colors on mount and when user type changes
   useEffect(() => {
+    // Apply colors from localStorage immediately on mount to prevent flicker
+    const savedColors = localStorage.getItem('firm_portal_colors');
+    if (savedColors) {
+      try {
+        const data = JSON.parse(savedColors);
+        setPrimaryColor(data.primaryColor);
+        setSecondaryColor(data.secondaryColor);
+        setLogoUrl(data.logoUrl);
+        setFaviconUrl(data.faviconUrl);
+        applyColorsToDocument(data.primaryColor, data.secondaryColor);
+        applyLogoAndFavicon(data.logoUrl, data.faviconUrl);
+      } catch (e) {
+        console.error('Failed to parse saved portal colors:', e);
+      }
+    }
+
     fetchPortalColors();
 
     // Listen for storage changes (when user logs in/out)

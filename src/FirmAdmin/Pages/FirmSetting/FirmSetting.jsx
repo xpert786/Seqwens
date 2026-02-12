@@ -19,10 +19,10 @@ export default function FirmSetting() {
 
         <div>
           <h4 className="text-2xl font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-            Firm Settings
+            Settings
           </h4>
           <p className="text-sm text-[#7B8AB2] font-[BasisGrotesquePro]">
-            Configure your firm's information and preferences
+            Configure your information and preferences
           </p>
         </div>
       </div>

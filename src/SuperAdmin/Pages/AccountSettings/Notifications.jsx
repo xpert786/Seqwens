@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { superAdminNotificationAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../../components/ConfirmationModal";
@@ -115,6 +116,7 @@ const groupNotificationsByDate = (notifications) => {
 };
 
 const Notifications = () => {
+  const location = useLocation();
   const [selectedTab, setSelectedTab] = useState("all");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,10 +128,16 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const lastActionTimeRef = React.useRef(0);
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     try {
+      // Don't fetch if we just had a manual update (prevents reverting to old data)
+      if (Date.now() - lastActionTimeRef.current < 5000) {
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -163,6 +171,11 @@ const Notifications = () => {
 
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
+    // Don't fetch if we just had a manual update
+    if (Date.now() - lastActionTimeRef.current < 5000) {
+      return;
+    }
+
     try {
       const response = await superAdminNotificationAPI.getUnreadCount();
       if (response.success && response.data) {
@@ -184,14 +197,30 @@ const Notifications = () => {
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 
-  // Handle tab change
-  const handleTabChange = (tabKey) => {
-    setSelectedTab(tabKey);
-    setPage(1); // Reset to first page when changing tabs
+  // Mark notification as read
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      lastActionTimeRef.current = Date.now();
+
+      await superAdminNotificationAPI.markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, is_read: true } : notif
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      if (selectedNotification && selectedNotification.id === notificationId) {
+        setSelectedNotification(prev => prev ? { ...prev, is_read: true } : null);
+      }
+      toast.success("Notification marked as read");
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+      toast.error(handleAPIError(err));
+    }
   };
 
   // View notification details
-  const handleViewDetails = async (notificationId) => {
+  const handleViewDetails = useCallback(async (notificationId) => {
     try {
       setLoadingDetails(true);
       const response = await superAdminNotificationAPI.getNotificationDetails(notificationId);
@@ -211,36 +240,33 @@ const Notifications = () => {
     } finally {
       setLoadingDetails(false);
     }
-  };
+  }, [selectedNotification]); // Add necessary dependencies
 
-  // Mark notification as read
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      await superAdminNotificationAPI.markAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-      if (selectedNotification && selectedNotification.id === notificationId) {
-        setSelectedNotification(prev => prev ? { ...prev, is_read: true } : null);
-      }
-      toast.success("Notification marked as read");
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-      toast.error(handleAPIError(err));
+  // Handle deep linking to a specific notification
+  useEffect(() => {
+    if (location.state?.notificationId && !loading) {
+      handleViewDetails(location.state.notificationId);
+      // Clear state to prevent modal from re-opening on every render/navigation
+      window.history.replaceState({}, document.title);
     }
+  }, [location.state, loading, handleViewDetails]);
+
+  // Handle tab change
+  const handleTabChange = (tabKey) => {
+    setSelectedTab(tabKey);
+    setPage(1); // Reset to first page when changing tabs
   };
 
   // Mark all as read
   const handleMarkAllAsRead = async () => {
     try {
+      lastActionTimeRef.current = Date.now();
+
       const response = await superAdminNotificationAPI.markAllAsRead();
       if (response.success) {
         toast.success(response.message || "All notifications marked as read");
-        fetchNotifications();
-        fetchUnreadCount();
+        setNotifications((prev) => prev.map(notif => ({ ...notif, is_read: true })));
+        setUnreadCount(0);
       }
     } catch (err) {
       console.error("Error marking all as read:", err);
@@ -261,8 +287,18 @@ const Notifications = () => {
     if (!notificationToDelete) return;
 
     try {
+      lastActionTimeRef.current = Date.now();
+
+      const notificationObj = notifications.find(n => n.id === notificationToDelete);
+      const wasUnread = notificationObj && !notificationObj.is_read;
+
       await superAdminNotificationAPI.deleteNotification(notificationToDelete);
       setNotifications((prev) => prev.filter((notif) => notif.id !== notificationToDelete));
+
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
       toast.success("Notification deleted");
       setShowDeleteNotificationConfirm(false);
       setNotificationToDelete(null);
@@ -283,456 +319,491 @@ const Notifications = () => {
 
   return (
     <>
-    <div className="card">
-      <div className="card-body" style={{
-        padding: "28px",
-        backgroundColor: "white",
-        borderRadius: "12px",
-      }}>
-        {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h5
-              className="mb-1"
-              style={{
-                color: "#3B4A66",
-                fontSize: "24px",
-                fontWeight: "500",
-                fontFamily: "BasisGrotesquePro",
-              }}
-            >
-              Notifications
-            </h5>
-            <p
-              className="mb-0"
-              style={{
-                color: "#4B5563",
-                fontSize: "14px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}
-            >
-              {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
-            </p>
-          </div>
-          {unreadCount > 0 && (
-            <button
-              className="btn "
-              onClick={handleMarkAllAsRead}
-              style={{
-                backgroundColor: "#F56D2D",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "8px 16px",
-                fontSize: "14px",
-                fontFamily: "BasisGrotesquePro",
-              }}
-            >
-              Mark All as Read
-            </button>
-          )}
-        </div>
-
-        {/* Tabs */}
-        <div className="d-flex gap-2 mb-4" style={{ borderBottom: "2px solid #E5E7EB" }}>
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className="btn"
-              style={{
-                backgroundColor: "transparent",
-                border: "none",
-                borderBottom: selectedTab === tab.key ? "2px solid #F56D2D" : "2px solid transparent",
-                color: selectedTab === tab.key ? "#F56D2D" : "#4B5563",
-                fontWeight: selectedTab === tab.key ? "500" : "400",
-                fontSize: "14px",
-                fontFamily: "BasisGrotesquePro",
-                padding: "8px 16px",
-                marginBottom: "-2px",
-                borderRadius: "0",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        )}
-
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+      <div className="card">
+        <div className="card-body" style={{
+          padding: "28px",
+          backgroundColor: "white",
+          borderRadius: "12px",
+        }}>
+          {/* Header */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h5
+                className="mb-1"
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "24px",
+                  fontWeight: "500",
+                  fontFamily: "BasisGrotesquePro",
+                }}
+              >
+                Notifications
+              </h5>
+              <p
+                className="mb-0"
+                style={{
+                  color: "#4B5563",
+                  fontSize: "14px",
+                  fontWeight: "400",
+                  fontFamily: "BasisGrotesquePro",
+                }}
+              >
+                {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
+              </p>
             </div>
+            {unreadCount > 0 && (
+              <button
+                className="btn "
+                onClick={handleMarkAllAsRead}
+                style={{
+                  backgroundColor: "#F56D2D",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  fontFamily: "BasisGrotesquePro",
+                }}
+              >
+                Mark All as Read
+              </button>
+            )}
           </div>
-        )}
 
-        {/* Notifications List */}
-        {!loading && !error && (
-          <>
-            {filteredNotifications.length === 0 ? (
-              <div className="text-center py-5">
-                <p style={{ color: "#4B5563", fontSize: "16px" }}>No notifications found</p>
+          {/* Tabs */}
+          <div className="d-flex gap-2 mb-4" style={{ borderBottom: "2px solid #E5E7EB" }}>
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className="btn"
+                style={{
+                  backgroundColor: "transparent",
+                  border: "none",
+                  borderBottom: selectedTab === tab.key ? "2px solid #F56D2D" : "2px solid transparent",
+                  color: selectedTab === tab.key ? "#F56D2D" : "#4B5563",
+                  fontWeight: selectedTab === tab.key ? "500" : "400",
+                  fontSize: "14px",
+                  fontFamily: "BasisGrotesquePro",
+                  padding: "8px 16px",
+                  marginBottom: "-2px",
+                  borderRadius: "0",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
-            ) : (
-              <div className="d-flex flex-column gap-3">
-                {Object.entries(groupedNotifications).map(([dateGroup, dateNotifications]) => (
-                  <div key={dateGroup}>
-                    <h6
-                      style={{
-                        color: "#6B7280",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        textTransform: "uppercase",
-                        marginBottom: "12px",
-                        fontFamily: "BasisGrotesquePro",
-                      }}
-                    >
-                      {dateGroup}
-                    </h6>
-                    {dateNotifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="d-flex align-items-start gap-3 p-3 rounded-3 mb-2"
+            </div>
+          )}
+
+          {/* Notifications List */}
+          {!loading && !error && (
+            <>
+              {filteredNotifications.length === 0 ? (
+                <div className="text-center py-5">
+                  <p style={{ color: "#4B5563", fontSize: "16px" }}>No notifications found</p>
+                </div>
+              ) : (
+                <div className="d-flex flex-column gap-3">
+                  {Object.entries(groupedNotifications).map(([dateGroup, dateNotifications]) => (
+                    <div key={dateGroup}>
+                      <h6
                         style={{
-                          backgroundColor: notification.is_read ? "#FFFFFF" : "#FFF4E6",
-                          border: notification.is_read ? "1px solid #E5E7EB" : "1px solid #F56D2D",
-                          cursor: "pointer",
-                          transition: "all 0.2s",
+                          color: "#6B7280",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          textTransform: "uppercase",
+                          marginBottom: "12px",
+                          fontFamily: "BasisGrotesquePro",
                         }}
-                        onClick={() => handleViewDetails(notification.id)}
                       >
+                        {dateGroup}
+                      </h6>
+                      {dateNotifications.map((notification) => (
                         <div
+                          key={notification.id}
+                          className="d-flex align-items-start gap-3 p-3 rounded-3 mb-2"
                           style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "50%",
-                            backgroundColor: PRIORITY_COLOR[notification.priority] || PRIORITY_COLOR.medium,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#fff",
-                            flexShrink: 0,
+                            backgroundColor: notification.is_read ? "#FFFFFF" : "#FFF4E6",
+                            border: notification.is_read ? "1px solid #E5E7EB" : "1px solid #F56D2D",
+                            cursor: "pointer",
+                            transition: "all 0.2s",
                           }}
+                          onClick={() => handleViewDetails(notification.id)}
                         >
-                          {getNotificationIcon(notification.notification_type)}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="d-flex justify-content-between align-items-start mb-1">
-                            <div>
-                              <h6
-                                className="mb-1"
-                                style={{
-                                  color: "#3B4A66",
-                                  fontSize: "16px",
-                                  fontWeight: "500",
-                                  fontFamily: "BasisGrotesquePro",
-                                }}
-                              >
-                                {notification.title || "Notification"}
-                              </h6>
-                              <p
-                                className="mb-0"
-                                style={{
-                                  color: "#4B5563",
-                                  fontSize: "14px",
-                                  fontFamily: "BasisGrotesquePro",
-                                }}
-                              >
-                                {notification.message}
-                              </p>
-                            </div>
-                            <div className="d-flex gap-2">
-                              {notification.priority && (
-                                <span
-                                  className="badge"
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "50%",
+                              backgroundColor: PRIORITY_COLOR[notification.priority] || PRIORITY_COLOR.medium,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#fff",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {getNotificationIcon(notification.notification_type)}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="d-flex justify-content-between align-items-start mb-1">
+                              <div>
+                                <h6
+                                  className="mb-1"
                                   style={{
-                                    backgroundColor: PRIORITY_COLOR[notification.priority] || PRIORITY_COLOR.medium,
-                                    color: "#fff",
-                                    fontSize: "10px",
+                                    color: "#3B4A66",
+                                    fontSize: "16px",
+                                    fontWeight: "500",
+                                    fontFamily: "BasisGrotesquePro",
+                                  }}
+                                >
+                                  {notification.title || "Notification"}
+                                </h6>
+                                <p
+                                  className="mb-0"
+                                  style={{
+                                    color: "#4B5563",
+                                    fontSize: "14px",
+                                    fontFamily: "BasisGrotesquePro",
+                                  }}
+                                >
+                                  {notification.message}
+                                </p>
+                              </div>
+                              <div className="d-flex gap-2">
+                                {notification.priority && (
+                                  <span
+                                    style={{
+                                      backgroundColor: PRIORITY_COLOR[notification.priority] || "#FBBF24",
+                                      color: "#FFFFFF",
+                                      fontSize: "10px",
+                                      padding: "0px 8px",
+                                      borderRadius: "100px",
+                                      fontWeight: "600",
+                                      textTransform: "capitalize",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      lineHeight: "1",
+                                      whiteSpace: "nowrap",
+                                      height: "16px",
+                                      minWidth: "40px"
+                                    }}
+                                  >
+                                    {notification.priority_display || notification.priority}
+                                  </span>
+                                )}
+                                <button
+                                  className="btn "
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(notification.id);
+                                  }}
+                                  style={{
+                                    backgroundColor: "transparent",
+                                    border: "none",
+                                    color: "#EF4444",
                                     padding: "4px 8px",
                                   }}
                                 >
-                                  {notification.priority_display || notification.priority}
+                                  <i className="bi bi-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <span
+                                style={{
+                                  color: "#6B7280",
+                                  fontSize: "12px",
+                                  fontFamily: "BasisGrotesquePro",
+                                }}
+                              >
+                                {notification.time_ago || formatTimeAgo(notification.created_at)}
+                              </span>
+                              {!notification.is_read && (
+                                <span
+                                  style={{
+                                    backgroundColor: "#F56D2D",
+                                    color: "#FFFFFF",
+                                    fontSize: "10px",
+                                    padding: "0px 8px",
+                                    borderRadius: "100px",
+                                    fontWeight: "600",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    lineHeight: "1",
+                                    whiteSpace: "nowrap",
+                                    height: "16px"
+                                  }}
+                                >
+                                  New
                                 </span>
                               )}
-                              <button
-                                className="btn "
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(notification.id);
-                                }}
-                                style={{
-                                  backgroundColor: "transparent",
-                                  border: "none",
-                                  color: "#EF4444",
-                                  padding: "4px 8px",
-                                }}
-                              >
-                                <i className="bi bi-trash"></i>
-                              </button>
                             </div>
                           </div>
-                          <div className="d-flex justify-content-between align-items-center mt-2">
-                            <span
-                              style={{
-                                color: "#6B7280",
-                                fontSize: "12px",
-                                fontFamily: "BasisGrotesquePro",
-                              }}
-                            >
-                              {notification.time_ago || formatTimeAgo(notification.created_at)}
-                            </span>
-                            {!notification.is_read && (
-                              <span
-                                className="badge"
-                                style={{
-                                  backgroundColor: "#F56D2D",
-                                  color: "#fff",
-                                  fontSize: "10px",
-                                  padding: "4px 8px",
-                                }}
-                              >
-                                New
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
-                <button
-                  className="btn "
-                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                  style={{
-                    backgroundColor: page === 1 ? "#E5E7EB" : "#F56D2D",
-                    color: page === 1 ? "#9CA3AF" : "#FFFFFF",
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontSize: "14px",
-                  }}
-                >
-                  Previous
-                </button>
-                <span style={{ fontSize: "14px", color: "#4B5563", minWidth: "100px", textAlign: "center" }}>
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  className="btn "
-                  onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={page === totalPages}
-                  style={{
-                    backgroundColor: page === totalPages ? "#E5E7EB" : "#F56D2D",
-                    color: page === totalPages ? "#9CA3AF" : "#FFFFFF",
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontSize: "14px",
-                  }}
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Notification Details Modal */}
-      {showDetailsModal && selectedNotification && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
-          onClick={() => setShowDetailsModal(false)}
-        >
-          <div
-            className="bg-white rounded-4 p-4"
-            style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: '#3B4A66' }}>
-                Notification Details
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setShowDetailsModal(false)}
-                aria-label="Close"
-              />
-            </div>
-
-            {loadingDetails ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : (
-              <div>
-                {/* Notification Icon and Priority */}
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      backgroundColor: PRIORITY_COLOR[selectedNotification.priority] || PRIORITY_COLOR.medium,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {getNotificationIcon(selectedNotification.notification_type)}
-                  </div>
-                  <div>
-                    <h6 className="mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: '#3B4A66' }}>
-                      {selectedNotification.title || "Notification"}
-                    </h6>
-                    {selectedNotification.priority && (
-                      <span
-                        className="badge"
-                        style={{
-                          backgroundColor: PRIORITY_COLOR[selectedNotification.priority] || PRIORITY_COLOR.medium,
-                          color: "#fff",
-                          fontSize: "12px",
-                          padding: "4px 12px",
-                        }}
-                      >
-                        {selectedNotification.priority_display || selectedNotification.priority}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Notification Type */}
-                {selectedNotification.notification_type_display && (
-                  <div className="mb-3">
-                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                      TYPE
-                    </label>
-                    <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
-                      {selectedNotification.notification_type_display}
-                    </p>
-                  </div>
-                )}
-
-                {/* Message */}
-                <div className="mb-3">
-                  <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                    MESSAGE
-                  </label>
-                  <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66', lineHeight: '1.6' }}>
-                    {selectedNotification.message}
-                  </p>
-                </div>
-
-                {/* Extra Data */}
-                {selectedNotification.extra_data && Object.keys(selectedNotification.extra_data).length > 0 && (
-                  <div className="mb-3">
-                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                      DETAILS
-                    </label>
-                    <div className="bg-light rounded p-3" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
-                      {Object.entries(selectedNotification.extra_data).map(([key, value]) => (
-                        <div key={key} className="d-flex justify-content-between mb-2">
-                          <span style={{ color: '#6B7280', textTransform: 'capitalize' }}>
-                            {key.replace(/_/g, ' ')}:
-                          </span>
-                          <span style={{ color: '#3B4A66', fontWeight: 500 }}>
-                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                          </span>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
 
-                {/* Related Object */}
-                {selectedNotification.related_object_type && (
-                  <div className="mb-3">
-                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                      RELATED OBJECT
-                    </label>
-                    <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
-                      {selectedNotification.related_object_type}
-                      {selectedNotification.related_object_id && ` (ID: ${selectedNotification.related_object_id})`}
-                    </p>
-                  </div>
-                )}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
+                  <button
+                    className="btn "
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                    disabled={page === 1}
+                    style={{
+                      backgroundColor: page === 1 ? "#E5E7EB" : "#F56D2D",
+                      color: page === 1 ? "#9CA3AF" : "#FFFFFF",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "6px 12px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Previous
+                  </button>
+                  <span style={{ fontSize: "14px", color: "#4B5563", minWidth: "100px", textAlign: "center" }}>
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    className="btn "
+                    onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={page === totalPages}
+                    style={{
+                      backgroundColor: page === totalPages ? "#E5E7EB" : "#F56D2D",
+                      color: page === totalPages ? "#9CA3AF" : "#FFFFFF",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "6px 12px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-                {/* Timestamps */}
-                <div className="mb-3">
-                  <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                    TIMESTAMP
-                  </label>
-                  <div className="d-flex flex-column gap-1">
-                    <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
-                      Created: {selectedNotification.created_at ? new Date(selectedNotification.created_at).toLocaleString() : 'N/A'}
-                    </p>
-                    {selectedNotification.read_at && (
-                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
-                        Read: {new Date(selectedNotification.read_at).toLocaleString()}
-                      </p>
-                    )}
-                    {selectedNotification.time_ago && (
-                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280' }}>
-                        {selectedNotification.time_ago}
-                      </p>
-                    )}
+        {/* Notification Details Modal */}
+        {showDetailsModal && selectedNotification && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+            onClick={() => setShowDetailsModal(false)}
+          >
+            <div
+              className="bg-white rounded-4 p-4"
+              style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: '#3B4A66' }}>
+                  Notification Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDetailsModal(false)}
+                  aria-label="Close"
+                />
+              </div>
+
+              {loadingDetails ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-
-                {/* Status */}
-                <div className="mb-4">
-                  <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                    STATUS
-                  </label>
-                  <div>
-                    <span
-                      className="badge"
+              ) : (
+                <div>
+                  {/* Notification Icon and Priority */}
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <div
                       style={{
-                        backgroundColor: selectedNotification.is_read ? '#22C55E' : '#F56D2D',
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "50%",
+                        backgroundColor: PRIORITY_COLOR[selectedNotification.priority] || PRIORITY_COLOR.medium,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                         color: "#fff",
-                        fontSize: "12px",
-                        padding: "6px 12px",
+                        flexShrink: 0,
                       }}
                     >
-                      {selectedNotification.is_read ? 'Read' : 'Unread'}
-                    </span>
+                      {getNotificationIcon(selectedNotification.notification_type)}
+                    </div>
+                    <div>
+                      <h6 className="mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: '#3B4A66' }}>
+                        {selectedNotification.title || "Notification"}
+                      </h6>
+                      {selectedNotification.priority && (
+                        <span
+                          className="badge"
+                          style={{
+                            backgroundColor: PRIORITY_COLOR[selectedNotification.priority] || PRIORITY_COLOR.medium,
+                            color: "#fff",
+                            fontSize: "12px",
+                            padding: "4px 12px",
+                          }}
+                        >
+                          {selectedNotification.priority_display || selectedNotification.priority}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="d-flex gap-2 justify-content-end">
-                  {!selectedNotification.is_read && (
+                  {/* Notification Type */}
+                  {selectedNotification.notification_type_display && (
+                    <div className="mb-3">
+                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                        TYPE
+                      </label>
+                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                        {selectedNotification.notification_type_display}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Message */}
+                  <div className="mb-3">
+                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                      MESSAGE
+                    </label>
+                    <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66', lineHeight: '1.6' }}>
+                      {selectedNotification.message}
+                    </p>
+                  </div>
+
+                  {/* Extra Data */}
+                  {selectedNotification.extra_data && Object.keys(selectedNotification.extra_data).length > 0 && (
+                    <div className="mb-3">
+                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                        DETAILS
+                      </label>
+                      <div className="bg-light rounded p-3" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
+                        {Object.entries(selectedNotification.extra_data).map(([key, value]) => (
+                          <div key={key} className="d-flex justify-content-between mb-2">
+                            <span style={{ color: '#6B7280', textTransform: 'capitalize' }}>
+                              {key.replace(/_/g, ' ')}:
+                            </span>
+                            <span style={{ color: '#3B4A66', fontWeight: 500 }}>
+                              {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Related Object */}
+                  {selectedNotification.related_object_type && (
+                    <div className="mb-3">
+                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                        RELATED OBJECT
+                      </label>
+                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                        {selectedNotification.related_object_type}
+                        {selectedNotification.related_object_id && ` (ID: ${selectedNotification.related_object_id})`}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Timestamps */}
+                  <div className="mb-3">
+                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                      TIMESTAMP
+                    </label>
+                    <div className="d-flex flex-column gap-1">
+                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                        Created: {selectedNotification.created_at ? new Date(selectedNotification.created_at).toLocaleString() : 'N/A'}
+                      </p>
+                      {selectedNotification.read_at && (
+                        <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                          Read: {new Date(selectedNotification.read_at).toLocaleString()}
+                        </p>
+                      )}
+                      {selectedNotification.time_ago && (
+                        <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280' }}>
+                          {selectedNotification.time_ago}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="mb-4">
+                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                      STATUS
+                    </label>
+                    <div>
+                      <span
+                        className="badge"
+                        style={{
+                          backgroundColor: selectedNotification.is_read ? '#22C55E' : '#F56D2D',
+                          color: "#fff",
+                          fontSize: "12px",
+                          padding: "6px 12px",
+                        }}
+                      >
+                        {selectedNotification.is_read ? 'Read' : 'Unread'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="d-flex gap-2 justify-content-end">
+                    {!selectedNotification.is_read && (
+                      <button
+                        className="btn "
+                        onClick={() => {
+                          handleMarkAsRead(selectedNotification.id);
+                        }}
+                        style={{
+                          backgroundColor: "#F56D2D",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "8px 16px",
+                          fontSize: "14px",
+                          fontFamily: "BasisGrotesquePro",
+                        }}
+                      >
+                        Mark as Read
+                      </button>
+                    )}
                     <button
                       className="btn "
                       onClick={() => {
-                        handleMarkAsRead(selectedNotification.id);
+                        handleDelete(selectedNotification.id);
+                        setShowDetailsModal(false);
                       }}
                       style={{
-                        backgroundColor: "#F56D2D",
+                        backgroundColor: "#EF4444",
                         color: "#fff",
                         border: "none",
                         borderRadius: "6px",
@@ -741,64 +812,45 @@ const Notifications = () => {
                         fontFamily: "BasisGrotesquePro",
                       }}
                     >
-                      Mark as Read
+                      Delete
                     </button>
-                  )}
-                  <button
-                    className="btn "
-                    onClick={() => {
-                      handleDelete(selectedNotification.id);
-                      setShowDetailsModal(false);
-                    }}
-                    style={{
-                      backgroundColor: "#EF4444",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "6px",
-                      padding: "8px 16px",
-                      fontSize: "14px",
-                      fontFamily: "BasisGrotesquePro",
-                    }}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="btn "
-                    onClick={() => setShowDetailsModal(false)}
-                    style={{
-                      backgroundColor: "#FFFFFF",
-                      color: "#3B4A66",
-                      border: "1px solid #E5E7EB",
-                      borderRadius: "6px",
-                      padding: "8px 16px",
-                      fontSize: "14px",
-                      fontFamily: "BasisGrotesquePro",
-                    }}
-                  >
-                    Close
-                  </button>
+                    <button
+                      className="btn "
+                      onClick={() => setShowDetailsModal(false)}
+                      style={{
+                        backgroundColor: "#FFFFFF",
+                        color: "#3B4A66",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "6px",
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                        fontFamily: "BasisGrotesquePro",
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
 
-    {/* Delete Notification Confirmation Modal */}
-    <ConfirmationModal
-      isOpen={showDeleteNotificationConfirm}
-      onClose={() => {
-        setShowDeleteNotificationConfirm(false);
-        setNotificationToDelete(null);
-      }}
-      onConfirm={confirmDeleteNotification}
-      title="Delete Notification"
-      message="Are you sure you want to delete this notification?"
-      confirmText="Delete"
-      cancelText="Cancel"
-      isDestructive={true}
-    />
+      {/* Delete Notification Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteNotificationConfirm}
+        onClose={() => {
+          setShowDeleteNotificationConfirm(false);
+          setNotificationToDelete(null);
+        }}
+        onConfirm={confirmDeleteNotification}
+        title="Delete Notification"
+        message="Are you sure you want to delete this notification?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
     </>
   );
 };

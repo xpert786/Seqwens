@@ -146,9 +146,10 @@
   align-items: center !important;
   padding: 8px 10px !important;
   border-radius: 8px !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
   /* larger text */
   font-weight: 500 !important;
+  white-space: nowrap !important;
   color: #3b4a66 !important;
   background-color: #ffffff !important;
   transition: 0.3s !important;

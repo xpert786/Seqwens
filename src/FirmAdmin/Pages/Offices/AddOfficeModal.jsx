@@ -819,7 +819,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                         type="button"
                         onClick={handleContinue}
                         disabled={loading}
-                        className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#F56D2D] to-[#ff8c57] !rounded-lg hover:shadow-md transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
+                        className="px-6 py-2.5 text-sm font-semibold text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E54A1B] transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
                     >
                         {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                         {loading ? 'Saving...' : currentStep === steps.length ? 'Add Office' : 'Continue'}

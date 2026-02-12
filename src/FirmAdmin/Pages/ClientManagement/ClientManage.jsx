@@ -2300,7 +2300,7 @@ export default function ClientManage() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={!pagination.has_previous || currentPage === 1}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_previous || currentPage === 1
+                  className={`px-3 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_previous || currentPage === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
@@ -2323,7 +2323,7 @@ export default function ClientManage() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
+                        className={`px-3 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
                           ? 'text-white shadow-sm hover:brightness-90'
                           : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
@@ -2337,7 +2337,7 @@ export default function ClientManage() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
                   disabled={!pagination.has_next || currentPage === pagination.total_pages}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_next || currentPage === pagination.total_pages
+                  className={`px-3 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_next || currentPage === pagination.total_pages
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
@@ -2783,14 +2783,14 @@ export default function ClientManage() {
             }}
           >
             <div
-              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+              className="bg-white rounded-lg shadow-lg p-4 max-w-sm w-full mx-4"
               style={{
                 borderRadius: '12px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>
+                <h4 className="text-base font-bold text-gray-900" style={{ color: '#3B4A66' }}>
                   {isAssignMode ? 'Assign Tax Preparer' : 'Reassign Tax Preparer'}
                 </h4>
                 <button
@@ -2864,7 +2864,7 @@ export default function ClientManage() {
                           setIsAssignMode(false);
                         }
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
                       disabled={reassigning}
                     >
                       Cancel
@@ -2885,7 +2885,7 @@ export default function ClientManage() {
                           });
                         }
                       }}
-                      className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                      className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
                       style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
                       disabled={reassigning}
                     >
@@ -2915,14 +2915,14 @@ export default function ClientManage() {
             }}
           >
             <div
-              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+              className="bg-white rounded-lg shadow-lg p-4 max-w-sm w-full mx-4"
               style={{
-                borderRadius: '12px',
+                borderRadius: '8px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h3>
+                <h3 className="text-sm font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h3>
                 <button
                   onClick={() => {
                     if (!deletingInvite) {
@@ -2936,25 +2936,25 @@ export default function ClientManage() {
                 </button>
               </div>
 
-              <div className="mb-6">
-                <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+              <div className="mb-4">
+                <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">
                   Are you sure you want to delete this invitation? This action cannot be undone.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-2">
                 <button
                   onClick={() => {
                     setShowDeleteInviteConfirmModal(false);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                  className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
                   disabled={deletingInvite}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDeleteInvite}
-                  className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                  className="px-3 py-1 text-xs font-medium text-white !rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
                   style={{ background: 'var(--color-red-500, #EF4444)' }}
                   disabled={deletingInvite}
                 >
@@ -2980,14 +2980,16 @@ export default function ClientManage() {
             }}
           >
             <div
-              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+              className="bg-white rounded-lg shadow-lg p-4 max-w-sm w-full mx-4"
               style={{
-                borderRadius: '12px',
+                borderRadius: '8px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Remove Client from Firm</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-sm font-bold text-gray-900" style={{ color: '#3B4A66' }}>
+                  Remove Client
+                </h4>
                 <button
                   onClick={() => {
                     if (!deleting) {
@@ -2995,26 +2997,26 @@ export default function ClientManage() {
                       setSelectedClientForDelete(null);
                     }
                   }}
-                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
                   disabled={deleting}
                 >
                   <CrossesIcon />
                 </button>
               </div>
 
-              <div className="mb-6">
-                <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                  Are you sure you want to remove this client from your firm? This will permanently remove their record from your firm and immediately free up their email address for new invites.
+              <div className="mb-4">
+                <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">
+                  Are you sure you want to remove this client? This will permanently remove their record and free up their email address.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-2">
                 <button
                   onClick={() => {
                     setShowDeleteConfirmModal(false);
                     setSelectedClientForDelete(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                  className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
                   disabled={deleting}
                 >
                   Cancel
@@ -3025,7 +3027,7 @@ export default function ClientManage() {
                       handleDeleteTaxpayer(selectedClientForDelete);
                     }
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                  className="px-3 py-1 text-xs font-medium text-white !rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
                   style={{ background: 'var(--color-red-500, #EF4444)' }}
                   disabled={deleting}
                 >
@@ -3036,6 +3038,6 @@ export default function ClientManage() {
           </div>
         )
       }
-    </div >
+    </div>
   );
 }

@@ -165,6 +165,8 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const lastActionTimeRef = useRef(0);
+  const localUnreadCountRef = useRef(0);
 
   // Maximum number of notifications to show initially
   const MAX_INITIAL_NOTIFICATIONS = 5;
@@ -196,6 +198,11 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
       closeButtonRef.current.focus();
     }
   }, []);
+
+  // Update local ref when unreadCount changes
+  useEffect(() => {
+    localUnreadCountRef.current = unreadCount;
+  }, [unreadCount]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -295,6 +302,14 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   }, [fetchUnreadCount]);
 
   const handleUnreadCountUpdate = useCallback((count) => {
+    const now = Date.now();
+    // Ignore updates if they occur within 3 seconds of a manual action
+    // and the count is different from our local state, to prevent revert flickers
+    if (now - lastActionTimeRef.current < 3000) {
+      console.log("Ignoring potentially stale WebSocket unread count update:", count, "Current local:", localUnreadCountRef.current);
+      return;
+    }
+
     setUnreadCount(count);
     if (typeof onChange === "function") {
       onChange({
@@ -342,64 +357,73 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
   const markAsRead = useCallback(async (notificationId) => {
     try {
+      lastActionTimeRef.current = Date.now();
+
       const response = await notificationAPI.markAsRead(notificationId);
       if (response.success) {
-        let updatedNotifications = [];
         setNotifications((prev) => {
-          updatedNotifications = prev.map((notification) =>
+          const updated = prev.map((notification) =>
             notification.id === notificationId
               ? { ...notification, read: true }
               : notification
           );
-          return updatedNotifications;
-        });
 
-        // Update unread count
-        const newUnreadCount = Math.max(0, unreadCount - 1);
-        setUnreadCount(newUnreadCount);
-
-        // Notify parent component with correct updated data
-        if (typeof onChange === "function") {
-          onChange({
-            notifications: updatedNotifications.length > 0 ? updatedNotifications : notifications.map((n) =>
-              n.id === notificationId ? { ...n, read: true } : n
-            ),
-            unreadCount: newUnreadCount,
+          // Update parent immediately with the updated notifications and count
+          setUnreadCount((prevCount) => {
+            const nextCount = Math.max(0, prevCount - 1);
+            if (typeof onChange === "function") {
+              onChange({
+                notifications: updated,
+                unreadCount: nextCount,
+              });
+            }
+            return nextCount;
           });
-        }
+
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
-  }, [notifications, unreadCount, onChange, notificationAPI]);
+  }, [notificationAPI, onChange]);
 
   const removeNotification = useCallback(async (notificationId) => {
     try {
-      const notificationToRemove = notifications.find((n) => n.id === notificationId);
-      const wasUnread = notificationToRemove && !notificationToRemove.read;
+      lastActionTimeRef.current = Date.now();
 
       const response = await notificationAPI.deleteNotification(notificationId);
       if (response.success) {
-        setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
+        setNotifications((prev) => {
+          const notificationToRemove = prev.find((n) => n.id === notificationId);
+          const wasUnread = notificationToRemove && !notificationToRemove.read;
+          const updated = prev.filter((notification) => notification.id !== notificationId);
 
-        // Update unread count if removed notification was unread
-        if (wasUnread) {
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-          // Notify parent component
-          if (typeof onChange === "function") {
-            const updatedNotifications = notifications.filter((n) => n.id !== notificationId);
-            const newUnreadCount = Math.max(0, unreadCount - 1);
+          if (wasUnread) {
+            setUnreadCount((prevCount) => {
+              const nextCount = Math.max(0, prevCount - 1);
+              if (typeof onChange === "function") {
+                onChange({
+                  notifications: updated,
+                  unreadCount: nextCount,
+                });
+              }
+              return nextCount;
+            });
+          } else if (typeof onChange === "function") {
             onChange({
-              notifications: updatedNotifications,
-              unreadCount: newUnreadCount,
+              notifications: updated,
+              unreadCount: localUnreadCountRef.current,
             });
           }
-        }
+
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Error deleting notification:", err);
     }
-  }, [notifications, unreadCount, onChange]);
+  }, [notificationAPI, onChange]);
 
   const markAllRead = useCallback(async () => {
     try {

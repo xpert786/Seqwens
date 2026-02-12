@@ -137,7 +137,6 @@ export default function FirmAdminDashboard() {
   const handleApplyDateRange = () => {
     setDateRange(selectedDateRange);
   };
-
   // Fetch dashboard data
   const fetchDashboardData = React.useCallback(async (signal) => {
     setLoading(true);
@@ -1173,7 +1172,7 @@ export default function FirmAdminDashboard() {
           {/* Left Section */}
           <div className="flex-1 min-w-0 pr-4 xl:pr-2 max-md:pr-0">
             <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
-              Firm Dashboard
+              Dashboard
             </h4>
             <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base leading-tight">
               Welcome Back
@@ -1510,7 +1509,7 @@ export default function FirmAdminDashboard() {
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Lead conversion and client journey</p>
               </div>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   className={`p-2 text-gray-500 hover:text-gray-700 ${engagementLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
                   onClick={() => setEngagementLayout(engagementLayout === 'column' ? 'row' : 'column')}
                   title="Toggle layout"
@@ -1696,7 +1695,7 @@ export default function FirmAdminDashboard() {
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Current compliance metrics & alerts summary</p>
               </div>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   className={`p-2 text-gray-500 hover:text-gray-700 ${complianceLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
                   onClick={() => setComplianceLayout(complianceLayout === 'column' ? 'row' : 'column')}
                   title="Toggle layout"

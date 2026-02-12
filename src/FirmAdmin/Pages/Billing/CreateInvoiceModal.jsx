@@ -3,7 +3,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminMessagingAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { formatDateInput, formatDateForAPI } from '../../../ClientOnboarding/utils/dateUtils';
-import DateInput from '../../../components/DateInput';
+import DatePicker from '../../../components/DatePicker';
 import '../../styles/CreateInvoiceModel.css';
 const API_BASE_URL = getApiBaseUrl();
 
@@ -479,7 +479,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                 <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
                   Issue Date <span className="text-red-500">*</span>
                 </label>
-                <DateInput
+                <DatePicker
                   value={invoiceData.issue_date}
                   onChange={(e) => handleDateChange('issue_date', e)}
                   placeholder="mm/dd/yyyy"
@@ -491,7 +491,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                 <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
                   Due Date <span className="text-red-500">*</span>
                 </label>
-                <DateInput
+                <DatePicker
                   value={invoiceData.due_date}
                   onChange={(e) => handleDateChange('due_date', e)}
                   placeholder="mm/dd/yyyy"

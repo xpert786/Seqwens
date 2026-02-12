@@ -401,12 +401,9 @@ export default function FirmDashboardLayout() {
         <main
           className="h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
           style={{
-            marginTop: isImpersonating ? '110px' : '70px',
             marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
             width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
-            backgroundColor: 'var(--firm-secondary-color, #F3F7FF)'
-          }}
-        >
+          }}  >
           <Outlet />
         </main>
       </div>

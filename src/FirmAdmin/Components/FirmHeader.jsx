@@ -58,6 +58,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
     const profileButtonRef = useRef(null);
     const searchRef = useRef(null);
     const logoRef = useRef(null);
+    const lastActionTimeRef = useRef(0);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -79,7 +80,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
         { title: "Offices", path: "/firmadmin/offices" },
         { title: "Email Templates", path: "/firmadmin/email-templates" },
         { title: "Security & Compliance", path: "/firmadmin/security" },
-        { title: "Firm Settings & Branding", path: "/firmadmin/settings" },
+        { title: "Settings & Branding", path: "/firmadmin/settings" },
         { title: "Custom Roles", path: "/firmadmin/custom-roles" },
         { title: "Account Settings", path: "/firmadmin/account-settings" },
     ];
@@ -124,6 +125,11 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
+        // Don't poll if we just had a manual update (prevents reverting to old count)
+        if (Date.now() - lastActionTimeRef.current < 5000) {
+            return;
+        }
+
         try {
             const response = await firmAdminNotificationAPI.getUnreadCount();
             if (response.success && response.data) {
@@ -363,6 +369,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
     const handleNotificationChange = useCallback((data) => {
         if (data && data.unreadCount !== undefined) {
             setUnreadNotifications(data.unreadCount);
+            lastActionTimeRef.current = Date.now();
         }
     }, []);
 
@@ -371,7 +378,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
     return (
         <>
             <nav
-                className={`navbar bg-white fixed-top border-bottom custom-topbar p-0 ${isImpersonating ? 'impersonating-topbar' : ''}`}
+                className={`navbar bg-white border-bottom custom-topbar p-0 ${isImpersonating ? 'impersonating-topbar' : ''}`}
                 style={{
                     top: isImpersonating ? '40px' : '0',
                     transition: 'top 0.3s ease'
@@ -402,7 +409,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                     />
                                 </Link>
                             </div>
-                            
+
                             {/* Sidebar Toggle - Positioned at the right edge corner */}
                             <div
                                 onClick={onToggleSidebar}

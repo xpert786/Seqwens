@@ -112,7 +112,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
           {/* Send Message Section */}
           <div style={{ marginBottom: '24px' }}>
             <h3 className="font-semibold" style={{ color: '#3B4A66', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
-              Send Message to Yours clients:
+              Send Message to your clients:
             </h3>
             <textarea
               value={message}
@@ -169,7 +169,6 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
                 borderRadius: '8px',
                 padding: '10px',
                 fontSize: '14px',
-                lineHeight: '70px',
                 marginBottom: '8px'
               }}
             />

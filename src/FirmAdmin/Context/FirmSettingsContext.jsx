@@ -36,6 +36,8 @@ export const FirmSettingsProvider = ({ children }) => {
       const response = await firmAdminSettingsAPI.getBrandingInfo();
       if (response?.success && response?.data) {
         setBranding(response.data);
+        localStorage.setItem('firm_branding', JSON.stringify(response.data));
+
         // Apply CSS variables
         const root = document.documentElement;
         if (response.data.primary_color) {
@@ -53,6 +55,24 @@ export const FirmSettingsProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to load firm branding info:', error);
+    }
+  }, []);
+
+  // Apply colors from localStorage immediately on mount to prevent flicker
+  useEffect(() => {
+    const savedBranding = localStorage.getItem('firm_branding');
+    if (savedBranding) {
+      try {
+        const data = JSON.parse(savedBranding);
+        setBranding(data);
+        const root = document.documentElement;
+        if (data.primary_color) root.style.setProperty('--firm-primary-color', data.primary_color);
+        if (data.secondary_color) root.style.setProperty('--firm-secondary-color', data.secondary_color);
+        if (data.accent_color) root.style.setProperty('--firm-accent-color', data.accent_color);
+        if (data.font_family) root.style.setProperty('--firm-font-family', data.font_family);
+      } catch (e) {
+        console.error('Failed to parse saved branding:', e);
+      }
     }
   }, []);
 

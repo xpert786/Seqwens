@@ -1625,7 +1625,7 @@ export default function StaffManagement() {
                       <button
                         onClick={() => setStaffPage(prev => Math.max(1, prev - 1))}
                         disabled={staffPage === 1}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
                       >
                         Previous
                       </button>
@@ -1652,7 +1652,7 @@ export default function StaffManagement() {
                                   )}
                                   <button
                                     onClick={() => setStaffPage(page)}
-                                    className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
+                                    className={`px-3 py-2 text-sm font-medium !rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
                                       ? 'bg-firm-primary text-white border border-firm-primary'
                                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                       }`}
@@ -1670,7 +1670,7 @@ export default function StaffManagement() {
                       <button
                         onClick={() => setStaffPage(prev => Math.min(Math.ceil(staffData.length / staffPageSize), prev + 1))}
                         disabled={staffPage >= Math.ceil(staffData.length / staffPageSize)}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
                       >
                         Next
                       </button>

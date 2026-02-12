@@ -643,7 +643,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 <button
                                                     onClick={handleUseSavedPaymentMethod}
                                                     disabled={!selectedPaymentMethodId || processing}
-                                                    className="flex-1 px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                                    className="flex-1 px-6 py-2 text-white !rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
                                                     style={{ backgroundColor: 'var(--firm-primary-color)' }}
                                                 >
                                                     {processing ? 'Processing...' : 'Use Selected Card'}
@@ -651,7 +651,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 <button
                                                     onClick={handleAddNewCard}
                                                     disabled={processing}
-                                                    className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
+                                                    className="px-6 py-2 bg-white border border-gray-300 !rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
                                                 >
                                                     Add New Card
                                                 </button>
@@ -683,7 +683,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-1.5 inline-flex gap-2">
                                     <button
                                         onClick={() => setBillingCycle('monthly')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'monthly'
+                                        className={`px-4 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'monthly'
                                             ? 'bg-firm-primary text-white'
                                             : 'bg-transparent text-gray-700 hover:bg-gray-100'
                                             }`}
@@ -692,7 +692,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                     </button>
                                     <button
                                         onClick={() => setBillingCycle('yearly')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'yearly'
+                                        className={`px-4 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${billingCycle === 'yearly'
                                             ? 'bg-firm-primary text-white'
                                             : 'bg-transparent text-gray-700 hover:bg-gray-100'
                                             }`}
@@ -854,14 +854,14 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                         <button
                             onClick={onClose}
                             disabled={processing}
-                            className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
+                            className="px-6 py-2 bg-white border border-gray-300 !rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handlePayNow}
                             disabled={!selectedPlan || processing || isCurrentPlan(selectedPlan)}
-                            className="px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                            className="px-6 py-2 text-white !rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
                             style={{ backgroundColor: 'var(--firm-primary-color)' }}
                         >
                             Pay Now

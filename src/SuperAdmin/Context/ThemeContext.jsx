@@ -36,7 +36,7 @@ export const ThemeProvider = ({ children }) => {
             root.style.setProperty('--sa-bg-active', '#334155');
             root.style.setProperty('--sa-text-primary', '#f8fafc');
             root.style.setProperty('--sa-text-secondary', '#94a3b8');
-            root.style.setProperty('--sa-border-color', '#334155');
+            root.style.setProperty('--sa-border-color', '#475569'); // Brighter border for dark mode so it's visible
             root.style.setProperty('--sa-accent', '#f56d2d');
         } else {
             root.classList.remove('dark-mode');
@@ -50,7 +50,7 @@ export const ThemeProvider = ({ children }) => {
             root.style.setProperty('--sa-bg-active', '#f1f5f9');
             root.style.setProperty('--sa-text-primary', '#1e293b');
             root.style.setProperty('--sa-text-secondary', '#64748b');
-            root.style.setProperty('--sa-border-color', '#e2e8f0');
+            root.style.setProperty('--sa-border-color', '#94a3b8'); // Much darker border for light mode visibility
             root.style.setProperty('--sa-accent', '#f56d2d');
         }
 
