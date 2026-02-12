@@ -1176,9 +1176,9 @@ export default function ESignatureManagement() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 min-h-screen">
+    <div className="p-2 sm:p-4 md:p-6 pt-0 sm:pt-2 min-h-screen">
       {/* Header Section */}
-      <div className="mb-4 md:mb-6">
+      <div className="mb-2 md:mb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex-1">
           </div>
@@ -1198,113 +1198,7 @@ export default function ESignatureManagement() {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="mb-4 md:mb-6">
-        {/* Desktop Navigation - Always visible on screens ≥ 768px */}
-        <div className="hidden md:block mb-6 w-fit">
-          <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Requests'/*, 'Templates'*/].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
 
-
-        {/* Mobile Navigation - Only visible on screens < 768px */}
-        <div className="block md:hidden">
-          {/* Logo Icon Toggle Button */}
-          <div className="flex items-center gap-3 mb-3">
-            <button
-              onClick={() => setShowMobileNav(!showMobileNav)}
-              className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-blue-50 text-gray-700 hover:bg-gray-50 transition-colors"
-              aria-label="Toggle Navigation"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={`transition-transform duration-300 ${showMobileNav ? 'rotate-180' : ''}`}
-              >
-                <path
-                  d="M12 2L2 7L12 12L22 7L12 2Z"
-                  fill="#3AD6F2"
-                />
-                <path
-                  d="M2 17L12 22L22 17"
-                  stroke="#3AD6F2"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 12L12 17L22 12"
-                  stroke="#3AD6F2"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {/* Current Active Tab Display */}
-            <div className="flex-1">
-              <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                {activeTab === 'Requests' ? 'Requests' :
-                  activeTab === 'Templates' ? 'Templates' : 'Requests'}
-              </span>
-            </div>
-          </div>
-
-          {/* Collapsible Menu - Only visible when showMobileNav is true */}
-          {showMobileNav && (
-            <div className="bg-white rounded-lg border border-blue-50 shadow-lg overflow-hidden">
-              <button
-                onClick={() => {
-                  setActiveTab('Requests');
-                  setShowMobileNav(false);
-                }}
-                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'Requests'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>Requests</span>
-                  {activeTab === 'Requests' && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M13.3333 4L6 11.3333L2.66667 8"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
 
 
       {/* Signature Request Tab Content */}

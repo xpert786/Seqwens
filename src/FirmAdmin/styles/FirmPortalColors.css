@@ -5,10 +5,7 @@
   background-color: #F56D2D !important;
 }
 
-/* Main background theme uses secondary color */
-.firm-dashboard-layout main {
-  /* background-color: var(--firm-secondary-color, #ffffff) !important; */
-}
+
 
 /* Target specific background color classes and replace with secondary color */
 /* .firm-dashboard-layout [class*="bg-[#F3F7FF]"],
@@ -128,10 +125,11 @@
   color: #6c757d !important;
 }
 
-/* Links and hover states */
-.firm-panel a:hover,
-.firm-panel [class*="hover"]:hover {
-  color: var(--firm-primary-color, #178109) !important;
+/* Links and hover states - use primary branding color - exclude active */
+.firm-panel a:hover:not(.active):not([aria-current="page"]),
+.firm-panel div[class*="hover"]:hover:not(button):not(.btn):not(.active):not([aria-current="page"]),
+.firm-panel span[class*="hover"]:hover:not(.active):not([aria-current="page"]) {
+  color: var(--firm-primary-color, #3AD6F2) !important;
 }
 
 /* Active states */
@@ -140,15 +138,30 @@
   background-color: var(--firm-secondary-color, #ffffff) !important;
 }
 
-/* Sidebar Hover Overrides - Force white text on hover */
+/* Sidebar text and icons - maintain original color on hover */
 .firm-sidebar a:hover,
 .firm-sidebar [class*="hover"]:hover,
 .firm-dashboard-layout .firm-sidebar a:hover {
-  color: white !important;
+  /* color: inherit; - removed !important white to stay same */
 }
 
 .firm-sidebar a:hover svg,
 .firm-sidebar [class*="hover"]:hover svg {
   color: white !important;
   fill: currentColor;
+}
+
+/* Ensure buttons with primary background keep white text on hover */
+.firm-panel button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):hover,
+.firm-dashboard-layout button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):hover,
+.firm-panel button[style*="background-color"]:hover,
+.btn-primary:hover {
+  color: white !important;
+}
+
+/* Ensure buttons without solid backgrounds get primary color on hover - exclude active */
+.firm-panel button:not([class*="bg-"]):hover:not(.active):not([aria-current="page"]),
+.firm-panel button[class*="bg-white"]:hover:not(.active):not([aria-current="page"]),
+.firm-dashboard-layout button:not([class*="bg-"]):hover:not(.active):not([aria-current="page"]) {
+  color: var(--firm-primary-color, #3AD6F2) !important;
 }

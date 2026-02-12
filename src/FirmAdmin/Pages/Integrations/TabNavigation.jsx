@@ -45,19 +45,24 @@ const TabNavigation = ({
           // 1. If active: White (#ffffff)
           // 2. If hovered: Dark theme color (#1F2A55)
           // 3. Otherwise: Primary color
-          const iconColor = isActive ? '#ffffff' : (isHovered ? '#1F2A55' : 'var(--firm-primary-color, #3AD6F2)');
+          const iconColor = isActive ? '#ffffff' : (isHovered ? 'var(--firm-primary-color, #3AD6F2)' : 'var(--firm-primary-color, #3AD6F2)');
 
           return (
             <button
               key={tab}
               onClick={() => onTabChange(tab)}
-              onMouseEnter={() => setHoveredTab(tab)}
+              onMouseEnter={() => !isActive && setHoveredTab(tab)}
               onMouseLeave={() => setHoveredTab(null)}
               className={`${defaultTabClassName} ${tabClassName} ${isActive
                 ? `${defaultActiveTabClassName} ${activeTabClassName}`
                 : `${defaultInactiveTabClassName} ${inactiveTabClassName}`
                 }`}
-              style={isActive ? { backgroundColor: 'var(--firm-primary-color, #3AD6F2)' } : undefined}
+              style={{
+                backgroundColor: isActive ? 'var(--firm-primary-color, #3AD6F2)' : 'transparent',
+                color: isActive ? 'white' : (isHovered ? 'var(--firm-primary-color, #3AD6F2)' : undefined),
+                cursor: isActive ? 'default' : 'pointer',
+                pointerEvents: isActive ? 'none' : 'auto'
+              }}
             >
               {iconPath && (
                 <svg

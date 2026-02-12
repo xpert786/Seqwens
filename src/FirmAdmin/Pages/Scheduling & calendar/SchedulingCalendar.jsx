@@ -1426,33 +1426,42 @@ const SchedulingCalendar = () => {
                                                     >
                                                         {day.getDate()}
                                                     </div>
-                                                    {dayAppointments.map((event, idx) => (
+                                                    {dayAppointments.slice(0, 2).map((event, idx) => (
                                                         <div
                                                             key={`${event.id || idx}-${event.appointment_time || idx}`}
                                                             className={`${getEventChipClasses(
                                                                 event.appointment_status
-                                                            )} text-xs p-1 rounded mb-1 shadow-sm cursor-pointer hover:opacity-90`}
+                                                            )} text-[10px] px-2 py-1.5 rounded-md mb-1 shadow-sm cursor-pointer hover:brightness-110 hover:shadow-md transition-all group/event`}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 openEventsModal(day, dayAppointments);
                                                             }}
                                                         >
-                                                            <div className="flex items-center gap-1">
-                                                                <div className="w-1 h-1 bg-white rounded-full"></div>
-                                                                <span className="truncate">
-                                                                    {event.subject || event.title || 'Meeting'}
+                                                            <div className="flex items-center justify-between gap-2 overflow-hidden">
+                                                                <div className="flex items-center gap-1 min-w-0 flex-1">
+                                                                    <div className="w-1 h-1 bg-white rounded-full flex-shrink-0"></div>
+                                                                    <span className="truncate font-medium">
+                                                                        {event.subject || event.title || 'Meeting'}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="text-[9px] opacity-90 whitespace-nowrap group-hover/event:opacity-100">
+                                                                    {formatTime(event.appointment_time)}
                                                                 </span>
                                                             </div>
-                                                            <div className="text-[10px] opacity-90">
-                                                                {getEventTimeRange(event)}
-                                                            </div>
-                                                            {getEventParticipants(event) && (
-                                                                <div className="text-[10px] opacity-80">
-                                                                    {getEventParticipants(event)}
-                                                                </div>
-                                                            )}
                                                         </div>
                                                     ))}
+                                                    {dayAppointments.length > 2 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openEventsModal(day, dayAppointments);
+                                                            }}
+                                                            className="w-full text-[10px] text-[#3AD6F2] font-semibold hover:text-[#28c5e0] hover:underline mt-1.5 py-1 bg-[#3AD6F2]/10 rounded-md transition-colors"
+                                                        >
+                                                            + {dayAppointments.length - 2} more
+                                                        </button>
+                                                    )}
                                                 </div>
                                             );
                                         })}

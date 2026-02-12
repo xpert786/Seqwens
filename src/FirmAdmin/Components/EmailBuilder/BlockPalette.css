@@ -40,7 +40,7 @@
     padding: 12px;
     background-color: #ffffff;
     border: 2px solid #e8f0ff;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
     text-align: left;
@@ -68,7 +68,7 @@
     align-items: center;
     justify-content: center;
     background-color: #f3f6fd;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .block-label {

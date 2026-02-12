@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { DocumentUpload, DocumentDownload, DocumentMoreIcon, DocumentCriticalIssuesIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentOverdueIcon, PdfDocumentIconLight, DocumentWarningIconCompliance, DocumentTextIcon, DocumentPostion, DocumentOpacity, DocumentRotation, DocumentEye } from '../Components/icons';
 import { firmAdminDocumentsAPI, firmAdminSettingsAPI, handleAPIError, watermarkToolAPI } from '../../ClientOnboarding/utils/apiUtils';
@@ -22,6 +23,7 @@ export default function DocumentManagement() {
   const [activeTab, setActiveTab] = useState('Folder');
   const [complianceSubTab, setComplianceSubTab] = useState('Overview');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [searchQuery, setSearchQuery] = useState('');
   const [enableWatermarking, setEnableWatermarking] = useState(true);
   const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
@@ -138,7 +140,7 @@ export default function DocumentManagement() {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.actions-menu-container')) {
+      if (!event.target.closest('.actions-menu-container') && !event.target.closest('.docmanage-actions-menu')) {
         setOpenActionsMenu(null);
       }
     };
@@ -395,7 +397,16 @@ export default function DocumentManagement() {
 
   const toggleActionsMenu = (folderId, event) => {
     event.stopPropagation();
-    setOpenActionsMenu(openActionsMenu === folderId ? null : folderId);
+    if (openActionsMenu === folderId) {
+      setOpenActionsMenu(null);
+    } else {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right + window.scrollX - 160,
+      });
+      setOpenActionsMenu(folderId);
+    }
   };
 
   const handleOpenFolder = (folderId) => {
@@ -604,7 +615,7 @@ export default function DocumentManagement() {
 
           {/* Folder Grid */}
           {!loading && !error && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 docmanage-folder-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 docmanage-folder-grid">
               {filteredFolders.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <p className="text-gray-600 font-[BasisGrotesquePro]">No folders found</p>
@@ -614,11 +625,11 @@ export default function DocumentManagement() {
                   <div
                     key={folder.id}
                     onClick={() => handleFolderClick(folder.id)}
-                    className="bg-white rounded-lg p-3 transition-all cursor-pointer relative docmanage-folder-card"
+                    className="bg-white rounded-lg p-2 transition-all cursor-pointer relative docmanage-folder-card"
                     style={{
                       border: '1px solid #E8F0FF',
                       borderRadius: '10px',
-                      padding: '10px',
+                      padding: '6px',
                       transition: 'all 0.3s ease',
                       cursor: 'pointer',
                       relative: 'true',
@@ -662,14 +673,21 @@ export default function DocumentManagement() {
                         >
                           <DocumentMoreIcon />
                         </button>
-                        {openActionsMenu === folder.id && (
-                          <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 docmanage-actions-menu">
+                        {openActionsMenu === folder.id && createPortal(
+                          <div
+                            className="absolute w-40 bg-white rounded-lg border border-gray-200 shadow-lg z-[9999] py-1 docmanage-actions-menu"
+                            style={{
+                              top: `${menuPosition.top}px`,
+                              left: `${menuPosition.left}px`,
+                              position: 'absolute'
+                            }}
+                          >
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleOpenFolder(folder.id);
                               }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                               style={{ fontFamily: 'BasisGrotesquePro' }}
                             >
                               Open Folder
@@ -680,12 +698,13 @@ export default function DocumentManagement() {
                                 handleDeleteFolder(folder.id, folder.name);
                                 setOpenActionsMenu(null);
                               }}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-gray-50 transition-colors"
                               style={{ fontFamily: 'BasisGrotesquePro' }}
                             >
                               Delete
                             </button>
-                          </div>
+                          </div>,
+                          document.body
                         )}
                       </div>
                     </div>
@@ -766,8 +785,8 @@ export default function DocumentManagement() {
           {complianceSubTab === 'Overview' && (
             <>
               {/* Overall Compliance Score Section */}
-              <div className="bg-white rounded-lg p-6">
-                <h5 className="text-xl font-semibold text-gray-800 mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              <div className="bg-white rounded-lg p-4">
+                <h5 className="text-xl font-semibold text-gray-800 mb-3" style={{ fontFamily: 'BasisGrotesquePro' }}>
                   Overall Compliance Score
                 </h5>
 
@@ -793,7 +812,7 @@ export default function DocumentManagement() {
               {/* Key Metrics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ">
                 {/* Critical Issues Card */}
-                <div className="bg-white rounded-lg p-5">
+                <div className="bg-white rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Critical Issues</h6>
                     <div className="w-8 h-8  rounded-full flex items-center justify-center">
@@ -805,7 +824,7 @@ export default function DocumentManagement() {
                 </div>
 
                 {/* Warning Card */}
-                <div className="bg-white rounded-lg p-5">
+                <div className="bg-white rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Warning</h6>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center">
@@ -816,7 +835,7 @@ export default function DocumentManagement() {
                 </div>
 
                 {/* Complaints Card */}
-                <div className="bg-white rounded-lg p-5">
+                <div className="bg-white rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Complaints</h6>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center">
@@ -827,7 +846,7 @@ export default function DocumentManagement() {
                 </div>
 
                 {/* Overdue Card */}
-                <div className="bg-white rounded-lg p-5">
+                <div className="bg-white rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Overdue</h6>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center">
@@ -839,8 +858,8 @@ export default function DocumentManagement() {
               </div>
 
               {/* Recent Compliance Issues Section */}
-              <div className="bg-white rounded-lg p-6">
-                <div className="mb-4">
+              <div className="bg-white rounded-lg p-4">
+                <div className="mb-3">
                   <h5 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Recent Compliance Issues
                   </h5>
@@ -937,7 +956,7 @@ export default function DocumentManagement() {
             <div className="space-y-6">
               {/* IRS Required Documents Tracking Section */}
               <div className="bg-white rounded-lg p-3">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
                   <div>
                     <h5 className="text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       IRS Required Documents Tracking
@@ -960,19 +979,19 @@ export default function DocumentManagement() {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white rounded-lg p-5">
+                  <div className="bg-white rounded-lg p-3">
                     <h6 className="text-sm font-medium text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Total Required
                     </h6>
                     <p className="text-xl font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>16</p>
                   </div>
-                  <div className="bg-white rounded-lg p-5">
+                  <div className="bg-white rounded-lg p-3">
                     <h6 className="text-sm font-medium text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Completed
                     </h6>
                     <p className="text-xl font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>12</p>
                   </div>
-                  <div className="bg-white rounded-lg p-5">
+                  <div className="bg-white rounded-lg p-3">
                     <h6 className="text-sm font-medium text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Missing
                     </h6>
@@ -983,7 +1002,7 @@ export default function DocumentManagement() {
 
               {/* All Documents Table Section */}
               <div className="bg-white rounded-lg p-3">
-                <div className="mb-6">
+                <div className="mb-4">
                   <h5 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     All Documents (4)
                   </h5>
@@ -1957,12 +1976,12 @@ export default function DocumentManagement() {
       {!isNestedRoute && activeTab === 'Security' && (
         <div className="bg-white rounded-lg lg:p-5 md:p-3 sm:p-1 border border-gray-100 docmanage-security-section">
           {/* Header */}
-          
+
 
           {/* Enable Watermarking Section */}
-          
 
-          
+
+
           {/* Watermark Preview Section */}
           {showPreview && (
             <div className="border-t pt-6 docmanage-preview-section" style={{ borderColor: '#E8F0FF' }}>
@@ -2110,14 +2129,16 @@ export default function DocumentManagement() {
                     <button
                       onClick={handleWmToolPreview}
                       disabled={wmToolLoading || !wmToolFile}
-                      className="flex-1 rounded-lg border border-[#D1D5DB] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                      className="flex-1 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm font-semibold text-[#374151] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                      style={{ borderRadius: '8px' }}
                     >
                       Generate Preview
                     </button>
                     <button
                       onClick={handleWmToolDownload}
                       disabled={wmToolLoading || !wmToolFile}
-                      className="flex-1 rounded-lg bg-[#3AD6F2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#34c3db] disabled:opacity-50 transition-colors shadow-sm"
+                      className="flex-1 rounded-lg bg-[#3AD6F2] px-3 py-2 text-sm font-semibold text-white hover:bg-[#34c3db] disabled:opacity-50 transition-colors shadow-sm"
+                      style={{ borderRadius: '8px' }}
                     >
                       Download Watermarked File
                     </button>

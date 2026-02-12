@@ -177,7 +177,6 @@ export default function AdvancedTab() {
                   </button>
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-[#3B4A66] mb-2">Type "DELETE" or Firm Name (Optional)</label>
                 <input type="text" value={deleteConfirmation} onChange={(e) => setDeleteConfirmation(e.target.value)} placeholder={firmName ? `Type \"DELETE\" or \"${firmName}\"` : 'Type \"DELETE\"'} className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444]" disabled={deleting} />

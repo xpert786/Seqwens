@@ -1565,12 +1565,12 @@ export default function ClientManage() {
               <>
                 <div className="row g-3">
                   {unlinkedTaxpayers.map((taxpayer) => (
-                    <div key={taxpayer.id} className="col-md-6 col-12">
+                    <div key={taxpayer.id} className="col-md-4 col-12">
                       <div
                         className="card client-card h-100"
                         style={{
                           border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                          padding: '16px',
+                          padding: '6px',
                           borderRadius: '10px',
                           transition: 'all 0.2s ease'
                         }}
@@ -1730,14 +1730,14 @@ export default function ClientManage() {
               <>
                 <div className="row g-3">
                   {pendingInvites.map((invite) => (
-                    <div key={invite.id} className="col-md-6 col-12">
+                    <div key={invite.id} className="col-md-4 col-12">
                       <div
                         className="card client-card h-100"
                         onClick={() => navigate(`/firmadmin/pending-invites/${invite.id || invite.invite_id || invite.client_id}`)}
                         style={{
                           border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
                           cursor: "pointer",
-                          padding: '16px',
+                          padding: '6px',
                           borderRadius: '10px'
                         }}
                       >

@@ -324,7 +324,7 @@ export default function Offices() {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm bg-white cursor-pointer"
+                        className="appearance-none min-w-[160px] px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm bg-white cursor-pointer"
                     >
                         <option>All Status</option>
                         <option>Active</option>
@@ -353,7 +353,7 @@ export default function Offices() {
                     </div>
                 ) : (
                     /* Table */
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto pb-24">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
@@ -504,14 +504,14 @@ export default function Offices() {
 
                                                     </button>
                                                     {showDropdown === formattedOffice.id && (
-                                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                                                        <div className="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
                                                             <div className="py-1">
                                                                 <button
                                                                     onClick={() => {
                                                                         navigate(`/firmadmin/offices/${formattedOffice.id}`);
                                                                         setShowDropdown(null);
                                                                     }}
-                                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                    className="block w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100"
                                                                 >
                                                                     View Details
                                                                 </button>
@@ -522,20 +522,20 @@ export default function Offices() {
                                                                         setShowTaxpayerModal(true);
                                                                         setShowDropdown(null);
                                                                     }}
-                                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                    className="block w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100"
                                                                 >
                                                                     Manage Taxpayers
                                                                 </button>
 
                                                                 <button
                                                                     onClick={() => handleStatusUpdate(formattedOffice, (formattedOffice.status || '').toLowerCase() === 'active' ? 'inactive' : 'active')}
-                                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                    className="block w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100"
                                                                 >
                                                                     {(formattedOffice.status || '').toLowerCase() === 'active' ? 'Set as Inactive' : 'Set as Active'}
                                                                 </button>
 
                                                                 <button
-                                                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 uppercase"
+                                                                    className="block w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 uppercase font-bold"
                                                                     onClick={() => handleDeleteClick(formattedOffice)}
                                                                 >
                                                                     Delete Office

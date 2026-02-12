@@ -23,28 +23,28 @@ export default function PdfViewer() {
   const [addingComment, setAddingComment] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  
+
   // PDF viewer state
   const [pdfFileData, setPdfFileData] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
   const pdfContainerRef = useRef(null);
-  
+
   // Document data state
   const [documentData, setDocumentData] = useState(null);
   const [loadingDocument, setLoadingDocument] = useState(true);
   const [documentError, setDocumentError] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
-  
+
   // Helper function to convert backend URL to proxy URL if needed
   const getProxyUrl = (url) => {
     if (!url) return url;
-    
+
     // Handle relative URLs (start with /)
     if (url.startsWith('/')) {
       return `${window.location.origin}${url}`;
     }
-    
+
     try {
       const urlObj = new URL(url);
       // Check if URL is from the backend server (168.231.121.7)
@@ -57,7 +57,7 @@ export default function PdfViewer() {
       // If URL parsing fails and it's not a relative URL, return original URL
       console.warn('Failed to parse URL:', url, e);
     }
-    
+
     return url;
   };
 
@@ -120,7 +120,7 @@ export default function PdfViewer() {
               status: document.status || 'pending_review',
               size: document.size || document.file_size || '—',
               client: document.client?.name || document.client_name || 'N/A',
-              
+
               assignedTo: document.uploaded_by?.name || document.uploaded_by_name || document.created_by?.name || 'N/A',
               uploadDate: formatDate(document.created_at),
               version: 'v1.0', // Version not provided by API, using default
@@ -157,7 +157,7 @@ export default function PdfViewer() {
       setPdfLoading(false);
     }
   }, [pdfUrl]);
-  
+
   // Handle PDF load error
   const handlePdfError = (error) => {
     console.error('Error loading PDF:', error);
@@ -384,302 +384,301 @@ export default function PdfViewer() {
       {/* Document Content */}
       {!loadingDocument && !documentError && documentData && (
         <>
-      {/* Top Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h5 className="text-xl font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            {documentData.name}
-          </h5>
-          <div className="flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            <span className="text-gray-600">{documentData.type}</span>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-              documentData.status?.toLowerCase().includes('approved') ? 'bg-green-500 text-white' :
-              documentData.status?.toLowerCase().includes('reviewed') ? 'bg-blue-800 text-white' :
-              documentData.status?.toLowerCase().includes('pending') ? 'bg-amber-400 text-gray-900' :
-              'bg-gray-500 text-white'
-              }`} style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {formatStatus(documentData.status)}
-            </span>
-            <span className="text-gray-600">{formatFileSize(documentData.size)}</span>
-          </div>
-        </div>
-       
-      </div>
-
-      {/* Document Metadata */}
-      <div className="mb-6">
-        <div className="grid grid-cols-4 gap-4">
-          {/* Client Card */}
-          <div className="bg-white rounded-lg p-5 relative">
-            <div className="absolute top-4 right-4">
-              <PdfProfileIcon />
+          {/* Top Header */}
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h5 className="text-xl font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                {documentData.name}
+              </h5>
+              <div className="flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                <span className="text-gray-600">{documentData.type}</span>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${documentData.status?.toLowerCase().includes('approved') ? 'bg-green-500 text-white' :
+                  documentData.status?.toLowerCase().includes('reviewed') ? 'bg-blue-800 text-white' :
+                    documentData.status?.toLowerCase().includes('pending') ? 'bg-amber-400 text-gray-900' :
+                      'bg-gray-500 text-white'
+                  }`} style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  {formatStatus(documentData.status)}
+                </span>
+                <span className="text-gray-600">{formatFileSize(documentData.size)}</span>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Client
-            </p>
-            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {documentData.client}
-            </p>
+
           </div>
 
-          {/* Assigned To Card */}
-          <div className="bg-white rounded-lg p-5 relative">
-            <div className="absolute top-4 right-4">
-              <PdfProfileIcon />
-            </div>
-            <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Assigned To
-            </p>
-            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {documentData.assignedTo}
-            </p>
-          </div>
+          {/* Document Metadata */}
+          <div className="mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Client Card */}
+              <div className="bg-white rounded-xl p-3 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</p>
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <PdfProfileIcon width={14} height={14} />
+                  </div>
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-base font-bold text-[#3B4A66]" style={{ fontFamily: 'BasisGrotesquePro' }}>{documentData.client}</p>
+                </div>
+              </div>
 
-          {/* Upload Date Card */}
-          <div className="bg-white rounded-lg p-5 relative">
-            <div className="absolute top-4 right-4">
-              <PdfCalendarIcon />
-            </div>
-            <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Upload Date
-            </p>
-            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {documentData.uploadDate}
-            </p>
-          </div>
+              {/* Assigned To Card */}
+              <div className="bg-white rounded-xl p-3 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>Assigned To</p>
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <PdfProfileIcon width={14} height={14} />
+                  </div>
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-base font-bold text-[#3B4A66]" style={{ fontFamily: 'BasisGrotesquePro' }}>{documentData.assignedTo}</p>
+                </div>
+              </div>
 
-          {/* Version Card */}
-          <div className="bg-white rounded-lg p-5 relative">
-            <div className="absolute top-4 right-4">
-              <PdfDocumentIconLight />
+              {/* Upload Date Card */}
+              <div className="bg-white rounded-xl p-3 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</p>
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <PdfCalendarIcon width={14} height={14} />
+                  </div>
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-base font-bold text-[#3B4A66]" style={{ fontFamily: 'BasisGrotesquePro' }}>{documentData.uploadDate}</p>
+                </div>
+              </div>
+
+              {/* Version Card */}
+              <div className="bg-white rounded-xl p-3 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>Version</p>
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <PdfDocumentIconLight width={14} height={14} />
+                  </div>
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-base font-bold text-[#3B4A66]" style={{ fontFamily: 'BasisGrotesquePro' }}>{documentData.version}</p>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Version
-            </p>
-            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {documentData.version}
-            </p>
           </div>
-        </div>
-      </div>
         </>
       )}
 
       {/* Main Content Area */}
       {!loadingDocument && !documentError && documentData && (
-      <div className="flex gap-6 bg-white">
-        {/* Left Column - Document Preview */}
-        <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h5 className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {documentData.name}
+        <div className="flex gap-6 bg-white">
+          {/* Left Column - Document Preview */}
+          <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h5 className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                {documentData.name}
+              </h5>
+            </div>
+
+            <div className="flex border border-gray-200 rounded-lg overflow-hidden" style={{ height: '700px' }}>
+              {/* Main PDF Viewer */}
+              <div className="flex-1 bg-white overflow-hidden flex flex-col">
+                {pdfLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+                      <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        Loading PDF...
+                      </p>
+                    </div>
+                  </div>
+                ) : pdfError ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <p className="text-sm text-red-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        {pdfError}
+                      </p>
+                      <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        Unable to load PDF document
+                      </p>
+                    </div>
+                  </div>
+                ) : pdfFileData ? (
+                  <div
+                    ref={pdfContainerRef}
+                    className="flex-1 overflow-auto"
+                    style={{
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: '#CBD5E0 #F3F4F6'
+                    }}
+                  >
+                    <div className="w-full h-full">
+                      <SimplePDFViewer
+                        pdfUrl={pdfFileData}
+                        height="700px"
+                        onLoadError={handlePdfError}
+                        className="w-full border-0"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+                      <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        Loading PDF...
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Comments & Notes */}
+          <div className="w-96 bg-white rounded-lg shadow-sm p-6 flex flex-col border border-blue-[#3AD6F2]">
+            <h5 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Comments & Notes
             </h5>
-          </div>
+            <p className="text-sm text-gray-600 mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Communication history for this document
+            </p>
 
-          <div className="flex border border-gray-200 rounded-lg overflow-hidden" style={{ height: '700px' }}>
-            {/* Main PDF Viewer */}
-            <div className="flex-1 bg-gray-100 overflow-hidden flex flex-col">
-              {pdfLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-                    <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Loading PDF...
-                    </p>
+            <div className="flex-1 max-h-[600px] overflow-auto space-y-4 mb-4 pr-2">
+              {loadingComments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-gray-500 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Loading comments...
                   </div>
                 </div>
-              ) : pdfError ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <p className="text-sm text-red-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {pdfError}
-                    </p>
-                    <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Unable to load PDF document
-                    </p>
-                  </div>
-                </div>
-              ) : pdfFileData ? (
-                <div
-                  ref={pdfContainerRef}
-                  className="flex-1 p-6"
-                  style={{
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#CBD5E0 #F3F4F6'
-                  }}
-                >
-                  <div className="bg-[#EEEEEE] shadow-sm rounded border border-gray-200 p-4 w-full h-full">
-                    <SimplePDFViewer
-                      pdfUrl={pdfFileData}
-                      height="calc(100vh - 300px)"
-                      onLoadError={handlePdfError}
-                      className="w-full"
-                    />
+              ) : comments.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-gray-500 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    No comments yet. Be the first to comment!
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-                    <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Loading PDF...
+                comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className={`bg-gray-50 p-4 rounded-lg border ${comment.is_resolved ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="text-gray-600 flex-shrink-0">
+                          {comment.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-800 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                              {comment.author}
+                            </span>
+                            <span className="text-gray-500 text-xs" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                              {comment.date}
+                            </span>
+                            {comment.comment_type && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                {comment.comment_type}
+                              </span>
+                            )}
+                            {comment.is_resolved && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                Resolved
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        {!comment.is_resolved && (
+                          <button
+                            onClick={() => handleUpdateComment(comment.id, { is_resolved: true })}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors text-green-600"
+                            title="Mark as resolved"
+                          >
+                            <PdfCheckmarkIcon />
+                          </button>
+                        )}
+                        {comment.is_resolved && (
+                          <button
+                            onClick={() => handleUpdateComment(comment.id, { is_resolved: false })}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors text-gray-600"
+                            title="Mark as unresolved"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M4 8L6 10L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        )}
+                        {deleteConfirmId === comment.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                              style={{ fontFamily: 'BasisGrotesquePro' }}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(null)}
+                              className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+                              style={{ fontFamily: 'BasisGrotesquePro' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteConfirmId(comment.id)}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors text-red-600"
+                            title="Delete comment"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className={`text-sm ${comment.is_resolved ? 'text-gray-500 line-through' : 'text-gray-700'}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      {comment.content}
                     </p>
                   </div>
-                </div>
+                ))
               )}
+            </div>
+
+            {/* Add Comment Section */}
+            <div className="mt-auto pt-4 border-t border-gray-200">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-medium text-sm flex-shrink-0" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  MC
+                </div>
+                <textarea
+                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm resize-none"
+                  rows="3"
+                  placeholder="Add a comment or note..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                />
+              </div>
+              <button
+                onClick={handleAddComment}
+                disabled={addingComment || !newComment.trim()}
+                className="w-fit flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+              >
+                {addingComment ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <PdfPaperPlaneIcon />
+                    <span>Add Comment</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Right Column - Comments & Notes */}
-        <div className="w-96 bg-white rounded-lg shadow-sm p-6 flex flex-col border border-blue-[#3AD6F2]">
-          <h5 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            Comments & Notes
-          </h5>
-          <p className="text-sm text-gray-600 mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            Communication history for this document
-          </p>
-
-          <div className="flex-1 max-h-[600px] overflow-auto space-y-4 mb-4 pr-2">
-            {loadingComments ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-gray-500 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Loading comments...
-                </div>
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-gray-500 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  No comments yet. Be the first to comment!
-                </div>
-              </div>
-            ) : (
-              comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className={`bg-gray-50 p-4 rounded-lg border ${comment.is_resolved ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className="text-gray-600 flex-shrink-0">
-                        {comment.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-gray-800 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            {comment.author}
-                          </span>
-                          <span className="text-gray-500 text-xs" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            {comment.date}
-                          </span>
-                          {comment.comment_type && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                              {comment.comment_type}
-                            </span>
-                          )}
-                          {comment.is_resolved && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                              Resolved
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      {!comment.is_resolved && (
-                        <button
-                          onClick={() => handleUpdateComment(comment.id, { is_resolved: true })}
-                          className="p-1.5 hover:bg-gray-200 rounded transition-colors text-green-600"
-                          title="Mark as resolved"
-                        >
-                          <PdfCheckmarkIcon />
-                        </button>
-                      )}
-                      {comment.is_resolved && (
-                        <button
-                          onClick={() => handleUpdateComment(comment.id, { is_resolved: false })}
-                          className="p-1.5 hover:bg-gray-200 rounded transition-colors text-gray-600"
-                          title="Mark as unresolved"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 8L6 10L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      )}
-                      {deleteConfirmId === comment.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirmId(null)}
-                            className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setDeleteConfirmId(comment.id)}
-                          className="p-1.5 hover:bg-gray-200 rounded transition-colors text-red-600"
-                          title="Delete comment"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <p className={`text-sm ${comment.is_resolved ? 'text-gray-500 line-through' : 'text-gray-700'}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    {comment.content}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Add Comment Section */}
-          <div className="mt-auto pt-4 border-t border-gray-200">
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-medium text-sm flex-shrink-0" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                MC
-              </div>
-              <textarea
-                className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm resize-none"
-                rows="3"
-                placeholder="Add a comment or note..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              />
-            </div>
-            <button
-              onClick={handleAddComment}
-              disabled={addingComment || !newComment.trim()}
-              className="w-fit flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-            >
-              {addingComment ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Adding...</span>
-                </>
-              ) : (
-                <>
-                  <PdfPaperPlaneIcon />
-                  <span>Add Comment</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
       )}
     </div>
   );
