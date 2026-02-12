@@ -39,7 +39,6 @@ const SubscriptionManagement = () => {
     const [showDeletePaymentConfirm, setShowDeletePaymentConfirm] = useState(false);
     const [paymentMethodToDelete, setPaymentMethodToDelete] = useState(null);
     const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
-
     // Form state for adding payment method
     const [newPaymentMethod, setNewPaymentMethod] = useState({
         cardNumber: '',
@@ -125,16 +124,28 @@ const SubscriptionManagement = () => {
 
             const result = await response.json();
 
-            // Handle response structure
             if (result.success && result.data) {
-                setSubscriptionOverview(result.data);
+                const data = result.data;
+
+                // Check if subscription is scheduled for cancellation (stripe usually sends cancel_at_period_end)
+                // If so, override status to 'cancelled' for UI display purposes
+                if (data.overview && data.overview.plan) {
+                    if (data.overview.plan.cancel_at_period_end === true ||
+                        data.overview.plan.is_cancelled === true ||
+                        data.overview.plan.status === 'cancelled') {
+                        data.overview.plan.status = 'canceled';
+                    }
+                }
+
+                setSubscriptionOverview(data);
+
                 // Extract current plan name from overview
-                if (result.data.overview && result.data.overview.plan) {
-                    setCurrentPlan(result.data.overview.plan.name);
+                if (data.overview && data.overview.plan) {
+                    setCurrentPlan(data.overview.plan.name);
                 }
                 // Set automatic payment failover status
-                if (result.data.overview && result.data.overview.automatic_payment_failover !== undefined) {
-                    setIsFailoverEnabled(result.data.overview.automatic_payment_failover);
+                if (data.overview && data.overview.automatic_payment_failover !== undefined) {
+                    setIsFailoverEnabled(data.overview.automatic_payment_failover);
                 }
             }
         } catch (err) {
@@ -508,6 +519,22 @@ const SubscriptionManagement = () => {
 
                 // Refresh subscription overview to reflect the cancellation
                 await fetchSubscriptionOverview();
+
+                // Manually update status to 'canceled' in case the API still returns 'active' (e.g. grace period)
+                // This ensures the UI reflects the user's action immediately.
+                setSubscriptionOverview(prev => {
+                    if (!prev || !prev.overview || !prev.overview.plan) return prev;
+                    return {
+                        ...prev,
+                        overview: {
+                            ...prev.overview,
+                            plan: {
+                                ...prev.overview.plan,
+                                status: 'canceled'
+                            }
+                        }
+                    };
+                });
             } else {
                 throw new Error(response.message || 'Failed to cancel subscription');
             }
@@ -733,7 +760,7 @@ const SubscriptionManagement = () => {
                                                 <h6 className="text-sm font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] flex items-center gap-2">
                                                     <div className="p-1 bg-orange-100 rounded-md">
                                                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M14 4L6.66667 11.3333L3 7.66667" stroke="#F56D2D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            <path d="M14 4L6.66667 11.3333L3 7.66667" stroke="var(--firm-primary-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                                         </svg>
                                                     </div>
                                                     Plan Privileges
@@ -761,20 +788,22 @@ const SubscriptionManagement = () => {
                                     )}
 
                                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 mt-auto">
-                                        <button
-                                            onClick={() => setIsUpgradePlanModalOpen(true)}
-                                            className="flex-1 px-4 py-3 bg-[#F56D2D] text-white rounded-lg hover:bg-[#EA580C] transition-all shadow-sm hover:shadow-md font-bold text-sm"
-                                            style={{ borderRadius: '8px' }}
-                                        >
-                                            Modify Subscription
-                                        </button>
+                                        {subscriptionOverview?.overview?.plan?.status !== 'canceled' && (
+                                            <button
+                                                onClick={() => setIsUpgradePlanModalOpen(true)}
+                                                className="flex-1 px-4 py-3 bg-[#F56D2D] text-white rounded-lg hover:bg-[#EA580C] transition-all shadow-sm hover:shadow-md font-bold text-sm"
+                                                style={{ borderRadius: '8px' }}
+                                            >
+                                                Modify Subscription
+                                            </button>
+                                        )}
                                         <button
                                             onClick={handleCancelSubscriptionClick}
-                                            disabled={cancellingSubscription}
-                                            className="px-4 py-3 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all font-bold text-sm disabled:opacity-50"
+                                            disabled={cancellingSubscription || subscriptionOverview?.overview?.plan?.status === 'canceled'}
+                                            className={`px-4 py-3 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all font-bold text-sm disabled:opacity-50 ${subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'w-full' : ''}`}
                                             style={{ borderRadius: '8px' }}
                                         >
-                                            {cancellingSubscription ? 'Processing...' : 'Cancel Service'}
+                                            {cancellingSubscription ? 'Processing...' : (subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'Canceled' : 'Cancel Service')}
                                         </button>
                                     </div>
 
@@ -1019,6 +1048,7 @@ const SubscriptionManagement = () => {
                                     onClick={() => setShowCancelConfirmModal(false)}
                                     disabled={cancellingSubscription}
                                     className="px-6 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ borderRadius: '8px' }}
                                 >
                                     Keep Subscription
                                 </button>
@@ -1026,6 +1056,7 @@ const SubscriptionManagement = () => {
                                     onClick={handleCancelSubscription}
                                     disabled={cancellingSubscription}
                                     className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ borderRadius: '8px' }}
                                 >
                                     {cancellingSubscription ? 'Cancelling...' : 'Yes, Cancel Subscription'}
                                 </button>

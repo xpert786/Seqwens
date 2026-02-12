@@ -100,7 +100,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
   const getIconWrapperStyle = (path) => {
     if (isActive(path)) {
       return {
-        backgroundColor: '#F56D2D', // Fixed color, not affected by secondary color changes
+        backgroundColor: 'var(--firm-primary-color, #32B582)',
         width: '32px',
         height: '32px'
       };
@@ -338,7 +338,6 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-colors duration-200">
                       <path d="M13.3327 8.66176C13.3327 11.9951 10.9993 13.6618 8.22602 14.6284C8.08079 14.6776 7.92304 14.6753 7.77935 14.6218C4.99935 13.6618 2.66602 11.9951 2.66602 8.66176V3.99509C2.66602 3.81828 2.73625 3.64871 2.86128 3.52369C2.9863 3.39866 3.15587 3.32842 3.33268 3.32842C4.66602 3.32842 6.33268 2.52842 7.49268 1.51509C7.63392 1.39442 7.81358 1.32812 7.99935 1.32812C8.18511 1.32812 8.36478 1.39442 8.50602 1.51509C9.67268 2.53509 11.3327 3.32842 12.666 3.32842C12.8428 3.32842 13.0124 3.39866 13.1374 3.52369C13.2624 3.64871 13.3327 3.81828 13.3327 3.99509V8.66176Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-
                   </span>
                   Security & Compliance
                 </Link>

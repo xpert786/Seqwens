@@ -1156,7 +1156,7 @@ export default function StaffManagement() {
               )}
               <button
                 onClick={() => setIsAddStaffModalOpen(true)}
-                className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
+                className="px-3 py-2 text-white bg-firm-primary !rounded-[7px] hover:brightness-90 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1221,7 +1221,7 @@ export default function StaffManagement() {
                 key={filter.value}
                 onClick={() => setActiveFilter(filter.value)}
                 className={`px-3 py-2 !rounded-[8px] text-sm font-medium font-[BasisGrotesquePro] transition-colors transition-transform focus:outline-none active:scale-[0.98] staff-filter-button ${activeFilter === filter.value
-                  ? 'bg-[#3AD6F2] text-white ring-2 ring-[#3AD6F2]/40 shadow-sm'
+                  ? 'bg-firm-primary text-white shadow-sm'
                   : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
               >
@@ -1551,7 +1551,7 @@ export default function StaffManagement() {
                             {/* Status */}
                             <td className="px-4 py-4">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${mappedStaff.statusValue === 'active' || mappedStaff.isActive
-                                ? 'bg-[#22C55E] text-white'
+                                ? 'bg-firm-primary text-white'
                                 : mappedStaff.statusValue === 'pending_invites'
                                   ? 'bg-[#F59E0B] text-white'
                                   : 'bg-[#EF4444] text-white'
@@ -1653,7 +1653,7 @@ export default function StaffManagement() {
                                   <button
                                     onClick={() => setStaffPage(page)}
                                     className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
-                                      ? 'bg-[#3B82F6] text-white border border-[#3B82F6]'
+                                      ? 'bg-firm-primary text-white border border-firm-primary'
                                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                       }`}
                                   >

@@ -426,7 +426,7 @@ export default function DocumentManagement() {
             {/* Buttons Section */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mt-3 lg:mt-0 w-full sm:w-auto">
               <button
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium docmanage-upload-button"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-firm-primary text-white hover:brightness-90 transition-all text-sm font-medium docmanage-upload-button"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
                 onClick={() => setShowUploadModal(true)}
               >
@@ -448,7 +448,7 @@ export default function DocumentManagement() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative docmanage-tab-button ${activeTab === tab
-                  ? 'text-white bg-[#3AD6F2]'
+                  ? 'text-white bg-firm-primary'
                   : 'text-gray-600 hover:text-gray-900'
                   }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
@@ -484,7 +484,7 @@ export default function DocumentManagement() {
                 placeholder="Search Folder..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full lg:w-1/2 lg:pl-10 lg:pr-4 lg:py-2.5 sm:p-2 sm:text-center md:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 bg-blue-50 search-folder-document-management docmanage-search-input"
+                className="w-full lg:w-1/2 lg:pl-10 lg:pr-4 lg:py-2.5 sm:p-2 sm:text-center md:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] bg-blue-50 search-folder-document-management docmanage-search-input"
                 style={{ fontFamily: 'BasisGrotesquePro' }}
               />
             </div>
@@ -552,7 +552,7 @@ export default function DocumentManagement() {
                               <span
                                 key={idx}
                                 className={`px-2 py-0.5 text-xs font-medium rounded-full docmanage-folder-badge ${idx === 0
-                                  ? 'bg-[#f49c2d] text-white'
+                                  ? 'bg-firm-primary text-white'
                                   : 'bg-white text-gray-800 border border-gray-300'
                                   }`}
                                 style={{ fontFamily: 'BasisGrotesquePro' }}
@@ -658,7 +658,7 @@ export default function DocumentManagement() {
                     key={tab}
                     onClick={() => setComplianceSubTab(tab)}
                     className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative ${complianceSubTab === tab
-                      ? 'text-white bg-[#3AD6F2]'
+                      ? 'text-white bg-firm-primary'
                       : 'text-gray-600 hover:text-gray-900'
                       }`}
                     style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
@@ -691,7 +691,7 @@ export default function DocumentManagement() {
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-[#3AD6F2] h-3 rounded-full" style={{ width: '30%' }}></div>
+                    <div className="bg-firm-primary h-3 rounded-full" style={{ width: '30%' }}></div>
                   </div>
                 </div>
 
@@ -862,7 +862,7 @@ export default function DocumentManagement() {
                       <option>Next 60 Days</option>
                       <option>Next 90 Days</option>
                     </select>
-                    <button className="px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                    <button className="px-4 py-2.5 bg-firm-primary text-white rounded-lg hover:brightness-90 transition-all text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                       Configure
                     </button>
                   </div>
@@ -1892,7 +1892,7 @@ export default function DocumentManagement() {
               <button
                 onClick={() => setEnableWatermarking(!enableWatermarking)}
                 disabled={loadingWatermark}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enableWatermarking ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enableWatermarking ? 'bg-[var(--firm-primary-color)]' : 'bg-gray-300'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ borderRadius: '999px' }}
               >
@@ -1918,7 +1918,7 @@ export default function DocumentManagement() {
                   value={watermarkText}
                   onChange={(e) => setWatermarkText(e.target.value)}
                   placeholder="Enter watermark text"
-                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm docmanage-watermark-input"
+                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
                   style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
                   disabled={loadingWatermark}
                 />
@@ -1933,7 +1933,7 @@ export default function DocumentManagement() {
                   <select
                     value={watermarkPosition}
                     onChange={(e) => setWatermarkPosition(e.target.value)}
-                    className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none docmanage-watermark-select"
+                    className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm appearance-none docmanage-watermark-select"
                     style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
                     disabled={loadingWatermark}
                   >
@@ -1968,7 +1968,7 @@ export default function DocumentManagement() {
                       const value = parseInt(e.target.value) || 30;
                       setWatermarkOpacity(`${Math.min(100, Math.max(1, value))}%`);
                     }}
-                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm docmanage-watermark-input"
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
                     style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
                     disabled={loadingWatermark}
                   />
@@ -1991,7 +1991,7 @@ export default function DocumentManagement() {
                       const value = parseInt(e.target.value) || 22;
                       setWatermarkTextSize(`${Math.min(200, Math.max(8, value))}px`);
                     }}
-                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm docmanage-watermark-input"
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
                     style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
                     disabled={loadingWatermark}
                   />
@@ -2014,7 +2014,7 @@ export default function DocumentManagement() {
                       const value = parseInt(e.target.value) || -45;
                       setWatermarkRotation(`${Math.min(180, Math.max(-180, value))}°`);
                     }}
-                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm docmanage-watermark-input"
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
                     style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
                     disabled={loadingWatermark}
                   />
@@ -2032,7 +2032,7 @@ export default function DocumentManagement() {
                     type="text"
                     value={watermarkColor}
                     onChange={(e) => setWatermarkColor(e.target.value)}
-                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm docmanage-watermark-input"
+                    className="w-full px-4 py-2.5 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--firm-primary-color)] text-sm docmanage-watermark-input"
                     style={{ fontFamily: 'BasisGrotesquePro', borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -2059,7 +2059,7 @@ export default function DocumentManagement() {
                 <button
                   onClick={() => setIncludeUserInfo(!includeUserInfo)}
                   disabled={loadingWatermark}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeUserInfo ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeUserInfo ? 'bg-[var(--firm-primary-color)]' : 'bg-gray-300'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ borderRadius: '999px' }}
                 >
@@ -2081,7 +2081,7 @@ export default function DocumentManagement() {
                 <button
                   onClick={() => setIncludeTimestamp(!includeTimestamp)}
                   disabled={loadingWatermark}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeTimestamp ? 'bg-[#3AD6F2]' : 'bg-gray-300'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${includeTimestamp ? 'bg-[var(--firm-primary-color)]' : 'bg-gray-300'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ borderRadius: '999px' }}
                 >

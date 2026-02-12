@@ -585,7 +585,10 @@ export default function BrandingTab() {
             />
           </div>
 
-          <button className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#FF7142] transition font-[BasisGrotesquePro] flex items-center gap-2">
+          <button
+            className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:brightness-90 transition font-[BasisGrotesquePro] flex items-center gap-2"
+            style={{ backgroundColor: 'var(--firm-primary-color, #1E40AF)' }}
+          >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 3V13M3 8H13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -645,7 +648,8 @@ export default function BrandingTab() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 text-sm font-medium text-white !bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:brightness-90 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          style={{ backgroundColor: 'var(--firm-primary-color, #1E40AF)' }}
         >
           {saving ? (
             <>

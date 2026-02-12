@@ -114,10 +114,12 @@ const AutoRenewal = () => {
                                 onClick={() => setEnableAutoRenewal(!enableAutoRenewal)}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableAutoRenewal ? 'bg-[#F56D2D]' : 'bg-gray-300'
                                     }`}
+                                style={{ borderRadius: '9999px' }}
                             >
                                 <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableAutoRenewal ? 'translate-x-6' : 'translate-x-1'
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableAutoRenewal ? 'translate-x-[22px]' : 'translate-x-1'
                                         }`}
+                                    style={{ borderRadius: '9999px' }}
                                 />
                             </button>
                         </div>

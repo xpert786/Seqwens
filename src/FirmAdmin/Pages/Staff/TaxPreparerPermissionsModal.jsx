@@ -288,7 +288,7 @@ export default function TaxPreparerPermissionsModal({
               </div>
 
               {/* User Info Card */}
-              <div className="mt-4 bg-[rgb(243,247,255)] rounded-lg p-4 border border-[#E8F0FF]">
+              <div className="mt-4 bg-white rounded-lg p-4 border border-[#E8F0FF]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-[#32B582]/10 rounded-lg flex items-center justify-center">
                     <FiUser size={18} className="text-[#32B582]" />
@@ -319,7 +319,7 @@ export default function TaxPreparerPermissionsModal({
         </div>
 
         {/* Summary Bar */}
-        <div className="bg-[rgb(243,247,255)] border-b border-[#E8F0FF] px-6 py-4">
+        <div className="bg-white border-b border-[#E8F0FF] px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
@@ -529,7 +529,7 @@ export default function TaxPreparerPermissionsModal({
         </div>
 
         {/* Footer */}
-        <div className="bg-[rgb(243,247,255)] border-t border-[#E8F0FF] px-6 py-4 flex justify-between items-center">
+        <div className="bg-white border-t border-[#E8F0FF] px-6 py-4 flex justify-between items-center">
           <button
             type="button"
             onClick={onClose}

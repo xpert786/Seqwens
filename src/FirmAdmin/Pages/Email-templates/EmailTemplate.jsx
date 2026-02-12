@@ -455,7 +455,8 @@ export default function EmailTemplate() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => openEditor(null)}
-                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#3AD6F2] px-4 font-semibold text-white hover:bg-[#2BC5E0] transition-colors"
+                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg px-4 font-semibold text-white hover:opacity-90 transition-colors"
+                                style={{ backgroundColor: 'var(--firm-primary-color)' }}
                             >
                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M9 3.75V14.25M3.75 9H14.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

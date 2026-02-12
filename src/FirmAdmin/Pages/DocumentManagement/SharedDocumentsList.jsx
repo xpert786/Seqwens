@@ -140,7 +140,7 @@ export default function SharedDocumentsList() {
             className="btn d-flex align-items-center gap-2 shareddocs-header-button"
             onClick={() => setShowDocumentSelectionModal(true)}
             style={{
-              backgroundColor: '#00C0C6',
+              backgroundColor: 'var(--firm-primary-color)',
               border: 'none',
               color: 'white',
               fontFamily: 'BasisGrotesquePro',
@@ -155,9 +155,9 @@ export default function SharedDocumentsList() {
             className="btn d-flex align-items-center gap-2 shareddocs-header-button"
             onClick={fetchShares}
             style={{
-              backgroundColor: '#F9FAFB',
-              border: '1px solid #E5E7EB',
-              color: '#3B4A66',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--firm-primary-color)',
+              color: 'var(--firm-primary-color)',
               fontFamily: 'BasisGrotesquePro',
               borderRadius: '8px'
             }}
@@ -235,7 +235,7 @@ export default function SharedDocumentsList() {
             onClick={fetchShares}
             className="btn shareddocs-error-button"
             style={{
-              backgroundColor: '#00C0C6',
+              backgroundColor: 'var(--firm-primary-color)',
               color: 'white',
               border: 'none',
               fontFamily: 'BasisGrotesquePro'
@@ -275,7 +275,7 @@ export default function SharedDocumentsList() {
                   <tr key={share.id}>
                     <td>
                       <div className="d-flex align-items-center gap-2 shareddocs-document-cell">
-                        <FiFile size={18} className="shareddocs-document-icon" style={{ color: '#00C0C6' }} />
+                        <FiFile size={18} className="shareddocs-document-icon" style={{ color: 'var(--firm-primary-color)' }} />
                         <div>
                           <div style={{ color: '#3B4A66', fontWeight: '500', fontSize: '14px' }} className="shareddocs-document-name">
                             {share.document?.name || 'Unknown Document'}

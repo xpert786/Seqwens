@@ -41,7 +41,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, tota
                   onClick={() => onPageChange(page)}
                   className="btn "
                   style={{
-                    backgroundColor: currentPage === page ? '#00C0C6' : '#FFFFFF',
+                    backgroundColor: currentPage === page ? '#F56D2D' : '#FFFFFF',
                     color: currentPage === page ? '#FFFFFF' : '#3B4A66',
                     border: '1px solid #E8F0FF',
                     borderRadius: '8px',

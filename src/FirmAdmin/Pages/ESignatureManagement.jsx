@@ -2062,7 +2062,7 @@ export default function ESignatureManagement() {
                             width: '44px',
                             height: '24px',
                             appearance: 'none',
-                            backgroundColor: spouseAlso ? '#00C0C6' : '#D1D5DB',
+                            backgroundColor: spouseAlso ? 'var(--firm-primary-color)' : '#D1D5DB',
                             borderRadius: '12px',
                             position: 'relative',
                             cursor: loading ? 'not-allowed' : 'pointer',
@@ -2113,7 +2113,7 @@ export default function ESignatureManagement() {
                             width: '44px',
                             height: '24px',
                             appearance: 'none',
-                            backgroundColor: preparerSign ? '#00C0C6' : '#D1D5DB',
+                            backgroundColor: preparerSign ? 'var(--firm-primary-color)' : '#D1D5DB',
                             borderRadius: '12px',
                             position: 'relative',
                             cursor: loading ? 'not-allowed' : 'pointer',
@@ -2270,7 +2270,7 @@ export default function ESignatureManagement() {
                   />
                   <div className="flex flex-col items-center">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="#00C0C6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="var(--firm-primary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <p className="text-sm font-medium text-gray-700 mb-1 mt-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Drop files here or click to browse
@@ -2436,7 +2436,7 @@ export default function ESignatureManagement() {
                 disabled={loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0}
                 className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0
                   ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
-                  : 'text-white bg-orange-500 hover:bg-orange-600'
+                  : 'text-white bg-firm-primary hover:brightness-90 transition-all'
                   }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
@@ -2913,7 +2913,7 @@ export default function ESignatureManagement() {
                             left: `${comment.position.left}px`,
                           }}
                         >
-                          <div className="bg-white rounded-lg shadow-lg border-2 border-[#3AD6F2] p-3 max-w-xs">
+                          <div className="bg-white rounded-lg shadow-lg border-2 border-[var(--firm-primary-color)] p-3 max-w-xs">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-5 h-5 bg-[#3AD6F2] rounded flex items-center justify-center">

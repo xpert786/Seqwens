@@ -4,6 +4,7 @@ import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import Pagination from '../../../../ClientOnboarding/components/Pagination';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -19,6 +20,12 @@ const LicenseManagement = () => {
     const [availableFeatures, setAvailableFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const itemsPerPage = 3;
 
     // Modal states
     const [showAssignModal, setShowAssignModal] = useState(false);
@@ -31,7 +38,7 @@ const LicenseManagement = () => {
     const [selectedStaffIds, setSelectedStaffIds] = useState([]);
 
     // Fetch license management data
-    const fetchLicenseData = useCallback(async () => {
+    const fetchLicenseData = useCallback(async (page = 1) => {
         try {
             setLoading(true);
             setError('');
@@ -39,7 +46,7 @@ const LicenseManagement = () => {
             const token = getAccessToken();
             // Using superadmin endpoint as provided, but with firm admin auth
             // If there's a firm-admin specific endpoint, it can be changed here
-            const url = `${API_BASE_URL}/user/firm-admin/subscriptions/licenses/`;
+            const url = `${API_BASE_URL}/user/firm-admin/subscriptions/licenses/?page=${page}&limit=${itemsPerPage}`;
 
             const response = await fetchWithCors(url, {
                 method: 'GET',
@@ -60,10 +67,17 @@ const LicenseManagement = () => {
                 setSummary(result.data.summary || {});
                 setStaffLicenseAssignments(result.data.staff_license_assignments || []);
                 setAvailableFeatures(result.data.available_features || []);
+                
+                // Set pagination data
+                setTotalItems(result.data.total_staff || result.data.staff_license_assignments?.length || 0);
+                setTotalPages(Math.ceil((result.data.total_staff || result.data.staff_license_assignments?.length || 0) / itemsPerPage));
+                setCurrentPage(page);
             } else {
                 setSummary({});
                 setStaffLicenseAssignments([]);
                 setAvailableFeatures([]);
+                setTotalItems(0);
+                setTotalPages(1);
             }
         } catch (err) {
             console.error('Error fetching license data:', err);
@@ -72,10 +86,12 @@ const LicenseManagement = () => {
             setSummary({});
             setStaffLicenseAssignments([]);
             setAvailableFeatures([]);
+            setTotalItems(0);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [itemsPerPage]);
 
     // Fetch data on mount
     useEffect(() => {
@@ -127,7 +143,7 @@ const LicenseManagement = () => {
                 setSelectedFeatureIds([]);
                 setSelectedStaffIds([]);
                 setIsBulkMode(false);
-                await fetchLicenseData();
+                await fetchLicenseData(currentPage);
             } else {
                 throw new Error(result.message || 'Failed to assign licenses');
             }
@@ -171,7 +187,7 @@ const LicenseManagement = () => {
                 setShowAssignModal(false);
                 setSelectedStaff(null);
                 setSelectedFeatureIds([]);
-                await fetchLicenseData();
+                await fetchLicenseData(currentPage);
             } else {
                 throw new Error(result.message || 'Failed to update licenses');
             }
@@ -224,7 +240,7 @@ const LicenseManagement = () => {
 
             if (result.success) {
                 toast.success(result.message || 'License(s) removed successfully!');
-                await fetchLicenseData();
+                await fetchLicenseData(currentPage);
                 setShowRemoveLicenseConfirm(false);
                 setLicenseToRemove(null);
             } else {
@@ -352,7 +368,7 @@ const LicenseManagement = () => {
 
                         {/* Staff Rows */}
                         <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-                            {staffLicenseAssignments.map((staff) => (
+                            {staffLicenseAssignments.slice(0, itemsPerPage).map((staff) => (
                                 <div key={staff.staff_id} className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4 items-center p-2 sm:p-3 lg:p-4 !border border-[#E8F0FF] rounded-lg">
                                     {/* Staff Member Column */}
                                     <div>
@@ -392,7 +408,7 @@ const LicenseManagement = () => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => openAssignModal(staff, false)}
-                                            className="px-4 py-2 bg-[#FFFFFF] !border border-[#22C55E] text-[#22C55E] !rounded-lg hover:bg-[#F0FDF4] transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+                                            className="px-4 py-2 bg-[#FFFFFF] !border border-[#F56D2D] text-[#F56D2D] !rounded-lg hover:bg-[#FFF7ED] transition-colors font-[BasisGrotesquePro] text-sm font-medium"
                                         >
                                             Manage
                                         </button>
@@ -408,6 +424,22 @@ const LicenseManagement = () => {
                                 </div>
                             ))}
                         </div>
+                        
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={(page) => {
+                                    setCurrentPage(page);
+                                    fetchLicenseData(page);
+                                }}
+                                totalItems={totalItems}
+                                itemsPerPage={itemsPerPage}
+                                startIndex={(currentPage - 1) * itemsPerPage}
+                                endIndex={Math.min(currentPage * itemsPerPage, totalItems)}
+                            />
+                        )}
                     </>
                 )}
             </div>

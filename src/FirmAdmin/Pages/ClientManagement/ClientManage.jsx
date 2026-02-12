@@ -1383,7 +1383,7 @@ export default function ClientManage() {
               </button>
             )}
             <button
-              className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              className="px-3 py-2 text-white bg-firm-primary !rounded-[7px] hover:brightness-90 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
               onClick={() => setShowAddClientModal(true)}
             >
               <AddClient />
@@ -2207,11 +2207,8 @@ export default function ClientManage() {
                                     setIsAssignMode(true);
                                     setShowReassignStaffModal(true);
                                   }}
-                                  className="text-xs px-2 py-1 rounded text-white hover:opacity-90 transition-opacity"
-                                  style={{
-                                    background: 'var(--Palette2-SkyBlue-900, #3AD6F2)',
-                                    fontSize: '11px'
-                                  }}
+                                  className="px-3 py-1.5 text-xs font-medium text-white !rounded-md hover:brightness-90 transition font-[BasisGrotesquePro]"
+                                  style={{ backgroundColor: 'var(--firm-primary-color, #3AD6F2)' }}
                                 >
                                   Assign Staff
                                 </button>
@@ -2342,9 +2339,10 @@ export default function ClientManage() {
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
-                          ? 'bg-[#3AD6F2] text-white'
+                          ? 'text-white shadow-sm hover:brightness-90'
                           : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
+                        style={currentPage === pageNum ? { backgroundColor: 'var(--firm-primary-color, #3AD6F2)' } : {}}
                       >
                         {pageNum}
                       </button>
@@ -2840,8 +2838,8 @@ export default function ClientManage() {
                       setShowReassignStaffModal(false);
                       navigate('/firmadmin/staff');
                     }}
-                    className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                    style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
+                    className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:brightness-90 transition-opacity font-[BasisGrotesquePro]"
+                    style={{ background: 'var(--firm-primary-color, #3AD6F2)' }}
                   >
                     Add Staff Member
                   </button>
