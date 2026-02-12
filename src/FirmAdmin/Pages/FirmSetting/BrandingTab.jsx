@@ -3,8 +3,10 @@ import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/
 import { getMediaUrl } from '../../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 export default function BrandingTab() {
+  const { refreshBranding } = useFirmSettings();
   const [formData, setFormData] = useState({
     primary_color: '#1E40AF',
     secondary_color: '#22C55E',
@@ -160,6 +162,7 @@ export default function BrandingTab() {
       toast.error(errorMsg || 'Failed to update branding information');
     } finally {
       setSaving(false);
+      refreshBranding();
     }
   };
 
@@ -198,6 +201,7 @@ export default function BrandingTab() {
       toast.error(errorMsg || 'Failed to reset branding');
     } finally {
       setSaving(false);
+      refreshBranding();
     }
   };
 

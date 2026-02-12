@@ -12,7 +12,7 @@ import { getImpersonationStatus } from '../../ClientOnboarding/utils/userUtils';
 
 
 export default function FirmDashboardLayout() {
-  const [sidebarWidth, setSidebarWidth] = useState('320px');
+  const [sidebarWidth, setSidebarWidth] = useState('280px');
   const [isImpersonating, setIsImpersonating] = useState(false);
 
 

@@ -47,24 +47,18 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
   const sidebarWidth = hasExpandedSections ? '280px' : '240px';
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => {
-      const newState = {
-        ...prev,
-        [section]: !prev[section]
-      };
-
-      // Calculate new width and dispatch event - matching TaxPreparer panel
-      const hasExpanded = Object.values(newState).some(expanded => expanded);
-      const newWidth = hasExpanded ? '280px' : '240px';
-
-      // Dispatch custom event for layout to listen
-      window.dispatchEvent(new CustomEvent('sidebarWidthChange', {
-        detail: { width: newWidth }
-      }));
-
-      return newState;
-    });
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
+
+  // Dispatch event whenever sidebarWidth changes
+  React.useEffect(() => {
+    window.dispatchEvent(new CustomEvent('sidebarWidthChange', {
+      detail: { width: sidebarWidth }
+    }));
+  }, [sidebarWidth]);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
