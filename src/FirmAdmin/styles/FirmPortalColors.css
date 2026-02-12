@@ -102,6 +102,12 @@
   background-color: var(--firm-secondary-color, #ffffff) !important;
 }
 
+/* Sidebar Hover Overrides */
+.firm-sidebar a:hover,
+.firm-sidebar [class*="hover"]:hover {
+  color: white !important;
+}
+
 /* Text colors use secondary color - apply to body text and labels */
 .firm-dashboard-layout,
 .firm-dashboard-layout p,
