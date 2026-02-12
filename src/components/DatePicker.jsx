@@ -190,9 +190,9 @@ const DatePicker = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h3 className="text-base font-semibold text-gray-900">
+            <h5 className="text-base font-semibold text-gray-900 mt-2">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-            </h3>
+            </h5>
             <button
               onClick={goToNextMonth}
               className="p-1 hover:bg-gray-100 rounded-md"
@@ -228,15 +228,14 @@ const DatePicker = ({
                 <button
                   key={index}
                   onClick={() => handleDateSelect(day)}
-                  className={`text-center text-sm py-2 px-1 rounded-md transition-colors ${
-                    isSelected
-                      ? 'bg-blue-600 text-white'
-                      : isToday
-                        ? 'bg-blue-100 text-blue-600'
-                        : isCurrentMonth
-                          ? 'text-gray-900 hover:bg-gray-100'
-                          : 'text-gray-400 hover:bg-gray-100'
-                  }`}
+                  className={`text-center text-sm py-2 px-1 rounded-md transition-colors ${isSelected
+                    ? 'bg-blue-600 text-white'
+                    : isToday
+                      ? 'bg-blue-100 text-blue-600'
+                      : isCurrentMonth
+                        ? 'text-gray-900 hover:bg-gray-100'
+                        : 'text-gray-400 hover:bg-gray-100'
+                    }`}
                 >
                   {day.getDate()}
                 </button>
