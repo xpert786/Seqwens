@@ -35,7 +35,6 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
         onClose();
       }
     };
-
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
     }
