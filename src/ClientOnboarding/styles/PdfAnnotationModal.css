@@ -1,12 +1,13 @@
 .pdf-annotation-modal .modal-content {
-  height: 100vh;
+  max-height: 90vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 .pdf-annotation-modal .modal-body {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }

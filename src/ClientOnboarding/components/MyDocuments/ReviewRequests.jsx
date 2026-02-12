@@ -391,7 +391,7 @@ const ReviewRequests = () => {
                         Submit Document Review
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body style={{ padding: '24px' }}>
+                <Modal.Body className="custom-scrollbar" style={{ padding: '24px', overflowY: 'auto' }}>
                     {selectedRequest && (
                         <>
                             <div className="mb-4">

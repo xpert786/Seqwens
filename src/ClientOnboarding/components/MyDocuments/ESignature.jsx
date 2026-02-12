@@ -893,8 +893,9 @@ export default function ESignature() {
           setShowPreviewModal(false);
           setSelectedIndex(null);
         }}
-        size="xl"
+        size="lg"
         centered
+        scrollable
         fullscreen="lg-down"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
@@ -911,7 +912,7 @@ export default function ESignature() {
             ) : 'E-Signature – Document Preview'}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+        <Modal.Body className="custom-scrollbar" style={{ padding: 0, overflowY: 'auto' }}>
           {selectedIndex !== null && signatureRequests[selectedIndex] ? (
             <>
               {(() => {
@@ -924,8 +925,8 @@ export default function ESignature() {
                 return pdfUrl ? (
                   <PDFViewer
                     pdfUrl={pdfUrl}
-                    height="70vh"
-                    showThumbnails={true}
+                    height="35vh"
+                    showThumbnails={false}
                   />
                 ) : (
                   <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>

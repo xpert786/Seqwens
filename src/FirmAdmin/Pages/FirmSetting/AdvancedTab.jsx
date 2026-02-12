@@ -183,7 +183,6 @@ export default function AdvancedTab() {
                 <p className="text-xs text-[#6B7280] mt-1">For additional security, type "DELETE" or your firm name</p>
               </div>
             </div>
-
             <div className="flex gap-3 justify-end">
               <button onClick={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteConfirmation(''); setError(''); }} disabled={deleting} className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed" style={{ borderRadius: '8px' }}>Cancel</button>
               <button onClick={handleDeleteAccount} disabled={deleting || !deletePassword} className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" style={{ borderRadius: '8px' }}>{deleting ? (<><div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div><span>Deleting...</span></>) : (<span>Delete Account</span>)}</button>
