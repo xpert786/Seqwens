@@ -1,0 +1,68 @@
+/* Dark Mode Overrides for Archived Monitoring */
+
+.dark-mode .archived-monitoring-container .bg-white {
+    background-color: var(--sa-bg-card) !important;
+}
+
+/* Borders */
+.dark-mode .archived-monitoring-container .border-\[\#E8F0FF\],
+.dark-mode .archived-monitoring-container .border-gray-100,
+.dark-mode .archived-monitoring-container .border-gray-200,
+.dark-mode .archived-monitoring-container .border-gray-300 {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Typography */
+.dark-mode .archived-monitoring-container h3,
+.dark-mode .archived-monitoring-container h4,
+.dark-mode .archived-monitoring-container .text-\[\#3B4A66\],
+.dark-mode .archived-monitoring-container label {
+    color: var(--sa-text-primary) !important;
+}
+
+.dark-mode .archived-monitoring-container p,
+.dark-mode .archived-monitoring-container .text-\[\#6B7280\],
+.dark-mode .archived-monitoring-container .text-gray-600,
+.dark-mode .archived-monitoring-container .text-gray-500,
+.dark-mode .archived-monitoring-container .text-gray-400 {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Inputs */
+.dark-mode .archived-monitoring-container input[type="text"],
+.dark-mode .archived-monitoring-container input[type="number"] {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Table Header and Backgrounds */
+.dark-mode .archived-monitoring-container .bg-gray-50 {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Hover Effects */
+.dark-mode .archived-monitoring-container .hover\:bg-gray-50:hover {
+    background-color: var(--sa-bg-secondary) !important;
+}
+
+/* Orange/Info Cards */
+.dark-mode .archived-monitoring-container .bg-orange-50 {
+    background-color: rgba(67, 20, 7, 0.4) !important;
+    border-color: #7c2d12 !important;
+}
+
+.dark-mode .archived-monitoring-container .text-orange-800 {
+    color: #fdba74 !important;
+}
+
+.dark-mode .archived-monitoring-container .text-orange-700 {
+    color: #fdba74 !important;
+}
+
+/* Error/Red Cards */
+.dark-mode .archived-monitoring-container .bg-red-50 {
+    background-color: rgba(127, 29, 29, 0.2) !important;
+    border-color: #991b1b !important;
+    color: #fca5a5 !important;
+}

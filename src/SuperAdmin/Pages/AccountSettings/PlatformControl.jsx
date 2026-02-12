@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { superToastOptions } from "../../utils/toastConfig";
 import { Modal, Button, Form } from "react-bootstrap";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import "../../style/PlatformControl.css";
 
 export default function PlatformControl() {
     const [platformName, setPlatformName] = useState("Acme Tax Suite");
@@ -271,7 +272,7 @@ export default function PlatformControl() {
     };
 
     return (
-        <div className=" min-h-screen">
+        <div className="platform-control-container min-h-screen">
             {/* Audit Summary (Mock) */}
             <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
                 <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-4">

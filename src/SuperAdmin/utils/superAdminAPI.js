@@ -1402,6 +1402,31 @@ export const superAdminAPI = {
       console.error('Error exporting system logs:', error);
       throw error;
     }
+  },
+
+  // API Keys Management
+  getApiKeys: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    if (params.service) queryParams.append('service', params.service);
+    if (params.current_only !== undefined) queryParams.append('current_only', params.current_only);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/user/admin/system/api-keys/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  getApiKey: async (keyId) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'GET');
+  },
+
+  revealApiKey: async (keyId) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/reveal/`, 'GET');
+  },
+
+  updateApiKey: async (keyId, payload) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'PATCH', payload);
   }
 };
 

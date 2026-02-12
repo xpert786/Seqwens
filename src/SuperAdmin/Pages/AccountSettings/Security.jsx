@@ -6,264 +6,235 @@ import { toast } from "react-toastify";
 import { Modal, Button, Form } from "react-bootstrap";
 import { superToastOptions } from "../../utils/toastConfig";
 
+import "../../style/Security.css";
+
 export default function Security() {
-    const [twoFactorAuth, setTwoFactorAuth] = useState(true);
-    const [passwordComplexity, setPasswordComplexity] = useState(false);
-    const [ipWhitelisting, setIpWhitelisting] = useState(true);
-    const [auditLogging, setAuditLogging] = useState(true);
-    const [sessionTimeout, setSessionTimeout] = useState("30");
-    const [maxLoginAttempts, setMaxLoginAttempts] = useState("5");
-
-    // API Keys statenp
-    const [apiKeys, setApiKeys] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
-    // Filters
-    const [serviceFilter, setServiceFilter] = useState("");
-    const [statusFilter, setStatusFilter] = useState("");
-    const [searchTerm, setSearchTerm] = useState("");
-    const [currentOnly, setCurrentOnly] = useState(false);
-    // Modal states
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [showRevealModal, setShowRevealModal] = useState(false);
-    const [selectedKey, setSelectedKey] = useState(null);
-    const [revealedKey, setRevealedKey] = useState(null);
-
-    // Form states
-    const [formData, setFormData] = useState({
-        service: "",
-        key: "",
-        status: "active"
-    });
-    const [formErrors, setFormErrors] = useState({});
-    const [submitting, setSubmitting] = useState(false);
-
-    // Password Change State
     const [pwCurrent, setPwCurrent] = useState("");
     const [pwNew, setPwNew] = useState("");
     const [pwConfirm, setPwConfirm] = useState("");
     const [pwError, setPwError] = useState("");
     const [pwLoading, setPwLoading] = useState(false);
 
-    // Supported services for filtering
-    const supportedServices = [
-        { value: "stripe", label: "Stripe Integration" },
-        { value: "email", label: "Email Service" },
-        { value: "sms", label: "SMS Provider" },
-        { value: "cloud_storage", label: "Cloud Storage" },
-        { value: "zoom_account_id", label: "Zoom Account ID" },
-        { value: "zoom_client_id", label: "Zoom Client ID" },
-        { value: "zoom_client_secret", label: "Zoom Client Secret" }
-    ];
+    // API Keys State
+    const [apiKeys, setApiKeys] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+    const [serviceFilter, setServiceFilter] = useState("");
+    const [currentOnly, setCurrentOnly] = useState(true);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedKey, setSelectedKey] = useState(null);
+    const [formData, setFormData] = useState({});
+    const [formErrors, setFormErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
+    const [supportedServices, setSupportedServices] = useState([]);
+    const [showRevealModal, setShowRevealModal] = useState(false);
+    const [revealedKey, setRevealedKey] = useState(null);
 
-    // Handle Password Change
-    const handlePasswordChange = async (e) => {
-        e.preventDefault();
-        setPwError("");
-        if (pwNew !== pwConfirm) {
-            setPwError("New passwords do not match");
-            return;
-        }
-        if (pwNew.length < 8) {
-            setPwError("Password must be at least 8 characters");
-            return;
-        }
+    useEffect(() => {
+        fetchApiKeys();
+    }, [searchTerm, statusFilter, serviceFilter, currentOnly]);
 
-        setPwLoading(true);
-        try {
-            await userAPI.changePassword(pwCurrent, pwNew, pwConfirm);
-            toast.success("Password changed successfully", superToastOptions);
-            setPwCurrent("");
-            setPwNew("");
-            setPwConfirm("");
-        } catch (err) {
-            setPwError(handleAPIError(err));
-            toast.error(handleAPIError(err), superToastOptions);
-        } finally {
-            setPwLoading(false);
-        }
-    };
-
-    // Fetch API keys
-    const fetchAPIKeys = async () => {
+    const fetchApiKeys = async () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await superAdminAPI.getAPIKeys({
-                service: serviceFilter || undefined,
-                status: statusFilter || undefined,
-                search: searchTerm || undefined,
-                currentOnly: currentOnly
+            const response = await superAdminAPI.getApiKeys({
+                search: searchTerm,
+                status: statusFilter,
+                service: serviceFilter,
+                current_only: currentOnly
             });
 
-            if (response.success && response.data) {
-                setApiKeys(Array.isArray(response.data) ? response.data : []);
-                if (response.summary) {
-                    setSummary(response.summary);
+            if (response.success) {
+                // Handle mixed response structures
+                let keys = [];
+                if (Array.isArray(response.data)) {
+                    keys = response.data;
+                } else if (response.data && Array.isArray(response.data.api_keys)) {
+                    keys = response.data.api_keys;
                 }
-            } else {
-                setApiKeys([]);
-                setSummary({ total: 0, active: 0, inactive: 0 });
+                setApiKeys(keys);
+
+                // Handle summary (can be top-level or inside data)
+                const summaryData = response.summary || (response.data && response.data.summary) || {};
+                setSummary(summaryData);
+
+                // Handle filters
+                const services = (response.filters && response.filters.services) ||
+                    (response.data && response.data.filters && response.data.filters.services) ||
+                    [];
+
+                // If no services returned from API, derive from keys if we have them
+                if (services.length === 0 && keys.length > 0) {
+                    const uniqueServices = new Map();
+                    keys.forEach(k => {
+                        if (!uniqueServices.has(k.service)) {
+                            uniqueServices.set(k.service, {
+                                value: k.service,
+                                label: k.service_display || k.service
+                            });
+                        }
+                    });
+                    setSupportedServices(Array.from(uniqueServices.values()));
+                } else {
+                    setSupportedServices(services);
+                }
             }
         } catch (err) {
-            console.error('Error fetching API keys:', err);
+            console.error("Error fetching API keys:", err);
             setError(handleAPIError(err));
-            setApiKeys([]);
-            toast.error(handleAPIError(err), superToastOptions);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchAPIKeys();
-    }, [serviceFilter, statusFilter, searchTerm, currentOnly]);
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPwError("");
 
-    const getStatusColor = (status) => {
-        const statusLower = (status || "").toLowerCase();
-        if (statusLower === "active") return "#22C55E";
-        if (statusLower === "inactive" || statusLower === "not configured") return "#EF4444";
-        return "#6B7280";
-    };
-
-    // Mask API key for display - always mask, never show full key
-    const maskAPIKey = (key) => {
-        if (!key || key === "N/A") return "N/A";
-        // If already masked (contains asterisks, dots or bullets), return as is
-        if (key.includes('*') || key.includes('•') || key.includes('·')) return key;
-        // Mask the key: show first 4 and last 4 characters, mask the rest
-        if (key.length <= 8) {
-            return '•'.repeat(key.length);
-        }
-        const first4 = key.substring(0, 4);
-        const last4 = key.substring(key.length - 4);
-        const masked = '•'.repeat(Math.max(8, key.length - 8));
-        return `${first4}${masked}${last4}`;
-    };
-
-    // Handle update API key
-    const handleUpdate = async () => {
-        if (!selectedKey || !selectedKey.service) return;
-
-        if (selectedKey.service === 'undefined') {
-            toast.error('Invalid API key identifier. Please provide a valid service name.', superToastOptions);
+        if (pwNew !== pwConfirm) {
+            setPwError("New passwords do not match");
             return;
         }
 
-        setFormErrors({});
+        if (pwNew.length < 8) {
+            setPwError("Password must be at least 8 characters long");
+            return;
+        }
 
-        // Validation - key is required for update
-        if (!formData.key || !formData.key.trim()) {
-            setFormErrors({ key: "API key value is required" });
-            toast.error('Key value is required', superToastOptions);
+        try {
+            setPwLoading(true);
+            const response = await userAPI.changePassword({
+                current_password: pwCurrent,
+                new_password: pwNew,
+                confirm_password: pwConfirm
+            });
+
+            if (response.success) {
+                toast.success("Password updated successfully");
+                setPwCurrent("");
+                setPwNew("");
+                setPwConfirm("");
+            } else {
+                setPwError(response.message || "Failed to update password");
+            }
+        } catch (err) {
+            setPwError(handleAPIError(err));
+        } finally {
+            setPwLoading(false);
+        }
+    };
+
+    const openEditModal = (key) => {
+        setSelectedKey(key);
+        setFormData({ key: "" }); // Empty for security, user enters new key
+        setFormErrors({});
+        setShowEditModal(true);
+    };
+
+    const handleUpdate = async () => {
+        if (!formData.key) {
+            setFormErrors({ key: "API Key is required" });
             return;
         }
 
         try {
             setSubmitting(true);
-            const updateData = {
-                key: formData.key.trim()
+            console.log("Updating API key:", selectedKey.id, formData);
+
+            // The API expects 'key_value' but we'll send 'key' as well for compatibility
+            const payload = {
+                key: formData.key,
+                key_value: formData.key, // Ensure backend gets the value
+                service: selectedKey.service
             };
 
-            const response = await superAdminAPI.updateAPIKey(selectedKey.service, updateData);
+            const response = await superAdminAPI.updateApiKey(selectedKey.id, payload);
 
             if (response.success) {
-                toast.success(response.message || "API key updated successfully in backend settings", superToastOptions);
+                toast.success("API Key updated successfully", superToastOptions);
                 setShowEditModal(false);
-                setSelectedKey(null);
-                setFormData({ service: "", key: "", status: "active" });
-                fetchAPIKeys();
+                fetchApiKeys();
+            } else {
+                toast.error(response.message || "Failed to update API key", superToastOptions);
             }
         } catch (err) {
-            // Don't log full error details that might contain API keys
-            const errorMsg = handleAPIError(err);
-            console.error('Error updating API key');
-
-            // Handle specific error cases
-            if (err.message?.includes('404') || err.message?.toLowerCase().includes('not found')) {
-                toast.error('API key not found. Only keys configured in backend settings are available.', superToastOptions);
-            } else if (err.message?.includes('400') || err.message?.toLowerCase().includes('invalid')) {
-                toast.error(errorMsg || 'Invalid API key identifier. Please provide a valid service name.', superToastOptions);
-            } else {
-                toast.error(errorMsg, superToastOptions);
-            }
+            console.error("Error updating API key:", err);
+            toast.error(handleAPIError(err), superToastOptions);
         } finally {
             setSubmitting(false);
         }
     };
 
-    // Handle reveal API key
-    const handleReveal = async (serviceName) => {
-        if (!serviceName || serviceName === 'undefined') {
-            toast.error('Invalid service name', superToastOptions);
-            return;
-        }
-
+    const handleReveal = async (service) => {
         try {
-            const response = await superAdminAPI.revealAPIKey(serviceName);
+            // Find the key object
+            const keyObj = apiKeys.find(k => k.service === service);
+            if (!keyObj) return;
 
-            if (response.success && response.data) {
-                setRevealedKey(response.data.key || response.data.masked_key);
-                setSelectedKey(response.data);
+            setSelectedKey(keyObj);
+
+            // If we already have the unmasked key in the object (rare/insecure but possible)
+            if (keyObj.key && !keyObj.key.includes('*')) {
+                setRevealedKey(keyObj.key);
                 setShowRevealModal(true);
+                return;
+            }
+
+            // Otherwise fetch it
+            const response = await superAdminAPI.revealApiKey(keyObj.id);
+            if (response.success && response.data) {
+                setRevealedKey(response.data.key);
+                setShowRevealModal(true);
+            } else {
+                toast.error("Failed to reveal API key", superToastOptions);
             }
         } catch (err) {
-            // Don't log full error details that might contain API keys
-            console.error('Error revealing API key');
+            console.error("Error revealing API key:", err);
             toast.error(handleAPIError(err), superToastOptions);
         }
     };
 
-    // Handle toggle status
-    const handleToggleStatus = async (apiKey) => {
-        if (!apiKey.service || apiKey.service === 'undefined') {
-            toast.error('Invalid API key identifier', superToastOptions);
-            return;
-        }
-
-        const newStatus = apiKey.status === "active" ? "inactive" : "active";
-
-        try {
-            const response = await superAdminAPI.updateAPIKey(apiKey.service, { status: newStatus });
-
-            if (response.success) {
-                toast.success(`API key ${newStatus === "active" ? "activated" : "deactivated"}`, superToastOptions);
-                fetchAPIKeys();
-            }
-        } catch (err) {
-            console.error('Error updating API key status:', err);
-            toast.error(handleAPIError(err), superToastOptions);
-        }
+    const maskAPIKey = (key) => {
+        if (!key) return "N/A";
+        if (key.includes('*')) return key; // Already masked
+        if (key.length <= 8) return "********";
+        return `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
     };
 
-    // Open edit modal
-    const openEditModal = (apiKey) => {
-        setSelectedKey(apiKey);
-        setFormData({
-            service: apiKey.service || "",
-            key: "", // Don't pre-fill key for security
-            status: apiKey.status || "active"
-        });
-        setFormErrors({});
-        setShowEditModal(true);
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'active': return '#22C55E';
+            case 'inactive': return '#EF4444';
+            case 'expired': return '#F59E0B';
+            default: return '#6B7280';
+        }
     };
 
     return (
-        <div style={{
-            backgroundColor: "#F3F7FF",
-            padding: "10px",
-            borderRadius: "12px",
-            border: "none"
-        }}>
-            {/* Security Configuration Card */}
-            <div style={{
-                border: "1px solid #E8F0FF",
-                padding: "24px",
+        <div
+            className="security-settings-container"
+            style={{
+                backgroundColor: "#F3F7FF",
+                padding: "10px",
                 borderRadius: "12px",
-                backgroundColor: "white",
-                marginBottom: "24px"
-            }}>
+                border: "none"
+            }}
+        >
+            {/* Security Configuration Card */}
+            <div
+                className="security-card"
+                style={{
+                    border: "1px solid #E8F0FF",
+                    padding: "24px",
+                    borderRadius: "12px",
+                    backgroundColor: "white",
+                    marginBottom: "24px"
+                }}
+            >
                 {/* Header */}
                 <div style={{ marginBottom: "24px" }}>
                     <h5
@@ -293,6 +264,7 @@ export default function Security() {
                                 className="form-control"
                                 value={pwCurrent}
                                 onChange={(e) => setPwCurrent(e.target.value)}
+                                autoComplete="current-password"
                                 required
                             />
                         </div>
@@ -304,6 +276,7 @@ export default function Security() {
                                 value={pwNew}
                                 onChange={(e) => setPwNew(e.target.value)}
                                 minLength={8}
+                                autoComplete="new-password"
                                 required
                             />
                         </div>
@@ -314,6 +287,7 @@ export default function Security() {
                                 className="form-control"
                                 value={pwConfirm}
                                 onChange={(e) => setPwConfirm(e.target.value)}
+                                autoComplete="new-password"
                                 required
                             />
                         </div>
@@ -343,12 +317,15 @@ export default function Security() {
             </div>
 
             {/* API Keys Management Card */}
-            <div style={{
-                border: "1px solid #E8F0FF",
-                padding: "24px",
-                borderRadius: "12px",
-                backgroundColor: "white"
-            }}>
+            <div
+                className="security-card"
+                style={{
+                    border: "1px solid #E8F0FF",
+                    padding: "24px",
+                    borderRadius: "12px",
+                    backgroundColor: "white"
+                }}
+            >
                 {/* Header */}
                 <div style={{ marginBottom: "24px" }}>
                     <h5
@@ -373,15 +350,18 @@ export default function Security() {
                     >
                         Manage third-party service integrations configured in backend settings
                     </p>
-                    <div style={{
-                        backgroundColor: "#FEF3C7",
-                        border: "1px solid #FDE047",
-                        borderRadius: "6px",
-                        padding: "12px",
-                        fontSize: "13px",
-                        fontFamily: "BasisGrotesquePro",
-                        color: "#92400E"
-                    }}>
+                    <div
+                        className="security-alert"
+                        style={{
+                            backgroundColor: "#FEF3C7",
+                            border: "1px solid #FDE047",
+                            borderRadius: "6px",
+                            padding: "12px",
+                            fontSize: "13px",
+                            fontFamily: "BasisGrotesquePro",
+                            color: "#92400E"
+                        }}
+                    >
                         ℹ️ <strong>Note:</strong> You can only update API keys that are configured in the backend settings. Creating new keys or deleting existing configurations is not allowed through this interface.
                     </div>
                 </div>

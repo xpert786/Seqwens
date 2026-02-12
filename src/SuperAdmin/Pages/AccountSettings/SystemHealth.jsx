@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
 import { toast } from "react-toastify";
+import "../../style/SystemHealth.css";
 
 const fallbackMetrics = [
     { name: "CPU Usage", percentage: 0, valueLabel: "0%" },
@@ -116,7 +117,7 @@ export default function SystemHealth() {
     const systemInfo = healthData?.system || {};
 
     return (
-        <div className="rounded-xl min-h-screen">
+        <div className="system-health-container rounded-xl min-h-screen">
             <div className="bg-white p-6 rounded-xl mb-6">
                 <div className="mb-6">
                     <h5 className="text-gray-800 text-2xl font-medium font-[BasisGrotesquePro] mb-2">
@@ -388,8 +389,8 @@ export default function SystemHealth() {
                                             <div className="flex justify-between items-center text-xs font-[BasisGrotesquePro] mb-2">
                                                 <span className="text-[#6B7280]">Database Size</span>
                                                 <span className="text-[#3B4A66] font-semibold">
-                                                    {healthData.application.database.size_mb 
-                                                        ? `${formatNumber(healthData.application.database.size_mb, 2)} MB` 
+                                                    {healthData.application.database.size_mb
+                                                        ? `${formatNumber(healthData.application.database.size_mb, 2)} MB`
                                                         : '—'}
                                                 </span>
                                             </div>

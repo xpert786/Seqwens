@@ -17,6 +17,7 @@
     /* Reduce heading size only on mobile */
     .save-config-title {
         font-size: 20px !important;
+        line-height: 1.3 !important;
     }
 
     .save-config-subtitle {
@@ -28,4 +29,66 @@
     .save-config {
         padding: 16px !important;
     }
+}
+
+/* Dark Mode Overrides for Profile Settings */
+/* Using specific selectors with !important to override inline styles */
+
+.dark-mode .profile-settings-container {
+    background-color: var(--sa-bg-secondary) !important;
+    /* Use secondary bg for main wrapper */
+}
+
+/* Card backgrounds inside profile settings */
+.dark-mode .profile-settings-container>div.bg-white,
+.dark-mode .profile-settings-container .bg-white {
+    background-color: var(--sa-bg-card) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Headers and Labels */
+.dark-mode .profile-settings-container h5,
+.dark-mode .profile-settings-container label,
+.dark-mode .profile-settings-container .form-label {
+    color: var(--sa-text-primary) !important;
+}
+
+/* Secondary text */
+.dark-mode .profile-settings-container p,
+.dark-mode .profile-settings-container .text-muted,
+.dark-mode .profile-settings-container small {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Inputs, Selects, and Textareas */
+/* We target them specifically within the profile container to ensure override */
+.dark-mode .profile-settings-container input.form-control,
+.dark-mode .profile-settings-container select.form-control,
+.dark-mode .profile-settings-container textarea.form-control {
+    background-color: var(--sa-bg-secondary) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Input placeholder text */
+.dark-mode .profile-settings-container input::placeholder,
+.dark-mode .profile-settings-container textarea::placeholder {
+    color: var(--sa-text-secondary) !important;
+    opacity: 0.7;
+}
+
+/* Override inline border colors on divs */
+.dark-mode .profile-settings-container div[style*="border-color"],
+.dark-mode .profile-settings-container div[style*="border:"] {
+    border-color: var(--sa-border-color) !important;
+}
+
+/* Adjust "Loading" text */
+.dark-mode .profile-settings-container div[style*="color: #6B7280"] {
+    color: var(--sa-text-secondary) !important;
+}
+
+/* Toggle switch labels if any */
+.dark-mode .custom-toggle label::after {
+    background-color: var(--sa-bg-card) !important;
 }
