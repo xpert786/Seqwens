@@ -4942,6 +4942,11 @@ export const firmAdminAddonsAPI = {
     return await apiRequest('/user/firm-admin/add-ons/catalogue/', 'GET');
   },
 
+  // List all available addons created by admin (Master List)
+  listAllAvailableAddons: async () => {
+    return await apiRequest('/user/firm-admin/add-ons/all-available/', 'GET');
+  },
+
   // Add addon to firm subscription
   addAddonToFirm: async (addonData) => {
     return await apiRequest('/user/firm-admin/add-ons/', 'POST', addonData);

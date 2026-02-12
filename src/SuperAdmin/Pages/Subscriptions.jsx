@@ -62,6 +62,9 @@ export default function Subscriptions() {
     total_count: 0,
     total_pages: 1,
   });
+  const [showSubscribersModal, setShowSubscribersModal] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalSubscribers, setModalSubscribers] = useState([]);
 
   const PLAN_CONFIG = [
     { key: 'starter', label: 'Starter' },
@@ -258,6 +261,18 @@ export default function Subscriptions() {
         });
         const data = response?.data || {};
         setSubscriptions(data.subscriptions || []);
+
+        // Populate metrics from API response
+        if (data.metrics) {
+          setMetrics(data.metrics);
+        }
+
+        // Populate notification settings from API response
+        if (data.notification_settings) {
+          setEmailNotifications(Boolean(data.notification_settings.subscription_email_updates_enabled));
+          setSmsAlerts(Boolean(data.notification_settings.subscription_sms_updates_enabled));
+        }
+
         if (Array.isArray(data.filters?.status_options)) {
           setStatusOptions(data.filters.status_options);
         }
@@ -472,6 +487,28 @@ export default function Subscriptions() {
   const startItem = pagination.total_count ? (currentPage - 1) * pageSize + 1 : 0;
   const endItem = Math.min(currentPage * pageSize, pagination.total_count);
 
+  const handleActiveSubscribersClick = async () => {
+    setShowSubscribersModal(true);
+    setModalLoading(true);
+    try {
+      // Fetch active subscribers for the modal. Limit 100 for global view.
+      const response = await superAdminAPI.getSuperadminSubscriptions({
+        status: 'active',
+        limit: 100
+      });
+      // We only want firms with an actual plan assigned
+      const activeSubs = (response?.data?.subscriptions || []).filter(s => s.plan && s.plan !== 'No Plan');
+      setModalSubscribers(activeSubs);
+    } catch (err) {
+      console.error('Error fetching modal subscribers:', err);
+      toast.error('Failed to load active subscribers');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+
+
   // Loading state
   if (loading) {
     return (
@@ -679,16 +716,24 @@ export default function Subscriptions() {
             </div>
 
             {/* Active Subscribers */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div 
+              className="bg-white p-4 cursor-pointer hover:shadow-md transition-shadow group relative" 
+              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+              onClick={handleActiveSubscribersClick}
+              title="Click to view all active subscribers"
+            >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscribers</p>
+                  <p className="text-xs font-medium mb-2 group-hover:text-blue-500 transition-colors" style={{ color: '#3B4A66' }}>Active Subscribers</p>
                   <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
                     {metrics?.active_subscribers?.formatted || '0'}
                   </p>
 
                 </div>
-                <BlueUserIcon className="text-lg" />
+                <BlueUserIcon className="text-lg group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] text-blue-500 font-medium">View All →</span>
               </div>
             </div>
 
@@ -1434,6 +1479,100 @@ export default function Subscriptions() {
           </div>
         </>
       )}
+
+      {/* Subscribers List Modal */}
+      <SubscribersListModal
+        isOpen={showSubscribersModal}
+        onClose={() => setShowSubscribersModal(false)}
+        loading={modalLoading}
+        subscribers={modalSubscribers}
+      />
+    </div>
+  );
+};
+
+// --- Modal Component ---
+const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      ></div>
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[#E8F0FF]">
+        {/* Modal Header */}
+        <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
+          <div>
+            <h3 className="text-xl font-bold text-[#3B4A66]">Active Subscribers</h3>
+            <p className="text-sm text-gray-500 mt-1">Total {subscribers.length} firms with active subscriptions</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2] mb-4"></div>
+              <p className="text-gray-500">Loading subscriber list...</p>
+            </div>
+          ) : subscribers.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-4 px-4 py-2 text-xs font-bold text-[#3B4A66] uppercase tracking-wider bg-gray-50 rounded-lg">
+                <div>Firm Name</div>
+                <div>Plan</div>
+                <div>Status</div>
+                <div>Total Paid</div>
+              </div>
+              {subscribers.map((sub, idx) => (
+                <div key={`${sub.firm_id}-${idx}`} className="grid grid-cols-4 items-center px-4 py-3 border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-colors">
+                  <div>
+                    <p className="text-sm font-semibold text-[#3B4A66]">{sub.firm_name || '—'}</p>
+                    <p className="text-xs text-gray-500">{sub.firm_owner || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-[#E8F0FF] text-[#3B4A66]">
+                      {sub.plan_label || sub.plan || '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700">
+                      {sub.status_label || sub.status || 'Active'}
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-[#3B4A66]">
+                    {sub.total_paid_formatted || `$${Number(sub.total_paid || 0).toFixed(2)}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-gray-500">No active subscribers found.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors"
+            style={{ borderRadius: '7px' }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -1462,10 +1601,10 @@ const SubscriptionInvoicesTab = () => {
       });
 
       const response = await superAdminAPI.get(`/user/admin/subscription-invoices/?${params}`);
-      if (response.data.success) {
-        setInvoices(response.data.data.invoices);
-        setTotalPages(response.data.data.pagination.total_pages);
-        setTotalCount(response.data.data.pagination.total_count);
+      if (response.success) {
+        setInvoices(response.data.invoices);
+        setTotalPages(response.data.pagination.total_pages);
+        setTotalCount(response.data.pagination.total_count);
       }
     } catch (error) {
       console.error('Error fetching subscription invoices:', error);
@@ -1478,8 +1617,8 @@ const SubscriptionInvoicesTab = () => {
   const fetchStats = useCallback(async () => {
     try {
       const response = await superAdminAPI.get('/user/admin/subscription-invoices/stats/');
-      if (response.data.success) {
-        setStats(response.data.data);
+      if (response.success) {
+        setStats(response.data);
       }
     } catch (error) {
       console.error('Error fetching invoice stats:', error);
