@@ -13,7 +13,6 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { superAdminAPI, handleAPIError } from '../../utils/superAdminAPI';
-
 const formatCurrency = (value) => {
   const numericValue = Number(value);
   if (Number.isNaN(numericValue)) {
