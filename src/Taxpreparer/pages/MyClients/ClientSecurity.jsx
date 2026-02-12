@@ -248,13 +248,7 @@ const ClientSecurity = () => {
     }
 
     return (
-        <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
-            {/* Header Section */}
-            <div className="mb-6">
-                <div className="flex items-center gap-4 mb-2">
-                </div>
-            </div>
-
+        <div className="mt-6 font-['BasisGrotesquePro']">
             {/* Security Tab Content */}
             <div className="space-y-6">
                 {/* Password Reset Section */}
@@ -304,6 +298,7 @@ const ClientSecurity = () => {
                                 onClick={confirmPasswordReset}
                                 disabled={resettingPassword || !clientData?.email}
                                 className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ borderRadius: '8px' }}
                             >
                                 {resettingPassword ? (
                                     <>
@@ -487,6 +482,7 @@ const ClientSecurity = () => {
                                 <button
                                     onClick={cancelPasswordReset}
                                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-[BasisGrotesquePro] text-sm font-medium"
+                                    style={{ borderRadius: '8px' }}
                                 >
                                     Cancel
                                 </button>
@@ -494,6 +490,7 @@ const ClientSecurity = () => {
                                     onClick={handlePasswordReset}
                                     disabled={resettingPassword}
                                     className="flex-1 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ borderRadius: '8px' }}
                                 >
                                     {resettingPassword ? (
                                         <>

@@ -16,15 +16,27 @@ export default function SimplePDFViewer({
 
   // Get the PDF URL - prefer pdfFile (blob) over pdfUrl
   const getPdfSource = () => {
+    let source = null;
+    
     if (pdfFile) {
       // If it's a File object, create object URL
       if (pdfFile instanceof File) {
-        return URL.createObjectURL(pdfFile);
+        source = URL.createObjectURL(pdfFile);
       }
       // If it's already a blob URL or data URL
-      return pdfFile;
+      else {
+        source = pdfFile;
+      }
+    } else {
+      source = pdfUrl;
     }
-    return pdfUrl;
+    
+    // Add zoom parameter to make PDF smaller
+    if (source && !source.includes('#')) {
+      source += '#zoom=auto-fit';
+    }
+    
+    return source;
   };
 
   const pdfSource = getPdfSource();

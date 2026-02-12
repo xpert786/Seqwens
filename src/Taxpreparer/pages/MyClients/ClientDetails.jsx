@@ -1243,221 +1243,220 @@ export default function ClientDetails() {
         </div>
       </div>
       <div className="bg-white rounded-xl p-6 ">
-        <div className="flex items-center justify-between">
-          <div className="flex items-start gap-4">
-            <div
-              className="w-16 aspect-square rounded-full overflow-hidden flex items-center justify-center text-xl font-bold"
-              style={{
-                backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
-                color: "var(--Palette2-Dark-blue-900, #3B4A66)",
-              }}
-            >
-              {client.profile_picture ? (
-                <img
-                  src={client.profile_picture}
-                  alt={client.name || "Client avatar"}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                initials
-              )}
-            </div>
-
-            <div>
-              {/* Name + Status badges */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <div
-                className="text-lg font-semibold flex items-center gap-2"
-                style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}
+                className="w-16 aspect-square rounded-full overflow-hidden flex items-center justify-center text-xl font-bold"
+                style={{
+                  backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+                }}
               >
-                {client.name}
-              </div>
-              <div className="mt-1 flex flex-wrap gap-2">
-                {statusesForHeader.map((s, i) => (
-                  <span key={i} className={
-                    (s || '').toLowerCase().includes('high')
-                      ? 'px-2 py-1 rounded-full bg-red-100 text-red-600 text-xs capitalize'
-                      : (s || '').toLowerCase().includes('active')
-                        ? 'px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-xs capitalize'
-                        : 'px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs capitalize'
-                  }>{s}</span>
-                ))}
+                {client.profile_picture ? (
+                  <img
+                    src={client.profile_picture}
+                    alt={client.name || "Client avatar"}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  initials
+                )}
               </div>
 
-              <div className="mt-2">
-                <div className="flex items-start gap-8">
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs mb-1">Email</span>
-                    <div className="flex items-center gap-2">
-                      <MailMiniIcon />
-                      <span className="text-gray-700 text-xs font-medium">{client.email}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs mb-1"> Phone</span>
-                    <div className="flex items-center gap-2">
-                      <PhoneMiniIcon />
-                      <span className="text-gray-700 text-xs font-medium">{client.phone}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs mb-1">Filing Status</span>
-                    <span className="text-gray-700 text-xs font-medium">{client.filingStatus || "N/A"}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs mb-1">SSN / ITIN (Tax ID)</span>
-                    <span className="text-gray-700 text-xs font-medium">{client.ssn || "N/A"}</span>
+              <div>
+                {/* Name + Status badges */}
+                <div
+                  className="text-lg font-semibold flex items-center gap-3"
+                  style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}
+                >
+                  {client.name}
+                  <div className="flex flex-wrap gap-2">
+                    {statusesForHeader.map((s, i) => (
+                      <span key={i} className={
+                        (s || '').toLowerCase().includes('high')
+                          ? 'px-2 py-1 rounded-full bg-red-100 text-red-600 text-[10px] capitalize'
+                          : (s || '').toLowerCase().includes('active')
+                            ? 'px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] capitalize'
+                            : 'px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] capitalize'
+                      }>{s}</span>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Buttons: visible on all tabs */}
-          <div className="flex gap-3 align-items-center" style={{ flexWrap: "nowrap" }}>
-            {/* Send Message Button */}
-            <button
-              className="rounded-md text-sm"
-              style={{
-                fontSize: "15px",
-                width: "131px",
-                gap: "6px",
-                borderRadius: "6px",
-                border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                color: "#fff",
-                padding: "5px 12px",
-                opacity: 1,
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              }}
-              onClick={() => {
-                // Navigate to messages page with clientId parameter
-                if (clientId) {
-                  navigate(`/taxdashboard/messages?clientId=${clientId}`);
-                } else {
-                  navigate('/taxdashboard/messages');
-                }
-              }}
-            >
-              Send Message
-            </button>
-
-            {/* Fill Intake Form Button - Visible for Unlinked or Pending */}
-            {['Unlinked', 'Pending'].includes(client.status) && (
+            {/* Buttons: visible on all tabs */}
+            <div className="flex gap-3 align-items-center" style={{ flexWrap: "nowrap" }}>
+              {/* Send Message Button */}
               <button
                 className="rounded-md text-sm"
                 style={{
                   fontSize: "15px",
-                  width: "auto",
+                  width: "131px",
                   gap: "6px",
                   borderRadius: "6px",
-                  border: "1px solid var(--Palette2-TealBlue-900, #00C0C6)",
-                  backgroundColor: "#fff",
-                  color: "var(--Palette2-TealBlue-900, #00C0C6)",
+                  border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                  backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                  color: "#fff",
                   padding: "5px 12px",
                   opacity: 1,
                   cursor: "pointer",
                   whiteSpace: "nowrap"
                 }}
-                onClick={() => setShowFillIntakeModal(true)}
+                onClick={() => {
+                  if (clientId) {
+                    navigate(`/taxdashboard/messages?clientId=${clientId}`);
+                  } else {
+                    navigate('/taxdashboard/messages');
+                  }
+                }}
               >
-                Fill Intake Form
+                Send Message
               </button>
-            )}
 
-            {/* Add Task Button */}
-            <button
-              className="rounded-md text-sm"
-              style={{
-                fontSize: "15px",
-                width: "131px",
-                gap: "6px",
-                borderRadius: "6px",
-                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                backgroundColor: "#fff",
-                color: "var(--Palette2-Dark-blue-900, #3B4A66)",
-                padding: "5px 12px",
-                opacity: 1,
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              }}
-              onClick={() => {
-                // Pre-fill client ID when opening modal
-                if (clientId) {
-                  setFormData(prev => ({
-                    ...prev,
-                    client_ids: [clientId.toString()]
-                  }));
-                }
-                setShowAddTaskModal(true);
-              }}
-            >
-              Add Task
-            </button>
+              {/* Fill Intake Form Button - Visible for Unlinked or Pending */}
+              {['Unlinked', 'Pending'].includes(client.status) && (
+                <button
+                  className="rounded-md text-sm"
+                  style={{
+                    fontSize: "15px",
+                    width: "auto",
+                    gap: "6px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--Palette2-TealBlue-900, #00C0C6)",
+                    backgroundColor: "#fff",
+                    color: "var(--Palette2-TealBlue-900, #00C0C6)",
+                    padding: "5px 12px",
+                    opacity: 1,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap"
+                  }}
+                  onClick={() => setShowFillIntakeModal(true)}
+                >
+                  Fill Intake Form
+                </button>
+              )}
 
-            {/* Edit Details Button */}
-            {canEditClient && (
-              <div className="d-flex gap-2">
-                {!isEditMode ? (
-                  <button
-                    className="rounded-md text-sm d-flex align-items-center gap-2"
-                    style={{
-                      fontSize: "15px",
-                      borderRadius: "6px",
-                      border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                      backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                      color: "#fff",
-                      padding: "5px 12px",
-                      opacity: 1,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap"
-                    }}
-                    onClick={() => setIsEditMode(true)}
-                  >
-                    <WhiteEdit />
-                    Edit Details
-                  </button>
-                ) : (
-                  <>
+              {/* Add Task Button */}
+              <button
+                className="rounded-md text-sm"
+                style={{
+                  fontSize: "15px",
+                  width: "110px",
+                  gap: "6px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  backgroundColor: "#fff",
+                  color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+                  padding: "5px 12px",
+                  opacity: 1,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap"
+                }}
+                onClick={() => {
+                  if (clientId) {
+                    setFormData(prev => ({
+                      ...prev,
+                      client_ids: [clientId.toString()]
+                    }));
+                  }
+                  setShowAddTaskModal(true);
+                }}
+              >
+                Add Task
+              </button>
+
+              {/* Edit Details Button */}
+              {canEditClient && (
+                <div className="d-flex gap-2">
+                  {!isEditMode ? (
                     <button
-                      className="btn btn-light"
-                      onClick={handleCancelEdit}
-                      disabled={saving}
+                      className="rounded-md text-sm d-flex align-items-center gap-2"
                       style={{
-                        borderRadius: "6px",
-                        padding: "5px 12px",
                         fontSize: "15px",
-                        border: "1px solid #E5E7EB",
+                        borderRadius: "6px",
+                        border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                        backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                        color: "#fff",
+                        padding: "5px 12px",
+                        opacity: 1,
+                        cursor: "pointer",
                         whiteSpace: "nowrap"
                       }}
+                      onClick={() => setIsEditMode(true)}
                     >
-                      Cancel
+                      <WhiteEdit />
+                      Edit Details
                     </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={handleSaveTaxpayer}
-                      disabled={saving}
-                      style={{
-                        borderRadius: "6px",
-                        padding: "5px 12px",
-                        fontSize: "15px",
-                        backgroundColor: "#FF7A2F",
-                        borderColor: "#FF7A2F",
-                        whiteSpace: "nowrap"
-                      }}
-                    >
-                      {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
+                  ) : (
+                    <>
+                      <button
+                        className="btn btn-light"
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        style={{
+                          borderRadius: "6px",
+                          padding: "5px 12px",
+                          fontSize: "15px",
+                          border: "1px solid #E5E7EB",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleSaveTaxpayer}
+                        disabled={saving}
+                        style={{
+                          borderRadius: "6px",
+                          padding: "5px 12px",
+                          fontSize: "15px",
+                          backgroundColor: "#FF7A2F",
+                          borderColor: "#FF7A2F",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {saving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
+          <div className="mt-2 ml-20">
+            <div className="flex items-center gap-20">
+              <div className="flex flex-col">
+                <span className="text-gray-400 text-xs mb-1">Email</span>
+                <div className="flex items-center gap-2">
+                  <MailMiniIcon />
+                  <span className="text-gray-700 text-sm font-medium">{client.email}</span>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 text-xs mb-1"> Phone</span>
+                <div className="flex items-center gap-2">
+                  <PhoneMiniIcon />
+                  <span className="text-gray-700 text-sm font-medium">{client.phone}</span>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 text-xs mb-1">Filing Status</span>
+                <span className="text-gray-700 text-sm font-medium">{client.filingStatus || "N/A"}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 text-xs mb-1">SSN / ITIN (Tax ID)</span>
+                <span className="text-gray-700 text-sm font-medium">{client.ssn || "N/A"}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div

@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { userAPI, handleAPIError } from "../../utils/apiUtils";
 import "../../styles/Icon.css";
-import { FaEnvelope, FaBuilding, FaUserTag, FaClock, FaCheck, FaTimes, FaExternalLinkAlt } from "react-icons/fa";
+import { FiMail, FiBriefcase, FiUser, FiClock, FiCheck, FiX, FiArrowRight } from "react-icons/fi";
 
 const Invites = () => {
     const [invites, setInvites] = useState([]);
@@ -86,7 +86,7 @@ const Invites = () => {
 
             {!loading && invites.length === 0 && !error && (
                 <div className="text-center py-5 bg-light rounded-3">
-                    <FaEnvelope className="text-secondary mb-3" style={{ fontSize: "2rem", opacity: 0.5 }} />
+                    <FiMail className="text-secondary mb-3" style={{ fontSize: "2rem", opacity: 0.5 }} />
                     <p className="text-muted mb-0">You have no pending invitations at this time.</p>
                 </div>
             )}
@@ -105,7 +105,7 @@ const Invites = () => {
                                     className="rounded-circle d-flex align-items-center justify-content-center"
                                     style={{ width: "48px", height: "48px", backgroundColor: "#E8F0FF", color: "#007AFF" }}
                                 >
-                                    <FaBuilding size={20} />
+                                    <FiBriefcase size={20} />
                                 </div>
                                 <div>
                                     <h6 className="mb-1" style={{ color: "#3B4A66", fontWeight: "600" }}>
@@ -113,15 +113,15 @@ const Invites = () => {
                                     </h6>
                                     <div className="d-flex gap-3 text-muted" style={{ fontSize: "13px" }}>
                                         <span className="d-flex align-items-center gap-1">
-                                            <FaUserTag size={12} />
+                                            <FiUser size={12} />
                                             {invite.role_display}
                                         </span>
                                         <span className="d-flex align-items-center gap-1">
-                                            <FaEnvelope size={12} />
+                                            <FiMail size={12} />
                                             Invited by {invite.invited_by_name}
                                         </span>
                                         <span className="d-flex align-items-center gap-1">
-                                            <FaClock size={12} />
+                                            <FiClock size={12} />
                                             Expires: {new Date(invite.expires_at).toLocaleDateString()}
                                         </span>
                                     </div>
@@ -140,7 +140,7 @@ const Invites = () => {
                                         fontWeight: "500"
                                     }}
                                 >
-                                    Review Invite <FaExternalLinkAlt size={12} />
+                                    Review Invite <FiArrowRight size={14} />
                                 </button>
                             </div>
                         </div>

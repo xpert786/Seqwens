@@ -95,7 +95,7 @@ export default function Dashboard() {
   return (
     <div>
 
-      <div className="taxdashboard-header lg:px-4 ">
+      <div className="taxdashboard-header">
         <div className="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center">
           <div className="text-center text-md-start">
             <h4 className="taxdashboard-title mb-1">Dashboard</h4>
@@ -177,9 +177,9 @@ export default function Dashboard() {
           const shouldShowStatusIcon = card.statusType !== "no_change";
 
           return (
-            <div className="col-12 col-sm-6 col-md-6 col-lg-3 lg:px-4 md:px-2 px-1" key={index}>
+            <div className="col-12 col-sm-6 col-md-6 col-lg-3" key={index}>
               <div
-                className={`carded dashboard-carded ${card.path ? 'clickable-card' : ''}`}
+                className={`carded dashboard-carded h-100 ${card.path ? 'clickable-card' : ''}`}
                 style={{
                   cursor: card.path ? 'pointer' : 'default',
                   position: 'relative',

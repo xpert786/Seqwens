@@ -185,9 +185,9 @@ export default function SchedulePage() {
   }
 
   return (
-    <>
+    <div className="mt-6">
       {/* Search and Filter */}
-      <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+      <div className="d-flex align-items-center gap-2 mb-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
         <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
           <input
             type="text"
@@ -264,7 +264,7 @@ export default function SchedulePage() {
           <button
             onClick={() => setShowCreateAppointmentModal(true)}
             className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
-            style={{ backgroundColor: '#178109' }}
+            style={{ backgroundColor: '#178109', borderRadius: '8px' }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -317,10 +317,10 @@ export default function SchedulePage() {
                     <div className="d-flex gap-2">
                       <button
                         className="btn  btn-outline-secondary d-flex align-items-center gap-1"
-                        style={{ fontSize: "12px", padding: "4px 8px" }}
+                        style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "6px" }}
                         onClick={(e) => openStatusModal(appointment, e)}
                       >
-                         Update Status
+                        Update Status
                       </button>
                       {hasMeetingLink && (
                         <button
@@ -332,7 +332,8 @@ export default function SchedulePage() {
                             padding: "4px 12px",
                             display: "flex",
                             alignItems: "center",
-                            gap: "4px"
+                            gap: "4px",
+                            borderRadius: "6px"
                           }}
                           onClick={(e) => handleJoinMeeting(meetingUrl, e)}
                         >
@@ -410,7 +411,7 @@ export default function SchedulePage() {
           preSelectedClient={clientInfo}
         />
       )}
-      
+
       {/* Update Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}>
@@ -418,7 +419,7 @@ export default function SchedulePage() {
             <h5 className="text-lg font-semibold mb-4">Update Appointment Status</h5>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Select New Status</label>
-              <select 
+              <select
                 className="form-select w-full rounded border-gray-300"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
@@ -429,13 +430,13 @@ export default function SchedulePage() {
               </select>
             </div>
             <div className="flex justify-end gap-2">
-              <button 
+              <button
                 className="btn btn-secondary "
                 onClick={() => setShowStatusModal(false)}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="btn btn-primary  text-white"
                 style={{ backgroundColor: '#F56D2D', borderColor: '#F56D2D' }}
                 onClick={() => updateAppointmentStatus(selectedAppointment.id, newStatus)}
@@ -446,6 +447,6 @@ export default function SchedulePage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

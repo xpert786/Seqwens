@@ -27,36 +27,36 @@ const DocumentRequestCard = ({
     switch (status?.toLowerCase()) {
       case 'pending':
         return {
-          color: '#92400E',
-          bg: '#FEF3C7',
+          color: '#FFFFFF',
+          bg: '#F59E0B',
           icon: <Clock size={14} className="mr-1.5" />,
           label: 'Pending'
         };
       case 'submitted':
         return {
-          color: '#1E40AF',
-          bg: '#DBEAFE',
+          color: '#FFFFFF',
+          bg: '#3B82F6',
           icon: <FileText size={14} className="mr-1.5" />,
           label: 'Submitted'
         };
       case 'verified':
         return {
-          color: '#065F46',
-          bg: '#D1FAE5',
+          color: '#FFFFFF',
+          bg: '#10B981',
           icon: <ShieldCheck size={14} className="mr-1.5" />,
           label: 'Verified'
         };
       case 'needs_revision':
         return {
-          color: '#991B1B',
-          bg: '#FEE2E2',
+          color: '#FFFFFF',
+          bg: '#EF4444',
           icon: <AlertCircle size={14} className="mr-1.5" />,
           label: 'Needs Revision'
         };
       default:
         return {
-          color: '#374151',
-          bg: '#F3F4F6',
+          color: '#FFFFFF',
+          bg: '#6B7280',
           icon: <Clock size={14} className="mr-1.5" />,
           label: status || 'Unknown'
         };

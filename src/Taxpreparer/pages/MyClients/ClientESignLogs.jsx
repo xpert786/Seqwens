@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { taxPreparerClientAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import { FaFilePdf, FaDownload, FaEye, FaComment, FaCheckCircle, FaClock, FaExclamationTriangle, FaSignature, FaCalendarAlt, FaUser, FaInfoCircle } from 'react-icons/fa';
+import { FaFilePdf, FaComment, FaCheckCircle, FaClock, FaExclamationTriangle, FaSignature, FaCalendarAlt, FaUser, FaInfoCircle } from 'react-icons/fa';
+import { EyeSquareIcon, DownloadIcon, Doc } from '../../component/icons';
 
 export default function ClientESignLogs() {
   const { clientId } = useParams();
@@ -29,7 +30,7 @@ export default function ClientESignLogs() {
         params.status = statusFilter;
       }
       const response = await taxPreparerClientAPI.getESignLogs(clientId, params);
-      
+
       if (response.success && response.data) {
         setEsignActivities(response.data);
       } else {
@@ -59,16 +60,16 @@ export default function ClientESignLogs() {
     switch (status?.toLowerCase()) {
       case 'completed':
       case 'signed':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-success text-white border-success';
       case 'viewed':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-info text-white border-info';
       case 'pending':
       case 'sent':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'bg-warning text-white border-warning';
       case 'cancelled':
-        return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-danger text-white border-danger';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-secondary text-white border-secondary';
     }
   };
 
@@ -150,7 +151,7 @@ export default function ClientESignLogs() {
   }
 
   return (
-    <div className="p-4 font-['BasisGrotesquePro']">
+    <div className="mt-6 font-['BasisGrotesquePro']">
       <div className="bg-white rounded-xl p-6">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -262,27 +263,27 @@ export default function ClientESignLogs() {
                         {document.preview_url && (
                           <button
                             onClick={() => openDocumentPreview(document.preview_url)}
-                            className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2 text-sm"
+                            className="p-0 bg-transparent border-0 hover:opacity-80 transition-opacity"
                             title="Preview Document"
                           >
-                            <FaEye className="w-4 h-4" />
-                            Preview
+                            <EyeSquareIcon />
                           </button>
                         )}
                         {document.download_url && (
                           <button
                             onClick={() => downloadDocument(document.download_url, document.name)}
-                            className="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 text-sm"
+                            className="p-0 bg-transparent border-0 hover:opacity-80 transition-opacity"
                             title="Download Document"
                           >
-                            <FaDownload className="w-4 h-4" />
-                            Download
+                            <DownloadIcon />
                           </button>
                         )}
                         <button
                           onClick={() => toggleExpanded(index)}
-                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm flex items-center gap-2"
+                          style={{ borderRadius: '8px' }}
                         >
+                          <Doc className="w-4 h-4" />
                           {isExpanded ? 'Hide Details' : 'Show Details'}
                         </button>
                       </div>

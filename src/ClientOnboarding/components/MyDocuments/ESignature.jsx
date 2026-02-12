@@ -358,9 +358,9 @@ export default function ESignature() {
   };
 
   const cardData = [
-    { label: "Pending Signature", icon: <SignatureIcon />, count: stats.pending, color: "#00bcd4" },
-    { label: "Completed", icon: <CompletedIcon />, count: stats.completed, color: "#4caf50" },
-    { label: "Awaiting others", icon: <AwaitingIcon />, count: stats.awaiting, color: "#3f51b5" },
+    { label: "Pending Signature", icon: <SignatureIcon />, count: stats.pending, color: "#00bcd4", filterKey: 'pending' },
+    { label: "Completed", icon: <CompletedIcon />, count: stats.completed, color: "#4caf50", filterKey: 'completed' },
+    { label: "Awaiting others", icon: <AwaitingIcon />, count: stats.awaiting, color: "#3f51b5", filterKey: null },
   ];
 
   return (
@@ -370,8 +370,15 @@ export default function ESignature() {
         {cardData.map((item, index) => (
           <div className="col-md-4" key={index}>
             <div
-              className="bg-white rounded p-3 d-flex flex-column justify-content-between"
-              style={{ borderRadius: "12px", height: "130px" }}
+              className={`bg-white rounded p-3 d-flex flex-column justify-content-between ${item.filterKey ? 'cursor-pointer' : ''}`}
+              style={{
+                borderRadius: "12px",
+                height: "130px",
+                cursor: item.filterKey ? 'pointer' : 'default',
+                border: filter === item.filterKey ? `1px solid ${item.color}` : '1px solid transparent',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => item.filterKey && setFilter(item.filterKey)}
             >
               <div className="d-flex justify-content-between align-items-start">
                 <div
@@ -886,6 +893,19 @@ export default function ESignature() {
         />
       )}
 
+      <style>{`
+        .pdf-preview-modal .modal-dialog {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin: 0 auto !important;
+          max-width: 600px !important;
+        }
+        .pdf-preview-modal .modal-content {
+          max-height: 90vh !important;
+          overflow: hidden !important;
+        }
+      `}</style>
       {/* PDF Preview Modal */}
       <Modal
         show={showPreviewModal}
@@ -893,9 +913,10 @@ export default function ESignature() {
           setShowPreviewModal(false);
           setSelectedIndex(null);
         }}
-        size="xl"
+        size="lg"
         centered
-        fullscreen="lg-down"
+        scrollable
+        dialogClassName="pdf-preview-modal"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
 
@@ -911,7 +932,7 @@ export default function ESignature() {
             ) : 'E-Signature – Document Preview'}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+        <Modal.Body style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>
           {selectedIndex !== null && signatureRequests[selectedIndex] ? (
             <>
               {(() => {
@@ -922,11 +943,14 @@ export default function ESignature() {
                   : request.document_url;
 
                 return pdfUrl ? (
-                  <PDFViewer
-                    pdfUrl={pdfUrl}
-                    height="70vh"
-                    showThumbnails={true}
-                  />
+                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                    <PDFViewer
+                      pdfUrl={pdfUrl}
+                      height="50vh"
+                      showThumbnails={false}
+                      className="w-100"
+                    />
+                  </div>
                 ) : (
                   <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
                     <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>

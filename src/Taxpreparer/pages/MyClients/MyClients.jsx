@@ -1792,7 +1792,7 @@ export default function MyClients() {
                             </div>
                           )}
                           <div className="d-flex flex-wrap gap-2 mt-2">
-                            <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                            <span className="badge bg-info text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                               {invite.firm_name}
                             </span>
                             {invite.is_expired ? (
@@ -1800,7 +1800,7 @@ export default function MyClients() {
                                 Expired
                               </span>
                             ) : (
-                              <span className="badge bg-warning" style={{ fontSize: '10px' }}>
+                              <span className="badge bg-warning text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                                 Pending
                               </span>
                             )}
@@ -1947,21 +1947,21 @@ export default function MyClients() {
                             )}
                             <div className="d-flex flex-wrap gap-2 mt-2">
                               {taxpayer.is_active ? (
-                                <span className="badge bg-success" style={{ fontSize: '10px' }}>
+                                <span className="badge bg-success text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                                   Active
                                 </span>
                               ) : (
-                                <span className="badge bg-secondary" style={{ fontSize: '10px' }}>
+                                <span className="badge bg-secondary text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                                   Inactive
                                 </span>
                               )}
                               {taxpayer.is_email_verified && (
-                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                                <span className="badge bg-info text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                                   Email Verified
                                 </span>
                               )}
                               {taxpayer.is_phone_verified && (
-                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                                <span className="badge bg-info text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                                   Phone Verified
                                 </span>
                               )}
@@ -2296,8 +2296,8 @@ export default function MyClients() {
       {showInviteTaxpayerModal && (
         <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px', overflow: 'visible' }}>
-              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px', overflow: 'visible', border: 'none' }}>
+              <div className="modal-header" style={{ borderBottom: 'none' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
                   Invite Taxpayer
                 </h5>
@@ -2379,7 +2379,7 @@ export default function MyClients() {
                       countryCodeEditable={false}
                     />
                   </div>
-                  <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 0 0 0', marginTop: '16px' }}>
+                  <div className="modal-footer" style={{ borderTop: 'none', padding: '16px 0 0 0', marginTop: '16px' }}>
                     <button
                       type="button"
                       className="btn btn-light"

@@ -443,10 +443,10 @@ export default function DocumentRequests() {
                             const colors = priorityColors[priorityLower] || { bg: '#6B7280', color: '#FFFFFF' };
                             return (
                               <span
-                                className="badge"
+                                className="badge mydocs-badge-priority"
                                 style={{
                                   backgroundColor: colors.bg,
-                                  color: colors.color,
+                                  color: '#FFFFFF',
                                   fontSize: "10px",
                                   fontWeight: "700",
                                   textTransform: "uppercase",
@@ -463,7 +463,7 @@ export default function DocumentRequests() {
                               </span>
                             );
                           })()}
-                          <span className="badge mydocs-badge-status">
+                          <span className="badge mydocs-badge-status" style={{ color: '#FFFFFF', textTransform: 'capitalize' }}>
                             {doc.status || 'Pending'}
                           </span>
                         </div>
@@ -490,45 +490,57 @@ export default function DocumentRequests() {
                           </div>
                         )}
 
-                      </div>
-
-                      <div className="mydocs-description">
-                        {doc.description || doc.instructions || doc.message || 'Please upload the requested documents'}
-                      </div>
-
-                      <div className="d-flex flex-wrap mb-1 mydocs-info">
-                        <div className="d-flex align-items-center">
-                          <BlackDateIcon />
-                          {(doc.due_date || doc.dueDate) && (
-                            <span className="ms-2">
-                              <strong className="fw-normal">Due:</strong> {formatDate(doc.due_date || doc.dueDate)}
+                        {overdueDays > 0 && (
+                          <div className="ms-auto">
+                            <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '11px', borderRadius: '4px', color: '#FFFFFF' }}>
+                              Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
                             </span>
+                          </div>
+                        )}
+
+                      </div>
+
+                      <div className="d-flex justify-content-between align-items-start mt-2">
+                        <div className="flex-grow-1 pe-3">
+                          <div className="mydocs-description mb-2">
+                            {doc.description || doc.instructions || doc.message || 'Please upload the requested documents'}
+                          </div>
+
+                          {(doc.instructions || doc.description) && (
+                            <div className="mydocs-instructions">
+                              <span className="mydocs-instructions-title d-block mb-1">Instructions:</span>
+                              <p className="mydocs-instructions-text mb-0">{doc.instructions || doc.description}</p>
+                            </div>
                           )}
+                        </div>
+
+                        <div className="d-flex flex-column align-items-end mydocs-info text-end" style={{ minWidth: 'fit-content' }}>
+                          <div className="d-flex align-items-center mb-1">
+                            <BlackDateIcon />
+                            {(doc.due_date || doc.dueDate) && (
+                              <span className="ms-2 small">
+                                <strong className="fw-normal">Due:</strong> {formatDate(doc.due_date || doc.dueDate)}
+                              </span>
+                            )}
+                          </div>
                           {(doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name) && (
-                            <span className="ms-2">
-                              <strong className="fw-normal">Requested by:</strong> {doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name}
-                            </span>
+                            <div className="small text-muted">
+                              Requested by: {doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name}
+                            </div>
                           )}
                           {doc.reminders_count !== undefined && (
-                            <span className="ms-2 mydocs-reminder">
+                            <div className="small text-muted mydocs-reminder mt-1">
                               {doc.reminders_count || doc.reminders || 0} reminder{doc.reminders_count !== 1 ? 's' : ''} sent
-                            </span>
+                            </div>
                           )}
                         </div>
                       </div>
 
-                      {overdueDays > 0 && (
-                        <div className="mydocs-overdue">
-                          Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
-                        </div>
-                      )}
 
-                      {(doc.instructions || doc.description) && (
-                        <div className="mydocs-instructions">
-                          <span className="mydocs-instructions-title">Instructions:</span>
-                          <p className="mydocs-instructions-text">{doc.instructions || doc.description}</p>
-                        </div>
-                      )}
+
+
+
+
 
                       {requestedDocs.length > 0 && (
                         <div>

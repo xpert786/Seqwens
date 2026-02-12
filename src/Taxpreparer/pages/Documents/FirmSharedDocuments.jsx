@@ -13,12 +13,10 @@ export default function FirmSharedDocuments() {
 
   const [documents, setDocuments] = useState([]);
   const [folders, setFolders] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFolderId, setSelectedFolderId] = useState(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -40,7 +38,6 @@ export default function FirmSharedDocuments() {
 
       const params = {};
       if (selectedFolderId) params.folder_id = selectedFolderId;
-      if (selectedCategoryId) params.category_id = selectedCategoryId;
       if (searchQuery.trim()) params.search = searchQuery.trim();
       if (showArchived) params.is_archived = true;
 
@@ -84,30 +81,13 @@ export default function FirmSharedDocuments() {
     }
   };
 
-  // Fetch categories
-  const fetchCategories = async () => {
-    try {
-      const response = await taxPreparerFirmSharedAPI.getFirmSharedCategories();
-
-      if (response.success && response.data) {
-        setCategories(response.data.categories || []);
-      }
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-    }
-  };
-
   useEffect(() => {
     fetchDocuments();
-  }, [selectedFolderId, selectedCategoryId, searchQuery, showArchived]);
+  }, [selectedFolderId, searchQuery, showArchived]);
 
   useEffect(() => {
     fetchFolders();
   }, [currentFolder]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   // Handle folder navigation
   const handleFolderClick = (folder) => {
@@ -279,11 +259,11 @@ export default function FirmSharedDocuments() {
 
   const getStatusBadgeClass = (status) => {
     const normalized = status?.toString().toLowerCase();
-    if (!normalized) return 'bg-secondary';
-    if (normalized.includes('archived') || normalized.includes('inactive')) return 'bg-secondary';
-    if (normalized.includes('pending') || normalized.includes('review')) return 'bg-warning text-dark';
-    if (normalized.includes('error') || normalized.includes('fail') || normalized.includes('reject')) return 'bg-danger';
-    return 'bg-success';
+    if (!normalized) return 'bg-secondary text-white';
+    if (normalized.includes('archived') || normalized.includes('inactive')) return 'bg-secondary text-white';
+    if (normalized.includes('pending') || normalized.includes('review')) return 'bg-warning text-white';
+    if (normalized.includes('error') || normalized.includes('fail') || normalized.includes('reject')) return 'bg-danger text-white';
+    return 'bg-success text-white';
   };
 
   const formatDate = (dateString) => {
@@ -300,7 +280,6 @@ export default function FirmSharedDocuments() {
     }
   };
 
-  // Helper function to convert backend URL to proxy URL if needed (to avoid CORS issues)
   const getProxyUrl = (url) => {
     if (!url) return url;
     try {
@@ -324,7 +303,6 @@ export default function FirmSharedDocuments() {
           <small className="text-muted">Access and manage documents shared by your firm</small>
         </div>
         <div className="d-flex gap-2">
-
           <button
             className="btn d-flex align-items-center gap-2"
             onClick={fetchDocuments}
@@ -388,39 +366,6 @@ export default function FirmSharedDocuments() {
               ))}
             </select>
           </div>
-          <div className="col-md-3">
-            <select
-              className="form-select"
-              value={selectedCategoryId || ''}
-              onChange={(e) => setSelectedCategoryId(e.target.value || null)}
-              style={{
-                fontFamily: 'BasisGrotesquePro',
-                borderColor: '#E5E7EB'
-              }}
-            >
-              <option value="">All Categories</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="col-md-2">
-            <div className="form-check">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="showArchived"
-                checked={showArchived}
-                onChange={(e) => setShowArchived(e.target.checked)}
-                style={{ cursor: 'pointer' }}
-              />
-              <label className="form-check-label" htmlFor="showArchived" style={{ cursor: 'pointer' }}>
-                Show Archived
-              </label>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -429,7 +374,7 @@ export default function FirmSharedDocuments() {
         <div className="mb-3">
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <button
-              className="btn  text-primary p-0 border-0 bg-transparent"
+              className="btn text-primary p-0 border-0 bg-transparent"
               onClick={() => handleBreadcrumbClick(-1)}
               style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
             >
@@ -440,7 +385,7 @@ export default function FirmSharedDocuments() {
               <React.Fragment key={idx}>
                 <FiChevronRight size={14} style={{ color: '#6B7280' }} />
                 <button
-                  className="btn  text-primary p-0 border-0 bg-transparent"
+                  className="btn text-primary p-0 border-0 bg-transparent"
                   onClick={() => handleBreadcrumbClick(idx)}
                   style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
                 >
@@ -485,7 +430,7 @@ export default function FirmSharedDocuments() {
             </p>
           </div>
           <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
-            {searchQuery || selectedFolderId || selectedCategoryId
+            {searchQuery || selectedFolderId
               ? 'Try adjusting your filters'
               : 'Upload documents to get started'}
           </p>
@@ -555,7 +500,7 @@ export default function FirmSharedDocuments() {
                       <td>
                         <div className="d-flex gap-2">
                           <button
-                            className="btn "
+                            className="btn"
                             onClick={() => handleDownload(doc)}
                             style={{
                               backgroundColor: '#F9FAFB',
@@ -569,7 +514,7 @@ export default function FirmSharedDocuments() {
                           </button>
                           {canPreview && (
                             <button
-                              className="btn "
+                              className="btn"
                               onClick={() => handlePreview(doc)}
                               style={{
                                 backgroundColor: '#F9FAFB',
@@ -583,7 +528,7 @@ export default function FirmSharedDocuments() {
                             </button>
                           )}
                           <button
-                            className="btn "
+                            className="btn"
                             onClick={() => handleDeleteClick(doc)}
                             disabled={deletingDocId === doc.id}
                             style={{
@@ -746,4 +691,3 @@ export default function FirmSharedDocuments() {
     </div>
   );
 }
-

@@ -5,7 +5,7 @@ import {
   UploadIcon,
   SignIcon,
   ReviewIcon,
-  FileIcon,
+  FileTaskIcon,
   BalanceIcon,
   MessageIcon,
 } from "../components/icons";
@@ -118,19 +118,21 @@ export default function DashboardFirst() {
   };
 
   const getTaskIcon = (title) => {
+    const iconProps = { width: 34, height: 34 };
     switch (title) {
       case "Complete Profile Setup":
-        return <ComFirstIcon width={50} height={50} />;
+        return <ComFirstIcon {...iconProps} />;
       case "Complete Data Intake Form":
-        return <UploadIcon width={24} height={24} />;
+        return <UploadIcon {...iconProps} />;
       case "Upload Tax Documents":
-        return <FileIcon width={24} height={24} />;
+        return <ConverIcon {...iconProps} />;
       case "Schedule a Consultation":
-        return <SignIcon width={24} height={24} />;
+        return <SignIcon {...iconProps} />;
       default:
         return null;
     }
   };
+
 
   const priorityBadgeClass = {
     complete: "success",
@@ -202,7 +204,7 @@ export default function DashboardFirst() {
 
   const quickActions = [
     {
-      icon: <FileIcon size={28} />,
+      icon: <BalanceIcon size={28} />,
       title: "Upload Documents",
       button: "Upload Now",
       route: "/dashboard/documents",
@@ -341,32 +343,33 @@ export default function DashboardFirst() {
             return (
               <div
                 key={idx}
-                className={`border-0 px-0 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer transition-colors ${status !== "complete" ? "hover:bg-gray-50" : ""
+                className={`border-0 px-0 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between cursor-pointer transition-colors ${status !== "complete" ? "hover:bg-gray-50" : ""
                   } ${idx !== setupTasks.length - 1 ? "border-b border-gray-200" : ""}`}
                 onClick={() => handleTaskClick(task)}
               >
                 {/* LEFT SIDE */}
-                <div className="flex gap-3 flex-1 w-full sm:w-auto">
-                  <div className="flex-shrink-0">
+                <div className="flex items-center gap-3 flex-1 w-full sm:w-auto">
+                  <div className="flex-shrink-0 flex items-center justify-center w-12 h-12">
                     {getTaskIcon(task.title)}
                   </div>
 
-                  <div className="min-w-0">
-                    <h6 className="mb-1 text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro]">
+                  <div className="min-w-0 flex flex-col justify-center">
+                    <h6 className="mb-0 text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro] leading-tight">
                       {task.title}
                     </h6>
-                    <small className="text-[#3B4A66] text-xs sm:text-sm font-[BasisGrotesquePro]">
+                    <p className="text-[#3B4A66] text-xs sm:text-sm font-[BasisGrotesquePro] mb-0 mt-1 opacity-80">
                       {task.description}
-                    </small>
+                    </p>
                   </div>
                 </div>
 
                 {/* RIGHT SIDE */}
-                <div className="flex justify-end w-full sm:w-auto">
+                <div className="flex justify-end w-full sm:w-auto mt-3 sm:mt-0">
                   <button
-                    className={`${buttonClass} w-24 sm:w-32`}
+                    className={`${buttonClass} w-24 sm:w-32 py-2 text-xs sm:text-sm font-medium transition-all duration-200`}
                     onClick={(e) => handleButtonClick(e, task)}
                     disabled={status === "complete"}
+                    style={{ borderRadius: '6px' }}
                   >
                     {buttonText}
                   </button>
@@ -385,15 +388,15 @@ export default function DashboardFirst() {
         <p className="text-gray-600 text-xs sm:text-sm font-[BasisGrotesquePro] mb-4">
           Common tasks you can do right now
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {quickActions.map((action, idx) => (
             <div key={idx} className="mb-3 sm:mb-0">
               <div className="p-3 sm:p-4 rounded-lg border border-[#E0E6ED] bg-[#F9FBFF] h-full flex flex-col justify-between">
-                <div>
-                  <div className="text-[40px] text-cyan-500 mb-4 sm:mb-6 font-[BasisGrotesquePro]">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6 h-10">
+                  <div className="text-[28px] sm:text-[32px] text-cyan-500 font-[BasisGrotesquePro] flex-shrink-0 flex items-center justify-center w-8 sm:w-10">
                     {action.icon}
                   </div>
-                  <h6 className="text-sm sm:text-base text-[#3B4A66] font-medium font-[BasisGrotesquePro] mb-2">
+                  <h6 className="text-sm sm:text-base text-[#3B4A66] font-medium font-[BasisGrotesquePro] mb-0 leading-tight">
                     {action.title}
                   </h6>
                 </div>
