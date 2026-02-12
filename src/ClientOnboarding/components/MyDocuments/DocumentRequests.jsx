@@ -169,43 +169,7 @@ export default function DocumentRequests() {
 
       formData.append('documents_metadata', JSON.stringify(documentsMetadata));
 
-      const config = {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Don't set Content-Type - let browser set it with boundary for FormData
-        },
-        body: formData
-      };
-
-      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`, config);
-      const result = await response.json();
-
-      if (!response.ok || (result.success === false && result.errors)) {
-        // Extract all error messages from the errors object
-        const errorMessages = [];
-
-        if (result.errors && typeof result.errors === 'object') {
-          Object.keys(result.errors).forEach(field => {
-            const fieldErrors = result.errors[field];
-            if (Array.isArray(fieldErrors)) {
-              fieldErrors.forEach(err => errorMessages.push(err));
-            } else if (typeof fieldErrors === 'string') {
-              errorMessages.push(fieldErrors);
-            }
-          });
-        }
-
-        // Show all error messages in toast notifications
-        if (errorMessages.length > 0) {
-          errorMessages.forEach(msg => {
-            toast.error(msg, { position: "top-right", autoClose: 5000 });
-          });
-        } else {
-          toast.error(result.message || result.detail || 'Failed to upload documents. Please try again.', { position: "top-right", autoClose: 5000 });
-        }
-        return;
-      }
+      const result = await documentsAPI.uploadDocument(formData);
 
       if (result.success) {
         toast.success(result.message || 'Documents uploaded successfully!', { position: "top-right", autoClose: 3000 });
@@ -286,42 +250,7 @@ export default function DocumentRequests() {
         formData.append('files', file);
       });
 
-      const config = {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Don't set Content-Type - let browser set it with boundary for FormData
-        },
-        body: formData
-      };
-
-      // Upload documents - API automatically submits the document request
-      const uploadResponse = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`, config);
-      const uploadResult = await uploadResponse.json();
-
-      if (!uploadResponse.ok || (uploadResult.success === false && uploadResult.errors)) {
-        const errorMessages = [];
-
-        if (uploadResult.errors && typeof uploadResult.errors === 'object') {
-          Object.keys(uploadResult.errors).forEach(field => {
-            const fieldErrors = uploadResult.errors[field];
-            if (Array.isArray(fieldErrors)) {
-              fieldErrors.forEach(err => errorMessages.push(err));
-            } else if (typeof fieldErrors === 'string') {
-              errorMessages.push(fieldErrors);
-            }
-          });
-        }
-
-        if (errorMessages.length > 0) {
-          errorMessages.forEach(msg => {
-            toast.error(msg, { position: "top-right", autoClose: 5000 });
-          });
-        } else {
-          toast.error(uploadResult.message || uploadResult.detail || 'Failed to upload documents. Please try again.', { position: "top-right", autoClose: 5000 });
-        }
-        return;
-      }
+      const uploadResult = await documentsAPI.submitDocumentRequest(selectedRequest.id, formData);
 
       if (uploadResult.success) {
         // API automatically submits the document request, so we just show success

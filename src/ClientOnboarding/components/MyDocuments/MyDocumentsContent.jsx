@@ -914,7 +914,32 @@ export default function MyDocumentsContent() {
 
     // Filter documents based on selected filter and search term
     const getFilteredDocuments = () => {
-        let filtered = documents;
+        let sourceDocs = documents;
+
+        // If searching and we have all data loaded, search EVERYTHING globally
+        if (searchTerm.trim() && isRecursiveLoaded.current) {
+            const allDocs = allDocumentsRef.current;
+            const allFoldersWithFlag = allFoldersRef.current.map(f => ({
+                ...f,
+                is_folder: true,
+                type: 'folder',
+                document_type: 'folder'
+            }));
+            sourceDocs = [...allFoldersWithFlag, ...allDocs];
+
+            // Remove duplicates if any (though there shouldn't be)
+            const seenIds = new Set();
+            sourceDocs = sourceDocs.filter(d => {
+                const id = d.id || d.document_id;
+                const isFolder = d.is_folder || d.type === 'folder';
+                const key = `${isFolder ? 'f' : 'd'}-${id}`;
+                if (seenIds.has(key)) return false;
+                seenIds.add(key);
+                return true;
+            });
+        }
+
+        let filtered = sourceDocs;
 
         // Apply status filter
         if (selectedFilter) {
@@ -941,7 +966,11 @@ export default function MyDocumentsContent() {
                     return false;
                 });
             } else if (filterLower === 'uploaded') {
-                filtered = documents; // All documents are uploaded
+                // Keep filtered as is, but ensure we are only showing documents, not folders for this stat
+                // unless it's a global search
+                if (!searchTerm.trim()) {
+                    filtered = filtered.filter(d => !d.is_folder && d.type !== 'folder');
+                }
             }
         }
 
@@ -949,7 +978,10 @@ export default function MyDocumentsContent() {
         if (searchTerm.trim()) {
             const searchLower = searchTerm.toLowerCase().trim();
             filtered = filtered.filter(d => {
-                const docName = (d.file_name || d.name || d.document_name || d.filename || 'Untitled Document').toLowerCase();
+                const isFolder = d.is_folder || d.type === 'folder' || d.document_type === 'folder';
+                const docName = isFolder
+                    ? (d.title || d.name || d.folder_name || 'Untitled Folder').toLowerCase()
+                    : (d.file_name || d.name || d.document_name || d.filename || 'Untitled Document').toLowerCase();
                 const docType = (d.file_type || d.file_extension || d.type || d.document_type || '').toLowerCase();
                 const docFolder = (d.folder?.title || d.folder?.name || d.folder_name || '').toLowerCase();
                 const docCategory = (d.category?.name || '').toLowerCase();
@@ -1161,7 +1193,7 @@ export default function MyDocumentsContent() {
                     <input
                         type="text"
                         className="form-control mydocs-search-input"
-                        placeholder="Search documents..."
+                        placeholder="Search folders and documents..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -1379,7 +1411,7 @@ export default function MyDocumentsContent() {
 
                                                 {/* Right Side: Status + Actions + Menu */}
                                                 <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
-                                                    {/* Only show status/actions/menu for files, not folders */}
+                                                    {/* Status badge for files */}
                                                     {!(doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder') && (
                                                         <>
 
@@ -1425,8 +1457,8 @@ export default function MyDocumentsContent() {
                                                         </>
                                                     )}
 
-                                                    {/* Only show menu for files, not folders */}
-                                                    {!(doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder') && (
+                                                    {/* Menu for both files and folders */}
+                                                    {true && (
                                                         <div style={{ position: 'relative' }} data-menu-container>
                                                             <button
                                                                 className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
