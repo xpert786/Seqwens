@@ -203,7 +203,7 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
   return (
     <>
       {/* KPI Cards Section - Updated Grid for 6 cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6 sm:mb-8">
         {kpiData.map((kpi, index) => (
           <div key={index} className="bg-white rounded-lg border-1 border-[#E8F0FF] p-4 flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md transition-shadow">
             {/* Card Header */}
@@ -347,14 +347,11 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
         </div>
       </div>
 
-      {/* Client Segmentation Section */}
+      {/* Client Segmentation - Full Width */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6 flex flex-col sm:row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
-            <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
-          </div>
+        <div className="mb-4 sm:mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
+          <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
@@ -435,7 +432,7 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
             ))}
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 }
