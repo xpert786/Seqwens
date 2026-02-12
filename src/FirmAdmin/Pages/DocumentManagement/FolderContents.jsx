@@ -386,7 +386,7 @@ export default function FolderContents() {
   };
 
   return (
-    <div className="p-6 bg-[rgb(243,247,255)] min-h-screen foldercontents-main-container">
+    <div className="p-4 bg-[rgb(243,247,255)] min-h-screen foldercontents-main-container">
       {/* Conditionally render folder contents only when NOT viewing a document */}
       {!isViewingDocument && (
         <>
@@ -461,68 +461,68 @@ export default function FolderContents() {
           {(loading && !statistics.total_documents) ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
               {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm animate-pulse h-24"></div>
+                <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm animate-pulse h-20"></div>
               ))}
             </div>
           ) : !error && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 foldercontents-summary-cards">
-              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <DocumentTextIcon width={18} height={18} />
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <DocumentTextIcon width={16} height={16} />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-[#3B4A66] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
+                  <p className="text-lg font-bold text-[#3B4A66] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
-                  <div className="p-2 bg-amber-50 rounded-lg">
-                    <DocumentWarningIcon width={18} height={18} />
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
+                  <div className="p-1.5 bg-amber-50 rounded-lg">
+                    <DocumentWarningIcon width={16} height={16} />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-[#F59E0B] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
+                  <p className="text-lg font-bold text-[#F59E0B] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <DocumentSuccessIcon width={18} height={18} />
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
+                  <div className="p-1.5 bg-green-50 rounded-lg">
+                    <DocumentSuccessIcon width={16} height={16} />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-[#22C55E] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
+                  <p className="text-lg font-bold text-[#22C55E] foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
-                  <div className="p-2 bg-red-50 rounded-lg">
-                    <DocumentCriticalIssuesIcon width={18} height={18} />
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
+                  <div className="p-1.5 bg-red-50 rounded-lg">
+                    <DocumentCriticalIssuesIcon width={16} height={16} />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-gray-400 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+                  <p className="text-lg font-bold text-gray-400 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    <DocumentDownload width={18} height={18} />
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm foldercontents-summary-card hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
+                  <div className="p-1.5 bg-gray-50 rounded-lg">
+                    <DocumentDownload width={16} height={16} />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold text-gray-400 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+                  <p className="text-lg font-bold text-gray-400 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
                 </div>
               </div>
             </div>
