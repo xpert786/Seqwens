@@ -1908,7 +1908,7 @@ export default function ClientDetails() {
                       countryCodeEditable={false}
                     />
                   ) : (
-                    <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                    <div className="mt-1 text-[15px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
                       {client.phone}
                     </div>
                   )}
@@ -1930,7 +1930,7 @@ export default function ClientDetails() {
                       disabled={isFieldLocked('email')}
                     />
                   ) : (
-                    <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                    <div className="mt-1 text-[15px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
                       {client.email}
                     </div>
                   )}

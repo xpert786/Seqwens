@@ -441,20 +441,18 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
     const labelStyle = { fontFamily: "BasisGrotesquePro", fontWeight: 400, fontSize: "16px", color: "#3B4A66" };
     const headerStyle = { color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" };
     const subHeaderStyle = { color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" };
-
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
         }}>
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 rounded-t-xl z-20">
                     <h5 className="font-semibold text-xl text-gray-800">Fill Client Intake Form</h5>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
-
                 {/* ERROR SUMMARY */}
                 {Object.keys(errors).length > 0 && (
                     <div className="px-6 py-4 bg-red-50 border-b border-red-100 text-red-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
@@ -914,10 +912,22 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
 
                 {/* Footer */}
                 <div className="p-4 border-t border-gray-100 bg-white rounded-b-xl flex justify-end gap-3 z-20">
-                    <button onClick={onClose} className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">Cancel</button>
-                    <button onClick={handleSubmit} disabled={loading} className="px-5 py-2.5 rounded-lg bg-[#3B4A66] text-white font-medium hover:bg-[#2c374d] transition flex items-center gap-2">
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+                        style={{ borderRadius: '12px' }}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="px-5 py-2.5 bg-[#3B4A66] text-white font-medium hover:bg-[#2c374d] transition flex items-center gap-2"
+                        style={{ borderRadius: '12px' }}
+                    >
                         {loading ? 'Submitting...' : 'Submit Form'}
                     </button>
+
                 </div>
             </div>
         </div>
