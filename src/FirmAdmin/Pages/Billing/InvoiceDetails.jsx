@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import InvoiceDetailsTab from './InvoiceDetailsTab';
-import { firmAdminInvoiceAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminInvoiceAPI, taxpayerFirmAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function InvoiceDetails() {
   const { invoiceId } = useParams();
@@ -167,63 +169,170 @@ export default function InvoiceDetails() {
 
   // Handle download invoice PDF
   const handleDownloadPDF = async () => {
-    if (!invoiceId) return;
+    if (!invoiceId || !invoiceData) return;
 
     try {
-      const token = getAccessToken();
-      if (!token) {
-        toast.error('Authentication token not found. Please login again.');
-        return;
+      toast.info('Preparing invoice PDF...', { autoClose: 2000 });
+
+      // Try to fetch firm logo/name for better branding
+      let firmInfo = { name: invoiceData.rawData?.firm_name || 'Seqwens', logo: null };
+      try {
+        const firmResponse = await taxpayerFirmAPI.getFirmLogo();
+        if (firmResponse.success && firmResponse.data) {
+          firmInfo.name = firmResponse.data.firm_name || firmInfo.name;
+          firmInfo.logo = firmResponse.data.logo_url;
+        }
+      } catch (e) {
+        console.warn('Could not fetch firm info', e);
       }
 
-      toast.info('Downloading invoice PDF...', { autoClose: 2000 });
+      // Generate PDF
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 20;
 
-      // Construct the download URL - typically at /firm/invoices/{id}/download/ or /firm/invoices/{id}/pdf/
-      const API_BASE_URL = getApiBaseUrl();
-      const downloadUrl = `${API_BASE_URL}/firm/invoices/${invoiceId}/download/`;
+      // Header: Firm Info
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text(firmInfo.name, 14, yPos);
 
-      // Fetch the PDF with authorization
-      const response = await fetchWithCors(downloadUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text('Professional CPA Services', 14, yPos + 7);
+
+      // Invoice Label
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(245, 109, 45);
+      doc.text('INVOICE', pageWidth - 14, yPos + 5, { align: 'right' });
+
+      yPos += 30;
+
+      // Horizontal Line
+      doc.setDrawColor(229, 231, 235);
+      doc.line(14, yPos - 5, pageWidth - 14, yPos - 5);
+
+      // Client & Invoice details section
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(75, 85, 99);
+      doc.text('BILL TO:', 14, yPos);
+      doc.text('INVOICE DETAILS:', pageWidth / 2 + 10, yPos);
+
+      yPos += 8;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text(invoiceData.clientInfo.name || 'N/A', 14, yPos);
+
+      // Billing Details
+      doc.text('Invoice #:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoiceData.invoiceNumber || `INV-${invoiceId}`, pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text(invoiceData.clientInfo.address || '', 14, yPos, { maxWidth: 80 });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Issue Date:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoiceData.issueDate || 'N/A', pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Due Date:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoiceData.dueDate || 'N/A', pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Status:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoiceData.invoiceDetails.status || 'N/A', pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 20;
+
+      // Items Table
+      const tableBody = (invoiceData.items || []).map(item => [
+        item.description || 'Service',
+        1,
+        `$${parseFloat(item.amount || 0).toFixed(2)}`,
+        `$${parseFloat(item.amount || 0).toFixed(2)}`
+      ]);
+
+      if (tableBody.length === 0) {
+        tableBody.push(['General Services', 1, `$${parseFloat(invoiceData.total || 0).toFixed(2)}`, `$${parseFloat(invoiceData.total || 0).toFixed(2)}`]);
+      }
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Description', 'Qty', 'Rate', 'Amount']],
+        body: tableBody,
+        theme: 'striped',
+        headStyles: { fillColor: [59, 74, 102], textColor: 255 },
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 20, halign: 'center' },
+          2: { cellWidth: 30, halign: 'right' },
+          3: { cellWidth: 30, halign: 'right' }
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to download PDF: ${response.statusText}`);
-      }
+      yPos = doc.lastAutoTable.finalY + 15;
 
-      // Get the blob data
-      const blob = await response.blob();
+      // Totals
+      const totalX = pageWidth - 14;
+      const labelX = totalX - 55;
 
-      // Determine file extension from content type or default to pdf
-      const contentType = response.headers.get('content-type') || 'application/pdf';
-      const fileName = invoiceData?.invoiceNumber
-        ? `${invoiceData.invoiceNumber}.pdf`
-        : `Invoice_${invoiceId}.pdf`;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Subtotal:', labelX, yPos);
+      doc.text(`$${parseFloat(invoiceData.subtotal || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
 
-      // Create a temporary URL for the blob
-      const url = window.URL.createObjectURL(blob);
+      yPos += 7;
+      doc.text(`Tax:`, labelX, yPos);
+      doc.text(`$${parseFloat(invoiceData.tax || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
 
-      // Create a temporary anchor element to trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
+      yPos += 10;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('TOTAL:', labelX, yPos);
+      doc.text(`$${parseFloat(invoiceData.total || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
 
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 100);
+      yPos += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(16, 185, 129);
+      doc.text('Amount Paid:', labelX, yPos);
+      doc.text(`$${parseFloat(invoiceData.paidAmount || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      yPos += 7;
+      doc.setTextColor(239, 68, 68);
+      doc.text('Balance Due:', labelX, yPos);
+      doc.text(`$${parseFloat(invoiceData.remainingAmount || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(156, 163, 175);
+      doc.text('Thank you for your business!', pageWidth / 2, doc.internal.pageSize.getHeight() - 15, { align: 'center' });
+
+      // Save
+      const fileName = `${invoiceData.invoiceNumber || 'Invoice'}.pdf`;
+      doc.save(fileName);
 
       toast.success('Invoice PDF downloaded successfully');
     } catch (error) {
-      console.error('Error downloading invoice PDF:', error);
-      toast.error(handleAPIError(error) || 'Failed to download invoice PDF');
+      console.error('Error generating invoice PDF:', error);
+      toast.error('Failed to generate invoice PDF');
     }
   };
 

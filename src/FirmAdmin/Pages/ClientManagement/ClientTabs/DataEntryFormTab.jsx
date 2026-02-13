@@ -273,6 +273,7 @@ export default function DataEntryFormTab({ client }) {
             <button
               onClick={() => navigate(`/firmadmin/clients/${client.id}/data-intake`)}
               className="inline-flex items-center px-4 py-2 border border-blue-600 text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              style={{ borderRadius: "10px" }}
             >
               <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -313,7 +314,7 @@ export default function DataEntryFormTab({ client }) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
           Taxpayer Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
               Taxpayer ID
@@ -364,7 +365,7 @@ export default function DataEntryFormTab({ client }) {
         </h3>
         {personal_info ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                   Personal Info ID

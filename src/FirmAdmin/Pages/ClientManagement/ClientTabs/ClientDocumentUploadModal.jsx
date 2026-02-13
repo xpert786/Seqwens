@@ -520,32 +520,34 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={resetModal}
                 disabled={uploading}
-                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 !rounded-xl transition-all font-[BasisGrotesquePro] disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 !rounded-xl transition-all font-[BasisGrotesquePro] disabled:opacity-50 flex items-center justify-center"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpload}
                 disabled={uploading || files.length === 0}
-                className="flex-[2] relative px-6 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 !rounded-xl transition-all shadow-lg shadow-blue-500/25 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+                className="flex-[2] relative px-4 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 !rounded-xl transition-all shadow-lg shadow-blue-500/25 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
               >
-                {uploading ? (
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></div>
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    <span>Confirm & Upload {files.length} Item{files.length !== 1 ? 's' : ''}</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-center w-full h-full">
+                  {uploading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full"></div>
+                      <span className="whitespace-nowrap">Processing...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 transition-transform group-hover:-translate-y-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <span className="whitespace-nowrap">Confirm & Upload {files.length} Item{files.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                </div>
               </button>
             </div>
           </div>

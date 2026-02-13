@@ -2,7 +2,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaTable } from "react-icons/fa";
-import { UploadsIcon, CrossIcon } from "../component/icons";
+import { UploadsIcon } from "../component/icons";
+import { IoMdClose } from "react-icons/io";
 import "../../ClientOnboarding/styles/Upload_Premium.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
@@ -426,24 +427,26 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
             onHide={handleClose}
             centered
             backdrop="static"
-            size={step === 1 ? "md" : "xl"}
+            size={step === 1 ? "lg" : "xl"}
             className="upload-modal"
         >
             <Modal.Body className="p-0">
                 {/* Header Section */}
-                <div className="p-4 bg-white border-bottom">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 className="upload-heading">Upload Documents</h5>
-                            <p className="upload-subheading mb-0">Upload your tax documents securely to Seqwens</p>
-                        </div>
-                        <Button variant="link" className="p-0 text-muted" onClick={handleClose}>
-                            <CrossIcon />
-                        </Button>
+                <div className="px-6 py-3 bg-white d-flex justify-content-between align-items-center rounded-t-xl">
+                    <div>
+                        <h5 className="upload-heading mb-1" style={{ fontSize: '22px', border: 'none' }}>Upload Documents</h5>
+                        <p className="upload-subheading mb-0" style={{ fontSize: '14px', border: 'none' }}>Upload your tax documents securely to Seqwens</p>
                     </div>
+                    <button
+                        onClick={handleClose}
+                        className="text-gray-400 hover:text-red-500 transition-colors bg-transparent border-0 p-1"
+                        aria-label="Close"
+                    >
+                        <IoMdClose size={28} />
+                    </button>
                 </div>
 
-                <div className="p-4">
+                <div className={step === 1 ? "p-0" : "p-4"}>
                     {/* Error Summary Panel */}
                     {modalErrors.length > 0 && (
                         <div className="error-summary-banner">
@@ -518,7 +521,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                                 className="ms-2 text-muted"
                                                 onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
                                             >
-                                                <CrossIcon size={14} />
+                                                <IoMdClose size={18} />
                                             </span>
                                         </div>
                                     ))}

@@ -89,7 +89,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
     const active = isActive(path);
     return `flex items-center px-3 py-2 text-[10px] font-medium whitespace-nowrap text-left no-underline group ${active
       ? "bg-white/20 text-white rounded-lg font-medium pointer-events-none"
-      : "text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+      : "text-white rounded-lg transition-all duration-200"
       }`;
   };
 
@@ -359,7 +359,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
           {/* Bottom Section - Account Settings & Log Out */}
           <div className="bg-white mx-2 mb-4 rounded-lg" style={{ width: 'calc(100% - 16px)' }}>
             <div className="px-4 py-4 space-y-2">
-              <Link to="/firmadmin/account-settings" className="flex items-center px-2 py-1 text-[11px] font-medium text-gray-900 hover:bg-[#ffebd6] rounded transition-all duration-200 whitespace-nowrap">
+              <Link to="/firmadmin/account-settings" className="flex items-center px-2 py-1 text-[11px] font-medium text-gray-900 rounded transition-all duration-200 whitespace-nowrap">
                 <span className="w-5 h-5 mr-3 text-gray-600">
                   <Settings />
                 </span>
@@ -368,7 +368,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex items-center px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-[#ffebd6] rounded transition-all duration-200 w-full text-left whitespace-nowrap border-none cursor-pointer bg-transparent"
+                className="flex items-center px-2 py-1 text-[10px] font-medium text-red-500 rounded transition-all duration-200 w-full text-left whitespace-nowrap border-none cursor-pointer bg-transparent"
               >
                 <span className="w-5 h-5 mr-3 text-red-500">
                   <Out />

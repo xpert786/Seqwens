@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Browse, CrossesIcon, Folder } from "../../Components/icons";
+import { IoMdClose } from "react-icons/io";
+import { Browse, Folder } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -968,9 +969,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             </div>
             <button
               onClick={onClose}
-              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors shadow-sm"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200"
             >
-              <CrossesIcon className="w-4 h-4 text-blue-500" />
+              <IoMdClose size={24} />
             </button>
           </div>
 

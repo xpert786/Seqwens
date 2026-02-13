@@ -112,14 +112,28 @@ const ClientEngagementDetails = () => {
             )}
 
             {/* Filter Bar */}
-            <div className="mb-4">
-                <div className="flex space-x-2">
+            <div
+                className="mb-4 inline-block bg-white border border-gray-200"
+                style={{
+                    borderRadius: '12px',
+                    padding: '6px'
+                }}
+            >
+                <div
+                    className="flex"
+                    style={{
+                        gap: '8px'
+                    }}
+                >
                     {['All', 'New', 'Appointment', 'Proposal', 'Signed', 'Completed'].map(stage => (
                         <button
                             key={stage}
                             onClick={() => { setFilterStage(stage); setCurrentPage(1); }}
-                            className={`px-3 py-1.5 rounded-md text-sm font-[BasisGrotesquePro] transition-colors
-                          ${filterStage === stage
+                            style={{
+                                borderRadius: '12px'
+                            }}
+                            className={`px-3 py-1.5 text-sm font-[BasisGrotesquePro] transition-colors
+          ${filterStage === stage
                                     ? 'bg-[#00C0C6] text-white'
                                     : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                                 }`}
@@ -129,6 +143,7 @@ const ClientEngagementDetails = () => {
                     ))}
                 </div>
             </div>
+
 
             <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
                 <div className="overflow-x-auto">
@@ -208,27 +223,45 @@ const ClientEngagementDetails = () => {
                             <button
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
-                                className={`px-3 py-1 border rounded text-sm font-[BasisGrotesquePro] ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                style={{ borderRadius: '12px' }}
+                                className={`px-3 py-1 border text-sm font-[BasisGrotesquePro] 
+      ${currentPage === 1
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                                    }`}
                             >
                                 Previous
                             </button>
+
                             {[...Array(totalPages)].map((_, i) => (
                                 <button
                                     key={i + 1}
                                     onClick={() => handlePageChange(i + 1)}
-                                    className={`px-3 py-1 border rounded text-sm font-[BasisGrotesquePro] ${currentPage === i + 1 ? 'bg-[#00C0C6] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                    style={{ borderRadius: '12px' }}
+                                    className={`px-3 py-1 border text-sm font-[BasisGrotesquePro]
+        ${currentPage === i + 1
+                                            ? 'bg-[#00C0C6] text-white'
+                                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        }`}
                                 >
                                     {i + 1}
                                 </button>
                             ))}
+
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
-                                className={`px-3 py-1 border rounded text-sm font-[BasisGrotesquePro] ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                style={{ borderRadius: '12px' }}
+                                className={`px-3 py-1 border text-sm font-[BasisGrotesquePro]
+      ${currentPage === totalPages
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                                    }`}
                             >
                                 Next
                             </button>
                         </div>
+
                     </div>
                 )}
             </div>

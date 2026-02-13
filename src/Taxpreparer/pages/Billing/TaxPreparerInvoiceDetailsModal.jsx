@@ -236,10 +236,10 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
           <div className="p-6 pt-12">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+              className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors z-10"
               aria-label="Close"
             >
-              <FiX size={20} />
+              <FiX size={28} />
             </button>
             {/* Header */}
             <div className="flex justify-between items-start mb-4">

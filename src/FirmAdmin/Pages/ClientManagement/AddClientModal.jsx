@@ -806,6 +806,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                   <button
                     type="button"
                     onClick={() => setLinkConfirmation(null)}
+
                     className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium font-[BasisGrotesquePro]"
                     disabled={loading}
                   >
@@ -935,12 +936,12 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                     </p>
                   </div>
                 </div>
-
                 {/* Footer Buttons */}
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     type="button"
                     onClick={onClose}
+                    style={{ borderRadius: '10px' }}
                     className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
                   >
                     Cancel

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaPlus, FaTrash, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import DateInput from "../../../components/DateInput";
@@ -451,7 +452,9 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 rounded-t-xl z-20">
                     <h5 className="font-semibold text-xl text-gray-800">Fill Client Intake Form</h5>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors" aria-label="Close">
+                        <IoMdClose size={28} />
+                    </button>
                 </div>
                 {/* ERROR SUMMARY */}
                 {Object.keys(errors).length > 0 && (
