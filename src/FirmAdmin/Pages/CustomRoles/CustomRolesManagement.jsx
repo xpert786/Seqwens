@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { FiSearch, FiShield, FiUsers, FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
+import { FiSearch, FiShield, FiUsers, FiEdit2, FiTrash2, FiPlus, FiX, FiUserCheck, FiKey } from 'react-icons/fi';
 import { firmAdminStaffAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import TaxPreparerPermissionsModal from '../Staff/TaxPreparerPermissionsModal';
 
@@ -245,7 +245,7 @@ export default function CustomRolesManagement() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">With Permissions</p>
             <div className="w-10 h-10 rounded-lg bg-[#3AD6F2]/10 flex items-center justify-center">
-              <FiShield size={20} color="#3AD6F2" />
+              <FiUserCheck size={20} color="#3AD6F2" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>
@@ -260,7 +260,7 @@ export default function CustomRolesManagement() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Total Permissions</p>
             <div className="w-10 h-10 rounded-lg bg-[#00C0C6]/10 flex items-center justify-center">
-              <FiShield size={20} color="#00C0C6" />
+              <FiKey size={20} color="#00C0C6" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>

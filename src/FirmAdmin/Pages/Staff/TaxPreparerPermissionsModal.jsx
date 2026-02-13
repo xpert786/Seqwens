@@ -7,52 +7,52 @@ import { firmAdminStaffAPI, handleAPIError } from '../../../ClientOnboarding/uti
 const PERMISSION_CATEGORIES = {
   'Client Access': {
     codes: ['view_assigned_clients_only', 'view_all_firm_clients', 'view_unlinked_taxpayers'],
-    icon: <FiUsers className="w-5 h-5" />,
+    icon: <FiUser className="w-5 h-5 text-[#3AD6F2]" />,
     color: 'blue'
   },
   'Client Management': {
     codes: ['create_clients', 'edit_client_data'],
-    icon: <FiEdit3 className="w-5 h-5" />,
+    icon: <FiUsers className="w-5 h-5 text-[#32B582]" />,
     color: 'green'
   },
   'Document Management': {
     codes: ['upload_documents', 'download_documents', 'delete_documents'],
-    icon: <FiFileText className="w-5 h-5" />,
+    icon: <FiFileText className="w-5 h-5 text-[#3AD6F2]" />,
     color: 'purple'
   },
   'Returns & Filing': {
     codes: ['view_returns'],
-    icon: <FiBarChart2 className="w-5 h-5" />,
+    icon: <FiBarChart2 className="w-5 h-5 text-[#F56D2D]" />,
     color: 'orange'
   },
   'E-Signatures': {
     codes: ['initiate_esignature', 'track_esignature'],
-    icon: <FiEdit3 className="w-5 h-5" />,
+    icon: <FiEdit3 className="w-5 h-5 text-[#32B582]" />,
     color: 'indigo'
   },
   'Communication': {
     codes: ['send_messages', 'receive_messages'],
-    icon: <FiMessageSquare className="w-5 h-5" />,
+    icon: <FiMessageSquare className="w-5 h-5 text-[#3AD6F2]" />,
     color: 'pink'
   },
   'Billing': {
     codes: ['create_invoices'],
-    icon: <FiDollarSign className="w-5 h-5" />,
+    icon: <FiDollarSign className="w-5 h-5 text-[#F56D2D]" />,
     color: 'yellow'
   },
   'Reports & Analytics': {
     codes: ['access_analytics', 'export_reports'],
-    icon: <FiPieChart className="w-5 h-5" />,
+    icon: <FiPieChart className="w-5 h-5 text-[#3AD6F2]" />,
     color: 'teal'
   },
   'Team Management': {
     codes: ['manage_team'],
-    icon: <FiUsers className="w-5 h-5" />,
+    icon: <FiShield className="w-5 h-5 text-[#F56D2D]" />,
     color: 'red'
   },
   'Task Management': {
     codes: ['assign_tasks_to_assigned_taxpayers', 'assign_tasks_to_unassigned_taxpayers'],
-    icon: <FiGrid className="w-5 h-5" />,
+    icon: <FiGrid className="w-5 h-5 text-[#3AD6F2]" />,
     color: 'cyan'
   }
 };

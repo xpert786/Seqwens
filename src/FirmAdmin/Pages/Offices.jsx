@@ -191,13 +191,24 @@ export default function Offices() {
                 </div>
                 <button
                     onClick={() => setShowAddOfficeModal(true)}
-                    className="mt-4 sm:mt-0 px-4 py-2.5 text-white !rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2 font-semibold"
-                    style={{ backgroundColor: 'var(--firm-primary-color)' }}
+                    className="mt-4 sm:mt-0 px-4 py-2.5 text-white !rounded-lg flex items-center gap-2 font-semibold bg-[#3AD6F2] hover:bg-[#3AD6F2] transition-none"
+                    style={{
+                        backgroundColor: 'var(--firm-primary-color)'
+                    }}
                 >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ pointerEvents: 'none' }}
+                    >
                         <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    Add Office
+                    <span style={{ pointerEvents: 'none' }}>
+                        Add Office
+                    </span>
                 </button>
             </div>
             {/* Summary Cards */}
