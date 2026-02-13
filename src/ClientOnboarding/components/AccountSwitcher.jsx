@@ -276,7 +276,7 @@ export default function AccountSwitcher() {
         if (!res.success) {
           throw new Error(res.message || 'Firm switch failed');
         }
-        responseData = res.data;
+        responseData = res.data || (res.user ? res : null);
       }
 
       // Handle Successful Switch
