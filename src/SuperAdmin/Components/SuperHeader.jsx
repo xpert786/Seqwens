@@ -7,6 +7,7 @@ import { UserIconBuild } from "./icons";
 import SuperAdminNotificationPanel from "./SuperAdminNotificationPanel";
 import { superAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { useTheme } from "../Context/ThemeContext";
+import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
 import "../style/SuperHeader.css";
 
 export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen = true }) {
@@ -35,10 +36,17 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
     }
   }, []);
 
+  // WebSocket connection for real-time notifications
+  const handleUnreadCountUpdate = useCallback((count) => {
+    setUnreadCount(count);
+  }, []);
+
+  useNotificationWebSocket(true, null, handleUnreadCountUpdate);
+
   useEffect(() => {
-    // Fetch unread count on mount and periodically
+    // Fetch unread count on mount and periodically as fallback
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 60000); // Every 60 seconds (less frequent with WS)
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 

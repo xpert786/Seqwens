@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FileIcon, UpIcon } from "../../component/icons";
-import { FaFolder, FaSearch, FaDownload, FaEye, FaUpload, FaEdit, FaTrash, FaEllipsisV } from "react-icons/fa";
+import { FaFolder, FaSearch, FaDownload, FaEye, FaUpload, FaEdit, FaTrash, FaEllipsisV, FaList, FaThLarge } from "react-icons/fa";
 import TaxUploadModal from "../../upload/TaxUploadModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerDocumentsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
-import { Modal } from "react-bootstrap";
+import { Modal, Dropdown } from "react-bootstrap";
+import "./DocumentsPage.css";
 
 const SUPPORTED_PREVIEW_TYPES = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
 
@@ -176,69 +177,50 @@ export default function DocumentManager() {
       setLoading(true);
       setError(null);
 
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
+      // Use the new optimized split endpoints for better performance
+      // Fetch folders and files in parallel
+      const [foldersResult, filesResult] = await Promise.all([
+        taxPreparerDocumentsAPI.getSharedFolders({
+          folder_id: folderId,
+          search
+        }),
+        taxPreparerDocumentsAPI.getSharedFiles({
+          folder_id: folderId,
+          search,
+          show_archived: showArchived
+        })
+      ]);
 
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      if (foldersResult.success && foldersResult.data) {
+        setCurrentFolder(foldersResult.data.current_folder || null);
+        setParentFolder(foldersResult.data.parent_folder || null);
+        setBreadcrumbs(foldersResult.data.breadcrumbs || []);
+        setFolders(foldersResult.data.folders || []);
 
-      const params = new URLSearchParams();
-      if (folderId) {
-        params.append('folder_id', folderId);
-      }
-      if (search) {
-        params.append('search', search);
-      }
-      if (showArchived) {
-        params.append('show_archived', 'true');
-      }
-
-      const queryString = params.toString();
-      const url = `${API_BASE_URL}/firm/staff/documents/browse/${queryString ? `?${queryString}` : ''}`;
-
-      const config = {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      };
-
-      const response = await fetchWithCors(url, config);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        if (result.data.current_folder) {
-          setCurrentFolder(result.data.current_folder);
-        } else {
-          setCurrentFolder(null);
+        // Update statistics with folder info
+        if (foldersResult.data.statistics) {
+          setStatistics(prev => ({
+            ...prev,
+            total_folders: foldersResult.data.statistics.total_folders || 0,
+          }));
         }
-        if (result.data.parent_folder) {
-          setParentFolder(result.data.parent_folder);
-        } else {
-          setParentFolder(null);
+      }
+
+      if (filesResult.success && filesResult.data) {
+        setDocuments(filesResult.data.documents || []);
+
+        // Update statistics with file info
+        if (filesResult.data.statistics) {
+          setStatistics(prev => ({
+            ...prev,
+            total_documents: filesResult.data.statistics.total_documents || 0,
+            archived_documents: filesResult.data.statistics.archived_documents || 0
+          }));
         }
-        if (result.data.breadcrumbs && Array.isArray(result.data.breadcrumbs)) {
-          setBreadcrumbs(result.data.breadcrumbs);
-        } else {
-          setBreadcrumbs([]);
-        }
-        const foldersList = result.data.folders || [];
-        setFolders(foldersList);
-        const docs = result.data.documents || [];
-        setDocuments(docs);
-        if (result.data.statistics) {
-          setStatistics(result.data.statistics);
-        }
-      } else {
-        throw new Error(result.message || 'Failed to fetch documents');
+      }
+
+      if (!foldersResult.success && !filesResult.success) {
+        throw new Error(foldersResult.message || filesResult.message || 'Failed to fetch documents');
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -491,7 +473,7 @@ export default function DocumentManager() {
   };
 
   return (
-    <div className="lg:p-4 md:p-2 px-1">
+    <div className="documents-page-wrapper lg:p-4 md:p-2 px-1">
       {/* Upload Modal */}
       <TaxUploadModal
         show={showUpload}
@@ -682,48 +664,65 @@ export default function DocumentManager() {
         )}
 
         {/* Search and Filter */}
-        <div className="d-flex align-items-center gap-2 mb-4" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-          <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
+        <div className="file-manager-search-row mb-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
+          <div className="file-manager-search-box position-relative flex-grow-1" style={{ maxWidth: '400px' }}>
+            <FaSearch className="position-absolute text-muted" style={{ top: "12px", left: "12px", zIndex: 10 }} />
             <input
               type="text"
-              className="form-control rounded"
+              className="form-control rounded ps-5"
               placeholder="Search documents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                paddingLeft: "38px",
-                paddingRight: "12px",
-                paddingTop: "10px",
-                paddingBottom: "8px",
-                width: "100%",
-                height: "38px",
+                border: "1px solid #E8F0FF",
+                height: "42px",
                 fontSize: "14px",
-                lineHeight: "22px"
-              }}
-            />
-            <FaSearch
-              style={{
-                position: 'absolute',
-                left: '14px',
-                top: '12px',
-                zIndex: 10,
-                pointerEvents: 'none',
-                color: '#6B7280'
+                width: '100%'
               }}
             />
           </div>
-          <div className="form-check ms-auto">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="showArchived"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-            />
-            <label className="form-check-label" htmlFor="showArchived" style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-              Show Archived
-            </label>
+          <div className="d-flex align-items-center gap-3">
+            <div className="form-check d-flex align-items-center mb-0">
+              <input
+                className="form-check-input me-2"
+                type="checkbox"
+                id="showArchived"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                style={{ cursor: "pointer" }}
+              />
+              <label className="form-check-label text-muted small fw-semibold" htmlFor="showArchived" style={{ cursor: "pointer" }}>
+                Show Archived
+              </label>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="btn-group" role="group" aria-label="View Mode">
+              <button
+                type="button"
+                className={`btn border ${view === "grid" ? "active" : ""}`}
+                onClick={() => setView("grid")}
+                style={{
+                  backgroundColor: view === "grid" ? "#F3F4F6" : "white",
+                  borderColor: "#E5E7EB",
+                  padding: "6px 12px"
+                }}
+              >
+                <FaThLarge size={16} style={{ color: view === "grid" ? "#00C0C6" : "#6B7280" }} />
+              </button>
+              <button
+                type="button"
+                className={`btn border ${view === "list" ? "active" : ""}`}
+                onClick={() => setView("list")}
+                style={{
+                  backgroundColor: view === "list" ? "#F3F4F6" : "white",
+                  borderColor: "#E5E7EB",
+                  padding: "6px 12px"
+                }}
+              >
+                <FaList size={16} style={{ color: view === "list" ? "#00C0C6" : "#6B7280" }} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -801,137 +800,181 @@ export default function DocumentManager() {
             {documents.length > 0 && (
               <div>
                 <h6 className="mb-3 fw-semibold" style={{ color: "#3B4A66" }}>Documents</h6>
-                <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead>
-                      <tr>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Name</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {documents.map((doc) => {
-                        const meta = getDocumentMeta(doc);
-                        const docStatus = getDocumentStatus(doc);
-                        const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
-                        const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
-                        const typeLabel = getDocumentTypeLabel(doc);
 
-                        return (
-                          <tr
-                            key={doc.id || doc.document_id || meta.name}
-                            style={{ cursor: meta.url ? "pointer" : "default" }}
-                            onClick={() => {
-                              if (meta.url) {
-                                window.open(meta.url, "_blank", "noopener,noreferrer");
-                              }
-                            }}
-                          >
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-                              <div className="d-flex align-items-center gap-2">
-                                <FileIcon />
-                                <span>{meta.name}</span>
-                              </div>
-                            </td>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
-                            <td>
-                              <span
-                                className={`badge ${getStatusBadgeClass(docStatus)} px-2 py-1`}
-                                style={{ borderRadius: "12px", fontSize: "12px" }}
-                              >
-                                {docStatus}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="d-flex gap-2 flex-wrap align-items-center">
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-primary "
-                                  disabled={!meta.canPreview}
-                                  title={meta.canPreview ? "Preview" : "Preview not available for this file type"}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    if (meta.canPreview) {
-                                      openPreviewModal(doc, event.currentTarget);
-                                    }
-                                  }}
+                {view === "list" ? (
+                  <div className="table-responsive">
+                    <table className="table table-hover align-middle">
+                      <thead>
+                        <tr>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Name</th>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Type</th>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {documents.map((doc) => {
+                          const meta = getDocumentMeta(doc);
+                          const docStatus = getDocumentStatus(doc);
+                          const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
+                          const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
+                          const typeLabel = getDocumentTypeLabel(doc);
+
+                          return (
+                            <tr
+                              key={doc.id || doc.document_id || meta.name}
+                              style={{ cursor: meta.url ? "pointer" : "default" }}
+                              onClick={() => {
+                                if (meta.url) {
+                                  window.open(meta.url, "_blank", "noopener,noreferrer");
+                                }
+                              }}
+                            >
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                                <div className="d-flex align-items-center gap-2">
+                                  <FileIcon />
+                                  <span>{meta.name}</span>
+                                </div>
+                              </td>
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
+                              <td>
+                                <span
+                                  className={`badge ${getStatusBadgeClass(docStatus)} px-2 py-1`}
+                                  style={{ borderRadius: "12px", fontSize: "12px" }}
                                 >
-                                  <FaEye className="me-1" />
-                                  Preview
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-secondary "
-                                  disabled={!meta.url}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleDownload(doc);
-                                  }}
-                                >
-                                  <FaDownload className="me-1" />
-                                  Download
-                                </button>
-                                <div className="position-relative">
+                                  {docStatus}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="d-flex gap-2 flex-wrap align-items-center">
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary "
+                                    disabled={!meta.canPreview}
+                                    title={meta.canPreview ? "Preview" : "Preview not available for this file type"}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      if (meta.canPreview) {
+                                        openPreviewModal(doc, event.currentTarget);
+                                      }
+                                    }}
+                                  >
+                                    <FaEye className="me-1" />
+                                    Preview
+                                  </button>
                                   <button
                                     type="button"
                                     className="btn btn-outline-secondary "
+                                    disabled={!meta.url}
                                     onClick={(event) => {
                                       event.stopPropagation();
-                                      setOpenMenuIndex(openMenuIndex === doc.id ? null : doc.id);
+                                      handleDownload(doc);
                                     }}
-                                    title="More options"
                                   >
-                                    <FaEllipsisV />
+                                    <FaDownload className="me-1" />
+                                    Download
                                   </button>
-                                  {openMenuIndex === doc.id && (
-                                    <div
-                                      className="position-absolute bg-white border rounded shadow-lg"
-                                      style={{
-                                        right: 0,
-                                        top: '100%',
-                                        zIndex: 1000,
-                                        minWidth: '150px',
-                                        marginTop: '4px'
+                                  <div className="position-relative">
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-secondary "
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setOpenMenuIndex(openMenuIndex === doc.id ? null : doc.id);
                                       }}
-                                      onClick={(e) => e.stopPropagation()}
+                                      title="More options"
                                     >
-                                      <button
-                                        className="btn  w-100 text-start d-flex align-items-center gap-2"
-                                        style={{ border: 'none', borderRadius: 0 }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleRename(doc);
+                                      <FaEllipsisV />
+                                    </button>
+                                    {openMenuIndex === doc.id && (
+                                      <div
+                                        className="position-absolute bg-white border rounded shadow-lg"
+                                        style={{
+                                          right: 0,
+                                          top: '100%',
+                                          zIndex: 1000,
+                                          minWidth: '150px',
+                                          marginTop: '4px'
                                         }}
+                                        onClick={(e) => e.stopPropagation()}
                                       >
-                                        <FaEdit /> Rename
-                                      </button>
-                                      <button
-                                        className="btn  w-100 text-start d-flex align-items-center gap-2 text-danger"
-                                        style={{ border: 'none', borderRadius: 0 }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDelete(doc);
-                                        }}
-                                      >
-                                        <FaTrash /> Delete
-                                </button>
-                                    </div>
-                                  )}
+                                        <button
+                                          className="btn  w-100 text-start d-flex align-items-center gap-2"
+                                          style={{ border: 'none', borderRadius: 0 }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRename(doc);
+                                          }}
+                                        >
+                                          <FaEdit /> Rename
+                                        </button>
+                                        <button
+                                          className="btn  w-100 text-start d-flex align-items-center gap-2 text-danger"
+                                          style={{ border: 'none', borderRadius: 0 }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(doc);
+                                          }}
+                                        >
+                                          <FaTrash /> Delete
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="row g-3">
+                    {documents.map((doc) => {
+                      const meta = getDocumentMeta(doc);
+                      const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
+                      const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
+
+                      return (
+                        <div key={doc.id || doc.document_id} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                          <div className="card h-100 border-0 shadow-sm document-card" style={{ transition: "all 0.2s ease" }}>
+                            <div className="card-body p-3 d-flex flex-column">
+                              <div className="d-flex justify-content-between align-items-start mb-3">
+                                <div className="p-2 rounded-3 bg-light text-primary">
+                                  <FileIcon />
+                                </div>
+                                <Dropdown onClick={(e) => e.stopPropagation()}>
+                                  <Dropdown.Toggle variant="white" size="sm" className="p-0 text-muted no-caret border-0">
+                                    <FaEllipsisV />
+                                  </Dropdown.Toggle>
+                                  <Dropdown.Menu align="end">
+                                    <Dropdown.Item onClick={() => openPreviewModal(doc)} disabled={!meta.canPreview}><FaEye className="me-2" /> Preview</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleDownload(doc)} disabled={!meta.url}><FaDownload className="me-2" /> Download</Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => handleRename(doc)}><FaEdit className="me-2" /> Rename</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleDelete(doc)} className="text-danger"><FaTrash className="me-2" /> Delete</Dropdown.Item>
+                                  </Dropdown.Menu>
+                                </Dropdown>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                              <h6 className="card-title text-truncate fw-semibold mb-1 small text-dark" title={meta.name}>
+                                {meta.name}
+                              </h6>
+                              <div className="mt-auto d-flex justify-content-between align-items-center text-muted" style={{ fontSize: "11px" }}>
+                                <span>{sizeLabel}</span>
+                                <span>{updatedAt}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

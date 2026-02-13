@@ -38,6 +38,7 @@ import { navigateToLogin, getPathWithPrefix } from "../../ClientOnboarding/utils
 import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
 import { useSubscriptionStatus } from "../Context/SubscriptionStatusContext";
+import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
 
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidth = '280px' }) {
     const { logoUrl } = useFirmPortalColors();
@@ -125,11 +126,6 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
-        // Don't poll if we just had a manual update (prevents reverting to old count)
-        if (Date.now() - lastActionTimeRef.current < 5000) {
-            return;
-        }
-
         try {
             const response = await firmAdminNotificationAPI.getUnreadCount();
             if (response.success && response.data) {
@@ -139,6 +135,13 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
             console.error("Error fetching unread count:", err);
         }
     }, []);
+
+    // WebSocket connection for real-time notifications
+    const handleUnreadCountUpdate = useCallback((count) => {
+        setUnreadNotifications(count);
+    }, []);
+
+    useNotificationWebSocket(true, null, handleUnreadCountUpdate);
 
     // Fetch profile data from account settings
     const fetchProfileData = useCallback(async () => {

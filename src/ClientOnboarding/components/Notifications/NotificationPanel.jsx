@@ -302,14 +302,6 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   }, [fetchUnreadCount]);
 
   const handleUnreadCountUpdate = useCallback((count) => {
-    const now = Date.now();
-    // Ignore updates if they occur within 3 seconds of a manual action
-    // and the count is different from our local state, to prevent revert flickers
-    if (now - lastActionTimeRef.current < 3000) {
-      console.log("Ignoring potentially stale WebSocket unread count update:", count, "Current local:", localUnreadCountRef.current);
-      return;
-    }
-
     setUnreadCount(count);
     if (typeof onChange === "function") {
       onChange({
@@ -437,6 +429,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
   const markAllRead = useCallback(async () => {
     try {
+      lastActionTimeRef.current = Date.now();
       const response = await notificationAPI.markAllAsRead();
       if (response.success) {
         const updatedNotifications = notifications.map((notification) => ({

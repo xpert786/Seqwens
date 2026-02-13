@@ -8,6 +8,7 @@ import { navigateToLogin } from "../utils/urlUtils";
 
 export default function SetNewPassword() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -43,6 +44,7 @@ export default function SetNewPassword() {
   }, [navigate, location]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   const handleResetPassword = async () => {
     // Clear previous errors
@@ -134,7 +136,7 @@ export default function SetNewPassword() {
               />
               <button
                 type="button"
-                className="toggle-visibility-btn mt-2"
+                className="toggle-visibility-btn"
                 onClick={togglePasswordVisibility}
               >
                 <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
@@ -171,21 +173,28 @@ export default function SetNewPassword() {
           </div>
 
           <label className="password-label">Confirm Password</label>
-          <input
-            type="password"
-            placeholder="Enter your password"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              if (errors.confirmPassword) {
-                setErrors(prev => ({ ...prev, confirmPassword: '' }));
-              }
-            }}
-            className={`form-control confirm-password-input ${errors.confirmPassword ? 'is-invalid' : ''}`}
-          />
-          {errors.confirmPassword && (
-            <div className="invalid-feedback">{errors.confirmPassword}</div>
-          )}
+          <div className="input-group custom-input-group">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                if (errors.confirmPassword) {
+                  setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                }
+              }}
+              className={`form-control custom-input ${errors.confirmPassword ? "is-invalid" : ""}`}
+            />
+            <button
+              type="button"
+              className="toggle-visibility-btn"
+              onClick={toggleConfirmPasswordVisibility}
+            >
+              <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+            </button>
+          </div>
+          {errors.confirmPassword && <div className="invalid-feedback d-block">{errors.confirmPassword}</div>}
 
           <button
             className="reset-button"

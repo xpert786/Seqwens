@@ -17,6 +17,7 @@ const createDefaultFormState = () => ({
         maintenance_mode: false,
         maintenance_message: "",
         support_email: "",
+        favicon: null,
     },
     notification_settings: {
         email_notifications_enabled: false,
@@ -35,6 +36,8 @@ export default function Profile() {
     const [formState, setFormState] = useState(createDefaultFormState);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [faviconFile, setFaviconFile] = useState(null);
+    const [faviconPreview, setFaviconPreview] = useState(null);
 
     useEffect(() => {
         const fetchSystemSettings = async () => {
@@ -135,13 +138,40 @@ export default function Profile() {
                     formState.platform_configuration.support_email;
             }
 
-            const response = await superAdminAPI.updateSystemSettings(payload);
+            let apiPayload = payload;
+            let headers = {};
+
+            // If we have a favicon file, use FormData
+            if (faviconFile) {
+                const formData = new FormData();
+                formData.append('favicon', faviconFile);
+                formData.append('json_data', JSON.stringify(payload));
+                apiPayload = formData;
+                headers = { 'Content-Type': 'multipart/form-data' };
+            }
+
+            const response = await superAdminAPI.updateSystemSettings(apiPayload, headers);
             const responseData = response?.data || {};
 
             toast.success(
                 response?.message || "System settings updated successfully.",
                 superToastOptions
             );
+
+            // Update Favicon Immediately
+            const newFavicon = responseData?.platform_configuration?.favicon;
+            if (newFavicon) {
+                let link = document.querySelector("link[rel~='icon']");
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.getElementsByTagName('head')[0].appendChild(link);
+                }
+                link.href = newFavicon;
+                // Clear local state
+                setFaviconFile(null);
+                setFaviconPreview(null);
+            }
 
             if (response && (response?.success !== false)) {
                 setFormState((prev) => ({
@@ -265,6 +295,56 @@ export default function Profile() {
                                     color: "#495057",
                                 }}
                             />
+                        </div>
+
+                        {/* Favicon Upload */}
+                        <div>
+                            <label
+                                className="form-label"
+                                style={{
+                                    color: "#3B4A66",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    fontFamily: "BasisGrotesquePro",
+                                }}
+                            >
+                                Platform Favicon
+                            </label>
+                            <div className="flex items-center gap-4">
+                                {(faviconPreview || formState.platform_configuration.favicon) && (
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+                                        <img
+                                            src={faviconPreview || formState.platform_configuration.favicon}
+                                            alt="Favicon"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/x-icon,image/png,image/jpeg"
+                                    className="form-control w-full"
+                                    onChange={(event) => {
+                                        if (event.target.files && event.target.files[0]) {
+                                            const file = event.target.files[0];
+                                            setFaviconFile(file);
+                                            setFaviconPreview(URL.createObjectURL(file));
+                                        }
+                                    }}
+                                    disabled={isLoading || isSaving}
+                                    style={{
+                                        backgroundColor: "white",
+                                        border: "1px solid #E8F0FF",
+                                        borderRadius: "6px",
+                                        padding: "8px 12px",
+                                        fontSize: "14px",
+                                        color: "#495057",
+                                    }}
+                                />
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                                Recommended size: 32x32px or 64x64px. Formats: .ico, .png
+                            </p>
                         </div>
 
                         <div>

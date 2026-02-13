@@ -340,7 +340,7 @@ export default function TaxPreparerPermissionsModal({
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-[#3AD6F2]/10 border border-[#3AD6F2]/30 !rounded-lg">
               <FiInfo size={16} className="text-[#3AD6F2]" />
-              <span className="text-xs text-[#3AD6F2] font-[BasisGrotesquePro] font-medium">
+              <span className="text-xs font-[BasisGrotesquePro] font-medium">
                 Changes apply only to this preparer
               </span>
             </div>

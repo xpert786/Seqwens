@@ -6,10 +6,35 @@ import { ModalProvider, useModal } from '../Context/ModalContext'
 import { ThemeProvider } from '../Context/ThemeContext'
 import '../style/ThemeExtras.css'
 import ForcedPasswordChangeModal from '../../components/ForcedPasswordChangeModal'
+import { superAdminAPI } from '../utils/superAdminAPI'
 
 function SuperDashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(280);
+
+  // Fetch and set favicon
+  useEffect(() => {
+    const fetchFavicon = async () => {
+      try {
+        const response = await superAdminAPI.getSystemSettings();
+        if (response?.success && response?.data?.platform_configuration?.favicon) {
+          const faviconUrl = response.data.platform_configuration.favicon;
+
+          let link = document.querySelector("link[rel~='icon']");
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+          }
+          link.href = faviconUrl;
+        }
+      } catch (error) {
+        console.error('Failed to fetch system settings for favicon:', error);
+      }
+    };
+
+    fetchFavicon();
+  }, []);
 
   const getSidebarWidth = useCallback(() => {
     if (typeof document === 'undefined') return 0;

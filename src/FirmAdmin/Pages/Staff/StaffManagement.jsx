@@ -1905,6 +1905,7 @@ export default function StaffManagement() {
               <button
                 type="button"
                 className="btn btn-secondary"
+                style={{ textColor: "white" }}
                 onClick={closeInviteActionsModal}
               >
                 Done

@@ -3,10 +3,11 @@ import React, { useRef, useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaTable } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../component/icons";
-import "../../ClientOnboarding/styles/Upload_Premium.css";
+import "./TaxUploadModal.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../ClientOnboarding/utils/userUtils";
+import { taxPreparerDocumentsAPI } from "../../ClientOnboarding/utils/apiUtils";
 import * as XLSX from "xlsx";
 
 // --- Constants ---
@@ -133,24 +134,14 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     const fetchRootFolders = async () => {
         try {
             setLoadingFolders(true);
-            const token = getAccessToken();
-            const API_BASE_URL = getApiBaseUrl();
 
-            // Use the staff browse endpoint
-            let url = `${API_BASE_URL}/firm/staff/documents/browse/`;
-            if (clientId) {
-                url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}`;
-            }
-
-            const response = await fetchWithCors(url, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch folders');
-            const result = await response.json();
+            // Fetch folders based on context (specific client or general shared documents)
+            const result = clientId
+                ? await taxPreparerDocumentsAPI.getClientFolders({ client_id: clientId, folder_id: null })
+                : await taxPreparerDocumentsAPI.getSharedFolders({ folder_id: null });
 
             if (result.success) {
-                const data = result.data?.subfolders || result.data?.folders || result.subfolders || result.data || [];
+                const data = result.data?.folders || [];
                 const formatted = data.map(f => ({
                     id: f.id,
                     name: f.title || f.name,
@@ -168,20 +159,14 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     };
 
     const fetchSubfolders = async (parentId) => {
-        const token = getAccessToken();
-        const API_BASE_URL = getApiBaseUrl();
         try {
-            let url = `${API_BASE_URL}/firm/staff/documents/browse/?folder_id=${parentId}`;
-            if (clientId) {
-                url = `${API_BASE_URL}/firm/staff/folders/browse/?client_id=${clientId}&folder_id=${parentId}`;
-            }
+            // Fetch folders based on context
+            const result = clientId
+                ? await taxPreparerDocumentsAPI.getClientFolders({ client_id: clientId, folder_id: parentId })
+                : await taxPreparerDocumentsAPI.getSharedFolders({ folder_id: parentId });
 
-            const response = await fetchWithCors(url, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const result = await response.json();
             if (result.success) {
-                const data = result.data?.subfolders || result.subfolders || result.data || [];
+                const data = result.data?.folders || [];
                 return data.map(f => ({
                     id: f.id,
                     name: f.title || f.name,

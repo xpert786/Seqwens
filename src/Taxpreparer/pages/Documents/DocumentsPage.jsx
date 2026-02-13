@@ -655,69 +655,51 @@ export default function DocumentsPage() {
       setFileManagerLoading(true);
       setFileManagerError(null);
 
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
+      // Use the new optimized split endpoints for better performance
+      // Fetch folders and files in parallel
+      const [foldersResult, filesResult] = await Promise.all([
+        taxPreparerDocumentsAPI.getSharedFolders({
+          folder_id: folderId,
+          search
+        }),
+        taxPreparerDocumentsAPI.getSharedFiles({
+          folder_id: folderId,
+          search,
+          show_archived: fileManagerShowArchived
+        })
+      ]);
 
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      if (foldersResult.success && foldersResult.data) {
+        setFileManagerCurrentFolder(foldersResult.data.current_folder || null);
+        setFileManagerParentFolder(foldersResult.data.parent_folder || null);
+        setFileManagerBreadcrumbs(foldersResult.data.breadcrumbs || []);
+        setFileManagerFolders(foldersResult.data.folders || []);
 
-      const params = new URLSearchParams();
-      if (folderId) {
-        params.append('folder_id', folderId);
-      }
-      if (search) {
-        params.append('search', search);
-      }
-      if (fileManagerShowArchived) {
-        params.append('show_archived', 'true');
-      }
-
-      const queryString = params.toString();
-      const url = `${API_BASE_URL}/firm/staff/documents/browse/${queryString ? `?${queryString}` : ''}`;
-
-      const config = {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      };
-
-      const response = await fetchWithCors(url, config);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        if (result.data.current_folder) {
-          setFileManagerCurrentFolder(result.data.current_folder);
-        } else {
-          setFileManagerCurrentFolder(null);
+        // Update statistics with folder info
+        if (foldersResult.data.statistics) {
+          setFileManagerStatistics(prev => ({
+            ...prev,
+            total_folders: foldersResult.data.statistics.total_folders || 0,
+            is_root: foldersResult.data.statistics.is_root
+          }));
         }
-        if (result.data.parent_folder) {
-          setFileManagerParentFolder(result.data.parent_folder);
-        } else {
-          setFileManagerParentFolder(null);
+      }
+
+      if (filesResult.success && filesResult.data) {
+        setFileManagerDocuments(filesResult.data.documents || []);
+
+        // Update statistics with file info
+        if (filesResult.data.statistics) {
+          setFileManagerStatistics(prev => ({
+            ...prev,
+            total_documents: filesResult.data.statistics.total_documents || 0,
+            archived_documents: filesResult.data.statistics.archived_documents || 0
+          }));
         }
-        if (result.data.breadcrumbs && Array.isArray(result.data.breadcrumbs)) {
-          setFileManagerBreadcrumbs(result.data.breadcrumbs);
-        } else {
-          setFileManagerBreadcrumbs([]);
-        }
-        const foldersList = result.data.folders || [];
-        setFileManagerFolders(foldersList);
-        const docs = result.data.documents || [];
-        setFileManagerDocuments(docs);
-        if (result.data.statistics) {
-          setFileManagerStatistics(result.data.statistics);
-        }
-      } else {
-        throw new Error(result.message || 'Failed to fetch documents');
+      }
+
+      if (!foldersResult.success && !filesResult.success) {
+        throw new Error(foldersResult.message || filesResult.message || 'Failed to fetch documents');
       }
     } catch (error) {
       console.error('Error fetching file manager documents:', error);

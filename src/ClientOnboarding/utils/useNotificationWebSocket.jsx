@@ -44,17 +44,16 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
       // Try to extract host and port from API base URL
       try {
         const apiUrl = new URL(apiBaseUrl);
+        const protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = apiUrl.hostname;
+        const port = apiUrl.port;
 
-        // Extract WebSocket server URL from API base URL
-        // If API URL is http://168.231.121.7/seqwens/api, WebSocket should be ws://168.231.121.7
-        if (host === '168.231.121.7') {
-          wsServerUrl = 'ws://168.231.121.7:8000';
+        // If it's a known IP or localhost, prioritize port 8000 for development
+        if (host === '168.231.121.7' || host === 'localhost' || host === '127.0.0.1') {
+          wsServerUrl = `${protocol}//${host}:8000`;
         } else {
-          // Use the same host for WebSocket
-          wsServerUrl = `ws://${host}`;
-          // If the host is not localhost, it might need 8000 as well, 
-          // but we'll stick to the explicit IP fix for now as it matches the known configuration.
+          // Use the same host and port as API, or default to protocol + host
+          wsServerUrl = `${protocol}//${host}${port ? `:${port}` : ''}`;
         }
       } catch (urlError) {
         // If URL parsing fails, use default
@@ -106,10 +105,18 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
           console.log('🔔 WebSocket notification message received:', data);
 
           switch (data.type) {
+            case 'connection':
             case 'connection_established':
               // Connection established message
               console.log('✅ Notification WebSocket connection confirmed');
-              console.log('Connected as user:', data.user_name || 'Unknown', `(${data.user_id || 'Unknown'})`);
+              if (data.user_id) {
+                console.log('Connected as user:', data.user_name || 'Unknown', `(${data.user_id})`);
+              }
+
+              // Handle initial unread count if provided in connection message
+              if (data.unread_count !== undefined && typeof onUnreadCountUpdate === 'function') {
+                onUnreadCountUpdate(data.unread_count);
+              }
               break;
 
             case 'notification':

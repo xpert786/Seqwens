@@ -1562,7 +1562,6 @@ const Messages = () => {
                     <option value="">All Users</option>
                     <option value="client">Clients Only</option>
                     <option value="staff">Staff Only</option>
-                    <option value="admin">Admins Only</option>
                   </select>
                 </div>
 

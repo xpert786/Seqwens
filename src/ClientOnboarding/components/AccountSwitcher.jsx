@@ -64,46 +64,46 @@ export default function AccountSwitcher() {
       const rawRole = firm.membership?.role || firm.role || 'team_member';
       const role = normalizeRole(rawRole);
       const status = normalizeStatus(firm.membership?.status || firm.status);
-      const firmId = parseInt(firm.membership?.firm_id || firm.firm_id || firm.id);
+      const firmId = parseInt(firm.membership?.firm_id || firm.firm_id || firm.firm?.id || firm.id);
       const firmName = firm.firm?.name || firm.name || 'Firm';
-      
+
       // Determine if this is the current membership
       // Prioritize strict client-side validation if we have context (to fix multi-tick bugs)
       let isCurrent = false;
 
       // 1. Strict validation: Matches Firm ID AND Active Role Type
       if (currentFirmId && activeUserType) {
-         const isSameFirm = firmId === parseInt(currentFirmId);
-         let isRoleMatch = false;
+        const isSameFirm = firmId === parseInt(currentFirmId);
+        let isRoleMatch = false;
 
-         // Map role to userType for comparison
-         if (activeUserType === 'client') {
-            isRoleMatch = ['client', 'taxpayer'].includes(role);
-         } else if (activeUserType === 'tax_preparer') {
-            isRoleMatch = ['team_member', 'teammember', 'tax_preparer', 'taxpreparer', 'staff'].includes(role);
-         } else if (activeUserType === 'admin') {
-            isRoleMatch = ['firm_admin', 'admin', 'firm', 'firmadmin'].includes(role);
-         } else if (activeUserType === 'super_admin') {
-            isRoleMatch = ['super_admin'].includes(role);
-         }
+        // Map role to userType for comparison
+        if (activeUserType === 'client') {
+          isRoleMatch = ['client', 'taxpayer'].includes(role);
+        } else if (activeUserType === 'tax_preparer') {
+          isRoleMatch = ['team_member', 'teammember', 'tax_preparer', 'taxpreparer', 'staff'].includes(role);
+        } else if (activeUserType === 'admin') {
+          isRoleMatch = ['firm_admin', 'admin', 'firm', 'firmadmin'].includes(role);
+        } else if (activeUserType === 'super_admin') {
+          isRoleMatch = ['super_admin'].includes(role);
+        }
 
-         // Only fallback to currentRole string check if it doesn't conflict with userType awareness
-         if (!isRoleMatch && currentRole) {
-            // Extra safety: only allow if userType wasn't decisive
-             isRoleMatch = role === normalizeRole(currentRole);
-         }
+        // Only fallback to currentRole string check if it doesn't conflict with userType awareness
+        if (!isRoleMatch && currentRole) {
+          // Extra safety: only allow if userType wasn't decisive
+          isRoleMatch = role === normalizeRole(currentRole);
+        }
 
-         isCurrent = isSameFirm && isRoleMatch;
+        isCurrent = isSameFirm && isRoleMatch;
       }
-      
+
       // 2. Fallback to API flag if strict validation wasn't possible (e.g. no userType yet)
       else if (firm.is_current === true) {
-         isCurrent = true;
+        isCurrent = true;
       }
-      
+
       // 3. Last resort fallback
       else if (currentFirmId) {
-         isCurrent = firmId === parseInt(currentFirmId) && (!currentRole || role === normalizeRole(currentRole));
+        isCurrent = firmId === parseInt(currentFirmId) && (!currentRole || role === normalizeRole(currentRole));
       }
 
       return {
@@ -114,7 +114,7 @@ export default function AccountSwitcher() {
         },
         firm_id: firmId,
         role: role,
-        user_type: firm.user_type, 
+        user_type: firm.user_type,
         status: status,
         office_scope: firm.membership?.office_location_scope?.offices || [],
         offices: firm.membership?.office_location_scope?.offices || [],
@@ -153,15 +153,15 @@ export default function AccountSwitcher() {
         const firmsDataStr = storage?.getItem('firmsData');
         let initialMemberships = [];
         if (firmsDataStr) {
-           try {
-             const storedFirms = JSON.parse(firmsDataStr);
-             initialMemberships = processMemberships(storedFirms, currentFirmId, currentRole, userType);
-           } catch(e) {}
+          try {
+            const storedFirms = JSON.parse(firmsDataStr);
+            initialMemberships = processMemberships(storedFirms, currentFirmId, currentRole, userType);
+          } catch (e) { }
         }
 
         // 2. Also check userData.firms (fallback)
         if (initialMemberships.length === 0 && userData?.firms) {
-           initialMemberships = processMemberships(userData.firms, currentFirmId, currentRole, userType);
+          initialMemberships = processMemberships(userData.firms, currentFirmId, currentRole, userType);
         }
 
         if (mounted && initialMemberships.length > 0) {
@@ -174,28 +174,28 @@ export default function AccountSwitcher() {
         try {
           const response = await userAPI.getMemberships();
           if (mounted && response.success && Array.isArray(response.data)) {
-             const freshMemberships = processMemberships(response.data, currentFirmId, currentRole, userType);
-             
-             // Sort: Active first, then by name
-             freshMemberships.sort((a, b) => {
-               if (a.is_current) return -1;
-               if (b.is_current) return 1;
-               return a.firm.name.localeCompare(b.firm.name);
-             });
+            const freshMemberships = processMemberships(response.data, currentFirmId, currentRole, userType);
 
-             setMemberships(freshMemberships);
-             
-             // Update current
-             const current = freshMemberships.find(m => m.is_current);
-             if (current) {
-               setCurrentMembership(current);
-               // Update storage with fresh data just in case
-               if (storage) {
-                 storage.setItem('firmsData', JSON.stringify(response.data));
-               }
-             } else if (initialMemberships.length === 0 && freshMemberships.length > 0) {
-               setCurrentMembership(freshMemberships[0]);
-             }
+            // Sort: Active first, then by name
+            freshMemberships.sort((a, b) => {
+              if (a.is_current) return -1;
+              if (b.is_current) return 1;
+              return a.firm.name.localeCompare(b.firm.name);
+            });
+
+            setMemberships(freshMemberships);
+
+            // Update current
+            const current = freshMemberships.find(m => m.is_current);
+            if (current) {
+              setCurrentMembership(current);
+              // Update storage with fresh data just in case
+              if (storage) {
+                storage.setItem('firmsData', JSON.stringify(response.data));
+              }
+            } else if (initialMemberships.length === 0 && freshMemberships.length > 0) {
+              setCurrentMembership(freshMemberships[0]);
+            }
           }
         } catch (apiError) {
           // Ignore API errors in background fetch
@@ -216,11 +216,11 @@ export default function AccountSwitcher() {
 
   const handleSwitch = async (targetMembership) => {
     if (switching) return;
-    
+
     // Don't switch if already current
     if (targetMembership.is_current) {
-       setShowDropdown(false);
-       return;
+      setShowDropdown(false);
+      return;
     }
 
     try {
@@ -232,117 +232,117 @@ export default function AccountSwitcher() {
 
       // Check if we are switching role within SAME firm
       if (currentMembership && targetMembership.firm.id === currentMembership.firm.id && targetMembership.role !== currentMembership.role) {
-         // Same firm, different role -> Use Switch Role API
-         console.log('AccountSwitcher: Switching Role within same firm', targetMembership.role);
-         
-         const roleMapping = {
-            'team_member': 'tax_preparer',
-            'teammember': 'tax_preparer',
-            'staff': 'tax_preparer',
-            'taxpayer': 'client',
-            'firm_admin': 'firm',
-            'firmadmin': 'firm',
-            'admin': 'firm',
-            'client': 'client'
-         };
-         
-         const apiRole = roleMapping[targetMembership.role] || targetMembership.role;
-         
-         const res = await fetch(`${apiBaseUrl}/user/switch-role/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ role: apiRole })
-         });
-         
-         const json = await res.json();
-         if (!res.ok || !json.success) {
-            throw new Error(json.message || 'Role switch failed');
-         }
-         
-         // Standardize response to look like switchFirm response
-         responseData = {
-            user: json.user,
-            tokens: { access: json.access_token, refresh: json.refresh_token },
-            firms: json.firms
-         };
+        // Same firm, different role -> Use Switch Role API
+        console.log('AccountSwitcher: Switching Role within same firm', targetMembership.role);
+
+        const roleMapping = {
+          'team_member': 'tax_preparer',
+          'teammember': 'tax_preparer',
+          'staff': 'tax_preparer',
+          'taxpayer': 'client',
+          'firm_admin': 'firm',
+          'firmadmin': 'firm',
+          'admin': 'firm',
+          'client': 'client'
+        };
+
+        const apiRole = roleMapping[targetMembership.role] || targetMembership.role;
+
+        const res = await fetch(`${apiBaseUrl}/user/switch-role/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ role: apiRole })
+        });
+
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || 'Role switch failed');
+        }
+
+        // Standardize response to look like switchFirm response
+        responseData = {
+          user: json.user,
+          tokens: { access: json.access_token, refresh: json.refresh_token },
+          firms: json.firms
+        };
 
       } else {
-         // Different firm (or fallback) -> Use Switch Firm API
-         console.log('AccountSwitcher: Switching Firm', targetMembership.firm.id);
-         const res = await userAPI.switchFirm(targetMembership.firm.id);
-         if (!res.success) {
-            throw new Error(res.message || 'Firm switch failed');
-         }
-         responseData = res.data;
+        // Different firm (or fallback) -> Use Switch Firm API
+        console.log('AccountSwitcher: Switching Firm', targetMembership.firm.id, targetMembership.role);
+        const res = await userAPI.switchFirm(targetMembership.firm.id, targetMembership.role);
+        if (!res.success) {
+          throw new Error(res.message || 'Firm switch failed');
+        }
+        responseData = res.data;
       }
 
       // Handle Successful Switch
       if (responseData) {
-         // 1. Update Tokens
-         if (responseData.tokens) {
-            setTokens(responseData.tokens.access, responseData.tokens.refresh, true);
-         }
+        // 1. Update Tokens
+        if (responseData.tokens) {
+          setTokens(responseData.tokens.access, responseData.tokens.refresh, true);
+        }
 
-         // 2. Get Fresh Storage Reference (Critical step!)
-         const storage = getStorage();
-         
-         // 3. Update User Data
-         if (responseData.user && storage) {
-            storage.setItem('userData', JSON.stringify(responseData.user));
-            storage.setItem('isLoggedIn', 'true');
-         }
-         
-         // 4. Update Firms Data
-         if (responseData.firms && Array.isArray(responseData.firms) && storage) {
-            // We store the raw response. is_current will be recalculated on next load.
-            // But we can help it by mapping active flag if needed.
-            // Actually, let's just store raw data. processMemberships handles the rest.
-            storage.setItem('firmsData', JSON.stringify(responseData.firms));
-         }
+        // 2. Get Fresh Storage Reference (Critical step!)
+        const storage = getStorage();
 
-         // 5. Determine Redirect Path & User Type
-         const role = normalizeRole(targetMembership.role);
-         let redirectPath = '/dashboard';
-         let userType = 'client';
+        // 3. Update User Data
+        if (responseData.user && storage) {
+          storage.setItem('userData', JSON.stringify(responseData.user));
+          storage.setItem('isLoggedIn', 'true');
+        }
 
-         if (['firm_admin', 'admin', 'firm', 'firmadmin'].includes(role)) {
-            redirectPath = '/firmadmin';
-            userType = 'admin';
-         } else if (['team_member', 'teammember', 'tax_preparer', 'taxpreparer', 'staff'].includes(role)) {
-            redirectPath = '/taxdashboard';
-            userType = 'tax_preparer';
-         } else if (['client', 'taxpayer'].includes(role)) {
-            redirectPath = '/dashboard';
-            userType = 'client';
-         } else if (['super_admin'].includes(role)) {
-            redirectPath = '/superadmin';
-            userType = 'super_admin'; 
-         }
+        // 4. Update Firms Data
+        if (responseData.firms && Array.isArray(responseData.firms) && storage) {
+          // We store the raw response. is_current will be recalculated on next load.
+          // But we can help it by mapping active flag if needed.
+          // Actually, let's just store raw data. processMemberships handles the rest.
+          storage.setItem('firmsData', JSON.stringify(responseData.firms));
+        }
 
-         // 6. Set User Type (CRITICAL for Route Protection)
-         if (storage) {
-            storage.setItem('userType', userType);
-         }
+        // 5. Determine Redirect Path & User Type
+        const role = normalizeRole(targetMembership.role);
+        let redirectPath = '/dashboard';
+        let userType = 'client';
 
-         // 7. Feedback & Redirect
-         const displayRole = ROLE_DISPLAY_NAMES[role] || role;
-         toast.success(`Switched to ${targetMembership.firm.name} (${displayRole})`);
-         setShowDropdown(false);
+        if (['firm_admin', 'admin', 'firm', 'firmadmin'].includes(role)) {
+          redirectPath = '/firmadmin';
+          userType = 'admin';
+        } else if (['team_member', 'teammember', 'tax_preparer', 'taxpreparer', 'staff'].includes(role)) {
+          redirectPath = '/taxdashboard';
+          userType = 'tax_preparer';
+        } else if (['client', 'taxpayer'].includes(role)) {
+          redirectPath = '/dashboard';
+          userType = 'client';
+        } else if (['super_admin'].includes(role)) {
+          redirectPath = '/superadmin';
+          userType = 'super_admin';
+        }
 
-         // Force Reload to clear state/cache and ensure context update
-         setTimeout(() => {
-            window.location.href = getPathWithPrefix(redirectPath);
-         }, 500);
+        // 6. Set User Type (CRITICAL for Route Protection)
+        if (storage) {
+          storage.setItem('userType', userType);
+        }
+
+        // 7. Feedback & Redirect
+        const displayRole = ROLE_DISPLAY_NAMES[role] || role;
+        toast.success(`Switched to ${targetMembership.firm.name} (${displayRole})`);
+        setShowDropdown(false);
+
+        // Force Reload to clear state/cache and ensure context update
+        setTimeout(() => {
+          window.location.href = getPathWithPrefix(redirectPath);
+        }, 500);
       }
 
     } catch (error) {
-       console.error("Switch failed", error);
-       toast.error(handleAPIError(error) || 'Failed to switch account');
+      console.error("Switch failed", error);
+      toast.error(handleAPIError(error) || 'Failed to switch account');
     } finally {
-       setSwitching(false);
+      setSwitching(false);
     }
   };
 
@@ -365,7 +365,7 @@ export default function AccountSwitcher() {
   // Use explicit mapping to ensure "Team Member" -> "Tax Preparer" visually
   const normalizedCurrentRole = normalizeRole(currentMembership.role);
   const currentRoleName = ROLE_DISPLAY_NAMES[normalizedCurrentRole] || 'Member';
-  
+
   return (
     <div className="position-relative account-switcher-container">
       <button
@@ -399,7 +399,7 @@ export default function AccountSwitcher() {
               const roleCode = normalizeRole(membership.role);
               const roleName = ROLE_DISPLAY_NAMES[roleCode] || membership.role;
               const key = `${membership.firm.id}-${membership.role}`;
-              
+
               return (
                 <div
                   key={key}
@@ -413,12 +413,12 @@ export default function AccountSwitcher() {
                       <div className="account-switcher-item-meta">
                         <span className="account-switcher-item-role">{roleName}</span>
                         <span className="account-switcher-separator">•</span>
-                           <span
-                              className="account-switcher-item-status"
-                              style={{ color: STATUS_COLORS[membership.status] || STATUS_COLORS.active }}
-                           >
-                              {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
-                           </span>
+                        <span
+                          className="account-switcher-item-status"
+                          style={{ color: STATUS_COLORS[membership.status] || STATUS_COLORS.active }}
+                        >
+                          {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
+                        </span>
                       </div>
                     </div>
                   </div>

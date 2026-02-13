@@ -4,7 +4,7 @@ import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendi
 import { FaChevronDown, FaChevronRight, FaChevronLeft, FaFolder, FaSearch, FaUpload, FaTimes, FaCheckCircle, FaEye, FaCheck, FaRedo, FaFilePdf } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError, taxPreparerClientAPI, taskDetailAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI, taskDetailAPI, taxPreparerDocumentsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import "../../styles/taskpage.css";
 // Custom checkbox styles
@@ -664,37 +664,15 @@ export default function TasksPage() {
 
       try {
         setLoadingFolders(true);
-        const API_BASE_URL = getApiBaseUrl();
-        const token = getAccessToken();
 
-        if (!token) {
-          console.error('No authentication token found');
-          return;
-        }
-
-        const config = {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        };
-
-        const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/`, config);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
+        // Use the new optimized folder endpoint
+        const result = await taxPreparerDocumentsAPI.getSharedFolders({
+          folder_id: null
+        });
 
         if (result.success && result.data) {
           // New API structure: result.data.folders
-          let rootFolders = [];
-
-          if (result.data.folders && Array.isArray(result.data.folders)) {
-            rootFolders = result.data.folders;
-          }
+          let rootFolders = result.data.folders || [];
 
           const foldersTree = rootFolders.map(folder => ({
             id: folder.id,
@@ -723,28 +701,10 @@ export default function TasksPage() {
   // Fetch subfolders for a specific folder
   const fetchSubfolders = async (folderId) => {
     try {
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-
-      if (!token) {
-        return [];
-      }
-
-      const config = {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      };
-
-      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/?folder_id=${folderId}`, config);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      // Use the new optimized folder endpoint
+      const result = await taxPreparerDocumentsAPI.getSharedFolders({
+        folder_id: folderId
+      });
 
       if (result.success && result.data && result.data.folders) {
         return result.data.folders.map(folder => ({

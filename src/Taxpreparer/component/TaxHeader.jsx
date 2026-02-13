@@ -12,6 +12,8 @@ import { getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
+import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
+import { firmAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/topbar.css";
 
 // Simple Error Boundary for AccountSwitcher
@@ -332,16 +334,27 @@ export default function Topbar({
 
   useEffect(() => {
     refreshProfileData();
+    // Initial notification count fetch
+    const fetchInitialUnreadCount = async () => {
+      try {
+        const response = await firmAdminNotificationAPI.getUnreadCount();
+        if (response.success && response.data) {
+          setUnreadNotifications(response.data.unread_count || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching initial unread count:", err);
+      }
+    };
+    fetchInitialUnreadCount();
 
     // Check impersonation status
     const checkStatus = () => {
       const { isImpersonating: impersonating } = getImpersonationStatus();
       setIsImpersonating(impersonating);
     };
-
+    
     checkStatus();
     const interval = setInterval(checkStatus, 3000);
-
 
     if (typeof window !== "undefined") {
       window.refreshTaxHeaderProfile = refreshProfileData;
@@ -357,6 +370,13 @@ export default function Topbar({
     };
 
   }, [refreshProfileData, applyProfileData]);
+
+  // WebSocket connection for real-time notifications
+  const handleUnreadCountUpdate = useCallback((count) => {
+    setUnreadNotifications(count);
+  }, []);
+
+  useNotificationWebSocket(true, null, handleUnreadCountUpdate);
 
 
   useEffect(() => {

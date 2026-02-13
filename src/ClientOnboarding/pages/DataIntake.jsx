@@ -192,6 +192,8 @@ export default function DataIntakeForm({ targetClientId }) {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [signatureLoading, setSignatureLoading] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
+  const [signatureType, setSignatureType] = useState(null); // Ensure signatureType matches existing usage
+  const [signedFormUrl, setSignedFormUrl] = useState(null);
 
   // Submit loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -743,6 +745,19 @@ export default function DataIntakeForm({ targetClientId }) {
             setIsSigned(personalInfoData.is_signed || false);
             if (personalInfoData.is_signed && personalInfoData.signature_type) {
               setSignatureType(personalInfoData.signature_type);
+            }
+
+            // Fetch signed form URL if signed
+            if (personalInfoData.is_signed) {
+              try {
+                dataIntakeAPI.getSignatureStatus().then(res => {
+                  if (res.success && res.data && res.data.signed_form_url) {
+                    setSignedFormUrl(res.data.signed_form_url);
+                  }
+                }).catch(err => console.error("Error fetching signature URL:", err));
+              } catch (e) {
+                console.error("Error calling getSignatureStatus:", e);
+              }
             }
 
             console.log("Form pre-filled with Consolidated API data");
@@ -2070,6 +2085,9 @@ export default function DataIntakeForm({ targetClientId }) {
       if (response.success) {
         // Update signature status
         setIsSigned(true);
+        if (response.data && response.data.signed_form_url) {
+          setSignedFormUrl(response.data.signed_form_url);
+        }
         setShowSignatureModal(false);
 
         toast.success(response.message || 'Signature submitted successfully!', {
@@ -4492,13 +4510,35 @@ export default function DataIntakeForm({ targetClientId }) {
             </div>
 
             {isSigned ? (
-              <div className="d-flex align-items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                  Form Signed Successfully
-                </span>
+              <div className="d-flex flex-column gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                    Form Signed Successfully
+                  </span>
+                </div>
+
+                {signedFormUrl && (
+                  <a
+                    href={signedFormUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline-primary d-flex align-items-center gap-2"
+                    style={{
+                      fontFamily: 'BasisGrotesquePro',
+                      fontSize: '14px',
+                      padding: '8px 16px',
+                      maxWidth: 'fit-content'
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 10V3M8 3L4.66667 6.33333M8 3L11.3333 6.33333M2.66667 13.6667H13.3333" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    View Signed Form
+                  </a>
+                )}
               </div>
             ) : (
               <div className="w-100 d-flex justify-content-center">

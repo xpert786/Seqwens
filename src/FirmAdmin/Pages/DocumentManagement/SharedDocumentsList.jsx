@@ -385,8 +385,8 @@ export default function SharedDocumentsList() {
 
       {/* Unshare Confirmation Modal */}
       <ConfirmationModal
-        show={showUnshareModal}
-        onHide={() => {
+        isOpen={showUnshareModal}
+        onClose={() => {
           setShowUnshareModal(false);
           setShareToUnshare(null);
         }}
@@ -399,7 +399,7 @@ export default function SharedDocumentsList() {
         }
         confirmText="Unshare"
         confirmButtonStyle={{ backgroundColor: '#DC2626', border: 'none' }}
-        loading={unsharing}
+        isLoading={unsharing}
       />
     </div>
   );
