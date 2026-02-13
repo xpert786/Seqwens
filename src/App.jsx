@@ -37,6 +37,7 @@ import ProtectedRoute from "./ClientOnboarding/components/ProtectedRoute";
 import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
 import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
 import RoleSelectionScreen from "./ClientOnboarding/components/RoleSelectionScreen";
+import SelectContext from "./pages/SelectContext";
 import TailwindTest from "./TailwindTest";
 import FeedbackWrapper from "./ClientOnboarding/components/FeedbackWrapper";
 // Import FirmRoutes directly (not lazy) to avoid React initialization issues with Context providers
@@ -259,6 +260,7 @@ export default function App() {
           <Route path="/invite" element={<AcceptInvite />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/select-role" element={<RoleSelectionScreen />} />
+          <Route path="/select-context" element={<SelectContext />} />
           {/* Tailwind test route */}
           <Route path="/tw-test" element={<TailwindTest />} />
           {/* Root path - Home page (public landing page) */}
