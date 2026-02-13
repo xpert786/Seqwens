@@ -454,10 +454,10 @@ export default function EmailTemplate() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => openEditor(null)}
-                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-[10px] px-4 font-semibold text-white transition-all"
+                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-[10px] px-4 font-semibold text-white bg-[#3AD6F2] hover:bg-[#3AD6F2] transition-none"
                                 style={{
                                     backgroundColor: 'var(--firm-primary-color)',
-                                    transition: 'none'
+                                    color: 'white'
                                 }}
                             >
                                 <svg
@@ -466,6 +466,7 @@ export default function EmailTemplate() {
                                     viewBox="0 0 18 18"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    style={{ pointerEvents: 'none' }}
                                 >
                                     <path
                                         d="M9 3.75V14.25M3.75 9H14.25"
@@ -475,8 +476,13 @@ export default function EmailTemplate() {
                                         strokeLinejoin="round"
                                     />
                                 </svg>
-                                Create Template
+
+                                <span style={{ pointerEvents: 'none' }}>
+                                    Create Template
+                                </span>
                             </button>
+
+
 
 
                         </div>
@@ -1519,10 +1525,16 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                         <button
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className="px-4 py-2 text-sm bg-[#F56D2D] text-white !rounded-[10px] hover:bg-[#E55A1D] disabled:opacity-50"
+                            className="px-4 py-2 text-sm !rounded-[10px] disabled:opacity-50 text-white bg-[#F56D2D] hover:bg-[#F56D2D] transition-none"
+                            style={{
+                                color: 'white'
+                            }}
                         >
-                            {submitting ? 'Saving...' : isEdit ? 'Update Template' : 'Create Template'}
+                            <span style={{ pointerEvents: 'none' }}>
+                                {submitting ? 'Saving...' : isEdit ? 'Update Template' : 'Create Template'}
+                            </span>
                         </button>
+
                     </div>
                 </div>
             </div>

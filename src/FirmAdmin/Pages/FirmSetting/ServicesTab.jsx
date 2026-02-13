@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import { FiX } from "react-icons/fi";
+import { FiX, FiAlertTriangle } from "react-icons/fi";
+import ConfirmationModal from '../../../components/ConfirmationModal';
 import './ServicesTab.css';
 
 export default function ServicesTab() {
@@ -37,6 +38,11 @@ export default function ServicesTab() {
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState('Tax');
   const [editName, setEditName] = useState('');
+
+  // Deletion state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteType, setDeleteType] = useState(null); // 'service' or 'discount'
 
   // Fetch services information on mount
   useEffect(() => {
@@ -191,47 +197,64 @@ export default function ServicesTab() {
     }
   };
 
-  const handleDeleteService = async (serviceId) => {
-    if (window.confirm('Are you sure you want to delete this service?')) {
-      try {
-        const isDefault = !serviceId || serviceId === 'null' || (typeof serviceId === 'string' && serviceId.startsWith('default_'));
-        let response;
+  const handleDeleteService = (serviceId) => {
+    const service = services.find(s => s.id === serviceId);
+    setItemToDelete(service);
+    setDeleteType('service');
+    setShowDeleteConfirm(true);
+  };
 
-        if (isDefault) {
-          // Find the service name since we need it to create a "deleted" record
-          const service = services.find(s => s.id === serviceId);
-          const serviceData = {
-            name: service.name,
-            description: service.description || '',
-            base_price: service.base_price || 0,
-            category: service.category || 'Tax',
-            enabled: false,
-            display_order: service.display_order,
-            is_deleted: true
-          };
-          response = await firmAdminSettingsAPI.addService(serviceData);
-        } else {
-          response = await firmAdminSettingsAPI.deleteService(serviceId);
-        }
+  const confirmDeleteService = async (serviceId) => {
+    try {
+      const isDefault = !serviceId || serviceId === 'null' || (typeof serviceId === 'string' && serviceId.startsWith('default_'));
+      let response;
 
-        if (response.success) {
-          setServices(prev => prev.filter(service => service.id !== serviceId));
-          toast.success('Service deleted successfully');
-        } else {
-          throw new Error(response.message || 'Failed to delete service');
-        }
-      } catch (err) {
-        console.error('Error deleting service:', err);
-        toast.error(handleAPIError(err) || 'Failed to delete service');
+      if (isDefault) {
+        // Find the service name since we need it to create a "deleted" record
+        const service = services.find(s => s.id === serviceId);
+        const serviceData = {
+          name: service.name,
+          description: service.description || '',
+          base_price: service.base_price || 0,
+          category: service.category || 'Tax',
+          enabled: false,
+          display_order: service.display_order,
+          is_deleted: true
+        };
+        response = await firmAdminSettingsAPI.addService(serviceData);
+      } else {
+        response = await firmAdminSettingsAPI.deleteService(serviceId);
       }
+
+      if (response.success) {
+        setServices(prev => prev.filter(service => service.id !== serviceId));
+        toast.success('Service deleted successfully');
+      } else {
+        throw new Error(response.message || 'Failed to delete service');
+      }
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      toast.error(handleAPIError(err) || 'Failed to delete service');
+    } finally {
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+      setDeleteType(null);
     }
   };
 
   const handleDeleteDiscount = (discountId) => {
-    if (window.confirm('Are you sure you want to delete this discount?')) {
-      setDiscounts(prev => prev.filter(discount => discount.id !== discountId));
-      toast.success('Discount deleted successfully');
-    }
+    const discount = discounts.find(d => d.id === discountId);
+    setItemToDelete(discount);
+    setDeleteType('discount');
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteDiscount = (discountId) => {
+    setDiscounts(prev => prev.filter(discount => discount.id !== discountId));
+    toast.success('Discount deleted successfully');
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+    setDeleteType(null);
   };
 
   const handleAddService = async () => {
@@ -820,8 +843,8 @@ export default function ServicesTab() {
 
       {/* Edit Service Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-[#E8F0FF] overflow-hidden">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-[#E8F0FF] overflow-hidden">
             <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-[#F8FAFF]">
               <h3 className="text-lg font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
                 Edit Service
@@ -835,76 +858,78 @@ export default function ServicesTab() {
             </div>
 
             <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
-                  Service Name
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-xl border border-[#E8F0FF] px-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
-                  Category
-                </label>
-                <select
-                  value={editCategory}
-                  onChange={(e) => setEditCategory(e.target.value)}
-                  className="w-full rounded-xl border border-[#E8F0FF] px-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro] bg-white cursor-pointer"
-                >
-                  <option value="Tax">Tax</option>
-                  <option value="Advisory">Advisory</option>
-                  <option value="Compliance">Compliance</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
-                  Base Price ($)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-[BasisGrotesquePro]">$</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
+                    Service Name
+                  </label>
                   <input
-                    type="number"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
-                    step="0.01"
-                    min="0"
-                    className="w-full rounded-xl border border-[#E8F0FF] pl-8 pr-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro]"
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full rounded-xl border border-[#E8F0FF] px-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro]"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
-                  Description
-                </label>
-                <textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  rows="3"
-                  className="w-full rounded-xl border border-[#E8F0FF] px-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro] resize-none"
-                  placeholder="Service description..."
-                />
+                <div>
+                  <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
+                    Category
+                  </label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full rounded-xl border border-[#E8F0FF] px-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro] bg-white cursor-pointer"
+                  >
+                    <option value="Tax">Tax</option>
+                    <option value="Advisory">Advisory</option>
+                    <option value="Compliance">Compliance</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
+                    Base Price ($)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-[BasisGrotesquePro]">$</span>
+                    <input
+                      type="number"
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      step="0.01"
+                      min="0"
+                      className="w-full rounded-xl border border-[#E8F0FF] pl-8 pr-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro]"
+                    />
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1.5">
+                    Description
+                  </label>
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    rows="3"
+                    className="w-full rounded-xl border border-[#E8F0FF] px-4 py-2.5 text-sm text-[#1F2A55] focus:outline-none focus:border-[#F56D2D] transition-colors font-[BasisGrotesquePro] resize-none"
+                    placeholder="Service description..."
+                  />
+                </div>
               </div>
             </div>
 
             <div className="p-6 bg-gray-50 flex gap-3 justify-end">
               <button
                 onClick={handleCancelEdit}
-                className="px-5 py-2 text-sm font-medium text-[#1F2A55] bg-white border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+                className="px-5 py-2 text-sm font-medium text-[#1F2A55] bg-white border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 transition font-[BasisGrotesquePro]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={saving}
-                className="px-5 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-xl hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-[10px] hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {saving ? (
                   <>
@@ -917,6 +942,29 @@ export default function ServicesTab() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setItemToDelete(null);
+          setDeleteType(null);
+        }}
+        onConfirm={() => {
+          if (deleteType === 'service') {
+            confirmDeleteService(itemToDelete?.id);
+          } else if (deleteType === 'discount') {
+            confirmDeleteDiscount(itemToDelete?.id);
+          }
+        }}
+        title={`Delete ${deleteType === 'service' ? 'Service' : 'Discount'}`}
+        message={`Are you sure you want to delete the ${deleteType === 'service' ? 'service' : 'discount'} "${itemToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        icon={<FiAlertTriangle className="text-red-500" size={24} />}
+      />
     </div>
   );
 }

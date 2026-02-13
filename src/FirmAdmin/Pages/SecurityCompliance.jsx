@@ -831,17 +831,21 @@ export default function SecurityCompliance() {
                             <button
                                 onClick={fetchSecurityAlerts}
                                 disabled={securityAlertsLoading}
-                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] bg-white hover:bg-white transition-none disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ borderRadius: '8px' }}
                             >
-                                {securityAlertsLoading ? 'Refreshing...' : 'Refresh'}
+                                <span style={{ pointerEvents: 'none' }}>
+                                    {securityAlertsLoading ? 'Refreshing...' : 'Refresh'}
+                                </span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('Audits Logs')}
-                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] bg-white hover:bg-white transition-none"
                                 style={{ borderRadius: '8px' }}
                             >
-                                View Audit Logs
+                                <span style={{ pointerEvents: 'none' }}>
+                                    View Audit Logs
+                                </span>
                             </button>
                         </div>
                     </div>
