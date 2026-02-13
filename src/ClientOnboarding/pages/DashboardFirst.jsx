@@ -8,6 +8,7 @@ import {
   FileTaskIcon,
   BalanceIcon,
   MessageIcon,
+  ConverIcon,
 } from "../components/icons";
 import { AiOutlineCalendar } from "react-icons/ai";
 import "../styles/Dashfirst.css";

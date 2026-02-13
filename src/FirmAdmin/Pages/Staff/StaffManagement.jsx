@@ -619,7 +619,7 @@ export default function StaffManagement() {
     if (!activeInviteDetails?.invite_link) return;
 
     // Fallback for non-secure contexts where navigator.clipboard is unavailable
-    if (!navigator.clipboard) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
       try {
         const textArea = document.createElement("textarea");
         textArea.value = activeInviteDetails.invite_link;

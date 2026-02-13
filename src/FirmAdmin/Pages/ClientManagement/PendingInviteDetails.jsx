@@ -162,29 +162,29 @@ export default function PendingInviteDetails() {
   // Handle copy invite link
   const handleCopyInviteLink = async () => {
     if (!invite?.invite_link) return;
-    
+
     // Fallback for non-secure contexts where navigator.clipboard is unavailable
-    if (!navigator.clipboard) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
       try {
         const textArea = document.createElement("textarea");
         textArea.value = invite.invite_link;
-        
+
         // Ensure element is part of document but not visible
         textArea.style.position = "fixed";
         textArea.style.left = "-9999px";
         textArea.style.top = "0";
         document.body.appendChild(textArea);
-        
+
         textArea.focus();
         textArea.select();
-        
+
         const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
-        
+
         if (successful) {
           toast.success("Invite link copied to clipboard!", getToastOptions({ autoClose: 2000 }));
         } else {
-           throw new Error("Copy command failed");
+          throw new Error("Copy command failed");
         }
       } catch (err) {
         console.error("Fallback copy failed:", err);
