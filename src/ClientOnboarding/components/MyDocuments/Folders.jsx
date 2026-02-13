@@ -61,102 +61,58 @@ export default function Folders({ onFolderSelect }) {
     const [newDocumentName, setNewDocumentName] = useState('');
     const [renamingDocumentId, setRenamingDocumentId] = useState(null);
 
-    // Fetch folders from API
+    // Fetch folders from API using optimized split endpoints
     const fetchFolders = async (folderId = null) => {
         try {
             setLoading(true);
             setError(null);
 
-            const API_BASE_URL = getApiBaseUrl();
-            const token = getAccessToken();
+            // Fetch folders and files in parallel for better performance
+            const [foldersResult, filesResult] = await Promise.all([
+                documentsAPI.browseFoldersSplit({
+                    folder_id: folderId
+                }),
+                documentsAPI.browseFilesSplit({
+                    folder_id: folderId
+                })
+            ]);
 
-            if (!token) {
-                console.error('No authentication token found');
-                setLoading(false);
-                return;
-            }
+            if (foldersResult.success && foldersResult.data) {
+                // Update current folder info
+                const currentFolderData = foldersResult.data.current_folder;
+                setCurrentFolder(currentFolderData || null);
 
-            const config = {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            };
-
-            const url = folderId
-                ? `${API_BASE_URL}/taxpayer/my-documents/browse/?folder_id=${folderId}`
-                : `${API_BASE_URL}/taxpayer/my-documents/browse/`;
-
-            const response = await fetchWithCors(url, config);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            console.log('Folders API response:', result);
-
-            if (result.success && result.data) {
-                // Update current folder
-                if (result.data.current_folder) {
-                    setCurrentFolder(result.data.current_folder);
-                    // Update folder path from breadcrumbs
-                    if (result.data.breadcrumbs && Array.isArray(result.data.breadcrumbs)) {
-                        const path = result.data.breadcrumbs.map(b => b.title);
-                        setFolderPath(path);
-                    } else {
-                        setFolderPath([]);
-                    }
+                // Update folder path from breadcrumbs
+                if (foldersResult.data.breadcrumbs && Array.isArray(foldersResult.data.breadcrumbs)) {
+                    const path = foldersResult.data.breadcrumbs.map(b => b.title);
+                    setFolderPath(path);
                 } else {
-                    setCurrentFolder(null);
-                    // Update folder path from breadcrumbs even when at root
-                    if (result.data.breadcrumbs && Array.isArray(result.data.breadcrumbs)) {
-                        const path = result.data.breadcrumbs.map(b => b.title);
-                        setFolderPath(path);
-                    } else {
-                        setFolderPath([]);
+                    setFolderPath([]);
+                }
+
+                // Update folders list
+                setFolders(foldersResult.data.folders || []);
+
+                // Update documents list from files result
+                if (filesResult.success && filesResult.data) {
+                    const docs = filesResult.data.documents || [];
+                    console.log('Setting documents:', docs.length, 'documents');
+                    setDocuments(docs);
+
+                    // Merge statistics
+                    if (filesResult.data.statistics) {
+                        setStatistics(prev => ({
+                            ...prev,
+                            ...filesResult.data.statistics,
+                            total_folders: foldersResult.data.statistics?.total_folders || prev.total_folders
+                        }));
                     }
                 }
 
-                // Handle folders - check for 'folders' array (root level) or 'subfolders' (inside a folder)
-                let foldersList = [];
-                if (result.data.folders && Array.isArray(result.data.folders)) {
-                    // Root level folders
-                    foldersList = result.data.folders;
-                } else if (result.data.subfolders && Array.isArray(result.data.subfolders)) {
-                    // Subfolders when inside a folder
-                    foldersList = result.data.subfolders;
-                }
-                setFolders(foldersList);
-
-                // Set documents - check for 'documents' array or files from current_folder
-                // IMPORTANT: At root level, documents array should be empty - files inside folders should NOT be shown
-                // Only show documents when explicitly inside a folder (current_folder exists or documents array has items)
-                let docs = [];
-
-                // First priority: Check if documents array exists and has items (main way API returns files when inside a folder)
-                if (result.data.documents && Array.isArray(result.data.documents)) {
-                    docs = result.data.documents;
-                }
-                // Second priority: Check if current_folder has files array (alternative structure)
-                else if (result.data.current_folder && result.data.current_folder.files && Array.isArray(result.data.current_folder.files)) {
-                    docs = result.data.current_folder.files;
-                }
-                // At root level (current_folder is null and documents is empty), docs will be empty array - this is correct
-
-                console.log('Setting documents:', docs.length, 'documents');
-                setDocuments(docs);
-                // Reset to first page when documents change
+                // Reset to first page when folders/documents change
                 setCurrentPage(1);
-
-                // Set statistics
-                if (result.data.statistics) {
-                    setStatistics(result.data.statistics);
-                }
             } else {
-                setFolders([]);
-                setDocuments([]);
+                throw new Error('Failed to fetch folders');
             }
         } catch (error) {
             console.error('Error fetching folders:', error);

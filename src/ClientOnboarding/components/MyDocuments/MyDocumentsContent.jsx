@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { FileIcon, OverdueIcon, UploadIcons, CompletedIcon, AwaitingIcon } from "../icons";
 import "../../styles/Document.css";
-import { handleAPIError, esignAssignAPI } from "../../utils/apiUtils";
+import { handleAPIError, esignAssignAPI, documentsAPI } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
 import { toast } from "react-toastify";
@@ -122,222 +122,60 @@ export default function MyDocumentsContent() {
     // Fetch documents using browse API (supports folder navigation)
     const fetchAllDocuments = async (folderId = null, force = false) => {
         try {
-            // If we have all data loaded, just filter locally unless force is true
-            if (!force && isRecursiveLoaded.current && !folderId && !selectedFilter) {
-                // Only use local if we are just browsing (not forcefully refreshing)
-                // But wait, if we are here, maybe we should just use local data?
-                // Let's assume if updateViewFromLocalData works, we can try it.
-                updateViewFromLocalData(currentFolderId);
-                return;
-            }
-
             setLoading(true);
             setError(null);
 
-            const API_BASE_URL = getApiBaseUrl();
-            const token = getAccessToken();
+            // In parallel mode, fetch folders and files separately
+            const [foldersResult, filesResult] = await Promise.all([
+                documentsAPI.browseFoldersSplit({
+                    folder_id: folderId,
+                    search: searchTerm
+                }),
+                documentsAPI.browseFilesSplit({
+                    folder_id: folderId,
+                    search: searchTerm,
+                    show_archived: selectedFilter === 'archived'
+                })
+            ]);
 
-            if (!token) {
-                throw new Error('Authentication required. Please log in again.');
-            }
+            if (foldersResult.success && foldersResult.data) {
+                // Set breadcrumbs
+                setBreadcrumbs(foldersResult.data.breadcrumbs || []);
 
-            const config = {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            };
+                // Transform folders
+                const foldersAsDocs = (foldersResult.data.folders || []).map(folder => ({
+                    ...folder,
+                    is_folder: true,
+                    type: 'folder',
+                    document_type: 'folder'
+                }));
 
-            // Use browse API with recursive=true to get everything at once
-            let url = `${API_BASE_URL}/taxpayer/my-documents/browse/?recursive=true`;
-
-            // Add timeout to prevent hanging
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-            const response = await fetchWithCors(url, {
-                ...config,
-                signal: controller.signal
-            }).finally(() => clearTimeout(timeoutId));
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Session expired. Please log in again.');
-                } else if (response.status === 403) {
-                    throw new Error('You do not have permission to view these documents.');
-                } else if (response.status === 404) {
-                    throw new Error('Documents not found.');
-                } else {
-                    throw new Error(`Failed to load documents (Error ${response.status})`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('Browse API response:', result);
-
-            if (result.success && result.data) {
-                if (result.data.recursive) {
-                    // Store all data
-                    allFoldersRef.current = result.data.all_folders || [];
-                    allDocumentsRef.current = result.data.all_documents || [];
-                    isRecursiveLoaded.current = true;
+                if (filesResult.success && filesResult.data) {
+                    const docs = filesResult.data.documents || [];
+                    setDocuments([...foldersAsDocs, ...docs]);
 
                     // Update stats
-                    if (result.data.statistics) {
+                    if (filesResult.data.statistics) {
+                        const statsData = filesResult.data.statistics;
                         setStats({
-                            pending: 0, // Need to calc from allDocuments
+                            pending: 0,
                             completed: 0,
                             overdue: 0,
-                            uploaded: result.data.statistics.total_documents
-                        });
-
-                        // Recalculate enhanced stats from all docs
-                        const allDocs = allDocumentsRef.current;
-                        const newStats = {
-                            pending: allDocs.filter(d => ['pending_sign', 'pending', 'waiting signature'].includes((d.status || '').toLowerCase())).length,
-                            completed: allDocs.filter(d => ['processed', 'completed'].includes((d.status || '').toLowerCase())).length,
-                            overdue: allDocs.filter(d => {
-                                if (d.due_date || d.dueDate) {
-                                    const due = new Date(d.due_date || d.dueDate);
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    return due < today && ['pending_sign', 'pending'].includes((d.status || '').toLowerCase());
-                                }
-                                return false;
-                            }).length,
-                            uploaded: allDocs.length
-                        };
-                        setStats(newStats);
-                    }
-
-                    // Render current view
-                    updateViewFromLocalData(folderId || currentFolderId);
-                } else {
-                    // Fallback to old behavior if backend doesn't support recursive
-                    // Get documents array - check multiple possible locations
-                    let docs = [];
-                    if (result.data.documents && Array.isArray(result.data.documents)) {
-                        docs = result.data.documents;
-                    } else if (result.data.current_folder && result.data.current_folder.files && Array.isArray(result.data.current_folder.files)) {
-                        docs = result.data.current_folder.files;
-                    }
-
-                    // Also include folders in the documents list for navigation
-                    const foldersData = result.data.folders || result.data.subfolders;
-                    if (foldersData && Array.isArray(foldersData)) {
-                        const foldersAsDocs = foldersData.map(folder => ({
-                            ...folder,
-                            is_folder: true,
-                            type: 'folder',
-                            document_type: 'folder'
-                        }));
-                        docs = [...foldersAsDocs, ...docs];
-                    }
-
-                    setDocuments(docs);
-
-                    // Stats handling (same as before) ...
-                    // Shortening for brevity as this is fallback
-                    if (result.data.statistics) {
-                        const statsData = result.data.statistics;
-                        const newStats = {
-                            pending: statsData.by_status?.pending_sign?.count || 0,
-                            completed: statsData.by_status?.processed?.count || 0,
-                            overdue: 0, // Calculate from documents if needed
                             uploaded: statsData.total_documents || docs.length
-                        };
-
-                        // Calculate overdue from documents (excluding folders)
-                        const overdueCount = docs.filter(d => {
-                            if (d.is_folder) return false;
-                            if (d.due_date || d.dueDate) {
-                                const due = new Date(d.due_date || d.dueDate);
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return due < today && (d.status === 'pending_sign' || d.status === 'Pending');
-                            }
-                            return false;
-                        }).length;
-                        newStats.overdue = overdueCount;
-                        newStats.uploaded = statsData.total_documents || docs.filter(d => !d.is_folder).length;
-
-                        setStats(newStats);
-                    } else {
-                        // Fallback: calculate stats from documents (excluding folders)
-                        const fileDocs = docs.filter(d => !d.is_folder);
-                        const newStats = {
-                            pending: fileDocs.filter(d => {
-                                const status = (d.status || '').toLowerCase();
-                                return status === 'pending_sign' || status === 'pending' || status === 'waiting signature';
-                            }).length,
-                            completed: fileDocs.filter(d => {
-                                const status = (d.status || '').toLowerCase();
-                                return status === 'processed' || status === 'completed';
-                            }).length,
-                            overdue: fileDocs.filter(d => {
-                                if (d.due_date || d.dueDate) {
-                                    const due = new Date(d.due_date || d.dueDate);
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    return due < today && (d.status === 'pending_sign' || d.status === 'pending');
-                                }
-                                return false;
-                            }).length,
-                            uploaded: fileDocs.length
-                        };
-                        setStats(newStats);
-                    }
-
-                    // Update breadcrumbs if we have current folder info
-                    if (result.data.current_folder) {
-                        const currentFolder = result.data.current_folder;
-                        const newBreadcrumbs = [];
-
-                        // Build breadcrumb trail
-                        if (currentFolder.parent) {
-                            // Add parent folders to breadcrumbs
-                            let parent = currentFolder.parent;
-                            while (parent) {
-                                newBreadcrumbs.unshift({
-                                    id: parent.id,
-                                    title: parent.title || parent.name
-                                });
-                                parent = parent.parent;
-                            }
-                        }
-
-                        // Add current folder
-                        newBreadcrumbs.push({
-                            id: currentFolder.id,
-                            title: currentFolder.title || currentFolder.name
                         });
-
-                        setBreadcrumbs(newBreadcrumbs);
-                    } else {
-                        // Root level - no breadcrumbs
-                        setBreadcrumbs([]);
                     }
+                } else {
+                    setDocuments(foldersAsDocs);
                 }
+            } else if (filesResult.success && filesResult.data) {
+                const docs = filesResult.data.documents || [];
+                setDocuments(docs);
             } else {
-                setDocuments([]);
-                setStats({ pending: 0, completed: 0, overdue: 0, uploaded: 0 });
-                setBreadcrumbs([]);
+                throw new Error('Failed to load documents');
             }
         } catch (error) {
             console.error('Error fetching documents:', error);
-
-            // Handle specific error types
-            if (error.name === 'AbortError') {
-                setError('Request timed out. Please check your connection and try again.');
-            } else {
-                const errorMessage = handleAPIError(error);
-                setError(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to load documents. Please try again.'));
-            }
-
-            // Set empty state so UI doesn't break
-            setDocuments([]);
-            setStats({ pending: 0, completed: 0, overdue: 0, uploaded: 0 });
+            setError(handleAPIError(error));
         } finally {
             setLoading(false);
         }
