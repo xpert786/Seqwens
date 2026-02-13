@@ -901,3 +901,13 @@ div[style*="z-index"][style*="fixed"] {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
+
+/* Global utility to disable hover effects on logout buttons */
+.no-hover-logout:hover {
+  color: #EF4444 !important;
+  background-color: transparent !important;
+  filter: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}

@@ -438,7 +438,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             onHide={handleClose}
             centered
             backdrop="static"
-            size={step === 1 ? "md" : "xl"}
+            size={step === 1 ? "lg" : "xl"}
             className="upload-modal"
         >
             <Modal.Body className="p-0">
@@ -457,7 +457,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
                 <div className="p-4">
                     {/* Select Client Field */}
-                   
+
 
                     {/* Error Summary Panel */}
                     {modalErrors.length > 0 && (

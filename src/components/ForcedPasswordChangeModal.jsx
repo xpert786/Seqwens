@@ -144,7 +144,7 @@ export default function ForcedPasswordChangeModal() {
                 right: 0,
                 bottom: 0
             }}>
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4 shadow-xl relative animate-forcedPwFadeIn"
+            <div className="bg-white rounded-lg p-6 w-[500px] max-w-xl mx-4 shadow-xl relative animate-forcedPwFadeIn"
                 style={{ maxHeight: '90vh', overflowY: 'auto' }}>
 
                 <div className="mb-6 text-center">

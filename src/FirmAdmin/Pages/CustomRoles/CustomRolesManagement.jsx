@@ -245,7 +245,7 @@ export default function CustomRolesManagement() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">With Permissions</p>
             <div className="w-10 h-10 rounded-lg bg-[#3AD6F2]/10 flex items-center justify-center">
-              <FiUserCheck size={20} color="#3AD6F2" />
+              <FiUsers size={20} color="#3AD6F2" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>

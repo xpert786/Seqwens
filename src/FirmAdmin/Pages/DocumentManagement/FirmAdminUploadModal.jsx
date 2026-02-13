@@ -611,13 +611,13 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             <style>
                 {`
                     .upload-modal-custom {
-                        max-width: 650px;
+                        max-width: 850px;
                         width: 95%;
                         margin: 1.75rem auto;
                         transition: max-width 0.3s ease-in-out;
                     }
                     .upload-modal-custom-wide {
-                        max-width: 1100px;
+                        max-width: 1250px;
                         width: 95%;
                         margin: 1.75rem auto;
                         transition: max-width 0.3s ease-in-out;

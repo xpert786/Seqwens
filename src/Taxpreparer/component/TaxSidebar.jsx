@@ -184,10 +184,10 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
         <div
           onClick={handleLogout}
-          className={bottomLinkClass("/logout")}
-          style={{ cursor: "pointer" }}
+          className={`${bottomLinkClass("/logout")} no-hover-logout`}
+          style={{ cursor: "pointer", backgroundColor: "white", color: "#EF4444" }}
         >
-          <span className={`tsb-bottom-icon ${isActive("/logout") ? "active" : ""}`}>
+          <span className={`tsb-bottom-icon ${isActive("/logout") ? "active" : ""}`} style={{ color: "#EF4444" }}>
             <LogOutIcon />
           </span>
           Log Out
