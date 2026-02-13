@@ -555,19 +555,19 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                     <button
                                         type="button"
                                         onClick={() => setFormData(p => ({ ...p, enable_office_branding: !p.enable_office_branding }))}
-                                        className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${formData.enable_office_branding ? 'bg-[#F56D2D]' : 'bg-gray-200'}`}
+                                        className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none border-2 ${formData.enable_office_branding ? 'bg-[#F56D2D] border-[#F56D2D]' : 'bg-[#CBD5E1] border-[#CBD5E1]'}`}
                                     >
-                                        <span className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${formData.enable_office_branding ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                                        <span className={`inline-block h-4 w-4 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${formData.enable_office_branding ? 'translate-x-6' : 'translate-x-0.5'}`} />
                                     </button>
                                 </div>
 
                                 <div className={`space-y-6 transition-all duration-300 ${!formData.enable_office_branding ? 'opacity-50 pointer-events-none' : ''}`}>
                                     {/* Image Uploads */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-gray-700">Office Logo</label>
+                                        <div className="space-y-3 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                            <label className="text-sm font-semibold text-gray-700">Office Logo</label>
                                             <div className="relative group">
-                                                <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all ${logoPreview ? 'border-primary-light bg-primary-50' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
+                                                <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all bg-white ${logoPreview ? 'border-[#3AD6F2] bg-blue-50/30' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
                                                     {logoPreview ? (
                                                         <div className="relative w-full h-full p-2 flex items-center justify-center">
                                                             <img
@@ -605,12 +605,13 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                     />
                                                 </div>
                                             </div>
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mt-2">PNG, JPG, or SVG</p>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-gray-700">Office Favicon</label>
+                                        <div className="space-y-3 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                            <label className="text-sm font-semibold text-gray-700">Office Favicon</label>
                                             <div className="relative group">
-                                                <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all ${faviconPreview ? 'border-primary-light bg-primary-50' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
+                                                <div className={`h-32 border-2 border-dashed !rounded-xl flex flex-col items-center justify-center transition-all bg-white ${faviconPreview ? 'border-[#3AD6F2] bg-blue-50/30' : 'border-[#E8F0FF] hover:border-[#3AD6F2]'}`}>
                                                     {faviconPreview ? (
                                                         <div className="relative w-full h-full p-2 flex items-center justify-center">
                                                             <img
@@ -648,44 +649,45 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                                     />
                                                 </div>
                                             </div>
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mt-2">16x16 or 32x32 recommended</p>
                                         </div>
                                     </div>
 
                                     {/* Colors */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-gray-700">Primary Color</label>
-                                            <div className="flex items-center gap-3">
+                                        <div className="space-y-3 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                            <label className="text-sm font-semibold text-gray-700">Primary Color</label>
+                                            <div className="flex items-center gap-3 bg-white p-2 !rounded-lg border border-[#E8F0FF]">
                                                 <input
                                                     type="color"
                                                     name="primary_color"
                                                     value={formData.primary_color}
                                                     onChange={handleInputChange}
-                                                    className="w-12 h-12 !rounded-lg border border-gray-200 cursor-pointer"
+                                                    className="w-12 h-10 !rounded-md border border-gray-200 cursor-pointer overflow-hidden"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={formData.primary_color}
                                                     onChange={(e) => setFormData(p => ({ ...p, primary_color: e.target.value }))}
-                                                    className="flex-1 px-4 py-2 border border-[#E8F0FF] !rounded-lg text-sm font-mono"
+                                                    className="flex-1 px-3 py-1.5 border-0 text-sm font-mono focus:outline-none"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-gray-700">Secondary Color</label>
-                                            <div className="flex items-center gap-3">
+                                        <div className="space-y-3 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                            <label className="text-sm font-semibold text-gray-700">Secondary Color</label>
+                                            <div className="flex items-center gap-3 bg-white p-2 !rounded-lg border border-[#E8F0FF]">
                                                 <input
                                                     type="color"
                                                     name="secondary_color"
                                                     value={formData.secondary_color}
                                                     onChange={handleInputChange}
-                                                    className="w-12 h-12 !rounded-lg border border-gray-200 cursor-pointer"
+                                                    className="w-12 h-10 !rounded-md border border-gray-200 cursor-pointer overflow-hidden"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={formData.secondary_color}
                                                     onChange={(e) => setFormData(p => ({ ...p, secondary_color: e.target.value }))}
-                                                    className="flex-1 px-4 py-2 border border-[#E8F0FF] !rounded-lg text-sm font-mono"
+                                                    className="flex-1 px-3 py-1.5 border-0 text-sm font-mono focus:outline-none"
                                                 />
                                             </div>
                                         </div>
@@ -725,11 +727,11 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                                             <button
                                                 type="button"
                                                 onClick={() => handleDayToggle(day)}
-                                                className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none ${dayData.isOpen ? 'bg-gradient-to-r from-[#F56D2D] to-[#ff8c57]' : 'bg-gray-200'
+                                                className={`relative inline-flex h-6 w-11 items-center !rounded-full transition-all duration-300 focus:outline-none border-2 ${dayData.isOpen ? 'bg-[#F56D2D] border-[#F56D2D]' : 'bg-[#CBD5E1] border-[#CBD5E1]'
                                                     }`}
                                             >
                                                 <span
-                                                    className={`inline-block h-4.5 w-4.5 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${dayData.isOpen ? 'translate-x-5.5' : 'translate-x-1'
+                                                    className={`inline-block h-4 w-4 transform !rounded-full bg-white shadow-sm transition-all duration-300 ${dayData.isOpen ? 'translate-x-6' : 'translate-x-0.5'
                                                         }`}
                                                 />
                                             </button>

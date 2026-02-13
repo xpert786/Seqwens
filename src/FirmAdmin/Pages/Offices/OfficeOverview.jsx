@@ -602,9 +602,9 @@ export default function OfficeOverview() {
                 </div>
 
                 {/* Summary Metrics Section */}
-                <div className="flex flex-wrap gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     {/* Staff Members */}
-                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-[180px] flex-1 max-w-[220px]">
+                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-0 flex-1 max-w-full">
                         <div className='flex items-center justify-between gap-2'>
                             <div className="w-10 h-10 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -621,7 +621,7 @@ export default function OfficeOverview() {
                     </div>
 
                     {/* Active Clients */}
-                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-[180px] flex-1 max-w-[220px]">
+                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-0 flex-1 max-w-full">
                         <div className="flex items-center justify-between gap-2">
                             <div className="w-10 h-10 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -638,7 +638,7 @@ export default function OfficeOverview() {
                     </div>
 
                     {/* Monthly Revenue */}
-                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-[180px] flex-1 max-w-[220px]">
+                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-0 flex-1 max-w-full">
                         <div className="flex items-center justify-between gap-2">
                             <div className="w-10 h-10 rounded-lg bg-[#F0FDFF] flex items-center justify-center flex-shrink-0">
                                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -658,7 +658,7 @@ export default function OfficeOverview() {
                     </div>
 
                     {/* Growth Rate */}
-                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-[180px] flex-1 max-w-[220px]">
+                    <div className="bg-white !rounded-xl p-4 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200 min-w-0 flex-1 max-w-full">
                         <div className="flex items-center justify-between gap-2">
                             <div className="w-10 h-10 rounded-lg bg-[#FFF5F0] flex items-center justify-center flex-shrink-0">
                                 <svg width="18" height="10" viewBox="0 0 21 11" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1136,7 +1136,7 @@ export default function OfficeOverview() {
                 <div className="space-y-6 p-6">
 
 
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-6">
                         <div className="space-y-6 !rounded-xl bg-white p-6 border border-[#E8F0FF] shadow-sm">
                             <div>
                                 <h5 className="text-lg font-semibold text-gray-500">Office Settings</h5>
@@ -1255,21 +1255,21 @@ export default function OfficeOverview() {
                         </div> */}
                     </div>
 
-                    <div className="space-y-6 rounded-xl bg-white p-6 ">
+                    <div className="space-y-6 !rounded-xl bg-white p-6 border border-[#E8F0FF] shadow-sm">
                         <div>
-                            <h5 className="text-lg font-semibold text-gray-600">Office Branding</h5>
+                            <h5 className="text-lg font-bold text-[#F56D2D]">Office Branding</h5>
                             <p className="text-sm text-[#64748B]">
                                 Override firm branding for this office.
                             </p>
                         </div>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <label className="text-base font-medium tracking-wide text-gray-700">
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div className="space-y-3 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                <label className="text-sm font-semibold text-gray-700">
                                     Office Logo
                                 </label>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {logoPreview && (
-                                        <div className="relative w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden">
+                                        <div className="relative w-32 h-32 border-2 border-gray-200 !rounded-xl overflow-hidden bg-white shadow-sm">
                                             <img
                                                 src={logoPreview}
                                                 alt="Logo preview"
@@ -1281,18 +1281,18 @@ export default function OfficeOverview() {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleLogoChange}
-                                        className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#3AD6F2] file:text-white hover:file:bg-[#2bc5db] cursor-pointer"
+                                        className="w-full text-xs text-gray-700 file:mr-4 file:py-2 file:px-4 file:!rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#3AD6F2] file:text-white hover:file:bg-[#2bc5db] cursor-pointer"
                                     />
-                                    <p className="text-xs text-gray-500">Upload office logo (PNG, JPG, or SVG)</p>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mt-2">Upload office logo (PNG, JPG, or SVG)</p>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-base font-medium tracking-wide text-gray-700">
+                            <div className="space-y-3 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                <label className="text-sm font-semibold text-gray-700">
                                     Favicon
                                 </label>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {faviconPreview && (
-                                        <div className="relative w-16 h-16 border-2 border-gray-200 rounded-lg overflow-hidden">
+                                        <div className="relative w-16 h-16 border-2 border-gray-200 !rounded-xl overflow-hidden bg-white shadow-sm">
                                             <img
                                                 src={faviconPreview}
                                                 alt="Favicon preview"
@@ -1304,55 +1304,53 @@ export default function OfficeOverview() {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleFaviconChange}
-                                        className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#3AD6F2] file:text-white hover:file:bg-[#2bc5db] cursor-pointer"
+                                        className="w-full text-xs text-gray-700 file:mr-4 file:py-2 file:px-4 file:!rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#3AD6F2] file:text-white hover:file:bg-[#2bc5db] cursor-pointer"
                                     />
-                                    <p className="text-xs text-gray-500">Upload favicon (16x16 or 32x32 px recommended)</p>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mt-2">Upload favicon (16x16 or 32x32 px recommended)</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-
-                            <div className="flex flex-col gap-1">
-                                <label className="text-base font-medium tracking-wide text-gray-700">
+                            <div className="flex flex-col gap-2 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                <label className="text-sm font-semibold text-gray-700">
                                     Primary Color
                                 </label>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 bg-white p-2 !rounded-lg border border-[#E8F0FF]">
                                     <input
                                         type="color"
                                         value={branding.primaryColor}
                                         onChange={handleBrandingChange('primaryColor')}
-                                        className="h-10 w-25 cursor-pointer bg-white p-1"
+                                        className="h-10 w-12 cursor-pointer !rounded-md overflow-hidden"
                                     />
                                     <input
                                         type="text"
                                         value={branding.primaryColor}
                                         onChange={handleBrandingChange('primaryColor')}
-                                        className="w-full px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                        className="w-full px-3 py-1.5 text-sm text-[#1F2937] border-0 focus:outline-none font-mono"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex flex-col gap-1">
-                                <label className="text-base font-medium tracking-wide text-gray-700">
+                            <div className="flex flex-col gap-2 p-4 bg-[#F8FAFC] !rounded-xl border border-[#E2E8F0]">
+                                <label className="text-sm font-semibold text-gray-700">
                                     Secondary Color
                                 </label>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 bg-white p-2 !rounded-lg border border-[#E8F0FF]">
                                     <input
                                         type="color"
                                         value={branding.secondaryColor}
                                         onChange={handleBrandingChange('secondaryColor')}
-                                        className="h-10 w-25 cursor-pointer bg-white p-1"
+                                        className="h-10 w-12 cursor-pointer !rounded-md overflow-hidden"
                                     />
                                     <input
                                         type="text"
                                         value={branding.secondaryColor}
                                         onChange={handleBrandingChange('secondaryColor')}
-                                        className="w-full px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                        className="w-full px-3 py-1.5 text-sm text-[#1F2937] border-0 focus:outline-none font-mono"
                                     />
                                 </div>
                             </div>
-
                         </div>
 
 

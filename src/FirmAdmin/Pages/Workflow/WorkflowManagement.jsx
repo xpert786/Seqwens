@@ -284,7 +284,7 @@ const WorkflowManagement = () => {
           <div className="flex gap-3">
             <button
               onClick={handleCreateTemplate}
-              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]"
+              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors flex items-center font-[BasisGrotesquePro]"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -293,7 +293,7 @@ const WorkflowManagement = () => {
             </button>
             <button
               onClick={() => handleStartWorkflow()}
-              className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro]"
+              className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg transition-colors flex items-center font-[BasisGrotesquePro]"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -315,24 +315,19 @@ const WorkflowManagement = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex gap-2">
-            <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col lg:flex-row justify-between mb-6 items-start">
+          <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-2">
+            <div className="flex gap-2">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 text-sm font-[BasisGrotesquePro] transition-all !rounded-lg border ${isActive
-                        ? 'shadow-md transform scale-[1.02]'
-                        : 'hover:bg-gray-50'
+                    className={`flex items-center gap-2 px-4 py-2 font-[BasisGrotesquePro] !rounded-lg ${isActive
+                      ? 'bg-[#3AD6F2] !text-white font-semibold'
+                      : 'bg-transparent !text-black'
                       }`}
-                    style={{
-                      backgroundColor: isActive ? '#F56D2D' : 'white',
-                      borderColor: isActive ? '#F56D2D' : '#E5E7EB', // Gray-200 for inactive
-                      color: isActive ? 'white' : '#4B5563' // Gray-600 for inactive
-                    }}
                   >
                     <span>{tab.icon}</span>
                     <span>{tab.label}</span>
@@ -383,7 +378,7 @@ const WorkflowManagement = () => {
                   </div>
                   <button
                     onClick={handleCreateTemplate}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro] text-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition-all font-[BasisGrotesquePro] text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -420,7 +415,7 @@ const WorkflowManagement = () => {
                   </p>
                   <button
                     onClick={handleCreateTemplate}
-                    className="px-6 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro]"
+                    className="px-6 py-3 bg-[#F56D2D] text-white !rounded-lg transition-all font-[BasisGrotesquePro]"
                   >
                     Create Your First Template
                   </button>

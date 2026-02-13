@@ -715,7 +715,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
 
                 {step === 1 && (
                     <div className="d-flex justify-content-end gap-2">
-                        <Button className="btn-cancel-custom" onClick={resetModal}>
+                        <Button className="" onClick={resetModal}>
                             Cancel
                         </Button>
                         <Button

@@ -107,12 +107,12 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
               placeholder="Search workflows..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
             />
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -167,7 +167,7 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
             return (
               <div
                 key={instance.id}
-                className="border border-[#E8F0FF] rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+                className="border border-[#E8F0FF] rounded-lg p-4 bg-white"
                 style={{ borderRadius: '8px' }}
               >
                 <div className="flex flex-col gap-4">
@@ -187,14 +187,14 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
                     <div className="flex gap-2">
                       <button
                         onClick={() => onViewInstance(instance)}
-                        className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors font-[BasisGrotesquePro]"
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg font-[BasisGrotesquePro]"
                         style={{ borderRadius: '8px' }}
                       >
                         View Details
                       </button>
                       <button
                         onClick={() => handleDeleteClick(instance)}
-                        className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
+                        className="px-4 py-2 text-sm font-medium text-red-500 bg-white border border-red-500 rounded-lg font-[BasisGrotesquePro]"
                         style={{ borderRadius: '8px' }}
                       >
                         Delete

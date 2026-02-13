@@ -56,18 +56,16 @@ const Toggle = ({ label, description, checked, onChange }) => {
         {description && <p className="text-xs text-[#7B8AB2] font-[BasisGrotesquePro]">{description}</p>}
       </div>
       <label className="relative inline-flex cursor-pointer items-center">
-        <input 
-          type="checkbox" 
-          className="sr-only" 
+        <input
+          type="checkbox"
+          className="sr-only"
           checked={checked}
           onChange={onChange}
         />
-        <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${
-          checked ? 'bg-[#FF8A63]' : 'bg-[#CBD5F5]'
-        }`}>
-          <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-            checked ? 'translate-x-5' : 'translate-x-0'
-          }`} />
+        <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${checked ? 'bg-[#FF8A63]' : 'bg-[#CBD5F5]'
+          }`}>
+          <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'
+            }`} />
         </div>
       </label>
     </div>
@@ -111,10 +109,10 @@ export default function EmailSettingsView() {
       setLoading(true);
       setError(null);
       const response = await firmAdminEmailSettingsAPI.getEmailSettings();
-      
+
       if (response?.success && response?.data) {
         const data = response.data;
-        
+
         // Set compliance settings
         if (data.compliance_settings) {
           setComplianceSettings(prev => ({
@@ -122,7 +120,7 @@ export default function EmailSettingsView() {
             ...data.compliance_settings
           }));
         }
-        
+
         // Set email branding
         if (data.email_branding) {
           setEmailBranding(prev => ({
@@ -130,7 +128,7 @@ export default function EmailSettingsView() {
             ...data.email_branding
           }));
         }
-        
+
         // Set automation settings
         if (data.automation_settings) {
           setAutomationSettings(prev => ({
@@ -173,7 +171,7 @@ export default function EmailSettingsView() {
       };
 
       const response = await firmAdminEmailSettingsAPI.updateEmailSettings(payload);
-      
+
       if (response?.success || response?.data) {
         toast.success('Email settings saved successfully');
       } else {
@@ -206,7 +204,7 @@ export default function EmailSettingsView() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        
+
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -218,27 +216,27 @@ export default function EmailSettingsView() {
             </div>
 
             <div className="space-y-3">
-              <Toggle 
-                label="Auto-include IRS Disclaimers" 
-                description="Automatically add required tax disclaimers" 
+              <Toggle
+                label="Auto-include IRS Disclaimers"
+                description="Automatically add required tax disclaimers"
                 checked={complianceSettings.auto_include_irs_disclaimers}
                 onChange={(e) => setComplianceSettings(prev => ({
                   ...prev,
                   auto_include_irs_disclaimers: e.target.checked
                 }))}
               />
-              <Toggle 
-                label="Auto-include Opt-out Links" 
-                description="Add unsubscribe links to marketing emails" 
+              <Toggle
+                label="Auto-include Opt-out Links"
+                description="Add unsubscribe links to marketing emails"
                 checked={complianceSettings.auto_include_opt_out_links}
                 onChange={(e) => setComplianceSettings(prev => ({
                   ...prev,
                   auto_include_opt_out_links: e.target.checked
                 }))}
               />
-              <Toggle 
-                label="Enable Audit Trails" 
-                description="Track all template changes and usage" 
+              <Toggle
+                label="Enable Audit Trails"
+                description="Track all template changes and usage"
                 checked={complianceSettings.enable_audit_trails}
                 onChange={(e) => setComplianceSettings(prev => ({
                   ...prev,
@@ -324,67 +322,68 @@ export default function EmailSettingsView() {
               </div>
             </div>
           </div>
-
-          <div className="rounded-2xl bg-white p-6 !border border-[#E8F0FF]">
-            <div className="mb-5">
-              <h3 className="text-lg font-semibold text-[#1F2A55]">Automation Settings</h3>
-              <p className="text-sm text-[#7B8AB2]">Configure automated email workflows</p>
-            </div>
-
-            <div className="space-y-4">
-              <Toggle
-                label="Auto-send Welcome Emails"
-                description="Send welcome email to new clients"
-                checked={automationSettings.auto_send_welcome_emails}
-                onChange={(e) => setAutomationSettings(prev => ({
-                  ...prev,
-                  auto_send_welcome_emails: e.target.checked
-                }))}
-              />
-              <Toggle
-                label="Auto-send Appointment Confirmations"
-                description="Confirm appointments automatically"
-                checked={automationSettings.auto_send_appointment_confirmations}
-                onChange={(e) => setAutomationSettings(prev => ({
-                  ...prev,
-                  auto_send_appointment_confirmations: e.target.checked
-                }))}
-              />
-              <Toggle
-                label="Auto-send Document Reminders"
-                description="Remind clients about missing documents"
-                checked={automationSettings.auto_send_document_reminders}
-                onChange={(e) => setAutomationSettings(prev => ({
-                  ...prev,
-                  auto_send_document_reminders: e.target.checked
-                }))}
-              />
-
-              <div>
-                <label className="text-sm font-semibold tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Reminder Frequency (days)</label>
-                <input
-                  type="number"
-                  value={automationSettings.reminder_frequency_days || 3}
-                  onChange={(e) => setAutomationSettings(prev => ({
-                    ...prev,
-                    reminder_frequency_days: parseInt(e.target.value) || 3
-                  }))}
-                  min="1"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-            <button 
-              onClick={handleSaveSettings}
-              disabled={saving}
-              className="!rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-regular text-white transition hover:bg-[#FF7142] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Saving...' : 'Save Settings'}
-              </button>
-            </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl bg-white p-6 !border border-[#E8F0FF]">
+        <div className="mb-5">
+          <h3 className="text-lg font-semibold text-[#1F2A55]">Automation Settings</h3>
+          <p className="text-sm text-[#7B8AB2]">Configure automated email workflows</p>
+        </div>
+
+        <div className="space-y-4">
+          <Toggle
+            label="Auto-send Welcome Emails"
+            description="Send welcome email to new clients"
+            checked={automationSettings.auto_send_welcome_emails}
+            onChange={(e) => setAutomationSettings(prev => ({
+              ...prev,
+              auto_send_welcome_emails: e.target.checked
+            }))}
+          />
+          <Toggle
+            label="Auto-send Appointment Confirmations"
+            description="Confirm appointments automatically"
+            checked={automationSettings.auto_send_appointment_confirmations}
+            onChange={(e) => setAutomationSettings(prev => ({
+              ...prev,
+              auto_send_appointment_confirmations: e.target.checked
+            }))}
+          />
+          <Toggle
+            label="Auto-send Document Reminders"
+            description="Remind clients about missing documents"
+            checked={automationSettings.auto_send_document_reminders}
+            onChange={(e) => setAutomationSettings(prev => ({
+              ...prev,
+              auto_send_document_reminders: e.target.checked
+            }))}
+          />
+
+          <div>
+            <label className="text-sm font-semibold tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Reminder Frequency (days)</label>
+            <input
+              type="number"
+              value={automationSettings.reminder_frequency_days || 3}
+              onChange={(e) => setAutomationSettings(prev => ({
+                ...prev,
+                reminder_frequency_days: parseInt(e.target.value) || 3
+              }))}
+              min="1"
+              className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleSaveSettings}
+          disabled={saving}
+          className="!rounded-lg bg-[#F56D2D] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#FF7142] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          {saving ? 'Saving...' : 'Save Settings'}
+        </button>
       </div>
     </div>
   );

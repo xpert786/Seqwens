@@ -73,7 +73,7 @@ const WorkflowStatisticsCards = ({ statistics, loading, onStatClick }) => {
                 <div
                     key={stat.key}
                     onClick={() => onStatClick && onStatClick(stat.key)}
-                    className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4 hover:shadow-md transition-all cursor-pointer"
+                    className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4 cursor-pointer"
                     title={stat.description}
                 >
                     <div className="flex items-start justify-between">
@@ -167,7 +167,7 @@ const WorkflowExecutionLogViewer = ({ instanceId, isOpen, onClose }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 transition-colors"
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -229,7 +229,7 @@ const WorkflowExecutionLogViewer = ({ instanceId, isOpen, onClose }) => {
                 <div className="flex justify-end p-4 border-t border-[#E8F0FF] flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:bg-gray-50 font-[BasisGrotesquePro] transition-colors"
+                        className="px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 font-[BasisGrotesquePro] transition-colors"
                     >
                         Close
                     </button>
@@ -250,7 +250,7 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
     const instanceCount = template.active_instances || template.instances_count || 0;
 
     return (
-        <div className="bg-white !rounded-lg !border border-[#E8F0FF] overflow-hidden hover:shadow-lg transition-all group">
+        <div className="bg-white !rounded-lg !border border-[#E8F0FF] overflow-hidden">
             {/* Header */}
             <div className="relative p-4 border-b border-[#E8F0FF] bg-gradient-to-r from-[#FFF4E6] to-white">
                 <div className="absolute top-3 right-3">
@@ -260,7 +260,7 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
                                 e.stopPropagation();
                                 setShowMenu(!showMenu);
                             }}
-                            className="p-2 bg-white hover:bg-gray-50 rounded-lg transition-colors !border border-[#E8F0FF]"
+                            className="p-2 bg-white rounded-lg transition-colors !border border-[#E8F0FF]"
                             title="More options"
                         >
                             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
                                         setShowMenu(false);
                                         onEdit(template);
                                     }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] flex items-center gap-2"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -287,7 +287,7 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
                                         setShowMenu(false);
                                         onClone(template);
                                     }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] flex items-center gap-2"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -300,7 +300,7 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
                                         setShowMenu(false);
                                         onDelete(template);
                                     }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-[BasisGrotesquePro] flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 font-[BasisGrotesquePro] flex items-center gap-2"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -358,7 +358,7 @@ const WorkflowTemplateCard = ({ template, onEdit, onDelete, onClone, onStartWork
                 {/* Action Button */}
                 <button
                     onClick={() => onStartWorkflow(template)}
-                    className="w-full py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro] text-sm font-medium flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-[#F56D2D] text-white !rounded-lg transition-all font-[BasisGrotesquePro] text-sm font-medium flex items-center justify-center gap-2"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />

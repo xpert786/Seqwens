@@ -137,20 +137,25 @@ export default function SharedDocumentsList() {
         </div>
         <div className="d-flex gap-2 shareddocs-header-buttons">
           <button
-            className="btn d-flex align-items-center gap-2 shareddocs-header-button"
+            className="btn d-flex align-items-center gap-2 shareddocs-header-button
+             hover:!bg-[var(--firm-primary-color)] hover:!text-white
+             focus:!bg-[var(--firm-primary-color)] focus:!text-white
+             active:!bg-[var(--firm-primary-color)] active:!text-white"
             onClick={() => setShowDocumentSelectionModal(true)}
             style={{
               backgroundColor: 'var(--firm-primary-color)',
               border: 'none',
               color: 'white',
               fontFamily: 'BasisGrotesquePro',
-              fontWeight: '500',
-              borderRadius: '8px'
+              borderRadius: '8px',
+              transition: 'none'
             }}
           >
             <FiShare2 size={16} />
             Share Documents
           </button>
+
+
           <button
             className="btn d-flex align-items-center gap-2 shareddocs-header-button"
             onClick={fetchShares}
