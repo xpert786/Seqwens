@@ -2101,457 +2101,445 @@ export default function TasksPage() {
           />
         </div>
       )}
-
-
-      {/* Task Details Modal */}
       {selectedTask && (
         <div
-          className="modal"
-          style={{
-            display: 'block',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 1050,
-            overflow: 'auto',
-            padding: '1rem'
-          }}
+          className="fixed inset-0 z-[1050] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={() => setSelectedTask(null)}
         >
           <div
-            className="modal-dialog modal-dialog-centered"
-            style={{
-              maxWidth: '600px',
-              width: '100%',
-              margin: '0 auto'
-            }}
+            className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col"
+            style={{ maxHeight: '90vh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div className="modal-header" style={{ backgroundColor: 'white', zIndex: 10, borderBottom: '1px solid #E5E7EB', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
-                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', fontSize: '1.125rem' }}>{selectedTask.title}</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setSelectedTask(null)}
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body custom-scrollbar" style={{ padding: '1.5rem', overflowY: 'auto', flex: 1, maxHeight: '60vh' }}>
-                <div className="mb-3">
-                  <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
-                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Client:</span>
-                    <span style={{ fontSize: '0.875rem', color: '#3B4A66', wordBreak: 'break-word' }}>{selectedTask.client}</span>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+              <h5 className="text-xl font-semibold text-gray-800 m-0">{selectedTask.title}</h5>
+              <button
+                type="button"
+                onClick={() => setSelectedTask(null)}
+                className="text-gray-400 hover:text-gray-600 border-0 bg-transparent p-0 transition-colors flex items-center justify-center"
+                aria-label="Close"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar min-h-0">
+              <div className="mb-3">
+                <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                  <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Client:</span>
+                  <span style={{ fontSize: '0.875rem', color: '#3B4A66', wordBreak: 'break-word' }}>{selectedTask.client}</span>
+                </div>
+                <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                  <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Due:</span>
+                  <span style={{ fontSize: '0.875rem', color: '#3B4A66' }}>{selectedTask.due}</span>
+                </div>
+                <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                  <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Priority:</span>
+                  <span
+                    className="badge"
+                    style={{
+                      backgroundColor:
+                        selectedTask.priority.toLowerCase() === 'high'
+                          ? '#EF4444'
+                          : selectedTask.priority.toLowerCase() === 'medium'
+                            ? '#F59E0B'
+                            : selectedTask.priority.toLowerCase() === 'low'
+                              ? '#10B981'
+                              : '#000000',
+                      color: '#FFFFFF',
+                      borderRadius: '12px',
+                      padding: '4px 12px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                    }}
+                  >
+                    {selectedTask.priority}
+                  </span>
+
+                </div>
+                <div className="mt-3">
+                  <h6 className="fw-medium mb-2" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Description:</h6>
+                  <div className="p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '0.875rem', color: '#3B4A66', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                    {selectedTask.note || selectedTask.description || 'No description provided'}
                   </div>
-                  <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
-                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Due:</span>
-                    <span style={{ fontSize: '0.875rem', color: '#3B4A66' }}>{selectedTask.due}</span>
+                </div>
+
+                {/* Task Instructions */}
+                <div className="mt-3">
+                  <h6 className="fw-medium mb-2" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Instructions:</h6>
+                  <div className="p-3" style={{ backgroundColor: '#EEF2FF', borderRadius: '8px', fontSize: '0.875rem', color: '#3B4A66', border: '1px solid #C7D2FE' }}>
+                    {selectedTask.instructions || (() => {
+                      const instructionsMap = {
+                        'client_onboarding': "Verify client personal information and review the completed questionnaire.",
+                        'amendment_filing': "Review the original tax return and collect necessary amendment documents.",
+                        'document_collection': "Upload or request all required documents from the client.",
+                        'document_review': "Review submitted documents for accuracy and completeness.",
+                        'document_request': "Wait for the client to upload the requested documents or follow up.",
+                        'signature_request': "Ensure the document is signed by the client (and spouse if applicable).",
+                      };
+                      return instructionsMap[selectedTask.task_type] || "Complete the task requirements.";
+                    })()}
                   </div>
+                </div>
+
+                {/* Status Badge */}
+                <div className="mt-3">
                   <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
-                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Priority:</span>
+                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Status:</span>
                     <span
                       className="badge"
                       style={{
-                        backgroundColor: selectedTask.priority.toLowerCase() === 'high' ? '#EF4444' :
-                          selectedTask.priority.toLowerCase() === 'medium' ? '#F59E0B' :
-                            selectedTask.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
+                        backgroundColor: selectedTask.status === 'completed' ? '#10B981' :
+                          selectedTask.status === 'submitted' ? '#3B82F6' :
+                            selectedTask.status === 'in_progress' ? '#F59E0B' :
+                              selectedTask.status === 'pending' ? '#EF4444' : '#6B7280',
                         color: '#FFFFFF',
                         borderRadius: '12px',
                         padding: '4px 12px',
                         fontSize: '0.75rem',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        textTransform: 'capitalize'
                       }}
                     >
-                      {selectedTask.priority}
+                      {selectedTask.status || 'Pending'}
                     </span>
                   </div>
-                  <div className="mt-3">
-                    <h6 className="fw-medium mb-2" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Description:</h6>
-                    <div className="p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '0.875rem', color: '#3B4A66', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                      {selectedTask.note || selectedTask.description || 'No description provided'}
-                    </div>
-                  </div>
+                </div>
 
-                  {/* Task Instructions */}
-                  <div className="mt-3">
-                    <h6 className="fw-medium mb-2" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Instructions:</h6>
-                    <div className="p-3" style={{ backgroundColor: '#EEF2FF', borderRadius: '8px', fontSize: '0.875rem', color: '#3B4A66', border: '1px solid #C7D2FE' }}>
-                      {selectedTask.instructions || (() => {
-                        const instructionsMap = {
-                          'client_onboarding': "Verify client personal information and review the completed questionnaire.",
-                          'amendment_filing': "Review the original tax return and collect necessary amendment documents.",
-                          'document_collection': "Upload or request all required documents from the client.",
-                          'document_review': "Review submitted documents for accuracy and completeness.",
-                          'document_request': "Wait for the client to upload the requested documents or follow up.",
-                          'signature_request': "Ensure the document is signed by the client (and spouse if applicable).",
-                        };
-                        return instructionsMap[selectedTask.task_type] || "Complete the task requirements.";
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="mt-3">
-                    <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
-                      <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Status:</span>
-                      <span
-                        className="badge"
-                        style={{
-                          backgroundColor: selectedTask.status === 'completed' ? '#10B981' :
-                            selectedTask.status === 'submitted' ? '#3B82F6' :
-                              selectedTask.status === 'in_progress' ? '#F59E0B' :
-                                selectedTask.status === 'pending' ? '#EF4444' : '#6B7280',
-                          color: '#FFFFFF',
-                          borderRadius: '12px',
-                          padding: '4px 12px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          textTransform: 'capitalize'
-                        }}
-                      >
-                        {selectedTask.status || 'Pending'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Completed Task Details Section - Show for all completed tasks */}
-                  {selectedTask.status === 'completed' && (
-                    <div className="mt-4">
-                      {/* Show documents if available (for document request tasks) */}
-                      {selectedTask.task_type === 'document_request' && selectedTask.files && selectedTask.files.length > 0 && (
-                        <>
-                          <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Submitted Documents:</h6>
-                          <div className="d-flex flex-column gap-2" style={{ maxWidth: '100%' }}>
-                            {selectedTask.files.map((file, index) => (
-                              <div
-                                key={file.id || index}
-                                className="d-flex align-items-center justify-content-between p-3"
+                {/* Completed Task Details Section - Show for all completed tasks */}
+                {selectedTask.status === 'completed' && (
+                  <div className="mt-4">
+                    {/* Show documents if available (for document request tasks) */}
+                    {selectedTask.task_type === 'document_request' && selectedTask.files && selectedTask.files.length > 0 && (
+                      <>
+                        <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Submitted Documents:</h6>
+                        <div className="d-flex flex-column gap-2" style={{ maxWidth: '100%' }}>
+                          {selectedTask.files.map((file, index) => (
+                            <div
+                              key={file.id || index}
+                              className="d-flex align-items-center justify-content-between p-3"
+                              style={{
+                                backgroundColor: '#F9FAFB',
+                                borderRadius: '8px',
+                                border: '1px solid #E5E7EB',
+                                flexWrap: 'wrap',
+                                gap: '0.75rem'
+                              }}
+                            >
+                              <div className="d-flex align-items-center gap-2" style={{ flex: 1, minWidth: 0 }}>
+                                <FaFilePdf style={{ color: '#EF4444', fontSize: '20px', flexShrink: 0 }} />
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{
+                                    fontWeight: '500',
+                                    color: '#3B4A66',
+                                    fontSize: '0.875rem',
+                                    wordBreak: 'break-word',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                  }}>
+                                    {file.file_name || file.name || `Document ${index + 1}`}
+                                  </div>
+                                  {file.file_size && (
+                                    <small style={{ color: '#6B7280', fontSize: '0.75rem' }}>
+                                      {(file.file_size / 1024).toFixed(2)} KB
+                                    </small>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn  btn-outline-primary d-flex align-items-center gap-2"
+                                onClick={() => handlePreviewFile(file)}
                                 style={{
-                                  backgroundColor: '#F9FAFB',
-                                  borderRadius: '8px',
-                                  border: '1px solid #E5E7EB',
-                                  flexWrap: 'wrap',
-                                  gap: '0.75rem'
+                                  borderRadius: '6px',
+                                  fontSize: '0.75rem',
+                                  padding: '0.375rem 0.75rem',
+                                  whiteSpace: 'nowrap',
+                                  flexShrink: 0
                                 }}
                               >
-                                <div className="d-flex align-items-center gap-2" style={{ flex: 1, minWidth: 0 }}>
-                                  <FaFilePdf style={{ color: '#EF4444', fontSize: '20px', flexShrink: 0 }} />
-                                  <div style={{ minWidth: 0, flex: 1 }}>
-                                    <div style={{
-                                      fontWeight: '500',
-                                      color: '#3B4A66',
-                                      fontSize: '0.875rem',
-                                      wordBreak: 'break-word',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis'
-                                    }}>
-                                      {file.file_name || file.name || `Document ${index + 1}`}
-                                    </div>
-                                    {file.file_size && (
-                                      <small style={{ color: '#6B7280', fontSize: '0.75rem' }}>
-                                        {(file.file_size / 1024).toFixed(2)} KB
-                                      </small>
-                                    )}
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="btn  btn-outline-primary d-flex align-items-center gap-2"
-                                  onClick={() => handlePreviewFile(file)}
-                                  style={{
-                                    borderRadius: '6px',
-                                    fontSize: '0.75rem',
-                                    padding: '0.375rem 0.75rem',
-                                    whiteSpace: 'nowrap',
-                                    flexShrink: 0
-                                  }}
-                                >
-                                  <FaEye />
-                                  Preview
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                                <FaEye />
+                                Preview
+                              </button>
+                            </div>
+                          ))}
+                        </div>
 
-                          {/* Submission Info */}
-                          {selectedTask.submission_info && (
-                            <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
-                              <div className="d-flex flex-column gap-2" style={{ fontSize: '0.875rem' }}>
-                                {selectedTask.submission_info.submitted_by && (
-                                  <div>
-                                    <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted by: </span>
-                                    <span style={{ color: '#3B4A66' }}>
-                                      {selectedTask.submission_info.submitted_by.name || selectedTask.submission_info.submitted_by.email}
-                                    </span>
-                                  </div>
-                                )}
-                                {selectedTask.submission_info.submitted_at && (
-                                  <div>
-                                    <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted at: </span>
-                                    <span style={{ color: '#3B4A66' }}>
-                                      {new Date(selectedTask.submission_info.submitted_at).toLocaleString('en-US', {
+                        {/* Submission Info */}
+                        {selectedTask.submission_info && (
+                          <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
+                            <div className="d-flex flex-column gap-2" style={{ fontSize: '0.875rem' }}>
+                              {selectedTask.submission_info.submitted_by && (
+                                <div>
+                                  <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted by: </span>
+                                  <span style={{ color: '#3B4A66' }}>
+                                    {selectedTask.submission_info.submitted_by.name || selectedTask.submission_info.submitted_by.email}
+                                  </span>
+                                </div>
+                              )}
+                              {selectedTask.submission_info.submitted_at && (
+                                <div>
+                                  <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted at: </span>
+                                  <span style={{ color: '#3B4A66' }}>
+                                    {new Date(selectedTask.submission_info.submitted_at).toLocaleString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              )}
+                              {selectedTask.submission_info.file_count !== undefined && (
+                                <div>
+                                  <span style={{ color: '#6B7280', fontWeight: '500' }}>Files submitted: </span>
+                                  <span style={{ color: '#3B4A66' }}>{selectedTask.submission_info.file_count}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      </>
+                    )}
+
+                    {/* Show completed at info for all completed tasks */}
+                    {selectedTask.completed_at && (
+                      <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
+                        <div style={{ fontSize: '0.875rem' }}>
+                          <span style={{ color: '#6B7280', fontWeight: '500' }}>Completed at: </span>
+                          <span style={{ color: '#3B4A66' }}>
+                            {new Date(selectedTask.completed_at).toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show comments if available */}
+                    {selectedTask.comments && selectedTask.comments.length > 0 && (
+                      <div className="mt-4">
+                        <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Comments:</h6>
+                        <div className="d-flex flex-column gap-2">
+                          {selectedTask.comments.map((comment, index) => (
+                            <div
+                              key={comment.id || index}
+                              className="p-3"
+                              style={{
+                                backgroundColor: '#F9FAFB',
+                                borderRadius: '8px',
+                                border: '1px solid #E5E7EB',
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                  <span style={{ fontWeight: '500', color: '#3B4A66' }}>
+                                    {comment.created_by_name || comment.created_by || 'Unknown'}
+                                  </span>
+                                  {comment.created_at && (
+                                    <small style={{ color: '#6B7280', marginLeft: '0.5rem' }}>
+                                      {new Date(comment.created_at).toLocaleString('en-US', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
                                         hour: '2-digit',
                                         minute: '2-digit'
                                       })}
-                                    </span>
-                                  </div>
-                                )}
-                                {selectedTask.submission_info.file_count !== undefined && (
-                                  <div>
-                                    <span style={{ color: '#6B7280', fontWeight: '500' }}>Files submitted: </span>
-                                    <span style={{ color: '#3B4A66' }}>{selectedTask.submission_info.file_count}</span>
-                                  </div>
-                                )}
+                                    </small>
+                                  )}
+                                </div>
+                              </div>
+                              <div style={{ color: '#3B4A66', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                                {comment.content}
                               </div>
                             </div>
-                          )}
-
-                        </>
-                      )}
-
-                      {/* Show completed at info for all completed tasks */}
-                      {selectedTask.completed_at && (
-                        <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
-                          <div style={{ fontSize: '0.875rem' }}>
-                            <span style={{ color: '#6B7280', fontWeight: '500' }}>Completed at: </span>
-                            <span style={{ color: '#3B4A66' }}>
-                              {new Date(selectedTask.completed_at).toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                      {/* Show comments if available */}
-                      {selectedTask.comments && selectedTask.comments.length > 0 && (
-                        <div className="mt-4">
-                          <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Comments:</h6>
-                          <div className="d-flex flex-column gap-2">
-                            {selectedTask.comments.map((comment, index) => (
-                              <div
-                                key={comment.id || index}
-                                className="p-3"
-                                style={{
-                                  backgroundColor: '#F9FAFB',
-                                  borderRadius: '8px',
-                                  border: '1px solid #E5E7EB',
-                                  fontSize: '0.875rem'
-                                }}
-                              >
-                                <div className="d-flex justify-content-between align-items-start mb-2">
-                                  <div>
-                                    <span style={{ fontWeight: '500', color: '#3B4A66' }}>
-                                      {comment.created_by_name || comment.created_by || 'Unknown'}
-                                    </span>
-                                    {comment.created_at && (
-                                      <small style={{ color: '#6B7280', marginLeft: '0.5rem' }}>
-                                        {new Date(comment.created_at).toLocaleString('en-US', {
-                                          year: 'numeric',
-                                          month: 'short',
-                                          day: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                        })}
-                                      </small>
-                                    )}
-                                  </div>
-                                </div>
-                                <div style={{ color: '#3B4A66', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                                  {comment.content}
-                                </div>
+                {/* Submitted Documents Section for Submitted Document Request Tasks */}
+                {selectedTask.task_type === 'document_request' && selectedTask.status === 'submitted' && selectedTask.files && selectedTask.files.length > 0 && (
+                  <div className="mt-4">
+                    <h6 className="fw-medium mb-3" style={{ color: '#4B5563' }}>Submitted Documents:</h6>
+                    <div className="d-flex flex-column gap-2">
+                      {selectedTask.files.map((file, index) => (
+                        <div
+                          key={file.id || index}
+                          className="d-flex align-items-center justify-content-between p-3"
+                          style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                        >
+                          <div className="d-flex align-items-center gap-2">
+                            <FaFilePdf style={{ color: '#EF4444', fontSize: '20px' }} />
+                            <div>
+                              <div style={{ fontWeight: '500', color: '#3B4A66' }}>
+                                {file.file_name || file.name || `Document ${index + 1}`}
                               </div>
-                            ))}
+                              {file.file_size && (
+                                <small style={{ color: '#6B7280' }}>
+                                  {(file.file_size / 1024).toFixed(2)} KB
+                                </small>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Submitted Documents Section for Submitted Document Request Tasks */}
-                  {selectedTask.task_type === 'document_request' && selectedTask.status === 'submitted' && selectedTask.files && selectedTask.files.length > 0 && (
-                    <div className="mt-4">
-                      <h6 className="fw-medium mb-3" style={{ color: '#4B5563' }}>Submitted Documents:</h6>
-                      <div className="d-flex flex-column gap-2">
-                        {selectedTask.files.map((file, index) => (
-                          <div
-                            key={file.id || index}
-                            className="d-flex align-items-center justify-content-between p-3"
-                            style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                          <button
+                            type="button"
+                            className="btn  btn-outline-primary d-flex align-items-center gap-2"
+                            onClick={() => handlePreviewFile(file)}
+                            style={{ borderRadius: '6px' }}
                           >
-                            <div className="d-flex align-items-center gap-2">
-                              <FaFilePdf style={{ color: '#EF4444', fontSize: '20px' }} />
-                              <div>
-                                <div style={{ fontWeight: '500', color: '#3B4A66' }}>
-                                  {file.file_name || file.name || `Document ${index + 1}`}
-                                </div>
-                                {file.file_size && (
-                                  <small style={{ color: '#6B7280' }}>
-                                    {(file.file_size / 1024).toFixed(2)} KB
-                                  </small>
-                                )}
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn  btn-outline-primary d-flex align-items-center gap-2"
-                              onClick={() => handlePreviewFile(file)}
-                              style={{ borderRadius: '6px' }}
-                            >
-                              <FaEye />
-                              Preview
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-4 d-flex gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          className="btn btn-success d-flex align-items-center gap-2"
-                          style={{ backgroundColor: '#32B582', borderColor: '#32B582', borderRadius: '8px' }}
-                          onClick={() => setShowApproveModal(true)}
-                          disabled={processingAction}
-                        >
-                          <FaCheck />
-                          Approve Task
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-warning d-flex align-items-center gap-2"
-                          style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B', color: 'white', borderRadius: '8px' }}
-                          onClick={() => setShowReRequestModal(true)}
-                          disabled={processingAction}
-                        >
-                          <FaRedo />
-                          Re-request Document
-                        </button>
-                      </div>
+                            <FaEye />
+                            Preview
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  )}
 
-                  {/* Upload Documents Section for Document Request Tasks (non-submitted, non-completed) */}
-                  {selectedTask.task_type === 'document_request' && selectedTask.status !== 'submitted' && selectedTask.status !== 'completed' && (
                     <div className="mt-4 d-flex gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        className="btn btn-primary d-flex align-items-center gap-2"
-                        style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6', borderRadius: '8px' }}
-                        onClick={() => {
-                          setShowDocumentUploadModal(true);
-                          setUploadFiles([]);
-                          setSelectedCategory(null);
-                          setSelectedFolder(selectedTask.folder_info?.id || null);
-                        }}
-                      >
-                        <FaUpload />
-                        Upload Documents
-                      </button>
                       <button
                         type="button"
                         className="btn btn-success d-flex align-items-center gap-2"
                         style={{ backgroundColor: '#32B582', borderColor: '#32B582', borderRadius: '8px' }}
-                        onClick={handleSubmitDocumentRequest}
-                        disabled={loading}
+                        onClick={() => setShowApproveModal(true)}
+                        disabled={processingAction}
                       >
-                        {loading ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            Submitting...
-                          </>
-                        ) : (
-                          <>
-                            <FaCheckCircle />
-                            Submit Document Request
-                          </>
-                        )}
+                        <FaCheck />
+                        Approve Task
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-warning d-flex align-items-center gap-2"
+                        style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B', color: 'white', borderRadius: '8px' }}
+                        onClick={() => setShowReRequestModal(true)}
+                        disabled={processingAction}
+                      >
+                        <FaRedo />
+                        Re-request Document
                       </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Upload Documents Section for Document Request Tasks (non-submitted, non-completed) */}
+                {selectedTask.task_type === 'document_request' && selectedTask.status !== 'submitted' && selectedTask.status !== 'completed' && (
+                  <div className="mt-4 d-flex gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      className="btn btn-primary d-flex align-items-center gap-2"
+                      style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6', borderRadius: '8px' }}
+                      onClick={() => {
+                        setShowDocumentUploadModal(true);
+                        setUploadFiles([]);
+                        setSelectedCategory(null);
+                        setSelectedFolder(selectedTask.folder_info?.id || null);
+                      }}
+                    >
+                      <FaUpload />
+                      Upload Documents
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-success d-flex align-items-center gap-2"
+                      style={{ backgroundColor: '#32B582', borderColor: '#32B582', borderRadius: '8px' }}
+                      onClick={handleSubmitDocumentRequest}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheckCircle />
+                          Submit Document Request
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
-              <div
-                className="modal-footer border-0"
+            </div>
+
+            {/* Footer */}
+            <div
+              className="px-6 py-4 flex justify-end gap-3 flex-wrap bg-gray-50 rounded-b-2xl shrink-0"
+              style={{
+                borderTop: '1px solid #E5E7EB',
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-light"
                 style={{
-                  padding: '1rem 1.5rem',
-                  borderTop: '1px solid #E5E7EB',
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '0.75rem',
-                  flexWrap: 'wrap'
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  padding: '0.5rem 1rem',
+                  fontWeight: '500'
+                }}
+                onClick={() => {
+                  setSelectedTask(null);
+                  setShowDocumentUploadModal(false);
+                  setUploadFiles([]);
                 }}
               >
+                Close
+              </button>
+              {selectedTask?.task_type !== 'document_request' && (
                 <button
                   type="button"
-                  className="btn btn-light"
+                  className="btn btn-primary"
                   style={{
-                    border: '1px solid #E5E7EB',
+                    backgroundColor: '#FF7A2F',
+                    borderColor: '#FF7A2F',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     padding: '0.5rem 1rem',
                     fontWeight: '500'
                   }}
                   onClick={() => {
-                    setSelectedTask(null);
-                    setShowDocumentUploadModal(false);
-                    setUploadFiles([]);
+                    // Populate form with selected task data
+                    if (selectedTask) {
+                      const taskClientIds = selectedTask.clients_info && selectedTask.clients_info.length > 0
+                        ? selectedTask.clients_info.map(c => c.id.toString())
+                        : [];
+
+                      setFormData({
+                        task_type: selectedTask.task_type || 'signature_request',
+                        task_title: selectedTask.title || '',
+                        client_ids: taskClientIds,
+                        folder_id: selectedTask.folder_info?.id || '',
+                        due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : '',
+                        priority: selectedTask.priority?.toLowerCase() || '',
+                        description: selectedTask.note || '',
+                        files: [],
+                        spouse_signature_required: selectedTask.signature_requests_info?.some(sr => sr.spouse_signature_required) || false
+                      });
+
+                      setSelectedFolderPath(selectedTask.folder_info?.title || selectedTask.folder_info?.name || '');
+                      setEditingTaskId(selectedTask.id);
+                      setIsEditMode(true);
+                      setShowAddTaskModal(true);
+                      setSelectedTask(null); // Close the details modal
+                    }
                   }}
                 >
-                  Close
+                  Edit Task
                 </button>
-                {selectedTask?.task_type !== 'document_request' && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{
-                      backgroundColor: '#FF7A2F',
-                      borderColor: '#FF7A2F',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      padding: '0.5rem 1rem',
-                      fontWeight: '500'
-                    }}
-                    onClick={() => {
-                      // Populate form with selected task data
-                      if (selectedTask) {
-                        const taskClientIds = selectedTask.clients_info && selectedTask.clients_info.length > 0
-                          ? selectedTask.clients_info.map(c => c.id.toString())
-                          : [];
-
-                        setFormData({
-                          task_type: selectedTask.task_type || 'signature_request',
-                          task_title: selectedTask.title || '',
-                          client_ids: taskClientIds,
-                          folder_id: selectedTask.folder_info?.id || '',
-                          due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : '',
-                          priority: selectedTask.priority?.toLowerCase() || '',
-                          description: selectedTask.note || '',
-                          files: [],
-                          spouse_signature_required: selectedTask.signature_requests_info?.some(sr => sr.spouse_signature_required) || false
-                        });
-
-                        setSelectedFolderPath(selectedTask.folder_info?.title || selectedTask.folder_info?.name || '');
-                        setEditingTaskId(selectedTask.id);
-                        setIsEditMode(true);
-                        setShowAddTaskModal(true);
-                        setSelectedTask(null); // Close the details modal
-                      }
-                    }}
-                  >
-                    Edit Task
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>

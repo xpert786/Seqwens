@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FiX } from 'react-icons/fi';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { taxPreparerClientAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
@@ -37,7 +38,7 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
     try {
       setLoading(true);
       setError(null);
-      
+
       if (!clientId) {
         throw new Error('Client ID is required');
       }
@@ -47,15 +48,15 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
 
       if (response.success && response.data) {
         const invoiceData = response.data.invoice || response.data;
-        
+
         // Ensure invoice_items is properly set
         if (invoiceData && !invoiceData.invoice_items && response.data.invoice?.invoice_items) {
           invoiceData.invoice_items = response.data.invoice.invoice_items;
         }
-        
+
         console.log('Invoice data (tax preparer endpoint):', invoiceData);
         console.log('Invoice items:', invoiceData?.invoice_items);
-        
+
         setInvoice(invoiceData);
         setPayments(response.data.payments || []);
       } else {
@@ -79,7 +80,7 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
       setLoading(true);
       setError(null);
       const token = getAccessToken();
-      
+
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -103,18 +104,18 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
         // Handle the response structure: data.invoice, data.payments
         // The invoice object has client as a number (ID), not an object
         const invoiceData = result.data.invoice || result.data;
-        
+
         // Ensure invoice_items is properly set
         if (invoiceData && !invoiceData.invoice_items && result.data.invoice?.invoice_items) {
           invoiceData.invoice_items = result.data.invoice.invoice_items;
         }
-        
+
         console.log('Invoice data (fallback endpoint):', invoiceData);
         console.log('Invoice items:', invoiceData?.invoice_items);
-        
+
         setInvoice(invoiceData);
         setPayments(result.data.payments || []);
-        
+
         // If we have client ID from invoice but didn't have it before, we can use it
         // for future tax preparer endpoint calls if needed
         if (invoiceData.client && typeof invoiceData.client === 'number' && !clientId) {
@@ -159,10 +160,10 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
   if (!isOpen) return null;
 
   // Extract invoice items - handle both array and single item cases
-  const invoiceItems = invoice?.invoice_items && Array.isArray(invoice.invoice_items) && invoice.invoice_items.length > 0 
-    ? invoice.invoice_items 
+  const invoiceItems = invoice?.invoice_items && Array.isArray(invoice.invoice_items) && invoice.invoice_items.length > 0
+    ? invoice.invoice_items
     : [];
-  
+
   // Debug logging
   if (invoice) {
     console.log('Current invoice:', invoice);
@@ -174,20 +175,20 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
   const subtotal = totalAmount - taxAmount;
   const paidAmount = parseFloat(invoice?.paid_amount || 0);
   const remainingAmount = parseFloat(invoice?.remaining_amount || (totalAmount - paidAmount));
-  
+
   // Use formatted dates from API if available
   const issueDate = invoice?.formatted_issue_date || invoice?.issue_date;
   const dueDate = invoice?.formatted_due_date || invoice?.due_date;
   const paidDate = invoice?.paid_date;
-  
+
   // Use formatted amounts from API if available
   const formattedTotalAmount = invoice?.formatted_amount || formatCurrency(totalAmount);
   const formattedPaidAmount = invoice?.formatted_paid_amount || formatCurrency(paidAmount);
-  
+
   // Status information
   const statusDisplay = invoice?.status_display || invoice?.status || 'Draft';
   const statusColor = invoice?.status_color || 'gray';
-  
+
   // Created by information
   const createdByName = invoice?.created_by_name;
 
@@ -198,7 +199,7 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative"
         style={{
           border: "1px solid #E8F0FF",
           borderRadius: "12px",
@@ -232,7 +233,14 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
             </div>
           </div>
         ) : invoice ? (
-          <div className="p-6">
+          <div className="p-6 pt-12">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+              aria-label="Close"
+            >
+              <FiX size={20} />
+            </button>
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -241,18 +249,18 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
                     Invoice {invoice.invoice_number || `#${invoice.id}`}
                   </h5>
                   {statusDisplay && (
-                    <span 
+                    <span
                       className="px-3 py-1 text-xs font-semibold rounded-full border"
                       style={{
-                        backgroundColor: statusColor === 'green' ? '#D1FAE5' : 
-                                        statusColor === 'yellow' ? '#FEF3C7' : 
-                                        statusColor === 'red' ? '#FEE2E2' : '#F3F4F6',
-                        color: statusColor === 'green' ? '#065F46' : 
-                               statusColor === 'yellow' ? '#92400E' : 
-                               statusColor === 'red' ? '#991B1B' : '#374151',
-                        borderColor: statusColor === 'green' ? '#A7F3D0' : 
-                                    statusColor === 'yellow' ? '#FDE68A' : 
-                                    statusColor === 'red' ? '#FECACA' : '#D1D5DB'
+                        backgroundColor: statusColor === 'green' ? '#D1FAE5' :
+                          statusColor === 'yellow' ? '#FEF3C7' :
+                            statusColor === 'red' ? '#FEE2E2' : '#F3F4F6',
+                        color: statusColor === 'green' ? '#065F46' :
+                          statusColor === 'yellow' ? '#92400E' :
+                            statusColor === 'red' ? '#991B1B' : '#374151',
+                        borderColor: statusColor === 'green' ? '#A7F3D0' :
+                          statusColor === 'yellow' ? '#FDE68A' :
+                            statusColor === 'red' ? '#FECACA' : '#D1D5DB'
                       }}
                     >
                       {statusDisplay}
@@ -380,18 +388,18 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
                   // Handle value as number or string
                   const itemValue = typeof item.value === 'number' ? item.value : parseFloat(item.value || item.amount || 0);
                   return (
-                  <div key={index} className="flex items-center border-b pb-2 mb-2">
-                    <div className="flex-1 text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>
-                      {item.description || 'Service'}
+                    <div key={index} className="flex items-center border-b pb-2 mb-2">
+                      <div className="flex-1 text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>
+                        {item.description || 'Service'}
+                      </div>
+                      <div className="w-20 text-center text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>1</div>
+                      <div className="w-20 text-center text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>
+                        {formatCurrency(itemValue)}
+                      </div>
+                      <div className="w-20 text-right text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>
+                        {formatCurrency(itemValue)}
+                      </div>
                     </div>
-                    <div className="w-20 text-center text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>1</div>
-                    <div className="w-20 text-center text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>
-                      {formatCurrency(itemValue)}
-                    </div>
-                    <div className="w-20 text-right text-xs font-normal text-[#3B4A66]" style={{ fontFamily: "BasisGrotesquePro" }}>
-                      {formatCurrency(itemValue)}
-                    </div>
-                  </div>
                   );
                 })
               ) : (
@@ -543,14 +551,14 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
               <button
                 onClick={() => window.print()}
                 className="px-4 py-2 text-xs bg-[#E8F0FF] border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
-                style={{ fontFamily: "BasisGrotesquePro" }}
+                style={{ fontFamily: "BasisGrotesquePro", borderRadius: "10px" }}
               >
                 Print
               </button>
               <button
                 onClick={onClose}
                 className="px-4 py-2 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                style={{ fontFamily: "BasisGrotesquePro" }}
+                style={{ fontFamily: "BasisGrotesquePro", borderRadius: "10px" }}
               >
                 Close
               </button>

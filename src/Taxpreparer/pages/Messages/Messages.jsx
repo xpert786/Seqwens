@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { AddTask, Cliented, Clocking, Completed, Message3Icon, Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
-import { FaSearch, FaChevronDown, FaPaperPlane } from "react-icons/fa";
+import { FaSearch, FaPaperPlane } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, PLusIcon } from "../../../ClientOnboarding/components/icons";
 import taxheaderlogo from "../../../assets/logo.png";
 import { taxPreparerThreadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
@@ -33,8 +33,7 @@ export default function MessagePage() {
       assignedStaffText: "",
     };
   };
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("All Messages");
+
   const [newMessage, setNewMessage] = useState("");
   const [activeTab, setActiveTab] = useState("Messages");
   const [showOptions, setShowOptions] = useState(false);
@@ -61,7 +60,7 @@ export default function MessagePage() {
   const [messageAttachment, setMessageAttachment] = useState(null);
   const messageFileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const dropdownRef = useRef(null);
+
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -89,13 +88,7 @@ export default function MessagePage() {
     markAllAsRead: wsMarkAllAsRead,
   } = useChatWebSocket(activeConversationId, true);
 
-  const filterOptions = [
-    "All Messages",
-    "Unread",
-    "Read",
-    "Internal",
-    "Archived"
-  ];
+
 
   const fetchThreads = useCallback(
     async (isPolling = false) => {
@@ -1179,158 +1172,130 @@ export default function MessagePage() {
             </div>
           </div>
 
-          {/* Filter Dropdown */}
-          <div className="mb-3" ref={dropdownRef}>
-            <button
-              className="btn btn-sm w-100 d-flex justify-content-between align-items-center"
-              style={{
-                background: "transparent",
-                border: "1px solid #E8F0FF",
-                color: "#3B4A66",
-                fontFamily: "BasisGrotesquePro",
-                fontSize: "13px"
-              }}
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            >
-              <span>{selectedFilter}</span>
-              <FaChevronDown style={{ fontSize: "12px" }} />
-            </button>
 
-            {showFilterDropdown && (
-              <div className="position-absolute w-100 mt-1" style={{ zIndex: 1000 }}>
-                <div className="list-group bg-white shadow-sm" style={{ borderRadius: "8px", border: "1px solid #E8F0FF" }}>
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option}
-                      className={`list-group-item list-group-item-action border-0 ${selectedFilter === option ? 'active' : ''}`}
-                      style={{
-                        fontSize: "13px",
-                        fontFamily: "BasisGrotesquePro",
-                        color: selectedFilter === option ? "#fff" : "#3B4A66",
-                        backgroundColor: selectedFilter === option ? "#F56D2D" : "transparent"
-                      }}
-                      onClick={() => {
-                        setSelectedFilter(option);
-                        setShowFilterDropdown(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Loading State */}
-          {loadingThreads && (
-            <div className="text-center py-4">
-              <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-              <p className="text-muted mt-2 small">Loading conversations...</p>
-            </div>
-          )}
+          <div
+            className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll"
+            style={{
+              gap: "12px",
+              overflowY: "auto",
+              overflowX: "hidden",
+              maxHeight: "calc(55vh - 150px)",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none"
+            }}
+          >
+            {/* Loading State */}
+            {loadingThreads && (
+              <div className="text-center py-4">
+                <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <p className="text-muted mt-2 small">Loading conversations...</p>
+              </div>
+            )}
 
-          {/* Error State */}
-          {threadsError && (
-            <div className="text-center py-4">
-              <p className="text-muted small">{threadsError}</p>
-            </div>
-          )}
+            {/* Error State */}
+            {threadsError && (
+              <div className="text-center py-4">
+                <p className="text-muted small">{threadsError}</p>
+              </div>
+            )}
 
-          {/* Empty State */}
-          {!loadingThreads && !threadsError && conversations.length === 0 && (
-            <div className="text-center py-5">
-              <p className="text-muted small mb-0">No conversations yet</p>
-              <p className="text-muted small">Start a new message to begin</p>
-            </div>
-          )}
+            {/* Empty State */}
+            {!loadingThreads && !threadsError && conversations.length === 0 && (
+              <div className="text-center py-5">
+                <p className="text-muted small mb-0">No conversations yet</p>
+                <p className="text-muted small">Start a new message to begin</p>
+              </div>
+            )}
 
-          {/* Conversations List */}
-          {(() => {
-            const filteredConversations = conversations.filter(conv => {
-              const term = searchTerm.toLowerCase();
-              return (
-                (conv.name && conv.name.toLowerCase().includes(term)) ||
-                (conv.subject && conv.subject.toLowerCase().includes(term)) ||
-                (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
-              );
-            });
+            {/* Conversations List */}
+            {(() => {
+              const filteredConversations = conversations.filter(conv => {
+                const term = searchTerm.toLowerCase();
+                return (
+                  (conv.name && conv.name.toLowerCase().includes(term)) ||
+                  (conv.subject && conv.subject.toLowerCase().includes(term)) ||
+                  (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
+                );
+              });
 
-            return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
-              <div className="conversations-list" style={{ width: "100%" }}>
-                {filteredConversations.map((conv, index) => (
-                  <div
-                    key={conv.id || `conv-${index}`}
-                    className="conversation-item p-3"
-                    style={{
-                      cursor: "pointer",
-                      border: "2px solid #E8F0FF",
-                      backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
-                      borderRadius: "12px",
-                      fontFamily: "BasisGrotesquePro",
-                      color: "#3B4A66",
-                      marginBottom: index < conversations.length - 1 ? "12px" : "0",
-                      width: "100%",
-                      minHeight: "80px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center"
-                    }}
-                    onClick={() => {
-                      setActiveConversationId(conv.id);
-                    }}
-                  >
-                    <div className="top-row d-flex justify-content-between align-items-center mb-1">
-                      <div className="d-flex align-items-center">
-                        <ConverIcon className="me-2 text-primary" />
+              return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
+                <div className="conversations-list" style={{ width: "100%" }}>
+                  {filteredConversations.map((conv, index) => (
+                    <div
+                      key={conv.id || `conv-${index}`}
+                      className="conversation-item p-3"
+                      style={{
+                        cursor: "pointer",
+                        border: "2px solid #E8F0FF",
+                        backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
+                        borderRadius: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        color: "#3B4A66",
+                        marginBottom: index < conversations.length - 1 ? "12px" : "0",
+                        width: "100%",
+                        minHeight: "80px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center"
+                      }}
+                      onClick={() => {
+                        setActiveConversationId(conv.id);
+                      }}
+                    >
+                      <div className="top-row d-flex justify-content-between align-items-center mb-1">
+                        <div className="d-flex align-items-center">
+                          <ConverIcon className="me-2 text-primary" />
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
+                            {conv.unreadCount > 0 && (
+                              <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
+                                {conv.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                         <div className="d-flex align-items-center gap-2">
-                          <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
-                          {conv.unreadCount > 0 && (
-                            <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
-                              {conv.unreadCount}
-                            </span>
-                          )}
+                          <small className="time-text" style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                          <button
+                            onClick={(e) => handleDeleteThread(conv.id, e)}
+                            className="btn "
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              padding: "4px 8px",
+                              color: "#EF4444",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                            title="Delete thread"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <small className="time-text" style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
-                        <button
-                          onClick={(e) => handleDeleteThread(conv.id, e)}
-                          className="btn "
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            padding: "4px 8px",
-                            color: "#EF4444",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                          title="Delete thread"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
+                      <small className="last-message" style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
+                      {conv.subject && (
+                        <div className="subject-row mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
+                          <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
+                          <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
+                        </div>
+                      )}
                     </div>
-                    <small className="last-message" style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
-                    {conv.subject && (
-                      <div className="subject-row mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
-                        <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
-                        <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : !loadingThreads && !threadsError && conversations.length > 0 && filteredConversations.length === 0 ? (
-              <div className="text-center py-5">
-                <p className="text-muted small">No matches found for "{searchTerm}"</p>
-              </div>
-            ) : null;
-          })()}
+                  ))}
+                </div>
+              ) : !loadingThreads && !threadsError && conversations.length > 0 && filteredConversations.length === 0 ? (
+                <div className="text-center py-5">
+                  <p className="text-muted small">No matches found for "{searchTerm}"</p>
+                </div>
+              ) : null;
+            })()}
+          </div>
         </div>
 
         {/* Right Column - Chat Interface */}
@@ -1370,29 +1335,33 @@ export default function MessagePage() {
                 <>
                   <div
                     ref={messagesContainerRef}
-                    className="flex-grow-1 overflow-auto mb-3"
+                    className="flex-grow-1 overflow-auto mb-3 messages-scroll"
                     style={{
                       minHeight: "200px",
                       maxHeight: "calc(55vh - 200px)",
-                      scrollbarWidth: "thin",
-                      scrollbarColor: "#C1C1C1 #F3F7FF"
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none"
                     }}
                   >
                     <style>
                       {`
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar {
-                            width: 8px;
+                          .messages-scroll::-webkit-scrollbar {
+                            display: none;
+                            width: 0;
+                            height: 0;
                           }
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-track {
-                            background: #F3F7FF;
-                            border-radius: 10px;
+                          .messages-scroll {
+                            -ms-overflow-style: none;
+                            scrollbar-width: none;
                           }
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-thumb {
-                            background: #C1C1C1;
-                            border-radius: 10px;
+                          .conversations-scroll::-webkit-scrollbar {
+                            display: none;
+                            width: 0;
+                            height: 0;
                           }
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-thumb:hover {
-                            background: #A0A0A0;
+                          .conversations-scroll {
+                            -ms-overflow-style: none;
+                            scrollbar-width: none;
                           }
                         `}
                     </style>

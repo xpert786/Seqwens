@@ -378,18 +378,23 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+              className="px-6 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+              style={{ borderRadius: '10px' }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50"
-              style={{ backgroundColor: '#F97316' }}
+              className="px-6 py-2 text-white text-sm font-medium disabled:opacity-50"
+              style={{
+                backgroundColor: '#F97316',
+                borderRadius: '10px'
+              }}
             >
               {submitting ? 'Setting...' : 'Set Availability'}
             </button>
+
           </div>
         </form>
       </div>

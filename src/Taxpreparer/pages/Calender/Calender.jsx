@@ -730,7 +730,7 @@ export default function CalendarPage() {
                               <div className="w-1 h-1 bg-white rounded-full"></div>
                               <span className="truncate">{event.title}</span>
                             </div>
-                            <div className="text-xs opacity-90">{event.time}</div>
+                            <div className="opacity-90" style={{ fontSize: '9px', lineHeight: '1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.time}</div>
                           </div>
                         ))}
                       </div>
