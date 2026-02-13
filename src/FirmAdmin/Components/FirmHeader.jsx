@@ -126,6 +126,11 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
+        // Don't poll if we just had a manual update (prevents reverting to old count)
+        if (Date.now() - lastActionTimeRef.current < 5000) {
+            return;
+        }
+
         try {
             const response = await firmAdminNotificationAPI.getUnreadCount();
             if (response.success && response.data) {

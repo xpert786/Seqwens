@@ -204,6 +204,22 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
     localUnreadCountRef.current = unreadCount;
   }, [unreadCount]);
 
+  // Synchronize unread count with parent component
+  useEffect(() => {
+    if (typeof onChange === "function") {
+      // Per requirement: "The count should only reflect the number of unread notifications currently displayed in the 'Unread' tab"
+      const currentUnreadInView = notifications.filter((n) => !n.read).length;
+
+      // When in unread view, use the visible count. Otherwise use the total unread count.
+      const displayCount = selectedTab === "unread" ? currentUnreadInView : unreadCount;
+
+      onChange({
+        notifications,
+        unreadCount: displayCount,
+      });
+    }
+  }, [notifications, unreadCount, selectedTab, onChange]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
@@ -242,15 +258,15 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
       if (response.success && response.data) {
         const transformedNotifications = response.data.notifications.map(transformNotification);
         setNotifications(transformedNotifications);
-        setUnreadCount(response.data.unread_count || 0);
 
-        // Notify parent component
-        if (typeof onChange === "function") {
-          onChange({
-            notifications: transformedNotifications,
-            unreadCount: response.data.unread_count || 0,
-          });
-        }
+        // Calculate unread count based on visible notifications if in unread tab
+        // as per requirement "count should only reflect number of unread currently displayed"
+        const countToDisplay = selectedTab === "unread"
+          ? transformedNotifications.filter(n => !n.read).length
+          : (response.data.unread_count || 0);
+
+        setUnreadCount(countToDisplay);
+
       } else {
         throw new Error(response.message || "Failed to fetch notifications");
       }
@@ -275,12 +291,6 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
       if (response.success && response.data) {
         const newUnreadCount = response.data.unread_count || 0;
         setUnreadCount(newUnreadCount);
-        if (typeof onChange === "function") {
-          onChange({
-            notifications,
-            unreadCount: newUnreadCount,
-          });
-        }
       }
     } catch (err) {
       console.error("Error fetching unread count:", err);
@@ -303,13 +313,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
   const handleUnreadCountUpdate = useCallback((count) => {
     setUnreadCount(count);
-    if (typeof onChange === "function") {
-      onChange({
-        notifications,
-        unreadCount: count,
-      });
-    }
-  }, [notifications, onChange]);
+  }, []);
 
   useNotificationWebSocket(true, handleNewNotification, handleUnreadCountUpdate);
 
@@ -371,16 +375,8 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
           );
 
           // Update parent immediately with the updated notifications and count
-          setUnreadCount((prevCount) => {
-            const nextCount = Math.max(0, prevCount - 1);
-            if (typeof onChange === "function") {
-              onChange({
-                notifications: updated,
-                unreadCount: nextCount,
-              });
-            }
-            return nextCount;
-          });
+          // Update local unread count
+          setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
 
           return updated;
         });
@@ -402,21 +398,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
           const updated = prev.filter((notification) => notification.id !== notificationId);
 
           if (wasUnread) {
-            setUnreadCount((prevCount) => {
-              const nextCount = Math.max(0, prevCount - 1);
-              if (typeof onChange === "function") {
-                onChange({
-                  notifications: updated,
-                  unreadCount: nextCount,
-                });
-              }
-              return nextCount;
-            });
-          } else if (typeof onChange === "function") {
-            onChange({
-              notifications: updated,
-              unreadCount: localUnreadCountRef.current,
-            });
+            setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
           }
 
           return updated;
@@ -425,7 +407,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
     } catch (err) {
       console.error("Error deleting notification:", err);
     }
-  }, [notificationAPI, onChange]);
+  }, [notificationAPI]);
 
   const markAllRead = useCallback(async () => {
     try {
@@ -440,14 +422,10 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
         setNotifications(updatedNotifications);
         setUnreadCount(0);
 
-        if (typeof onChange === "function") {
-          onChange({
-            notifications: updatedNotifications,
-            unreadCount: 0,
-          });
-        }
-        // Refetch notifications to get updated state from server
-        fetchNotifications();
+        // Small delay to ensure backend state is fully updated before refetching
+        setTimeout(() => {
+          fetchNotifications();
+        }, 500);
       }
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
