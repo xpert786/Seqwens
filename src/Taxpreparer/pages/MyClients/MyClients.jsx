@@ -2156,11 +2156,11 @@ export default function MyClients() {
         <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
             <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
-              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF', padding: '16px 24px' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
-                <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
+                <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close" style={{ fontSize: '12px' }}></button>
               </div>
-              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
                 <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
                   <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
                     {activeInviteDetails.first_name} {activeInviteDetails.last_name}
@@ -2184,14 +2184,23 @@ export default function MyClients() {
                       className="form-control"
                       value={activeInviteDetails.invite_link || ""}
                       readOnly
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB', height: '38px', fontSize: '14px' }}
                     />
                     <button
                       type="button"
                       className="btn btn-outline-secondary"
                       onClick={handleCopyInviteLink}
                       disabled={!activeInviteDetails.invite_link}
-                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                      style={{
+                        borderRadius: '8px',
+                        width: '38px',
+                        height: '38px',
+                        padding: '0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}
                     >
                       <FaCopy size={12} />
                     </button>
@@ -2200,7 +2209,15 @@ export default function MyClients() {
                       className="btn btn-outline-primary"
                       onClick={handleRefreshInviteLink}
                       disabled={inviteLinkRefreshing}
-                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                      style={{
+                        borderRadius: '8px',
+                        whiteSpace: 'nowrap',
+                        height: '38px',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 12px'
+                      }}
                     >
                       {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
                     </button>
@@ -2224,14 +2241,24 @@ export default function MyClients() {
                       value={editedInviteEmail}
                       onChange={(e) => setEditedInviteEmail(e.target.value)}
                       placeholder={activeInviteDetails.email || 'Enter email'}
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB', height: '38px', fontSize: '14px' }}
                     />
                     <button
                       type="button"
                       className="btn btn-primary"
                       onClick={handleSendEmailInviteNow}
                       disabled={inviteActionLoading}
-                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                      style={{
+                        borderRadius: '8px',
+                        backgroundColor: '#00C0C6',
+                        borderColor: '#00C0C6',
+                        whiteSpace: 'nowrap',
+                        height: '38px',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 16px'
+                      }}
                     >
                       {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
                     </button>
@@ -2248,7 +2275,7 @@ export default function MyClients() {
                     <FaSms size={14} /> Send SMS Invite
                   </label>
                   <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll text the invite link to the phone number you provide2222.
+                    We'll text the invite link to the phone number you provide.
                   </p>
                   <div className="d-flex gap-2 mb-2">
                     <PhoneInput
@@ -2260,7 +2287,7 @@ export default function MyClients() {
                       }}
                       inputClass="form-control"
                       containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
-                      inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB', height: '38px' }}
                       dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
                       enableSearch={true}
                       countryCodeEditable={false}
@@ -2270,7 +2297,17 @@ export default function MyClients() {
                       className="btn btn-primary"
                       onClick={handleSendSmsInviteNow}
                       disabled={inviteActionLoading}
-                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                      style={{
+                        borderRadius: '8px',
+                        backgroundColor: '#00C0C6',
+                        borderColor: '#00C0C6',
+                        whiteSpace: 'nowrap',
+                        height: '38px',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 16px'
+                      }}
                     >
                       {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
                     </button>

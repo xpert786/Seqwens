@@ -693,11 +693,14 @@ span.info-item {
   overflow: visible;
 }
 
-/* Phone Input Dropdown Fix for Share Taxpayer Invite modal */
 .invite-actions-modal .modal-dialog,
-.invite-actions-modal .modal-content,
-.invite-actions-modal .modal-body {
+.invite-actions-modal .modal-content {
   overflow: visible !important;
+}
+
+.invite-actions-modal .modal-body.custom-scrollbar {
+  overflow-y: auto !important;
+  overflow-x: hidden;
 }
 
 .invite-actions-phone-container {
@@ -780,6 +783,7 @@ span.info-item {
 
 /* Send Invite Modal Mobile Responsive Styles */
 @media (max-width: 576px) {
+
   /* Modal container adjustments - smaller modal */
   .modal {
     padding: 0 !important;

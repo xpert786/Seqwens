@@ -276,7 +276,7 @@ export default function InvoicesPage() {
               display: 'flex',
               marginTop: "-9px",
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
             <FiltIcon className="me-2 text-muted" />
@@ -306,14 +306,30 @@ export default function InvoicesPage() {
           {!isScheduleView && clientId && (
             <button
               onClick={() => setShowCreateInvoiceModal(true)}
-              className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
-              style={{ backgroundColor: '#F56D2D' }}
+              className="px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition flex items-center gap-2"
+              style={{
+                backgroundColor: '#F56D2D',
+                borderRadius: '12px'
+              }}
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7 1V7M7 7V13M7 7H13M7 7H1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               Create Invoice
             </button>
+
           )}
         </div>
 
