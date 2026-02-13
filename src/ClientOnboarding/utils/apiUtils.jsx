@@ -5036,21 +5036,6 @@ export const taxPreparerFirmSharedAPI = {
     return await apiRequest(endpoint, 'GET');
   },
 
-  // NEW: List firm-shared folders (Folders only optimized)
-  getFirmSharedFolders: async (params = {}) => {
-    const { parent_id, search } = params;
-    const queryParams = new URLSearchParams();
-
-    if (parent_id) queryParams.append('parent_id', parent_id);
-    if (search) queryParams.append('search', search);
-
-    const queryString = queryParams.toString();
-    const endpoint = queryString
-      ? `/firm/tax-preparer/firm-shared-folders/?${queryString}`
-      : '/firm/tax-preparer/firm-shared-folders/';
-    return await apiRequest(endpoint, 'GET');
-  },
-
   // Upload file to firm-shared area
   uploadFirmSharedDocument: async (file, folderId = null, categoryId = null, comment = null) => {
     try {
@@ -6801,6 +6786,55 @@ export const documentsAPI = {
     const endpoint = queryString
       ? `/taxpayer/document-requests/?${queryString}`
       : '/taxpayer/document-requests/';
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Browse documents for taxpayer (root or in a folder)
+  // GET /taxpayer/my-documents/browse/
+  browseDocuments: async (params = {}) => {
+    const { folder_id, show_archived, search, category_id, sort_by, recursive } = params;
+    const queryParams = new URLSearchParams();
+
+    if (folder_id) queryParams.append('folder_id', folder_id);
+    if (show_archived) queryParams.append('show_archived', show_archived);
+    if (search) queryParams.append('search', search);
+    if (category_id) queryParams.append('category_id', category_id);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (recursive) queryParams.append('recursive', recursive);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/my-documents/browse/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Optimized folder browsing for taxpayer
+  // GET /taxpayer/my-documents/folders/
+  browseFoldersSplit: async (params = {}) => {
+    const { folder_id, search } = params;
+    const queryParams = new URLSearchParams();
+    if (folder_id) queryParams.append('folder_id', folder_id);
+    if (search) queryParams.append('search', search);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/my-documents/folders/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Optimized file browsing for taxpayer
+  // GET /taxpayer/my-documents/files/
+  browseFilesSplit: async (params = {}) => {
+    const { folder_id, search, show_archived, category_id, sort_by, page, page_size } = params;
+    const queryParams = new URLSearchParams();
+    if (folder_id) queryParams.append('folder_id', folder_id);
+    if (search) queryParams.append('search', search);
+    if (show_archived) queryParams.append('show_archived', show_archived);
+    if (category_id) queryParams.append('category_id', category_id);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (page) queryParams.append('page', page);
+    if (page_size) queryParams.append('page_size', page_size);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/my-documents/files/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
   },
 
