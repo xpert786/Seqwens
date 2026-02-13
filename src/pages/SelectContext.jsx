@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import RoleSelectionModal from '../components/RoleSelectionModal';
 import FirmSelectionModal from '../components/FirmSelectionModal';
-import FixedLayout from '../components/FixedLayout';
+import FixedLayout from '../ClientOnboarding/components/FixedLayout';
 
 export default function SelectContext() {
     const location = useLocation();
