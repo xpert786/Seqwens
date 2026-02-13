@@ -208,7 +208,7 @@ export default function Messages() {
           });
 
           const sortedChats = sortConversationsByRecent(transformedChats);
-          
+
           // Preserve existing subjects when updating conversations
           setConversations(prevConvs => {
             const mergedChats = sortedChats.map(newChat => {
@@ -558,13 +558,13 @@ export default function Messages() {
             const updated = prevConvs.map(conv =>
               conv.id === activeConversationId
                 ? {
-                    ...conv,
-                    lastMessage: lastMessage.text,
-                    time: "Just now",
-                    lastMessageAt: lastMessage.date || new Date().toISOString(),
-                    // Ensure subject is preserved
-                    subject: conv.subject,
-                  }
+                  ...conv,
+                  lastMessage: lastMessage.text,
+                  time: "Just now",
+                  lastMessageAt: lastMessage.date || new Date().toISOString(),
+                  // Ensure subject is preserved
+                  subject: conv.subject,
+                }
                 : conv
             );
             return sortConversationsByRecent(updated);
@@ -945,8 +945,9 @@ export default function Messages() {
 
         const timestamp = thread.last_message_at || thread.created_at || new Date().toISOString();
         // Transform the created thread to match component structure
+        const threadId = thread.thread_id || thread.id;
         const newChat = {
-          id: thread.id,
+          id: threadId,
           name: staffNames,
           lastMessage: lastMessageText,
           time: formatRelativeTime(timestamp),
@@ -1269,7 +1270,7 @@ export default function Messages() {
 
       <div className="d-flex flex-grow-1 overflow-hidden messages-layout">
 
-        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
+        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px" }}>
           <div className="mb-2">
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
@@ -1304,7 +1305,6 @@ export default function Messages() {
               gap: "12px",
               overflowY: "auto",
               overflowX: "hidden",
-              maxHeight: "calc(55vh - 150px)",
               scrollbarWidth: "none",
               msOverflowStyle: "none"
             }}>
@@ -1436,7 +1436,7 @@ export default function Messages() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-panel" style={{ height: "55vh", minHeight: "400px" }}>
+        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-panel">
           {activeConversation ? (
             <>
               <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
@@ -1455,8 +1455,6 @@ export default function Messages() {
                 style={{
                   overflowY: "auto",
                   overflowX: "hidden",
-                  minHeight: "200px",
-                  maxHeight: "calc(55vh - 200px)",
                   scrollbarWidth: "none",
                   msOverflowStyle: "none"
                 }}

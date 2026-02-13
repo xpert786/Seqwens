@@ -1107,35 +1107,45 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="lg:px-4 md:px-2 px-1 messages-page">
+    <div className="messages-page messages-page-container h-100 d-flex flex-column" style={{ padding: "0 24px 24px 24px" }}>
       <style>
         {`
           @keyframes slideUp {
-            from {
-              transform: translateY(100%);
-              opacity: 0;
-            }
-            to {
-              transform: translateY(0);
-              opacity: 1;
-            }
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          .messages-page-container {
+            animation: slideUp 0.4s ease-out;
+            height: calc(100vh - 100px) !important;
+          }
+          .active-thread {
+            border-color: #F56D2D !important;
+            box-shadow: 0 4px 12px rgba(245, 109, 45, 0.1);
           }
         `}
       </style>
+
       {/* Header */}
-      <div className="message-header d-flex justify-content-between align-items-center mb-3 px-2">
+      <div className="message-header mb-4 px-3 py-2 bg-white rounded-4 shadow-sm" style={{ flexShrink: 0, minHeight: "80px" }}>
         <div>
-          <h5 className="mb-0" style={{ color: "#3B4A66", fontSize: "26px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+          <h5 className="mb-0" style={{ color: "#1A202C", fontSize: "24px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>
             Messages
           </h5>
-          <small style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
+          <p className="mb-0 text-muted" style={{ fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
             Communicate with clients and team members
-          </small>
+          </p>
         </div>
 
         <button
-          className="btn d-flex align-items-center new-message-btn"
-          style={{ backgroundColor: "#F56D2D", color: "#FFFFFF", fontFamily: "BasisGrotesquePro" }}
+          className="btn d-flex align-items-center px-4 py-2 rounded-3 transition-all new-message-btn"
+          style={{
+            backgroundColor: "#F56D2D",
+            color: "#FFFFFF",
+            fontFamily: "BasisGrotesquePro",
+            fontWeight: "600",
+            border: "none",
+            boxShadow: "0 4px 12px rgba(245, 109, 45, 0.2)"
+          }}
           onClick={handleOpenComposeModal}
         >
           <span className="me-2 text-white"><PLusIcon /></span>
@@ -1143,23 +1153,22 @@ export default function MessagePage() {
         </button>
       </div>
 
-
       {/* Two Column Layout */}
       <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
 
         {/* Left Column - Conversations */}
-        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
-          <div className="mb-2">
-            <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
+        <div className="p-3 me-4 d-flex flex-column conversations-panel bg-white shadow-sm" style={{ border: "1px solid #E2E8F0", borderRadius: "20px" }}>
+          <div className="mb-4">
+            <h5 className="mb-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
             <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
               <FaSearch
                 style={{
                   position: "absolute",
-                  left: "10px",
+                  left: "14px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#9CA3AF",
+                  color: "#A0AEC0",
                   fontSize: "14px"
                 }}
               />
@@ -1170,448 +1179,206 @@ export default function MessagePage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  paddingLeft: "35px",
-                  fontSize: "13px",
+                  paddingLeft: "42px",
+                  fontSize: "14px",
                   fontFamily: "BasisGrotesquePro",
-                  height: "38px"
+                  height: "44px",
+                  borderRadius: "12px",
+                  border: "1px solid #E2E8F0",
+                  backgroundColor: "#F7FAFC"
                 }}
               />
             </div>
           </div>
 
           {/* Filter Dropdown */}
-          <div className="mb-3" ref={dropdownRef}>
+          <div className="mb-3 position-relative" ref={dropdownRef}>
             <button
-              className="btn btn-sm w-100 d-flex justify-content-between align-items-center"
+              className="btn btn-sm w-100 d-flex justify-content-between align-items-center py-2 px-3"
               style={{
-                background: "transparent",
-                border: "1px solid #E8F0FF",
-                color: "#3B4A66",
+                background: "#F7FAFC",
+                border: "1px solid #E2E8F0",
+                color: "#4A5568",
                 fontFamily: "BasisGrotesquePro",
-                fontSize: "13px"
+                fontSize: "14px",
+                borderRadius: "10px"
               }}
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
             >
               <span>{selectedFilter}</span>
-              <FaChevronDown style={{ fontSize: "12px" }} />
+              <FaChevronDown style={{ fontSize: "12px", color: "#718096" }} />
             </button>
 
             {showFilterDropdown && (
-              <div className="position-absolute w-100 mt-1" style={{ zIndex: 1000 }}>
-                <div className="list-group bg-white shadow-sm" style={{ borderRadius: "8px", border: "1px solid #E8F0FF" }}>
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option}
-                      className={`list-group-item list-group-item-action border-0 ${selectedFilter === option ? 'active' : ''}`}
-                      style={{
-                        fontSize: "13px",
-                        fontFamily: "BasisGrotesquePro",
-                        color: selectedFilter === option ? "#fff" : "#3B4A66",
-                        backgroundColor: selectedFilter === option ? "#F56D2D" : "transparent"
-                      }}
-                      onClick={() => {
-                        setSelectedFilter(option);
-                        setShowFilterDropdown(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+              <div
+                className="position-absolute mt-1 shadow-lg bg-white border rounded-3 z-3 w-100 overflow-hidden"
+              >
+                {filterOptions.map((option) => (
+                  <button
+                    key={option}
+                    className="dropdown-item py-2 px-3 border-0 bg-white w-100 text-start hover:bg-light"
+                    style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#4A5568" }}
+                    onClick={() => {
+                      setSelectedFilter(option);
+                      setShowFilterDropdown(false);
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Loading State */}
-          {loadingThreads && (
-            <div className="text-center py-4">
-              <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-              <p className="text-muted mt-2 small">Loading conversations...</p>
-            </div>
-          )}
+          <div className="flex-grow-1 overflow-auto conversations-list pr-1">
+            <style>
+              {`
+                .conversations-list::-webkit-scrollbar { width: 5px; }
+                .conversations-list::-webkit-scrollbar-thumb { background: #CBD5E0; border-radius: 10px; }
+                .conversation-item:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+              `}
+            </style>
 
-          {/* Error State */}
-          {threadsError && (
-            <div className="text-center py-4">
-              <p className="text-muted small">{threadsError}</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loadingThreads && !threadsError && conversations.length === 0 && (
-            <div className="text-center py-5">
-              <p className="text-muted small mb-0">No conversations yet</p>
-              <p className="text-muted small">Start a new message to begin</p>
-            </div>
-          )}
-
-          {/* Conversations List */}
-          {(() => {
-            const filteredConversations = conversations.filter(conv => {
-              const term = searchTerm.toLowerCase();
-              return (
-                (conv.name && conv.name.toLowerCase().includes(term)) ||
-                (conv.subject && conv.subject.toLowerCase().includes(term)) ||
-                (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
-              );
-            });
-
-            return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
-              <div className="conversations-list" style={{ width: "100%" }}>
-                {filteredConversations.map((conv, index) => (
+            {loadingThreads ? (
+              <div className="text-center py-5">
+                <div className="spinner-border spinner-border-sm text-primary" />
+              </div>
+            ) : threadsError ? (
+              <div className="text-center py-5 text-danger small">{threadsError}</div>
+            ) : conversations.length === 0 ? (
+              <div className="text-center py-5 text-muted small">No conversations yet</div>
+            ) : (
+              conversations
+                .filter(conv => {
+                  const matchesSearch = conv.name.toLowerCase().includes(searchTerm.toLowerCase());
+                  if (selectedFilter === "Active") return matchesSearch && conv.status === "active";
+                  if (selectedFilter === "Closed") return matchesSearch && conv.status === "closed";
+                  return matchesSearch;
+                })
+                .map((conv, index) => (
                   <div
-                    key={conv.id || `conv-${index}`}
-                    className="conversation-item p-3"
+                    key={conv.id || index}
+                    className={`conversation-item p-3 mb-2 transition-all ${conv.id === activeConversationId ? "active-thread" : ""}`}
                     style={{
                       cursor: "pointer",
-                      border: "2px solid #E8F0FF",
-                      backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
-                      borderRadius: "12px",
-                      fontFamily: "BasisGrotesquePro",
-                      color: "#3B4A66",
-                      marginBottom: index < conversations.length - 1 ? "12px" : "0",
-                      width: "100%",
-                      minHeight: "80px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center"
+                      border: "1px solid #E2E8F0",
+                      backgroundColor: conv.id === activeConversationId ? "#F56D2D08" : "#FFFFFF",
+                      borderRadius: "14px",
+                      position: "relative"
                     }}
-                    onClick={() => {
-                      setActiveConversationId(conv.id);
-                    }}
+                    onClick={() => setActiveConversationId(conv.id)}
                   >
-                    <div className="top-row d-flex justify-content-between align-items-center mb-1">
-                      <div className="d-flex align-items-center">
-                        <ConverIcon className="me-2 text-primary" />
-                        <div className="d-flex align-items-center gap-2">
-                          <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
-                          {conv.unreadCount > 0 && (
-                            <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
-                              {conv.unreadCount}
-                            </span>
-                          )}
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div className="d-flex align-items-center gap-2 overflow-hidden">
+                        <div className="flex-shrink-0 d-flex align-items-center justify-content-center bg-light rounded-3" style={{ width: "36px", height: "36px" }}>
+                          <ConverIcon size={18} color={conv.id === activeConversationId ? "#F56D2D" : "#718096"} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <div className="text-truncate fw-bold" style={{ color: "#1A202C", fontSize: "14px" }}>{conv.name}</div>
+                          <div className="text-truncate text-muted" style={{ fontSize: "11px" }}>{conv.subject}</div>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <small className="time-text" style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
-                        <button
-                          onClick={(e) => handleDeleteThread(conv.id, e)}
-                          className="btn "
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            padding: "4px 8px",
-                            color: "#EF4444",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                          title="Delete thread"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
+                      <small style={{ color: "#A0AEC0", fontSize: "10px" }}>{conv.time}</small>
                     </div>
-                    <small className="last-message" style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
-                    {conv.subject && (
-                      <div className="subject-row mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
-                        <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
-                        <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
-                      </div>
-                    )}
+                    <div className="d-flex justify-content-between align-items-center">
+                      <small className="text-truncate text-muted" style={{ fontSize: "12px", maxWidth: "80%" }}>{conv.lastMessage}</small>
+                      {conv.unreadCount > 0 && (
+                        <span className="badge rounded-pill bg-danger" style={{ fontSize: "9px" }}>{conv.unreadCount}</span>
+                      )}
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : !loadingThreads && !threadsError && conversations.length > 0 && filteredConversations.length === 0 ? (
-              <div className="text-center py-5">
-                <p className="text-muted small">No matches found for "{searchTerm}"</p>
-              </div>
-            ) : null;
-          })()}
+                ))
+            )}
+          </div>
         </div>
 
         {/* Right Column - Chat Interface */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-interface">
-          {/* Chat Header with Tabs */}
+        <div className="flex-grow-1 bg-white rounded-4 shadow-sm d-flex flex-column chat-interface overflow-hidden" style={{ border: "1px solid #E2E8F0" }}>
           {(() => {
-            const activeConversation = conversations.find(c => c.id === activeConversationId);
-            return activeConversation ? (
-              <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <div className="d-flex align-items-center gap-2">
-                  <ConverIcon className="text-primary" size={20} />
-                  <div>
-                    <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
-                    <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                      {activeConversation.status === 'active' ? 'Active' : 'Closed'}
-                    </small>
+            const activeConv = conversations.find(c => c.id === activeConversationId);
+            if (!activeConv) {
+              return (
+                <div className="d-flex flex-column align-items-center justify-content-center h-100 bg-light-subtle">
+                  <div className="mb-3 opacity-25"><ConverIcon size={64} /></div>
+                  <h6 className="text-muted">Select a conversation to start messaging</h6>
+                </div>
+              );
+            }
+
+            return (
+              <div className="d-flex flex-column h-100">
+                {/* Chat Header */}
+                <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white shadow-sm-bottom" style={{ zIndex: 5 }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="bg-light rounded-circle p-2"><ConverIcon size={20} className="text-primary" /></div>
+                    <div>
+                      <h6 className="mb-0 fw-bold">{activeConv.name}</h6>
+                      <small className="text-success" style={{ fontSize: "12px" }}>● Active</small>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <div>
-                  <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Select a conversation</h6>
-                  <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                    Choose a conversation to view messages
-                  </small>
+
+                {/* Messages Area */}
+                <div className="flex-grow-1 overflow-auto p-4 chat-messages-area" ref={messagesContainerRef} style={{ backgroundColor: "#F8FAFC" }}>
+                  {activeChatMessages.map((msg) => (
+                    <div key={msg.id} className={`d-flex mb-4 ${msg.type === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
+                      <div className={`p-3 shadow-sm message-bubble ${msg.type === 'user' ? 'sent' : 'received'}`} style={{
+                        maxWidth: "75%",
+                        borderRadius: msg.type === 'user' ? "20px 20px 0 20px" : "0 20px 20px 20px",
+                        backgroundColor: msg.type === 'user' ? "#F56D2D" : "#FFFFFF",
+                        color: msg.type === 'user' ? "#FFFFFF" : "#1A202C",
+                        border: msg.type === 'user' ? "none" : "1px solid #E2E8F0"
+                      }}>
+                        {msg.type !== 'user' && <div className="fw-bold mb-1" style={{ fontSize: "11px", color: "#F56D2D" }}>{msg.sender}</div>}
+                        <div style={{ fontSize: "14px", lineHeight: "1.5" }}>{msg.text}</div>
+                        {msg.hasAttachment && (
+                          <div className={`mt-2 p-2 rounded d-flex align-items-center gap-2 ${msg.type === 'user' ? 'bg-white bg-opacity-10' : 'bg-light'}`} style={{ border: "1px dashed rgba(0,0,0,0.1)" }}>
+                            <FileIcon size={14} />
+                            <a href={msg.attachment} target="_blank" rel="noreferrer" className={msg.type === 'user' ? 'text-white' : 'text-primary'} style={{ fontSize: "12px" }}>{msg.attachmentName}</a>
+                          </div>
+                        )}
+                        <div className="mt-1 opacity-75" style={{ fontSize: "10px", textAlign: msg.type === 'user' ? 'right' : 'left' }}>
+                          {new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="p-3 border-top bg-white chat-input-area">
+                  <div className="d-flex align-items-center gap-2">
+                    <input ref={messageFileInputRef} type="file" className="d-none" onChange={handleFileSelect} />
+                    <button className="btn bg-light rounded-3 p-2" onClick={() => messageFileInputRef.current.click()}><FileIcon size={20} /></button>
+                    <div className="flex-grow-1 position-relative">
+                      {messageAttachment && (
+                        <div className="position-absolute bottom-100 start-0 mb-2 p-2 bg-white border rounded shadow-sm small d-flex align-items-center gap-2">
+                          {messageAttachment.name}
+                          <button className="btn btn-sm p-0 text-danger" onClick={() => setMessageAttachment(null)}>×</button>
+                        </div>
+                      )}
+                      <input
+                        className="form-control rounded-3 border-light bg-light py-2"
+                        placeholder="Type a message..."
+                        value={newMessage}
+                        onChange={handleTyping}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                      />
+                    </div>
+                    <button
+                      className="btn rounded-3 px-3 py-2"
+                      style={{ backgroundColor: (newMessage.trim() || messageAttachment) ? "#F56D2D" : "#E2E8F0", color: "#FFF" }}
+                      disabled={!(newMessage.trim() || messageAttachment)}
+                      onClick={handleSend}
+                    >
+                      <FaPaperPlane />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })()}
-
-          {/* Chat Content and Input Area */}
-          <>
-            {(() => {
-              const activeConversation = conversations.find(c => c.id === activeConversationId);
-              return activeConversation ? (
-                <>
-                  <div
-                    ref={messagesContainerRef}
-                    className="flex-grow-1 overflow-auto mb-3"
-                    style={{
-                      minHeight: "200px",
-                      maxHeight: "calc(55vh - 200px)",
-                      scrollbarWidth: "thin",
-                      scrollbarColor: "#C1C1C1 #F3F7FF"
-                    }}
-                  >
-                    <style>
-                      {`
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar {
-                            width: 8px;
-                          }
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-track {
-                            background: #F3F7FF;
-                            border-radius: 10px;
-                          }
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-thumb {
-                            background: #C1C1C1;
-                            border-radius: 10px;
-                          }
-                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-thumb:hover {
-                            background: #A0A0A0;
-                          }
-                        `}
-                    </style>
-                    {loadingMessages ? (
-                      <div className="text-center py-5">
-                        <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-                        <p className="text-muted mt-2 small">Loading messages...</p>
-                      </div>
-                    ) : activeChatMessages.length > 0 ? (
-                      <>
-                        {activeChatMessages.map((msg) => {
-                          // Client messages (received) appear on LEFT
-                          if (msg.type === "admin") {
-                            return (
-                              <div key={msg.id} className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
-                                {/* <JdIcon color="#f97316" className="me-2" /> */}
-                                <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
-                                  <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
-                                    {msg.sender}
-                                  </div>
-                                  <div>{msg.text}</div>
-                                  {msg.hasAttachment && (
-                                    <div className="mt-2">
-                                      <FileIcon className="me-2 text-primary" />
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
-                                    {new Date(msg.date).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })}
-                                    {msg.isEdited && (
-                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          }
-                          // Tax preparer messages (sent by current user) appear on RIGHT
-                          else if (msg.type === "user") {
-                            return (
-                              <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
-                                <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
-                                  <div style={{ color: "#1F2937" }}>{msg.text}</div>
-                                  {msg.hasAttachment && (
-                                    <div className="mt-2">
-                                      <FileIcon className="me-2 text-primary" />
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
-                                    {new Date(msg.date).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })}
-                                    {msg.isEdited && (
-                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                    )}
-                                  </div>
-                                </div>
-                                {/* <JdIcon color="#f97316" className="ms-2" /> */}
-                              </div>
-                            );
-                          }
-                          return null;
-                        })}
-                        <div ref={messagesEndRef} />
-                      </>
-                    ) : (
-                      <div className="text-center py-5">
-                        <p className="text-muted">No messages yet. Start the conversation!</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border-top pt-2">
-                    <div className="d-flex align-items-center">
-                      {/* WebSocket connection indicator */}
-                      {wsConnected && (
-                        <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
-                        </div>
-                      )}
-                      {!wsConnected && wsError && (
-                        <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
-                        </div>
-                      )}
-                      {/* Typing indicator */}
-                      {typingUsers.length > 0 && (
-                        <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
-                          {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-                        </div>
-                      )}
-                      <input
-                        ref={messageFileInputRef}
-                        type="file"
-                        onChange={handleFileSelect}
-                        className="d-none"
-                      />
-                      <button
-                        type="button"
-                        className="btn me-2"
-                        onClick={() => messageFileInputRef.current?.click()}
-                        style={{
-                          background: "transparent",
-                          border: "1px solid #E8F0FF",
-                          color: "#3B4A66"
-                        }}
-                        title="Attach file"
-                      >
-                        <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2" />
-                        </svg>
-
-                      </button>
-                      {messageAttachment && (
-                        <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
-                          {messageAttachment.name}
-                        </span>
-                      )}
-                      {messageAttachment && (
-                        <button
-                          type="button"
-                          className="btn me-2"
-                          onClick={() => setMessageAttachment(null)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#EF4444",
-                            padding: "0 5px"
-                          }}
-                          title="Remove attachment"
-                        >
-                          ×
-                        </button>
-                      )}
-                      <input
-                        type="text"
-                        className="form-control me-2"
-                        placeholder="Write a message..."
-                        value={newMessage}
-                        onChange={handleTyping}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !sendingMessage) {
-                            e.preventDefault();
-                            handleSend();
-                          }
-                        }}
-                        style={{ fontFamily: "BasisGrotesquePro" }}
-                      />
-                      <button
-                        type="button"
-                        className="btn"
-                        style={{
-                          background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
-                          color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
-                          cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
-                        }}
-                        onClick={handleSend}
-                        disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
-                        aria-label="Send message"
-                      >
-                        <FaPaperPlane />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="d-flex align-items-center justify-content-center h-100">
-                  <div className="text-center">
-                    <p className="text-muted mb-0">Select a conversation to view messages</p>
-                  </div>
-                </div>
-              );
-            })()}
-          </>
         </div>
       </div>
 
@@ -1653,7 +1420,7 @@ export default function MessagePage() {
               marginBottom: "32px"
             }}>
               <div>
-                <h4 style={{
+                <h4 className="compose-modal-title" style={{
                   fontSize: "28px",
                   fontWeight: "700",
                   color: "#1A202C",
@@ -1668,7 +1435,7 @@ export default function MessagePage() {
                   margin: 0,
                   lineHeight: "1.4"
                 }}>
-                  Send a new message to a client or team member.
+                  Send a new message to a client.
                 </p>
               </div>
               <button
@@ -1732,16 +1499,25 @@ export default function MessagePage() {
                       }}
                     >
                       <option value="">Select a client</option>
-                      {availableClients.map((client) => {
-                        const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
-                        const label = fullName || client.email || `Client #${client.id}`;
-                        const secondary = client.email && fullName ? ` (${client.email})` : "";
-                        return (
-                          <option key={client.id} value={client.id}>
-                            {label}{secondary}
-                          </option>
-                        );
-                      })}
+                      {availableClients
+                        .filter(client => {
+                          // Don't show clients who already have a thread
+                          const existingThread = conversations.find(conv =>
+                            conv.clientId?.toString() === client.id?.toString()
+                          );
+                          return !existingThread;
+                        })
+                        .map((client) => {
+                          const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+                          const label = fullName || client.email || `Client #${client.id}`;
+                          const secondary = client.email && fullName ? ` (${client.email})` : "";
+                          return (
+                            <option key={client.id} value={client.id}>
+                              {label}{secondary}
+                            </option>
+                          );
+                        })
+                      }
                     </select>
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -1802,35 +1578,6 @@ export default function MessagePage() {
 
               {/* Category & Priority */}
               <div style={{ display: "flex", gap: "20px" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    color: "#2D3748",
-                    marginBottom: "12px"
-                  }}>
-                    Category
-                  </label>
-                  <select
-                    value={composeForm.category}
-                    onChange={(e) => setComposeForm({ ...composeForm, category: e.target.value })}
-                    style={{
-                      width: "100%",
-                      padding: "16px",
-                      border: "1px solid #E2E8F0",
-                      borderRadius: "12px",
-                      fontSize: "16px",
-                      outline: "none",
-                      backgroundColor: "#FAFAFA",
-                      cursor: "pointer"
-                    }}
-                  >
-                    <option value="Client">Client</option>
-                    <option value="Internal">Internal</option>
-                    <option value="Team">Team</option>
-                  </select>
-                </div>
                 <div style={{ flex: 1 }}>
                   <label style={{
                     display: "block",
@@ -1957,10 +1704,16 @@ export default function MessagePage() {
                     }
 
                     // Extract chat/thread ID from response
-                    const chatId = chatData.id || chatData.chat_id || chatData.thread_id;
+                    // IMPORTANT: Prioritize thread_id (Modern system) over id (Legacy chat system)
+                    const chatId = chatData.thread_id || chatData.id || chatData.chat_id;
                     if (!chatId) {
                       throw new Error('Chat ID not found in response');
                     }
+
+                    console.log('New chat created, setting active ID:', chatId, 'Original IDs:', {
+                      id: chatData.id,
+                      thread_id: chatData.thread_id
+                    });
 
                     // Set the active conversation to the new chat
                     setActiveConversationId(chatId);
@@ -2044,7 +1797,6 @@ export default function MessagePage() {
           </div>
         </div>
       )}
-    </div>
+    </div >
   );
 }
-

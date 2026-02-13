@@ -459,19 +459,26 @@ const Messages = () => {
           const existingThreadUserIds = new Set();
 
           conversations.forEach(conv => {
-            // Check for client in conversation
-            if (conv.client && conv.client.id) {
-              existingThreadUserIds.add(conv.client.id);
+            // Check for client in conversation (handle object or direct ID)
+            if (conv.client) {
+              const clientId = typeof conv.client === 'object' ? conv.client.id : conv.client;
+              if (clientId) existingThreadUserIds.add(clientId.toString());
+            } else if (conv.client_id) {
+              existingThreadUserIds.add(conv.client_id.toString());
             }
+
             // Check for staff in conversation
             if (conv.assigned_staff && Array.isArray(conv.assigned_staff)) {
               conv.assigned_staff.forEach(staff => {
-                if (staff && staff.id) existingThreadUserIds.add(staff.id);
+                const staffId = typeof staff === 'object' ? staff.id : staff;
+                if (staffId) existingThreadUserIds.add(staffId.toString());
               });
+            } else if (conv.staff_id) {
+              existingThreadUserIds.add(conv.staff_id.toString());
             }
           });
 
-          users = users.filter(user => !existingThreadUserIds.has(user.id));
+          users = users.filter(user => user.id && !existingThreadUserIds.has(user.id.toString()));
         }
 
         setActiveUsers(users);

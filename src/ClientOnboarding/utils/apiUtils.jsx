@@ -1906,9 +1906,16 @@ export const threadsAPI = {
   },
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
-  sendMessage: async (threadId, messageData) => {
+  sendMessage: async (threadId, messageData, file = null) => {
     const token = getAccessToken();
-    const hasAttachment = messageData.attachment || messageData.file;
+    
+    // Support both messageData.attachment/file and separate file argument
+    const hasAttachment = file || messageData.attachment || messageData.file;
+    
+    // Ensure we handle the attachment correctly if passed as separate argument
+    if (file && !messageData.attachment && !messageData.file) {
+      messageData.attachment = file;
+    }
 
     let config;
     let response;
@@ -5930,9 +5937,17 @@ export const taxPreparerThreadsAPI = {
   },
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
-  sendMessage: async (threadId, messageData) => {
+  sendMessage: async (threadId, messageData, file = null) => {
     const token = getAccessToken();
-    const hasAttachment = messageData.attachment || messageData.file;
+    console.log('taxPreparerThreadsAPI.sendMessage called with:', { threadId, messageData, file });
+
+    // Support both messageData.attachment/file and separate file argument (how it's called in Messages.jsx)
+    const hasAttachment = file || messageData.attachment || messageData.file;
+
+    // Ensure we handle the attachment correctly if passed as separate argument
+    if (file && !messageData.attachment && !messageData.file) {
+      messageData.attachment = file;
+    }
 
     let config;
     let response;
@@ -5940,6 +5955,7 @@ export const taxPreparerThreadsAPI = {
     if (hasAttachment) {
       // Use FormData for file attachments
       const formData = new FormData();
+      console.log('Preparing FormData for message with attachment');
 
       if (messageData.content) {
         formData.append('content', messageData.content);
