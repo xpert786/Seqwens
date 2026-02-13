@@ -62,12 +62,11 @@ export default function MessagePage() {
   const typingTimeoutRef = useRef(null);
 
   const [sendingMessage, setSendingMessage] = useState(false);
-  const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [threadToDelete, setThreadToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("All");
+  const filterOptions = ["All", "Active", "Closed"];
+  const dropdownRef = useRef(null);
 
   const isSendButtonActive = newMessage.trim().length > 0;
   const sendButtonStyles = {
@@ -1100,35 +1099,45 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="lg:px-4 md:px-2 px-1 messages-page">
+    <div className="messages-page messages-page-container h-100 d-flex flex-column" style={{ padding: "0 24px 24px 24px" }}>
       <style>
         {`
           @keyframes slideUp {
-            from {
-              transform: translateY(100%);
-              opacity: 0;
-            }
-            to {
-              transform: translateY(0);
-              opacity: 1;
-            }
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          .messages-page-container {
+            animation: slideUp 0.4s ease-out;
+            height: calc(100vh - 100px) !important;
+          }
+          .active-thread {
+            border-color: #F56D2D !important;
+            box-shadow: 0 4px 12px rgba(245, 109, 45, 0.1);
           }
         `}
       </style>
+
       {/* Header */}
-      <div className="message-header d-flex justify-content-between align-items-center mb-3 px-2">
+      <div className="message-header mb-4 px-3 py-2 bg-white rounded-4 shadow-sm" style={{ flexShrink: 0, minHeight: "80px" }}>
         <div>
-          <h5 className="mb-0" style={{ color: "#3B4A66", fontSize: "26px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+          <h5 className="mb-0" style={{ color: "#1A202C", fontSize: "24px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>
             Messages
           </h5>
-          <small style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
+          <p className="mb-0 text-muted" style={{ fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
             Communicate with clients and team members
-          </small>
+          </p>
         </div>
 
         <button
-          className="btn d-flex align-items-center new-message-btn"
-          style={{ backgroundColor: "#F56D2D", color: "#FFFFFF", fontFamily: "BasisGrotesquePro" }}
+          className="btn d-flex align-items-center px-4 py-2 rounded-3 transition-all new-message-btn"
+          style={{
+            backgroundColor: "#F56D2D",
+            color: "#FFFFFF",
+            fontFamily: "BasisGrotesquePro",
+            fontWeight: "600",
+            border: "none",
+            boxShadow: "0 4px 12px rgba(245, 109, 45, 0.2)"
+          }}
           onClick={handleOpenComposeModal}
         >
           <span className="me-2 text-white"><PLusIcon /></span>
@@ -1136,23 +1145,22 @@ export default function MessagePage() {
         </button>
       </div>
 
-
       {/* Two Column Layout */}
       <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
 
         {/* Left Column - Conversations */}
-        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
-          <div className="mb-2">
-            <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
+        <div className="p-3 me-4 d-flex flex-column conversations-panel bg-white shadow-sm" style={{ border: "1px solid #E2E8F0", borderRadius: "20px" }}>
+          <div className="mb-4">
+            <h5 className="mb-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
             <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
               <FaSearch
                 style={{
                   position: "absolute",
-                  left: "10px",
+                  left: "14px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#9CA3AF",
+                  color: "#A0AEC0",
                   fontSize: "14px"
                 }}
               />
@@ -1163,20 +1171,62 @@ export default function MessagePage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  paddingLeft: "35px",
-                  fontSize: "13px",
+                  paddingLeft: "42px",
+                  fontSize: "14px",
                   fontFamily: "BasisGrotesquePro",
-                  height: "38px"
+                  height: "44px",
+                  borderRadius: "12px",
+                  border: "1px solid #E2E8F0",
+                  backgroundColor: "#F7FAFC"
                 }}
               />
             </div>
           </div>
 
+          {/* Filter Dropdown */}
+          <div className="mb-3 position-relative" ref={dropdownRef}>
+            <button
+              className="btn btn-sm w-100 d-flex justify-content-between align-items-center py-2 px-3"
+              style={{
+                background: "#F7FAFC",
+                border: "1px solid #E2E8F0",
+                color: "#4A5568",
+                fontFamily: "BasisGrotesquePro",
+                fontSize: "14px",
+                borderRadius: "10px"
+              }}
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            >
+              <span>{selectedFilter}</span>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: "#718096" }}>
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
 
+            {showFilterDropdown && (
+              <div
+                className="position-absolute mt-1 shadow-lg bg-white border rounded-3 z-3 w-100 overflow-hidden"
+              >
+                {filterOptions.map((option) => (
+                  <button
+                    key={option}
+                    className="dropdown-item py-2 px-3 border-0 bg-white w-100 text-start hover:bg-light"
+                    style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#4A5568" }}
+                    onClick={() => {
+                      setSelectedFilter(option);
+                      setShowFilterDropdown(false);
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* Loading State */}
+          {/* Conversations List */}
           <div
-            className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll"
+            className="flex-grow-1 d-flex flex-column conversations-scroll"
             style={{
               gap: "12px",
               overflowY: "auto",
@@ -1213,11 +1263,15 @@ export default function MessagePage() {
             {(() => {
               const filteredConversations = conversations.filter(conv => {
                 const term = searchTerm.toLowerCase();
-                return (
+                const matchesSearch = (
                   (conv.name && conv.name.toLowerCase().includes(term)) ||
                   (conv.subject && conv.subject.toLowerCase().includes(term)) ||
                   (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
                 );
+
+                if (selectedFilter === "Active") return matchesSearch && conv.status === "active";
+                if (selectedFilter === "Closed") return matchesSearch && conv.status === "closed";
+                return matchesSearch;
               });
 
               return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
@@ -1225,20 +1279,21 @@ export default function MessagePage() {
                   {filteredConversations.map((conv, index) => (
                     <div
                       key={conv.id || `conv-${index}`}
-                      className="conversation-item p-3"
+                      className={`conversation-item p-3 mb-2 ${conv.id === activeConversationId ? "active-thread" : ""}`}
                       style={{
                         cursor: "pointer",
-                        border: "2px solid #E8F0FF",
-                        backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
+                        border: "2px solid",
+                        borderColor: conv.id === activeConversationId ? "#F56D2D33" : "#E8F0FF",
+                        backgroundColor: conv.id === activeConversationId ? "#F56D2D08" : "#F3F7FF",
                         borderRadius: "12px",
                         fontFamily: "BasisGrotesquePro",
                         color: "#3B4A66",
-                        marginBottom: index < conversations.length - 1 ? "12px" : "0",
                         width: "100%",
                         minHeight: "80px",
                         display: "flex",
                         flexDirection: "column",
-                        justifyContent: "center"
+                        justifyContent: "center",
+                        transition: "all 0.2s ease"
                       }}
                       onClick={() => {
                         setActiveConversationId(conv.id);
@@ -1246,44 +1301,40 @@ export default function MessagePage() {
                     >
                       <div className="top-row d-flex justify-content-between align-items-center mb-1">
                         <div className="d-flex align-items-center">
-                          <ConverIcon className="me-2 text-primary" />
+                          <ConverIcon className="me-2" color={conv.id === activeConversationId ? "#F56D2D" : "#718096"} />
                           <div className="d-flex align-items-center gap-2">
-                            <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
+                            <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
                             {conv.unreadCount > 0 && (
-                              <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
+                              <span className="badge bg-danger text-white rounded-pill" style={{ fontSize: "10px", padding: "4px 8px" }}>
                                 {conv.unreadCount}
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="d-flex align-items-center gap-2">
-                          <small className="time-text" style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                          <small className="time-text" style={{ color: "#A0AEC0", fontSize: "12px", fontWeight: "400" }}>{conv.time}</small>
                           <button
-                            onClick={(e) => handleDeleteThread(conv.id, e)}
-                            className="btn "
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              padding: "4px 8px",
-                              color: "#EF4444",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteThread(conv.id, e);
                             }}
+                            className="btn btn-link p-0 text-danger opacity-75 hover-opacity-100"
+                            style={{ border: "none" }}
                             title="Delete thread"
                           >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </button>
                         </div>
                       </div>
-                      <small className="last-message" style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
+                      <small className="last-message text-truncate d-block" style={{ marginLeft: "35px", color: "#718096", fontSize: "12px" }}>
+                        {conv.lastMessage || 'No message'}
+                      </small>
                       {conv.subject && (
                         <div className="subject-row mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
-                          <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
-                          <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
+                          <span style={{ color: "#F56D2D", fontSize: "10px", fontWeight: "600" }}>SUBJECT:</span>
+                          <span className="text-truncate" style={{ color: "#4A5568", fontSize: "11px" }}>{conv.subject}</span>
                         </div>
                       )}
                     </div>
@@ -1299,52 +1350,23 @@ export default function MessagePage() {
         </div>
 
         {/* Right Column - Chat Interface */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-interface">
-          {/* Chat Header with Tabs */}
+        <div className="flex-grow-1 bg-white rounded-4 shadow-sm d-flex flex-column chat-interface overflow-hidden" style={{ border: "1px solid #E2E8F0" }}>
           {(() => {
             const activeConversation = conversations.find(c => c.id === activeConversationId);
             return activeConversation ? (
-              <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <div className="d-flex align-items-center gap-2">
-                  <ConverIcon className="text-primary" size={20} />
-                  <div>
-                    <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
-                    <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                      {activeConversation.status === 'active' ? 'Active' : 'Closed'}
-                    </small>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <div>
-                  <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Select a conversation</h6>
-                  <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                    Choose a conversation to view messages
-                  </small>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Chat Content and Input Area */}
-          <>
-            {(() => {
-              const activeConversation = conversations.find(c => c.id === activeConversationId);
-              return activeConversation ? (
-                <>
-                  <div
-                    ref={messagesContainerRef}
-                    className="flex-grow-1 overflow-auto mb-3 messages-scroll"
-                    style={{
-                      minHeight: "200px",
-                      maxHeight: "calc(55vh - 200px)",
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none"
-                    }}
-                  >
-                    <style>
-                      {`
+              <>
+                <div
+                  ref={messagesContainerRef}
+                  className="flex-grow-1 overflow-auto mb-3 messages-scroll"
+                  style={{
+                    minHeight: "200px",
+                    maxHeight: "calc(55vh - 200px)",
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none"
+                  }}
+                >
+                  <style>
+                    {`
                           .messages-scroll::-webkit-scrollbar {
                             display: none;
                             width: 0;
@@ -1364,414 +1386,455 @@ export default function MessagePage() {
                             scrollbar-width: none;
                           }
                         `}
-                    </style>
-                    {loadingMessages ? (
-                      <div className="text-center py-5">
-                        <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-                        <p className="text-muted mt-2 small">Loading messages...</p>
-                      </div>
-                    ) : activeChatMessages.length > 0 ? (
-                      <>
-                        {activeChatMessages.map((msg) => {
-                          // Client messages (received) appear on LEFT
-                          if (msg.type === "admin") {
-                            return (
-                              <div key={msg.id} className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
-                                {/* <JdIcon color="#f97316" className="me-2" /> */}
-                                <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
-                                  <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
-                                    {msg.sender}
-                                  </div>
-                                  <div>{msg.text}</div>
-                                  {msg.hasAttachment && (
-                                    <div className="mt-2">
-                                      <FileIcon className="me-2 text-primary" />
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
-                                    {new Date(msg.date).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })}
-                                    {msg.isEdited && (
-                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                  </style>
+                  {loadingMessages ? (
+                    <div className="text-center py-5">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                      <p className="text-muted mt-2 small">Loading messages...</p>
+                    </div>
+                  ) : activeChatMessages.length > 0 ? (
+                    <>
+                      {activeChatMessages.map((msg) => {
+                        // Client messages (received) appear on LEFT
+                        if (msg.type === "admin") {
+                          return (
+                            <div key={msg.id} className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
+                              {/* <JdIcon color="#f97316" className="me-2" /> */}
+                              <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
+                                <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
+                                  {msg.sender}
+                                </div>
+                                <div>{msg.text}</div>
+                                {msg.hasAttachment && (
+                                  <div className="mt-2">
+                                    <FileIcon className="me-2 text-primary" />
+                                    <a
+                                      href={msg.attachment || msg.attachmentObj?.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#3B82F6",
+                                        textDecoration: "underline",
+                                        cursor: "pointer"
+                                      }}
+                                    >
+                                      {msg.attachmentName || "Attachment"}
+                                    </a>
+                                    {msg.attachmentSize && (
+                                      <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                        ({msg.attachmentSize})
+                                      </span>
                                     )}
                                   </div>
+                                )}
+                                <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
+                                  {new Date(msg.date).toLocaleString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                  {msg.isEdited && (
+                                    <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          }
-                          // Tax preparer messages (sent by current user) appear on RIGHT
-                          else if (msg.type === "user") {
-                            return (
-                              <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
-                                <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
-                                  <div style={{ color: "#1F2937" }}>{msg.text}</div>
-                                  {msg.hasAttachment && (
-                                    <div className="mt-2">
-                                      <FileIcon className="me-2 text-primary" />
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
-                                    {new Date(msg.date).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })}
-                                    {msg.isEdited && (
-                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                            </div>
+                          );
+                        }
+                        // Tax preparer messages (sent by current user) appear on RIGHT
+                        else if (msg.type === "user") {
+                          return (
+                            <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
+                              <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
+                                <div style={{ color: "#1F2937" }}>{msg.text}</div>
+                                {msg.hasAttachment && (
+                                  <div className="mt-2">
+                                    <FileIcon className="me-2 text-primary" />
+                                    <a
+                                      href={msg.attachment || msg.attachmentObj?.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#3B82F6",
+                                        textDecoration: "underline",
+                                        cursor: "pointer"
+                                      }}
+                                    >
+                                      {msg.attachmentName || "Attachment"}
+                                    </a>
+                                    {msg.attachmentSize && (
+                                      <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                        ({msg.attachmentSize})
+                                      </span>
                                     )}
                                   </div>
+                                )}
+                                <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
+                                  {new Date(msg.date).toLocaleString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                  {msg.isEdited && (
+                                    <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                                  )}
                                 </div>
-                                {/* <JdIcon color="#f97316" className="ms-2" /> */}
                               </div>
-                            );
-                          }
-                          return null;
-                        })}
-                        <div ref={messagesEndRef} />
-                      </>
-                    ) : (
-                      <div className="text-center py-5">
-                        <p className="text-muted">No messages yet. Start the conversation!</p>
+                              {/* <JdIcon color="#f97316" className="ms-2" /> */}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                      <div ref={messagesEndRef} />
+                    </>
+                  ) : (
+                    <div className="text-center py-5">
+                      <p className="text-muted">No messages yet. Start the conversation!</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-top pt-2">
+                  <div className="d-flex align-items-center">
+                    {/* WebSocket connection indicator */}
+                    {wsConnected && (
+                      <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
                       </div>
                     )}
-                  </div>
+                    {!wsConnected && wsError && (
+                      <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
+                      </div>
+                    )}
+                    {/* Typing indicator */}
+                    {typingUsers.length > 0 && (
+                      <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
+                        {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                      </div>
+                    )}
+                    <input
+                      ref={messageFileInputRef}
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="d-none"
+                    />
+                    <button
+                      type="button"
+                      className="btn me-2"
+                      onClick={() => messageFileInputRef.current?.click()}
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #E8F0FF",
+                        color: "#3B4A66"
+                      }}
+                      title="Attach file"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2" />
+                      </svg>
 
-                  <div className="border-top pt-2">
-                    <div className="d-flex align-items-center">
-                      {/* WebSocket connection indicator */}
-                      {wsConnected && (
-                        <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
-                        </div>
-                      )}
-                      {!wsConnected && wsError && (
-                        <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
-                        </div>
-                      )}
-                      {/* Typing indicator */}
-                      {typingUsers.length > 0 && (
-                        <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
-                          {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-                        </div>
-                      )}
-                      <input
-                        ref={messageFileInputRef}
-                        type="file"
-                        onChange={handleFileSelect}
-                        className="d-none"
-                      />
+                    </button>
+                    {messageAttachment && (
+                      <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
+                        {messageAttachment.name}
+                      </span>
+                    )}
+                    {messageAttachment && (
                       <button
                         type="button"
                         className="btn me-2"
-                        onClick={() => messageFileInputRef.current?.click()}
+                        onClick={() => setMessageAttachment(null)}
                         style={{
                           background: "transparent",
-                          border: "1px solid #E8F0FF",
-                          color: "#3B4A66"
+                          border: "none",
+                          color: "#EF4444",
+                          padding: "0 5px"
                         }}
-                        title="Attach file"
+                        title="Remove attachment"
                       >
-                        <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2" />
-                        </svg>
-
+                        ×
                       </button>
-                      {messageAttachment && (
-                        <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
-                          {messageAttachment.name}
-                        </span>
-                      )}
-                      {messageAttachment && (
-                        <button
-                          type="button"
-                          className="btn me-2"
-                          onClick={() => setMessageAttachment(null)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#EF4444",
-                            padding: "0 5px"
-                          }}
-                          title="Remove attachment"
-                        >
-                          ×
-                        </button>
-                      )}
-                      <input
-                        type="text"
-                        className="form-control me-2"
-                        placeholder="Write a message..."
-                        value={newMessage}
-                        onChange={handleTyping}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !sendingMessage) {
-                            e.preventDefault();
-                            handleSend();
-                          }
-                        }}
-                        style={{ fontFamily: "BasisGrotesquePro" }}
-                      />
-                      <button
-                        type="button"
-                        className="btn"
-                        style={{
-                          background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
-                          color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
-                          cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
-                        }}
-                        onClick={handleSend}
-                        disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
-                        aria-label="Send message"
-                      >
-                        <FaPaperPlane />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="d-flex align-items-center justify-content-center h-100">
-                  <div className="text-center">
-                    <p className="text-muted mb-0">Select a conversation to view messages</p>
+                    )}
+                    <input
+                      type="text"
+                      className="form-control me-2"
+                      placeholder="Write a message..."
+                      value={newMessage}
+                      onChange={handleTyping}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !sendingMessage) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      style={{ fontFamily: "BasisGrotesquePro" }}
+                    />
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{
+                        background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
+                        color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
+                        cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
+                      }}
+                      onClick={handleSend}
+                      disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
+                      aria-label="Send message"
+                    >
+                      <FaPaperPlane />
+                    </button>
                   </div>
                 </div>
-              );
-            })()}
-          </>
-        </div>
-      </div>
+              </>
+            ) : (
+              <div className="d-flex align-items-center justify-content-center h-100">
+                <div className="text-center">
+                  <p className="text-muted mb-0">Select a conversation to view messages</p>
+                </div>
+              </div>
+            );
+          })()}
+        </div >
+      </div >
 
       {/* Compose Message Modal */}
-      {showComposeModal && (
-        <div className="compose-modal-wrapper" style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "#00000099",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9999,
+      {
+        showComposeModal && (
+          <div className="compose-modal-wrapper" style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "#00000099",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
 
-        }}
-          onClick={handleCloseComposeModal}
-        >
-          <div className="compose-modal-box" style={{
-            backgroundColor: "white",
-            borderRadius: "16px",
-            padding: "40px",
-            width: "95%",
-            maxWidth: "700px",
-            maxHeight: "85vh",
-            overflowY: "auto",
-            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-            position: "relative"
           }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleCloseComposeModal}
           >
-            {/* Modal Header */}
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: "32px"
-            }}>
-              <div>
-                <h4 style={{
-                  fontSize: "28px",
-                  fontWeight: "700",
-                  color: "#1A202C",
-                  margin: "0 0 8px 0",
-                  lineHeight: "1.2"
-                }}>
-                  Compose Message
-                </h4>
-                <p style={{
-                  fontSize: "16px",
-                  color: "#718096",
-                  margin: 0,
-                  lineHeight: "1.4"
-                }}>
-                  Send a new message to a client or team member.
-                </p>
+            <div className="compose-modal-box" style={{
+              backgroundColor: "white",
+              borderRadius: "16px",
+              padding: "40px",
+              width: "95%",
+              maxWidth: "700px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              position: "relative"
+            }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "32px"
+              }}>
+                <div>
+                  <h4 className="compose-modal-title" style={{
+                    fontSize: "28px",
+                    fontWeight: "700",
+                    color: "#1A202C",
+                    margin: "0 0 8px 0",
+                    lineHeight: "1.2"
+                  }}>
+                    Compose Message
+                  </h4>
+                  <p style={{
+                    fontSize: "16px",
+                    color: "#718096",
+                    margin: 0,
+                    lineHeight: "1.4"
+                  }}>
+                    Send a new message to a client.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseComposeModal}
+                  style={{
+                    background: "#F7F9FC",
+                    border: "none",
+                    fontSize: "18px",
+                    color: "#718096",
+                    cursor: "pointer",
+                    padding: "12px",
+                    borderRadius: "50%",
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#E2E8F0";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#F7F9FC";
+                  }}
+                >
+                  ×
+                </button>
               </div>
-              <button
-                onClick={handleCloseComposeModal}
-                style={{
-                  background: "#F7F9FC",
-                  border: "none",
-                  fontSize: "18px",
-                  color: "#718096",
-                  cursor: "pointer",
-                  padding: "12px",
-                  borderRadius: "50%",
-                  width: "40px",
-                  height: "40px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "all 0.2s ease"
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#E2E8F0";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#F7F9FC";
-                }}
-              >
-                ×
-              </button>
-            </div>
 
-            {/* Form Fields */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              {/* Select Client */}
-              <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: "#2D3748",
-                  marginBottom: "12px"
-                }}>
-                  Select Client <span style={{ color: "#F56D2D" }}>*</span>
-                </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {clientsLoading ? (
-                    <div style={{ padding: "12px 0" }}>
-                      <span style={{ fontSize: "14px", color: "#718096" }}>Loading clients...</span>
+              {/* Form Fields */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                {/* Select Client */}
+                <div>
+                  <label style={{
+                    display: "block",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#2D3748",
+                    marginBottom: "12px"
+                  }}>
+                    Select Client <span style={{ color: "#F56D2D" }}>*</span>
+                  </label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {clientsLoading ? (
+                      <div style={{ padding: "12px 0" }}>
+                        <span style={{ fontSize: "14px", color: "#718096" }}>Loading clients...</span>
+                      </div>
+                    ) : (
+                      <select
+                        value={composeForm.clientId}
+                        onChange={(e) => setComposeForm({ ...composeForm, clientId: e.target.value })}
+                        style={{
+                          width: "100%",
+                          padding: "16px",
+                          border: "1px solid #E2E8F0",
+                          borderRadius: "12px",
+                          fontSize: "16px",
+                          backgroundColor: "#FAFAFA",
+                          outline: "none"
+                        }}
+                      >
+                        <option value="">Select a client</option>
+                        {availableClients
+                          .filter(client => {
+                            // Don't show clients who already have a thread
+                            const existingThread = conversations.find(conv =>
+                              conv.clientId?.toString() === client.id?.toString()
+                            );
+                            return !existingThread;
+                          })
+                          .map((client) => {
+                            const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+                            const label = fullName || client.email || `Client #${client.id}`;
+                            const secondary = client.email && fullName ? ` (${client.email})` : "";
+                            return (
+                              <option key={client.id} value={client.id}>
+                                {label}{secondary}
+                              </option>
+                            );
+                          })
+                        }
+                      </select>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={fetchAssignedClients}
+                        style={{
+                          backgroundColor: "#EDF2F7",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "8px 12px",
+                          fontSize: "14px",
+                          color: "#4A5568",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Refresh Clients
+                      </button>
+                      {clientsError && (
+                        <span style={{ color: "#E53E3E", fontSize: "13px" }}>{clientsError}</span>
+                      )}
+                      {!clientsLoading && !clientsError && availableClients.length === 0 && (
+                        <span style={{ color: "#718096", fontSize: "13px" }}>No assigned clients found.</span>
+                      )}
                     </div>
-                  ) : (
+                  </div>
+                </div>
+
+
+
+                {/* Subject */}
+                <div>
+                  <label style={{
+                    display: "block",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#2D3748",
+                    marginBottom: "12px"
+                  }}>
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter message subject"
+                    value={composeForm.subject}
+                    onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      border: "1px solid #E2E8F0",
+                      borderRadius: "12px",
+                      fontSize: "16px",
+                      outline: "none",
+                      backgroundColor: "#FAFAFA"
+                    }}
+                  />
+                </div>
+
+                {/* Category & Priority */}
+                <div style={{ display: "flex", gap: "20px" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "16px",
+                      fontWeight: "700",
+                      color: "#2D3748",
+                      marginBottom: "12px"
+                    }}>
+                      Priority
+                    </label>
                     <select
-                      value={composeForm.clientId}
-                      onChange={(e) => setComposeForm({ ...composeForm, clientId: e.target.value })}
+                      value={composeForm.priority}
+                      onChange={(e) => setComposeForm({ ...composeForm, priority: e.target.value })}
                       style={{
                         width: "100%",
                         padding: "16px",
                         border: "1px solid #E2E8F0",
                         borderRadius: "12px",
                         fontSize: "16px",
+                        outline: "none",
                         backgroundColor: "#FAFAFA",
-                        outline: "none"
-                      }}
-                    >
-                      <option value="">Select a client</option>
-                      {availableClients.map((client) => {
-                        const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
-                        const label = fullName || client.email || `Client #${client.id}`;
-                        const secondary = client.email && fullName ? ` (${client.email})` : "";
-                        return (
-                          <option key={client.id} value={client.id}>
-                            {label}{secondary}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <button
-                      type="button"
-                      onClick={fetchAssignedClients}
-                      style={{
-                        backgroundColor: "#EDF2F7",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "8px 12px",
-                        fontSize: "14px",
-                        color: "#4A5568",
                         cursor: "pointer"
                       }}
                     >
-                      Refresh Clients
-                    </button>
-                    {clientsError && (
-                      <span style={{ color: "#E53E3E", fontSize: "13px" }}>{clientsError}</span>
-                    )}
-                    {!clientsLoading && !clientsError && availableClients.length === 0 && (
-                      <span style={{ color: "#718096", fontSize: "13px" }}>No assigned clients found.</span>
-                    )}
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
                   </div>
                 </div>
-              </div>
 
-
-
-              {/* Subject */}
-              <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: "#2D3748",
-                  marginBottom: "12px"
-                }}>
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter message subject"
-                  value={composeForm.subject}
-                  onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
-                  style={{
-                    width: "100%",
-                    padding: "16px",
-                    border: "1px solid #E2E8F0",
-                    borderRadius: "12px",
-                    fontSize: "16px",
-                    outline: "none",
-                    backgroundColor: "#FAFAFA"
-                  }}
-                />
-              </div>
-
-              {/* Category & Priority */}
-              <div style={{ display: "flex", gap: "20px" }}>
-                <div style={{ flex: 1 }}>
+                {/* Message */}
+                <div>
                   <label style={{
                     display: "block",
                     fontSize: "16px",
@@ -1779,11 +1842,12 @@ export default function MessagePage() {
                     color: "#2D3748",
                     marginBottom: "12px"
                   }}>
-                    Category
+                    Opening Message
                   </label>
-                  <select
-                    value={composeForm.category}
-                    onChange={(e) => setComposeForm({ ...composeForm, category: e.target.value })}
+                  <textarea
+                    placeholder="Enter your message"
+                    value={composeForm.message}
+                    onChange={(e) => setComposeForm({ ...composeForm, message: e.target.value })}
                     style={{
                       width: "100%",
                       padding: "16px",
@@ -1791,229 +1855,175 @@ export default function MessagePage() {
                       borderRadius: "12px",
                       fontSize: "16px",
                       outline: "none",
+                      minHeight: "140px",
+                      resize: "vertical",
                       backgroundColor: "#FAFAFA",
-                      cursor: "pointer"
+                      fontFamily: "inherit"
                     }}
-                  >
-                    <option value="Client">Client</option>
-                    <option value="Internal">Internal</option>
-                    <option value="Team">Team</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    color: "#2D3748",
-                    marginBottom: "12px"
-                  }}>
-                    Priority
-                  </label>
-                  <select
-                    value={composeForm.priority}
-                    onChange={(e) => setComposeForm({ ...composeForm, priority: e.target.value })}
-                    style={{
-                      width: "100%",
-                      padding: "16px",
-                      border: "1px solid #E2E8F0",
-                      borderRadius: "12px",
-                      fontSize: "16px",
-                      outline: "none",
-                      backgroundColor: "#FAFAFA",
-                      cursor: "pointer"
-                    }}
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
+                  />
                 </div>
               </div>
 
-              {/* Message */}
-              <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: "#2D3748",
-                  marginBottom: "12px"
-                }}>
-                  Opening Message
-                </label>
-                <textarea
-                  placeholder="Enter your message"
-                  value={composeForm.message}
-                  onChange={(e) => setComposeForm({ ...composeForm, message: e.target.value })}
+              {/* Modal Footer */}
+              <div style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "16px",
+                marginTop: "40px"
+              }}>
+                <button
+                  onClick={handleCloseComposeModal}
                   style={{
-                    width: "100%",
-                    padding: "16px",
+                    padding: "16px 32px",
                     border: "1px solid #E2E8F0",
                     borderRadius: "12px",
+                    backgroundColor: "white",
+                    color: "#718096",
                     fontSize: "16px",
-                    outline: "none",
-                    minHeight: "140px",
-                    resize: "vertical",
-                    backgroundColor: "#FAFAFA",
-                    fontFamily: "inherit"
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
                   }}
-                />
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#F7F9FC";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "white";
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      if (!composeForm.clientId) {
+                        toast.error('Please select a client', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
+                        return;
+                      }
+
+                      const clientIdNumber = parseInt(composeForm.clientId, 10);
+                      if (Number.isNaN(clientIdNumber)) {
+                        toast.error('Invalid client selected', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
+                        return;
+                      }
+
+                      // Use the new chat/create endpoint with all fields for backend enforcement
+                      const response = await chatService.createTaxPreparerChat(clientIdNumber, {
+                        subject: composeForm.subject,
+                        category: composeForm.category,
+                        priority: composeForm.priority,
+                        opening_message: composeForm.message.trim()
+                      });
+
+                      // Handle response - could be success/data format or direct data
+                      const chatData = response.success ? response.data : response;
+                      if (!chatData) {
+                        throw new Error('Invalid response received from server');
+                      }
+
+                      // Extract chat/thread ID from response
+                      // IMPORTANT: Prioritize thread_id (Modern system) over id (Legacy chat system)
+                      const chatId = chatData.thread_id || chatData.id || chatData.chat_id;
+                      if (!chatId) {
+                        throw new Error('Chat ID not found in response');
+                      }
+
+                      console.log('New chat created, setting active ID:', chatId, 'Original IDs:', {
+                        id: chatData.id,
+                        thread_id: chatData.thread_id
+                      });
+
+                      // Set the active conversation to the new chat
+                      setActiveConversationId(chatId);
+
+                      // Refresh threads to get the new chat in the list
+                      await fetchThreads(true);
+
+                      toast.success('Chat created successfully', {
+                        position: "top-right",
+                        autoClose: 3000,
+                      });
+
+                      handleCloseComposeModal();
+                    } catch (err) {
+                      console.error('Error creating thread:', err);
+                      toast.error('Failed to create thread: ' + (err.message || 'Unknown error'), {
+                        position: "top-right",
+                        autoClose: 3000,
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: "16px 32px",
+                    border: "none",
+                    borderRadius: "12px",
+                    backgroundColor: "#F56D2D",
+                    color: "white",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#E55A1A";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#F56D2D";
+                  }}
+                >
+                  Send Message
+                </button>
               </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "16px",
-              marginTop: "40px"
-            }}>
-              <button
-                onClick={handleCloseComposeModal}
-                style={{
-                  padding: "16px 32px",
-                  border: "1px solid #E2E8F0",
-                  borderRadius: "12px",
-                  backgroundColor: "white",
-                  color: "#718096",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease"
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#F7F9FC";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "white";
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    if (!composeForm.clientId) {
-                      toast.error('Please select a client', {
-                        position: "top-right",
-                        autoClose: 3000,
-                      });
-                      return;
-                    }
-
-                    const clientIdNumber = parseInt(composeForm.clientId, 10);
-                    if (Number.isNaN(clientIdNumber)) {
-                      toast.error('Invalid client selected', {
-                        position: "top-right",
-                        autoClose: 3000,
-                      });
-                      return;
-                    }
-
-                    // Use the new chat/create endpoint with all fields for backend enforcement
-                    const response = await chatService.createTaxPreparerChat(clientIdNumber, {
-                      subject: composeForm.subject,
-                      category: composeForm.category,
-                      priority: composeForm.priority,
-                      opening_message: composeForm.message.trim()
-                    });
-
-                    // Handle response - could be success/data format or direct data
-                    const chatData = response.success ? response.data : response;
-                    if (!chatData) {
-                      throw new Error('Invalid response received from server');
-                    }
-
-                    // Extract chat/thread ID from response
-                    const chatId = chatData.id || chatData.chat_id || chatData.thread_id;
-                    if (!chatId) {
-                      throw new Error('Chat ID not found in response');
-                    }
-
-                    // Set the active conversation to the new chat
-                    setActiveConversationId(chatId);
-
-                    // Refresh threads to get the new chat in the list
-                    await fetchThreads(true);
-
-                    toast.success('Chat created successfully', {
-                      position: "top-right",
-                      autoClose: 3000,
-                    });
-
-                    handleCloseComposeModal();
-                  } catch (err) {
-                    console.error('Error creating thread:', err);
-                    toast.error('Failed to create thread: ' + (err.message || 'Unknown error'), {
-                      position: "top-right",
-                      autoClose: 3000,
-                    });
-                  }
-                }}
-                style={{
-                  padding: "16px 32px",
-                  border: "none",
-                  borderRadius: "12px",
-                  backgroundColor: "#F56D2D",
-                  color: "white",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease"
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#E55A1A";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#F56D2D";
-                }}
-              >
-                Send Message
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
-          <div className="bg-white p-4" style={{ width: "400px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
-            <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Delete Thread</h5>
-            <p className="mb-4" style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
-              Are you sure you want to delete this conversation? This action cannot be undone.
-            </p>
-            <div className="d-flex justify-content-end gap-2">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setThreadToDelete(null);
-                }}
-                disabled={deleting}
-                style={{ fontFamily: "BasisGrotesquePro" }}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn"
-                onClick={confirmDeleteThread}
-                disabled={deleting}
-                style={{
-                  backgroundColor: "#EF4444",
-                  color: "#FFFFFF",
-                  fontFamily: "BasisGrotesquePro"
-                }}
-              >
-                {deleting ? 'Deleting...' : 'Delete'}
-              </button>
+      {
+        showDeleteConfirm && (
+          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
+            <div className="bg-white p-4" style={{ width: "400px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
+              <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Delete Thread</h5>
+              <p className="mb-4" style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+                Are you sure you want to delete this conversation? This action cannot be undone.
+              </p>
+              <div className="d-flex justify-content-end gap-2">
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setThreadToDelete(null);
+                  }}
+                  disabled={deleting}
+                  style={{ fontFamily: "BasisGrotesquePro" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={confirmDeleteThread}
+                  disabled={deleting}
+                  style={{
+                    backgroundColor: "#EF4444",
+                    color: "#FFFFFF",
+                    fontFamily: "BasisGrotesquePro"
+                  }}
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
-

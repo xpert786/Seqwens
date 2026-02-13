@@ -363,7 +363,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       }
 
       // Fallback for non-secure contexts where navigator.clipboard is unavailable
-      if (!navigator.clipboard) {
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
         try {
           const textArea = document.createElement("textarea");
           textArea.value = inviteLink;

@@ -736,8 +736,39 @@ export default function Security() {
                         </div>
                         <button
                             onClick={() => {
-                                navigator.clipboard.writeText(revealedKey || "");
-                                toast.success("API key copied to clipboard", superToastOptions);
+                                const textToCopy = revealedKey || "";
+
+                                // Fallback for non-secure contexts where navigator.clipboard is unavailable
+                                if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                                    try {
+                                        const textArea = document.createElement("textarea");
+                                        textArea.value = textToCopy;
+                                        textArea.style.position = "fixed";
+                                        textArea.style.left = "-9999px";
+                                        textArea.style.top = "0";
+                                        document.body.appendChild(textArea);
+                                        textArea.focus();
+                                        textArea.select();
+                                        const successful = document.execCommand('copy');
+                                        document.body.removeChild(textArea);
+                                        if (successful) {
+                                            toast.success("API key copied to clipboard", superToastOptions);
+                                        } else {
+                                            throw new Error("Copy command failed");
+                                        }
+                                    } catch (err) {
+                                        console.error("Fallback copy failed:", err);
+                                        toast.error("Could not auto-copy. Please manually copy the key.", superToastOptions);
+                                    }
+                                    return;
+                                }
+
+                                navigator.clipboard.writeText(textToCopy).then(() => {
+                                    toast.success("API key copied to clipboard", superToastOptions);
+                                }).catch(err => {
+                                    console.error("Copy failed:", err);
+                                    toast.error("Failed to copy. Please try again.", superToastOptions);
+                                });
                             }}
                             style={{
                                 position: "absolute",

@@ -1,16 +1,50 @@
-@media (max-width: 767px) {
+/* Base Desktop Styles */
+.messages-page {
+  padding: 0 24px 24px 24px;
+}
 
-  /* Page padding */
+.messages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.messages-layout {
+  display: flex;
+  flex-direction: row;
+}
+
+.conversations-panel {
+  width: 500px;
+  height: 55vh;
+  min-height: 400px;
+  margin-right: 1.5rem;
+}
+
+.chat-panel {
+  height: 55vh;
+  min-height: 400px;
+}
+
+.conversations-scroll {
+  max-height: calc(55vh - 150px);
+}
+
+.messages-scroll {
+  max-height: calc(55vh - 200px);
+}
+
+/* MOBILE: 320px to 767px */
+@media (max-width: 767px) {
   .messages-page {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding: 12px !important;
   }
 
-  /* Header stack */
   .messages-header {
     flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 12px !important;
   }
 
   .messages-header h5 {
@@ -18,91 +52,53 @@
   }
 
   .messages-header button {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+    justify-content: center !important;
   }
 
-  /* Main layout -> vertical */
   .messages-layout {
     flex-direction: column !important;
+    gap: 16px !important;
   }
 
-  /* Conversations panel full width */
   .conversations-panel {
     width: 100% !important;
     height: auto !important;
-    min-height: 280px !important;
+    min-height: 300px !important;
     margin-right: 0 !important;
-    margin-bottom: 12px;
   }
 
-  /* Conversations scroll height */
-  .conversations-panel .conversations-scroll {
-    max-height: 220px !important;
-  }
-
-  /* Chat panel full width */
   .chat-panel {
     width: 100% !important;
     height: auto !important;
-    min-height: 320px !important;
+    min-height: 400px !important;
   }
 
-  /* Messages scroll */
-  .chat-panel .messages-scroll {
-    max-height: 240px !important;
+  .conversations-scroll {
+    max-height: 250px !important;
   }
 
-  /* Message bubbles */
+  .messages-scroll {
+    max-height: 300px !important;
+  }
+
   .chat-panel .bg-light {
     max-width: 90% !important;
   }
 
-  /* Input row wrap */
-  /* Input row stay in one line */
   .chat-panel .border-top .d-flex {
     flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 8px;
+    gap: 8px !important;
   }
 
   .chat-panel input.form-control {
     flex: 1 !important;
-    width: auto !important;
-    min-width: 0;
+    height: 44px !important;
   }
 
-  /* Attach + send buttons */
-  .chat-panel button.btn {
-    min-height: 44px;
-  }
-
-  /* Create chat modal */
-  .create-chat-modal {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 12px !important;
-    margin: 12px;
-  }
-
-  /* Delete confirm modal */
+  .create-chat-modal,
   .delete-confirm-modal {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 12px !important;
-    margin: 12px;
-  }
-
-  /* Modal buttons full width */
-  .create-chat-modal .text-end,
-  .delete-confirm-modal .d-flex {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px;
-  }
-
-  .create-chat-modal button,
-  .delete-confirm-modal button {
-    width: 100%;
+    width: 95% !important;
+    margin: 10px !important;
   }
 }
