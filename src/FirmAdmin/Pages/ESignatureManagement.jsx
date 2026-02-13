@@ -1186,8 +1186,16 @@ export default function ESignatureManagement() {
             onClick={() => {
               setShowCreateModal(true);
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg transition-colors text-sm font-medium w-full sm:w-auto"
-            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px', backgroundColor: 'var(--firm-primary-color, #3AD6F2)' }}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg text-sm font-medium w-full sm:w-auto
+             hover:bg-[inherit] hover:text-[inherit]
+             active:bg-[inherit] active:text-[inherit]
+             focus:bg-[inherit] focus:text-[inherit]"
+            style={{
+              fontFamily: 'BasisGrotesquePro',
+              borderRadius: '10px',
+              backgroundColor: 'var(--firm-primary-color, #3AD6F2)',
+              transition: 'none'
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -1195,6 +1203,7 @@ export default function ESignatureManagement() {
             <span className="hidden sm:inline">New Request</span>
             <span className="sm:hidden">New Request</span>
           </button>
+
         </div>
       </div>
 

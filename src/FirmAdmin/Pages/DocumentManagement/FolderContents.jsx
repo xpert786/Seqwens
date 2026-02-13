@@ -66,7 +66,7 @@ export default function FolderContents() {
   // Check if we're viewing a document (nested route)
   const isViewingDocument = location.pathname.includes('/document/');
 
-  // Fetch folder contents from API
+  // Fetch folder contents from API using optimized split endpoints
   const fetchFolderContents = useCallback(async () => {
     if (!folderId) return;
 
@@ -74,29 +74,31 @@ export default function FolderContents() {
       setLoading(true);
       setError(null);
 
-      const params = {
-        folder_id: folderId
-      };
+      // Fetch folders and files in parallel for better performance
+      const [foldersResult, filesResult] = await Promise.all([
+        firmAdminDocumentsAPI.browseFoldersSplit({
+          folder_id: folderId,
+          search: searchQuery
+        }),
+        firmAdminDocumentsAPI.browseFilesSplit({
+          folder_id: folderId,
+          search: searchQuery
+        })
+      ]);
 
-      if (searchQuery) {
-        params.search = searchQuery;
-      }
-
-      const response = await firmAdminDocumentsAPI.browseDocuments(params);
-
-      if (response.success && response.data) {
+      if (foldersResult.success && foldersResult.data) {
         // Set folder info
-        if (response.data.current_folder) {
-          setFolderInfo(response.data.current_folder);
+        if (foldersResult.data.current_folder) {
+          setFolderInfo(foldersResult.data.current_folder);
         }
 
         // Set breadcrumbs
-        if (response.data.breadcrumbs) {
-          setBreadcrumbs(response.data.breadcrumbs);
+        if (foldersResult.data.breadcrumbs) {
+          setBreadcrumbs(foldersResult.data.breadcrumbs);
         }
 
         // Transform sub-folders
-        const transformedFolders = (response.data.folders || []).map(folder => ({
+        const transformedFolders = (foldersResult.data.folders || []).map(folder => ({
           id: folder.id,
           title: folder.title,
           description: folder.description || '',
@@ -104,9 +106,11 @@ export default function FolderContents() {
         }));
 
         setFolders(transformedFolders);
+      }
 
+      if (filesResult.success && filesResult.data) {
         // Transform documents
-        const transformedDocuments = (response.data.documents || []).map(doc => {
+        const transformedDocuments = (filesResult.data.documents || []).map(doc => {
           // Extract filename from URL
           const url = doc.tax_documents || '';
           const filename = url.split('/').pop() || 'document.pdf';
@@ -120,7 +124,7 @@ export default function FolderContents() {
             statusColor: getStatusColor(doc.status),
             textColor: getStatusTextColor(doc.status),
             category: doc.category?.name || 'General',
-            client: doc.client, // Keep original object if available
+            client: doc.client,
             clientId: doc.client?.id || doc.client_id,
             clientName: doc.client?.name || doc.client_name || 'N/A',
             uploaded_by: doc.uploaded_by_name || doc.created_by?.name || 'N/A',
@@ -133,7 +137,7 @@ export default function FolderContents() {
 
         setDocuments(transformedDocuments);
 
-        // Calculate statistics
+        // Calculate statistics from the results
         const totalDocs = transformedDocuments.length;
         const pending = transformedDocuments.filter(d => d.status === 'pending_review').length;
         const approved = transformedDocuments.filter(d => d.status === 'approved').length;
@@ -142,10 +146,12 @@ export default function FolderContents() {
           total_documents: totalDocs,
           pending: pending,
           approved: approved,
-          total_storage: 0 // Not provided by API
+          total_storage: 0
         });
-      } else {
-        throw new Error(response.message || 'Failed to fetch folder contents');
+      }
+
+      if (!foldersResult.success && !filesResult.success) {
+        throw new Error(foldersResult.message || filesResult.message || 'Failed to fetch folder contents');
       }
     } catch (err) {
       console.error('Error fetching folder contents:', err);

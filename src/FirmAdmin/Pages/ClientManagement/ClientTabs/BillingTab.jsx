@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { firmAdminBillingHistoryAPI, handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminBillingHistoryAPI, firmAdminInvoiceAPI, taxpayerFirmAPI, handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import CreateInvoiceModal from '../../Billing/CreateInvoiceModal';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function BillingTab({ client, billingHistory: propBillingHistory = [] }) {
   const navigate = useNavigate();
@@ -23,7 +27,21 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
     end_date: '',
     search: ''
   });
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setFilters(prev => ({ ...prev, search: searchInput }));
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInput]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -129,6 +147,188 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
     fetchBillingHistory();
   }, [client?.id, pagination.page, pagination.page_size, filters.status, filters.start_date, filters.end_date, filters.search]);
 
+  // Handle download invoice PDF
+  const handleDownloadInvoice = async (invoice) => {
+    if (!invoice?.id) return;
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        return;
+      }
+      toast.info('Preparing invoice PDF...', { autoClose: 2000 });
+
+      // 1. Fetch full details (including items)
+      const detailsResponse = await firmAdminInvoiceAPI.getInvoiceDetails(invoice.id);
+      if (!detailsResponse.success || !detailsResponse.data) {
+        throw new Error(detailsResponse.message || 'Failed to fetch invoice details');
+      }
+
+      const fullInvoice = detailsResponse.data.invoice;
+
+      // 2. Try to fetch firm logo/name
+      let firmInfo = { name: 'Seqwens', logo: null };
+      try {
+        const firmResponse = await taxpayerFirmAPI.getFirmLogo();
+        if (firmResponse.success && firmResponse.data) {
+          firmInfo.name = firmResponse.data.firm_name || 'Seqwens';
+          firmInfo.logo = firmResponse.data.logo_url;
+        }
+      } catch (e) {
+        console.warn('Could not fetch firm info', e);
+      }
+
+      // 3. Generate PDF
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 20;
+
+      // Header: Firm Info
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text(firmInfo.name, 14, yPos);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text('Professional CPA Services', 14, yPos + 7);
+
+      // Invoice Label
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(245, 109, 45);
+      doc.text('INVOICE', pageWidth - 14, yPos + 5, { align: 'right' });
+
+      yPos += 30;
+
+      // Horizontal Line
+      doc.setDrawColor(229, 231, 235);
+      doc.line(14, yPos - 5, pageWidth - 14, yPos - 5);
+
+      // Client & Invoice details section
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(75, 85, 99);
+      doc.text('BILL TO:', 14, yPos);
+      doc.text('INVOICE DETAILS:', pageWidth / 2 + 10, yPos);
+
+      yPos += 8;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text(fullInvoice.client_name || fullInvoice.client || 'N/A', 14, yPos);
+
+      // Billing Details
+      doc.text('Invoice #:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(fullInvoice.invoice_number || `INV-${fullInvoice.id}`, pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text(fullInvoice.client_address || '', 14, yPos, { maxWidth: 80 });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Issue Date:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(fullInvoice.formatted_issue_date || fullInvoice.issue_date || 'N/A', pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Due Date:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(fullInvoice.formatted_due_date || fullInvoice.due_date || 'N/A', pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Status:', pageWidth / 2 + 10, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(fullInvoice.status_display || fullInvoice.status || 'N/A', pageWidth - 14, yPos, { align: 'right' });
+
+      yPos += 20;
+
+      // Items Table
+      const tableBody = (fullInvoice.invoice_items || []).map(item => [
+        item.description || 'Service',
+        1,
+        `$${parseFloat(item.value || 0).toFixed(2)}`,
+        `$${parseFloat(item.value || 0).toFixed(2)}`
+      ]);
+
+      if (tableBody.length === 0) {
+        tableBody.push(['General Services', 1, `$${parseFloat(fullInvoice.amount || 0).toFixed(2)}`, `$${parseFloat(fullInvoice.amount || 0).toFixed(2)}`]);
+      }
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Description', 'Qty', 'Rate', 'Amount']],
+        body: tableBody,
+        theme: 'striped',
+        headStyles: { fillColor: [59, 74, 102], textColor: 255 },
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 20, halign: 'center' },
+          2: { cellWidth: 30, halign: 'right' },
+          3: { cellWidth: 30, halign: 'right' }
+        }
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Totals
+      const totalX = pageWidth - 14;
+      const labelX = totalX - 55;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Subtotal:', labelX, yPos);
+      doc.text(`$${(parseFloat(fullInvoice.amount || 0) - parseFloat(fullInvoice.tax_amount || 0)).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      yPos += 7;
+      doc.text(`Tax (${fullInvoice.tax_percentage || 0}%):`, labelX, yPos);
+      doc.text(`$${parseFloat(fullInvoice.tax_amount || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      yPos += 10;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('TOTAL:', labelX, yPos);
+      doc.text(`$${parseFloat(fullInvoice.amount || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      yPos += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(16, 185, 129);
+      doc.text('Amount Paid:', labelX, yPos);
+      doc.text(`$${parseFloat(fullInvoice.paid_amount || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      yPos += 7;
+      doc.setTextColor(239, 68, 68);
+      doc.text('Balance Due:', labelX, yPos);
+      doc.text(`$${parseFloat(fullInvoice.remaining_amount || 0).toFixed(2)}`, totalX, yPos, { align: 'right' });
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(156, 163, 175);
+      doc.text('Thank you for your business!', pageWidth / 2, doc.internal.pageSize.getHeight() - 15, { align: 'center' });
+
+      // Save
+      const fileName = `${fullInvoice.invoice_number || 'Invoice'}.pdf`;
+      doc.save(fileName);
+
+      toast.success('Invoice PDF generated successfully');
+      setShowDropdown(null);
+    } catch (error) {
+      console.error('Error generating invoice PDF:', error);
+      toast.error(handleAPIError(error) || 'Failed to generate invoice PDF');
+    }
+  };
+
   // Format currency helper
   const formatCurrency = (amount) => {
     if (typeof amount === 'string') {
@@ -160,6 +360,7 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
             <button
               onClick={() => setShowCreateInvoiceModal(true)}
               className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] flex items-center gap-2"
+              style={{ borderRadius: "10px" }}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -182,8 +383,8 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
             <input
               type="text"
               placeholder="Search..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-[BasisGrotesquePro]"
             />
           </div>
@@ -248,59 +449,59 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
                       {statusDisplay}
                     </span>
                   </div>
-                <div className="flex justify-center relative">
-                  <div
-                    ref={(el) => { dropdownRefs.current[invoice.id] = el; }}
-                  >
-                    <button
-                      onClick={() => handleDropdownToggle(invoice.id)}
-                      className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900"
+                  <div className="flex justify-center relative">
+                    <div
+                      ref={(el) => { dropdownRefs.current[invoice.id] = el; }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          d="M8 8.66667C8.73638 8.66667 9.33333 8.06971 9.33333 7.33333C9.33333 6.59695 8.73638 6 8 6C7.26362 6 6.66667 6.59695 6.66667 7.33333C6.66667 8.06971 7.26362 8.66667 8 8.66667Z"
-                          fill="currentColor"
-                        />
-                        <path
-                          d="M8 4C8.73638 4 9.33333 3.40305 9.33333 2.66667C9.33333 1.93029 8.73638 1.33333 8 1.33333C7.26362 1.33333 6.66667 1.93029 6.66667 2.66667C6.66667 3.40305 7.26362 4 8 4Z"
-                          fill="currentColor"
-                        />
-                        <path
-                          d="M8 14.6667C8.73638 14.6667 9.33333 14.0697 9.33333 13.3333C9.33333 12.597 8.73638 12 8 12C7.26362 12 6.66667 12.597 6.66667 13.3333C6.66667 14.0697 7.26362 14.6667 8 14.6667Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </button>
-                    {showDropdown === invoice.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              navigate(`/firmadmin/billing/${invoice.id}`);
-                              setShowDropdown(null);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-                          >
-                            View Details
-                          </button>
-                          <button
-                            onClick={() => setShowDropdown(null)}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-                          >
-                            Download Invoice
-                          </button>
-                          <button
-                            onClick={() => setShowDropdown(null)}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-                          >
-                            Delete
-                          </button>
+                      <button
+                        onClick={() => handleDropdownToggle(invoice.id)}
+                        className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M8 8.66667C8.73638 8.66667 9.33333 8.06971 9.33333 7.33333C9.33333 6.59695 8.73638 6 8 6C7.26362 6 6.66667 6.59695 6.66667 7.33333C6.66667 8.06971 7.26362 8.66667 8 8.66667Z"
+                            fill="currentColor"
+                          />
+                          <path
+                            d="M8 4C8.73638 4 9.33333 3.40305 9.33333 2.66667C9.33333 1.93029 8.73638 1.33333 8 1.33333C7.26362 1.33333 6.66667 1.93029 6.66667 2.66667C6.66667 3.40305 7.26362 4 8 4Z"
+                            fill="currentColor"
+                          />
+                          <path
+                            d="M8 14.6667C8.73638 14.6667 9.33333 14.0697 9.33333 13.3333C9.33333 12.597 8.73638 12 8 12C7.26362 12 6.66667 12.597 6.66667 13.3333C6.66667 14.0697 7.26362 14.6667 8 14.6667Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </button>
+                      {showDropdown === invoice.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                navigate(`/firmadmin/billing/${invoice.id}`);
+                                setShowDropdown(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] rounded"
+                            >
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => handleDownloadInvoice(invoice)}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] rounded"
+                            >
+                              Download Invoice
+                            </button>
+                            <button
+                              onClick={() => setShowDropdown(null)}
+                              className="block w-full text-left px-4 py-2 text-sm text-red-600 font-[BasisGrotesquePro] rounded"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
               );
             })}
           </div>
@@ -315,22 +516,20 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
                 <button
                   onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                   disabled={!pagination.has_previous}
-                  className={`px-3 py-2 text-sm border rounded-lg font-[BasisGrotesquePro] ${
-                    !pagination.has_previous
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-2 text-sm border rounded-lg font-[BasisGrotesquePro] ${!pagination.has_previous
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                   disabled={!pagination.has_next}
-                  className={`px-3 py-2 text-sm border rounded-lg font-[BasisGrotesquePro] ${
-                    !pagination.has_next
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-2 text-sm border rounded-lg font-[BasisGrotesquePro] ${!pagination.has_next
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   Next
                 </button>

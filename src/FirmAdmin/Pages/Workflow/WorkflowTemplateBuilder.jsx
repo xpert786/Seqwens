@@ -382,19 +382,19 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                     : 'border-[#E8F0FF] hover:border-[#3AD6F2] hover:shadow-md'
                     }`}
                 >
-                  <div className="flex items-start gap-2 mb-2">
-                    <span className="text-gray-500">{stage.icon}</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-gray-500 flex-shrink-0">{stage.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-gray-900 font-[BasisGrotesquePro] truncate">
                         {stage.name}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${userInfo.color}`}>
-                          {userInfo.icon} {userInfo.label}
-                        </span>
-                        <span className="text-xs text-gray-500">{stage.days}d</span>
-                      </div>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 ml-7">
+                    <span className={`text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${userInfo.color}`}>
+                      {userInfo.icon} {userInfo.label}
+                    </span>
+                    <span className="text-xs text-gray-500">{stage.days}d</span>
                   </div>
                   {isAdded && (
                     <div className="text-xs text-green-600 font-medium">✓ Added</div>
@@ -407,14 +407,25 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
           <div className="mt-4 pt-4 border-t border-[#E8F0FF]">
             <button
               onClick={addBlankStage}
-              className="w-full py-3 !border-2 border-dashed border-[#E8F0FF] !rounded-lg text-[#3AD6F2] hover:border-[#3AD6F2] hover:bg-[#F0FDFF] font-[BasisGrotesquePro] font-medium flex items-center justify-center gap-2"
+              className="w-full py-3 !border-2 border-dashed border-[#E8F0FF] !rounded-lg text-[#3AD6F2] font-[BasisGrotesquePro] font-medium flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Custom Stage
             </button>
           </div>
+
         </div>
 
         {/* Current Stages */}

@@ -6,6 +6,15 @@ import {
   setDefaultCard
 } from "../../../utils/paymentMethodsService";
 import AddPaymentMethodModalWithStripe from './AddPaymentMethodModalWithStripe';
+import {
+  BillIcon,
+  LockIcon,
+  SettingIcon,
+  DelIcon,
+  CrossIcon,
+  CompletedIcon,
+  PlusIcon
+} from "../../../ClientOnboarding/components/icons";
 import './styles/SavedPaymentMethods.css';
 
 /**
@@ -154,15 +163,8 @@ const SavedPaymentMethods = () => {
    * Get card brand icon/emoji
    */
   const getCardIcon = (brand) => {
-    const brandIcons = {
-      'visa': '💳',
-      'mastercard': '💳',
-      'amex': '💳',
-      'discover': '💳',
-      'diners': '💳',
-      'jcb': '💳',
-    };
-    return brandIcons[brand?.toLowerCase()] || '💳';
+    // Using BillIcon as a generic credit card icon
+    return <BillIcon />;
   };
 
   /**
@@ -198,14 +200,16 @@ const SavedPaymentMethods = () => {
           className="btn btn-primary btn-add-card"
           onClick={() => setIsAddModalOpen(true)}
         >
-          + Add New Card
+          <div className="flex items-center gap-2">
+            <PlusIcon /> <span className="text-white">Add New Card</span>
+          </div>
         </button>
       </div>
 
       {/* Alerts */}
       {error && (
         <div className="alert alert-error">
-          <span className="alert-icon">⚠️</span>
+          <span className="alert-icon"><CrossIcon /></span>
           <div className="alert-content">
             <p className="alert-title">Error</p>
             <p className="alert-message">{error}</p>
@@ -215,14 +219,14 @@ const SavedPaymentMethods = () => {
             onClick={() => setError('')}
             aria-label="Close alert"
           >
-            ×
+            <CrossIcon />
           </button>
         </div>
       )}
 
       {success && (
         <div className="alert alert-success">
-          <span className="alert-icon">✓</span>
+          <span className="alert-icon"><CompletedIcon /></span>
           <div className="alert-content">
             <p className="alert-message">{success}</p>
           </div>
@@ -231,7 +235,7 @@ const SavedPaymentMethods = () => {
             onClick={() => setSuccess('')}
             aria-label="Close alert"
           >
-            ×
+            <CrossIcon />
           </button>
         </div>
       )}
@@ -294,7 +298,7 @@ const SavedPaymentMethods = () => {
         </div>
       ) : (
         <div className="empty-state">
-          <div className="empty-icon">💳</div>
+          <div className="empty-icon"><BillIcon /></div>
           <p className="empty-title">No Saved Cards</p>
           <p className="empty-description">
             Add your first card to enable automatic billing for subscription renewals
@@ -311,7 +315,7 @@ const SavedPaymentMethods = () => {
       {/* Info Section */}
       <div className="info-section">
         <div className="info-card">
-          <h3 className="info-card-title">🔒 Security</h3>
+          <h3 className="info-card-title flex items-center gap-2"><LockIcon /> Security</h3>
           <p className="info-card-text">
             Your card information is securely processed and stored by Stripe.
             We never store your full card details.
@@ -319,7 +323,7 @@ const SavedPaymentMethods = () => {
         </div>
 
         <div className="info-card">
-          <h3 className="info-card-title">⚙️ Auto-Renewal</h3>
+          <h3 className="info-card-title flex items-center gap-2"><SettingIcon /> Auto-Renewal</h3>
           <p className="info-card-text">
             Your default payment method will be used for automatic subscription renewals.
             You can change or update it anytime.
@@ -327,7 +331,12 @@ const SavedPaymentMethods = () => {
         </div>
 
         <div className="info-card">
-          <h3 className="info-card-title">🗑️ Deletion</h3>
+          <h3 className="info-card-title flex items-center gap-2">
+            <div style={{ backgroundColor: '#EF4444', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <DelIcon />
+            </div>
+            Deletion
+          </h3>
           <p className="info-card-text">
             Deleted cards are removed from your account and Stripe.
             You cannot use them for future charges.

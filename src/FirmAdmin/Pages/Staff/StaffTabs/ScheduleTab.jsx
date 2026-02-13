@@ -441,6 +441,7 @@ export default function ScheduleTab({ staffId, staffName }) {
         <button
           onClick={() => handleCreateEvent()}
           className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center justify-center gap-2"
+          style={{ borderRadius: "10px" }}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -459,7 +460,10 @@ export default function ScheduleTab({ staffId, staffName }) {
         <button
           onClick={() => setCurrentView('Week')}
           className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Week' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
+
             }`}
+
+          style={{ borderRadius: "10px" }}
         >
           Week
         </button>
@@ -467,6 +471,8 @@ export default function ScheduleTab({ staffId, staffName }) {
           onClick={() => setCurrentView('Monthly')}
           className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Monthly' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
             }`}
+
+          style={{ borderRadius: "10px" }}
         >
           Monthly
         </button>
@@ -474,6 +480,7 @@ export default function ScheduleTab({ staffId, staffName }) {
           onClick={() => setCurrentView('Years')}
           className={`px-4 py-2 text-sm rounded-lg font-[BasisGrotesquePro] ${currentView === 'Years' ? 'bg-[#F56D2D] text-white' : 'text-gray-700 hover:bg-gray-50'
             }`}
+          style={{ borderRadius: "10px" }}
         >
           Years
         </button>

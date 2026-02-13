@@ -1240,7 +1240,7 @@ const Messages = () => {
             </div>
 
             {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 hide-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 hide-scrollbar">
               {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="text-gray-500">Loading conversations...</div>
@@ -1279,10 +1279,11 @@ const Messages = () => {
                     <div
                       key={conv.id}
                       onClick={() => handleConversationSelect(conv)}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedThreadId === conv.id
-                        ? 'bg-[#FFF4E6] !border border-[#E8F0FF]'
-                        : 'bg-white hover:bg-gray-50'
+                      className={`p-3 rounded-xl border-2 border-[#E8F0FF] cursor-pointer transition-colors ${selectedThreadId === conv.id
+                        ? 'bg-[#E8F0FF]'
+                        : 'bg-[#F3F7FF] hover:bg-[#E8F0FF]'
                         }`}
+                      style={{ minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">

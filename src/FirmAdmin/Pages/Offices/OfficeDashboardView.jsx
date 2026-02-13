@@ -133,9 +133,9 @@ export default function OfficeDashboardView() {
 
 
                 {/* Summary Metrics Section */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
                     {/* Staff Members */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className='flex items-center justify-between gap-3'>
                             <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +156,7 @@ export default function OfficeDashboardView() {
                     </div>
 
                     {/* Active Clients */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between gap-3">
                             <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -175,7 +175,7 @@ export default function OfficeDashboardView() {
                     </div>
 
                     {/* Monthly Revenue */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between gap-3">
                             <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +195,7 @@ export default function OfficeDashboardView() {
                     </div>
 
                     {/* Growth Rate */}
-                    <div className="bg-white rounded-lg p-4 gap-3">
+                    <div className="bg-white !rounded-xl p-5 border border-[#E8F0FF] shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between gap-3">
                             <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg width="21" height="11" viewBox="0 0 21 11" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -436,65 +436,65 @@ export default function OfficeDashboardView() {
                             </div>
                         </div>
                         {trendsView === 'combined' && (
-                        <div className="h-[386px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={trendsData} margin={{ top: 20, right: 40, left: 0, bottom: 20 }}>
-                                    <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                                    <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
-                                    <YAxis
-                                        yAxisId="left"
-                                        stroke="#94A3B8"
-                                        fontSize={12}
-                                        tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                                    />
-                                    <YAxis
-                                        yAxisId="right"
-                                        orientation="right"
-                                        stroke="#94A3B8"
-                                        fontSize={12}
-                                    />
-                                    <Tooltip
-                                        formatter={(value, name) => {
-                                            if (name === 'revenue') {
-                                                return [`$${value.toLocaleString()}`, 'Revenue'];
-                                            }
-                                            if (name === 'clients') {
-                                                return [`${value}`, 'Clients'];
-                                            }
-                                            return [`${value}`, 'Tasks'];
-                                        }}
-                                        contentStyle={{ borderRadius: 12, borderColor: '#E2E8F0', padding: '8px 12px' }}
-                                    />
-                                    <Legend verticalAlign="top" align="left" iconType="circle" wrapperStyle={{ fontSize: 12, color: '#64748B' }} />
-                                    <Area
-                                        yAxisId="left"
-                                        type="monotone"
-                                        dataKey="revenue"
-                                        fill="rgba(59, 130, 246, 0.15)"
-                                        stroke="#3B82F6"
-                                        strokeWidth={3}
-                                        activeDot={{ r: 6, fill: '#3B82F6' }}
-                                    />
-                                    <Bar
-                                        yAxisId="right"
-                                        dataKey="clients"
-                                        barSize={28}
-                                        radius={[10, 10, 0, 0]}
-                                        fill="#60A5FA"
-                                        name="Clients"
-                                    />
-                                    <Line
-                                        yAxisId="right"
-                                        type="monotone"
-                                        dataKey="tasks"
-                                        stroke="#10B981"
-                                        strokeWidth={3}
-                                        dot={{ r: 4, fill: '#10B981' }}
-                                        name="Tasks"
-                                    />
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
+                            <div className="h-[386px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart data={trendsData} margin={{ top: 20, right: 40, left: 0, bottom: 20 }}>
+                                        <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                                        <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
+                                        <YAxis
+                                            yAxisId="left"
+                                            stroke="#94A3B8"
+                                            fontSize={12}
+                                            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                                        />
+                                        <YAxis
+                                            yAxisId="right"
+                                            orientation="right"
+                                            stroke="#94A3B8"
+                                            fontSize={12}
+                                        />
+                                        <Tooltip
+                                            formatter={(value, name) => {
+                                                if (name === 'revenue') {
+                                                    return [`$${value.toLocaleString()}`, 'Revenue'];
+                                                }
+                                                if (name === 'clients') {
+                                                    return [`${value}`, 'Clients'];
+                                                }
+                                                return [`${value}`, 'Tasks'];
+                                            }}
+                                            contentStyle={{ borderRadius: 12, borderColor: '#E2E8F0', padding: '8px 12px' }}
+                                        />
+                                        <Legend verticalAlign="top" align="left" iconType="circle" wrapperStyle={{ fontSize: 12, color: '#64748B' }} />
+                                        <Area
+                                            yAxisId="left"
+                                            type="monotone"
+                                            dataKey="revenue"
+                                            fill="rgba(59, 130, 246, 0.15)"
+                                            stroke="#3B82F6"
+                                            strokeWidth={3}
+                                            activeDot={{ r: 6, fill: '#3B82F6' }}
+                                        />
+                                        <Bar
+                                            yAxisId="right"
+                                            dataKey="clients"
+                                            barSize={28}
+                                            radius={[10, 10, 0, 0]}
+                                            fill="#60A5FA"
+                                            name="Clients"
+                                        />
+                                        <Line
+                                            yAxisId="right"
+                                            type="monotone"
+                                            dataKey="tasks"
+                                            stroke="#10B981"
+                                            strokeWidth={3}
+                                            dot={{ r: 4, fill: '#10B981' }}
+                                            name="Tasks"
+                                        />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </div>
                         )}
                         {trendsView === 'split' && (
                             <div className="space-y-6">
@@ -576,10 +576,10 @@ export default function OfficeDashboardView() {
                         )}
                         {trendsView === 'table' && (
                             <div className="overflow-x-auto rounded-2xl">
-                                 <div className="p-4">
+                                <div className="p-4">
                                     <h6 className="text-sm font-semibold text-[#1F2937]">Office Staff</h6>
                                     <span className="text-xs font-medium text-[#94A3B8]">All staff members assigned to this office location</span>
-                                 </div>
+                                </div>
                                 <table className="min-w-full divide-y divide-[#E4ECFF] text-left text-sm text-[#4B5563]">
                                     <thead className="text-xs font-semibold  tracking-wide text-[#6B7280]">
                                         <tr>
@@ -673,7 +673,7 @@ export default function OfficeDashboardView() {
                                                 <span className="text-sm font-medium text-gray-700">Client Satisfaction</span>
                                                 <span className="text-sm font-semibold text-gray-900">{office.clientSatisfaction}/5.0</span>
                                             </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div className="w-full bg-gray-200 rounded-full h-2">
                                                 <div
                                                     className="bg-[#3AD6F2] h-2 rounded-full"
                                                     style={{ width: `${(office.clientSatisfaction / 5.0) * 100}%` }}

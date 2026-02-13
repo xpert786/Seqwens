@@ -4,7 +4,7 @@ import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEl
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
-import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action, CrossesIcon } from '../../Components/icons';
+import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action } from '../../Components/icons';
 import '../../../Taxpreparer/styles/taxdashboard.css';
 import '../../styles/ClientManage.css';
 import BulkActionModal from './BulkAction';
@@ -22,6 +22,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
 import { getToastOptions } from '../../../utils/toastConfig';
+import { IoMdClose } from 'react-icons/io';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -43,6 +44,10 @@ export default function ClientManage() {
   const [deleting, setDeleting] = useState(false);
   const [reassigning, setReassigning] = useState(false);
   const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
+  const [selectedStaffIdForModal, setSelectedStaffIdForModal] = useState(null);
+  const [staffSearchQuery, setStaffSearchQuery] = useState('');
+  const [isStaffDropdownOpen, setIsStaffDropdownOpen] = useState(false);
+  const staffDropdownRef = useRef(null);
   const [selectedClientForWorkflow, setSelectedClientForWorkflow] = useState(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [selectedClientForMessage, setSelectedClientForMessage] = useState(null);
@@ -318,6 +323,27 @@ export default function ClientManage() {
     };
 
     fetchStaffMembers();
+  }, []);
+
+  // Filtered staff members for the custom dropdown
+  const filteredStaffMembers = useMemo(() => {
+    if (!staffSearchQuery.trim()) return staffMembers;
+    const query = staffSearchQuery.toLowerCase();
+    return staffMembers.filter(staff =>
+      (staff.name || '').toLowerCase().includes(query) ||
+      (staff.email || '').toLowerCase().includes(query)
+    );
+  }, [staffMembers, staffSearchQuery]);
+
+  // Handle outside click for staff dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (staffDropdownRef.current && !staffDropdownRef.current.contains(event.target)) {
+        setIsStaffDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Debounce search term
@@ -1632,7 +1658,6 @@ export default function ClientManage() {
                           </div>
                           <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
                             <button
-                              className="btn "
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedClientForReassign(taxpayer.id);
@@ -1647,7 +1672,9 @@ export default function ClientManage() {
                                 fontWeight: '600',
                                 padding: '6px 14px',
                                 borderRadius: '6px',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                transition: 'none',
+                                cursor: 'pointer'
                               }}
                             >
                               Assign
@@ -2087,7 +2114,9 @@ export default function ClientManage() {
                   filteredClients.map((client) => (
                     <tr key={client.id}>
                       <td colSpan="6" className="p-0">
-                        <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
+                        <div
+                          className="border border-[#E8F0FF] p-3 mb-3 rounded-lg"
+                        >
                           <div className="flex items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8">
                             {/* Client Column */}
                             <div className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px]">
@@ -2095,7 +2124,7 @@ export default function ClientManage() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                                     <div
-                                      className="font-semibold text-gray-900 text-sm cursor-pointer hover:text-blue-600 transition-colors"
+                                      className="font-semibold text-gray-900 text-sm cursor-pointer hover:text-blue-600"
                                       onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
                                     >
                                       {client.name}
@@ -2184,23 +2213,39 @@ export default function ClientManage() {
                                 </div>
                               ) : (
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setSelectedClientForReassign(client.id);
                                     setIsAssignMode(true);
                                     setShowReassignStaffModal(true);
                                   }}
-                                  className="px-3 py-1.5 text-xs font-medium text-white !rounded-md hover:brightness-90 transition font-[BasisGrotesquePro]"
-                                  style={{ backgroundColor: 'var(--firm-primary-color, #3AD6F2)' }}
+                                  className="px-3 py-1.5 text-xs font-medium rounded-md font-[BasisGrotesquePro]
+             hover:bg-[inherit] hover:text-[inherit] hover:border-[inherit]
+             active:bg-[inherit] active:text-[inherit]
+             focus:bg-[inherit] focus:text-[inherit]
+             !opacity-100"
+                                  style={{
+                                    backgroundColor: 'var(--firm-primary-color, #3AD6F2)',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    outline: 'none',
+                                    transition: 'none',
+                                    opacity: 1
+                                  }}
                                 >
                                   Assign Staff
                                 </button>
+
                               )}
                             </div>
 
                             {/* Action Column */}
                             <div className="w-[70px] sm:w-[80px] md:w-[100px] text-sm font-medium relative dropdown-container flex justify-center flex-shrink-0">
                               <button
-                                onClick={() => setShowDropdown(showDropdown === client.id ? null : client.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowDropdown(showDropdown === client.id ? null : client.id);
+                                }}
                                 className="text-gray-400 "
                               >
                                 <Action />
@@ -2224,7 +2269,12 @@ export default function ClientManage() {
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedule Meeting</button> */}
                                     {client.assignedStaff && client.assignedStaff.length > 0 ? (
                                       <button
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700"
+                                        style={{
+                                          transition: 'none',
+                                          backgroundColor: 'transparent',
+                                          color: '#374151'
+                                        }}
                                         onClick={() => {
                                           setSelectedClientForReassign(client.id);
                                           setIsAssignMode(false);
@@ -2236,7 +2286,12 @@ export default function ClientManage() {
                                       </button>
                                     ) : (
                                       <button
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700"
+                                        style={{
+                                          transition: 'none',
+                                          backgroundColor: 'transparent',
+                                          color: '#374151'
+                                        }}
                                         onClick={() => {
                                           setSelectedClientForReassign(client.id);
                                           setIsAssignMode(true);
@@ -2249,7 +2304,8 @@ export default function ClientManage() {
                                     )}
                                     <button
                                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         setSelectedClientForWorkflow({
                                           id: client.id,
                                           name: client.name || client.company || 'Client',
@@ -2263,7 +2319,8 @@ export default function ClientManage() {
                                     </button>
                                     <button
                                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         setSelectedClientForMessage({
                                           id: client.id,
                                           name: client.name || 'Client'
@@ -2392,9 +2449,9 @@ export default function ClientManage() {
                   <h3 className="taxdashboardr-titler text-base font-bold text-gray-900" style={{ color: '#3B4A66' }}>Filters</h3>
                   <button
                     onClick={() => setShowFiltersModal(false)}
-                    className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200 text-gray-500"
                   >
-                    <CrossesIcon />
+                    <IoMdClose size={22} />
                   </button>
                 </div>
               </div>
@@ -2817,12 +2874,13 @@ export default function ClientManage() {
                       setShowReassignStaffModal(false);
                       setSelectedClientForReassign(null);
                       setIsAssignMode(false);
+                      setSelectedStaffIdForModal(null);
                     }
                   }}
-                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200 text-gray-500"
                   disabled={reassigning}
                 >
-                  <CrossesIcon />
+                  <IoMdClose size={20} />
                 </button>
               </div>
 
@@ -2849,37 +2907,82 @@ export default function ClientManage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div>
+                  <div className="relative" ref={staffDropdownRef}>
                     <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
                       Select Tax Preparer
                     </label>
-                    <select
-                      id="reassign-staff-select"
-                      key={`reassign-select-${selectedClientForReassign}`}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 font-[BasisGrotesquePro] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      disabled={reassigning}
-                      defaultValue=""
+                    <div
+                      className={`w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white cursor-pointer flex justify-between items-center ${isStaffDropdownOpen ? 'ring-2 ring-blue-500 border-transparent' : ''}`}
+                      onClick={() => !reassigning && setIsStaffDropdownOpen(!isStaffDropdownOpen)}
                     >
-                      <option value="">Select a tax preparer</option>
-                      {staffMembers.map((staff) => (
-                        <option key={staff.id} value={staff.id}>
-                          {staff.full_name || staff.name} {staff.email ? `(${staff.email})` : ''} {staff.is_firm_admin ? '- Firm Admin' : staff.role ? `- ${staff.role}` : ''}
-                        </option>
-                      ))}
-                    </select>
+                      <span className={`text-sm font-[BasisGrotesquePro] ${selectedStaffIdForModal ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {selectedStaffIdForModal
+                          ? staffMembers.find(s => s.id === selectedStaffIdForModal)?.name || 'Selected'
+                          : 'Select a tax preparer'}
+                      </span>
+                      <svg className={`w-4 h-4 transition-transform duration-200 ${isStaffDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+
+                    {isStaffDropdownOpen && (
+                      <div className="absolute z-[10000] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="Search preparers..."
+                              value={staffSearchQuery}
+                              onChange={(e) => setStaffSearchQuery(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                            />
+                            <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                          </div>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredStaffMembers.length > 0 ? (
+                            filteredStaffMembers.map((staff) => (
+                              <div
+                                key={staff.id}
+                                className={`px-3 py-2.5 text-sm cursor-pointer transition-colors flex flex-col gap-0.5 ${selectedStaffIdForModal === staff.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'}`}
+                                onClick={() => {
+                                  setSelectedStaffIdForModal(staff.id);
+                                  setIsStaffDropdownOpen(false);
+                                }}
+                              >
+                                <div className="font-medium flex items-center gap-1.5">
+                                  {staff.name}
+                                  {staff.is_firm_admin && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 font-bold uppercase">Admin</span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-gray-500 truncate">{staff.email}</div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-3 py-4 text-center text-sm text-gray-500 italic">
+                              No preparers found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {reassigning && (
                     <div className="text-center py-2 text-gray-500 text-sm">
                       {isAssignMode ? 'Assigning...' : 'Reassigning...'}
                     </div>
                   )}
-                  <div className="flex justify-end gap-3">
+                  <div className="flex justify-end gap-3 pt-2">
                     <button
                       onClick={() => {
                         if (!reassigning) {
                           setShowReassignStaffModal(false);
                           setSelectedClientForReassign(null);
                           setIsAssignMode(false);
+                          setSelectedStaffIdForModal(null);
                         }
                       }}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
@@ -2889,23 +2992,20 @@ export default function ClientManage() {
                     </button>
                     <button
                       onClick={() => {
-                        const selectElement = document.getElementById('reassign-staff-select');
-                        const selectedValue = selectElement?.value;
-                        if (selectedValue && selectedClientForReassign) {
-                          // Find the selected staff member to check if it's a firm admin
-                          const selectedStaff = staffMembers.find(staff => staff.id.toString() === selectedValue);
+                        if (selectedStaffIdForModal && selectedClientForReassign) {
+                          const selectedStaff = staffMembers.find(staff => staff.id === selectedStaffIdForModal);
                           const isFirm = selectedStaff?.is_firm_admin === true;
-                          handleReassignTaxPreparer(selectedClientForReassign, selectedValue, isFirm);
+                          handleReassignTaxPreparer(selectedClientForReassign, selectedStaffIdForModal, isFirm);
                         } else {
-                          toast.error('Please select a tax preparer', {
-                            position: "top-right",
-                            autoClose: 3000,
-                          });
+                          toast.error('Please select a tax preparer', getToastOptions());
                         }
                       }}
-                      className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                      style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
-                      disabled={reassigning}
+                      className="px-4 py-2 text-sm font-medium text-white !rounded-lg font-[BasisGrotesquePro]"
+                      style={{
+                        background: 'var(--Palette2-SkyBlue-900, #3AD6F2)',
+                        transition: 'none'
+                      }}
+                      disabled={reassigning || !selectedStaffIdForModal}
                     >
                       {reassigning
                         ? (isAssignMode ? 'Assigning...' : 'Reassigning...')
@@ -2947,10 +3047,10 @@ export default function ClientManage() {
                       setShowDeleteInviteConfirmModal(false);
                     }
                   }}
-                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200 text-gray-500"
                   disabled={deletingInvite}
                 >
-                  <CrossesIcon />
+                  <IoMdClose size={22} />
                 </button>
               </div>
 
@@ -3015,10 +3115,10 @@ export default function ClientManage() {
                       setSelectedClientForDelete(null);
                     }
                   }}
-                  className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200 text-gray-500"
                   disabled={deleting}
                 >
-                  <CrossesIcon />
+                  <IoMdClose size={22} />
                 </button>
               </div>
 

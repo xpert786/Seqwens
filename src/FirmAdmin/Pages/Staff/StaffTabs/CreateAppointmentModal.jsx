@@ -370,6 +370,7 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                             type="button"
                             onClick={onClose}
                             className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-gray-700"
+                            style={{ borderRadius: "10px" }}
                             disabled={loading}
                         >
                             Cancel
@@ -378,6 +379,7 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                             type="submit"
                             form="create-appointment-form"
                             className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center gap-2"
+                            style={{ borderRadius: "10px" }}
                             disabled={loading}
                         >
                             {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}

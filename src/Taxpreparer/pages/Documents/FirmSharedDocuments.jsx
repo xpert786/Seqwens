@@ -30,29 +30,40 @@ export default function FirmSharedDocuments() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [docToDelete, setDocToDelete] = useState(null);
 
-  // Fetch documents
-  const fetchDocuments = async () => {
+  // Fetch documents and folders
+  const fetchItems = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = {};
-      if (selectedFolderId) params.folder_id = selectedFolderId;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-      if (showArchived) params.is_archived = true;
+      const [foldersResult, documentsResult] = await Promise.all([
+        taxPreparerFirmSharedAPI.getFirmSharedFolders({
+          parent_id: selectedFolderId,
+          search: searchQuery.trim()
+        }),
+        taxPreparerFirmSharedAPI.getFirmSharedDocuments({
+          folder_id: selectedFolderId,
+          search: searchQuery.trim(),
+          is_archived: showArchived
+        })
+      ]);
 
-      const response = await taxPreparerFirmSharedAPI.getFirmSharedDocuments(params);
+      if (foldersResult.success && foldersResult.data) {
+        setFolders(foldersResult.data.folders || []);
+      }
 
-      if (response.success && response.data) {
-        setDocuments(response.data.documents || []);
-      } else {
-        throw new Error(response.message || 'Failed to fetch documents');
+      if (documentsResult.success && documentsResult.data) {
+        setDocuments(documentsResult.data.documents || []);
+      }
+
+      if (!foldersResult.success && !documentsResult.success) {
+        throw new Error(foldersResult.message || documentsResult.message || 'Failed to fetch items');
       }
     } catch (err) {
-      console.error('Error fetching firm-shared documents:', err);
+      console.error('Error fetching firm-shared items:', err);
       const errorMsg = handleAPIError(err);
       setError(errorMsg);
-      toast.error(errorMsg || 'Failed to load firm-shared documents', {
+      toast.error(errorMsg || 'Failed to load firm-shared items', {
         position: "top-right",
         autoClose: 3000,
       });
@@ -61,33 +72,9 @@ export default function FirmSharedDocuments() {
     }
   };
 
-  // Fetch folders
-  const fetchFolders = async () => {
-    try {
-      const params = {};
-      if (currentFolder) {
-        params.parent_id = currentFolder.id;
-      } else {
-        params.parent_id = null;
-      }
-
-      const response = await taxPreparerFirmSharedAPI.getFirmSharedFolders(params);
-
-      if (response.success && response.data) {
-        setFolders(response.data.folders || []);
-      }
-    } catch (err) {
-      console.error('Error fetching folders:', err);
-    }
-  };
-
   useEffect(() => {
-    fetchDocuments();
+    fetchItems();
   }, [selectedFolderId, searchQuery, showArchived]);
-
-  useEffect(() => {
-    fetchFolders();
-  }, [currentFolder]);
 
   // Handle folder navigation
   const handleFolderClick = (folder) => {
@@ -162,7 +149,7 @@ export default function FirmSharedDocuments() {
           position: "top-right",
           autoClose: 2000,
         });
-        fetchDocuments();
+        fetchItems();
       } else {
         throw new Error(response.message || 'Failed to delete document');
       }
@@ -229,7 +216,7 @@ export default function FirmSharedDocuments() {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        fetchDocuments();
+        fetchItems();
       } else {
         throw new Error(response.message || 'Failed to upload file');
       }
@@ -305,7 +292,7 @@ export default function FirmSharedDocuments() {
         <div className="d-flex gap-2">
           <button
             className="btn d-flex align-items-center gap-2"
-            onClick={fetchDocuments}
+            onClick={fetchItems}
             style={{
               backgroundColor: '#F9FAFB',
               border: '1px solid #E5E7EB',
@@ -409,7 +396,7 @@ export default function FirmSharedDocuments() {
         <div className="text-center py-5">
           <p className="text-danger mb-3">{error}</p>
           <button
-            onClick={fetchDocuments}
+            onClick={fetchItems}
             className="btn"
             style={{
               backgroundColor: '#00C0C6',

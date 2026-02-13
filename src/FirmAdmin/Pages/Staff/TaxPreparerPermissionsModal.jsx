@@ -1,58 +1,58 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { FiCheck, FiX, FiUser, FiMail, FiShield, FiInfo } from 'react-icons/fi';
+import { FiCheck, FiX, FiUser, FiMail, FiShield, FiInfo, FiUsers, FiFileText, FiBarChart2, FiEdit3, FiMessageSquare, FiDollarSign, FiPieChart, FiGrid, FiList } from 'react-icons/fi';
 import { firmAdminStaffAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
 // Permission categories mapping with icons
 const PERMISSION_CATEGORIES = {
   'Client Access': {
     codes: ['view_assigned_clients_only', 'view_all_firm_clients', 'view_unlinked_taxpayers'],
-    icon: '👥',
+    icon: <FiUsers className="w-5 h-5" />,
     color: 'blue'
   },
   'Client Management': {
     codes: ['create_clients', 'edit_client_data'],
-    icon: '📝',
+    icon: <FiEdit3 className="w-5 h-5" />,
     color: 'green'
   },
   'Document Management': {
     codes: ['upload_documents', 'download_documents', 'delete_documents'],
-    icon: '📄',
+    icon: <FiFileText className="w-5 h-5" />,
     color: 'purple'
   },
   'Returns & Filing': {
     codes: ['view_returns'],
-    icon: '📊',
+    icon: <FiBarChart2 className="w-5 h-5" />,
     color: 'orange'
   },
   'E-Signatures': {
     codes: ['initiate_esignature', 'track_esignature'],
-    icon: '✍️',
+    icon: <FiEdit3 className="w-5 h-5" />,
     color: 'indigo'
   },
   'Communication': {
     codes: ['send_messages', 'receive_messages'],
-    icon: '💬',
+    icon: <FiMessageSquare className="w-5 h-5" />,
     color: 'pink'
   },
   'Billing': {
     codes: ['create_invoices'],
-    icon: '💰',
+    icon: <FiDollarSign className="w-5 h-5" />,
     color: 'yellow'
   },
   'Reports & Analytics': {
     codes: ['access_analytics', 'export_reports'],
-    icon: '📈',
+    icon: <FiPieChart className="w-5 h-5" />,
     color: 'teal'
   },
   'Team Management': {
     codes: ['manage_team'],
-    icon: '👔',
+    icon: <FiUsers className="w-5 h-5" />,
     color: 'red'
   },
   'Task Management': {
     codes: ['assign_tasks_to_assigned_taxpayers', 'assign_tasks_to_unassigned_taxpayers'],
-    icon: '✅',
+    icon: <FiGrid className="w-5 h-5" />,
     color: 'cyan'
   }
 };
@@ -266,44 +266,39 @@ export default function TaxPreparerPermissionsModal({
       }}
     >
       <div
-        className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl relative max-h-[95vh] overflow-hidden flex flex-col"
+        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         {/* Header */}
         <div className="bg-white border-b-2 border-[#E8F0FF] p-6">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 bg-[#3AD6F2]/10 rounded-lg flex items-center justify-center">
-                  <FiShield size={24} className="text-[#3AD6F2]" />
-                </div>
-                <div>
-                  <h4 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
+                  <FiShield className="text-[#3AD6F2] w-5 h-5" />
+                  <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
                     Manage Permissions
                   </h4>
-                  <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
-                    Customize access for individual tax preparer
-                  </p>
                 </div>
+                <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-1 ml-7">
+                  Customize access for individual tax preparer
+                </p>
               </div>
 
               {/* User Info Card */}
-              <div className="mt-4 bg-white rounded-lg p-4 border border-[#E8F0FF]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#32B582]/10 rounded-lg flex items-center justify-center">
-                    <FiUser size={18} className="text-[#32B582]" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 font-[BasisGrotesquePro] text-lg">
-                      {userInfo.name || preparerName || 'Tax Preparer'}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <FiMail size={14} className="text-gray-500" />
-                      <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                        {userInfo.email || preparerEmail}
-                      </p>
-                    </div>
-                  </div>
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <FiUser className="text-[#32B582] w-5 h-5 flex-shrink-0" />
+                  <p className="font-semibold text-gray-900 font-[BasisGrotesquePro] text-base m-0">
+                    {userInfo.name || preparerName || 'Tax Preparer'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FiMail className="text-gray-500 w-5 h-5 flex-shrink-0" />
+                  <p className="text-sm text-gray-600 font-[BasisGrotesquePro] m-0">
+                    {userInfo.email || preparerEmail}
+                  </p>
                 </div>
               </div>
             </div>
@@ -319,9 +314,9 @@ export default function TaxPreparerPermissionsModal({
         </div>
 
         {/* Summary Bar */}
-        <div className="bg-white border-b border-[#E8F0FF] px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
+        <div className="bg-white border-b border-[#E8F0FF] px-6 py-3">
+          <div className="flex items-center justify-between flex-nowrap">
+            <div className="flex items-center gap-3 whitespace-nowrap overflow-hidden">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#32B582] rounded-full"></div>
                 <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
@@ -338,9 +333,9 @@ export default function TaxPreparerPermissionsModal({
                 {totalPermissions} Total Permissions
               </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#3AD6F2]/10 border border-[#3AD6F2]/30 !rounded-lg">
-              <FiInfo size={16} className="text-[#3AD6F2]" />
-              <span className="text-xs font-[BasisGrotesquePro] font-medium">
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#3AD6F2] rounded-full whitespace-nowrap flex-shrink-0">
+              <FiInfo size={14} className="text-white" />
+              <span className="text-xs text-white font-[BasisGrotesquePro] font-medium">
                 Changes apply only to this preparer
               </span>
             </div>
@@ -348,7 +343,7 @@ export default function TaxPreparerPermissionsModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
@@ -377,24 +372,35 @@ export default function TaxPreparerPermissionsModal({
                     {/* Category Header */}
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{categoryData.icon}</span>
-                        <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                        <div className="flex-shrink-0 flex items-center text-gray-500">
+                          {React.isValidElement(categoryData.icon) ?
+                            React.cloneElement(categoryData.icon, { className: "w-5 h-5" }) :
+                            categoryData.icon}
+                        </div>
+                        <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
                           {category}
                         </h5>
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro]">
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
                           {categoryPermissions.length} {categoryPermissions.length === 1 ? 'permission' : 'permissions'}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(categoryCodes, allSelected)}
-                        className={`px-4 py-1.5 !rounded-lg font-[BasisGrotesquePro] text-sm font-medium transition-colors ${allSelected
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                          : 'bg-[#3AD6F2]/10 text-[#3AD6F2] hover:bg-[#3AD6F2]/20 border border-[#3AD6F2]/30'
-                          }`}
+                        className={`px-4 py-1.5 !rounded-lg font-[BasisGrotesquePro] text-sm font-medium
+    hover:bg-[inherit] hover:text-[inherit] active:bg-[inherit] active:text-[inherit]
+    !text-white`}
+                        style={{
+                          backgroundColor: allSelected ? '#9CA3AF' : '#3AD6F2', // gray-400 or primary
+                          border: allSelected
+                            ? '1px solid #9CA3AF'
+                            : '1px solid rgba(58,214,242,0.4)',
+                          transition: 'none'
+                        }}
                       >
                         {allSelected ? 'Deselect All' : 'Select All'}
                       </button>
+
                     </div>
 
                     {/* Permissions List */}
@@ -466,11 +472,11 @@ export default function TaxPreparerPermissionsModal({
                   <div className="bg-white border border-[#E8F0FF] rounded-lg p-5 hover:border-[#3AD6F2] transition-all shadow-sm">
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">📋</span>
-                        <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                        <FiList className="text-gray-500 w-5 h-5 flex-shrink-0" />
+                        <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
                           Other Permissions
                         </h5>
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro]">
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
                           {uncategorizedPermissions.length} {uncategorizedPermissions.length === 1 ? 'permission' : 'permissions'}
                         </span>
                       </div>

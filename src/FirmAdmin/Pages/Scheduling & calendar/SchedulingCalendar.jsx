@@ -370,7 +370,7 @@ const SchedulingCalendar = () => {
                 {hasClient && (
                     <button
                         type="button"
-                        className="text-blue-600 hover:underline"
+                        className="text-[#F56D2D] hover:underline"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleNavigateToClient(event);
@@ -383,7 +383,7 @@ const SchedulingCalendar = () => {
                 {hasStaff && (
                     <button
                         type="button"
-                        className="text-blue-600 hover:underline"
+                        className="text-[#F56D2D] hover:underline"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleNavigateToStaff(event);
@@ -1330,7 +1330,7 @@ const SchedulingCalendar = () => {
                                             highlightDate ? isSameCalendarDay(dateObj, highlightDate) : day.isToday;
                                         const weekCellClasses = [
                                             'min-h-[300px] p-2 border rounded-lg transition-colors duration-150',
-                                            isHighlighted ? 'bg-blue-50 border-blue-300' : 'border-[#E8F0FF]',
+                                            isHighlighted ? 'bg-[#FFF4E6] border-[#F56D2D]' : 'border-[#E8F0FF]',
                                             hasAppointments && !day.isToday ? 'bg-[#FFF7ED] border-[#F56D2D]' : '',
                                         ].join(' ');
 
@@ -1343,7 +1343,7 @@ const SchedulingCalendar = () => {
                                                         className={[
                                                             'w-6 h-6 flex items-center justify-center rounded-full text-sm font-[BasisGrotesquePro]',
                                                             isHighlighted
-                                                                ? 'bg-blue-100 text-blue-700 font-bold'
+                                                                ? 'bg-[#FFE0B2] text-[#F56D2D] font-bold'
                                                                 : hasAppointments
                                                                     ? 'bg-[#F56D2D] text-white font-semibold'
                                                                     : 'text-gray-900',
@@ -1415,51 +1415,49 @@ const SchedulingCalendar = () => {
                                             return (
                                                 <div
                                                     key={index}
-                                                    className={`min-h-[100px] p-2 sm:p-3 border-r border-b border-[#E8F0FF] transition-colors ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                                                    className={`min-h-[160px] p-2 sm:p-3 border-r border-b border-[#E8F0FF] transition-colors ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                                                         } ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
                                                 >
                                                     <div
                                                         className={`text-sm font-medium mb-1 ${isHighlighted
-                                                            ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center'
+                                                            ? 'bg-[#F56D2D] text-white rounded-full w-6 h-6 flex items-center justify-center'
                                                             : ''
                                                             }`}
                                                     >
                                                         {day.getDate()}
                                                     </div>
-                                                    {dayAppointments.slice(0, 2).map((event, idx) => (
+                                                    {dayAppointments.slice(0, 3).map((event, idx) => (
                                                         <div
                                                             key={`${event.id || idx}-${event.appointment_time || idx}`}
                                                             className={`${getEventChipClasses(
                                                                 event.appointment_status
-                                                            )} text-[10px] px-2 py-1.5 rounded-md mb-1 shadow-sm cursor-pointer hover:brightness-110 hover:shadow-md transition-all group/event`}
+                                                            )} text-[11px] px-2 py-1.5 rounded-md mb-1 shadow-sm cursor-pointer transition-all flex flex-col gap-0.5`}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 openEventsModal(day, dayAppointments);
                                                             }}
                                                         >
-                                                            <div className="flex items-center justify-between gap-2 overflow-hidden">
-                                                                <div className="flex items-center gap-1 min-w-0 flex-1">
-                                                                    <div className="w-1 h-1 bg-white rounded-full flex-shrink-0"></div>
-                                                                    <span className="truncate font-medium">
-                                                                        {event.subject || event.title || 'Meeting'}
-                                                                    </span>
-                                                                </div>
-                                                                <span className="text-[9px] opacity-90 whitespace-nowrap group-hover/event:opacity-100">
+                                                            <span className="font-medium leading-tight break-words line-clamp-2">
+                                                                {event.subject || event.title || 'Meeting'}
+                                                            </span>
+                                                            <div className="flex items-center gap-1 opacity-100">
+                                                                <div className="w-1 h-1 bg-white rounded-full flex-shrink-0"></div>
+                                                                <span className="text-[10px] whitespace-nowrap font-medium">
                                                                     {formatTime(event.appointment_time)}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     ))}
-                                                    {dayAppointments.length > 2 && (
+                                                    {dayAppointments.length > 3 && (
                                                         <button
                                                             type="button"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 openEventsModal(day, dayAppointments);
                                                             }}
-                                                            className="w-full text-[10px] text-[#3AD6F2] font-semibold hover:text-[#28c5e0] hover:underline mt-1.5 py-1 bg-[#3AD6F2]/10 rounded-md transition-colors"
+                                                            className="w-full text-[11px] text-[#F56D2D] font-bold mt-1.5 py-1 bg-[#FFF4E6] rounded-md transition-colors"
                                                         >
-                                                            + {dayAppointments.length - 2} more
+                                                            + {dayAppointments.length - 3} more
                                                         </button>
                                                     )}
                                                 </div>
@@ -1558,7 +1556,7 @@ const SchedulingCalendar = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-full lg:w-80 space-y-4">
+                    <div className="w-full lg:w-64 space-y-4">
                         {/* Today's Events */}
                         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
                             <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Today's Events</h6>
@@ -1705,6 +1703,8 @@ const SchedulingCalendar = () => {
                                                         handleManageAppointment(event.id, 'approve');
                                                     }}
                                                     className="flex-1 px-3 py-1.5 text-xs font-bold text-white bg-[#059669] hover:bg-[#047857] rounded-lg transition-colors font-[BasisGrotesquePro]"
+                                                    style={{ borderRadius: "10px" }}
+
                                                 >
                                                     Accept
                                                 </button>
@@ -1714,6 +1714,7 @@ const SchedulingCalendar = () => {
                                                         handleManageAppointment(event.id, 'cancel');
                                                     }}
                                                     className="flex-1 px-3 py-1.5 text-xs font-bold text-white bg-[#DC2626] hover:bg-[#B91C1C] rounded-lg transition-colors font-[BasisGrotesquePro]"
+                                                    style={{ borderRadius: "10px" }}
                                                 >
                                                     Reject
                                                 </button>
@@ -1727,6 +1728,7 @@ const SchedulingCalendar = () => {
                             <button
                                 onClick={closeEventsModal}
                                 className="px-4 py-2 text-sm bg-white !border border-[#E8F0FF] rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                                style={{ borderRadius: "10px" }}
                             >
                                 Close
                             </button>
@@ -1765,7 +1767,7 @@ const SchedulingCalendar = () => {
                         {/* Modal Body - Scrollable */}
                         <div className="p-4 space-y-4 overflow-y-auto flex-1">
                             {/* New Appointment Details */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg p-3">
                                 <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">New Appointment</h6>
                                 <div className="space-y-1 text-sm text-gray-700 font-[BasisGrotesquePro]">
                                     <p><span className="font-medium">Title:</span> {newAppointmentDetails?.event_title || eventTitle}</p>
@@ -1804,7 +1806,7 @@ const SchedulingCalendar = () => {
                                                 <span className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${appointment.appointment_status === 'confirmed'
                                                     ? 'bg-green-100 text-green-800'
                                                     : appointment.appointment_status === 'scheduled'
-                                                        ? 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-orange-100 text-orange-800'
                                                         : 'bg-gray-100 text-gray-800'
                                                     }`}>
                                                     {appointment.appointment_status || 'scheduled'}
@@ -1999,7 +2001,7 @@ const SchedulingCalendar = () => {
                                     <button
                                         type="button"
                                         onClick={addTimeSlot}
-                                        className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
+                                        className="px-3 py-2 text-sm font-medium text-[#F56D2D] hover:bg-[#FFF5E0] transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
                                         style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)', borderRadius: '8px' }}
                                     >
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

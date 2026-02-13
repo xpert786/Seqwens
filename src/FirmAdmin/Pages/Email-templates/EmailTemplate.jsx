@@ -454,14 +454,30 @@ export default function EmailTemplate() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => openEditor(null)}
-                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-[10px] px-4 font-semibold text-white hover:opacity-90 transition-colors"
-                                style={{ backgroundColor: 'var(--firm-primary-color)' }}
+                                className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-[10px] px-4 font-semibold text-white transition-all"
+                                style={{
+                                    backgroundColor: 'var(--firm-primary-color)',
+                                    transition: 'none'
+                                }}
                             >
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M9 3.75V14.25M3.75 9H14.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 18 18"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        d="M9 3.75V14.25M3.75 9H14.25"
+                                        stroke="white"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
                                 </svg>
                                 Create Template
                             </button>
+
 
                         </div>
                     </header>
@@ -1707,7 +1723,7 @@ function TemplatesView({
                 <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-3 text-xs font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8 bg-gray-50/50">
                     <span>Template</span>
                     <span>Category</span>
-                    <span className="ml-3">Subject</span>
+                    <span>Subject</span>
                     <span>Usage</span>
                     <span>Last Used</span>
                     <span>Status</span>
@@ -1725,9 +1741,13 @@ function TemplatesView({
                                     key={template.id}
                                     className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 sm:px-6 lg:px-8 text-xs ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
                                 >
-                                    <div>
-                                        <p className="font-semibold text-[#1F2A55] whitespace-nowrap overflow-hidden text-ellipsis">{template.title}</p>
-                                        <p className="mt-0.5 text-[10px] font-medium text-[#7B8AB2] whitespace-nowrap overflow-hidden text-ellipsis">{template.description}</p>
+                                    <div className="flex flex-col justify-center min-h-[40px]">
+                                        <p className="font-semibold text-[#1F2A55] whitespace-nowrap overflow-hidden text-ellipsis leading-tight">{template.title}</p>
+                                        {template.description && (
+                                            <p className="mt-1 text-[10px] font-medium text-[#7B8AB2] whitespace-nowrap overflow-hidden text-ellipsis leading-tight">
+                                                {template.description}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="flex h-6 w-6 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
@@ -1741,7 +1761,7 @@ function TemplatesView({
                                     </div>
                                     <p className="text-xs font-medium text-[#3D4C70] whitespace-nowrap overflow-hidden text-ellipsis">{template.subject}</p>
                                     <p className="font-medium text-[#1F2A55]">{template.usage}</p>
-                                    <p className="ml-3 text-[#3D4C70] font-medium">{template.lastUsed}</p>
+                                    <p className="text-[#3D4C70] font-medium">{template.lastUsed}</p>
                                     <span
                                         className={`inline-flex items-center justify-center !rounded-full px-2 py-[2px] text-[10px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
                                     >
@@ -1752,7 +1772,7 @@ function TemplatesView({
                                             <EyeIcon />
                                         </IconButton>
                                         <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
-                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
                                                 <path d="M8.70947 4.03906H4.62614C4.31672 4.03906 4.01997 4.16198 3.80118 4.38077C3.58239 4.59956 3.45947 4.89631 3.45947 5.20573V13.3724C3.45947 13.6818 3.58239 13.9786 3.80118 14.1974C4.01997 14.4161 4.31672 14.5391 4.62614 14.5391H12.7928C13.1022 14.5391 13.399 14.4161 13.6178 14.1974C13.8366 13.9786 13.9595 13.6818 13.9595 13.3724V9.28906" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
@@ -1763,14 +1783,14 @@ function TemplatesView({
                                             <DuplicateIcon />
                                         </IconButton>
                                         <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
-                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
                                                 <path d="M13.9582 4.03906L4.0415 7.2474L7.83317 8.9974L11.9165 6.08073L8.99984 10.1641L10.7498 13.9557L13.9582 4.03906Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                         </IconButton>
                                         <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
-                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
                                             </svg>
                                         </IconButton>

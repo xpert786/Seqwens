@@ -54,7 +54,7 @@ export default function MyClients() {
   const [invitesError, setInvitesError] = useState(null);
   const [invitesPagination, setInvitesPagination] = useState({
     page: 1,
-    page_size: 20,
+    page_size: 4,
     total_count: 0,
     total_pages: 1
   });
@@ -174,7 +174,7 @@ export default function MyClients() {
         setPendingInvites(response.data.invites || []);
         setInvitesPagination({
           page: response.data.page || page,
-          page_size: response.data.page_size || 20,
+          page_size: response.data.page_size || 4,
           total_count: response.data.total_count || 0,
           total_pages: response.data.total_pages || 1
         });
@@ -1423,7 +1423,7 @@ export default function MyClients() {
       {/* Search & Filter - Show for clients and unlinked taxpayers tabs */}
       {(activeTab === 'clients' || activeTab === 'unlinked-taxpayers') && (
         <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-          <div className="position-relative " style={{ width: '260px', flexShrink: 0 }}>
+          <div className="position-relative " style={{ width: '220px', flexShrink: 0 }}>
             <input
               type="text"
               className="form-control rounded"
@@ -1432,27 +1432,27 @@ export default function MyClients() {
               onChange={handleSearchChange}
               style={{
                 border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                paddingLeft: "38px",
-                paddingRight: "12px",
-                paddingTop: "10px",
-                paddingBottom: "8px",
+                paddingLeft: "34px",
+                paddingRight: "10px",
+                paddingTop: "6px",
+                paddingBottom: "6px",
                 width: "100%",
-                height: "38px",
-                fontSize: "14px",
-                lineHeight: "22px"
+                height: "34px",
+                fontSize: "13px",
+                lineHeight: "20px"
               }}
             />
             <svg
-              width="14"
-              height="14"
+              width="13"
+              height="13"
               viewBox="0 0 12 12"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className="search-icon"
               style={{
                 position: 'absolute',
-                left: '14px',
-                top: '12px',
+                left: '12px',
+                top: '10px',
                 zIndex: 10,
                 pointerEvents: 'none'
               }}
@@ -1463,25 +1463,25 @@ export default function MyClients() {
 
           <div className="position-relative filter-dropdown-container" style={{ display: 'flex', alignItems: 'center' }}>
             <button
-              className="btn btn-filter d-flex align-items-center justify-content-center rounded px-3"
+              className="btn btn-filter d-flex align-items-center justify-content-center rounded"
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               style={{
                 border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
                 background: "#fff",
-                height: "38px",
-                paddingLeft: "38px",
+                height: "34px",
+                paddingLeft: "12px",
                 paddingRight: "12px",
-                paddingTop: "10px",
-                paddingBottom: "8px",
-                fontSize: "14px",
-                lineHeight: "22px",
-                marginTop: "-9px",
+                paddingTop: "6px",
+                paddingBottom: "6px",
+                fontSize: "13px",
+                lineHeight: "20px",
+                marginTop: "-8px",
                 whiteSpace: 'nowrap',
                 display: 'flex',
                 alignItems: 'center'
               }}
             >
-              <FiltIcon className="me-2 text-muted" style={{ fontSize: "14px" }} />
+              <FiltIcon className="me-2 text-muted" style={{ fontSize: "13px" }} />
               <span>Filter</span>
               {(statusFilter || priorityFilter) && (
                 <span className="badge bg-danger text-white ms-2" style={{ fontSize: "10px", color: "#ffffff" }}>
@@ -1497,28 +1497,33 @@ export default function MyClients() {
                   top: "100%",
                   right: 0,
                   zIndex: 1000,
-                  minWidth: "200px",
+                  minWidth: "160px",
                   marginTop: "8px",
-                  padding: "12px"
+                  padding: "8px",
+                  borderRadius: "10px",
+                  border: "1px solid #E8F0FF"
                 }}
               >
                 <div className="mb-2">
-                  <label className="form-label small fw-semibold">Status</label>
+                  <label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#6B7280", marginLeft: "4px" }}>STATUS</label>
                   <div className="d-flex flex-column gap-1">
                     <button
-                      className={`btn  ${statusFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${statusFilter === null ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handleStatusFilter(null)}
                     >
-                      All
+                      All Status
                     </button>
                     <button
-                      className={`btn  ${statusFilter === 'active' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${statusFilter === 'active' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handleStatusFilter('active')}
                     >
                       Active
                     </button>
                     <button
-                      className={`btn  ${statusFilter === 'pending' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${statusFilter === 'pending' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handleStatusFilter('pending')}
                     >
                       Pending
@@ -1526,28 +1531,32 @@ export default function MyClients() {
                   </div>
                 </div>
                 <div className="mb-2">
-                  <label className="form-label small fw-semibold">Priority</label>
+                  <label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#6B7280", marginLeft: "4px" }}>PRIORITY</label>
                   <div className="d-flex flex-column gap-1">
                     <button
-                      className={`btn  ${priorityFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${priorityFilter === null ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handlePriorityFilter(null)}
                     >
-                      All
+                      All Priority
                     </button>
                     <button
-                      className={`btn  ${priorityFilter === 'high' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${priorityFilter === 'high' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handlePriorityFilter('high')}
                     >
                       High
                     </button>
                     <button
-                      className={`btn  ${priorityFilter === 'medium' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${priorityFilter === 'medium' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handlePriorityFilter('medium')}
                     >
                       Medium
                     </button>
                     <button
-                      className={`btn  ${priorityFilter === 'low' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      className={`btn btn-sm py-1 ${priorityFilter === 'low' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
                       onClick={() => handlePriorityFilter('low')}
                     >
                       Low
@@ -1556,11 +1565,11 @@ export default function MyClients() {
                 </div>
                 {(statusFilter || priorityFilter || searchQuery) && (
                   <button
-                    className="btn  btn-outline-danger w-100 mt-2"
+                    className="btn btn-sm btn-outline-danger w-100 mt-1 py-1"
                     onClick={clearFilters}
-                    style={{ borderRadius: '8px' }}
+                    style={{ borderRadius: '6px', fontSize: "11px" }}
                   >
-                    Clear Filters
+                    Clear All
                   </button>
                 )}
               </div>
@@ -1818,16 +1827,18 @@ export default function MyClients() {
                           <div className="fw-semibold mb-1">
                             {invite.first_name} {invite.last_name}
                           </div>
-                          <div className="text-muted small mb-2">
-                            <FaEnvelope className="me-1" size={12} />
-                            {invite.email}
+                          <div className="text-muted mb-2 d-flex align-items-center gap-3" style={{ fontSize: '11px' }}>
+                            <span className="d-flex align-items-center">
+                              <FaEnvelope className="me-2" size={12} />
+                              {invite.email}
+                            </span>
+                            {invite.phone_number && (
+                              <span className="d-flex align-items-center">
+                                <Phone className="me-2" />
+                                {invite.phone_number}
+                              </span>
+                            )}
                           </div>
-                          {invite.phone_number && (
-                            <div className="text-muted small mb-2">
-                              <Phone className="me-1" />
-                              {invite.phone_number}
-                            </div>
-                          )}
                           <div className="d-flex flex-wrap gap-2 mt-2">
                             <span className="badge bg-info text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                               {invite.firm_name}
@@ -1842,13 +1853,11 @@ export default function MyClients() {
                               </span>
                             )}
                           </div>
-                          <div className="text-muted small mt-2">
-                            <div>Invited by: {invite.invited_by_name}</div>
-                            <div>Invited: {new Date(invite.invited_at).toLocaleDateString()}</div>
+                          <div className="text-muted mt-2 d-flex flex-wrap gap-3" style={{ fontSize: '11px' }}>
+                            <span>Invited by: {invite.invited_by_name}</span>
+                            <span>Invited: {new Date(invite.invited_at).toLocaleDateString()}</span>
                             {invite.expires_at && (
-                              <div>
-                                Expires: {new Date(invite.expires_at).toLocaleDateString()}
-                              </div>
+                              <span>Expires: {new Date(invite.expires_at).toLocaleDateString()}</span>
                             )}
                           </div>
                         </div>

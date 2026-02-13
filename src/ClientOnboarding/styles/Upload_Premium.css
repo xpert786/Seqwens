@@ -20,17 +20,17 @@
 }
 
 .upload-heading {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
-    color: var(--primary-orange);
-    margin-bottom: 4px !important;
+    color: var(--text-main);
+    margin-bottom: 2px !important;
     font-family: 'BasisGrotesquePro', sans-serif;
 }
 
 .upload-subheading {
     font-size: 14px;
     color: var(--text-muted);
-    margin-bottom: 24px !important;
+    margin-bottom: 0px !important;
 }
 
 /* Error Summary Banner */
@@ -73,8 +73,12 @@
 .premium-dropzone {
     border: 2px dashed #D1D5DB;
     background-color: var(--bg-light);
-    border-radius: 16px;
-    padding: 40px 20px;
+    border-radius: 0;
+    padding: 100px 40px;
+    width: 100%;
+    margin: 0;
+    border-left: none;
+    border-right: none;
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -103,7 +107,7 @@
 }
 
 .dropzone-text {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--text-main);
     margin-bottom: 8px;
@@ -120,16 +124,17 @@
     grid-template-columns: 320px 1fr;
     gap: 24px;
     height: 550px;
-    margin-top: 20px;
+    margin-top: 5px;
 }
 
 .file-sidebar {
     background: white;
-    border: 1px solid var(--border-color);
+    border: none;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: var(--bg-light);
 }
 
 .file-list-header {
@@ -245,7 +250,7 @@
 .config-content-wrapper {
     flex: 1;
     background: white;
-    border: 1px solid var(--border-color);
+    border: none;
     border-radius: 12px;
     padding: 24px;
     overflow-y: auto;
@@ -359,7 +364,7 @@
 /* Modal Buttons */
 .modal-footer-premium {
     padding: 16px 24px;
-    border-top: 1px solid var(--border-color);
+    border-top: none;
     display: flex;
     justify-content: flex-end;
     gap: 12px;

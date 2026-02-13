@@ -1035,14 +1035,21 @@ export default function FirmAdminDashboard() {
             <button
               onClick={() => setIsScheduleModalOpen(false)}
               disabled={scheduleLoading}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                borderRadius: '12px'
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
+
             <button
               onClick={handleScheduleReport}
               disabled={scheduleLoading}
               className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              style={{
+                borderRadius: '12px'
+              }}
             >
               {scheduleLoading ? (
                 <>

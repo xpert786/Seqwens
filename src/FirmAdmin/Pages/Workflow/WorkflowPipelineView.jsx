@@ -139,7 +139,7 @@ const WorkflowPipelineView = ({
                             <button
                                 key={template.id}
                                 onClick={() => onSelectTemplate(template.id)}
-                                className="px-4 py-3 bg-white !border border-[#E8F0FF] !rounded-lg hover:shadow-md hover:border-[#3AD6F2] transition-all font-[BasisGrotesquePro] text-gray-700"
+                                className="px-4 py-3 bg-white !border border-[#E8F0FF] !rounded-lg font-[BasisGrotesquePro] text-gray-700"
                             >
                                 <div className="font-semibold">{template.name}</div>
                                 <div className="text-xs text-gray-500 mt-1">
@@ -162,7 +162,7 @@ const WorkflowPipelineView = ({
                         <select
                             value={selectedTemplate || ''}
                             onChange={(e) => onSelectTemplate(parseInt(e.target.value))}
-                            className="px-4 py-2.5 !border border-[#E8F0FF] !rounded-lg bg-white font-[BasisGrotesquePro] text-gray-700 focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent"
+                            className="px-4 py-2.5 !border border-[#E8F0FF] !rounded-lg bg-white font-[BasisGrotesquePro] text-gray-700 focus:outline-none"
                         >
                             <option value="">Select Template</option>
                             {templates?.map(t => (
@@ -203,21 +203,23 @@ const WorkflowPipelineView = ({
                                                 {index + 1}
                                             </div>
                                             <div>
-                                                <h5 className="font-semibold text-gray-800 font-[BasisGrotesquePro]">
-                                                    {stage.name}
-                                                </h5>
+                                                <div className="flex items-center gap-2">
+                                                    <h5 className="font-semibold text-gray-800 font-[BasisGrotesquePro]">
+                                                        {stage.name}
+                                                    </h5>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${stage.user_type_group === 'taxpayer' ? 'bg-orange-100 text-orange-700' :
+                                                        stage.user_type_group === 'preparer' ? 'bg-green-100 text-green-700' :
+                                                            stage.user_type_group === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                        }`}>
+                                                        {stage.user_type_group || 'all users'}
+                                                    </span>
+                                                </div>
                                                 <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
                                                     {stageInstances.length} workflow{stageInstances.length !== 1 ? 's' : ''} here
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full ${stage.user_type_group === 'taxpayer' ? 'bg-orange-100 text-orange-700' :
-                                            stage.user_type_group === 'preparer' ? 'bg-green-100 text-green-700' :
-                                                stage.user_type_group === 'admin' ? 'bg-purple-100 text-purple-700' :
-                                                    'bg-gray-100 text-gray-700'
-                                            }`}>
-                                            {stage.user_type_group || 'all users'}
-                                        </span>
                                     </div>
                                 </div>
 
@@ -239,7 +241,7 @@ const WorkflowPipelineView = ({
                                             return (
                                                 <div
                                                     key={instance.id}
-                                                    className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 hover:shadow-lg hover:border-[#3AD6F2] transition-all cursor-pointer"
+                                                    className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 cursor-pointer"
                                                     onClick={() => onViewInstance(instance)}
                                                 >
                                                     {/* Client Info */}
@@ -290,7 +292,7 @@ const WorkflowPipelineView = ({
                                                                 e.stopPropagation();
                                                                 onViewInstance(instance);
                                                             }}
-                                                            className="flex-1 text-xs py-1.5 px-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-[BasisGrotesquePro] transition-colors"
+                                                            className="flex-1 text-xs py-1.5 px-2 bg-gray-100 text-gray-700 rounded font-[BasisGrotesquePro]"
                                                         >
                                                             View Details
                                                         </button>
@@ -301,7 +303,7 @@ const WorkflowPipelineView = ({
                                                                     handleAdvanceStage(instance, nextStage.id);
                                                                 }}
                                                                 disabled={isAdvancing}
-                                                                className="flex-1 text-xs py-1.5 px-2 bg-[#F56D2D] hover:bg-[#E55A1D] text-white rounded font-[BasisGrotesquePro] transition-colors disabled:opacity-50"
+                                                                className="flex-1 text-xs py-1.5 px-2 bg-[#F56D2D] text-white rounded font-[BasisGrotesquePro] disabled:opacity-50"
                                                                 title="Move to the next stage"
                                                             >
                                                                 {isAdvancing ? '...' : '→ Next Stage'}
@@ -314,7 +316,7 @@ const WorkflowPipelineView = ({
                                                                     handleCompleteWorkflow(instance);
                                                                 }}
                                                                 disabled={isCompleting}
-                                                                className="flex-1 text-xs py-1.5 px-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-[BasisGrotesquePro] transition-colors disabled:opacity-50"
+                                                                className="flex-1 text-xs py-1.5 px-2 bg-emerald-500 text-white rounded font-[BasisGrotesquePro] disabled:opacity-50"
                                                                 title="Complete the workflow"
                                                             >
                                                                 {isCompleting ? '...' : '✓ Complete'}
@@ -349,7 +351,7 @@ const WorkflowPipelineView = ({
                             {filteredInstances.filter(i => i.status === 'completed').map(instance => (
                                 <div
                                     key={instance.id}
-                                    className="bg-white rounded-lg border border-emerald-200 p-4 hover:shadow-lg transition-all cursor-pointer"
+                                    className="bg-white rounded-lg border border-emerald-200 p-4 cursor-pointer"
                                     onClick={() => onViewInstance(instance)}
                                 >
                                     <p className="font-semibold text-gray-800 font-[BasisGrotesquePro] text-sm">

@@ -288,6 +288,7 @@ export default function Staff() {
         <button
           onClick={() => setIsAddStaffModalOpen(true)}
           className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#FF7142] transition font-[BasisGrotesquePro] flex items-center gap-2"
+          style={{ borderRadius: "10px" }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 2V14M2 8H14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -312,13 +313,7 @@ export default function Staff() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <button className="px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center gap-2">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.40473 6.83733C2.74673 5.59733 1.56406 4.23333 0.918059 3.46667C0.718059 3.22933 0.652726 3.05533 0.613393 2.74933C0.478726 1.70133 0.411393 1.17733 0.718726 0.838667C1.02606 0.5 1.56939 0.5 2.65606 0.5H10.3441C11.4307 0.5 11.9741 0.5 12.2814 0.838C12.5887 1.17667 12.5214 1.70067 12.3867 2.74867C12.3467 3.05467 12.2814 3.22867 12.0821 3.466C11.4354 4.234 10.2507 5.60067 8.58873 6.84267C8.51187 6.90247 8.44834 6.97765 8.4022 7.0634C8.35605 7.14915 8.3283 7.24358 8.32073 7.34067C8.15606 9.16133 8.00406 10.1587 7.90939 10.6627C7.75673 11.4773 6.60273 11.9673 5.98406 12.404C5.61606 12.664 5.16939 12.3547 5.12206 11.952C4.94504 10.4177 4.79524 8.88031 4.67273 7.34067C4.66588 7.24266 4.63848 7.14719 4.5923 7.06047C4.54613 6.97375 4.48222 6.89773 4.40473 6.83733Z" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
 
-            Filters
-          </button>
         </div>
 
         {/* Staff Profiles Section */}
@@ -345,6 +340,7 @@ export default function Staff() {
                 <button
                   onClick={() => navigate(`/firmadmin/staff/${staff.id}`)}
                   className="flex-1 min-w-0 px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] whitespace-nowrap overflow-hidden"
+                  style={{ borderRadius: "10px" }}
                 >
                   Edit
                 </button>

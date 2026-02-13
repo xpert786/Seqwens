@@ -505,7 +505,7 @@ const Appointments = () => {
                                         {calendarDays.map((day, index) => (
                                             <div
                                                 key={index}
-                                                className={`min-h-[60px] sm:min-h-[70px] lg:min-h-[80px] p-1 sm:p-2 border-r border-b border-[#E8F0FF] relative ${!day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
+                                                className={`min-h-[160px] p-2 sm:p-3 border-r border-b border-[#E8F0FF] relative ${!day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
                                                     } ${day.isToday ? 'bg-blue-50' : ''} ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
                                             >
                                                 {!(day.date === 21 && day.isCurrentMonth) && (
@@ -520,11 +520,15 @@ const Appointments = () => {
                                                             <span className="text-white text-xs font-bold font-[BasisGrotesquePro]">{day.date}</span>
                                                         </div>
                                                         <div className="mt-6 sm:mt-8">
-                                                            <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 break-words">
-                                                                <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="text-[10px] sm:text-xs text-gray-900 font-[BasisGrotesquePro] leading-tight break-words">Schedule a free Phone...</div>
-                                                                    <div className="text-[10px] sm:text-xs font-[BasisGrotesquePro] leading-tight" style={{ color: '#00C0C6' }}>09:00 - 10:00</div>
+                                                            <div className="bg-[#FFF5E0] border border-[#FFE0B2] text-[#F56D2D] rounded-lg px-2 py-1.5 flex flex-col gap-0.5 shadow-sm">
+                                                                <span className="text-[11px] font-medium leading-tight break-words line-clamp-2">
+                                                                    Schedule a free Phone Consultation
+                                                                </span>
+                                                                <div className="flex items-center gap-1 opacity-100">
+                                                                    <div className="w-1 h-1 bg-[#F56D2D] rounded-full flex-shrink-0"></div>
+                                                                    <span className="text-[10px] whitespace-nowrap font-medium">
+                                                                        09:00 - 10:00
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -572,7 +576,7 @@ const Appointments = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-full lg:w-80 space-y-4">
+                    <div className="w-full lg:w-64 space-y-4">
                         {/* Today's Events */}
                         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
                             <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Today's Events</h6>

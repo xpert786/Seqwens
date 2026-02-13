@@ -394,8 +394,193 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                 onChange={(e) => setMarkForEsign(e.target.checked)}
                 disabled={uploading}
               />
-              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
-            </label>
+
+              <div className="flex flex-col items-center">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-colors ${isDragging ? 'bg-blue-100' : 'bg-slate-100 group-hover:bg-blue-50'
+                  }`}>
+                  <svg className={`w-7 h-7 transition-colors ${isDragging ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-slate-700 font-[BasisGrotesquePro]">
+                  {isDragging ? 'Drop files now' : 'Select files to upload'}
+                </p>
+                <p className="text-xs text-slate-400 mt-1 font-[BasisGrotesquePro]">
+                  or drag and drop them here
+                </p>
+              </div>
+            </div>
+
+            {/* File List */}
+            {files.length > 0 && (
+              <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider font-[BasisGrotesquePro]">
+                    Selected Files ({files.length})
+                  </p>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                  {files.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-white border border-slate-100 !rounded-xl shadow-sm group hover:border-blue-200 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate font-[BasisGrotesquePro]">{file.name}</p>
+                          <p className="text-[10px] text-slate-400 font-[BasisGrotesquePro]">{file.size}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(index);
+                        }}
+                        disabled={uploading}
+                        className="ml-2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 !rounded-lg transition-colors"
+                        type="button"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                  Categorization
+                </label>
+                <select
+                  value={selectedCategoryId || ''}
+                  onChange={(e) => setSelectedCategoryId(e.target.value ? parseInt(e.target.value) : null)}
+                  disabled={uploading || loadingCategories}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 !rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-[BasisGrotesquePro]"
+                >
+                  <option value="">General / Tax Documents</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Folder */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                  Target Folder
+                </label>
+                <select
+                  value={selectedFolderId || ''}
+                  onChange={(e) => setSelectedFolderId(e.target.value ? parseInt(e.target.value) : null)}
+                  disabled={uploading || loadingFolders}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 !rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-[BasisGrotesquePro]"
+                >
+                  <option value="">Main Folder (Root)</option>
+                  {currentFolderId && (
+                    <option value={currentFolderId}>Current Folder</option>
+                  )}
+                  {folders.map((folder) => (
+                    folder.id !== currentFolderId && (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.title}
+                      </option>
+                    )
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                Meta Tags
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="e.g. w2, urgent, 2024 (comma separated)"
+                  disabled={uploading}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 !rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-[BasisGrotesquePro]"
+                />
+                <svg className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="bg-blue-50/50 border border-blue-100 !rounded-2xl p-4 mb-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 font-[BasisGrotesquePro]">Mark for eSign</p>
+                    <p className="text-[11px] text-slate-500 font-[BasisGrotesquePro]">Notify client to sign these documents</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={markForEsign}
+                    onChange={(e) => setMarkForEsign(e.target.checked)}
+                    disabled={uploading}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={resetModal}
+                disabled={uploading}
+                className="flex-1 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 !rounded-xl transition-all font-[BasisGrotesquePro] disabled:opacity-50 flex items-center justify-center"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={uploading || files.length === 0}
+                className="flex-[2] relative px-4 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 !rounded-xl transition-all shadow-lg shadow-blue-500/25 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+              >
+                <div className="flex items-center justify-center w-full h-full">
+                  {uploading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full"></div>
+                      <span className="whitespace-nowrap">Processing...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 transition-transform group-hover:-translate-y-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <span className="whitespace-nowrap">Confirm & Upload {files.length} Item{files.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 

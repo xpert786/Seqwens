@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaChevronDown } from 'react-icons/fa';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
@@ -32,6 +33,20 @@ const StartWorkflowModal = ({
   const [loadingPreparers, setLoadingPreparers] = useState(false);
   const [starting, setStarting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isPreparerDropdownOpen, setIsPreparerDropdownOpen] = useState(false);
+  const preparerDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (preparerDropdownRef.current && !preparerDropdownRef.current.contains(event.target)) {
+        setIsPreparerDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -225,7 +240,7 @@ const StartWorkflowModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
-      <div className="bg-white !rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-white !rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#E8F0FF] flex-shrink-0">
           <div>
@@ -353,23 +368,55 @@ const StartWorkflowModal = ({
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500 mx-auto"></div>
               </div>
             ) : (
-              <select
-                value={selectedPreparerId}
-                onChange={(e) => setSelectedPreparerId(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 font-[BasisGrotesquePro] bg-white"
-                disabled={starting}
-              >
-                <option value="">Auto-assign based on rules</option>
-                {preparers.map((preparer) => (
-                  <option key={preparer.id} value={preparer.id}>
-                    {preparer.staff_member?.name ||
-                      preparer.full_name ||
-                      `${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() ||
-                      preparer.contact?.email ||
-                      preparer.email}
-                  </option>
-                ))}
-              </select>
+              <div className="relative" ref={preparerDropdownRef}>
+                <div
+                  className={`w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg flex justify-between items-center bg-white cursor-pointer ${starting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => !starting && setIsPreparerDropdownOpen(!isPreparerDropdownOpen)}
+                >
+                  <span className="font-[BasisGrotesquePro] truncate">
+                    {selectedPreparerId
+                      ? (() => {
+                        const p = preparers.find(pr => pr.id == selectedPreparerId);
+                        return p ? (p.staff_member?.name ||
+                          p.full_name ||
+                          `${p.first_name || ''} ${p.last_name || ''}`.trim() ||
+                          p.contact?.email ||
+                          p.email) : "Auto-assign based on rules";
+                      })()
+                      : "Auto-assign based on rules"}
+                  </span>
+                  <FaChevronDown className="text-gray-400" size={12} />
+                </div>
+                {isPreparerDropdownOpen && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div
+                      className="px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer font-[BasisGrotesquePro]"
+                      onClick={() => {
+                        setSelectedPreparerId("");
+                        setIsPreparerDropdownOpen(false);
+                      }}
+                    >
+                      Auto-assign based on rules
+                    </div>
+                    {preparers.map((preparer) => (
+                      <div
+                        key={preparer.id}
+                        className={`px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer font-[BasisGrotesquePro] ${selectedPreparerId == preparer.id ? 'bg-blue-50 text-blue-600' : ''}`}
+                        onClick={() => {
+                          setSelectedPreparerId(preparer.id);
+                          setIsPreparerDropdownOpen(false);
+                        }}
+                      >
+                        {preparer.staff_member?.name ||
+                          preparer.full_name ||
+                          `${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() ||
+                          preparer.contact?.email ||
+                          preparer.email}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

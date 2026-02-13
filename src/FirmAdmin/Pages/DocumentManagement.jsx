@@ -155,55 +155,67 @@ export default function DocumentManagement() {
   }, [openActionsMenu]);
 
 
-  // Fetch folders and documents from API (without search - filtering done on frontend)
+  // Fetch folders and documents from API using optimized split endpoints
   const fetchDocuments = useCallback(async (folderId = null) => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = {};
-      if (folderId) {
-        params.folder_id = folderId;
-      }
-      // Note: NOT passing search parameter - we filter on the frontend for instant results
+      // Fetch folders and files in parallel for better performance
+      const [foldersResult, filesResult] = await Promise.all([
+        firmAdminDocumentsAPI.browseFoldersSplit({
+          folder_id: folderId
+        }),
+        firmAdminDocumentsAPI.browseFilesSplit({
+          folder_id: folderId
+        })
+      ]);
 
-      const response = await firmAdminDocumentsAPI.browseDocuments(params);
-
-      if (response.success && response.data) {
+      if (foldersResult.success && foldersResult.data) {
         // Set firm info
-        if (response.data.firm) {
-          setFirmInfo(response.data.firm);
+        if (foldersResult.data.firm) {
+          setFirmInfo(foldersResult.data.firm);
         }
 
         // Set current folder and parent
-        setCurrentFolder(response.data.current_folder || null);
-        setParentFolder(response.data.parent_folder || null);
+        setCurrentFolder(foldersResult.data.current_folder || null);
+        setParentFolder(foldersResult.data.parent_folder || null);
 
         // Set breadcrumbs
-        if (response.data.breadcrumbs) {
-          setBreadcrumbs(response.data.breadcrumbs);
+        if (foldersResult.data.breadcrumbs) {
+          setBreadcrumbs(foldersResult.data.breadcrumbs);
         }
 
         // Transform folders
-        const transformedFolders = (response.data.folders || []).map(folder => ({
+        const transformedFolders = (foldersResult.data.folders || []).map(folder => ({
           id: folder.id,
           name: folder.title,
           description: folder.description || '',
           documentCount: folder.files_count || 0,
           modified: folder.updated_at ? `Modified ${formatDate(folder.updated_at)}` : '',
           date: folder.created_at ? formatDateShort(folder.created_at) : '',
-          size: '—', // Size not provided in API
-          badges: ['System'], // Default badge
+          size: '—',
+          badges: ['System'],
           files: folder.files || [],
-          // Store additional fields for search filtering
           client_name: folder.client_name || '',
           client_email: folder.client_email || ''
         }));
 
         setFolders(transformedFolders);
 
+        // Set folder statistics
+        if (foldersResult.data.statistics) {
+          setStatistics(prev => ({
+            ...prev,
+            total_folders: foldersResult.data.statistics.total_folders || 0,
+            is_root: foldersResult.data.statistics.is_root
+          }));
+        }
+      }
+
+      if (filesResult.success && filesResult.data) {
         // Transform documents
-        const transformedDocuments = (response.data.documents || []).map(doc => ({
+        const transformedDocuments = (filesResult.data.documents || []).map(doc => ({
           id: doc.id,
           tax_documents: doc.tax_documents,
           status: doc.status,
@@ -212,19 +224,24 @@ export default function DocumentManagement() {
           category: doc.category,
           created_at: doc.created_at,
           updated_at: doc.updated_at,
-          // Store additional fields for search filtering
-          client_name: doc.client?.name || doc.client_name || '',
-          client_email: doc.client?.email || doc.client_email || ''
+          client_name: doc.client_name || '',
+          client_email: doc.client_email || ''
         }));
 
         setDocuments(transformedDocuments);
 
-        // Set statistics
-        if (response.data.statistics) {
-          setStatistics(response.data.statistics);
+        // Set document statistics
+        if (filesResult.data.statistics) {
+          setStatistics(prev => ({
+            ...prev,
+            total_documents: filesResult.data.statistics.total_documents || 0,
+            archived_documents: filesResult.data.statistics.archived_documents || 0
+          }));
         }
-      } else {
-        throw new Error(response.message || 'Failed to fetch documents');
+      }
+
+      if (!foldersResult.success && !filesResult.success) {
+        throw new Error(foldersResult.message || filesResult.message || 'Failed to fetch documents');
       }
     } catch (err) {
       console.error('Error fetching documents:', err);
@@ -2001,12 +2018,12 @@ export default function DocumentManagement() {
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">Document (PDF)</label>
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#E5E7EB] border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-[#E5E7EB] border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex flex-col items-center justify-center py-6">
                           <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                           </svg>
-                          <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span></p>
+                          <p className="mb-4 text-sm text-gray-500"><span className="font-semibold">Click to upload</span></p>
                           <p className="text-xs text-gray-500">{wmToolFile ? wmToolFile.name : 'PDF only'}</p>
                         </div>
                         <input type="file" className="hidden" accept=".pdf" onChange={handleWmToolFileChange} />

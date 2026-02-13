@@ -4,7 +4,7 @@ import { FaSearch, FaFilter, FaFolder, FaDownload, FaEdit, FaTrash, FaEllipsisV,
 import { FileIcon } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerDocumentsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import { Modal, Button, Form, Dropdown } from "react-bootstrap";
 import "../../styles/taxupload.css";
@@ -62,42 +62,53 @@ export default function ClientDocuments() {
       setLoading(true);
       setError(null);
 
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-
-      if (!token) throw new Error('No authentication token found');
       if (!clientId) throw new Error('Client ID is required');
 
-      const params = new URLSearchParams();
-      if (folderId) params.append('folder_id', folderId);
-      if (search) params.append('search', search);
+      // Use the new optimized split endpoints for better performance
+      // Fetch folders and files in parallel
+      const [foldersResult, filesResult] = await Promise.all([
+        taxPreparerDocumentsAPI.getClientFoldersSplit(clientId, {
+          folder_id: folderId,
+          search
+        }),
+        taxPreparerDocumentsAPI.getClientFilesSplit(clientId, {
+          folder_id: folderId,
+          search
+        })
+      ]);
 
-      const url = `${API_BASE_URL}/taxpayer/tax-preparer/clients/${clientId}/documents/browse/?${params.toString()}`;
-      const response = await fetchWithCors(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      if (foldersResult.success && foldersResult.data) {
+        // Handle root title if not provided by backend optimized views
+        const rootTitle = foldersResult.data.breadcrumbs?.[0]?.title || "Client's Documents";
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        setCurrentFolder(foldersResult.data.current_folder || null);
+        setParentFolder(foldersResult.data.parent_folder || null);
+        setBreadcrumbs(foldersResult.data.breadcrumbs || [{ id: null, title: rootTitle, path: '/' }]);
+        setFolders(foldersResult.data.folders || []);
+
+        if (foldersResult.data.statistics) {
+          setStatistics(prev => ({
+            ...prev,
+            total_folders: foldersResult.data.statistics.total_folders || 0,
+            is_root: foldersResult.data.statistics.is_root
+          }));
+        }
       }
 
-      const result = await response.json();
+      if (filesResult.success && filesResult.data) {
+        setDocuments(filesResult.data.documents || []);
 
-      if (result.success && result.data) {
-        setClientInfo(result.data.client || null);
-        setCurrentFolder(result.data.current_folder || null);
-        setParentFolder(result.data.parent_folder || null);
-        setBreadcrumbs(result.data.breadcrumbs || []);
-        setFolders(result.data.folders || []);
-        setDocuments(result.data.documents || []);
-        setStatistics(result.data.statistics || {});
-      } else {
-        throw new Error(result.message || 'Failed to fetch documents');
+        if (filesResult.data.statistics) {
+          setStatistics(prev => ({
+            ...prev,
+            total_documents: filesResult.data.statistics.total_documents || 0,
+            archived_documents: filesResult.data.statistics.archived_documents || 0
+          }));
+        }
+      }
+
+      if (!foldersResult.success && !filesResult.success) {
+        throw new Error(foldersResult.message || filesResult.message || 'Failed to fetch documents');
       }
     } catch (error) {
       console.error('Error fetching client documents:', error);

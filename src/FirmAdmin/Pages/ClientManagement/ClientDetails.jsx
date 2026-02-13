@@ -138,9 +138,12 @@ export default function ClientDetails() {
       if (editFormData.last_name !== originalFormData.last_name) {
         payload.last_name = editFormData.last_name;
       }
+      /* Email field is now uneditable as per user request */
+      /* 
       if (editFormData.email !== originalFormData.email) {
         payload.email = editFormData.email;
       }
+      */
       if (editFormData.phone_number !== originalFormData.phone_number) {
         payload.phone = editFormData.phone_number;
       }
@@ -391,22 +394,10 @@ export default function ClientDetails() {
               {/* Email - Row 1, Col 1 */}
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Email</div>
-                {isEditMode ? (
-                  <div className="flex items-center gap-2">
-                    <MailIcon />
-                    <input
-                      type="email"
-                      value={editFormData.email}
-                      onChange={(e) => handleEditFormChange('email', e.target.value)}
-                      className="flex-1 px-2 py-1 text-sm text-gray-900 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <MailIcon />
-                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.email}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <MailIcon />
+                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.email}</span>
+                </div>
               </div>
               {/* Phone - Row 1, Col 2 */}
               <div>
@@ -452,7 +443,7 @@ export default function ClientDetails() {
                 <button
                   onClick={handleCancelEdit}
                   disabled={saving}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 !rounded-lg hover:bg-gray-300 transition font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 !rounded-lg hover:bg-gray-300 transition font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
                 >
                   Cancel
                 </button>

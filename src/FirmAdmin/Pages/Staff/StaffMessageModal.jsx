@@ -33,7 +33,7 @@ export default function StaffMessageModal({ isOpen, onClose, staffId, staffName 
                 toast.success('Message sent successfully');
                 setMessage('');
                 onClose();
-                
+
                 // Redirect to messages page with threadId
                 const chatId = response.data?.id || response.data?.chat_id || response.data?.thread_id;
                 if (chatId) {
@@ -98,6 +98,7 @@ export default function StaffMessageModal({ isOpen, onClose, staffId, staffName 
                         onClick={handleSendMessage}
                         disabled={sending || !message.trim()}
                         className="px-4 py-2 bg-[#F56D2D] text-white text-sm font-bold rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        style={{ borderRadius: "10px" }}
                     >
                         {sending ? (
                             <>

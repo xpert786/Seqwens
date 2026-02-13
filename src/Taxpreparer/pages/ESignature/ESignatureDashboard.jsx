@@ -6,11 +6,26 @@ import { getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus, FiPenTool, FiEye, FiInfo } from 'react-icons/fi';
 import ProcessingModal from '../../../components/ProcessingModal';
+import Pagination from '../../../ClientOnboarding/components/Pagination';
 import PdfSignatureModal from '../../components/PdfSignatureModal.jsx';
 import PdfAnnotationModal from '../../../ClientOnboarding/components/PdfAnnotationModal';
 import PDFViewer from '../../../components/PDFViewer';
 import { annotationAPI } from '../../../utils/annotationAPI';
 import '../../styles/esignature-dashboard.css';
+
+const previewStyles = `
+  .pdf-preview-modal .modal-dialog {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto !important;
+    max-width: 600px !important;
+  }
+  .pdf-preview-modal .modal-content {
+    max-height: 90vh !important;
+    overflow: hidden !important;
+  }
+`;
 
 export default function ESignatureDashboard() {
   const navigate = useNavigate();
@@ -20,6 +35,8 @@ export default function ESignatureDashboard() {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all, pending, completed, declined, expired
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const [statistics, setStatistics] = useState({
     pending: 0,
     completed: 0,
@@ -139,6 +156,7 @@ export default function ESignatureDashboard() {
   // Filter requests when search term or status filter changes
   useEffect(() => {
     filterRequests();
+    setCurrentPage(1); // Reset to first page on filter change
   }, [searchTerm, statusFilter, signatureRequests]);
 
   const fetchSignatureRequests = async () => {
@@ -1044,6 +1062,7 @@ export default function ESignatureDashboard() {
 
   return (
     <div className="esignature-dashboard-container" style={{ fontFamily: 'BasisGrotesquePro' }}>
+      <style>{previewStyles}</style>
       {/* Header */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -1232,159 +1251,280 @@ export default function ESignatureDashboard() {
           </div>
         ) : (
           <div className="d-flex flex-column gap-3 w-full">
-            {filteredRequests.map((request, index) => {
-              const statusBadge = getStatusBadge(request);
-              const clientName = request.taxpayer_name || request.client_name || request.client?.full_name || 'Unknown Client';
-              const documentName = request.document_name || request.document?.name || 'No Document';
+            {filteredRequests
+              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+              .map((request, index) => {
+                const statusBadge = getStatusBadge(request);
+                const clientName = request.taxpayer_name || request.client_name || request.client?.full_name || 'Unknown Client';
+                const documentName = request.document_name || request.document?.name || 'No Document';
 
-              const userData = getUserData();
-              const currentUserId = userData?.id || userData?.user?.id;
+                const userData = getUserData();
+                const currentUserId = userData?.id || userData?.user?.id;
 
-              // Robust check for creator status - ensure IDs exist and convert to strings for comparison
-              const isCreator = currentUserId && request.requested_by && String(currentUserId) === String(request.requested_by);
+                // Robust check for creator status - ensure IDs exist and convert to strings for comparison
+                const isCreator = currentUserId && request.requested_by && String(currentUserId) === String(request.requested_by);
 
-              // Check for firm admin role
-              const isFirmAdmin = userData?.role === 'FirmAdmin' || userData?.user?.role === 'FirmAdmin' || userData?.is_firm_admin;
+                // Check for firm admin role
+                const isFirmAdmin = userData?.role === 'FirmAdmin' || userData?.user?.role === 'FirmAdmin' || userData?.is_firm_admin;
 
-              // Allow management if user is creator or firm admin
-              const canManage = isCreator || isFirmAdmin;
+                // Allow management if user is creator or firm admin
+                const canManage = isCreator || isFirmAdmin;
 
-              const isAssignedPreparer = request.assigned_preparer_ids?.includes(currentUserId);
+                const isAssignedPreparer = request.assigned_preparer_ids?.includes(currentUserId);
 
-              return (
-                <div
-                  key={`${request.id}-${index}`}
-                  className="signature-request-card"
-                  onClick={(e) => handleViewDetails(request, e)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <div className="d-flex align-items-center gap-2 mb-2 signature-request-header">
-                        <h5 className="signature-request-title" style={{ color: '#3B4A66', fontWeight: '600', margin: 0 }}>
-                          {request.title || documentName}
-                        </h5>
-                        <span className={`status-badge ${statusBadge.className}`}>
-                          {statusBadge.text}
-                        </span>
-                      </div>
-                      <div className="d-flex flex-column gap-1 mb-2">
-                        <div className="d-flex align-items-start gap-2">
-                          <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
-                            Client:
-                          </span>
-                          <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
-                            {clientName}
+                return (
+                  <div
+                    key={`${request.id}-${index}`}
+                    className="signature-request-card"
+                    onClick={(e) => handleViewDetails(request, e)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div className="flex-grow-1">
+                        <div className="d-flex align-items-center gap-2 mb-2 signature-request-header">
+                          <h5 className="signature-request-title" style={{ color: '#3B4A66', fontWeight: '600', margin: 0 }}>
+                            {request.title || documentName}
+                          </h5>
+                          <span className={`status-badge ${statusBadge.className}`}>
+                            {statusBadge.text}
                           </span>
                         </div>
-                        <div className="d-flex align-items-start gap-2">
-                          <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
-                            Document:
-                          </span>
-                          <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
-                            {documentName}
-                          </span>
+                        <div className="d-flex flex-column gap-1 mb-2">
+                          <div className="d-flex align-items-start gap-2">
+                            <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
+                              Client:
+                            </span>
+                            <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
+                              {clientName}
+                            </span>
+                          </div>
+                          <div className="d-flex align-items-start gap-2">
+                            <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
+                              Document:
+                            </span>
+                            <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
+                              {documentName}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      {request.description && (
-                        <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '8px' }}>
-                          {request.description}
-                        </p>
-                      )}
-                      {request.preparer_must_sign === true && (() => {
-                        const userData = getUserData();
-                        const userEmail = userData?.email || userData?.user?.email;
-                        const preparerEmail = request.preparer_email;
-                        if (userEmail === preparerEmail && request.signer_urls) {
-                          return (
-                            <div className="mb-2">
-                              <span style={{
-                                color: '#FFFFFF',
-                                fontSize: '13px',
-                                fontWeight: '500',
-                                backgroundColor: '#00C0C6',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                display: 'inline-block'
-                              }}>
-                                ⚠️ Preparer signature required - Click to sign
-                              </span>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                      <div className="d-flex flex-wrap gap-3 align-items-center" style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '12px' }}>
-                        <span>
-                          Created: {formatDate(request.created_at)}
-                        </span>
-                        {request.deadline && (
+                        {request.description && (
+                          <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '8px' }}>
+                            {request.description}
+                          </p>
+                        )}
+                        {request.preparer_must_sign === true && (() => {
+                          const userData = getUserData();
+                          const userEmail = userData?.email || userData?.user?.email;
+                          const preparerEmail = request.preparer_email;
+                          if (userEmail === preparerEmail && request.signer_urls) {
+                            return (
+                              <div className="mb-2">
+                                <span style={{
+                                  color: '#FFFFFF',
+                                  fontSize: '13px',
+                                  fontWeight: '500',
+                                  backgroundColor: '#00C0C6',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  display: 'inline-block'
+                                }}>
+                                  ⚠️ Preparer signature required - Click to sign
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                        <div className="d-flex flex-wrap gap-3 align-items-center" style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '12px' }}>
                           <span>
-                            Deadline: {formatDate(request.deadline)}
+                            Created: {formatDate(request.created_at)}
                           </span>
-                        )}
-                        {request.signed_at && (
-                          <span>
-                            Signed: {formatDate(request.signed_at)}
-                          </span>
-                        )}
-                      </div>
-                      {/* Action Buttons */}
-                      <div className="mt-2 d-flex gap-2 flex-wrap action-buttons-wrapper">
-                        {/* Preview Button - Show if document URL exists */}
-                        {request.document_url && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedPreviewDocument({
-                                url: request.document_url,
-                                name: request.document_name || request.title || 'Document'
-                              });
-                              setShowPreviewModal(true);
-                            }}
-                            className="btn d-flex align-items-center gap-2"
-                            style={{
-                              backgroundColor: '#F3F4F6',
-                              color: '#3B4A66',
-                              border: '1px solid #E5E7EB',
-                              fontFamily: 'BasisGrotesquePro',
-                              fontWeight: '500',
-                              padding: '8px 16px',
-                              borderRadius: '6px',
-                              fontSize: '14px'
-                            }}
-                            title="Preview Document"
-                          >
-                            <FiEye size={14} />
-                            Preview
-                          </button>
-                        )}
-                        {/* Annotate & Sign for Preparer Button - Show when taxpayer and spouse (if required) have signed */}
-                        {areTaxpayerAndSpouseSigned(request) &&
-                          request.preparer_must_sign === true &&
-                          request.preparer_signed === false &&
-                          (isAssignedPreparer || !request.assigned_preparer_ids?.length) && (
+                          {request.deadline && (
+                            <span>
+                              Deadline: {formatDate(request.deadline)}
+                            </span>
+                          )}
+                          {request.signed_at && (
+                            <span>
+                              Signed: {formatDate(request.signed_at)}
+                            </span>
+                          )}
+                        </div>
+                        {/* Action Buttons */}
+                        <div className="mt-2 d-flex gap-2 flex-wrap action-buttons-wrapper">
+                          {/* Preview Button - Show if document URL exists */}
+                          {request.document_url && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Use annotated_pdf_url if available, otherwise use document_url
-                                const pdfUrl = request.annotated_pdf_url || request.document_url;
-                                setSelectedDocumentForAnnotation({
-                                  url: pdfUrl,
+                                setSelectedPreviewDocument({
+                                  url: request.document_url,
                                   name: request.document_name || request.title || 'Document',
-                                  id: request.id,
-                                  document_id: request.document
+                                  isAnnotated: false
                                 });
-                                console.log('📄 Opening annotation modal for preparer:', {
-                                  esign_request_id: request.id,
-                                  document_id: request.document,
-                                  document_name: request.document_name,
-                                  using_annotated_pdf: !!request.annotated_pdf_url,
-                                  pdf_url: pdfUrl
-                                });
-                                setShowAnnotationModal(true);
+                                setShowPreviewModal(true);
                               }}
                               className="btn d-flex align-items-center gap-2"
+                              style={{
+                                backgroundColor: '#F3F4F6',
+                                color: '#3B4A66',
+                                border: '1px solid #E5E7EB',
+                                fontFamily: 'BasisGrotesquePro',
+                                fontWeight: '500',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                fontSize: '14px'
+                              }}
+                              title="Preview Document"
+                            >
+                              <FiEye size={14} />
+                              Preview
+                            </button>
+                          )}
+                          {/* Annotate & Sign for Preparer Button - Show when taxpayer and spouse (if required) have signed */}
+                          {areTaxpayerAndSpouseSigned(request) &&
+                            request.preparer_must_sign === true &&
+                            request.preparer_signed === false &&
+                            (isAssignedPreparer || !request.assigned_preparer_ids?.length) && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Use annotated_pdf_url if available, otherwise use document_url
+                                  const pdfUrl = request.annotated_pdf_url || request.document_url;
+                                  setSelectedDocumentForAnnotation({
+                                    url: pdfUrl,
+                                    name: request.document_name || request.title || 'Document',
+                                    id: request.id,
+                                    document_id: request.document
+                                  });
+                                  console.log('📄 Opening annotation modal for preparer:', {
+                                    esign_request_id: request.id,
+                                    document_id: request.document,
+                                    document_name: request.document_name,
+                                    using_annotated_pdf: !!request.annotated_pdf_url,
+                                    pdf_url: pdfUrl
+                                  });
+                                  setShowAnnotationModal(true);
+                                }}
+                                className="btn d-flex align-items-center gap-2"
+                                style={{
+                                  backgroundColor: '#00C0C6',
+                                  color: 'white',
+                                  border: 'none',
+                                  fontFamily: 'BasisGrotesquePro',
+                                  fontWeight: '500',
+                                  padding: '8px 16px',
+                                  borderRadius: '6px',
+                                  fontSize: '14px'
+                                }}
+                              >
+                                <FiPenTool size={14} />
+                                Annotate & Sign for Preparer
+                              </button>
+                            )}
+
+                          {/* Show action buttons when all signees have signed */}
+                          {areAllSigneesSigned(request) && (
+                            <>
+                              {/* Preview Annotated Document Button */}
+                              {request.annotated_pdf_url && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedPreviewDocument({
+                                      url: request.annotated_pdf_url,
+                                      name: request.document_name || request.title || 'Document',
+                                      isAnnotated: true
+                                    });
+                                    setShowPreviewModal(true);
+                                  }}
+                                  className="btn d-flex align-items-center gap-2"
+                                  style={{
+                                    backgroundColor: '#F3F4F6',
+                                    color: '#3B4A66',
+                                    border: '1px solid #E5E7EB',
+                                    fontFamily: 'BasisGrotesquePro',
+                                    fontWeight: '500',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    fontSize: '14px'
+                                  }}
+                                  title="Preview Annotated Document"
+                                >
+                                  <FiEye size={14} />
+                                  Preview Annotated Document
+                                </button>
+                              )}
+
+                              {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
+                              {request.status?.toLowerCase() !== 'completed' &&
+                                request.status?.toLowerCase() !== 'processed' &&
+                                canManage && (
+                                  <>
+                                    {/* Mark as Completed Button */}
+                                    <button
+                                      onClick={(e) => handleCompleteRequest(request.id, e)}
+                                      className="btn d-flex align-items-center gap-2"
+                                      style={{
+                                        backgroundColor: '#10B981',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontFamily: 'BasisGrotesquePro',
+                                        fontWeight: '500',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        fontSize: '14px'
+                                      }}
+                                      title="Mark E-Sign Request as Completed"
+                                    >
+                                      <FiCheckCircle size={14} />
+                                      Mark as Completed
+                                    </button>
+
+                                    {/* Re-Request E-Sign Button */}
+                                    <button
+                                      onClick={(e) => handleRerequestSignature(request.id, e)}
+                                      className="btn d-flex align-items-center gap-2"
+                                      style={{
+                                        backgroundColor: '#F59E0B',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontFamily: 'BasisGrotesquePro',
+                                        fontWeight: '500',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        fontSize: '14px',
+                                        opacity: rerequestingId === request.id ? 0.7 : 1,
+                                        cursor: rerequestingId === request.id ? 'not-allowed' : 'pointer'
+                                      }}
+                                      title="Re-Request E-Sign"
+                                      disabled={rerequestingId === request.id}
+                                    >
+                                      {rerequestingId === request.id ? (
+                                        <>
+                                          <div className="spinner-border spinner-border-sm text-white" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                          </div>
+                                          Sending...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <FiRefreshCw size={14} />
+                                          Re-Request E-Sign
+                                        </>
+                                      )}
+                                    </button>
+                                  </>
+                                )}
+                            </>
+                          )}
+                        </div>
+                        {/* Sign Document Button for Ready Status */}
+                        {request.status === 'ready' && (
+                          <div className="mt-2">
+                            <button
+                              onClick={(e) => handleSignDocument(request, e)}
+                              className="btn"
                               style={{
                                 backgroundColor: '#00C0C6',
                                 color: 'white',
@@ -1396,588 +1536,477 @@ export default function ESignatureDashboard() {
                                 fontSize: '14px'
                               }}
                             >
-                              <FiPenTool size={14} />
-                              Annotate & Sign for Preparer
+                              Sign Document
                             </button>
-                          )}
-
-                        {/* Show action buttons when all signees have signed */}
-                        {areAllSigneesSigned(request) && (
-                          <>
-                            {/* Preview Annotated Document Button */}
-                            {request.annotated_pdf_url && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedPreviewDocument({
-                                    url: request.annotated_pdf_url,
-                                    name: request.document_name || request.title || 'Document'
-                                  });
-                                  setShowPreviewModal(true);
-                                }}
-                                className="btn d-flex align-items-center gap-2"
-                                style={{
-                                  backgroundColor: '#F3F4F6',
-                                  color: '#3B4A66',
-                                  border: '1px solid #E5E7EB',
-                                  fontFamily: 'BasisGrotesquePro',
-                                  fontWeight: '500',
-                                  padding: '8px 16px',
-                                  borderRadius: '6px',
-                                  fontSize: '14px'
-                                }}
-                                title="Preview Annotated Document"
-                              >
-                                <FiEye size={14} />
-                                Preview Annotated Document
-                              </button>
-                            )}
-
-                            {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
-                            {request.status?.toLowerCase() !== 'completed' &&
-                              request.status?.toLowerCase() !== 'processed' &&
-                              canManage && (
-                                <>
-                                  {/* Mark as Completed Button */}
-                                  <button
-                                    onClick={(e) => handleCompleteRequest(request.id, e)}
-                                    className="btn d-flex align-items-center gap-2"
-                                    style={{
-                                      backgroundColor: '#10B981',
-                                      color: 'white',
-                                      border: 'none',
-                                      fontFamily: 'BasisGrotesquePro',
-                                      fontWeight: '500',
-                                      padding: '8px 16px',
-                                      borderRadius: '6px',
-                                      fontSize: '14px'
-                                    }}
-                                    title="Mark E-Sign Request as Completed"
-                                  >
-                                    <FiCheckCircle size={14} />
-                                    Mark as Completed
-                                  </button>
-
-                                  {/* Re-Request E-Sign Button */}
-                                  <button
-                                    onClick={(e) => handleRerequestSignature(request.id, e)}
-                                    className="btn d-flex align-items-center gap-2"
-                                    style={{
-                                      backgroundColor: '#F59E0B',
-                                      color: 'white',
-                                      border: 'none',
-                                      fontFamily: 'BasisGrotesquePro',
-                                      fontWeight: '500',
-                                      padding: '8px 16px',
-                                      borderRadius: '6px',
-                                      fontSize: '14px',
-                                      opacity: rerequestingId === request.id ? 0.7 : 1,
-                                      cursor: rerequestingId === request.id ? 'not-allowed' : 'pointer'
-                                    }}
-                                    title="Re-Request E-Sign"
-                                    disabled={rerequestingId === request.id}
-                                  >
-                                    {rerequestingId === request.id ? (
-                                      <>
-                                        <div className="spinner-border spinner-border-sm text-white" role="status">
-                                          <span className="visually-hidden">Loading...</span>
-                                        </div>
-                                        Sending...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <FiRefreshCw size={14} />
-                                        Re-Request E-Sign
-                                      </>
-                                    )}
-                                  </button>
-                                </>
-                              )}
-                          </>
+                          </div>
                         )}
                       </div>
-                      {/* Sign Document Button for Ready Status */}
-                      {request.status === 'ready' && (
-                        <div className="mt-2">
-                          <button
-                            onClick={(e) => handleSignDocument(request, e)}
-                            className="btn"
-                            style={{
-                              backgroundColor: '#00C0C6',
-                              color: 'white',
-                              border: 'none',
-                              fontFamily: 'BasisGrotesquePro',
-                              fontWeight: '500',
-                              padding: '8px 16px',
-                              borderRadius: '6px',
-                              fontSize: '14px'
-                            }}
-                          >
-                            Sign Document
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              totalItems={filteredRequests.length}
+              itemsPerPage={itemsPerPage}
+              startIndex={(currentPage - 1) * itemsPerPage}
+              endIndex={Math.min(currentPage * itemsPerPage, filteredRequests.length)}
+            />
           </div>
         )
         }
       </div>
-
-      {/* Summary */}
-      {filteredRequests.length > 0 && (
-        <div className="mt-4 text-center" style={{ color: '#6B7280', fontSize: '14px' }}>
-          Showing {filteredRequests.length} of {signatureRequests.length} signature request{signatureRequests.length !== 1 ? 's' : ''}
-        </div>
-      )}
 
 
       {/* Create E-Signature Request Modal */}
       <Modal
         show={showCreateModal}
         onHide={processing ? undefined : handleCloseCreateModal}
-        size="lg"
+        size="md"
         centered
         backdrop={processing ? 'static' : true}
         keyboard={!processing}
         style={{ fontFamily: 'BasisGrotesquePro' }}
+        className="custom-modal-width-md"
       >
         <Modal.Header closeButton>
           <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
             Create E-Signature Request
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: '24px' }}>
-          <div className="d-flex flex-column gap-4">
-            {/* Client Selection */}
-            <div>
-              <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
-                Client (Taxpayer) <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <div className="position-relative" ref={clientDropdownRef}>
-                <button
-                  type="button"
-                  className="form-control text-start d-flex justify-content-between align-items-center"
-                  onClick={() => {
-                    if (creating || processing) return;
-                    setShowClientDropdown(!showClientDropdown);
-                    if (!showClientDropdown && clients.length === 0) {
-                      fetchClients();
-                    }
-                  }}
-                  disabled={creating || processing}
-                  style={{
-                    borderColor: '#E5E7EB',
-                    backgroundColor: creating || processing ? '#F3F4F6' : 'white',
-                    cursor: creating || processing ? 'not-allowed' : 'pointer',
-                    opacity: creating || processing ? 0.6 : 1
-                  }}
-                >
-                  <span style={{ color: selectedClient ? '#3B4A66' : '#9CA3AF' }}>
-                    {selectedClient
-                      ? (selectedClient.full_name || selectedClient.name || selectedClient.client_name || `Client #${selectedClient.id}`)
-                      : 'Select a client'}
-                  </span>
-                  <span style={{ color: '#6B7280' }}>▼</span>
-                </button>
-                {showClientDropdown && (
-                  <div
-                    className="position-absolute w-100 bg-white border rounded shadow-lg"
+        <Modal.Body style={{ padding: 0 }} className="p-0">
+          <div className="custom-scrollbar" style={{ maxHeight: '65vh', overflowY: 'auto', padding: '24px' }}>
+            <div className="d-flex flex-column gap-4">
+              {/* Client Selection */}
+              <div>
+                <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+                  Client (Taxpayer) <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <div className="position-relative" ref={clientDropdownRef}>
+                  <button
+                    type="button"
+                    className="form-control text-start d-flex justify-content-between align-items-center"
+                    onClick={() => {
+                      if (creating || processing) return;
+                      setShowClientDropdown(!showClientDropdown);
+                      if (!showClientDropdown && clients.length === 0) {
+                        fetchClients();
+                      }
+                    }}
+                    disabled={creating || processing}
                     style={{
-                      top: '100%',
-                      left: 0,
-                      zIndex: 1000,
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      marginTop: '4px'
+                      borderColor: '#E5E7EB',
+                      backgroundColor: creating || processing ? '#F3F4F6' : 'white',
+                      cursor: creating || processing ? 'not-allowed' : 'pointer',
+                      opacity: creating || processing ? 0.6 : 1
                     }}
                   >
-                    {loadingClients ? (
-                      <div className="p-3 text-center text-muted">Loading clients...</div>
-                    ) : clients.length === 0 ? (
-                      <div className="p-3 text-center text-muted">No clients found</div>
-                    ) : (
-                      clients.map((client) => (
-                        <button
-                          key={client.id || client.client_id}
-                          type="button"
-                          className="w-100 text-start p-3 border-0 bg-white"
-                          style={{
-                            cursor: 'pointer',
-                            borderBottom: '1px solid #F3F4F6'
-                          }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
-                          onClick={() => {
-                            setSelectedClient(client);
-                            setShowClientDropdown(false);
-                            // Check if client has spouse and get spouse info
-                            if (client.id || client.client_id) {
-                              taxPreparerClientAPI.checkClientSpouse(client.id || client.client_id)
-                                .then(res => {
-                                  if (res.success && res.data?.has_spouse) {
-                                    setHasSpouse(true);
-                                    // Try to get spouse email and name from client data
-                                    if (res.data.spouse_email) {
-                                      setSpouseEmail(res.data.spouse_email);
-                                    } else if (client.spouse_contact_details?.email) {
-                                      setSpouseEmail(client.spouse_contact_details.email);
-                                    } else if (client.spouseContact?.email) {
-                                      setSpouseEmail(client.spouseContact.email);
+                    <span style={{ color: selectedClient ? '#3B4A66' : '#9CA3AF' }}>
+                      {selectedClient
+                        ? (selectedClient.full_name || selectedClient.name || selectedClient.client_name || `Client #${selectedClient.id}`)
+                        : 'Select a client'}
+                    </span>
+                    <span style={{ color: '#6B7280' }}>▼</span>
+                  </button>
+                  {showClientDropdown && (
+                    <div
+                      className="position-absolute w-100 bg-white border rounded shadow-lg"
+                      style={{
+                        top: '100%',
+                        left: 0,
+                        zIndex: 1000,
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        marginTop: '4px'
+                      }}
+                    >
+                      {loadingClients ? (
+                        <div className="p-3 text-center text-muted">Loading clients...</div>
+                      ) : clients.length === 0 ? (
+                        <div className="p-3 text-center text-muted">No clients found</div>
+                      ) : (
+                        clients.map((client) => (
+                          <button
+                            key={client.id || client.client_id}
+                            type="button"
+                            className="w-100 text-start p-3 border-0 bg-white"
+                            style={{
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #F3F4F6'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setShowClientDropdown(false);
+                              // Check if client has spouse and get spouse info
+                              if (client.id || client.client_id) {
+                                taxPreparerClientAPI.checkClientSpouse(client.id || client.client_id)
+                                  .then(res => {
+                                    if (res.success && res.data?.has_spouse) {
+                                      setHasSpouse(true);
+                                      // Try to get spouse email and name from client data
+                                      if (res.data.spouse_email) {
+                                        setSpouseEmail(res.data.spouse_email);
+                                      } else if (client.spouse_contact_details?.email) {
+                                        setSpouseEmail(client.spouse_contact_details.email);
+                                      } else if (client.spouseContact?.email) {
+                                        setSpouseEmail(client.spouseContact.email);
+                                      }
+                                      if (res.data.spouse_name) {
+                                        setSpouseName(res.data.spouse_name);
+                                      } else if (client.spouse_information?.name) {
+                                        setSpouseName(client.spouse_information.name);
+                                      } else if (client.spouse?.name) {
+                                        setSpouseName(client.spouse.name);
+                                      }
+                                    } else {
+                                      setHasSpouse(false);
+                                      setSpouseEmail('');
+                                      setSpouseName('');
                                     }
-                                    if (res.data.spouse_name) {
-                                      setSpouseName(res.data.spouse_name);
-                                    } else if (client.spouse_information?.name) {
-                                      setSpouseName(client.spouse_information.name);
-                                    } else if (client.spouse?.name) {
-                                      setSpouseName(client.spouse.name);
-                                    }
-                                  } else {
-                                    setHasSpouse(false);
-                                    setSpouseEmail('');
-                                    setSpouseName('');
-                                  }
-                                })
-                                .catch(() => { });
-                            }
-                          }}
-                        >
-                          {client.full_name || client.name || client.client_name || `Client #${client.id || client.client_id}`}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
+                                  })
+                                  .catch(() => { });
+                              }
+                            }}
+                          >
+                            {client.full_name || client.name || client.client_name || `Client #${client.id || client.client_id}`}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Has Spouse Toggle */}
-            <div>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                justifyContent: 'space-between',
-                cursor: creating || processing ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#3B4A66',
-                opacity: creating || processing ? 0.6 : 1
-              }}>
-                <span>Client has a spouse (spouse signature required)</span>
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <input
-                    type="checkbox"
-                    checked={hasSpouse}
-                    onChange={async (e) => {
-                      const checked = e.target.checked;
-                      if (!checked) {
-                        setHasSpouse(false);
-                        setSpouseEmail('');
-                        setSpouseName('');
-                        return;
-                      }
+              {/* Has Spouse Toggle */}
+              <div>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  justifyContent: 'space-between',
+                  cursor: creating || processing ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#3B4A66',
+                  opacity: creating || processing ? 0.6 : 1
+                }}>
+                  <span>Client has a spouse (spouse signature required)</span>
+                  <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <input
+                      type="checkbox"
+                      checked={hasSpouse}
+                      onChange={async (e) => {
+                        const checked = e.target.checked;
+                        if (!checked) {
+                          setHasSpouse(false);
+                          setSpouseEmail('');
+                          setSpouseName('');
+                          return;
+                        }
 
-                      // If checking, validate that client has a spouse
-                      if (!selectedClient) {
-                        toast.error('Please select a client first.');
-                        return;
-                      }
+                        // If checking, validate that client has a spouse
+                        if (!selectedClient) {
+                          toast.error('Please select a client first.');
+                          return;
+                        }
 
-                      try {
-                        const clientId = selectedClient.id || selectedClient.client_id;
-                        const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
+                        try {
+                          const clientId = selectedClient.id || selectedClient.client_id;
+                          const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
 
-                        if (response.success && response.data) {
-                          if (response.data.has_spouse) {
-                            setHasSpouse(true);
-                            // Try to get spouse email and name
-                            if (response.data.spouse_email || response.data.spouse_info?.spouse_email) {
-                              setSpouseEmail(response.data.spouse_email || response.data.spouse_info.spouse_email);
-                            }
-                            if (response.data.spouse_name || response.data.spouse_info?.spouse_name) {
-                              setSpouseName(response.data.spouse_name || response.data.spouse_info.spouse_name);
+                          if (response.success && response.data) {
+                            if (response.data.has_spouse) {
+                              setHasSpouse(true);
+                              // Try to get spouse email and name
+                              if (response.data.spouse_email || response.data.spouse_info?.spouse_email) {
+                                setSpouseEmail(response.data.spouse_email || response.data.spouse_info.spouse_email);
+                              }
+                              if (response.data.spouse_name || response.data.spouse_info?.spouse_name) {
+                                setSpouseName(response.data.spouse_name || response.data.spouse_info.spouse_name);
+                              }
+                            } else {
+                              toast.error('This client does not have a partner/spouse. Spouse signature cannot be required.');
                             }
                           } else {
-                            toast.error('This client does not have a partner/spouse. Spouse signature cannot be required.');
+                            toast.error('Failed to check spouse information. Please try again.');
                           }
-                        } else {
-                          toast.error('Failed to check spouse information. Please try again.');
+                        } catch (error) {
+                          console.error('Error checking spouse:', error);
+                          toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
                         }
-                      } catch (error) {
-                        console.error('Error checking spouse:', error);
-                        toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
-                      }
-                    }}
-                    disabled={creating || processing}
-                    style={{
-                      width: '44px',
-                      height: '24px',
-                      appearance: 'none',
-                      backgroundColor: hasSpouse ? '#00C0C6' : '#D1D5DB',
-                      borderRadius: '12px',
-                      position: 'relative',
-                      cursor: creating || processing ? 'not-allowed' : 'pointer',
-                      transition: 'background-color 0.2s',
-                      outline: 'none'
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '2px',
-                      left: hasSpouse ? '22px' : '2px',
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: 'white',
-                      borderRadius: '50%',
-                      transition: 'left 0.2s',
-                      pointerEvents: 'none',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                    }}
-                  />
-                </div>
-              </label>
-            </div>
-
-            {/* Spouse Email (required if has_spouse) */}
-
-
-
-
-            {/* Preparer Must Sign Toggle */}
-            <div>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                cursor: creating || processing ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#3B4A66',
-                opacity: creating || processing ? 0.6 : 1
-              }}>
-                <span>Preparer must sign</span>
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <input
-                    type="checkbox"
-                    checked={preparerMustSign}
-                    onChange={(e) => setPreparerMustSign(e.target.checked)}
-                    disabled={creating || processing}
-                    style={{
-                      width: '44px',
-                      height: '24px',
-                      appearance: 'none',
-                      backgroundColor: preparerMustSign ? '#00C0C6' : '#D1D5DB',
-                      borderRadius: '12px',
-                      position: 'relative',
-                      cursor: creating || processing ? 'not-allowed' : 'pointer',
-                      transition: 'background-color 0.2s',
-                      outline: 'none'
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '2px',
-                      left: preparerMustSign ? '22px' : '2px',
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: 'white',
-                      borderRadius: '50%',
-                      transition: 'left 0.2s',
-                      pointerEvents: 'none',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                    }}
-                  />
-                </div>
-              </label>
-            </div>
-
-            {/* PDF File Upload */}
-            <div>
-              <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
-                PDF File <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handleFileChange}
-                className="form-control"
-                style={{
-                  borderColor: '#E5E7EB',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  opacity: creating || processing ? 0.6 : 1
-                }}
-                disabled={creating || processing}
-              />
-              {selectedFile && (
-                <div className="mt-2 p-2 bg-gray-50 rounded" style={{ borderRadius: '8px' }}>
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M5 6H11M5 9H11M5 12H8" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span style={{ color: '#3B4A66', fontSize: '14px', fontFamily: 'BasisGrotesquePro' }}>
-                        {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFile(null);
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = '';
-                        }
-                      }}
-                      className="btn "
-                      style={{
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        color: '#EF4444',
-                        padding: '4px 8px'
                       }}
                       disabled={creating || processing}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
+                      style={{
+                        width: '44px',
+                        height: '24px',
+                        appearance: 'none',
+                        backgroundColor: hasSpouse ? '#00C0C6' : '#D1D5DB',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        cursor: creating || processing ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.2s',
+                        outline: 'none'
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        left: hasSpouse ? '22px' : '2px',
+                        width: '20px',
+                        height: '20px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%',
+                        transition: 'left 0.2s',
+                        pointerEvents: 'none',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                    />
                   </div>
-                </div>
-              )}
-              <p className="text-muted mt-1" style={{ fontSize: '12px', fontFamily: 'BasisGrotesquePro' }}>
-                Upload a PDF file (max 10MB). The file will be saved to the preparer's documents.
-              </p>
-            </div>
+                </label>
+              </div>
 
-            {/* Folder Selection (Optional) */}
-            <div>
-              <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
-                Folder (Optional)
-              </label>
-              <div className="position-relative" ref={folderDropdownRef}>
-                <button
-                  type="button"
-                  className="form-control text-start d-flex justify-content-between align-items-center"
-                  onClick={() => {
-                    if (creating || processing || loadingFolders) return;
-                    setShowFolderDropdown(!showFolderDropdown);
-                    if (!showFolderDropdown && folders.length === 0) {
-                      fetchFolders();
-                    }
-                  }}
-                  disabled={creating || processing || loadingFolders}
+              {/* Spouse Email (required if has_spouse) */}
+
+
+
+
+              {/* Preparer Must Sign Toggle */}
+              <div>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  cursor: creating || processing ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#3B4A66',
+                  opacity: creating || processing ? 0.6 : 1
+                }}>
+                  <span>Preparer must sign</span>
+                  <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <input
+                      type="checkbox"
+                      checked={preparerMustSign}
+                      onChange={(e) => setPreparerMustSign(e.target.checked)}
+                      disabled={creating || processing}
+                      style={{
+                        width: '44px',
+                        height: '24px',
+                        appearance: 'none',
+                        backgroundColor: preparerMustSign ? '#00C0C6' : '#D1D5DB',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        cursor: creating || processing ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.2s',
+                        outline: 'none'
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        left: preparerMustSign ? '22px' : '2px',
+                        width: '20px',
+                        height: '20px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%',
+                        transition: 'left 0.2s',
+                        pointerEvents: 'none',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                    />
+                  </div>
+                </label>
+              </div>
+
+              {/* PDF File Upload */}
+              <div>
+                <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+                  PDF File <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileChange}
+                  className="form-control"
                   style={{
                     borderColor: '#E5E7EB',
-                    backgroundColor: creating || processing || loadingFolders ? '#F3F4F6' : 'white',
-                    cursor: creating || processing || loadingFolders ? 'not-allowed' : 'pointer',
-                    opacity: creating || processing || loadingFolders ? 0.6 : 1
+                    padding: '8px',
+                    borderRadius: '8px',
+                    opacity: creating || processing ? 0.6 : 1
                   }}
-                >
-                  <span style={{ color: selectedFolder ? '#3B4A66' : '#9CA3AF' }}>
-                    {loadingFolders ? 'Loading folders...' : (selectedFolder
-                      ? (selectedFolder.title || selectedFolder.name || selectedFolder.folder_name || `Folder #${selectedFolder.id}`)
-                      : 'Select a folder (optional)')}
-                  </span>
-                  {loadingFolders ? (
-                    <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: '16px', height: '16px', borderWidth: '2px' }}>
-                      <span className="visually-hidden">Loading...</span>
+                  disabled={creating || processing}
+                />
+                {selectedFile && (
+                  <div className="mt-2 p-2 bg-gray-50 rounded" style={{ borderRadius: '8px' }}>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M14 2H2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M5 6H11M5 9H11M5 12H8" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span style={{ color: '#3B4A66', fontSize: '14px', fontFamily: 'BasisGrotesquePro' }}>
+                          {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                        className="btn "
+                        style={{
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          color: '#EF4444',
+                          padding: '4px 8px'
+                        }}
+                        disabled={creating || processing}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
                     </div>
-                  ) : (
-                    <span style={{ color: '#6B7280' }}>▼</span>
-                  )}
-                </button>
-                {showFolderDropdown && (
-                  <div
-                    className="position-absolute w-100 bg-white border rounded shadow-lg"
-                    style={{
-                      top: '100%',
-                      left: 0,
-                      zIndex: 1000,
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      marginTop: '4px'
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="w-100 text-start p-3 border-0 bg-white"
-                      style={{
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #F3F4F6'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
-                      onClick={() => {
-                        setSelectedFolder(null);
-                        setShowFolderDropdown(false);
-                      }}
-                    >
-                      None
-                    </button>
-                    {loadingFolders ? (
-                      <div className="p-3 text-center text-muted">Loading folders...</div>
-                    ) : folders.length === 0 ? (
-                      <div className="p-3 text-center text-muted">No folders found</div>
-                    ) : (
-                      folders.map((folder) => (
-                        <button
-                          key={folder.id || folder.folder_id}
-                          type="button"
-                          className="w-100 text-start p-3 border-0 bg-white"
-                          style={{
-                            cursor: 'pointer',
-                            borderBottom: '1px solid #F3F4F6'
-                          }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
-                          onClick={() => {
-                            setSelectedFolder(folder);
-                            setShowFolderDropdown(false);
-                          }}
-                        >
-                          {folder.title || folder.name || folder.folder_name || `Folder #${folder.id || folder.folder_id}`}
-                        </button>
-                      ))
-                    )}
                   </div>
                 )}
+                <p className="text-muted mt-1" style={{ fontSize: '12px', fontFamily: 'BasisGrotesquePro' }}>
+                  Upload a PDF file (max 10MB). The file will be saved to the preparer's documents.
+                </p>
               </div>
-            </div>
 
-            {/* Deadline */}
-            <div>
-              <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
-                Deadline <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <input
-                type="date"
-                className="form-control"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                style={{
-                  borderColor: '#E5E7EB',
-                  borderRadius: '8px',
-                  opacity: creating || processing ? 0.6 : 1
-                }}
-                disabled={creating || processing}
-                required
-              />
-              <p className="text-muted mt-1" style={{ fontSize: '12px', fontFamily: 'BasisGrotesquePro' }}>
-                Select a date for the signature deadline (required)
-              </p>
+              {/* Folder Selection (Optional) */}
+              <div>
+                <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+                  Folder (Optional)
+                </label>
+                <div className="position-relative" ref={folderDropdownRef}>
+                  <button
+                    type="button"
+                    className="form-control text-start d-flex justify-content-between align-items-center"
+                    onClick={() => {
+                      if (creating || processing || loadingFolders) return;
+                      setShowFolderDropdown(!showFolderDropdown);
+                      if (!showFolderDropdown && folders.length === 0) {
+                        fetchFolders();
+                      }
+                    }}
+                    disabled={creating || processing || loadingFolders}
+                    style={{
+                      borderColor: '#E5E7EB',
+                      backgroundColor: creating || processing || loadingFolders ? '#F3F4F6' : 'white',
+                      cursor: creating || processing || loadingFolders ? 'not-allowed' : 'pointer',
+                      opacity: creating || processing || loadingFolders ? 0.6 : 1
+                    }}
+                  >
+                    <span style={{ color: selectedFolder ? '#3B4A66' : '#9CA3AF' }}>
+                      {loadingFolders ? 'Loading folders...' : (selectedFolder
+                        ? (selectedFolder.title || selectedFolder.name || selectedFolder.folder_name || `Folder #${selectedFolder.id}`)
+                        : 'Select a folder (optional)')}
+                    </span>
+                    {loadingFolders ? (
+                      <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: '16px', height: '16px', borderWidth: '2px' }}>
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    ) : (
+                      <span style={{ color: '#6B7280' }}>▼</span>
+                    )}
+                  </button>
+                  {showFolderDropdown && (
+                    <div
+                      className="position-absolute w-100 bg-white border rounded shadow-lg"
+                      style={{
+                        top: '100%',
+                        left: 0,
+                        zIndex: 1000,
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="w-100 text-start p-3 border-0 bg-white"
+                        style={{
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #F3F4F6'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                        onClick={() => {
+                          setSelectedFolder(null);
+                          setShowFolderDropdown(false);
+                        }}
+                      >
+                        None
+                      </button>
+                      {loadingFolders ? (
+                        <div className="p-3 text-center text-muted">Loading folders...</div>
+                      ) : folders.length === 0 ? (
+                        <div className="p-3 text-center text-muted">No folders found</div>
+                      ) : (
+                        folders.map((folder) => (
+                          <button
+                            key={folder.id || folder.folder_id}
+                            type="button"
+                            className="w-100 text-start p-3 border-0 bg-white"
+                            style={{
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #F3F4F6'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                            onClick={() => {
+                              setSelectedFolder(folder);
+                              setShowFolderDropdown(false);
+                            }}
+                          >
+                            {folder.title || folder.name || folder.folder_name || `Folder #${folder.id || folder.folder_id}`}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Deadline */}
+              <div>
+                <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+                  Deadline <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  style={{
+                    borderColor: '#E5E7EB',
+                    borderRadius: '8px',
+                    opacity: creating || processing ? 0.6 : 1
+                  }}
+                  disabled={creating || processing}
+                  required
+                />
+                <p className="text-muted mt-1" style={{ fontSize: '12px', fontFamily: 'BasisGrotesquePro' }}>
+                  Select a date for the signature deadline (required)
+                </p>
+              </div>
             </div>
           </div>
         </Modal.Body>
+
         <Modal.Footer>
           <button
             className="btn"
@@ -2011,10 +2040,10 @@ export default function ESignatureDashboard() {
             {creating ? 'Creating...' : processing ? 'Processing...' : 'Create Request'}
           </button>
         </Modal.Footer>
-      </Modal>
+      </Modal >
 
       {/* Processing Modal */}
-      <ProcessingModal
+      < ProcessingModal
         show={processing}
         processingStatus={processingStatus}
         processingError={processingError}
@@ -2022,7 +2051,7 @@ export default function ESignatureDashboard() {
       />
 
       {/* SignWell Embedded Signing Modal */}
-      <Modal
+      < Modal
         show={showSignWellModal}
         onHide={() => {
           // Clean up any polling intervals
@@ -2035,7 +2064,8 @@ export default function ESignatureDashboard() {
           setCurrentSigningRequest(null);
           // Refresh requests after a short delay
           setTimeout(() => fetchSignatureRequests(), 1000);
-        }}
+        }
+        }
         size="xl"
         centered
         fullscreen="lg-down"
@@ -2145,10 +2175,10 @@ export default function ESignatureDashboard() {
             Open in New Window
           </button>
         </Modal.Footer>
-      </Modal>
+      </Modal >
 
       {/* PDF Signature Modal */}
-      <PdfSignatureModal
+      < PdfSignatureModal
         isOpen={showPdfSignatureModal}
         onClose={() => {
           setShowPdfSignatureModal(false);
@@ -2281,25 +2311,29 @@ export default function ESignatureDashboard() {
           setShowPreviewModal(false);
           setSelectedPreviewDocument(null);
         }}
-        size="xl"
+        size="lg"
         centered
-        fullscreen="lg-down"
+        scrollable
+        dialogClassName="pdf-preview-modal"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
         <Modal.Header closeButton>
           <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             {selectedPreviewDocument
-              ? `E-Signature – ${selectedPreviewDocument.name}`
+              ? `E-Signature – ${selectedPreviewDocument.isAnnotated ? 'Annotated ' : ''}${selectedPreviewDocument.name}`
               : 'E-Signature – Document Preview'}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+        <Modal.Body style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>
           {selectedPreviewDocument?.url ? (
-            <PDFViewer
-              pdfUrl={selectedPreviewDocument.url}
-              height="70vh"
-              showThumbnails={true}
-            />
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+              <PDFViewer
+                pdfUrl={selectedPreviewDocument.url}
+                height="50vh"
+                showThumbnails={false}
+                className="w-100"
+              />
+            </div>
           ) : (
             <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
               <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
@@ -2323,78 +2357,80 @@ export default function ESignatureDashboard() {
       </Modal>
 
       {/* PDF Annotation Modal */}
-      {showAnnotationModal && selectedDocumentForAnnotation && (
-        <PdfAnnotationModal
-          isOpen={showAnnotationModal}
-          onClose={() => {
-            setShowAnnotationModal(false);
-            setSelectedDocumentForAnnotation(null);
-          }}
-          documentUrl={selectedDocumentForAnnotation.url}
-          documentName={selectedDocumentForAnnotation.name}
-          requestId={selectedDocumentForAnnotation.id}
-          onSave={async (annotationData) => {
-            try {
-              console.log('💾 Preparing to save preparer annotations:', {
-                esign_request_id: selectedDocumentForAnnotation.id,
-                document_id: selectedDocumentForAnnotation.document_id,
-                annotations_count: annotationData.annotations?.length || 0,
-                images_count: annotationData.images?.length || 0,
-                pdf_scale: annotationData.pdf_scale,
-                canvas_info: annotationData.canvas_info
-              });
-
-              // Send to backend using tax preparer specific API with A4 coordinate conversion
-              const response = await annotationAPI.savePreparerAnnotations({
-                pdfUrl: selectedDocumentForAnnotation.url,
-                annotations: annotationData.annotations || [],
-                images: annotationData.images || [],
-                pdf_scale: annotationData.pdf_scale || 1.5,
-                canvas_info: annotationData.canvas_info,
-                canvasWidth: annotationData.canvas_info?.width,
-                canvasHeight: annotationData.canvas_info?.height,
-                requestId: selectedDocumentForAnnotation.document_id,
-                esign_document_id: selectedDocumentForAnnotation.id,
-                metadata: {
-                  request_id: selectedDocumentForAnnotation.id,
+      {
+        showAnnotationModal && selectedDocumentForAnnotation && (
+          <PdfAnnotationModal
+            isOpen={showAnnotationModal}
+            onClose={() => {
+              setShowAnnotationModal(false);
+              setSelectedDocumentForAnnotation(null);
+            }}
+            documentUrl={selectedDocumentForAnnotation.url}
+            documentName={selectedDocumentForAnnotation.name}
+            requestId={selectedDocumentForAnnotation.id}
+            onSave={async (annotationData) => {
+              try {
+                console.log('💾 Preparing to save preparer annotations:', {
+                  esign_request_id: selectedDocumentForAnnotation.id,
                   document_id: selectedDocumentForAnnotation.document_id,
-                  document_url: selectedDocumentForAnnotation.url,
-                  document_name: selectedDocumentForAnnotation.name,
-                  timestamp: new Date().toISOString(),
+                  annotations_count: annotationData.annotations?.length || 0,
+                  images_count: annotationData.images?.length || 0,
+                  pdf_scale: annotationData.pdf_scale,
                   canvas_info: annotationData.canvas_info
-                }
-              });
+                });
 
-              if (response.success) {
-                toast.success('PDF annotations saved successfully!', {
+                // Send to backend using tax preparer specific API with A4 coordinate conversion
+                const response = await annotationAPI.savePreparerAnnotations({
+                  pdfUrl: selectedDocumentForAnnotation.url,
+                  annotations: annotationData.annotations || [],
+                  images: annotationData.images || [],
+                  pdf_scale: annotationData.pdf_scale || 1.5,
+                  canvas_info: annotationData.canvas_info,
+                  canvasWidth: annotationData.canvas_info?.width,
+                  canvasHeight: annotationData.canvas_info?.height,
+                  requestId: selectedDocumentForAnnotation.document_id,
+                  esign_document_id: selectedDocumentForAnnotation.id,
+                  metadata: {
+                    request_id: selectedDocumentForAnnotation.id,
+                    document_id: selectedDocumentForAnnotation.document_id,
+                    document_url: selectedDocumentForAnnotation.url,
+                    document_name: selectedDocumentForAnnotation.name,
+                    timestamp: new Date().toISOString(),
+                    canvas_info: annotationData.canvas_info
+                  }
+                });
+
+                if (response.success) {
+                  toast.success('PDF annotations saved successfully!', {
+                    position: 'top-right',
+                    autoClose: 5000
+                  });
+
+                  // Close the annotation modal
+                  setShowAnnotationModal(false);
+                  setSelectedDocumentForAnnotation(null);
+
+                  // Refresh signature requests
+                  setTimeout(() => {
+                    fetchSignatureRequests();
+                  }, 1000);
+                } else {
+                  throw new Error(response.message || 'Failed to save annotations');
+                }
+              } catch (error) {
+                console.error('Error saving annotations:', error);
+                const errorMsg = handleAPIError(error);
+                toast.error(errorMsg || 'Failed to save annotations', {
                   position: 'top-right',
                   autoClose: 5000
                 });
-
-                // Close the annotation modal
-                setShowAnnotationModal(false);
-                setSelectedDocumentForAnnotation(null);
-
-                // Refresh signature requests
-                setTimeout(() => {
-                  fetchSignatureRequests();
-                }, 1000);
-              } else {
-                throw new Error(response.message || 'Failed to save annotations');
               }
-            } catch (error) {
-              console.error('Error saving annotations:', error);
-              const errorMsg = handleAPIError(error);
-              toast.error(errorMsg || 'Failed to save annotations', {
-                position: 'top-right',
-                autoClose: 5000
-              });
-            }
-          }}
-        />
-      )}
+            }}
+          />
+        )
+      }
 
-    </div>
+    </div >
   );
 }
 

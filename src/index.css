@@ -870,3 +870,34 @@ div[style*="z-index"][style*="fixed"] {
 .peer:focus~.peer-focus\:ring-\[\#00C0C6\] {
   --tw-ring-color: var(--firm-primary-color) !important;
 }
+
+/* Custom Modal Width Override */
+@media (min-width: 576px) {
+  .custom-modal-width-md .modal-dialog {
+    max-width: 700px !important;
+  }
+}
+
+/* Ensure Custom Scrollbar Styles Apply */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E0 #F3F4F6;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}

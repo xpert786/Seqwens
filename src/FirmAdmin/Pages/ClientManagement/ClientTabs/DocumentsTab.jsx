@@ -12,7 +12,7 @@ import DocumentDetailsModal from './DocumentDetailsModal';
 export default function DocumentsTab({ client }) {
   const navigate = useNavigate();
   const API_BASE_URL = getApiBaseUrl();
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentFolderId, setCurrentFolderId] = useState(null); // null means root
@@ -257,15 +257,15 @@ export default function DocumentsTab({ client }) {
     if (['pdf'].includes(ext)) {
       return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-          <path d="M14 2V8H20" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M14 2V8H20" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     }
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-        <path d="M14 2V8H20" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M14 2V8H20" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   };
@@ -330,7 +330,7 @@ export default function DocumentsTab({ client }) {
     try {
       setDownloadingPDF(true);
       const blob = await firmAdminClientsAPI.getClientDataEntryFormPDF(client.id);
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -376,7 +376,7 @@ export default function DocumentsTab({ client }) {
 
       // Get PDF URL with authentication
       const pdfUrl = `${API_BASE_URL}/firm/clients/${client.id}/data-entry-form-pdf/`;
-      
+
       // Fetch PDF with authentication headers
       const response = await fetchWithCors(pdfUrl, {
         method: 'GET',
@@ -395,7 +395,7 @@ export default function DocumentsTab({ client }) {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const newWindow = window.open(url, '_blank');
-      
+
       if (newWindow) {
         // Clean up URL after a delay
         setTimeout(() => {
@@ -463,35 +463,37 @@ export default function DocumentsTab({ client }) {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
-          {currentFolderId && (
-            <button
-              onClick={() => {
-                if (documentsData?.parent_folder?.id === null) {
-                  setCurrentFolderId(null);
-                } else if (documentsData?.current_folder?.parent_id) {
-                  setCurrentFolderId(documentsData.current_folder.parent_id);
-                } else {
-                  setCurrentFolderId(null);
-                }
-                setSelectedCard(null);
-              }}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Back
-            </button>
-          )}
-          <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">Documents</h5>
+            {currentFolderId && (
+              <button
+                onClick={() => {
+                  if (documentsData?.parent_folder?.id === null) {
+                    setCurrentFolderId(null);
+                  } else if (documentsData?.current_folder?.parent_id) {
+                    setCurrentFolderId(documentsData.current_folder.parent_id);
+                  } else {
+                    setCurrentFolderId(null);
+                  }
+                  setSelectedCard(null);
+                }}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                style={{ borderRadius: "10px" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Back
+              </button>
+            )}
+            <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">Documents</h5>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowUploadModal(true)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro]"
+              style={{ borderRadius: '12px' }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
               Upload Documents
             </button>
@@ -499,6 +501,7 @@ export default function DocumentsTab({ client }) {
               onClick={handleViewPDF}
               disabled={viewingPDF || downloadingPDF}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#3AD6F2] bg-white border border-[#3AD6F2] rounded-lg hover:bg-blue-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ borderRadius: '12px' }}
             >
               {viewingPDF ? (
                 <>
@@ -508,8 +511,8 @@ export default function DocumentsTab({ client }) {
               ) : (
                 <>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M6 6H10M6 8H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    <path d="M6 6H10M6 8H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   View Signed Form PDF
                 </>
@@ -519,6 +522,7 @@ export default function DocumentsTab({ client }) {
               onClick={handleDownloadPDF}
               disabled={downloadingPDF || viewingPDF}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ borderRadius: '12px' }}
             >
               {downloadingPDF ? (
                 <>
@@ -528,8 +532,8 @@ export default function DocumentsTab({ client }) {
               ) : (
                 <>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M10 6V10M8 8H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    <path d="M10 6V10M8 8H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Download PDF
                 </>
@@ -548,11 +552,10 @@ export default function DocumentsTab({ client }) {
               {index > 0 && <span className="text-gray-400">/</span>}
               <button
                 onClick={() => handleBreadcrumbClick(breadcrumb)}
-                className={`text-sm font-[BasisGrotesquePro] ${
-                  index === documentsData.breadcrumbs.length - 1
-                    ? 'text-gray-900 font-semibold'
-                    : 'text-blue-600 hover:text-blue-800 cursor-pointer'
-                }`}
+                className={`text-sm font-[BasisGrotesquePro] ${index === documentsData.breadcrumbs.length - 1
+                  ? 'text-gray-900 font-semibold'
+                  : 'text-blue-600 hover:text-blue-800 cursor-pointer'
+                  }`}
               >
                 {breadcrumb.title}
               </button>
@@ -572,11 +575,10 @@ export default function DocumentsTab({ client }) {
                 <div
                   key={folder.id}
                   onClick={() => handleFolderClick(folder.id)}
-                  className={`!rounded-lg p-6 cursor-pointer transition-colors ${
-                    isSelected
-                      ? 'bg-[#FFF4E6] !border border-[#F49C2D]'
-                      : 'bg-white !border border-[#E8F0FF] hover:border-[#F49C2D]'
-                  }`}
+                  className={`!rounded-lg p-6 cursor-pointer transition-colors ${isSelected
+                    ? 'bg-[#FFF4E6] !border border-[#F49C2D]'
+                    : 'bg-white !border border-[#E8F0FF] hover:border-[#F49C2D]'
+                    }`}
                 >
                   <div className="flex items-start gap-3 mb-3">
                     {/* Folder Icon */}
@@ -804,11 +806,10 @@ export default function DocumentsTab({ client }) {
                               <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${
-                                  currentPage === page
-                                    ? 'bg-[#F56D2D] text-white'
-                                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                }`}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${currentPage === page
+                                  ? 'bg-[#F56D2D] text-white'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                  }`}
                               >
                                 {page}
                               </button>
@@ -841,17 +842,18 @@ export default function DocumentsTab({ client }) {
 
       {/* Empty State */}
       {(!documentsData.folders || documentsData.folders.length === 0) &&
-       (!documentsData.documents || documentsData.documents.length === 0) && (
-        <div className="text-center py-12">
-          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">No folders or documents found</p>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro]"
-          >
-            Upload Documents
-          </button>
-        </div>
-      )}
+        (!documentsData.documents || documentsData.documents.length === 0) && (
+          <div className="text-center py-12">
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">No folders or documents found</p>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              style={{ borderRadius: '10px' }}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro]"
+            >
+              Upload Documents
+            </button>
+          </div>
+        )}
 
       {/* Upload Modal */}
       <ClientDocumentUploadModal

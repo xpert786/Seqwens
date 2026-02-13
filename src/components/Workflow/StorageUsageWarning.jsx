@@ -22,9 +22,8 @@ const StorageUsageWarning = ({ usage = { total_gb: 0, limit_gb: 100, percentage_
 
   return (
     <div
-      className={`storage-warning p-4 rounded-lg mb-4 ${
-        isError ? 'bg-red-50 border-2 border-red-300' : 'bg-orange-50 border-2 border-orange-300'
-      }`}
+      className={`storage-warning p-4 rounded-lg mb-4 ${isError ? 'bg-red-50 border-2 border-red-300' : 'bg-orange-50 border-2 border-orange-300'
+        }`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -43,9 +42,8 @@ const StorageUsageWarning = ({ usage = { total_gb: 0, limit_gb: 100, percentage_
               />
             </svg>
             <h4
-              className={`font-semibold text-sm ${
-                isError ? 'text-red-800' : 'text-orange-800'
-              } font-[BasisGrotesquePro]`}
+              className={`font-semibold text-sm ${isError ? 'text-red-800' : 'text-orange-800'
+                } font-[BasisGrotesquePro]`}
             >
               {isError ? 'Storage Limit Exceeded!' : 'Storage Warning'}
             </h4>
@@ -63,9 +61,8 @@ const StorageUsageWarning = ({ usage = { total_gb: 0, limit_gb: 100, percentage_
           </div>
 
           <p
-            className={`text-sm mb-3 ${
-              isError ? 'text-red-700' : 'text-orange-700'
-            } font-[BasisGrotesquePro]`}
+            className={`text-sm mb-3 ${isError ? 'text-red-700' : 'text-orange-700'
+              } font-[BasisGrotesquePro]`}
           >
             {isError
               ? `Your firm has exceeded its storage limit! (${usage.total_gb?.toFixed(2) || 0} GB / ${usage.limit_gb} GB)`
@@ -86,6 +83,7 @@ const StorageUsageWarning = ({ usage = { total_gb: 0, limit_gb: 100, percentage_
                 <button
                   onClick={onUpgrade}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-[BasisGrotesquePro]"
+
                 >
                   Upgrade Plan
                 </button>
