@@ -71,7 +71,7 @@
 
 /* Dropzone Styles */
 .premium-dropzone {
-    border: 2px dashed #D1D5DB;
+    border: none;
     background-color: var(--bg-light);
     border-radius: 0;
     padding: 100px 40px;
@@ -90,12 +90,10 @@
 }
 
 .premium-dropzone:hover {
-    border-color: var(--primary-orange);
     background-color: #FFF7ED;
 }
 
 .premium-dropzone.active {
-    border-color: var(--primary-orange);
     background-color: #FFF7ED;
     transform: scale(1.01);
 }
@@ -339,7 +337,7 @@
 }
 
 .children-container {
-    border-left: 1px dashed #E5E7EB;
+    border-left: none;
     margin-left: 7px;
 }
 

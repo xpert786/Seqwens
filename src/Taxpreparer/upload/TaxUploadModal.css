@@ -71,7 +71,7 @@
 
 /* Dropzone Styles */
 .premium-dropzone {
-    border: 2px dashed #D1D5DB;
+    border: none;
     background-color: var(--bg-light);
     border-radius: 16px;
     padding: 40px 20px;
@@ -334,7 +334,7 @@
 }
 
 .children-container {
-    border-left: 1px dashed #E5E7EB;
+    border-left: none;
     margin-left: 7px;
 }
 

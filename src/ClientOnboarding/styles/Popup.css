@@ -63,7 +63,7 @@
 
 /* Upload Drop Zone */
 .upload-dropzone {
-  border: 2px dashed #e5e7eb;
+  border: none;
   background-color: #fafafa;
   border-radius: 8px;
   text-align: center;
@@ -493,6 +493,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

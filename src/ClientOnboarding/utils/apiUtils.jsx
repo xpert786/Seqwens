@@ -647,6 +647,26 @@ export const userAPI = {
   // Get pending invites for the user
   getPendingInvites: async () => {
     return await apiRequest('/user/invites/pending/', 'GET');
+  },
+
+  // Role and Firm Switcher Endpoints
+  getAvailableContexts: async () => {
+    return await apiRequest('/user/available-contexts/', 'GET');
+  },
+
+  selectRole: async (role) => {
+    return await apiRequest('/user/select-role/', 'POST', { role });
+  },
+
+  selectFirm: async (membershipId) => {
+    return await apiRequest('/user/select-firm/', 'POST', { membership_id: membershipId });
+  },
+
+  switchContext: async (role = null, membershipId = null) => {
+    const payload = {};
+    if (role) payload.role = role;
+    if (membershipId) payload.membership_id = membershipId;
+    return await apiRequest('/user/switch-context/', 'POST', payload);
   }
 };
 

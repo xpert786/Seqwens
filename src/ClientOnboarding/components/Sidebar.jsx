@@ -169,10 +169,11 @@ export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
 
         <button
           onClick={handleLogout}
-          className={`sidebar-bottom-link ${isLoggingOut ? 'logging-out' : ''}`}
+          className={`sidebar-bottom-link ${isLoggingOut ? 'logging-out' : ''} no-hover-logout`}
           disabled={isLoggingOut}
+          style={{ backgroundColor: 'white', color: '#EF4444' }}
         >
-          <span className="bottom-icon-wrapper">
+          <span className="bottom-icon-wrapper" style={{ color: '#EF4444' }}>
             <LogOutIcon />
           </span>
           {isLoggingOut ? 'Logging out...' : 'Log Out'}

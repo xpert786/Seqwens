@@ -148,6 +148,33 @@ export default function Login() {
     // Set tokens first so they are available for the new route
     setTokens(accessToken, refreshToken, rememberMe);
 
+    // NEW: Check for role/firm selection using available-contexts API
+    try {
+      const contextsData = await userAPI.getAvailableContexts();
+
+      if (contextsData.success) {
+        const { needs_role_selection, needs_firm_selection, all_roles, all_firms } = contextsData.data;
+
+        // If user needs to select role or firm, redirect to selection page
+        if (needs_role_selection || needs_firm_selection) {
+          navigate("/select-context", {
+            state: {
+              needs_role_selection,
+              needs_firm_selection,
+              all_roles,
+              all_firms,
+              user: response.user || response.data?.user
+            },
+            replace: true
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking available contexts:', error);
+      // Continue with normal login flow if context check fails
+    }
+
     // Check for returnTo in location state or search params
     const queryParams = new URLSearchParams(location.search);
     const returnTo = location.state?.returnTo || queryParams.get('returnTo');
@@ -178,40 +205,6 @@ export default function Login() {
     console.log('Custom role:', customRole);
     console.log('Firms:', firms);
 
-    // Check if user has multiple memberships across firms
-    // Note: Backend returns one firm object per membership, even if same firm
-    const allMemberships = firms
-      .filter(firm => firm.membership) // Only firms with membership
-      .map(firm => ({
-        ...firm.membership,
-        firm_id: firm.id,
-        firm_name: firm.name,
-        firm_status: firm.status
-      }));
-
-    console.log('All memberships:', allMemberships);
-
-    // Check if user has multiple active memberships
-    const activeMemberships = allMemberships.filter(m => m.status === 'Active');
-
-    console.log('Active memberships count:', activeMemberships.length);
-
-    if (activeMemberships.length > 1) {
-      // User has multiple active memberships, show role selection screen
-      console.log('User has multiple active memberships, redirecting to role selection');
-      navigate("/select-role", {
-        state: {
-          userData: {
-            ...user,
-            firms: firms,
-            memberships: activeMemberships
-          }
-        },
-        replace: true
-      });
-      return;
-    }
-
     // Check if user has custom role and role is tax_preparer
     // If custom_role exists, user should use tax preparer dashboard
     if (customRole && roles && Array.isArray(roles) && roles.includes('tax_preparer')) {
@@ -221,16 +214,6 @@ export default function Login() {
 
       // Redirect to tax preparer dashboard
       navigate("/taxdashboard");
-      return;
-    }
-
-    // Check if user has multiple roles (legacy check)
-    if (roles && Array.isArray(roles) && roles.length > 1) {
-      // User has multiple roles, show role selection screen
-      navigate("/select-role", {
-        state: { userData: user },
-        replace: true
-      });
       return;
     }
 

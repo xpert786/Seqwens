@@ -368,9 +368,10 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex items-center px-2 py-1 text-[10px] font-medium text-red-500 rounded transition-all duration-200 w-full text-left whitespace-nowrap border-none cursor-pointer bg-transparent"
+                className="flex items-center px-2 py-1 text-[10px] font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer no-hover-logout"
+                style={{ color: '#EF4444', backgroundColor: 'transparent' }}
               >
-                <span className="w-5 h-5 mr-3 text-red-500">
+                <span className="w-5 h-5 mr-3" style={{ color: '#EF4444' }}>
                   <Out />
                 </span>
                 {isLoggingOut ? 'Logging out...' : 'Log Out'}

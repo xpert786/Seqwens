@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import seqwensLogo from "../assets/seqwlogo.png.png";
 import { isLoggedIn, getUserData, getStorage } from "../ClientOnboarding/utils/userUtils";
+import TopbarSwitcher from "./TopbarSwitcher";
 
 export default function Header() {
   const location = useLocation();
@@ -324,13 +325,19 @@ export default function Header() {
           {/* Right Buttons - Dynamic */}
           <div className="hidden md:flex items-center gap-4 lg:gap-6">
             {isUserLoggedIn ? (
-              <button
-                onClick={handleUserLogoClick}
-                className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro] hover:bg-[#2BC5E0] transition-colors cursor-pointer"
-                title="Go to Dashboard"
-              >
-                {getUserInitials()}
-              </button>
+              <>
+                {/* Role/Firm Switcher */}
+                <TopbarSwitcher />
+
+                {/* User Avatar */}
+                <button
+                  onClick={handleUserLogoClick}
+                  className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro] hover:bg-[#2BC5E0] transition-colors cursor-pointer"
+                  title="Go to Dashboard"
+                >
+                  {getUserInitials()}
+                </button>
+              </>
             ) : (
               <Link
                 to="/login"
