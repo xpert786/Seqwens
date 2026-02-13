@@ -183,7 +183,7 @@ export default function ClientESignLogs() {
 
         {esignActivities.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">📝</div>
+            <FaSignature className="mx-auto text-gray-300 mb-4" size={48} />
             <p className="text-gray-500 text-lg">No eSign activity logs found</p>
             <p className="text-gray-400 text-sm mt-2">
               Activity logs will appear here when e-signature requests are made

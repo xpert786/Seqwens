@@ -2140,7 +2140,7 @@ export default function TasksPage() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body custom-scrollbar" style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '1.5rem', overflowY: 'auto', flex: 1, maxHeight: '60vh' }}>
                 <div className="mb-3">
                   <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
                     <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Client:</span>
