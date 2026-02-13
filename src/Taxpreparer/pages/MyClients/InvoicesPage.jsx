@@ -276,7 +276,7 @@ export default function InvoicesPage() {
               display: 'flex',
               marginTop: "-9px",
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
             <FiltIcon className="me-2 text-muted" />
