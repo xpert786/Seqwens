@@ -151,6 +151,9 @@ export default function CustomRolesManagement() {
 
   // Apply client-side filtering
   const filteredPreparers = taxPreparers.filter(preparer => {
+    // Hide firm admin self
+    if (preparer.role === 'firm') return false;
+
     // Search filter
     let searchMatch = true;
     if (debouncedSearchTerm.trim()) {
@@ -172,11 +175,14 @@ export default function CustomRolesManagement() {
   });
 
   // Calculate summary statistics
+  // Filter out firm role from stats calculation to avoid counting the hidden firm admin
+  const validPreparers = taxPreparers.filter(p => p.role !== 'firm');
+
   const summary = {
-    total_preparers: pagination.total_count || taxPreparers.length,
-    active_preparers: taxPreparers.filter(p => !!p.is_active).length,
-    with_permissions: taxPreparers.filter(p => !!p.has_permissions).length,
-    total_permissions: taxPreparers.reduce((sum, p) => sum + (p.permissions_count || 0), 0)
+    total_preparers: pagination.total_count || validPreparers.length,
+    active_preparers: validPreparers.filter(p => !!p.is_active).length,
+    with_permissions: validPreparers.filter(p => !!p.has_permissions).length,
+    total_permissions: validPreparers.reduce((sum, p) => sum + (p.permissions_count || 0), 0)
   };
 
   // Only show the full-page loader on initial load if no data exists

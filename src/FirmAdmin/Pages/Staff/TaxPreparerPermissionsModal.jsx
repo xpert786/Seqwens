@@ -40,16 +40,6 @@ const PERMISSION_CATEGORIES = {
     icon: <FiDollarSign className="w-5 h-5 text-[#F56D2D]" />,
     color: 'yellow'
   },
-  'Reports & Analytics': {
-    codes: ['access_analytics', 'export_reports'],
-    icon: <FiPieChart className="w-5 h-5 text-[#3AD6F2]" />,
-    color: 'teal'
-  },
-  'Team Management': {
-    codes: ['manage_team'],
-    icon: <FiShield className="w-5 h-5 text-[#F56D2D]" />,
-    color: 'red'
-  },
   'Task Management': {
     codes: ['assign_tasks_to_assigned_taxpayers', 'assign_tasks_to_unassigned_taxpayers'],
     icon: <FiGrid className="w-5 h-5 text-[#3AD6F2]" />,

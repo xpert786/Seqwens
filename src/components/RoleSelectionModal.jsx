@@ -48,7 +48,7 @@ export default function RoleSelectionModal({ roles, onSelect, onClose }) {
         <div className="role-selection-modal-overlay">
             <div className="role-selection-modal">
                 <div className="role-selection-header">
-                    <h2>Select Your Role</h2>
+                    <h4>Select Your Role</h4>
                     <p>You have multiple roles. Please select one to continue.</p>
                 </div>
 

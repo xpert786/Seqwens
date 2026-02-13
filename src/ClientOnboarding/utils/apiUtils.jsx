@@ -2490,6 +2490,47 @@ export const firmAdminTasksAPI = {
         }
         return response.json();
       });
+  },
+
+  // Update task - Firm Admin API
+  updateTask: async (taskId, taskData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'PUT', // or PATCH depending on backend implementation, usually PUT for full update
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(taskData)
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/tasks/${taskId}/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          
+          // Handle validation errors similar to createTask
+          if (response.status === 400 && errorData.errors) {
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, errors]) => {
+                const fieldErrors = Array.isArray(errors) ? errors.join(', ') : errors;
+                return `${field}: ${fieldErrors}`;
+              })
+              .join('; ');
+            const error = new Error(errorMessages || errorData.message || 'Validation failed');
+            error.fieldErrors = errorData.errors;
+            error.status = response.status;
+            throw error;
+          }
+
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
   }
 };
 

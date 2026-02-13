@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TableView from './TableView';
 import CreateTaskModal from './CreateTaskModal';
+import EditTaskModal from './EditTaskModal';
 import { firmAdminTasksAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import jsPDF from "jspdf";
@@ -18,6 +19,8 @@ const TaskManagementMain = () => {
   const [taskTypeFilter, setTaskTypeFilter] = useState('All Types');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -162,7 +165,12 @@ const TaskManagementMain = () => {
             file_count: task.file_count || 0,
             client_count: task.client_count || (task.clients_info ? task.clients_info.length : 0),
             estimated_hours: task.estimated_hours,
-            hours_spent: task.hours_spent
+            hours_spent: task.hours_spent,
+            // Raw data for editing
+            client_ids: task.client_ids || (task.clients_info ? task.clients_info.map(c => c.id) : []),
+            folder_id: task.folder_id || (task.folder_info ? task.folder_info.id : null),
+            dueDateRaw: task.due_date,
+            assignedToId: assignedToId 
           };
         });
 
@@ -251,16 +259,6 @@ const TaskManagementMain = () => {
         </svg>
       )
     },
-    // {
-    //   title: 'Total Hours',
-    //   value: summary.total_hours.toString(),
-    //   icon: (
-    //     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    //       <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    //       <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    //     </svg>
-    //   )
-    // }
   ];
 
   const getPriorityColor = (priority) => {
@@ -291,6 +289,10 @@ const TaskManagementMain = () => {
     setOpenDropdown(null);
     if (action === 'View Details') {
       navigate(`/firmadmin/tasks/${taskId}`);
+    } else if (action === 'Edit Task') {
+      const task = taskData.find(t => t.id === taskId);
+      setTaskToEdit(task);
+      setShowEditTaskModal(true);
     } else if (action === 'Delete Task') {
       const task = taskData.find(t => t.id === taskId);
       setTaskToDelete({ id: taskId, title: task?.task || 'Task' });
