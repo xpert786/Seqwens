@@ -25,18 +25,27 @@
   flex-direction: row;
 }
 
-/* MOBILE: 320px to 767px */
-@media (max-width: 767px) {
+/* MOBILE: 320px to 991px (Updated breakpoint to match JS isMobile check) */
+@media (max-width: 991px) {
   .messages-page-container {
     padding: 12px !important;
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
   }
 
   .messages-page .message-header {
     flex-direction: column !important;
-    align-items: center !important;
+    align-items: stretch !important;
     text-align: center !important;
     gap: 12px !important;
-    padding: 16px 12px !important;
+    padding: 12px !important;
+    min-height: auto !important;
+  }
+
+  .messages-page .message-header>div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .messages-page .message-header h5 {
@@ -50,33 +59,35 @@
   .messages-page .new-message-btn {
     width: 100% !important;
     justify-content: center !important;
-    padding: 12px !important;
+    padding: 10px !important;
     font-size: 14px !important;
-    margin-top: 8px;
+    margin-top: 0;
   }
 
   .messages-page .chat-wrapper {
     flex-direction: column !important;
     gap: 16px !important;
+    overflow: visible !important;
   }
 
   .messages-page .conversations-panel {
     width: 100% !important;
     margin-right: 0 !important;
-    margin-bottom: 16px !important;
+    margin-bottom: 0 !important;
     height: auto !important;
-    min-height: 350px !important;
+    min-height: 300px !important;
+    border-radius: 12px !important;
   }
 
   .messages-page .chat-interface {
     width: 100% !important;
     height: auto !important;
-    min-height: 450px !important;
+    min-height: 400px !important;
+    border-radius: 12px !important;
   }
 
   .messages-page .chat-messages-area {
-    max-height: calc(50vh - 100px) !important;
-    min-height: 250px !important;
+    max-height: 300px !important;
   }
 
   .messages-page .message-bubble {
@@ -86,7 +97,12 @@
   }
 
   .messages-page .chat-input-area {
-    padding: 12px !important;
+    padding: 8px !important;
+  }
+
+  .messages-page .conversations-scroll {
+    max-height: 350px !important;
+    overflow-y: auto !important;
   }
 
   .messages-page .chat-input-area .d-flex {
@@ -138,7 +154,9 @@
   }
 }
 
-.messages-page-container {
-  animation: slideUp 0.4s ease-out;
-  height: calc(100vh - 100px) !important;
+@media (min-width: 992px) {
+  .messages-page-container {
+    animation: slideUp 0.4s ease-out;
+    height: calc(100vh - 100px) !important;
+  }
 }

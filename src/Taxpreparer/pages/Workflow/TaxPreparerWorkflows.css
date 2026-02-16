@@ -139,3 +139,94 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .workflow-card .action-button {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+    
+    .workflow-card .action-button svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    .status-badge {
+        font-size: 10px !important;
+        padding: 3px 8px !important;
+    }
+    
+    .status-badge svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+    
+    /* Workflow card content adjustments */
+    .workflow-card h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    .workflow-card .text-xs {
+        font-size: 10px !important;
+    }
+    
+    .workflow-card .text-sm {
+        font-size: 12px !important;
+    }
+    
+    /* Button container adjustments */
+    .workflow-card .flex.flex-col.sm\:flex-row.md\:flex-col {
+        gap: 8px !important;
+    }
+    
+    /* Document requests grid */
+    .workflow-card .grid.md\:grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .workflow-card .action-button {
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+    }
+    
+    .workflow-container h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    .workflow-container p {
+        font-size: 14px !important;
+    }
+    
+    /* Workflow card padding adjustments */
+    .workflow-card .p-6 {
+        padding: 16px !important;
+    }
+    
+    .workflow-card .md\:p-8 {
+        padding: 16px !important;
+    }
+    
+    /* Stats cards adjustments */
+    .workflow-container .card-body {
+        padding: 12px !important;
+    }
+    
+    .workflow-container .stat-icon-wrapper {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* Search and filter adjustments */
+    .workflow-container .form-control {
+        font-size: 14px !important;
+        height: 40px !important;
+    }
+    
+    .workflow-container .filter-button {
+        font-size: 12px !important;
+        height: 40px !important;
+    }
+}

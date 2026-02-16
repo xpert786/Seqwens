@@ -27,15 +27,21 @@
 .mydocs-card {
     cursor: pointer;
     background-color: #fff;
-    border: 1px solid #dee2e6;
+    border: 1px solid #E5E7EB;
     border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.mydocs-card:hover {
+    border-color: #D1D5DB;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .mydocs-card.active {
-    background-color: #FFF3E1;
-    border-color: #F49C2D;
+    border-color: #00C0C6;
+    box-shadow: 0 0 0 1px #00C0C6;
 }
 
 .mydocs-doc-title {
@@ -66,12 +72,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #E8F0FF;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    background-color: #F0F7FF;
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
 }
 
+.mydocs-icon-wrapper svg {
+    width: 22px;
+    height: 22px;
+    color: #3B4A66;
+}
 
 .mydocs-upload-btn {
     background-color: #F56D2D !important;
@@ -250,4 +262,149 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Status and Priority Badges */
+.badge-status {
+    background-color: #6B7280 !important;
+    font-size: 10px !important;
+    text-transform: capitalize !important;
+    padding: 3px 8px !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    display: inline-block;
+}
+
+.badge-priority-high {
+    background-color: #EF4444 !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    padding: 3px 8px !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    display: inline-block;
+}
+
+.badge-priority-medium {
+    background-color: #F59E0B !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    padding: 3px 8px !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    display: inline-block;
+}
+
+.badge-priority-low {
+    background-color: #10B981 !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    padding: 3px 8px !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    display: inline-block;
+}
+
+.btn-upload {
+    background-color: #F56D2D !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 18px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(245, 109, 45, 0.2) !important;
+    height: fit-content !important;
+    white-space: nowrap !important;
+}
+
+.btn-upload:hover {
+    background-color: #E55A1B !important;
+    box-shadow: 0 4px 8px rgba(245, 109, 45, 0.3) !important;
+}
+
+.btn-upload:active {
+    transform: translateY(1px) !important;
+}
+
+/* Mobile Responsive for Upload Button */
+@media (max-width: 768px) {
+    .btn-upload {
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+    }
+    
+    .btn-upload span {
+        display: none !important;
+    }
+}
+.modal-footer-container {
+    padding: 16px 20px;
+    border-top: 1px solid #F3F4F6;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 12px;
+    background-color: #FFFFFF;
+}
+
+.modal-btn-cancel {
+    padding: 12px 24px;
+    background-color: white;
+    border: 1px solid #D1D5DB;
+    border-radius: 10px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+    flex: none;
+}
+
+.modal-btn-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.modal-btn-submit {
+    padding: 12px 24px;
+    background-color: #32B582;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+}
+
+.modal-btn-submit:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+/* Mobile Responsive for Modal Buttons */
+@media (max-width: 576px) {
+    .modal-footer-container {
+        flex-direction: column-reverse;
+    }
+    
+    .modal-btn-cancel,
+    .modal-btn-submit {
+        flex: 1;
+        width: 100%;
+    }
 }

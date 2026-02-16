@@ -64,11 +64,25 @@ export default function MessagePage() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("all");
   const filterOptions = ["All", "Active", "Closed"];
   const dropdownRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [showChatOnMobile, setShowChatOnMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 992);
+      if (window.innerWidth >= 992) {
+        setShowChatOnMobile(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -218,6 +232,7 @@ export default function MessagePage() {
 
             if (targetThread) {
               setActiveConversationId(targetThread.id);
+              setShowChatOnMobile(true);
               navigate(location.pathname, { replace: true });
             } else if (sortedThreads.length > 0 && !activeConversationId) {
               setActiveConversationId(sortedThreads[0].id);
@@ -1164,7 +1179,7 @@ export default function MessagePage() {
               <FaSearch
                 style={{
                   position: "absolute",
-                  left: "14px",
+                  left: "15px",
                   top: "50%",
                   transform: "translateY(-50%)",
                   color: "#A0AEC0",
@@ -1173,100 +1188,58 @@ export default function MessagePage() {
               />
               <input
                 type="text"
-                className="form-control"
                 placeholder="Search conversations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-control"
                 style={{
-                  paddingLeft: "42px",
-                  fontSize: "14px",
-                  fontFamily: "BasisGrotesquePro",
-                  height: "44px",
+                  paddingLeft: "40px",
                   borderRadius: "12px",
                   border: "1px solid #E2E8F0",
-                  backgroundColor: "#F7FAFC"
+                  backgroundColor: "#F7FAFC",
+                  height: "45px",
+                  fontSize: "14px",
+                  boxShadow: "none"
                 }}
               />
             </div>
           </div>
 
           {/* Filter Dropdown */}
-          <div className="mb-3 position-relative" ref={dropdownRef}>
-            <button
-              className="btn btn-sm w-100 d-flex justify-content-between align-items-center py-2 px-3"
-              style={{
-                background: "#F7FAFC",
-                border: "1px solid #E2E8F0",
-                color: "#4A5568",
-                fontFamily: "BasisGrotesquePro",
-                fontSize: "14px",
-                borderRadius: "10px"
-              }}
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            >
-              <span>{selectedFilter}</span>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: "#718096" }}>
-                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-
-            {showFilterDropdown && (
-              <div
-                className="position-absolute mt-1 shadow-lg bg-white border rounded-3 z-3 w-100 overflow-hidden"
+          <div className="mb-3">
+            <div className="custom-select-wrapper" style={{ position: 'relative' }}>
+              <select
+                className="form-select border-0 bg-light"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                style={{
+                  borderRadius: "8px",
+                  padding: "10px 15px",
+                  fontSize: "14px",
+                  color: "#4A5568",
+                  cursor: "pointer",
+                  appearance: "none",
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%234A5568' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 15px center"
+                }}
               >
-                {filterOptions.map((option) => (
-                  <button
-                    key={option}
-                    className="dropdown-item py-2 px-3 border-0 bg-white w-100 text-start hover:bg-light"
-                    style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#4A5568" }}
-                    onClick={() => {
-                      setSelectedFilter(option);
-                      setShowFilterDropdown(false);
-                    }}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            )}
+                <option value="all">All</option>
+                <option value="unread">Unread</option>
+                <option value="active">Active</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
           </div>
 
-          {/* Conversations List */}
           <div
-            className="flex-grow-1 d-flex flex-column conversations-scroll"
+            className="flex-grow-1 overflow-auto conversations-scroll"
             style={{
-              gap: "12px",
-              overflowY: "auto",
-              overflowX: "hidden",
-              maxHeight: "calc(55vh - 150px)",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none"
+              maxHeight: "calc(100vh - 350px)",
+              scrollbarWidth: "thin",
+              scrollbarColor: "#CBD5E0 #F7FAFC"
             }}
           >
-            {/* Loading State */}
-            {loadingThreads && (
-              <div className="text-center py-4">
-                <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-                <p className="text-muted mt-2 small">Loading conversations...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {threadsError && (
-              <div className="text-center py-4">
-                <p className="text-muted small">{threadsError}</p>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!loadingThreads && !threadsError && conversations.length === 0 && (
-              <div className="text-center py-5">
-                <p className="text-muted small mb-0">No conversations yet</p>
-                <p className="text-muted small">Start a new message to begin</p>
-              </div>
-            )}
-
-            {/* Conversations List */}
             {(() => {
               const filteredConversations = conversations.filter(conv => {
                 const term = searchTerm.toLowerCase();
@@ -1276,30 +1249,52 @@ export default function MessagePage() {
                   (conv.lastMessage && conv.lastMessage.toLowerCase().includes(term))
                 );
 
-                if (selectedFilter === "Active") return matchesSearch && conv.status === "active";
-                if (selectedFilter === "Closed") return matchesSearch && conv.status === "closed";
+                if (filterStatus === "active") return matchesSearch && conv.status === "active";
+                if (filterStatus === "closed") return matchesSearch && conv.status === "closed";
+                if (filterStatus === "unread") return matchesSearch && conv.unreadCount > 0;
                 return matchesSearch;
               });
 
-              return !loadingThreads && !threadsError && filteredConversations.length > 0 ? (
-                <div className="conversations-list" style={{ width: "100%" }}>
-                  {filteredConversations.map((conv, index) => (
+              if (loadingThreads && conversations.length === 0) {
+                return (
+                  <div className="text-center py-5">
+                    <div className="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                    <p className="text-muted small">Loading conversations...</p>
+                  </div>
+                );
+              }
+
+              if (threadsError && conversations.length === 0) {
+                return (
+                  <div className="text-center py-5">
+                    <p className="text-danger small mb-2">Failed to load conversations</p>
+                    <button
+                      onClick={() => fetchThreads()}
+                      className="btn btn-sm btn-outline-primary"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                );
+              }
+
+              if (conversations.length === 0) {
+                return (
+                  <div className="text-center py-5">
+                    <p className="text-muted small">No conversations yet</p>
+                  </div>
+                );
+              }
+
+              return filteredConversations.length > 0 ? (
+                <div className="d-flex flex-column gap-2">
+                  {filteredConversations.map((conv) => (
                     <div
-                      key={conv.id || `conv-${index}`}
-                      className={`conversation-item p-3 mb-2 ${conv.id === activeConversationId ? "active-thread" : ""}`}
+                      key={conv.id}
+                      className={`p-3 rounded-3 cursor-pointer transition-all ${activeConversationId === conv.id ? "bg-white border-primary shadow-sm" : "bg-light border-transparent hover-bg-white"
+                        }`}
                       style={{
-                        cursor: "pointer",
-                        border: "2px solid",
-                        borderColor: conv.id === activeConversationId ? "#F56D2D33" : "#E8F0FF",
-                        backgroundColor: conv.id === activeConversationId ? "#F56D2D08" : "#F3F7FF",
-                        borderRadius: "12px",
-                        fontFamily: "BasisGrotesquePro",
-                        color: "#3B4A66",
-                        width: "100%",
-                        minHeight: "80px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
+                        border: activeConversationId === conv.id ? "1.5px solid #F56D2D" : "1px solid transparent",
                         transition: "all 0.2s ease"
                       }}
                       onClick={() => {
@@ -1357,19 +1352,35 @@ export default function MessagePage() {
         </div>
 
         {/* Right Column - Chat Interface */}
-        <div className="flex-grow-1 bg-white rounded-4 shadow-sm d-flex flex-column chat-interface overflow-hidden" style={{ border: "1px solid #E2E8F0" }}>
+        <div
+          className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-interface overflow-hidden"
+          style={{ border: "1px solid #E2E8F0" }}
+        >
           {(() => {
             const activeConversation = conversations.find(c => c.id === activeConversationId);
             return activeConversation ? (
               <>
+                {/* Desktop Header - Matches Client Panel */}
+                <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
+                  <ConverIcon className="text-primary" size={20} />
+                  <div>
+                    <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
+                    <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
+                      {activeConversation.status === 'active' ? 'Active' : 'Closed'}
+                    </small>
+                  </div>
+                </div>
+
                 <div
                   ref={messagesContainerRef}
-                  className="flex-grow-1 overflow-auto mb-3 messages-scroll"
+                  className="flex-grow-1 mb-3 messages-scroll"
                   style={{
-                    minHeight: "200px",
-                    maxHeight: "calc(55vh - 200px)",
+                    overflowY: "auto",
+                    overflowX: "hidden",
                     scrollbarWidth: "none",
-                    msOverflowStyle: "none"
+                    msOverflowStyle: "none",
+                    minHeight: "200px",
+                    maxHeight: "calc(100vh - 250px)",
                   }}
                 >
                   <style>
@@ -1508,7 +1519,7 @@ export default function MessagePage() {
                   )}
                 </div>
 
-                <div className="border-top pt-2">
+                <div className="border-top pt-2 chat-input-area" style={{ flexShrink: 0 }}>
                   <div className="d-flex align-items-center">
                     {/* WebSocket connection indicator */}
                     {wsConnected && (

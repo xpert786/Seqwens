@@ -335,13 +335,13 @@ const TaxPreparerWorkflows = () => {
                 <div className="p-6 md:p-8">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-4">
+                      <div className="flex flex-row flex-wrap items-center gap-3 mb-4">
                         <span
-                          className="status-badge flex items-center"
+                          className="status-badge inline-flex items-center gap-1"
                           style={{ backgroundColor: style.bg, color: style.text }}
                         >
                           {style.icon}
-                          {workflow.status_display || workflow.status || 'Active'}
+                          <span>{workflow.status_display || workflow.status || 'Active'}</span>
                         </span>
                         <span className="text-gray-400">•</span>
                         <span className="text-gray-500 text-sm font-medium">Last updated 2 days ago</span>
