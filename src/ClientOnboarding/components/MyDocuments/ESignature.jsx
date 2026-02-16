@@ -637,14 +637,7 @@ export default function ESignature() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedIndex(originalIndex);
-                                  // Use the annotated_pdf_url from API response
-                                  setSelectedDocumentForAnnotation({
-                                    url: request.annotated_pdf_url,
-                                    name: request.document_name || request.title || 'Document',
-                                    id: request.id || request.esign_id,
-                                    document_id: request.document
-                                  });
-                                  setShowAnnotationModal(true);
+                                  setShowPreviewModal(true);
                                 }}
                                 title="Preview Annotated PDF"
                               >
@@ -931,7 +924,7 @@ export default function ESignature() {
             {selectedIndex !== null && signatureRequests[selectedIndex] ? (
               (() => {
                 const request = signatureRequests[selectedIndex];
-                const isAnnotated = request.taxpayer_signed === true && request.spouse_signed === true && request.annotated_pdf_url;
+                const isAnnotated = (request.taxpayer_signed === true && request.spouse_signed === true || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url;
                 const docName = request.document_name || request.title || 'Document';
                 return `E-Signature – ${isAnnotated ? 'Annotated ' : ''}${docName}`;
               })()
@@ -944,7 +937,7 @@ export default function ESignature() {
               {(() => {
                 const request = signatureRequests[selectedIndex];
                 // Use annotated_pdf_url if both taxpayer and spouse have signed, otherwise use document_url
-                const pdfUrl = (request.taxpayer_signed === true && request.spouse_signed === true && request.annotated_pdf_url)
+                const pdfUrl = ((request.taxpayer_signed === true && request.spouse_signed === true) || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url
                   ? request.annotated_pdf_url
                   : request.document_url;
 

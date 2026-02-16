@@ -348,6 +348,7 @@ export default function DashboardFirst() {
                 }
               }}
               disabled={isProceeding}
+              style={{ borderRadius: "12px" }}
               className={`w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white rounded-xl font-bold shadow-lg shadow-orange-100 hover:bg-[#e05d20] transition-all active:scale-95 whitespace-nowrap flex items-center justify-center gap-3 ${isProceeding ? 'opacity-80' : 'hover:shadow-xl'}`}
             >
               {isProceeding ? (
