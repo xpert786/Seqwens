@@ -349,14 +349,13 @@
 
   /* Calendar Grid scrolling for small screens */
   .bg-white.rounded-lg.border.border-gray-200 {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible !important;
   }
 
   .grid.grid-cols-7,
   .grid.grid-cols-4 {
-    min-width: 600px !important;
-    /* Force a minimum width to allow scrolling instead of squashing */
+    min-width: auto !important;
+    width: 100% !important;
   }
 
   .min-h-\[120px\] {
@@ -459,10 +458,11 @@
     max-width: 70px !important;
   }
 
-  /* Calendar Grid Extra Small */
+  /* Calendar Grid Extra Small - No horizontal scroll */
   .grid.grid-cols-7,
   .grid.grid-cols-4 {
-    min-width: 500px !important;
+    min-width: auto !important;
+    width: 100% !important;
   }
 
   .min-h-\[120px\] {
@@ -544,10 +544,11 @@
     max-width: 60px !important;
   }
 
-  /* Calendar Grid Ultra Small */
+  /* Calendar Grid Ultra Small - No horizontal scroll */
   .grid.grid-cols-7,
   .grid.grid-cols-4 {
-    min-width: 400px !important;
+    min-width: auto !important;
+    width: 100% !important;
   }
 
   .min-h-\[120px\] {
@@ -581,5 +582,75 @@
     width: 16px !important;
     height: 16px !important;
     font-size: 8px !important;
+  }
+}
+
+/* Calendar Mobile Responsive Styles - Matching Tasks Page Calendar */
+@media (max-width: 767px) {
+  .calendar-header-wrapper {
+    padding: 12px !important;
+  }
+  .calendar-header-title {
+    font-size: 1.1rem !important;
+  }
+  .calendar-header-year {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Day header abbreviation for mobile */
+  .calendar-day-header-item {
+    font-size: 0.65rem !important;
+    padding: 8px 2px !important;
+  }
+  
+  /* Calendar cells */
+  .calendar-cell {
+    min-height: 80px !important;
+    padding: 4px !important;
+  }
+  
+  /* Day number circle */
+  .calendar-day-number-wrapper {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Task/Event items */
+  .calendar-task-item,
+  .min-h-\[120px\] .bg-orange-500 {
+    font-size: 0.6rem !important;
+    padding: 1px 3px !important;
+    margin-bottom: 1px !important;
+  }
+  
+  /* Task badge */
+  .calendar-task-badge {
+    font-size: 0.55rem !important;
+    padding: 0 4px !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Tasks container */
+  .calendar-tasks-container {
+    max-height: 50px !important;
+    gap: 1.5px !important;
+  }
+  
+  /* Day headers - show full name on desktop, abbreviated on mobile */
+  .day-header-full {
+    display: none !important;
+  }
+  .day-header-short {
+    display: inline !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .day-header-full {
+    display: inline !important;
+  }
+  .day-header-short {
+    display: none !important;
   }
 }

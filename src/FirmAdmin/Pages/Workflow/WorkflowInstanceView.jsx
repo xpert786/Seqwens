@@ -208,8 +208,8 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
       <div className="w-full">
         {/* Header */}
         <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex-1 min-w-0">
               <button
                 onClick={handleBack}
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2 font-[BasisGrotesquePro]"
@@ -219,24 +219,33 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 </svg>
                 Back to Workflows
               </button>
-              <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-tight">
                 {instance.tax_case_name || instance.tax_case?.name || 'Unknown Client'} - {instance.template_name || instance.workflow_template?.name || 'Unknown Workflow'}
               </h3>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                <span>Status: <span className="font-medium">{instance.status_display || instance.status || 'Active'}</span></span>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-gray-500">Status:</span>
+                  <span className="font-medium">{instance.status_display || instance.status || 'Active'}</span>
+                </span>
                 {instance.started_at && (
-                  <span>Started: {new Date(instance.started_at).toLocaleDateString()}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-gray-500">Started:</span>
+                    <span>{new Date(instance.started_at).toLocaleDateString()}</span>
+                  </span>
                 )}
                 {instance.tax_case_email && (
-                  <span>Email: {instance.tax_case_email}</span>
+                  <span className="inline-flex items-center gap-1 break-all">
+                    <span className="text-gray-500">Email:</span>
+                    <span>{instance.tax_case_email}</span>
+                  </span>
                 )}
               </div>
             </div>
             {canDelete && (
-              <div className="ml-4">
+              <div className="flex-shrink-0 lg:ml-4">
                 <button
                   onClick={handleDeleteClick}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
+                  className="w-full lg:w-auto px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
                   style={{ borderRadius: '8px' }}
                 >
                   Delete
@@ -300,12 +309,12 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 return (
                   <div
                     key={log.id}
-                    className="border-l-4 border-[#3AD6F2] pl-4 py-3 bg-gray-50 rounded-r-lg"
+                    className="border-l-4 border-[#3AD6F2] pl-3 sm:pl-4 py-3 bg-gray-50 rounded-r-lg"
                     style={{ borderRadius: '0 8px 8px 0' }}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                           <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
                             {actionType}
                           </span>
@@ -315,14 +324,16 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-600 mb-1 font-[BasisGrotesquePro]">
-                          Performed by: <span className="font-medium">{performedByName}</span>
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-x-4 text-xs text-gray-600">
+                          <span className="font-[BasisGrotesquePro]">
+                            Performed by: <span className="font-medium">{performedByName}</span>
+                          </span>
+                          {log.created_at && (
+                            <span className="text-gray-500 font-[BasisGrotesquePro]">
+                              {new Date(log.created_at).toLocaleString()}
+                            </span>
+                          )}
                         </div>
-                        {log.created_at && (
-                          <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">
-                            {new Date(log.created_at).toLocaleString()}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -336,7 +347,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
         <div className="bg-white rounded-lg border border-[#E8F0FF] p-4">
           <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Timeline</h4>
           <div className="space-y-4">
-            {instance.stage_instances && instance.stage_instances.length > 0 ? (
+            {instance.stage_instances && instance.stage_instances.length > 0 && (
               instance.stage_instances.map((stageInstance, index) => {
                 const isCurrent = stageInstance.status === 'in_progress';
                 const isCompleted = stageInstance.status === 'completed';
@@ -345,73 +356,74 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 return (
                   <div
                     key={stageInstance.id}
-                    className={`border-l-4 pl-4 pb-4 ${isCurrent ? 'border-blue-500 bg-blue-50' :
+                    className={`border-l-4 pl-3 sm:pl-4 pb-4 ${isCurrent ? 'border-blue-500 bg-blue-50' :
                         isCompleted ? 'border-green-500' :
                           'border-gray-300'
                       }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xl">{getStatusIcon(stageInstance.status)}</span>
-                          <h5 className={`font-semibold ${getStatusColor(stageInstance.status)} font-[BasisGrotesquePro]`}>
-                            {stageInstance.stage?.name || `Stage ${index + 1}`}
-                          </h5>
-                          {isCurrent && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                              Current
-                            </span>
-                          )}
-                        </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xl flex-shrink-0">{getStatusIcon(stageInstance.status)}</span>
+                        <h5 className={`font-semibold text-sm sm:text-base ${getStatusColor(stageInstance.status)} font-[BasisGrotesquePro]`}>
+                          {stageInstance.stage?.name || `Stage ${index + 1}`}
+                        </h5>
+                        {isCurrent && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                            Current
+                          </span>
+                        )}
+                      </div>
 
+                      <div className="flex flex-col gap-1 mt-1">
                         {stageInstance.started_at && (
-                          <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">
+                          <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
                             Started: {new Date(stageInstance.started_at).toLocaleString()}
                           </p>
                         )}
                         {stageInstance.completed_at && (
-                          <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">
+                          <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
                             Completed: {new Date(stageInstance.completed_at).toLocaleString()}
                           </p>
                         )}
-
-                        {isCurrent && stageInstance.actions && (
-                          <div className="mt-4 p-3 bg-white rounded border border-[#E8F0FF]">
-                            <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">Actions</h6>
-                            <div className="space-y-2">
-                              {stageInstance.actions.map((action, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm">
-                                  {action.status === 'completed' ? (
-                                    <span className="text-green-600">✅</span>
-                                  ) : (
-                                    <span className="text-yellow-600">⏳</span>
-                                  )}
-                                  <span className={`font-[BasisGrotesquePro] ${action.status === 'completed' ? 'text-gray-700' : 'text-gray-500'
-                                    }`}>
-                                    {action.action_type_display || action.action_type} - {action.configuration?.title || action.configuration?.subject || 'Action'}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {isCurrent && instance.stage_instances[index + 1] && (
-                          <button
-                            onClick={() => handleAdvance(instance.stage_instances[index + 1].stage?.id)}
-                            disabled={advancing}
-                            className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors font-[BasisGrotesquePro] disabled:opacity-50"
-                            style={{ borderRadius: '8px' }}
-                          >
-                            {advancing ? 'Advancing...' : 'Advance to Next Stage'}
-                          </button>
-                        )}
                       </div>
+
+                      {isCurrent && stageInstance.actions && (
+                        <div className="mt-3 p-3 bg-white rounded border border-[#E8F0FF]">
+                          <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">Actions</h6>
+                          <div className="space-y-2">
+                            {stageInstance.actions.map((action, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                {action.status === 'completed' ? (
+                                  <span className="text-green-600">✅</span>
+                                ) : (
+                                  <span className="text-yellow-600">⏳</span>
+                                )}
+                                <span className={`font-[BasisGrotesquePro] ${action.status === 'completed' ? 'text-gray-700' : 'text-gray-500'
+                                  }`}>
+                                  {action.action_type_display || action.action_type} - {action.configuration?.title || action.configuration?.subject || 'Action'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {isCurrent && instance.stage_instances[index + 1] && (
+                        <button
+                          onClick={() => handleAdvance(instance.stage_instances[index + 1].stage?.id)}
+                          disabled={advancing}
+                          className="mt-3 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors font-[BasisGrotesquePro] disabled:opacity-50"
+                          style={{ borderRadius: '8px' }}
+                        >
+                          {advancing ? 'Advancing...' : 'Advance to Next Stage'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
               })
-            ) : (
+            )}
+            {(!instance.stage_instances || instance.stage_instances.length === 0) && (
               <div className="text-center py-8 text-gray-500">
                 No stages found
               </div>

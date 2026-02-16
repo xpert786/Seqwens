@@ -148,29 +148,6 @@ export default function MyDocumentsMain() {
         {activeTab === 'reviews' && <ReviewRequests />}
         {activeTab === 'archived' && <ArchivedDocuments />}
       </div>
-
-      {/* Persistent Mobile Footer (Fixed clipping) */}
-      <div
-        className="fixed-bottom bg-white border-top p-3 d-md-none"
-        style={{
-          zIndex: 1050,
-          boxShadow: "0 -4px 10px rgba(0,0,0,0.05)"
-        }}
-      >
-        <button
-          className="btn w-100 py-3 text-white fw-bold"
-          onClick={() => setShowUploadModal(true)} // Changed handleSave to setShowUploadModal
-          style={{
-            backgroundColor: "#F56D2D",
-            borderRadius: "12px",
-            fontSize: "16px",
-            border: "none"
-          }}
-        >
-          Upload New Document
-        </button>
-        <div style={{ height: "env(safe-area-inset-bottom)" }}></div>
-      </div>
     </div>
   );
 }

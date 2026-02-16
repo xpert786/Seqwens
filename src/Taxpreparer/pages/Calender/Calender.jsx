@@ -669,8 +669,9 @@ export default function CalendarPage() {
                 {selectedPeriod !== "Day" && selectedPeriod !== "Years" && (
                   <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
                     {dayNames.map(day => (
-                      <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0">
-                        {day}
+                      <div key={day} className="calendar-day-header-item p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0">
+                        <span className="day-header-full">{day.toUpperCase()}</span>
+                        <span className="day-header-short">{day[0].toUpperCase()}</span>
                       </div>
                     ))}
                   </div>
@@ -697,7 +698,7 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={index}
-                        className={`min-h-[120px] p-2 cursor-pointer transition-colors hover:bg-[#F5F5F5] ${selectedPeriod === "Monthly" && !isCurrentMonthInMonthly ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                        className={`calendar-cell min-h-[120px] p-2 cursor-pointer transition-colors hover:bg-[#F5F5F5] ${selectedPeriod === "Monthly" && !isCurrentMonthInMonthly ? 'bg-gray-50 text-gray-400' : 'bg-white'
                           } ${isToday ? 'bg-[#F5F5F5]' : ''} ${isSelected ? 'bg-orange-50 border-orange-200' : ''
                           } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index % 7 !== 6) || (selectedPeriod === "Years" && index % 4 !== 3) ? 'border-r border-[#E8F0FF]' : ''
                           } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index < (selectedPeriod === "Monthly" ? 35 : 0)) || (selectedPeriod === "Years" && index < 8) ? 'border-b border-[#E8F0FF]' : ''
@@ -710,29 +711,38 @@ export default function CalendarPage() {
                           }
                         }}
                       >
-                        <div className={`text-sm font-medium mb-1 ${isToday ? 'bg-blue-500 text-white rounded-full px-2 py-1 flex items-center justify-center' : ''
-                          }`}>
-                          {displayValue}
-                        </div>
-                        {dayEvents.map(event => (
-                          <div
-                            key={event.id}
-                            className="bg-orange-500 text-white p-1 rounded text-xs mb-1 shadow-sm cursor-pointer hover:bg-orange-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Show event details or launch meeting
-                              if (event.appointment?.meeting_link || event.appointment?.zoom_meeting_link) {
-                                handleLaunchMeeting(event.appointment);
-                              }
-                            }}
-                          >
-                            <div className="flex items-center gap-1">
-                              <div className="w-1 h-1 bg-white rounded-full"></div>
-                              <span className="truncate">{event.title}</span>
-                            </div>
-                            <div className="opacity-90" style={{ fontSize: '9px', lineHeight: '1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.time}</div>
+                        <div className="d-flex justify-content-between align-items-start mb-1">
+                          <div className={`calendar-day-number-wrapper text-sm font-medium ${isToday ? 'bg-blue-500 text-white rounded-full px-2 py-1 flex items-center justify-center' : ''
+                            }`}>
+                            {displayValue}
                           </div>
-                        ))}
+                          {dayEvents.length > 0 && (
+                            <span className="calendar-task-badge badge border rounded-pill" style={{ fontSize: '0.65rem', backgroundColor: '#3B4A66', color: '#FFFFFF' }}>
+                              {dayEvents.length}
+                            </span>
+                          )}
+                        </div>
+                        <div className="calendar-tasks-container d-flex flex-column gap-1 overflow-auto" style={{ flex: 1, maxHeight: '90px' }}>
+                          {dayEvents.map(event => (
+                            <div
+                              key={event.id}
+                              className="calendar-task-item bg-orange-500 text-white p-1 rounded text-xs mb-1 shadow-sm cursor-pointer hover:bg-orange-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Show event details or launch meeting
+                                if (event.appointment?.meeting_link || event.appointment?.zoom_meeting_link) {
+                                  handleLaunchMeeting(event.appointment);
+                                }
+                              }}
+                            >
+                              <div className="flex items-center gap-1">
+                                <div className="w-1 h-1 bg-white rounded-full"></div>
+                                <span className="truncate">{event.title}</span>
+                              </div>
+                              <div className="opacity-90 calendar-task-time" style={{ fontSize: '9px', lineHeight: '1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.time}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     );
                   })}

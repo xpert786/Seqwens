@@ -140,17 +140,17 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex: 99999 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      style={{ zIndex: 9999, padding: '24px' }}
     >
-      <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" style={{ borderRadius: '8px' }}>
+      <div className="bg-white max-w-2xl w-full max-h-[calc(100vh-48px)] overflow-y-auto" style={{ borderRadius: '12px', padding: '24px' }}>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-900 font-[BasisGrotesquePro]">
             Create Document Request
           </h3>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 ml-auto"
             disabled={loading}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -60,19 +60,24 @@ const WorkflowDashboard = ({
       {/* Workflow Header */}
       <div className="bg-white border border-[#E8F0FF] rounded-lg p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                {workflow.template_name || 'Workflow'}
-              </h3>
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                  workflow.status
-                )} font-[BasisGrotesquePro]`}
-              >
-                {workflow.status || 'Active'}
+          <div className="flex-1">
+            {/* Status and Last Updated in one row */}
+            <div className="flex flex-row items-center gap-2 mb-2 flex-wrap">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500 text-white">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wide font-[BasisGrotesquePro]">
+                  {workflow.status || 'Active'}
+                </span>
+              </div>
+              <span className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">
+                Last updated 2 days ago
               </span>
             </div>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+              {workflow.template_name || 'Workflow'}
+            </h3>
             {workflow.tax_case_name && (
               <p className="text-sm text-gray-600 mb-1 font-[BasisGrotesquePro]">
                 Tax Case: <span className="font-medium">{workflow.tax_case_name}</span>
