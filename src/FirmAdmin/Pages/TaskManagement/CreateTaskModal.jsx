@@ -288,7 +288,13 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
     const files = Array.from(e.target.files);
     const validFiles = files.filter(file => {
       const maxSize = 10 * 1024 * 1024; // 10MB
-      const allowedTypes = ['.pdf', '.xlsx', '.xls', '.docx', '.jpg', '.jpeg', '.png'];
+
+      // Dynamic allowed types based on task type
+      const isSignatureRequest = formData.task_type === 'signature_request';
+      const allowedTypes = isSignatureRequest
+        ? ['.pdf']
+        : ['.pdf', '.xlsx', '.xls', '.docx', '.jpg', '.jpeg', '.png'];
+
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
 
       if (file.size > maxSize) {
@@ -296,7 +302,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
         return false;
       }
       if (!allowedTypes.includes(fileExtension)) {
-        toast.error(`File ${file.name} has invalid type. Allowed: PDF, Excel, Word, Images`);
+        const allowedMsg = isSignatureRequest ? 'PDF only' : 'PDF, Excel, Word, Images';
+        toast.error(`File ${file.name} has invalid type. Allowed: ${allowedMsg}`);
         return false;
       }
       return true;
@@ -692,124 +699,126 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
               </div>
 
               {/* Client */}
-              <div className="mb-3">
-                <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Client(s) <span className="text-muted" style={{ fontWeight: 400 }}>(Optional)</span>
-                </label>
-                <div className="position-relative" ref={clientDropdownRef}>
-                  <div className="d-flex align-items-center gap-2">
-                    <button
-                      type="button"
-                      className={`form-select form-select-sm text-start ${errors.client_ids ? 'is-invalid' : ''}`}
-                      onClick={() => setShowClientDropdown(!showClientDropdown)}
-                      style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
-                    >
-                      {loadingClients ? 'Loading...' : (formData.client_ids.length > 0 ? `${formData.client_ids.length} Client(s) Selected` : 'Internal Only (No Client)')}
-                    </button>
-                    {formData.client_ids.length > 0 && (
+              {formData.task_type !== 'signature_request' && (
+                <div className="mb-3">
+                  <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
+                    Client(s) <span className="text-muted" style={{ fontWeight: 400 }}>(Optional)</span>
+                  </label>
+                  <div className="position-relative" ref={clientDropdownRef}>
+                    <div className="d-flex align-items-center gap-2">
                       <button
                         type="button"
-                        className="btn  btn-light border"
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, client_ids: [] }));
-                          setShowClientDropdown(false);
-                        }}
-                        title="Clear Clients"
+                        className={`form-select form-select-sm text-start ${errors.client_ids ? 'is-invalid' : ''}`}
+                        onClick={() => setShowClientDropdown(!showClientDropdown)}
+                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
                       >
-                        <FaTimes size={10} color="#EF4444" />
+                        {loadingClients ? 'Loading...' : (formData.client_ids.length > 0 ? `${formData.client_ids.length} Client(s) Selected` : 'Internal Only (No Client)')}
                       </button>
+                      {formData.client_ids.length > 0 && (
+                        <button
+                          type="button"
+                          className="btn  btn-light border"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, client_ids: [] }));
+                            setShowClientDropdown(false);
+                          }}
+                          title="Clear Clients"
+                        >
+                          <FaTimes size={10} color="#EF4444" />
+                        </button>
+                      )}
+                    </div>
+                    {showClientDropdown && (
+                      <div
+                        className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
+                        style={{ maxHeight: '250px', overflowY: 'auto', zIndex: 1000 }}
+                      >
+                        <div
+                          className="p-2 cursor-pointer border-bottom bg-slate-50 fw-medium"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, client_ids: [] }));
+                            setShowClientDropdown(false);
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                          style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
+                        >
+                          Internal (No Client Assigned)
+                        </div>
+                        {clients.map((client) => {
+                          const isSelected = formData.client_ids.includes(client.id.toString());
+                          return (
+                            <div
+                              key={client.id}
+                              className="p-2 cursor-pointer d-flex align-items-center gap-2"
+                              onClick={() => {
+                                const newClientIds = isSelected
+                                  ? formData.client_ids.filter(id => id !== client.id.toString())
+                                  : [...formData.client_ids, client.id.toString()];
+                                setFormData(prev => ({ ...prev, client_ids: newClientIds }));
+                                if (errors.client_ids) {
+                                  setErrors(prev => {
+                                    const newErrors = { ...prev };
+                                    delete newErrors.client_ids;
+                                    return newErrors;
+                                  });
+                                }
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                readOnly
+                                style={{ cursor: 'pointer' }}
+                              />
+                              {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {errors.client_ids && <div className="invalid-feedback d-block">{errors.client_ids}</div>}
+                    {formData.client_ids.length > 0 && (
+                      <div className="d-flex flex-wrap gap-2 mt-2">
+                        {formData.client_ids.map(id => {
+                          const client = clients.find(c => c.id.toString() === id);
+                          if (!client) return null;
+                          const displayName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email;
+                          return (
+                            <span
+                              key={id}
+                              className="badge d-flex align-items-center gap-2"
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                color: '#3B4A66',
+                                border: '1px solid #E8F0FF',
+                                fontSize: '11px',
+                                padding: '4px 10px',
+                                fontFamily: 'BasisGrotesquePro'
+                              }}
+                            >
+                              {displayName}
+                              <FaTimes
+                                size={8}
+                                className="cursor-pointer"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    client_ids: prev.client_ids.filter(cid => cid !== id)
+                                  }));
+                                }}
+                              />
+                            </span>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                  {showClientDropdown && (
-                    <div
-                      className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
-                      style={{ maxHeight: '250px', overflowY: 'auto', zIndex: 1000 }}
-                    >
-                      <div
-                        className="p-2 cursor-pointer border-bottom bg-slate-50 fw-medium"
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, client_ids: [] }));
-                          setShowClientDropdown(false);
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
-                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
-                      >
-                        Internal (No Client Assigned)
-                      </div>
-                      {clients.map((client) => {
-                        const isSelected = formData.client_ids.includes(client.id.toString());
-                        return (
-                          <div
-                            key={client.id}
-                            className="p-2 cursor-pointer d-flex align-items-center gap-2"
-                            onClick={() => {
-                              const newClientIds = isSelected
-                                ? formData.client_ids.filter(id => id !== client.id.toString())
-                                : [...formData.client_ids, client.id.toString()];
-                              setFormData(prev => ({ ...prev, client_ids: newClientIds }));
-                              if (errors.client_ids) {
-                                setErrors(prev => {
-                                  const newErrors = { ...prev };
-                                  delete newErrors.client_ids;
-                                  return newErrors;
-                                });
-                              }
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              readOnly
-                              style={{ cursor: 'pointer' }}
-                            />
-                            {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {errors.client_ids && <div className="invalid-feedback d-block">{errors.client_ids}</div>}
-                  {formData.client_ids.length > 0 && (
-                    <div className="d-flex flex-wrap gap-2 mt-2">
-                      {formData.client_ids.map(id => {
-                        const client = clients.find(c => c.id.toString() === id);
-                        if (!client) return null;
-                        const displayName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email;
-                        return (
-                          <span
-                            key={id}
-                            className="badge d-flex align-items-center gap-2"
-                            style={{
-                              backgroundColor: '#FFFFFF',
-                              color: '#3B4A66',
-                              border: '1px solid #E8F0FF',
-                              fontSize: '11px',
-                              padding: '4px 10px',
-                              fontFamily: 'BasisGrotesquePro'
-                            }}
-                          >
-                            {displayName}
-                            <FaTimes
-                              size={8}
-                              className="cursor-pointer"
-                              onClick={() => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  client_ids: prev.client_ids.filter(cid => cid !== id)
-                                }));
-                              }}
-                            />
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
               {/* Folder and Due Date - Same Row */}
               <div className="row g-2 mb-3">
@@ -894,7 +903,9 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                   <FaFileUpload size={20} style={{ color: '#3AD6F2', marginBottom: '8px' }} />
                   <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#3B4A66' }}>Click to upload files</div>
                   <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '11px', color: '#7B8AB2', marginTop: '4px' }}>
-                    PDF, XLSX, XLS, DOCX, JPG, JPEG, PNG (Max 10MB each)
+                    {formData.task_type === 'signature_request'
+                      ? 'PDF (Max 10MB each)'
+                      : 'PDF, XLSX, XLS, DOCX, JPG, JPEG, PNG (Max 10MB each)'}
                   </div>
                   <input
                     id="file-input"
@@ -902,7 +913,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                     className="d-none"
                     onChange={handleFileChange}
                     multiple
-                    accept=".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"
+                    accept={formData.task_type === 'signature_request' ? ".pdf" : ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"}
                   />
                 </div>
                 {errors.files && <div className="invalid-feedback d-block">{errors.files}</div>}

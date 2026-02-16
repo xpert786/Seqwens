@@ -599,37 +599,39 @@ export default function BillingManagement() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-start gap-3 justify-end ml-auto">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date:</span>
+                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Issue Date:</span>
                   <DatePicker
                     value={filters.issue_date}
                     onChange={(e) => setFilters(prev => ({ ...prev, issue_date: e.target.value }))}
-                    placeholder="Filter by Issue Date"
-                    className="w-40 !border border-[#E8F0FF] rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Select Date"
+                    className="w-[150px] !border border-[#E8F0FF] rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date:</span>
-                  <DatePicker
-                    value={filters.due_date}
-                    onChange={(e) => setFilters(prev => ({ ...prev, due_date: e.target.value }))}
-                    placeholder="Filter by Due Date"
-                    className="w-40 !border border-[#E8F0FF] rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Due Date:</span>
+                    <DatePicker
+                      value={filters.due_date}
+                      onChange={(e) => setFilters(prev => ({ ...prev, due_date: e.target.value }))}
+                      placeholder="Select Date"
+                      className="w-[150px] !border border-[#E8F0FF] rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  {invoices.length > itemsPerPage && (
+                    <div className="text-[10px] text-gray-500 pr-1">
+                      Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
+                    </div>
+                  )}
                 </div>
                 {(filters.status || filters.client_id || filters.issue_date || filters.due_date) && (
                   <button
                     onClick={() => setFilters({ status: "", client_id: "", issue_date: "", due_date: "" })}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors py-1.5"
                   >
                     Reset Filters
                   </button>
-                )}
-                {invoices.length > itemsPerPage && (
-                  <div className="text-sm border-l pl-3 ml-1" style={{ color: '#6B7280', borderColor: '#E5E7EB' }}>
-                    Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
-                  </div>
                 )}
               </div>
             </div>

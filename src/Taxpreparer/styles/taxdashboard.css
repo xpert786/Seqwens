@@ -588,24 +588,26 @@ p.card-contented {
     gap: 8px !important;
   }
 
-  /* Full-width stat cards on mobile */
   .carded.dashboard-carded {
     padding: 16px;
-    min-height: 120px;
+    min-height: 100px;
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     text-align: left;
     justify-content: space-between;
     margin-bottom: 8px;
     width: 100%;
+    gap: 8px;
   }
 
   .carded.dashboard-carded .d-flex {
     flex-direction: row;
-    align-items: center;
-    gap: 8px;
+    align-items: center !important;
+    gap: 6px;
     width: auto;
+    flex-shrink: 0;
   }
 
   .dashboarded-carded-valued {
@@ -664,6 +666,11 @@ p.card-contented {
   }
 
   .quick-action-card svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .dashboard-stat-icon {
     width: 18px !important;
     height: 18px !important;
   }

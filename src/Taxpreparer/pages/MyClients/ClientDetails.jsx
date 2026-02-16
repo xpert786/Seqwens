@@ -1336,7 +1336,7 @@ export default function ClientDetails() {
                 <div className="d-flex gap-2">
                   {!isEditMode ? (
                     <button
-                      className="rounded-md text-sm d-flex align-items-center gap-2"
+                      onClick={() => setIsEditMode(true)}
                       style={{
                         fontSize: "15px",
                         borderRadius: "6px",
@@ -1346,13 +1346,16 @@ export default function ClientDetails() {
                         padding: "5px 12px",
                         opacity: 1,
                         cursor: "pointer",
-                        whiteSpace: "nowrap"
+                        whiteSpace: "nowrap",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px"
                       }}
-                      onClick={() => setIsEditMode(true)}
                     >
                       <WhiteEdit />
-                      Edit Details
+                      <span>Edit Details</span>
                     </button>
+
                   ) : (
                     <>
                       <button
@@ -1391,13 +1394,13 @@ export default function ClientDetails() {
             </div>
           </div>
 
-          <div className="mt-2 ml-20">
-            <div className="flex items-center gap-20">
+          <div className="mt-4 md:mt-2 ml-0 md:ml-20">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-20">
               <div className="flex flex-col">
                 <span className="text-gray-400 text-xs mb-1">Email</span>
                 <div className="flex items-center gap-2">
                   <MailMiniIcon />
-                  <span className="text-gray-700 text-sm font-medium">{client.email}</span>
+                  <span className="text-gray-700 text-sm font-medium break-all">{client.email}</span>
                 </div>
               </div>
               <div className="flex flex-col">
@@ -1420,12 +1423,12 @@ export default function ClientDetails() {
         </div>
       </div>
       <div
-        className="inline-block bg-white rounded-xl mt-10 p-4"
+        className="w-full bg-white rounded-xl mt-6 md:mt-10 p-4 overflow-x-auto"
         style={{
           border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
         }}
       >
-        <div className="flex gap-3">
+        <div className="flex gap-3 min-w-max">
           {/* Info (active-like) */}
           <button
             className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
@@ -2126,10 +2129,11 @@ export default function ClientDetails() {
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           zIndex: 1050,
-          padding: '1rem'
+          padding: '24px'
         }}>
           <div style={{
             width: '100%',
+            margin: '0 auto',
             maxWidth: '500px',
             background: 'white',
             borderRadius: '16px',

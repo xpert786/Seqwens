@@ -72,6 +72,46 @@ const checkboxStyle = `
     font-size: 11px;
     font-weight: 500;
   }
+
+  /* Calendar Mobile Styles */
+  @media (max-width: 767px) {
+    .calendar-header-wrapper {
+        padding: 12px !important;
+    }
+    .calendar-header-title {
+        font-size: 1.1rem !important;
+    }
+    .calendar-header-year {
+        font-size: 1.1rem !important;
+    }
+    .calendar-day-header-item {
+        font-size: 0.65rem !important;
+        padding: 8px 2px !important;
+    }
+    .calendar-cell {
+        min-height: 80px !important;
+        padding: 4px !important;
+    }
+    .calendar-day-number-wrapper {
+        width: 22px !important;
+        height: 22px !important;
+        font-size: 0.75rem !important;
+    }
+    .calendar-task-item {
+        font-size: 0.6rem !important;
+        padding: 1px 3px !important;
+        margin-bottom: 1px !important;
+    }
+    .calendar-task-badge {
+        font-size: 0.55rem !important;
+        padding: 0 4px !important;
+        line-height: 1.4 !important;
+    }
+    .calendar-tasks-container {
+        max-height: 50px !important;
+        gap: 1.5px !important;
+    }
+  }
 `;
 
 const CalendarView = ({ tasksList, onTaskClick }) => {
@@ -136,12 +176,12 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden font-sans">
       {/* Calendar Header */}
-      <div className="d-flex justify-content-between align-items-center p-4 border-bottom">
+      <div className="calendar-header-wrapper d-flex justify-content-between align-items-center p-4 border-bottom">
         <div className="d-flex align-items-center gap-2">
-          <h3 className="m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
+          <h3 className="calendar-header-title m-0 fw-bold text-dark" style={{ fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
             {monthNames[currentDate.getMonth()]}
           </h3>
-          <span className="text-secondary" style={{ fontSize: '1.5rem', fontWeight: '300' }}>
+          <span className="calendar-header-year text-secondary" style={{ fontSize: '1.5rem', fontWeight: '300' }}>
             {currentDate.getFullYear()}
           </span>
         </div>
@@ -174,23 +214,25 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
+          gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
           borderBottom: '1px solid #E5E7EB',
           backgroundColor: '#F9FAFB'
         }}
       >
         {dayNames.map(d => (
-          <div key={d} className="py-3 text-center text-secondary small fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
-            {d.toUpperCase()}
+          <div key={d} className="calendar-day-header-item py-3 text-center text-secondary small fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+            <span className="d-none d-md-inline">{d.toUpperCase()}</span>
+            <span className="d-inline d-md-none">{d[0].toUpperCase()}</span>
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
       <div
+        className="calendar-grid-body"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
+          gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
           backgroundColor: '#E5E7EB', // Grid lines color
           gap: '1px', // Create grid lines
           borderBottom: '1px solid #E5E7EB'
@@ -200,26 +242,25 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
           const key = `${d.date.getFullYear()}-${d.date.getMonth()}-${d.date.getDate()}`;
           const dayTasks = tasksByDate[key] || [];
           const isToday = d.date.toDateString() === new Date().toDateString();
-          const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
 
           return (
             <div
               key={i}
-              className={`bg-white p-2 d-flex flex-column transition-all`}
+              className={`calendar-cell bg-white p-2 d-flex flex-column transition-all`}
               style={{
                 minHeight: '130px',
-                backgroundColor: !d.current ? '#F9FAFB' : '#FFFFFF', // Lighter background for non-current days
+                backgroundColor: !d.current ? '#F9FAFB' : '#FFFFFF',
                 opacity: !d.current ? 0.7 : 1,
               }}
             >
-              <div className="d-flex justify-content-between align-items-start mb-2">
+              <div className="d-flex justify-content-between align-items-start mb-1 mb-md-2">
                 <div
-                  className={`d-flex align-items-center justify-content-center fw-semibold ${isToday ? 'shadow-sm' : ''}`}
+                  className={`calendar-day-number-wrapper d-flex align-items-center justify-content-center fw-semibold ${isToday ? 'shadow-sm' : ''}`}
                   style={{
                     width: '28px',
                     height: '28px',
                     borderRadius: '50%',
-                    backgroundColor: isToday ? '#00C0C6' : 'transparent', // Using brand color
+                    backgroundColor: isToday ? '#00C0C6' : 'transparent',
                     color: isToday ? '#FFFFFF' : (d.current ? '#1F2937' : '#9CA3AF'),
                     fontSize: '0.85rem'
                   }}
@@ -227,23 +268,23 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
                   {d.day}
                 </div>
                 {dayTasks.length > 0 && (
-                  <span className="badge border rounded-pill" style={{ fontSize: '0.65rem', backgroundColor: '#3B4A66', color: '#FFFFFF' }}>
+                  <span className="calendar-task-badge badge border rounded-pill" style={{ fontSize: '0.65rem', backgroundColor: '#3B4A66', color: '#FFFFFF' }}>
                     {dayTasks.length}
                   </span>
                 )}
               </div>
 
-              <div className="d-flex flex-column gap-1 overflow-auto custom-scrollbar" style={{ flex: 1, maxHeight: '90px' }}>
+              <div className="calendar-tasks-container d-flex flex-column gap-1 overflow-auto custom-scrollbar" style={{ flex: 1, maxHeight: '90px' }}>
                 {dayTasks.map(t => {
                   const style = getPriorityInfo(t.priority);
                   return (
                     <div
                       key={t.id}
-                      className="px-2 py-1 rounded"
+                      className="calendar-task-item px-2 py-1 rounded"
                       style={{
                         backgroundColor: style.bg,
                         color: style.text,
-                        borderLeft: `3px solid ${style.text}`, // Cleaner border indicator
+                        borderLeft: `3px solid ${style.text}`,
                         fontSize: '0.75rem',
                         fontWeight: '500',
                         cursor: 'pointer',
@@ -1805,7 +1846,7 @@ export default function TasksPage() {
           {/* Customize button on the right */}
           <button
             ref={buttonRef}
-            className="customize-btn d-inline-flex align-items-center gap-2"
+            className="customize-btn d-none d-md-inline-flex align-items-center gap-2"
             style={{
               padding: "8px 14px",
               background: "#fff",
@@ -1920,6 +1961,41 @@ export default function TasksPage() {
               <button className="btn " onClick={fetchReceivedTasks} style={{ backgroundColor: "#DC2626", color: "#fff", border: "none" }}>
                 Retry
               </button>
+            </div>
+          )}
+
+          {/* Kanban Board Toggle Buttons */}
+          {!tasksLoading && !tasksError && (
+            <div className="kanban-controls d-flex flex-wrap align-items-center gap-2 mb-4 p-2 rounded-3" style={{ background: '#fff', border: '1px solid #E8F0FF' }}>
+              <span className="text-muted small fw-semibold text-uppercase ms-2 me-1" style={{ letterSpacing: '0.05em', fontSize: '11px' }}>
+                Quick Filter:
+              </span>
+              <div className="d-flex flex-wrap gap-2">
+                {defaultOrder.map(k => {
+                  const s = stats.find(item => item.key === k);
+                  return (
+                    <button
+                      key={k}
+                      onClick={() => setCheckboxes(prev => ({ ...prev, [k]: !prev[k] }))}
+                      className="btn d-flex align-items-center gap-2 px-3 py-1.5"
+                      style={{
+                        borderRadius: '10px',
+                        backgroundColor: checkboxes[k] ? `${s?.color}15` : '#fff',
+                        color: checkboxes[k] ? s?.color : '#6B7280',
+                        border: `1.5px solid ${checkboxes[k] ? s?.color : '#E5E7EB'}`,
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        boxShadow: checkboxes[k] ? `0 2px 4px ${s?.color}10` : 'none',
+                        transition: 'all 0.2s',
+                        minWidth: 'max-content'
+                      }}
+                    >
+                      <span className="d-flex" style={{ opacity: checkboxes[k] ? 1 : 0.6 }}>{iconFor(k)}</span>
+                      {titleFor(k)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 

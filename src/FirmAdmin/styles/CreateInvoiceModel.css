@@ -12,59 +12,63 @@
 
 @media (max-width: 767px) {
 
-    /* Remove desktop offsets */
-    .invoice-modal-mobile {
-      margin-left: 0 !important;
-      margin-top: 0 !important;
-      padding: 12px !important;
-      align-items: flex-start;
-    }
-  
-    /* Full screen modal feel */
-    .invoice-modal-box {
-      max-width: 100% !important;
-      max-height: 100vh !important;
-      border-radius: 12px;
-    }
-  
-    /* Reduce header padding */
-    .invoice-modal-box > div:first-child {
-      padding: 16px !important;
-    }
-  
-    /* Content padding */
-    .invoice-modal-box .p-6 {
-      padding: 16px !important;
-    }
-  
-    /* Stack invoice item grid */
-    .invoice-modal-box .grid-cols-12 {
-      grid-template-columns: 1fr !important;
-    }
-  
-    /* Inputs full width */
-    .invoice-modal-box input,
-    .invoice-modal-box select {
-      font-size: 14px;
-    }
-  
-    /* Service dropdown should not overflow */
-    .invoice-modal-box .absolute.z-10 {
-      max-height: 180px;
-    }
-  
-    /* Footer buttons full width */
-    .invoice-modal-footer {
-      flex-direction: column;
-    }
-  
-    .invoice-modal-footer button {
-      width: 100%;
-    }
-  
-    /* Total amount spacing */
-    .invoice-modal-box .text-xl {
-      font-size: 18px;
-    }
+  /* Remove desktop offsets */
+  .invoice-modal-mobile {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    padding: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
-  
+
+  /* Full screen modal feel with equal gaps */
+  .invoice-modal-box {
+    max-width: 100% !important;
+    max-height: 90vh !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 12px;
+    overflow-y: auto;
+  }
+
+  /* Reduce header padding */
+  .invoice-modal-box>div:first-child {
+    padding: 16px !important;
+  }
+
+  /* Content padding */
+  .invoice-modal-box .p-6 {
+    padding: 16px !important;
+  }
+
+  /* Stack invoice item grid */
+  .invoice-modal-box .grid-cols-12 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Inputs full width */
+  .invoice-modal-box input,
+  .invoice-modal-box select {
+    font-size: 14px;
+  }
+
+  /* Service dropdown should not overflow */
+  .invoice-modal-box .absolute.z-10 {
+    max-height: 180px;
+  }
+
+  /* Footer buttons full width */
+  .invoice-modal-footer {
+    flex-direction: column;
+  }
+
+  .invoice-modal-footer button {
+    width: 100%;
+  }
+
+  /* Total amount spacing */
+  .invoice-modal-box .text-xl {
+    font-size: 18px;
+  }
+}

@@ -352,7 +352,7 @@ export default function Topbar({
       const { isImpersonating: impersonating } = getImpersonationStatus();
       setIsImpersonating(impersonating);
     };
-    
+
     checkStatus();
     const interval = setInterval(checkStatus, 3000);
 

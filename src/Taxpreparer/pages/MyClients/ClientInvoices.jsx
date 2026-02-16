@@ -9,7 +9,7 @@ import TaxPreparerCreateInvoiceModal from "../Billing/TaxPreparerCreateInvoiceMo
 export default function ClientInvoices() {
   const { clientId } = useParams();
   const navigate = useNavigate();
-  
+
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'paid', 'pending', 'overdue', 'outstanding'
   const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState({
@@ -30,14 +30,14 @@ export default function ClientInvoices() {
     has_next: false,
     has_previous: false
   });
-  
+
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortBy, setSortBy] = useState("-issue_date");
   const [statusFilter, setStatusFilter] = useState(""); // Empty means all
-  
+
   // Invoice detail modal state
   const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
@@ -93,10 +93,10 @@ export default function ClientInvoices() {
 
       if (response.success && response.data) {
         let invoicesList = response.data.invoices || [];
-        
+
         // Filter for outstanding if needed (pending, overdue, partial)
         if (activeTab === 'outstanding' && !statusFilter) {
-          invoicesList = invoicesList.filter(inv => 
+          invoicesList = invoicesList.filter(inv =>
             inv.status === 'pending' || inv.status === 'overdue' || inv.status === 'partial'
           );
         }
@@ -263,9 +263,9 @@ export default function ClientInvoices() {
 
   return (
     <div className="mt-6">
-      <div className="bg-white rounded-xl p-6">
+      <div className="bg-white rounded-xl p-3 p-md-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h4 className="text-lg font-semibold" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
               {clientInfo?.name ? `${clientInfo.name}'s Invoices` : 'Client Invoices'}
@@ -274,7 +274,7 @@ export default function ClientInvoices() {
           </div>
           <button
             onClick={() => setShowCreateInvoiceModal(true)}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
+            className="w-full md:w-auto px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center justify-center gap-2"
             style={{ backgroundColor: '#F56D2D' }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -286,61 +286,54 @@ export default function ClientInvoices() {
 
         {/* Summary Cards */}
         {summary && (
-          <div className="row g-3 mb-4">
-            <div className="col-md-3 col-sm-6">
-              <div className="bg-light rounded p-3">
-                <div className="text-muted small mb-1">Total Invoices</div>
-                <div className="fw-semibold" style={{ fontSize: "20px", color: "#3B4A66" }}>
+          <div className="row g-2 g-md-3 mb-4">
+            <div className="col-6 col-md-3">
+              <div className="bg-light rounded p-2 p-md-3 h-100">
+                <div className="text-muted small mb-1" style={{ fontSize: '11px' }}>Total Invoices</div>
+                <div className="fw-semibold" style={{ fontSize: "16px", color: "#3B4A66" }}>
                   {summary.total_invoices || 0}
                 </div>
               </div>
             </div>
-            <div className="col-md-3 col-sm-6">
-              <div className="bg-light rounded p-3">
-                <div className="text-muted small mb-1">Paid Invoices</div>
-                <div className="fw-semibold" style={{ fontSize: "20px", color: "#22C55E" }}>
+            <div className="col-6 col-md-3">
+              <div className="bg-light rounded p-2 p-md-3 h-100">
+                <div className="text-muted small mb-1" style={{ fontSize: '11px' }}>Paid Invoices</div>
+                <div className="fw-semibold" style={{ fontSize: "16px", color: "#22C55E" }}>
                   {summary.paid_invoices_count || 0}
                 </div>
               </div>
             </div>
-            <div className="col-md-3 col-sm-6">
-              <div className="bg-light rounded p-3">
-                <div className="text-muted small mb-1">Total Paid</div>
-                <div className="fw-semibold" style={{ fontSize: "20px", color: "#22C55E" }}>
+            <div className="col-6 col-md-3">
+              <div className="bg-light rounded p-2 p-md-3 h-100">
+                <div className="text-muted small mb-1" style={{ fontSize: '11px' }}>Total Paid</div>
+                <div className="fw-semibold" style={{ fontSize: "16px", color: "#22C55E" }}>
                   {formatCurrency(summary.paid_total)}
                 </div>
               </div>
             </div>
-            <div className="col-md-3 col-sm-6">
-              <div className="bg-light rounded p-3">
-                <div className="text-muted small mb-1">Outstanding</div>
-                <div className="fw-semibold" style={{ fontSize: "20px", color: "#EF4444" }}>
+            <div className="col-6 col-md-3">
+              <div className="bg-light rounded p-2 p-md-3 h-100">
+                <div className="text-muted small mb-1" style={{ fontSize: '11px' }}>Outstanding</div>
+                <div className="fw-semibold" style={{ fontSize: "16px", color: "#EF4444" }}>
                   {formatCurrency(summary.outstanding_total)}
                 </div>
               </div>
             </div>
-            {summary.overdue_total > 0 && (
-              <div className="col-md-3 col-sm-6">
-                <div className="bg-light rounded p-3" style={{ border: "2px solid #EF4444" }}>
-                  <div className="text-muted small mb-1">Overdue</div>
-                  <div className="fw-semibold" style={{ fontSize: "20px", color: "#EF4444" }}>
-                    {formatCurrency(summary.overdue_total)}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="d-inline-block mb-4" style={{
+        {/* Tabs - made scrollable on mobile */}
+        <div className="mb-4 overflow-x-auto" style={{
           padding: "6px 10px",
           border: "1px solid #E8F0FF",
           backgroundColor: "#FFFFFF",
           borderRadius: "15px",
           fontFamily: "BasisGrotesquePro",
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none'
         }}>
-          <ul className="d-flex mb-0 flex-wrap" style={{ listStyle: "none", padding: 0, margin: 0, gap: "10px" }}>
+          <ul className="d-flex mb-0" style={{ listStyle: "none", padding: 0, margin: 0, gap: "5px", minWidth: 'max-content' }}>
             <li>
               <button
                 onClick={() => handleTabChange('all')}
@@ -552,8 +545,8 @@ export default function ClientInvoices() {
                     </thead>
                     <tbody>
                       {invoices.map((invoice) => (
-                        <tr 
-                          key={invoice.id} 
+                        <tr
+                          key={invoice.id}
                           style={{ cursor: "pointer" }}
                           className="hover:bg-[#F0FDFF] transition-colors"
                           onClick={() => handleInvoiceClick(invoice.id)}
@@ -645,8 +638,8 @@ export default function ClientInvoices() {
                 </div>
                 <p className="text-muted mb-2">No invoices found</p>
                 {(searchQuery || startDate || endDate || statusFilter) && (
-                  <button 
-                    className="btn  btn-outline-primary mt-2" 
+                  <button
+                    className="btn  btn-outline-primary mt-2"
                     onClick={() => {
                       setSearchQuery("");
                       setStartDate("");
@@ -666,31 +659,31 @@ export default function ClientInvoices() {
           </>
         )}
 
-      {/* Invoice Detail Modal */}
-      {showInvoiceDetailModal && selectedInvoiceId && (
-        <TaxPreparerInvoiceDetailsModal
-          isOpen={showInvoiceDetailModal}
-          onClose={() => {
-            setShowInvoiceDetailModal(false);
-            setSelectedInvoiceId(null);
-          }}
-          invoiceId={selectedInvoiceId}
-          clientId={clientId}
-        />
-      )}
+        {/* Invoice Detail Modal */}
+        {showInvoiceDetailModal && selectedInvoiceId && (
+          <TaxPreparerInvoiceDetailsModal
+            isOpen={showInvoiceDetailModal}
+            onClose={() => {
+              setShowInvoiceDetailModal(false);
+              setSelectedInvoiceId(null);
+            }}
+            invoiceId={selectedInvoiceId}
+            clientId={clientId}
+          />
+        )}
 
-      {/* Create Invoice Modal */}
-      {showCreateInvoiceModal && (
-        <TaxPreparerCreateInvoiceModal
-          onClose={() => setShowCreateInvoiceModal(false)}
-          onInvoiceCreated={() => {
-            setShowCreateInvoiceModal(false);
-            // Refresh invoices list
-            fetchInvoices();
-          }}
-          preSelectedClient={clientInfo}
-        />
-      )}
+        {/* Create Invoice Modal */}
+        {showCreateInvoiceModal && (
+          <TaxPreparerCreateInvoiceModal
+            onClose={() => setShowCreateInvoiceModal(false)}
+            onInvoiceCreated={() => {
+              setShowCreateInvoiceModal(false);
+              // Refresh invoices list
+              fetchInvoices();
+            }}
+            preSelectedClient={clientInfo}
+          />
+        )}
       </div>
     </div>
   );

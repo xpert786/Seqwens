@@ -185,34 +185,35 @@ export default function InvoicesPage() {
   return (
     <div className="mt-6">
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
         {summaryCards.map((s, idx) => (
           <div
             key={idx}
-            className="bg-white rounded-xl p-4 h-28"
+            className="bg-white rounded-xl p-2 md:p-4 h-24 md:h-28"
             style={{
               border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
 
             }}
           >
-            <div className="h-full flex flex-col justify-between">
-              <div className="flex items-start justify-between">
+            <div className="h-full flex flex-col justify-between overflow-hidden">
+              <div className="flex items-start justify-between gap-1">
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: "var(--Palette2-Dark-blue-100, #E8F0FF)" }}
                 >
-                  <div className="text-lg">{s.icon}</div>
+                  <div className="text-sm md:text-lg">{s.icon}</div>
                 </div>
 
                 <div
-                  className="text-lg font-semibold"
+                  className="text-xs md:text-lg font-bold truncate"
                   style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}
+                  title={s.value}
                 >
                   {s.value}
                 </div>
               </div>
 
-              <div className="mt-4 text-sm" style={{ color: "#6B7280" }}>
+              <div className="mt-1 md:mt-4 text-[10px] md:text-sm font-medium truncate" style={{ color: "#6B7280" }} title={s.label}>
                 {s.label}
               </div>
             </div>
@@ -221,8 +222,8 @@ export default function InvoicesPage() {
       </div>
 
       {/* Search / Filter */}
-      <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-        <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
+      <div className="d-flex align-items-center gap-2 mb-3 mt-3 flex-wrap">
+        <div className="position-relative" style={{ width: '100%', maxWidth: '300px', flexShrink: 0 }}>
           <input
             type="text"
             className="form-control rounded"
@@ -257,31 +258,6 @@ export default function InvoicesPage() {
           >
             <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </div>
-
-        <div className="position-relative filter-dropdown-container" style={{ display: 'flex', alignItems: 'center' }}>
-          <button
-            className="btn btn-filter d-flex align-items-center justify-content-center rounded px-3"
-            style={{
-              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-              background: "#fff",
-              height: "38px",
-              paddingLeft: "12px",
-              paddingRight: "12px",
-              paddingTop: "10px",
-              paddingBottom: "8px",
-              fontSize: "14px",
-              lineHeight: "22px",
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              marginTop: "-9px",
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <FiltIcon className="me-2 text-muted" />
-            <span>Filter</span>
-          </button>
         </div>
       </div>
       {/* Bottom content switches by query param: ?view=schedule */}
@@ -414,7 +390,7 @@ export default function InvoicesPage() {
                 {filteredInvoices.map((invoice) => (
                   <div
                     key={invoice.id}
-                    className={"rounded-xl p-4 border flex items-center justify-between"}
+                    className="rounded-xl p-4 border flex flex-col md:flex-row md:items-center justify-between gap-3"
                     style={{
                       background: "#FFFFFF",
                       borderColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
@@ -436,23 +412,23 @@ export default function InvoicesPage() {
                       <div className="text-xs text-gray-500 mt-1">
                         Paid {formatDate(invoice.paid_date)}
                         {invoice.payment_method && (
-                          <span className="hidden md:inline"> • Method: {invoice.payment_method}</span>
+                          <span> • Method: {invoice.payment_method}</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
+                    <div className="flex flex-row md:flex-row items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-3 md:pt-0 mt-3 md:mt-0">
+                      <div className="text-left md:text-right">
                         <div className="text-xs text-gray-500">Paid Invoice:</div>
                         <div className="text-orange-500 font-semibold text-lg">
                           {formatCurrency(invoice.amount)}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-0 bg-transparent" title="View">
+                        <button className="p-0 bg-transparent border-0" title="View">
                           <EyeSquareIcon />
                         </button>
-                        <button className="p-0 bg-transparent" title="Download">
+                        <button className="p-0 bg-transparent border-0" title="Download">
                           <DownloadIcon />
                         </button>
                       </div>

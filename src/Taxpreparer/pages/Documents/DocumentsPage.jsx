@@ -1065,7 +1065,7 @@ export default function DocumentsPage() {
                           {fileManagerFolders.map((folder) => (
                             <div
                               key={folder.id}
-                              className={fileManagerView === "grid" ? "col-md-3 col-sm-4 col-6" : "mb-2"}
+                              className={fileManagerView === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-3" : "mb-2"}
                               onClick={() => setFileManagerSelectedFolderId(folder.id)}
                               style={{ cursor: "pointer" }}
                             >
@@ -1140,7 +1140,7 @@ export default function DocumentsPage() {
                                     <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
                                       <div className="d-flex align-items-center gap-2">
                                         <FileIcon />
-                                        <span>{meta.name}</span>
+                                        <span className="d-none d-md-inline-block">{meta.name}</span>
                                       </div>
                                     </td>
                                     <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>

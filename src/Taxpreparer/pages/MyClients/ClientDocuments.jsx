@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaSearch, FaFilter, FaFolder, FaDownload, FaEdit, FaTrash, FaEllipsisV, FaPlus, FaFileUpload, FaPenNib } from "react-icons/fa";
+import { FaSearch, FaFilter, FaFolder, FaDownload, FaEdit, FaTrash, FaPlus, FaFileUpload, FaPenNib } from "react-icons/fa";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import { FileIcon } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -503,9 +504,9 @@ export default function ClientDocuments() {
             <h6 className="text-muted mb-3">Folders</h6>
             <div className="row g-3">
               {folders.map(folder => (
-                <div key={folder.id} className="col-md-3 col-sm-6">
+                <div key={folder.id} className="col-12 col-md-3">
                   <div
-                    className="border rounded p-3 d-flex flex-column justify-content-between h-100 bg-white shadow-sm hover:shadow-md transition-all"
+                    className="border rounded p-3 d-flex flex-column justify-content-between h-100 bg-white shadow-sm hover:shadow-md transition-all w-100"
                     style={{ cursor: 'pointer', minHeight: '120px' }}
                     onClick={() => setSelectedFolderId(folder.id)}
                   >
@@ -519,14 +520,14 @@ export default function ClientDocuments() {
                     <div className="d-flex justify-content-end mt-2 pt-2 border-top" onClick={e => e.stopPropagation()}>
                       <Dropdown>
                         <Dropdown.Toggle variant="link" className="text-muted p-0 no-caret">
-                          <FaEllipsisV />
+                          <BsThreeDotsVertical />
                         </Dropdown.Toggle>
                         <Dropdown.Menu className="p-2" style={{ minWidth: '240px' }}>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex flex-column gap-2">
                             <Button
                               variant="light"
                               size="sm"
-                              className="flex-fill d-flex align-items-center justify-content-center gap-2"
+                              className="w-100 d-flex align-items-center justify-content-start gap-2"
                               onClick={() => {
                                 setItemToRename({ type: 'folder', item: folder });
                                 setNewItemName(folder.title);
@@ -538,7 +539,7 @@ export default function ClientDocuments() {
                             <Button
                               variant="light"
                               size="sm"
-                              className="flex-fill d-flex align-items-center justify-content-center gap-2 text-danger"
+                              className="w-100 d-flex align-items-center justify-content-start gap-2 text-danger"
                               onClick={() => {
                                 setItemToDelete({ type: 'folder', item: folder });
                                 setShowDeleteModal(true);
@@ -561,14 +562,14 @@ export default function ClientDocuments() {
         {documents.length > 0 ? (
           <div>
             <h6 className="text-muted mb-3">Documents</h6>
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
+            <div className="table-responsive" style={{ minHeight: '200px' }}>
+              <table className="table table-hover align-middle mb-0" style={{ fontSize: 'var(--mobile-font-size, 13px)', whiteSpace: 'nowrap' }}>
                 <thead className="bg-light">
-                  <tr>
+                  <tr style={{ whiteSpace: 'nowrap' }}>
                     <th className="border-0">Name</th>
-                    <th className="border-0">Category</th>
-                    <th className="border-0">Size</th>
-                    <th className="border-0">Date</th>
+                    <th className="border-0 d-none d-md-table-cell">Category</th>
+                    <th className="border-0 d-none d-md-table-cell">Size</th>
+                    <th className="border-0 d-none d-lg-table-cell">Date</th>
                     <th className="border-0">Status</th>
                     <th className="border-0 text-end">Actions</th>
                   </tr>
@@ -576,24 +577,27 @@ export default function ClientDocuments() {
                 <tbody>
                   {documents.map(doc => {
                     const docName = doc.file_name || doc.name || doc.document_name || 'Untitled';
+                    // Remove extension for display if it's a PDF on mobile
+                    const displayName = docName.replace(/\.[^/.]+$/, "");
                     const fileSize = doc.file_size_bytes || doc.file_size || 0;
                     const fileType = doc.file_type || doc.file_extension || 'FILE';
                     const fileUrl = doc.file_url || doc.tax_documents || '';
                     const isPdf = fileType.toLowerCase().includes('pdf') || (docName.toLowerCase().endsWith('.pdf'));
-                    // Get category name if available
                     const categoryName = doc.category_name || (doc.category ? doc.category.name : '-');
 
                     return (
-                      <tr key={doc.id} style={{ cursor: 'pointer' }} onClick={() => fileUrl && window.open(fileUrl, '_blank')}>
+                      <tr key={doc.id} style={{ cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => fileUrl && window.open(fileUrl, '_blank')}>
                         <td>
                           <div className="d-flex align-items-center gap-2">
                             <div className="text-primary"><FileIcon /></div>
-                            <span className="fw-medium">{docName}</span>
+                            <span className="fw-medium text-truncate d-none d-lg-inline-block" style={{ maxWidth: '150px', verticalAlign: 'middle' }} title={docName}>
+                              {displayName}
+                            </span>
                           </div>
                         </td>
-                        <td className="text-muted small">{categoryName}</td>
-                        <td className="text-muted small">{formatFileSize(fileSize)}</td>
-                        <td className="text-muted small">{formatDate(doc.created_at || doc.date)}</td>
+                        <td className="text-muted small d-none d-md-table-cell">{categoryName}</td>
+                        <td className="text-muted small d-none d-md-table-cell">{formatFileSize(fileSize)}</td>
+                        <td className="text-muted small d-none d-lg-table-cell">{formatDate(doc.created_at || doc.date)}</td>
                         <td>
                           <span className={`badge ${getStatusBadgeClass(doc.status || 'Active')} rounded-pill`}>{doc.status || 'Active'}</span>
                           {doc.esign_status && (
@@ -603,42 +607,49 @@ export default function ClientDocuments() {
                           )}
                         </td>
                         <td className="text-end" onClick={e => e.stopPropagation()}>
-                          <div className="d-flex justify-content-end gap-2">
+                          <div className="d-flex justify-content-end gap-2 flex-nowrap" style={{ whiteSpace: 'nowrap' }}>
                             <button
-                              className="btn  btn-light text-muted"
+                              className="btn btn-sm btn-light text-muted d-flex align-items-center justify-content-center"
+                              style={{ width: '30px', height: '30px', borderRadius: '6px' }}
                               onClick={() => fileUrl && window.open(fileUrl, '_blank')}
                               title="Download"
                             >
-                              <FaDownload />
+                              <FaDownload size={14} />
                             </button>
                             <Dropdown>
-                              <Dropdown.Toggle variant="light" size="sm" className="text-muted no-caret">
-                                <FaEllipsisV />
+                              <Dropdown.Toggle variant="light" size="sm" className="text-muted no-caret d-flex align-items-center justify-content-center" style={{ width: '30px', height: '30px', borderRadius: '6px' }}>
+                                <BsThreeDotsVertical size={14} />
                               </Dropdown.Toggle>
-                              <Dropdown.Menu align="end">
+                              <Dropdown.Menu align="end" style={{ minWidth: '140px', padding: '4px 0' }}>
                                 <Dropdown.Item onClick={() => {
                                   setItemToRename({ type: 'file', item: doc });
                                   setNewItemName(docName);
                                   setShowRenameModal(true);
-                                }}>
-                                  <FaEdit className="me-2" /> Rename
+                                }} style={{ fontSize: '11px', padding: '6px 12px' }}>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <FaEdit size={12} /> <span>Rename</span>
+                                  </div>
                                 </Dropdown.Item>
 
                                 {isPdf && !doc.esign_status && (
                                   <Dropdown.Item onClick={() => {
                                     setFileToEsign(doc);
                                     setShowAssignEsignModal(true);
-                                  }}>
-                                    <FaPenNib className="me-2" /> Assign for E-Sign
+                                  }} style={{ fontSize: '11px', padding: '6px 12px' }}>
+                                    <div className="d-flex align-items-center gap-2">
+                                      <FaPenNib size={12} /> <span>Assign for E-Sign</span>
+                                    </div>
                                   </Dropdown.Item>
                                 )}
 
-                                <Dropdown.Divider />
+                                <Dropdown.Divider style={{ margin: '4px 0' }} />
                                 <Dropdown.Item className="text-danger" onClick={() => {
                                   setItemToDelete({ type: 'file', item: doc });
                                   setShowDeleteModal(true);
-                                }}>
-                                  <FaTrash className="me-2" /> Delete
+                                }} style={{ fontSize: '11px', padding: '6px 12px' }}>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <FaTrash size={12} /> <span>Delete</span>
+                                  </div>
                                 </Dropdown.Item>
                               </Dropdown.Menu>
                             </Dropdown>
