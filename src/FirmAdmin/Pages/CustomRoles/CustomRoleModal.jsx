@@ -31,10 +31,6 @@ const PERMISSION_CATEGORIES = {
   'Billing': [
     'create_invoices'
   ],
-  'Reports & Analytics': [
-    'access_analytics',
-    'export_reports'
-  ],
   'Team Management': [
     'manage_team'
   ]
@@ -56,8 +52,6 @@ const ALL_PERMISSIONS = [
   { code: 'send_messages', label: 'Send client communications (messages)' },
   { code: 'receive_messages', label: 'Receive client communications (messages)' },
   { code: 'create_invoices', label: 'Create invoices' },
-  { code: 'access_analytics', label: 'Access reporting and analytics' },
-  { code: 'export_reports', label: 'Export client or firm reports' },
   { code: 'manage_team', label: 'Invite, deactivate, or manage other team members' }
 ];
 
@@ -75,10 +69,13 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     if (role) {
       // Handle both old format (permission_groups) and new format (permissions)
       const permissions = role.permissions || [];
+      const validCodes = ALL_PERMISSIONS.map(p => p.code);
+      const filteredPermissions = permissions.filter(p => validCodes.includes(p));
+
       setFormData({
         name: role.name || '',
         description: role.description || '',
-        permissions: permissions,
+        permissions: filteredPermissions,
         is_active: role.is_active !== undefined ? role.is_active : true
       });
     } else {

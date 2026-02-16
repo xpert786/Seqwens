@@ -622,8 +622,8 @@ export default function ESignature() {
                         {(() => {
                           const bothSigned = request.taxpayer_signed === true && request.spouse_signed === true;
 
-                          // If both have signed, show Preview Annotated PDF button (if annotated_pdf_url exists)
-                          if (bothSigned && request.annotated_pdf_url) {
+                          // If both have signed or status is completed, submitted, or under_review, show Preview Annotated PDF button (if annotated_pdf_url exists)
+                          if ((bothSigned || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url) {
                             return (
                               <button
                                 className="btn d-flex align-items-center gap-2 rounded"
@@ -637,8 +637,14 @@ export default function ESignature() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedIndex(originalIndex);
-                                  // Open preview modal with annotated PDF
-                                  setShowPreviewModal(true);
+                                  // Use the annotated_pdf_url from API response
+                                  setSelectedDocumentForAnnotation({
+                                    url: request.annotated_pdf_url,
+                                    name: request.document_name || request.title || 'Document',
+                                    id: request.id || request.esign_id,
+                                    document_id: request.document
+                                  });
+                                  setShowAnnotationModal(true);
                                 }}
                                 title="Preview Annotated PDF"
                               >
@@ -648,8 +654,8 @@ export default function ESignature() {
                             );
                           }
 
-                          // If both haven't signed and status is not "processing", show Annotate PDF button
-                          if (!bothSigned && request.status !== 'processing') {
+                          // If both haven't signed and status is not processing, submitted, completed, or under_review, show Annotate PDF button
+                          if (!bothSigned && request.status !== 'processing' && request.status !== 'submitted' && request.status !== 'completed' && request.status !== 'under_review') {
                             return (
                               <button
                                 className="btn d-flex align-items-center gap-2 rounded"
@@ -680,10 +686,10 @@ export default function ESignature() {
                                   });
                                   setShowAnnotationModal(true);
                                 }}
-                                title="Open PDF Annotation Tool"
+                                title="Open PDF Signing Tool"
                               >
                                 <FiPenTool size={14} />
-                                Annotate PDF
+                                Sign
                               </button>
                             );
                           }

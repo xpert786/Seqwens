@@ -71,6 +71,9 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     isFullyConfigurable: false
   });
 
+  // State for Add-On Pricing
+  const [addonsPricing, setAddonsPricing] = useState([]);
+
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -147,6 +150,13 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             badgeColor: planData.badge_color || '',
             isFullyConfigurable: planData.is_fully_configurable || false
           });
+
+          // Load Add-On Pricing
+          if (planData.addons_with_pricing) {
+            setAddonsPricing(planData.addons_with_pricing);
+          } else {
+            setAddonsPricing([]);
+          }
         }
       }
     } catch (error) {
@@ -283,6 +293,15 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     setError('');
     setSuccess(false);
 
+    // Prepare addon pricing update payload
+    const addonsPricingPayload = addonsPricing.map(addon => ({
+      addon_id: addon.id,
+      price: addon.price,
+      price_unit: addon.price_unit,
+      is_included: addon.is_included,
+      is_available: addon.is_available
+    }));
+
     const payload = {
       subscription_type: activeTab.toLowerCase(),
       monthly_price: Number(pricing.monthly || 0),
@@ -298,6 +317,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       additional_user_addon: true,
       priority_support_addon: true,
       is_active: true,
+
       // New display settings
       display_name: displaySettings.displayName || null,
       description: displaySettings.description || null,
@@ -316,7 +336,10 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       display_order: displaySettings.displayOrder,
       badge_text: displaySettings.badgeText || null,
       badge_color: displaySettings.badgeColor || null,
-      is_fully_configurable: displaySettings.isFullyConfigurable
+      is_fully_configurable: displaySettings.isFullyConfigurable,
+
+      // Add-ons Pricing Update
+      addons_pricing_update: addonsPricingPayload
     };
 
     try {
@@ -651,6 +674,95 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   </div>
                 </div>
               </>
+            </div>
+
+            {/* Add-On Pricing Configuration */}
+            <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Add-On Pricing Configuration</h3>
+              <p className="text-sm mb-4 text-gray-500">Configure specific add-on pricing for this plan. Overrides global default pricing.</p>
+
+              <div className="space-y-4">
+                {addonsPricing.length > 0 ? (
+                  addonsPricing.map((addon, index) => (
+                    <div key={addon.id} className="p-3 rounded-lg border border-gray-100 bg-gray-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium text-sm text-[#3B4A66]">{addon.name}</h4>
+                          <p className="text-xs text-gray-500">Global Default: ${addon.default_price} {addon.default_price_unit}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={addon.is_available}
+                              onChange={(e) => {
+                                const newAddons = [...addonsPricing];
+                                newAddons[index].is_available = e.target.checked;
+                                setAddonsPricing(newAddons);
+                              }}
+                              className="w-3 h-3 rounded"
+                            />
+                            <span className="text-xs text-gray-600">Available</span>
+                          </label>
+                          <label className="flex items-center gap-1 cursor-pointer ml-2">
+                            <input
+                              type="checkbox"
+                              checked={addon.is_included}
+                              onChange={(e) => {
+                                const newAddons = [...addonsPricing];
+                                newAddons[index].is_included = e.target.checked;
+                                // If included, price is 0 (or irrelevant)
+                                if (e.target.checked) {
+                                  newAddons[index].price = 0;
+                                }
+                                setAddonsPricing(newAddons);
+                              }}
+                              className="w-3 h-3 rounded"
+                            />
+                            <span className="text-xs text-gray-600">Included (Free)</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {!addon.is_included && addon.is_available && (
+                        <div className="flex gap-4 mt-2">
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium mb-1 text-[#3B4A66]">Plan Price ($)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={addon.price}
+                              onChange={(e) => {
+                                const newAddons = [...addonsPricing];
+                                newAddons[index].price = e.target.value === '' ? '' : parseFloat(e.target.value);
+                                setAddonsPricing(newAddons);
+                              }}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium mb-1 text-[#3B4A66]">Unit</label>
+                            <input
+                              type="text"
+                              value={addon.price_unit || ''}
+                              onChange={(e) => {
+                                const newAddons = [...addonsPricing];
+                                newAddons[index].price_unit = e.target.value;
+                                setAddonsPricing(newAddons);
+                              }}
+                              placeholder={addon.default_price_unit}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400 italic">No active add-ons found.</p>
+                )}
+              </div>
             </div>
 
             {/* Display Settings Section */}

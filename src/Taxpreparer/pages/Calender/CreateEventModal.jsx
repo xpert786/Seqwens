@@ -13,7 +13,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
     timezone: 'America/New_York',
     appointment_date: '',
     slots: [
-      { id: 1, time: '09:00', client_id: preSelectedClient ? preSelectedClient.id : '' }
+      { id: 1, time: '', client_id: preSelectedClient ? preSelectedClient.id : '' }
     ],
     description: '',
     meeting_type: 'zoom'
@@ -22,6 +22,8 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // Fetch clients list
   useEffect(() => {
@@ -29,6 +31,67 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
       fetchClients();
     }
   }, [isOpen]);
+
+  // Fetch available slots when date changes
+  useEffect(() => {
+    if (isOpen && formData.appointment_date) {
+      fetchAvailableSlots(formData.appointment_date);
+    } else {
+      setAvailableSlots([]);
+    }
+  }, [isOpen, formData.appointment_date]);
+
+  const fetchAvailableSlots = async (date) => {
+    try {
+      setLoadingSlots(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/taxpayer/tax-preparer/availability/slots/?date=${date}`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.available_slots) {
+        setAvailableSlots(result.data.available_slots);
+      } else {
+        setAvailableSlots([]);
+        if (result.success && !result.data.is_available) {
+          toast.info(result.data.message || 'No slots available for this date', {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching available slots:', error);
+      setAvailableSlots([]);
+      toast.error('Failed to load available slots', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
 
   const fetchClients = async () => {
     try {
@@ -98,7 +161,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
       ...prev,
       slots: [...prev.slots, {
         id: newId,
-        time: '09:00',
+        time: '', // Default to empty so they have to select
         client_id: ''
       }]
     }));
@@ -235,7 +298,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
           appointment_duration: 30,
           timezone: 'America/New_York',
           appointment_date: '',
-          slots: [{ id: 1, time: '09:00', client_id: '' }],
+          slots: [{ id: 1, time: '', client_id: '' }],
           description: '',
           meeting_type: 'zoom'
         });
@@ -352,14 +415,27 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
             <div className="space-y-3">
               {formData.slots.map((slot) => (
                 <div key={slot.id} className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="time"
-                    value={slot.time}
-                    onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
-                    className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    style={{ minWidth: '120px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                    required
-                  />
+                  {loadingSlots ? (
+                    <div className="px-3 py-2 rounded-lg text-sm bg-gray-50 flex items-center justify-center" style={{ minWidth: '150px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                      <span className="text-gray-500">Loading...</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={slot.time}
+                      onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
+                      className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white"
+                      style={{ minWidth: '150px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+                      required
+                      disabled={!formData.appointment_date || availableSlots.length === 0}
+                    >
+                      <option value="">Select Time</option>
+                      {availableSlots.map((availableSlot, index) => (
+                        <option key={index} value={availableSlot.start_time}>
+                          {availableSlot.formatted_time}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   {preSelectedClient && slot.id === 1 ? (
                     <div
                       className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm bg-gray-50 cursor-not-allowed"
@@ -405,6 +481,11 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
                 Add Time Slot
               </button>
             </div>
+            {formData.appointment_date && !loadingSlots && availableSlots.length === 0 && (
+              <p className="mt-2 text-sm text-red-500">
+                No available time slots found for this date. Please select another date.
+              </p>
+            )}
           </div>
 
           {/* Meeting Type */}

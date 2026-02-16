@@ -206,226 +206,204 @@ const Security = () => {
   }
 
   return (
-    <div
-
+    <div className="container-fluid px-0 pb-5">
+  {/* Header */}
+  <div className="mb-4 px-1">
+    <h5
+      className="mb-1"
+      style={{
+        color: "#3B4A66",
+        fontSize: "22px",
+        fontWeight: "600",
+        fontFamily: "BasisGrotesquePro",
+      }}
     >
-      <div className="align-items-center mb-3 ">
-        <h5
-          className="mb-0 me-3"
-          style={{
-            color: "#3B4A66",
-            fontSize: "20px",
-            fontWeight: "500",
-            fontFamily: "BasisGrotesquePro",
-          }}
-        >
-          Security Settings
-        </h5>
-        <p
-          className="mb-0"
-          style={{
-            color: "#4B5563",
-            fontSize: "14px",
-            fontWeight: "400",
-            fontFamily: "BasisGrotesquePro",
-          }}
-        >
-          Manage your account security and privacy
-        </p>
-      </div>
+      Security Settings
+    </h5>
+    <p
+      className="mb-0 text-muted"
+      style={{
+        fontSize: "15px",
+        fontFamily: "BasisGrotesquePro",
+      }}
+    >
+      Manage your account security and privacy
+    </p>
+  </div>
 
-      {/* <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <strong style={{ color: "#3B4A66", fontSize: "15px", fontFamily: "BasisGrotesquePro", }}>
-            Login Alerts
-          </strong>
-          <p
-            className="mb-0"
-            style={{
-              color: "#4B5563",
-              fontSize: "13px",
-              fontWeight: "400",
-            }}
-          >
-            Get notified of new login attempts
-          </p>
-        </div>
-        <div className="custom-toggle">
-          <input
-            type="checkbox"
-            id="loginAlerts"
-            checked={loginAlerts}
-            onChange={() => setLoginAlerts(!loginAlerts)}
-          />
-          <label htmlFor="loginAlerts"></label>
-        </div>
-      </div> */}
+  <hr className="my-4" style={{ borderColor: "#F1F5F9", opacity: 1 }} />
 
+  <h6
+    className="mb-3 px-1"
+    style={{ 
+      color: "#3B4A66", 
+      fontSize: "18px", 
+      fontWeight: "600", 
+      fontFamily: "BasisGrotesquePro" 
+    }}
+  >
+    Password
+  </h6>
 
-      <h6
-        className="mb-3"
-        style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}
+  <form className="px-1">
+    {/* Current Password */}
+    <div className="mb-4">
+      <label 
+        className="form-label" 
+        style={{ 
+          color: "#3B4A66", 
+          fontSize: "14px", 
+          fontWeight: "600", 
+          fontFamily: "BasisGrotesquePro", 
+          marginBottom: "8px" 
+        }}
       >
-        Password
-      </h6>
-      <form>
-        <div className="mb-3">
-          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>Current Password</label>
-          <div style={{ position: "relative" }}>
-            <input
-              type={showCurrentPassword ? "text" : "password"}
-              className="form-control"
-              placeholder="Enter current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              style={{ 
-                color: "#3B4A66", 
-                fontSize: "15px", 
-                fontWeight: "400", 
-                fontFamily: "BasisGrotesquePro",
-                padding: "8px 40px 8px 12px"
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              style={{
-                position: "absolute",
-                right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                color: "#4B5563",
-                cursor: "pointer",
-                fontSize: "18px",
-                padding: "0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "24px",
-                height: "24px",
-                zIndex: 10
-              }}
-            >
-              <i className={`bi ${showCurrentPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-            </button>
-          </div>
-        </div>
-        <div className="mb-3">
-          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>New Password</label>
-          <div style={{ position: "relative" }}>
-            <input
-              type={showNewPassword ? "text" : "password"}
-              className="form-control"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              style={{ 
-                color: "#3B4A66", 
-                fontSize: "15px", 
-                fontWeight: "400", 
-                fontFamily: "BasisGrotesquePro",
-                padding: "8px 40px 8px 12px"
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-              style={{
-                position: "absolute",
-                right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                color: "#4B5563",
-                cursor: "pointer",
-                fontSize: "18px",
-                padding: "0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "24px",
-                height: "24px",
-                zIndex: 10
-              }}
-            >
-              <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-            </button>
-          </div>
-        </div>
-        <div className="mb-3">
-          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>Confirm New Password</label>
-          <div style={{ position: "relative" }}>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              className="form-control"
-              placeholder="Confirm new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              style={{ 
-                color: "#3B4A66", 
-                fontSize: "15px", 
-                fontWeight: "400", 
-                fontFamily: "BasisGrotesquePro",
-                padding: "8px 40px 8px 12px"
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={{
-                position: "absolute",
-                right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                color: "#4B5563",
-                cursor: "pointer",
-                fontSize: "18px",
-                padding: "0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "24px",
-                height: "24px",
-                zIndex: 10
-              }}
-            >
-              <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-            </button>
-          </div>
-        </div>
-
-
-
-
+        Current Password
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          type={showCurrentPassword ? "text" : "password"}
+          className="form-control py-2 shadow-none"
+          placeholder="Enter current password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          style={{ 
+            color: "#3B4A66", 
+            fontSize: "16px", 
+            borderRadius: "10px",
+            border: "1px solid #E5E7EB",
+            paddingRight: "45px"
+          }}
+        />
         <button
           type="button"
-          className="btn mb-4"
-          onClick={handlePasswordUpdate}
-          disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
           style={{
-            color: "#3B4A66",
-            fontSize: "16px",
-            fontWeight: "400",
-            fontFamily: "BasisGrotesquePro",
-            background: "#E8F0FF",
-            opacity: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? 0.6 : 1,
-            cursor: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? "not-allowed" : "pointer",
-            transition: "opacity 0.2s ease",
+            position: "absolute",
+            right: "8px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "transparent",
+            border: "none",
+            color: "#6B7280",
+            padding: "8px",
+            display: "flex",
+            alignItems: "center"
           }}
         >
-          Update Password
+          <i className={`bi ${showCurrentPassword ? "bi-eye-slash" : "bi-eye"}`} style={{ fontSize: "1.2rem" }}></i>
         </button>
-      </form>
-
-
-
-
+      </div>
     </div>
+
+    {/* New Password */}
+    <div className="mb-4">
+      <label 
+        className="form-label" 
+        style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}
+      >
+        New Password
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          type={showNewPassword ? "text" : "password"}
+          className="form-control py-2 shadow-none"
+          placeholder="Enter new password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          style={{ 
+            color: "#3B4A66", 
+            fontSize: "16px", 
+            borderRadius: "10px",
+            border: "1px solid #E5E7EB",
+            paddingRight: "45px"
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => setShowNewPassword(!showNewPassword)}
+          style={{
+            position: "absolute",
+            right: "8px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "transparent",
+            border: "none",
+            color: "#6B7280",
+            padding: "8px"
+          }}
+        >
+          <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`} style={{ fontSize: "1.2rem" }}></i>
+        </button>
+      </div>
+    </div>
+
+    {/* Confirm Password */}
+    <div className="mb-4">
+      <label 
+        className="form-label" 
+        style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}
+      >
+        Confirm New Password
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          type={showConfirmPassword ? "text" : "password"}
+          className="form-control py-2 shadow-none"
+          placeholder="Confirm new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          style={{ 
+            color: "#3B4A66", 
+            fontSize: "16px", 
+            borderRadius: "10px",
+            border: "1px solid #E5E7EB",
+            paddingRight: "45px"
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          style={{
+            position: "absolute",
+            right: "8px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "transparent",
+            border: "none",
+            color: "#6B7280",
+            padding: "8px"
+          }}
+        >
+          <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`} style={{ fontSize: "1.2rem" }}></i>
+        </button>
+      </div>
+    </div>
+
+    {/* Update Button */}
+    <div className="mt-4 pb-5 mb-5">
+      <button
+        type="button"
+        className="btn w-100 py-3 d-flex align-items-center justify-content-center"
+        onClick={handlePasswordUpdate}
+        disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+        style={{
+          color: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? "#9CA3AF" : "#007AFF",
+          fontSize: "16px",
+          fontWeight: "600",
+          fontFamily: "BasisGrotesquePro",
+          background: "#E8F0FF",
+          borderRadius: "12px",
+          border: "none",
+          opacity: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? 0.6 : 1,
+          transition: "all 0.2s ease",
+        }}
+      >
+        {passwordSaving ? "Updating..." : "Update Password"}
+      </button>
+    </div>
+  </form>
+</div>
   );
 };
 

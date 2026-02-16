@@ -44,6 +44,11 @@ const PERMISSION_CATEGORIES = {
     codes: ['assign_tasks_to_assigned_taxpayers', 'assign_tasks_to_unassigned_taxpayers'],
     icon: <FiGrid className="w-5 h-5 text-[#3AD6F2]" />,
     color: 'cyan'
+  },
+  'Reporting & Team': {
+    codes: ['manage_team'],
+    icon: <FiPieChart className="w-5 h-5 text-[#F56D2D]" />,
+    color: 'red'
   }
 };
 
@@ -90,9 +95,13 @@ export default function TaxPreparerPermissionsModal({
           console.log('Available permission codes:', choicesList.map(p => typeof p === 'string' ? p : p.code));
         }
 
-        setPermissions(permissionsList);
+        // Filter out any permissions that are no longer valid choices
+        const validCodes = choicesList.map(p => typeof p === 'string' ? p : p.code);
+        const filteredPermissions = permissionsList.filter(p => validCodes.includes(p));
+
+        setPermissions(filteredPermissions);
         setPermissionChoices(choicesList);
-        setSelectedPermissions(permissionsList);
+        setSelectedPermissions(filteredPermissions);
 
         // Update user info from API response if available
         if (response.data.user_name || response.data.user_email) {

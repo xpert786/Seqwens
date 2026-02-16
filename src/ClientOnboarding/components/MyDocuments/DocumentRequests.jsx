@@ -338,420 +338,364 @@ export default function DocumentRequests() {
   return (
     <div>
       {/* Pending Requests */}
-      <div className="mydocs-container">
-        <div className="mydocs-header">
-          <div className="d-flex justify-content-between align-items-start mb-3 flex-wrap">
-            <div>
-              <h5 className="mydocs-title">Document Requests</h5>
-              <p className="mydocs-subtitle">
-                Documents requested by your tax professional
+      <div className="mydocs-container container-fluid px-2 px-md-3">
+  {/* Header Section */}
+  <div className="mydocs-header pt-3">
+    {/* Update: align-items-md-end and justify-content-between handles the split */}
+    <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center mb-3 gap-3">
+      
+      {/* Title Section */}
+      <div className="w-100 w-md-auto text-center text-md-start flex-grow-1">
+        <h5 className="mydocs-title mb-1" style={{ fontSize: '1.25rem', fontWeight: '600', color: '#3B4A66' }}>
+          Document Requests
+        </h5>
+        <p className="mydocs-subtitle text-muted mb-0" style={{ fontSize: '0.9rem' }}>
+          Requested by your tax professional
+        </p>
+      </div>
+
+      {/* Update: justify-content-md-end keeps buttons on extreme right on desktop */}
+      <div className="d-flex gap-2 w-100 w-md-auto overflow-auto pb-1 justify-content-md-end">
+        {['All', 'Pending', 'Submitted', 'Completed'].map((label) => {
+          const value = label === 'All' ? null : label.toLowerCase();
+          return (
+            <button
+              key={label}
+              onClick={() => setFilterStatus(value)}
+              className="btn flex-grow-1 flex-md-grow-0"
+              style={{
+                backgroundColor: filterStatus === value ? "#00C0C6" : "#fff",
+                color: filterStatus === value ? "#fff" : "#3B4A66",
+                border: "1px solid #E8F0FF",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: "500",
+                padding: "8px 20px", // Increased horizontal padding for better "right-aligned" look
+                whiteSpace: "nowrap"
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+
+  {/* Document List */}
+  {documents.length === 0 ? (
+    <div className="mt-3 text-center py-5 bg-white rounded-3 border">
+      <h6 className="mb-2" style={{ color: '#3B4A66' }}>No Document Requests</h6>
+      <p className="text-muted px-3" style={{ fontSize: '14px' }}>
+        Your tax professional will send requests here when needed.
+      </p>
+    </div>
+  ) : (
+    <div className="mt-3 d-flex flex-column gap-3">
+      {documents.map((doc, idx) => {
+        const overdueDays = calculateOverdueDays(doc.due_date || doc.dueDate);
+        const requestedDocs = doc.requested_documents || doc.requestedDocs || doc.requested_docs || [];
+        const isActionable = doc.status === 'pending' || !doc.status || doc.status === 'in_progress';
+
+        return (
+          <div
+            key={doc.id || `doc-${idx}`}
+            className={`mydocs-card p-3 shadow-sm bg-white rounded-3 border ${activeCard === doc.id ? 'border-info' : ''}`}
+            style={{ transition: 'all 0.2s' }}
+            onClick={() => setActiveCard(doc.id)}
+          >
+            {/* Top Row: Title, Status, and Overdue Badge */}
+            <div className="d-flex flex-column gap-2 mb-3">
+              <div className="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  <span className="mydocs-icon-wrapper flex-shrink-0" style={{ padding: '6px', background: '#F0F7FF', borderRadius: '6px' }}>
+                    <FileIcon />
+                  </span>
+                  <strong className="mydocs-doc-title" style={{ fontSize: '1rem', color: '#3B4A66' }}>
+                    {doc.task_title || doc.title || `${doc.tax_year || ''} Document Request`.trim()}
+                  </strong>
+                </div>
+
+                <div className="d-flex gap-2">
+                  {doc.priority && (
+                    <span className="badge" style={{
+                      backgroundColor: doc.priority.toLowerCase() === 'high' ? '#EF4444' : '#F59E0B',
+                      fontSize: '10px', textTransform: 'uppercase', padding: '4px 8px'
+                    }}>
+                      {doc.priority}
+                    </span>
+                  )}
+                  <span className="badge bg-secondary" style={{ fontSize: '10px', textTransform: 'capitalize', padding: '4px 8px' }}>
+                    {doc.status || 'Pending'}
+                  </span>
+                </div>
+              </div>
+
+              {overdueDays > 0 && (
+                <div className="badge bg-danger text-white w-fit-content align-self-start" style={{ fontSize: '11px' }}>
+                  Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
+
+            {/* Middle Section: Description & Instructions */}
+            <div className="mb-3">
+              <p className="text-muted mb-2" style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                {doc.description || doc.instructions || 'Please upload the requested documents'}
               </p>
             </div>
 
-            {/* Filter Buttons */}
-            <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0">
-              <button
-                onClick={() => setFilterStatus(null)}
-                className="btn "
-                style={{
-                  backgroundColor: filterStatus === null ? "#00C0C6" : "#fff",
-                  color: filterStatus === null ? "#fff" : "#3B4A66",
-                  border: "1px solid #E8F0FF",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  padding: "6px 12px"
-                }}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterStatus('pending')}
-                className="btn "
-                style={{
-                  backgroundColor: filterStatus === 'pending' ? "#00C0C6" : "#fff",
-                  color: filterStatus === 'pending' ? "#fff" : "#3B4A66",
-                  border: "1px solid #E8F0FF",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  padding: "6px 12px"
-                }}
-              >
-                Pending
-              </button>
-
-              <button
-                onClick={() => setFilterStatus('completed')}
-                className="btn "
-                style={{
-                  backgroundColor: filterStatus === 'completed' ? "#00C0C6" : "#fff",
-                  color: filterStatus === 'completed' ? "#fff" : "#3B4A66",
-                  border: "1px solid #E8F0FF",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  padding: "6px 12px"
-                }}
-              >
-                Completed
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {documents.length === 0 ? (
-          <div className="mt-3 text-center py-5">
-            <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
-              No Document Requests
-            </h6>
-            <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
-              You don't have any pending document requests at this time. Your tax professional will send you requests when needed.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-3">
-            {documents.map((doc) => {
-              const overdueDays = calculateOverdueDays(doc.due_date || doc.dueDate);
-              const requestedDocs = doc.requested_documents || doc.requestedDocs || doc.requested_docs || [];
-
-              return (
-                <div
-                  key={doc.id || doc.request_id || `doc-${documents.indexOf(doc)}`}
-                  className={`mydocs-card ${activeCard === doc.id ? 'active' : ''}`}
-                  onClick={() => setActiveCard(doc.id)}
-                >
-                  <div className="d-flex justify-content-between align-items-start w-100">
-                    <div className="w-100">
-                      <div className="mydocs-header-row d-flex align-items-center justify-content-between mb-2 flex-wrap gap-3">
-                        <div className="d-flex align-items-center gap-3 flex-wrap mydocs-title-group">
-                          <span className="mydocs-icon-wrapper">
-                            <FileIcon />
-                          </span>
-
-                          <strong className="mydocs-doc-title">
-                            {doc.task_title || doc.title || `${doc.tax_year || doc.year || ''} ${doc.document_type || doc.type || 'Document Request'}`.trim()}
-                          </strong>
-
-                          {doc.priority && (() => {
-                            const priorityLower = (doc.priority || '').toLowerCase();
-                            const priorityColors = {
-                              'high': { bg: '#EF4444', color: '#FFFFFF' },
-                              'medium': { bg: '#F59E0B', color: '#FFFFFF' },
-                              'low': { bg: '#10B981', color: '#FFFFFF' }
-                            };
-                            const colors = priorityColors[priorityLower] || { bg: '#6B7280', color: '#FFFFFF' };
-                            return (
-                              <span
-                                className="badge mydocs-badge-priority"
-                                style={{
-                                  backgroundColor: colors.bg,
-                                  color: '#FFFFFF',
-                                  fontSize: "10px",
-                                  fontWeight: "700",
-                                  textTransform: "uppercase",
-                                  lineHeight: "1",
-                                  height: "20px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  padding: "3px 9px",
-                                  borderRadius: "20px",
-                                  border: "none"
-                                }}
-                              >
-                                {doc.priority}
-                              </span>
-                            );
-                          })()}
-                          <span className="badge mydocs-badge-status" style={{ color: '#FFFFFF', textTransform: 'capitalize' }}>
-                            {doc.status || 'Pending'}
-                          </span>
-                        </div>
-
-                        {(doc.status === 'pending' || !doc.status || doc.status === 'in_progress') && (
-                          <div className="d-flex gap-2 mydocs-action-group">
-                            <button
-                              className="btn  d-flex align-items-center gap-2"
-                              onClick={(e) => handleSubmitRequestClick(e, doc)}
-                              style={{
-                                backgroundColor: '#32B582',
-                                borderColor: '#32B582',
-                                color: 'white',
-                                borderRadius: '8px',
-                                fontSize: '12px',
-                                fontWeight: '500',
-                                padding: '6px 12px',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              <FaCheckCircle />
-                              Submit Request
-                            </button>
-                          </div>
-                        )}
-
-                        {overdueDays > 0 && (
-                          <div className="ms-auto">
-                            <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '11px', borderRadius: '4px', color: '#FFFFFF' }}>
-                              Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )}
-
-                      </div>
-
-                      <div className="d-flex justify-content-between align-items-start mt-2">
-                        <div className="flex-grow-1 pe-3">
-                          <div className="mydocs-description mb-2">
-                            {doc.description || doc.instructions || doc.message || 'Please upload the requested documents'}
-                          </div>
-
-                          {(doc.instructions || doc.description) && (
-                            <div className="mydocs-instructions">
-                              <span className="mydocs-instructions-title d-block mb-1">Instructions:</span>
-                              <p className="mydocs-instructions-text mb-0">{doc.instructions || doc.description}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="d-flex flex-column align-items-end mydocs-info text-end" style={{ minWidth: 'fit-content' }}>
-                          <div className="d-flex align-items-center mb-1">
-                            <BlackDateIcon />
-                            {(doc.due_date || doc.dueDate) && (
-                              <span className="ms-2 small">
-                                <strong className="fw-normal">Due:</strong> {formatDate(doc.due_date || doc.dueDate)}
-                              </span>
-                            )}
-                          </div>
-                          {(doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name) && (
-                            <div className="small text-muted">
-                              Requested by: {doc.created_by_name || doc.requested_by || doc.requestedBy || doc.requested_by_name}
-                            </div>
-                          )}
-                          {doc.reminders_count !== undefined && (
-                            <div className="small text-muted mydocs-reminder mt-1">
-                              {doc.reminders_count || doc.reminders || 0} reminder{doc.reminders_count !== 1 ? 's' : ''} sent
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-
-
-
-
-
-
-                      {requestedDocs.length > 0 && (
-                        <div>
-                          <strong className="mydocs-req-title">Requested Documents:</strong>
-                          <div className="mt-2 d-flex flex-wrap gap-2">
-                            {requestedDocs.map((item, idx) => (
-                              <div key={idx} className="mydocs-req-chip">
-                                {typeof item === 'string' ? item : (item.name || item.document_type || item)}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+            {/* Requested Items Chips */}
+            {requestedDocs.length > 0 && (
+              <div className="mb-3">
+                <small className="fw-bold text-muted d-block mb-2">Requested Documents:</small>
+                <div className="d-flex flex-wrap gap-2">
+                  {requestedDocs.map((item, idx) => (
+                    <span key={idx} className="badge bg-white border text-dark fw-normal" style={{ fontSize: '12px', padding: '5px 10px' }}>
+                      {typeof item === 'string' ? item : (item.name || item.document_type || item)}
+                    </span>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {/* Bottom Row: Metadata and Submit Action */}
+            {/* Removed pt-3 to eliminate top padding and changed gap to gap-2 for a tighter mobile layout */}
+<div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-top gap-2 py-2">
+  <div className="mydocs-info text-muted" style={{ fontSize: '13px' }}>
+    <div className="d-flex align-items-center gap-1 mb-1">
+      <BlackDateIcon />
+      {/* Ensure the text is vertically aligned with the icon */}
+      <span className="align-middle">Due: <strong>{formatDate(doc.due_date || doc.dueDate)}</strong></span>
+    </div>
+    <div className="small">Requested by: {doc.created_by_name || doc.requested_by_name || 'System'}</div>
+  </div>
+
+  {isActionable && (
+    <button
+      className="btn btn-success w-100 w-md-auto d-flex align-items-center justify-content-center gap-2 py-2 px-4 shadow-sm"
+      onClick={(e) => handleSubmitRequestClick(e, doc)}
+      style={{ 
+        backgroundColor: '#32B582', 
+        border: 'none', 
+        borderRadius: '8px',
+        fontSize: '14px' // Standardized font size for the button
+      }}
+    >
+      <FaCheckCircle />
+      Submit Request
+    </button>
+  )}
+</div>
           </div>
-        )}
-      </div>
+        );
+      })}
+    </div>
+  )}
+</div>
 
       {/* Upload Modal */}
       {showUploadModal && selectedRequest && (
-        <div
+  <div
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)', // Slightly darker for better focus
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 2000, // High z-index to stay above headers/footers
+      padding: '16px' // Prevents modal from touching screen edges
+    }}
+    onClick={handleCloseUploadModal}
+  >
+    <div
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '16px', // Softer corners for modern UI
+        width: '100%',
+        maxWidth: '550px',
+        maxHeight: 'calc(100vh - 40px)', // Ensures modal fits inside mobile viewports
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Modal Header */}
+      <div style={{
+        padding: '20px',
+        borderBottom: '1px solid #F3F4F6',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start' // Better for long titles
+      }}>
+        <div style={{ paddingRight: '12px' }}>
+          <h5 style={{ margin: 0, color: '#111827', fontSize: '1.15rem', fontWeight: '700' }}>
+            Submit Request
+          </h5>
+          <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: '13px', lineHeight: '1.4' }}>
+            <strong>{selectedRequest.task_title || 'Document Request'}</strong>
+          </p>
+        </div>
+        <button
+          onClick={handleCloseUploadModal}
           style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            background: '#F3F4F6',
+            border: 'none',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1050
+            color: '#4B5563',
+            cursor: 'pointer',
+            flexShrink: 0
           }}
-          onClick={handleCloseUploadModal}
         >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              width: '90%',
-              maxWidth: '600px',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div style={{
-              padding: '20px 24px',
-              borderBottom: '1px solid #E5E7EB',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div>
-                <h5 style={{ margin: 0, color: '#111827', fontSize: '18px', fontWeight: '600' }}>
-                  Submit Document Request
-                </h5>
-                <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: '14px' }}>
-                  {selectedRequest.task_title || 'Document Request'} - Upload files to submit
-                </p>
-              </div>
-              <button
-                onClick={handleCloseUploadModal}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '20px',
-                  color: '#6B7280',
-                  cursor: 'pointer',
-                  padding: '4px'
-                }}
-              >
-                <FaTimes />
-              </button>
-            </div>
+          <FaTimes size={14} />
+        </button>
+      </div>
 
-            {/* Modal Body */}
-            <div style={{ padding: '24px' }}>
-              {/* File Selection */}
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151'
-                }}>
-                  Select Files <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileSelect}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <small style={{
-                  display: 'block',
-                  marginTop: '6px',
-                  color: '#6B7280',
-                  fontSize: '12px'
-                }}>
-                  All file types are supported
-                </small>
-                {uploadFiles.length > 0 && (
-                  <div style={{ marginTop: '12px' }}>
-                    {uploadFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '8px 12px',
-                          backgroundColor: '#F9FAFB',
-                          borderRadius: '6px',
-                          marginBottom: '6px'
-                        }}
-                      >
-                        <span style={{ fontSize: '14px', color: '#374151' }}>{file.name}</span>
-                        <button
-                          onClick={() => removeFile(index)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#EF4444',
-                            cursor: 'pointer',
-                            padding: '4px 8px'
-                          }}
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* Modal Footer */}
-            <div style={{
-              padding: '16px 24px',
-              borderTop: '1px solid #E5E7EB',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px'
-            }}>
-              <button
-                onClick={handleCloseUploadModal}
-                disabled={uploading}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'white',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '8px',
-                  color: '#374151',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: uploading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitDocumentRequest}
-                disabled={uploading || submittingRequest || uploadFiles.length === 0}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: (uploading || submittingRequest || uploadFiles.length === 0) ? '#9CA3AF' : '#32B582',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: (uploading || submittingRequest || uploadFiles.length === 0) ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {uploading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Uploading...
-                  </>
-                ) : submittingRequest ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <FaCheckCircle className="me-2" />
-                    Upload & Submit Request
-                  </>
-                )}
-              </button>
+      {/* Modal Body - Scrollable Area */}
+      <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '10px',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: '#374151'
+          }}>
+            Select Files <span style={{ color: '#EF4444' }}>*</span>
+          </label>
+          
+          {/* Enhanced Mobile Input Wrapper */}
+          <div style={{
+            border: '2px dashed #E5E7EB',
+            borderRadius: '12px',
+            padding: '20px',
+            textAlign: 'center',
+            backgroundColor: '#F9FAFB',
+            position: 'relative'
+          }}>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0,
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            />
+            <div style={{ color: '#6B7280', fontSize: '14px' }}>
+              <span style={{ color: '#F56D2D', fontWeight: '600' }}>Tap to upload</span> or drag and drop
             </div>
           </div>
+          
+          <small style={{ display: 'block', marginTop: '8px', color: '#9CA3AF', fontSize: '12px' }}>
+            Accepted: PDF, JPG, PNG (Max 10MB per file)
+          </small>
+
+          {/* Selected File List */}
+          {uploadFiles.length > 0 && (
+            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {uploadFiles.map((file, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 12px',
+                    backgroundColor: '#F3F4F6',
+                    borderRadius: '8px',
+                    border: '1px solid #E5E7EB'
+                  }}
+                >
+                  <span style={{ fontSize: '13px', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
+                    {file.name}
+                  </span>
+                  <button
+                    onClick={() => removeFile(index)}
+                    style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}
+                  >
+                    <FaTimes size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Modal Footer - Responsive Stacking */}
+      <div style={{
+        padding: '16px 20px',
+        borderTop: '1px solid #F3F4F6',
+        display: 'flex',
+        flexDirection: window.innerWidth < 576 ? 'flex-column-reverse' : 'row', // logic for stacking on small screens
+        justifyContent: 'flex-end',
+        gap: '12px',
+        backgroundColor: '#FFFFFF'
+      }}>
+        {/* CSS workaround for stacking buttons via media queries usually preferred, 
+            but for inline styles, we optimize for standard flex flow */}
+        <button
+          onClick={handleCloseUploadModal}
+          disabled={uploading}
+          style={{
+            flex: window.innerWidth < 576 ? '1' : 'none',
+            padding: '12px 24px',
+            backgroundColor: 'white',
+            border: '1px solid #D1D5DB',
+            borderRadius: '10px',
+            color: '#374151',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: uploading ? 'not-allowed' : 'pointer',
+            minHeight: '48px' // Better touch target
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmitDocumentRequest}
+          disabled={uploading || submittingRequest || uploadFiles.length === 0}
+          style={{
+            flex: window.innerWidth < 576 ? '1' : 'none',
+            padding: '12px 24px',
+            backgroundColor: (uploading || submittingRequest || uploadFiles.length === 0) ? '#9CA3AF' : '#32B582',
+            border: 'none',
+            borderRadius: '10px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: (uploading || submittingRequest || uploadFiles.length === 0) ? 'not-allowed' : 'pointer',
+            minHeight: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          {uploading || submittingRequest ? (
+             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          ) : (
+            <><FaCheckCircle style={{ marginRight: '8px' }} /> Submit</>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

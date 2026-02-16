@@ -321,7 +321,7 @@
   .client-sidebar-container {
     width: 100% !important;
     max-width: 260px !important;
-    height: auto !important;
+    height: calc(100vh - 60px) !important;
     max-height: calc(100vh - 60px) !important;
     top: 60px !important;
     z-index: 1050 !important;

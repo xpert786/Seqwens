@@ -445,298 +445,246 @@ export default function Profile() {
         );
     }
     return (
-        <div >
-            <div className="align-items-center mb-3 ">
-                <h5
-                    className="mb-0 me-3"
-                    style={{
-                        color: "#3B4A66",
-                        fontSize: "20px",
-                        fontWeight: "500",
-                        fontFamily: "BasisGrotesquePro",
-                    }}
-                >
-                    Personal Information
-                </h5>
-                <p
-                    className="mb-0"
-                    style={{
-                        color: "#4B5563",
-                        fontSize: "14px",
-                        fontWeight: "400",
-                        fontFamily: "BasisGrotesquePro",
-                    }}
-                >
-                    Update your personal details and tax information
-                </p>
-            </div>
+        <div className="container-fluid px-0 pb-5">
+    {/* Header */}
+    <div className="mb-4 px-1">
+        <h5
+            style={{
+                color: "#3B4A66",
+                fontSize: "22px",
+                fontWeight: "600",
+                fontFamily: "BasisGrotesquePro",
+            }}
+        >
+            Personal Information
+        </h5>
+        <p
+            className="mb-0 text-muted"
+            style={{
+                fontSize: "15px",
+                fontFamily: "BasisGrotesquePro",
+            }}
+        >
+            Update your personal details and tax information
+        </p>
+    </div>
 
-
-            {/* Profile Image */}
-            <div className="d-flex align-items-center mb-4 mt-6">
-                {(imagePreview || (userData.profile_image && userData.profile_image !== 'null' && userData.profile_image !== 'undefined')) && !profileImageError ? (
-                    <div className="me-3" style={{ position: 'relative' }}>
+    {/* Profile Image Section */}
+    <div className="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-4 mb-5 mt-4 px-1">
+        {(imagePreview || (userData.profile_image && userData.profile_image !== 'null' && userData.profile_image !== 'undefined')) && !profileImageError ? (
+            <div style={{ position: 'relative' }}>
                 <img
-                            src={imagePreview || userData.profile_image}
+                    src={imagePreview || userData.profile_image}
                     alt="Profile"
-                            style={{ 
-                                width: '100px',
-                                height: '100px',
-                                objectFit: 'cover',
-                                borderRadius: '50%',
-                                border: '3px solid #e0e0e0',
-                                display: 'block'
-                            }}
-                    onError={() => {
-                        console.error('Failed to load profile image');
-                        // Hide image on error, show initials placeholder instead
-                        setProfileImageError(true);
-                            }}
-                        />
-                    </div>
-                ) : (
-                    <div 
-                        className="me-3"
-                        style={{
-                            width: '100px',
-                            height: '100px',
-                            borderRadius: '50%',
-                            backgroundColor: '#e0e0e0',
-                            border: '3px solid #ccc',
-                            color: '#666',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <span style={{ fontSize: '32px' }}>👤</span>
-                    </div>
-                )}
-                <div>
-                    <div className="mb-2">
-                        <input
-                            type="file"
-                            id="profileImageInput"
-                            accept="image/*,.avif,.webp,.heic,.heif"
-                            onChange={handleImageSelect}
-                            style={{ display: 'none' }}
-                        />
-                        <label 
-                            htmlFor="profileImageInput" 
-                            className="btn text-white  mb-2" 
-                            style={{ 
-                                background: "#F56D2D", 
-                                fontSize: "15px", 
-                                fontWeight: "400", 
-                                fontFamily: "BasisGrotesquePro",
-                                cursor: 'pointer'
-                            }}
+                    style={{ 
+                        width: '110px',
+                        height: '110px',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        border: '4px solid #fff',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                        display: 'block'
+                    }}
+                    onError={() => setProfileImageError(true)}
+                />
+            </div>
+        ) : (
+            <div 
+                style={{
+                    width: '110px',
+                    height: '110px',
+                    borderRadius: '50%',
+                    backgroundColor: '#F3F4F6',
+                    border: '2px dashed #D1D5DB',
+                    color: '#9CA3AF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '40px'
+                }}
+            >
+                👤
+            </div>
+        )}
+
+        <div className="text-center text-sm-start flex-grow-1">
+            <div className="d-flex flex-wrap justify-content-center justify-content-sm-start gap-2 mb-2">
+                <input
+                    type="file"
+                    id="profileImageInput"
+                    accept="image/*,.avif,.webp,.heic,.heif"
+                    onChange={handleImageSelect}
+                    style={{ display: 'none' }}
+                />
+                <label 
+                    htmlFor="profileImageInput" 
+                    className="btn text-white px-4" 
+                    style={{ 
+                        background: "#F56D2D", 
+                        fontSize: "14px", 
+                        fontWeight: "500", 
+                        borderRadius: "10px",
+                        cursor: 'pointer',
+                        padding: "10px 20px"
+                    }}
+                >
+                    {selectedImage ? 'Change Photo' : 'Choose Photo'}
+                </label>
+
+                {selectedImage && (
+                    <>
+                        <button 
+                            className="btn btn-success px-4"
+                            onClick={handleImageUpload}
+                            disabled={uploadingImage}
+                            style={{ borderRadius: "10px", fontSize: "14px" }}
                         >
-                            {selectedImage ? 'Selected: ' + selectedImage.name : 'Choose Photo'}
-                        </label>
+                            {uploadingImage ? 'Uploading...' : 'Upload'}
+                        </button>
+                        <button 
+                            className="btn btn-outline-secondary px-4"
+                            onClick={() => {
+                                setSelectedImage(null);
+                                setImagePreview(null);
+                            }}
+                            style={{ borderRadius: "10px", fontSize: "14px" }}
+                        >
+                            Cancel
+                        </button>
+                    </>
+                )}
+            </div>
+            
+            <p className="text-muted small mb-0 mt-2">
+                {selectedImage ? <strong>Selected: {selectedImage.name}</strong> : 'JPG, PNG, AVIF or WEBP. Max 10MB'}
+            </p>
+        </div>
+    </div>
+
+    {/* Form */}
+    <form onSubmit={handleSaveChanges} className="px-1">
+        <div className="row g-3">
+            <div className="col-12 col-md-4">
+                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}>First Name</label>
+                <input 
+                    type="text" 
+                    className="form-control py-2" 
+                    value={userData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    style={{ borderRadius: "10px", border: "1px solid #E5E7EB" }}
+                />
+            </div>
+            <div className="col-12 col-md-4">
+                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}>Middle Initial</label>
+                <input 
+                    type="text" 
+                    className="form-control py-2" 
+                    value={userData.middle_name}
+                    onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                    style={{ borderRadius: "10px", border: "1px solid #E5E7EB" }}
+                />
+            </div>
+            <div className="col-12 col-md-4">
+                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}>Last Name</label>
+                <input 
+                    type="text" 
+                    className="form-control py-2" 
+                    value={userData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    style={{ borderRadius: "10px", border: "1px solid #E5E7EB" }}
+                />
+            </div>
+            <div className="col-12 col-md-6">
+                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}>Email</label>
+                <input
+                    type="email"
+                    className="form-control py-2"
+                    value={userData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    style={{ borderRadius: "10px", border: "1px solid #E5E7EB" }}
+                />
+            </div>
+            <div className="col-12 col-md-6">
+                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600" }}>Phone</label>
+                <PhoneInput
+                    country={phoneCountry}
+                    value={userData.phone_number || ''}
+                    onChange={(phone) => handleInputChange('phone_number', phone)}
+                    onCountryChange={(countryCode) => setPhoneCountry(countryCode.toLowerCase())}
+                    inputClass="form-control w-100"
+                    containerClass="w-100 phone-input-container"
+                    inputStyle={{ width: "100%", borderRadius: "10px", height: "42px" }}
+                    enableSearch={true}
+                    countryCodeEditable={false}
+                />
+            </div>
+        </div>
+
+        {/* Firm Information */}
+        {firmInfo && userRole && !['firm', 'admin', 'super_admin'].includes(userRole) && (
+            <div className="mt-5 pt-4 border-top" style={{ borderColor: "#F3F4F6 !important" }}>
+                <h6 className="mb-4" style={{ color: "#3B4A66", fontWeight: "700" }}>Current Firm</h6>
+                <div className="row g-3">
+                    <div className="col-12 col-md-6">
+                        <label className="form-label text-muted small fw-bold">Firm Name</label>
+                        <input 
+                            type="text" 
+                            className="form-control bg-light border-0" 
+                            value={firmInfo.name || ''} 
+                            disabled 
+                            style={{ borderRadius: "10px", padding: "12px" }}
+                        />
                     </div>
-                    
-                    {selectedImage && (
-                        <div className="mb-2">
-                            <button 
-                                className="btn btn-success  me-2"
-                                onClick={handleImageUpload}
-                                disabled={uploadingImage}
-                                style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            >
-                                {uploadingImage ? (
-                                    <>
-                                        <div className="spinner-border spinner-border-sm me-1" role="status">
-                                            <span className="visually-hidden">Uploading...</span>
-                                        </div>
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    'Upload Photo'
-                                )}
-                            </button>
-                            <button 
-                                className="btn btn-secondary "
-                                onClick={() => {
-                                    setSelectedImage(null);
-                                    setImagePreview(null);
-                                }}
-                                style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            >
-                                Cancel
-                            </button>
+                    <div className="col-6 col-md-3">
+                        <label className="form-label text-muted small fw-bold">Status</label>
+                        <input 
+                            type="text" 
+                            className="form-control bg-light border-0" 
+                            value={firmInfo.status ? firmInfo.status.toUpperCase() : ''} 
+                            disabled 
+                            style={{ borderRadius: "10px", padding: "12px" }}
+                        />
+                    </div>
+                    {firmInfo.subdomain && (
+                        <div className="col-6 col-md-3">
+                            <label className="form-label text-muted small fw-bold">Subdomain</label>
+                            <input 
+                                type="text" 
+                                className="form-control bg-light border-0" 
+                                value={firmInfo.subdomain || ''} 
+                                disabled 
+                                style={{ borderRadius: "10px", padding: "12px" }}
+                            />
                         </div>
                     )}
-                    
-                    <p className="text-muted small mb-0" style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                        JPG, PNG, AVIF, WEBP, GIF up to 10MB
-                    </p>
                 </div>
             </div>
+        )}
 
-            {/* Form */}
-            <form onSubmit={handleSaveChanges}>
-                <div className="row g-3">
-                    <div className="col-md-4">
-                        <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>First Name</label>
-                        <input 
-                            type="text" 
-                            className="form-control" 
-                            value={userData.first_name}
-                            onChange={(e) => handleInputChange('first_name', e.target.value)}
-                            style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            
-                        />
-                    </div>
-                    <div className="col-md-4">
-                        <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Middle Initial</label>
-                        <input 
-                            type="text" 
-                            className="form-control" 
-                            value={userData.middle_name}
-                            onChange={(e) => handleInputChange('middle_name', e.target.value)}
-                            style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                        />
-                    </div>
-                    <div className="col-md-4">
-                        <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Last Name</label>
-                        <input 
-                            type="text" 
-                            className="form-control" 
-                            value={userData.last_name}
-                            onChange={(e) => handleInputChange('last_name', e.target.value)}
-                            style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                        />
-                    </div>
-                    <div className="col-md-6">
-                        <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Email</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            value={userData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                        />
-                    </div>
-                    <div className="col-md-6">
-                        <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Phone</label>
-                        <PhoneInput
-                            country={phoneCountry}
-                            value={userData.phone_number || ''}
-                            onChange={(phone) => handleInputChange('phone_number', phone)}
-                            onCountryChange={(countryCode) => {
-                                setPhoneCountry(countryCode.toLowerCase());
-                            }}
-                            inputClass="form-control"
-                            containerClass="w-100 phone-input-container"
-                            inputStyle={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            enableSearch={true}
-                            countryCodeEditable={false}
-                        />
-                    </div>
-                </div>
-
-                {/* Firm Information - Show only if user is not firm admin or super admin */}
-                {firmInfo && userRole && userRole !== 'firm' && userRole !== 'admin' && userRole !== 'super_admin' && (
-                    <div className="mt-4 pt-4 border-top border-[#E8F0FF]">
-                        <h6 
-                            className="mb-3"
-                            style={{ 
-                                color: "#3B4A66", 
-                                fontSize: "16px", 
-                                fontWeight: "600", 
-                                fontFamily: "BasisGrotesquePro" 
-                            }}
-                        >
-                            Current Firm
-                        </h6>
-                        <div className="row g-3">
-                            <div className="col-md-6">
-                                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                    Firm Name
-                                </label>
-                                <input 
-                                    type="text" 
-                                    className="form-control" 
-                                    value={firmInfo.name || ''}
-                                    disabled
-                                    style={{ 
-                                        color: "#6B7280", 
-                                        fontSize: "13px", 
-                                        fontWeight: "400", 
-                                        fontFamily: "BasisGrotesquePro",
-                                        backgroundColor: "#F9FAFB",
-                                        cursor: "not-allowed"
-                                    }}
-                                />
-                            </div>
-                            <div className="col-md-3">
-                                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                    Status
-                                </label>
-                                <input 
-                                    type="text" 
-                                    className="form-control" 
-                                    value={firmInfo.status ? firmInfo.status.charAt(0).toUpperCase() + firmInfo.status.slice(1) : ''}
-                                    disabled
-                                    style={{ 
-                                        color: "#6B7280", 
-                                        fontSize: "13px", 
-                                        fontWeight: "400", 
-                                        fontFamily: "BasisGrotesquePro",
-                                        backgroundColor: "#F9FAFB",
-                                        cursor: "not-allowed"
-                                    }}
-                                />
-                            </div>
-                            {firmInfo.subdomain && (
-                                <div className="col-md-3">
-                                    <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                        Subdomain
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        className="form-control" 
-                                        value={firmInfo.subdomain || ''}
-                                        disabled
-                                        style={{ 
-                                            color: "#6B7280", 
-                                            fontSize: "13px", 
-                                            fontWeight: "400", 
-                                            fontFamily: "BasisGrotesquePro",
-                                            backgroundColor: "#F9FAFB",
-                                            cursor: "not-allowed"
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+        {/* Submit Button */}
+        <div className="mt-5 pb-5 mb-5">
+            <button
+                type="submit"
+                className="btn w-100 w-md-auto d-flex align-items-center justify-content-center gap-2 py-3 px-md-5"
+                disabled={saving}
+                style={{ 
+                    backgroundColor: "#F56D2D", 
+                    color: "#ffffff", 
+                    fontSize: "16px", 
+                    fontWeight: "600", 
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 12px rgba(245, 109, 45, 0.2)",
+                    opacity: saving ? 0.7 : 1 
+                }}
+            >
+                {saving ? (
+                    <div className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                    <><SaveIcon /> Save Changes</>
                 )}
-
-                <div className="mt-4">
-                    <button
-                        type="submit"
-                        className="btn d-flex align-items-center gap-2"
-                        disabled={saving}
-                        style={{ backgroundColor: "#F56D2D", color: "#ffffff", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro", opacity: saving ? 0.7 : 1 }}
-                    >
-                        {saving ? (
-                            <>
-                                <div className="spinner-border spinner-border-sm" role="status">
-                                    <span className="visually-hidden">Saving...</span>
-                                </div>
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <SaveIcon />
-                                Save Changes
-                            </>
-                        )}
-                    </button>
-                </div>
-            </form>
+            </button>
         </div>
+    </form>
+</div>
     );
 }

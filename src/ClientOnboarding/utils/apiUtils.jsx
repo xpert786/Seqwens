@@ -2499,20 +2499,21 @@ export const firmAdminTasksAPI = {
       throw new Error('No authentication token found');
     }
 
+    const isFormData = taskData instanceof FormData;
     const config = {
-      method: 'PUT', // or PATCH depending on backend implementation, usually PUT for full update
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' })
       },
-      body: JSON.stringify(taskData)
+      body: isFormData ? taskData : JSON.stringify(taskData)
     };
 
     return await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/tasks/${taskId}/`, config)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle validation errors similar to createTask
           if (response.status === 400 && errorData.errors) {
             const errorMessages = Object.entries(errorData.errors)
@@ -2788,7 +2789,7 @@ export const taskDetailAPI = {
       body: JSON.stringify(data)
     };
 
-    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/comments/`, config)
+    return await fetchWithCors(`${API_BASE_URL}/firm/tasks/${taskId}/comments/`, config)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));

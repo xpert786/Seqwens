@@ -3,7 +3,8 @@ import { roleAPI, profileAPI, handleAPIError, firmAdminCustomRolesAPI } from "..
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import RoleRequestModal from "./RoleRequestModal";
-import { FiTrash2, FiUser, FiMail, FiPhone, FiShield, FiBriefcase, FiUsers, FiPlus, FiChevronDown, FiChevronUp, FiCheck } from "react-icons/fi";
+import { FiTrash2, FiUser, FiMail, FiPhone, FiShield, FiBriefcase, FiUsers, FiPlus, FiChevronDown, FiChevronUp, FiCheck, FiRefreshCw } from "react-icons/fi";
+import { setTokens, clearUserData } from "../utils/userUtils";
 
 const ROLE_DISPLAY_NAMES = {
   super_admin: "Super Admin",
@@ -47,6 +48,7 @@ export default function UserProfileWithRoles() {
   const [selectedCustomRoleInfo, setSelectedCustomRoleInfo] = useState(null); // Store custom role info (name, description)
   const [expandedFirmRole, setExpandedFirmRole] = useState(null); // Track which firm role's permissions are expanded
   const [profileImageError, setProfileImageError] = useState(false); // Track if profile image failed to load
+  const [switchingRole, setSwitchingRole] = useState(null); // Track which role is being switched to
 
   // Fetch user profile
   const fetchUserProfile = async () => {
@@ -83,7 +85,7 @@ export default function UserProfileWithRoles() {
           }
           return true;
         });
-        
+
         setAllRoles({
           user_roles: userRoles,
           firm_roles: response.data.firm_roles || [],
@@ -220,7 +222,7 @@ export default function UserProfileWithRoles() {
       });
       return;
     }
-    
+
     setSelectedRoleToRequest(role);
     setSelectedCustomRoleInfo(customRoleInfo); // Store custom role info if provided
     setShowRequestModal(true);
@@ -229,26 +231,26 @@ export default function UserProfileWithRoles() {
   // Check if a role has a pending request
   const hasPendingRequest = (roleValue) => {
     if (!roleValue || pendingRequests.length === 0) return false;
-    
+
     // Extract custom role ID if it's in custom_role_{id} format
-    const customRoleId = roleValue.toString().startsWith('custom_role_') 
-      ? roleValue.toString().replace('custom_role_', '') 
+    const customRoleId = roleValue.toString().startsWith('custom_role_')
+      ? roleValue.toString().replace('custom_role_', '')
       : null;
-    
+
     return pendingRequests.some(
       req => {
         // Handle standard roles: check requested_role field
         const requestedRole = req.requested_role;
-        
+
         // Handle custom roles: check custom_role object
         const customRole = req.custom_role;
         const customRoleIdFromRequest = customRole?.id || req.custom_role_id || null;
-        
+
         // For standard roles: match requested_role
         if (!customRoleId && requestedRole) {
           return requestedRole === roleValue || requestedRole === roleValue.toString();
         }
-        
+
         // For custom roles: match custom_role.id
         if (customRoleId) {
           // Match if backend returned custom_role object with id
@@ -264,27 +266,68 @@ export default function UserProfileWithRoles() {
             return true;
           }
         }
-        
+
         // Fallback: Check if roleValue is a number and matches custom_role_id
         if (!customRoleId && customRoleIdFromRequest && roleValue.toString() === customRoleIdFromRequest.toString()) {
           return true;
         }
-        
+
         return false;
       }
     );
   };
 
   const handleRequestSuccess = async () => {
-        // Refresh user roles and pending requests after successful request
-        await Promise.all([
-          fetchUserRoles(),
-          fetchPendingRequests()
-        ]);
-        setShowRequestModal(false);
-        setSelectedRoleToRequest(null);
-        setSelectedCustomRoleInfo(null);
-      };
+    // Refresh user roles and pending requests after successful request
+    await Promise.all([
+      fetchUserRoles(),
+      fetchPendingRequests()
+    ]);
+    setShowRequestModal(false);
+    setSelectedRoleToRequest(null);
+    setSelectedCustomRoleInfo(null);
+  };
+
+  const handleSwitchActiveRole = async (roleValue) => {
+    if (switchingRole) return;
+
+    try {
+      setSwitchingRole(roleValue);
+      const response = await roleAPI.switchRole(roleValue);
+
+      if (response.success && response.access_token) {
+        toast.success(`Switched role to ${ROLE_DISPLAY_NAMES[roleValue] || roleValue}`, {
+          position: "top-right",
+          autoClose: 2000,
+        });
+
+        // Update user tokens and role context
+        const rememberMe = localStorage.getItem('rememberMe') === 'true' || sessionStorage.getItem('rememberMe') === 'true';
+        setTokens(response.access_token, response.refresh_token, rememberMe);
+
+        const storage = rememberMe ? localStorage : sessionStorage;
+        if (response.user) {
+          storage.setItem('userData', JSON.stringify(response.user));
+          storage.setItem('userType', response.user.active_role || response.user.user_type);
+        }
+
+        // Short delay before reload to show success message
+        setTimeout(() => {
+          window.location.href = '/'; // Go to dashboard with new role
+        }, 1500);
+      } else {
+        throw new Error(response.message || "Failed to switch role");
+      }
+    } catch (error) {
+      console.error("Error switching role:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setSwitchingRole(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -307,7 +350,7 @@ export default function UserProfileWithRoles() {
   const allUserRoles = userRoles?.all_roles || [];
   const activeRole = userRoles?.active_role || primaryRole;
   const rolesWithDetails = userRoles?.roles_with_details || [];
-  
+
   // Get primary role details
   const primaryRoleDetails = rolesWithDetails.find(r => r.is_primary) || {
     role: primaryRole,
@@ -315,7 +358,7 @@ export default function UserProfileWithRoles() {
     is_primary: true,
     is_active: activeRole === primaryRole
   };
-  
+
   // Get additional roles (non-primary)
   const additionalRolesDetails = rolesWithDetails.filter(r => !r.is_primary);
 
@@ -327,42 +370,39 @@ export default function UserProfileWithRoles() {
   const isFirmAdmin = primaryRole === 'firm' || primaryRole === 'admin' || allUserRoles.includes('firm') || allUserRoles.includes('admin');
 
   return (
-    <div style={{ fontFamily: "BasisGrotesquePro" }}>
+    <div style={{ fontFamily: "BasisGrotesquePro" }} className="pb-5">
       {/* Profile Header Section */}
-      <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
-        <div className="d-flex align-items-center gap-4">
+      <div className="bg-white border border-[#E8F0FF] rounded-4 p-3 p-md-4 mb-4 shadow-sm">
+        <div className="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3 gap-md-4">
           {/* Profile Picture */}
-          <div>
+          <div className="flex-shrink-0">
             {profileImage && profileImage !== 'null' && profileImage !== 'undefined' && !profileImageError ? (
               <img
                 src={profileImage}
                 alt="Profile"
                 style={{
-                  width: '120px',
-                  height: '120px',
+                  width: '100px',
+                  height: '100px',
                   objectFit: 'cover',
                   borderRadius: '50%',
-                  border: '4px solid #E8F0FF',
+                  border: '4px solid #F0F7FF',
                   display: 'block'
                 }}
-                onError={() => {
-                  // Hide image and show initials instead of random avatar
-                  setProfileImageError(true);
-                }}
+                onError={() => setProfileImageError(true)}
               />
             ) : (
               <div
                 style={{
-                  width: '120px',
-                  height: '120px',
+                  width: '100px',
+                  height: '100px',
                   borderRadius: '50%',
                   backgroundColor: '#E8F0FF',
-                  border: '4px solid #E8F0FF',
+                  border: '4px solid #F0F7FF',
                   color: '#3B4A66',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '48px',
+                  fontSize: '36px',
                   fontWeight: '600'
                 }}
               >
@@ -372,29 +412,29 @@ export default function UserProfileWithRoles() {
           </div>
 
           {/* User Info */}
-          <div className="flex-grow-1">
+          <div className="flex-grow-1 w-100">
             <h3
+              className="mb-2"
               style={{
                 color: "#3B4A66",
-                fontSize: "24px",
-                fontWeight: "600",
-                marginBottom: "8px"
+                fontSize: "22px",
+                fontWeight: "700"
               }}
             >
               {fullName}
             </h3>
             <div className="d-flex flex-column gap-2">
               {userProfile?.email && (
-                <div className="d-flex align-items-center gap-2">
-                  <FiMail size={16} color="#6B7280" />
-                  <span style={{ color: "#6B7280", fontSize: "14px" }}>
+                <div className="d-flex align-items-center justify-content-center justify-content-sm-start gap-2">
+                  <FiMail size={14} className="text-muted" />
+                  <span className="text-break" style={{ color: "#6B7280", fontSize: "14px" }}>
                     {userProfile.email}
                   </span>
                 </div>
               )}
               {userProfile?.phone_number && (
-                <div className="d-flex align-items-center gap-2">
-                  <FiPhone size={16} color="#6B7280" />
+                <div className="d-flex align-items-center justify-content-center justify-content-sm-start gap-2">
+                  <FiPhone size={14} className="text-muted" />
                   <span style={{ color: "#6B7280", fontSize: "14px" }}>
                     {userProfile.phone_number}
                   </span>
@@ -406,82 +446,80 @@ export default function UserProfileWithRoles() {
       </div>
 
       {/* My Roles Section */}
-      <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
+      <div className="bg-white border border-[#E8F0FF] rounded-4 p-3 p-md-4 mb-4 shadow-sm">
         <div className="d-flex align-items-center gap-2 mb-4">
-          <FiShield size={20} color="#3B4A66" />
+          <FiShield size={20} style={{ color: "#3B4A66" }} />
           <h4
+            className="m-0"
             style={{
               color: "#3B4A66",
-              fontSize: "20px",
-              fontWeight: "600",
-              marginBottom: "0"
+              fontSize: "18px",
+              fontWeight: "700"
             }}
           >
-            My Roles
+            Account Roles
           </h4>
         </div>
 
         {primaryRole && (
-          <div className="mb-3">
-            <p
-              style={{
-                color: "#6B7280",
-                fontSize: "14px",
-                fontWeight: "500",
-                marginBottom: "8px"
-              }}
-            >
-              Primary Role
-            </p>
-            <div className="d-flex flex-wrap gap-2">
-              <span
-                className="px-3 py-2 rounded d-flex align-items-center gap-2"
-                style={{
-                  backgroundColor: primaryRoleDetails.is_active 
-                    ? ROLE_TYPE_COLORS.user_role.bg 
-                    : "#F9FAFB",
-                  color: primaryRoleDetails.is_active 
-                    ? ROLE_TYPE_COLORS.user_role.text 
-                    : "#6B7280",
-                  border: `1px solid ${primaryRoleDetails.is_active 
-                    ? ROLE_TYPE_COLORS.user_role.border 
-                    : "#E5E7EB"}`,
-                  fontSize: "14px",
-                  fontWeight: "500"
-                }}
-              >
-                <FiUser size={14} />
-                {primaryRoleDetails.display_name || ROLE_DISPLAY_NAMES[primaryRole] || primaryRole} (Primary)
-                {primaryRoleDetails.is_active && (
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      backgroundColor: ROLE_TYPE_COLORS.user_role.text,
-                      color: "white",
-                      padding: "2px 6px",
-                      borderRadius: "10px",
-                      marginLeft: "4px"
-                    }}
-                  >
-                    Active
-                  </span>
-                )}
+      <div className="mb-4">
+        <p className="small fw-bold text-uppercase text-muted mb-2" style={{ letterSpacing: '0.5px' }}>
+          Primary Role
+        </p>
+        <div className="d-flex flex-wrap gap-2">
+          <div
+            className="px-3 py-2 rounded-3 d-flex align-items-center gap-3 transition-all duration-200 hover:shadow-sm"
+            style={{
+              backgroundColor: primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.bg : "#F8FAFC",
+              color: primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.text : "#64748B",
+              border: `1px solid ${primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.border : "#E2E8F0"}`,
+              fontSize: "13px",
+              fontWeight: "600",
+              minWidth: "fit-content"
+            }}
+          >
+            <div className="d-flex align-items-center gap-2">
+              <FiUser size={14} />
+              <span className="text-truncate">
+                {primaryRoleDetails.display_name || ROLE_DISPLAY_NAMES[primaryRole] || primaryRole}
               </span>
             </div>
+            
+            <div className="d-flex align-items-center gap-2">
+              {primaryRoleDetails.is_active ? (
+                <span className="badge rounded-pill" style={{ backgroundColor: ROLE_TYPE_COLORS.user_role.text, fontSize: '9px', padding: '4px 8px' }}>
+                  Active
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleSwitchActiveRole(primaryRole)}
+                  disabled={!!switchingRole}
+                  className="btn btn-sm p-0 d-flex align-items-center gap-1 text-decoration-none"
+                  style={{ 
+                    fontSize: '11px', 
+                    fontWeight: '700',
+                    color: ROLE_TYPE_COLORS.user_role.text,
+                    opacity: switchingRole ? 0.5 : 1
+                  }}
+                >
+                  {switchingRole === primaryRole ? (
+                    <div className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }} role="status" />
+                  ) : (
+                    <FiRefreshCw size={12} />
+                  )}
+                  Switch
+                </button>
+              )}
+            </div>
           </div>
-        )}
+        </div>
+      </div>
+    )}
 
         {additionalRolesDetails.length > 0 && (
-          <div className="mb-3">
-            <p
-              style={{
-                color: "#6B7280",
-                fontSize: "14px",
-                fontWeight: "500",
-                marginBottom: "8px"
-              }}
-            >
-              Additional Roles
+          <div>
+            <p className="small fw-bold text-uppercase text-muted mb-2" style={{ letterSpacing: '0.5px' }}>
+              Additional Access
             </p>
             <div className="d-flex flex-wrap gap-2">
               {additionalRolesDetails.map((roleDetail, index) => {
@@ -490,105 +528,67 @@ export default function UserProfileWithRoles() {
                 const isDeletable = !roleDetail.is_primary;
 
                 return (
-                  <span
+                  <div
                     key={`${roleDetail.role}-${index}`}
-                    className="px-3 py-2 rounded d-flex align-items-center gap-2"
+                    className="px-3 py-2 rounded-3 d-flex align-items-center gap-3 transition-all duration-200 hover:shadow-sm"
                     style={{
-                      backgroundColor: roleDetail.is_active ? colors.bg : "#F9FAFB",
-                      color: roleDetail.is_active ? colors.text : "#6B7280",
-                      border: `1px solid ${roleDetail.is_active ? colors.border : "#E5E7EB"}`,
-                      fontSize: "14px",
-                      fontWeight: "500"
+                      backgroundColor: roleDetail.is_active ? colors.bg : "#F8FAFC",
+                      color: roleDetail.is_active ? colors.text : "#64748B",
+                      border: `1px solid ${roleDetail.is_active ? colors.border : "#E2E8F0"}`,
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      minWidth: "fit-content"
                     }}
                   >
-                    {roleType === "firm_role" ? (
-                      <FiBriefcase size={14} />
-                    ) : (
-                      <FiUsers size={14} />
-                    )}
-                    {roleDetail.display_name || ROLE_DISPLAY_NAMES[roleDetail.role] || roleDetail.role}
-                    {roleDetail.is_active && (
-                      <span
-                        style={{
-                          fontSize: "10px",
-                          backgroundColor: colors.text,
-                          color: "white",
-                          padding: "2px 6px",
-                          borderRadius: "10px",
-                          marginLeft: "4px"
-                        }}
-                      >
-                        Active
-                      </span>
-                    )}
-                    {isDeletable && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRole(roleDetail.role)}
-                        disabled={removingRole === roleDetail.role}
-                        className="btn-close btn-close-sm"
-                        style={{
-                          fontSize: "10px",
-                          opacity: removingRole === roleDetail.role ? 0.5 : 1,
-                          cursor: removingRole === roleDetail.role ? "not-allowed" : "pointer",
-                          marginLeft: "4px"
-                        }}
-                        aria-label={`Remove ${roleDetail.role} role`}
-                      />
-                    )}
-                  </span>
+                    <div className="d-flex align-items-center gap-2">
+                      {roleType === "firm_role" ? <FiBriefcase size={14} /> : <FiUsers size={14} />}
+                      <span>{roleDetail.display_name || ROLE_DISPLAY_NAMES[roleDetail.role] || roleDetail.role}</span>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2">
+                      {roleDetail.is_active ? (
+                        <span className="badge rounded-pill" style={{ backgroundColor: colors.text, fontSize: '9px', padding: '4px 8px' }}>
+                          Active
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleSwitchActiveRole(roleDetail.role)}
+                          disabled={!!switchingRole}
+                          className="btn btn-sm p-0 d-flex align-items-center gap-1 text-decoration-none"
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            color: colors.text,
+                            opacity: switchingRole ? 0.5 : 1
+                          }}
+                        >
+                          {switchingRole === roleDetail.role ? (
+                            <div className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }} role="status" />
+                          ) : (
+                            <FiRefreshCw size={12} />
+                          )}
+                          Switch
+                        </button>
+                      )}
+
+                      {isDeletable && !roleDetail.is_active && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRole(roleDetail.role)}
+                          disabled={!!switchingRole}
+                          className="btn-close btn-close-sm"
+                          style={{ fontSize: '9px', opacity: removingRole === roleDetail.role ? 0.5 : 0.6 }}
+                          aria-label="Remove role"
+                        />
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
           </div>
         )}
-
-        {additionalRolesDetails.length === 0 && primaryRole && (
-          <p style={{ color: "#6B7280", fontSize: "14px", fontStyle: "italic" }}>
-            You currently have only your primary role.
-          </p>
-        )}
       </div>
-
-      
-
-      {/* Delete Role Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          if (!removingRole) {
-            setShowDeleteConfirm(false);
-            setRoleToDelete(null);
-          }
-        }}
-        onConfirm={confirmDeleteRole}
-        title="Remove Role"
-        message={
-          roleToDelete
-            ? `Are you sure you want to remove the "${ROLE_DISPLAY_NAMES[roleToDelete] || roleToDelete}" role? This action cannot be undone.`
-            : "Are you sure you want to remove this role? This action cannot be undone."
-        }
-        confirmText="Remove"
-        cancelText="Cancel"
-        isLoading={!!removingRole}
-        isDestructive={true}
-      />
-
-      {/* Role Request Modal */}
-      <RoleRequestModal
-        show={showRequestModal}
-        onClose={() => {
-          setShowRequestModal(false);
-          setSelectedRoleToRequest(null);
-          setSelectedCustomRoleInfo(null);
-        }}
-        onSuccess={handleRequestSuccess}
-        userRoles={allUserRoles}
-        primaryRole={primaryRole}
-        preselectedRole={selectedRoleToRequest}
-        preselectedRoleName={selectedCustomRoleInfo?.name || null}
-        preselectedRoleDescription={selectedCustomRoleInfo?.description || null}
-      />
     </div>
   );
 }

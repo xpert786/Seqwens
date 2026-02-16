@@ -449,15 +449,12 @@ export default function Topbar({
 
 
                     <div className="d-flex align-items-center gap-3 flex-grow-1">
-                        <Link to="/" className="navbar-brand d-flex align-items-center m-0">
-                            <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" />
-                        </Link>
                         <button
                             type="button"
                             onClick={onToggleSidebar}
                             className="sidebar-toggle-btn"
                             aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-                            style={{ background: "transparent", border: "none" }}
+                            style={{ background: "transparent", border: "none", flexShrink: 0 }}
                         >
                             <span
                                 className={`sidebar-toggle-icon ${isSidebarOpen ? "" : "collapsed"}`}
@@ -465,6 +462,10 @@ export default function Topbar({
                                 <LogoIcon />
                             </span>
                         </button>
+
+                        <Link to="/" className="navbar-brand d-flex align-items-center m-0">
+                            <img src={logoUrl || logo} alt="Logo" crossOrigin="anonymous" className="topbar-logo" />
+                        </Link>
 
 
                         <div className="topbar-search position-relative" ref={searchRef}>

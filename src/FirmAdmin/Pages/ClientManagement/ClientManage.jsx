@@ -1679,6 +1679,27 @@ export default function ClientManage() {
                             >
                               Assign
                             </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClientForDelete(taxpayer.id);
+                                setShowDeleteConfirmModal(true);
+                              }}
+                              style={{
+                                backgroundColor: '#EF4444',
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                whiteSpace: 'nowrap',
+                                transition: 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Reject
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1840,6 +1861,26 @@ export default function ClientManage() {
                             >
                               <FaLink size={10} />
                               <span>Invite</span>
+                            </button>
+                            <button
+                              className="btn d-flex align-items-center justify-content-center gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveInviteDetails(invite);
+                                handleDeleteInvite();
+                              }}
+                              style={{
+                                backgroundColor: '#EF4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '5px',
+                                padding: '4px 10px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              <FaTrash size={10} />
+                              <span>Reject</span>
                             </button>
                           </div>
                         </div>
@@ -3021,141 +3062,154 @@ export default function ClientManage() {
       }
 
       {/* Delete Invite Confirmation Modal */}
-      {
-        showDeleteInviteConfirmModal && (
+      {showDeleteInviteConfirmModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 shadow-2xl"
+          style={{ 
+            zIndex: 10000,
+            backgroundColor: "rgba(19, 19, 35, 0.4)",
+            backdropFilter: "blur(4px)",
+            animation: "fadeIn 0.2s ease-out"
+          }}
+          onClick={() => !deletingInvite && setShowDeleteInviteConfirmModal(false)}
+        >
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            style={{ zIndex: 10000 }}
-            onClick={() => {
-              if (!deletingInvite) {
-                setShowDeleteInviteConfirmModal(false);
-              }
+            className="bg-white w-full max-w-sm overflow-hidden"
+            style={{ 
+              borderRadius: '24px',
+              padding: '32px',
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
+              animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-white rounded-lg shadow-lg p-4 max-w-sm w-full mx-4"
-              style={{
-                borderRadius: '8px',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h3>
-                <button
-                  onClick={() => {
-                    if (!deletingInvite) {
-                      setShowDeleteInviteConfirmModal(false);
-                    }
-                  }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200 text-gray-500"
-                  disabled={deletingInvite}
-                >
-                  <IoMdClose size={22} />
-                </button>
+            <div className="text-center">
+              <div
+                className="mx-auto mb-5 flex items-center justify-center"
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  backgroundColor: "#FFF5F5",
+                  color: "#FF4D4F",
+                  borderRadius: "18px",
+                  fontSize: "24px"
+                }}
+              >
+                <FaTrash />
               </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Delete Invitation</h3>
+              <p className="text-sm text-gray-500 mb-8 font-[BasisGrotesquePro] leading-relaxed">
+                Are you sure you want to delete this invitation? This action cannot be undone.
+              </p>
+            </div>
 
-              <div className="mb-4">
-                <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">
-                  Are you sure you want to delete this invitation? This action cannot be undone.
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setShowDeleteInviteConfirmModal(false);
-                  }}
-                  className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
-                  disabled={deletingInvite}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDeleteInvite}
-                  className="px-3 py-1 text-xs font-medium text-white !rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                  style={{ background: 'var(--color-red-500, #EF4444)' }}
-                  disabled={deletingInvite}
-                >
-                  {deletingInvite ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={confirmDeleteInvite}
+                disabled={deletingInvite}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
+                style={{ 
+                  backgroundColor: '#FF4D4F',
+                  boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
+                }}
+              >
+                {deletingInvite && <div className="spinner-border spinner-border-sm" role="status" />}
+                {deletingInvite ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+              <button
+                onClick={() => setShowDeleteInviteConfirmModal(false)}
+                disabled={deletingInvite}
+                className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Delete Client Confirmation Modal */}
-      {
-        showDeleteConfirmModal && (
+      {showDeleteConfirmModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 shadow-2xl"
+          style={{ 
+            zIndex: 10000,
+            backgroundColor: "rgba(19, 19, 35, 0.4)",
+            backdropFilter: "blur(4px)",
+            animation: "fadeIn 0.2s ease-out"
+          }}
+          onClick={() => !deleting && setShowDeleteConfirmModal(false)}
+        >
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            style={{ zIndex: 9999 }}
-            onClick={() => {
-              if (!deleting) {
-                setShowDeleteConfirmModal(false);
-                setSelectedClientForDelete(null);
-              }
+            className="bg-white w-full max-w-sm overflow-hidden"
+            style={{ 
+              borderRadius: '24px',
+              padding: '32px',
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
+              animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-white rounded-lg shadow-lg p-4 max-w-sm w-full mx-4"
-              style={{
-                borderRadius: '8px',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="text-sm font-bold text-gray-900" style={{ color: '#3B4A66' }}>
-                  Remove Client
-                </h4>
-                <button
-                  onClick={() => {
-                    if (!deleting) {
-                      setShowDeleteConfirmModal(false);
-                      setSelectedClientForDelete(null);
-                    }
-                  }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200 text-gray-500"
-                  disabled={deleting}
-                >
-                  <IoMdClose size={22} />
-                </button>
+            <div className="text-center">
+              <div
+                className="mx-auto mb-5 flex items-center justify-center"
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  backgroundColor: "#FFF5F5",
+                  color: "#FF4D4F",
+                  borderRadius: "18px",
+                  fontSize: "24px"
+                }}
+              >
+                <FaExclamationTriangle />
               </div>
-
-              <div className="mb-4">
-                <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">
-                  Are you sure you want to remove this client? This will permanently remove their record and free up their email address.
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setShowDeleteConfirmModal(false);
-                    setSelectedClientForDelete(null);
-                  }}
-                  className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
-                  disabled={deleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (selectedClientForDelete) {
-                      handleDeleteTaxpayer(selectedClientForDelete);
-                    }
-                  }}
-                  className="px-3 py-1 text-xs font-medium text-white !rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                  style={{ background: 'var(--color-red-500, #EF4444)' }}
-                  disabled={deleting}
-                >
-                  {deleting ? 'Removing...' : 'Confirm Removal'}
-                </button>
-              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Remove Client</h3>
+              <p className="text-sm text-gray-500 mb-8 font-[BasisGrotesquePro] leading-relaxed">
+                Are you sure you want to remove this client? This will permanently remove their record and free up their email address.
+              </p>
             </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => selectedClientForDelete && handleDeleteTaxpayer(selectedClientForDelete)}
+                disabled={deleting}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
+                style={{ 
+                  backgroundColor: '#FF4D4F',
+                  boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
+                }}
+              >
+                {deleting && <div className="spinner-border spinner-border-sm" role="status" />}
+                {deleting ? 'Removing...' : 'Confirm removal'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  setSelectedClientForDelete(null);
+                }}
+                disabled={deleting}
+                className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+            
+            <style>
+                {`
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.9); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                `}
+            </style>
           </div>
-        )
-      }
+        </div>
+      )}
     </div>
   );
 }

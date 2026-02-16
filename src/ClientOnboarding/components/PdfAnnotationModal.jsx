@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
-import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove } from 'react-icons/fi';
+import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove, FiZoomIn, FiZoomOut, FiMonitor } from 'react-icons/fi';
 import { handleAPIError } from '../utils/apiUtils';
 import '../styles/PdfAnnotationModal.css';
 
@@ -381,6 +381,9 @@ export default function PdfAnnotationModal({
       : (annotationsRef.current.length > 0 ? annotationsRef.current : annotations);
     const pageAnnotations = allAnnotations.filter(a => a.page === pageNum);
 
+    context.save();
+    context.scale(scale, scale);
+
     pageAnnotations.forEach(annotation => {
       if (annotation.type === 'drawing') {
         context.strokeStyle = annotation.color || penColor;
@@ -401,6 +404,8 @@ export default function PdfAnnotationModal({
         }
       }
     });
+
+    context.restore();
   };
 
   const drawImages = (context, pageNum, viewport) => {
@@ -410,6 +415,9 @@ export default function PdfAnnotationModal({
       const imageObj = new Image();
       imageObj.src = img.src;
       imageObj.onload = () => {
+        context.save();
+        context.scale(scale, scale);
+
         context.drawImage(
           imageObj,
           img.x,
@@ -421,9 +429,11 @@ export default function PdfAnnotationModal({
         // Draw border if this image is being dragged
         if (draggingImage && draggingImage.id === img.id) {
           context.strokeStyle = '#00C0C6';
-          context.lineWidth = 2;
+          context.lineWidth = 2; // Scaled line width
           context.strokeRect(img.x, img.y, img.width, img.height);
         }
+
+        context.restore();
       };
     });
   };
@@ -467,7 +477,9 @@ export default function PdfAnnotationModal({
     if (!Array.isArray(currentAnnotations) || currentAnnotations.length === 0) return [];
 
     const annotationsToRemove = new Set();
-    const eraserRadiusSquared = eraserWidth * eraserWidth;
+    // Adjust eraser radius based on scale to keep physical size roughly consistent on document
+    const eraserRadius = eraserWidth / scale;
+    const eraserRadiusSquared = eraserRadius * eraserRadius;
 
     for (const ann of currentAnnotations) {
       // Skip invalid annotations
@@ -489,7 +501,7 @@ export default function PdfAnnotationModal({
     }
 
     return Array.from(annotationsToRemove);
-  }, [eraserWidth]);
+  }, [eraserWidth, scale]);
 
   const handleMouseDown = (e) => {
     // Disable editing if annotations have been saved
@@ -516,8 +528,9 @@ export default function PdfAnnotationModal({
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    // Normalize coordinates by scale
+    const x = ((e.clientX - rect.left) * scaleX) / scale;
+    const y = ((e.clientY - rect.top) * scaleY) / scale;
 
     // Validate coordinates
     if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
@@ -531,6 +544,7 @@ export default function PdfAnnotationModal({
       console.log('Starting drag for image:', clickedImage.id);
       canvas.style.cursor = 'grabbing';
       setDraggingImage(clickedImage);
+      // Store offset in unscaled coordinates
       setDragOffset({
         x: x - clickedImage.x,
         y: y - clickedImage.y
@@ -567,13 +581,23 @@ export default function PdfAnnotationModal({
         console.log('Annotations to remove:', annotationsToRemove);
 
         // Also check if eraser is over any image
+        const eraserRadius = eraserWidth / scale;
+        const eraserRadiusSquared = eraserRadius * eraserRadius;
+
         const imagesToRemove = images.filter(img => {
           if (img.page !== pageNum) return false;
+          // Check if eraser center is within image bounds OR close enough to center
+          // Simple check: distance from eraser to image center
           const imgCenterX = img.x + img.width / 2;
           const imgCenterY = img.y + img.height / 2;
           const dx = imgCenterX - x;
           const dy = imgCenterY - y;
-          return (dx * dx + dy * dy) <= (eraserWidth * eraserWidth);
+
+          // Also check simple bounds intersection for better feel
+          const inBounds = x >= img.x && x <= img.x + img.width &&
+            y >= img.y && y <= img.y + img.height;
+
+          return inBounds || ((dx * dx + dy * dy) <= eraserRadiusSquared);
         }).map(img => img.id);
         console.log('Images to remove:', imagesToRemove);
 
@@ -666,8 +690,9 @@ export default function PdfAnnotationModal({
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    // Normalize coordinates by scale
+    const x = ((e.clientX - rect.left) * scaleX) / scale;
+    const y = ((e.clientY - rect.top) * scaleY) / scale;
 
     // Validate coordinates
     if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
@@ -715,6 +740,9 @@ export default function PdfAnnotationModal({
       const context = canvas.getContext('2d');
       if (!context) return;
 
+      context.save();
+      context.scale(scale, scale);
+
       context.strokeStyle = penColor;
       context.lineWidth = penWidth;
       context.lineCap = 'round';
@@ -727,6 +755,8 @@ export default function PdfAnnotationModal({
         context.lineTo(x, y);
         context.stroke();
       }
+
+      context.restore();
 
       startPosRef.current = { x, y, page: pageNum };
 
@@ -1069,11 +1099,12 @@ export default function PdfAnnotationModal({
           src: img.src,
           signer: 'spouse'
         })) : [],
-        pdf_scale: scale,
-        zoom_percentage: Math.round(scale * 100), // Zoom percentage (e.g., 150 for 150%)
+        // Send normalized scale (1.0) since all coordinates are already normalized
+        pdf_scale: 1.0,
+        zoom_percentage: 100,
         canvas_info: {
-          width: canvasWidth,
-          height: canvasHeight
+          width: canvasWidth / scale,
+          height: canvasHeight / scale
         }
       };
 
@@ -1123,9 +1154,27 @@ export default function PdfAnnotationModal({
     onClose();
   };
 
-  // Zoom is fixed at 100% - no zoom functions needed
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev + 0.25, 3.0));
+  };
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev - 0.25, 0.5));
+  };
 
   if (!isOpen) return null;
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkRes = () => {
+      setIsMobile(window.innerWidth < 768); // 768px is the standard tablet/mobile breakpoint
+    };
+
+    checkRes(); // Check on mount
+    window.addEventListener('resize', checkRes);
+    return () => window.removeEventListener('resize', checkRes);
+  }, []);
 
   return (
     <Modal
@@ -1141,7 +1190,7 @@ export default function PdfAnnotationModal({
         <div className="d-flex justify-content-between align-items-center w-100">
           <div>
             <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0, textAlign: 'center' }}>
-              PDF Annotation Tool
+              PDF Signature Tool111
             </Modal.Title>
           </div>
           <button
@@ -1153,261 +1202,205 @@ export default function PdfAnnotationModal({
       </Modal.Header>
 
       <Modal.Body className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '60vh', overflowY: 'auto' }}>
-        {/* Toolbox */}
-        <div className="annotation-toolbox" style={{
-          borderBottom: '2px solid #E5E7EB',
-          padding: '12px 24px',
-          backgroundColor: '#F9FAFB',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          flexWrap: 'wrap'
-        }}>
-          {/* Signer Toggle - Show only if spouse signature is required */}
-          {spouseSignRequired && (
-            <>
-              <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
-                <button
-                  onClick={() => setActiveSigner('primary')}
-                  className={`btn  ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{
-                    fontSize: '12px',
-                    padding: '4px 12px',
-                    minWidth: '80px'
-                  }}
-                  title="Sign as Primary Taxpayer"
-                >
-                  Primary
-                </button>
-                <button
-                  onClick={() => setActiveSigner('spouse')}
-                  className={`btn  ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{
-                    fontSize: '12px',
-                    padding: '4px 12px',
-                    minWidth: '80px',
-                    backgroundColor: activeSigner === 'spouse' ? '#F56D2D' : undefined,
-                    borderColor: activeSigner === 'spouse' ? '#F56D2D' : undefined
-                  }}
-                  title="Sign as Spouse"
-                >
-                  Spouse
-                </button>
-              </div>
-              <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-            </>
-          )}
 
-          {/* Tools */}
-          <div className="d-flex gap-2 align-items-center">
+        {isMobile ? (
+          /* --- Mobile Warning Message --- */
+          <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ height: '100%', backgroundColor: '#F9FAFB' }}>
+            <div style={{ backgroundColor: '#FEF3C7', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
+              <FiMonitor size={48} color="#D97706" />
+            </div>
+            <h3 style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '700', color: '#1F2937' }}>Bigger Screen Required</h3>
+            <p style={{ fontFamily: 'BasisGrotesquePro', color: '#4B5563', maxWidth: '300px', margin: '0 auto' }}>
+              For accurate signing and annotations, please open this document on a laptop or desktop computer.
+            </p>
             <button
-              onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
-              disabled={isSaved}
-              className={`btn  ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
-              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
-              title="Pen Tool"
+              onClick={handleClose}
+              className="btn btn-primary mt-4"
+              style={{ backgroundColor: '#3B4A66', border: 'none', padding: '10px 24px', borderRadius: '8px' }}
             >
-              <FiPenTool size={18} />
-            </button>
-            <button
-              onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
-              disabled={isSaved}
-              className={`btn  ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
-              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
-              title="Eraser Tool"
-            >
-              <FiTrash size={18} />
-            </button>
-            <button
-              onClick={() => !isSaved && imageInputRef.current?.click()}
-              disabled={isSaved}
-              className={`btn  ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
-              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
-              title="Upload Image"
-            >
-              <FiImage size={18} />
-            </button>
-            <button
-              onClick={() => {
-                if (!isSaved) {
-                  console.log('Select/Move tool clicked');
-                  setActiveTool(TOOLS.SELECT);
-                }
-              }}
-              disabled={isSaved}
-              className={`btn  ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
-              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
-              title="Select/Move Tool - Click and drag images to move them"
-            >
-              <FiMove size={18} />
-            </button>
-            <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: 'none' }}
-            />
-
-            {/* Divider */}
-            <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-
-            {/* Clear All button */}
-            <button
-              onClick={handleClearAll}
-              disabled={isSaved || (annotations.length === 0 && images.length === 0)}
-              className="btn  btn-outline-danger"
-              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
-              title="Clear All Annotations"
-            >
-              <FiTrash2 size={18} />
+              Got it, Close
             </button>
           </div>
-
-          {/* Pen Settings */}
-          {activeTool === TOOLS.PEN && !isSaved && (
-            <>
-              <div className="d-flex align-items-center gap-2">
-                <label style={{ fontSize: '14px', color: '#3B4A66', margin: 0 }}>Color:</label>
-                <input
-                  type="color"
-                  value={penColor}
-                  onChange={(e) => setPenColor(e.target.value)}
-                  disabled={isSaved}
-                  style={{ width: '40px', height: '32px', border: '1px solid #E5E7EB', borderRadius: '4px', cursor: isSaved ? 'not-allowed' : 'pointer', opacity: isSaved ? 0.6 : 1 }}
-                />
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                <label style={{ fontSize: '14px', color: '#3B4A66', margin: 0 }}>Width:</label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={penWidth}
-                  onChange={(e) => setPenWidth(parseInt(e.target.value))}
-                  disabled={isSaved}
-                  style={{ width: '100px', opacity: isSaved ? 0.6 : 1 }}
-                />
-                <span style={{ fontSize: '12px', color: '#6B7280', minWidth: '30px' }}>{penWidth}px</span>
-              </div>
-            </>
-          )}
-
-          {/* Eraser Settings */}
-          {activeTool === TOOLS.TRASH && !isSaved && (
-            <div className="d-flex align-items-center gap-2">
-              <label style={{ fontSize: '14px', color: '#3B4A66', margin: 0 }}>Size:</label>
-              <input
-                type="range"
-                min="5"
-                max="50"
-                value={eraserWidth}
-                onChange={(e) => setEraserWidth(parseInt(e.target.value))}
-                disabled={isSaved}
-                style={{ width: '100px', opacity: isSaved ? 0.6 : 1 }}
-              />
-              <span style={{ fontSize: '12px', color: '#6B7280', minWidth: '30px' }}>{eraserWidth}px</span>
-            </div>
-          )}
-
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{
-              fontSize: '14px',
-              color: '#3B4A66',
+        ) : (
+          /* --- Full Desktop Experience --- */
+          <>
+            {/* Toolbox */}
+            <div className="annotation-toolbox" style={{
+              borderBottom: '2px solid #E5E7EB',
+              padding: '12px 24px',
+              backgroundColor: '#F9FAFB',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 8px',
-              minWidth: '60px',
-              justifyContent: 'center'
+              gap: '16px',
+              flexWrap: 'wrap'
             }}>
-              {Math.round(scale * 100)}%
-            </span>
-          </div>
-        </div>
+              {/* Signer Toggle - Show only if spouse signature is required */}
+              {spouseSignRequired && (
+                <>
+                  <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
+                    <button
+                      onClick={() => setActiveSigner('primary')}
+                      className={`btn  ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: '12px', padding: '4px 12px', minWidth: '80px' }}
+                    >
+                      Primary
+                    </button>
+                    <button
+                      onClick={() => setActiveSigner('spouse')}
+                      className={`btn  ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      style={{
+                        fontSize: '12px',
+                        padding: '4px 12px',
+                        minWidth: '80px',
+                        backgroundColor: activeSigner === 'spouse' ? '#F56D2D' : undefined,
+                        borderColor: activeSigner === 'spouse' ? '#F56D2D' : undefined
+                      }}
+                    >
+                      Spouse
+                    </button>
+                  </div>
+                  <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+                </>
+              )}
 
-        {/* PDF Viewer Area */}
-        <div
-          ref={containerRef}
-          className="pdf-viewer-container"
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'auto',
-            padding: '16px',
-            backgroundColor: '#F3F4F6',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
-          {loading ? (
-            <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '100%' }}>
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading PDF...</span>
-              </div>
-              <p className="mt-3" style={{ color: '#6B7280' }}>Loading PDF document...</p>
-            </div>
-          ) : pdfPages.length > 0 ? (
-            pdfPages.map((pageNum) => (
-              <div
-                key={pageNum}
-                data-page={pageNum}
-                className="pdf-page-wrapper"
-                style={{
-                  position: 'relative',
-                  marginBottom: '20px',
-                  cursor: activeTool === TOOLS.PEN ? 'crosshair'
-                    : activeTool === TOOLS.TRASH ? 'not-allowed'
-                      : activeTool === TOOLS.IMAGE ? 'copy'
-                        : activeTool === TOOLS.SELECT ? (draggingImage ? 'grabbing' : 'grab')
-                          : 'default'
-                }}
-              >
-                {/* Canvas will be inserted here by renderPage */}
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-5">
-              <p style={{ color: '#6B7280' }}>No PDF pages available</p>
-            </div>
-          )}
-        </div>
+              {/* Tools */}
+              <div className="d-flex gap-2 align-items-center">
+                <button
+                  onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
+                  disabled={isSaved}
+                  className={`btn  ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  style={{ opacity: isSaved ? 0.6 : 1 }}
+                  title="Pen Tool"
+                >
+                  <FiPenTool size={18} />
+                </button>
+                <button
+                  onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
+                  disabled={isSaved}
+                  className={`btn  ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  style={{ opacity: isSaved ? 0.6 : 1 }}
+                  title="Eraser Tool"
+                >
+                  <FiTrash size={18} />
+                </button>
+                <button
+                  onClick={() => !isSaved && imageInputRef.current?.click()}
+                  disabled={isSaved}
+                  className={`btn  ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  style={{ opacity: isSaved ? 0.6 : 1 }}
+                  title="Upload Image"
+                >
+                  <FiImage size={18} />
+                </button>
+                <button
+                  onClick={() => !isSaved && setActiveTool(TOOLS.SELECT)}
+                  disabled={isSaved}
+                  className={`btn  ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  style={{ opacity: isSaved ? 0.6 : 1 }}
+                  title="Select/Move Tool"
+                >
+                  <FiMove size={18} />
+                </button>
+                <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
 
-        {/* Page Navigation */}
-        {pdfPages.length > 1 && (
-          <div className="page-navigation" style={{
-            borderTop: '2px solid #E5E7EB',
-            padding: '12px 24px',
-            backgroundColor: '#F9FAFB',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="btn  btn-outline-secondary"
+                <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+
+                <button onClick={handleZoomOut} className="btn btn-outline-secondary" title="Zoom Out">
+                  <FiZoomOut size={18} />
+                </button>
+                <button onClick={handleZoomIn} className="btn btn-outline-secondary" title="Zoom In">
+                  <FiZoomIn size={18} />
+                </button>
+
+                <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+
+                <button
+                  onClick={handleClearAll}
+                  disabled={isSaved || (annotations.length === 0 && images.length === 0)}
+                  className="btn btn-outline-danger"
+                  title="Clear All"
+                >
+                  <FiTrash2 size={18} />
+                </button>
+              </div>
+
+              {/* Dynamic Tool Settings */}
+              {activeTool === TOOLS.PEN && !isSaved && (
+                <div className="d-flex align-items-center gap-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <label className="mb-0 small">Color:</label>
+                    <input type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)} style={{ width: '30px', height: '30px', border: 'none', padding: 0 }} />
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <label className="mb-0 small">Width:</label>
+                    <input type="range" min="1" max="10" value={penWidth} onChange={(e) => setPenWidth(parseInt(e.target.value))} />
+                  </div>
+                </div>
+              )}
+
+              <div style={{ marginLeft: 'auto' }}>
+                <span className="badge bg-light text-dark border">{Math.round(scale * 100)}%</span>
+              </div>
+            </div>
+
+            {/* PDF Viewer Area */}
+            <div
+              ref={containerRef}
+              className="pdf-viewer-container"
+              style={{
+                flex: 1,
+                overflow: 'auto',
+                padding: '24px',
+                backgroundColor: '#F3F4F6',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
             >
-              Previous Page
-            </button>
-            <span style={{ color: '#3B4A66', fontWeight: '500' }}>
-              Page {currentPage} of {pdfPages.length}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(pdfPages.length, prev + 1))}
-              disabled={currentPage === pdfPages.length}
-              className="btn  btn-outline-secondary"
-            >
-              Next Page
-            </button>
-          </div>
+              {loading ? (
+                <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                  <div className="spinner-border text-primary" role="status"></div>
+                  <p className="mt-3 text-muted">Loading PDF document...</p>
+                </div>
+              ) : pdfPages.length > 0 ? (
+                pdfPages.map((pageNum) => (
+                  <div key={pageNum} data-page={pageNum} className="pdf-page-wrapper shadow-sm mb-4" style={{ position: 'relative', backgroundColor: 'white' }}>
+                    {/* Canvas inserted by renderPage */}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-5">
+                  <p className="text-muted">No PDF pages available</p>
+                </div>
+              )}
+            </div>
+
+            {/* Page Navigation */}
+            {pdfPages.length > 1 && (
+              <div className="page-navigation" style={{
+                borderTop: '2px solid #E5E7EB',
+                padding: '12px 24px',
+                backgroundColor: '#F9FAFB',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">
+                  Previous
+                </button>
+                <span className="small fw-bold">Page {currentPage} of {pdfPages.length}</span>
+                <button onClick={() => setCurrentPage(prev => Math.min(pdfPages.length, prev + 1))} disabled={currentPage === pdfPages.length} className="btn btn-sm btn-outline-secondary">
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </Modal.Body>
-
       <Modal.Footer style={{
         borderTop: '2px solid #E5E7EB',
         padding: '16px 24px',

@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { taskDetailAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import { FaCheck, FaRedo, FaFilePdf, FaEye, FaArrowLeft, FaClock, FaCalendarAlt, FaUser, FaPlus, FaChevronRight, FaPaperclip, FaCheckSquare, FaEdit } from 'react-icons/fa';
+import EditTaskModal from './EditTaskModal';
 import '../../styles/TaskDetails.css';
 
 const TaskDetails = () => {
@@ -18,6 +20,10 @@ const TaskDetails = () => {
     const [timeTrackingLoading, setTimeTrackingLoading] = useState(false);
     const [currentTime, setCurrentTime] = useState(null);
     const [showResetTimerConfirm, setShowResetTimerConfirm] = useState(false);
+    const [reRequestComments, setReRequestComments] = useState('');
+    const [showReRequestModal, setShowReRequestModal] = useState(false);
+    const [processingAction, setProcessingAction] = useState(false);
+    const [showApproveModal, setShowApproveModal] = useState(false);
 
     // Fetch task details
     const fetchTaskDetails = useCallback(async () => {
@@ -192,11 +198,75 @@ const TaskDetails = () => {
                 throw new Error(response.message || 'Failed to reset time tracking');
             }
         } catch (err) {
-            console.error('Error resetting time tracking:', err);
-            const errorMessage = handleAPIError(err);
-            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to reset time tracking'));
+            console.error('Error resetting timer:', err);
+            toast.error(handleAPIError(err));
         } finally {
             setTimeTrackingLoading(false);
+        }
+    };
+
+    // Handle approve task
+    const handleApproveTask = async () => {
+        if (!id) return;
+
+        try {
+            setProcessingAction(true);
+            const response = await taskDetailAPI.updateTaskStatus(id, 'completed');
+
+            if (response.success) {
+                toast.success(response.message || 'Task approved successfully!');
+                setShowApproveModal(false);
+                fetchTaskDetails(); // Refresh data
+            } else {
+                throw new Error(response.message || 'Failed to approve task');
+            }
+        } catch (error) {
+            console.error('Error approving task:', error);
+            toast.error(handleAPIError(error));
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    // Handle re-request document
+    const handleReRequestDocument = async () => {
+        if (!id) return;
+
+        if (!reRequestComments.trim()) {
+            toast.error('Please provide comments for the re-request');
+            return;
+        }
+
+        try {
+            setProcessingAction(true);
+
+            // Step 1: Update task status to pending
+            const statusResponse = await taskDetailAPI.updateTaskStatus(id, 'pending');
+
+            if (!statusResponse.success) {
+                throw new Error(statusResponse.message || 'Failed to update task status');
+            }
+
+            // Step 2: Add comment with re-request reason
+            try {
+                await taskDetailAPI.addTaskComment(id, {
+                    content: `Document Re-request: ${reRequestComments}`,
+                    mentioned_user_ids: []
+                });
+            } catch (commentError) {
+                console.warn('Status updated but comment failed:', commentError);
+                toast.warning('Task status updated but comment may not have been added');
+            }
+
+            toast.success('Document re-requested successfully!');
+            setShowReRequestModal(false);
+            setReRequestComments('');
+            fetchTaskDetails(); // Refresh data
+        } catch (error) {
+            console.error('Error re-requesting document:', error);
+            toast.error(handleAPIError(error));
+        } finally {
+            setProcessingAction(false);
         }
     };
 
@@ -248,24 +318,32 @@ const TaskDetails = () => {
         category: taskData.category || taskData.task_type_display || '',
         tags: taskData.tags || [],
         assignedTo: taskData.assigned_to ? {
+            id: taskData.assigned_to.id,
             initials: taskData.assigned_to.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '',
             name: taskData.assigned_to.name || ''
-        } : { initials: '', name: '' },
+        } : { id: null, initials: '', name: '' },
         client: taskData.client?.name || '',
+        client_ids: taskData.clients ? taskData.clients.map(c => c.id) : (taskData.client?.id ? [taskData.client.id] : []),
         priority: taskData.priority_display || taskData.priority || 'Medium',
         status: taskData.status_display || taskData.status || 'pending',
         progress: taskData.progress?.percentage || 0,
         dueDate: taskData.due_date_formatted || taskData.due_date || '',
+        dueDateRaw: taskData.due_date || '',
         hours: taskData.time_spent?.formatted || taskData.time_tracking?.total_hours_formatted || '0h / 0h',
         timeSpent: taskData.time_spent?.formatted || taskData.time_tracking?.total_hours_formatted || '0h / 0h',
         created: taskData.created_at || '',
         assignedBy: taskData.created_by?.name || '',
-        taskType: taskData.task_type_display || taskData.task_type || '',
+        taskType: taskData.task_type || '',
+        taskTypeDisplay: taskData.task_type_display || taskData.task_type || '',
         folder: taskData.folder?.title || '',
+        folder_id: taskData.folder?.id || null,
         estimatedHours: taskData.estimated_hours || taskData.time_tracking?.estimated_hours || null,
-        filesCount: taskData.files_count || 0,
+        files: taskData.files || [],
+        filesCount: taskData.files_count || (taskData.files ? taskData.files.length : 0),
         checklistItemsCount: taskData.checklist_items_count || 0,
-        commentsCount: taskData.comments_count || 0
+        commentsCount: taskData.comments_count || 0,
+        spouse_sign: taskData.spouse_sign || false,
+        clients: taskData.clients || []
     };
 
     // Transform related items
@@ -292,6 +370,7 @@ const TaskDetails = () => {
             case 'to do': return 'bg-[#6B7280] text-white';
             case 'review': return 'bg-[#854D0E] text-white';
             case 'completed': return 'bg-[#10B981] text-white';
+            case 'submitted': return 'bg-[#3B82F6] text-white';
             case 'cancelled': return 'bg-[#EF4444] text-white';
             case 'overdue': return 'bg-[#EF4444] text-white';
             default: return 'bg-[#6B7280] text-white';
@@ -334,677 +413,327 @@ const TaskDetails = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F6F7FF] p-6 taskdetails-main-container">
-            <div className="mx-auto">
+        <div className="min-h-screen bg-[#F6F7FF] p-3 sm:p-6 taskdetails-main-container">
+            <div className="max-w-7xl mx-auto">
                 {/* Back Button */}
-                <div className="mb-4 taskdetails-back-button">
+                <div className="mb-6 taskdetails-back-button">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-all active:scale-95 font-[BasisGrotesquePro] shadow-sm"
                     >
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        Back
+                        <span className="text-sm font-semibold">Back</span>
                     </button>
                 </div>
 
-                {/* Header Section */}
-                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 space-y-4 lg:space-y-0 taskdetails-header">
-                    <div className="flex-1 taskdetails-header-content">
-                        <h4 className="text-xl font-bold text-gray-900 mb-3 font-[BasisGrotesquePro] taskdetails-header-title">{transformedTaskData.task}</h4>
-                        <div className="flex flex-wrap items-center gap-3 taskdetails-header-badges">
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] taskdetails-header-badge ${getPriorityColor(transformedTaskData.priority)}`}>
+                {/* Header Section: Improved stacking for mobile */}
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-8 gap-6 taskdetails-header">
+                    <div className="flex-1 min-w-0 taskdetails-header-content">
+                        <h4 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] break-words leading-tight taskdetails-header-title">
+                            {transformedTaskData.task}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-2 taskdetails-header-badges">
+                            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold rounded-lg font-[BasisGrotesquePro] ${getPriorityColor(transformedTaskData.priority)}`}>
                                 {transformedTaskData.priority}
                             </span>
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] taskdetails-header-badge ${getStatusColor(transformedTaskData.status)}`}>
+                            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold rounded-lg font-[BasisGrotesquePro] ${getStatusColor(transformedTaskData.status)}`}>
                                 {transformedTaskData.status}
                             </span>
-                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-header-due">Due: {transformedTaskData.dueDate}</span>
+                            <span className="text-sm text-gray-500 font-medium font-[BasisGrotesquePro] ml-1">
+                                Due: {transformedTaskData.dueDate}
+                            </span>
                         </div>
                     </div>
-                    <div className="flex space-x-3 taskdetails-action-buttons">
+
+                    {/* Action Buttons: Full width on mobile */}
+                    <div className="flex flex-col sm:flex-row items-stretch gap-3 taskdetails-action-buttons">
                         <button
                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                             disabled={timeTrackingLoading}
-                            className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro] disabled:opacity-50 taskdetails-action-button"
+                            className="px-6 py-3 bg-white text-[#3B4A66] border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-bold shadow-sm disabled:opacity-50 active:scale-95"
                         >
                             {timeTrackingStatus?.is_tracking_active ? (
                                 <>
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5.25 3.75H7.5C7.91421 3.75 8.25 4.08579 8.25 4.5V13.5C8.25 13.9142 7.91421 14.25 7.5 14.25H5.25C4.83579 14.25 4.5 13.9142 4.5 13.5V4.5C4.5 4.08579 4.83579 3.75 5.25 3.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                        <path d="M10.5 3.75H12.75C13.1642 3.75 13.5 4.08579 13.5 4.5V13.5C13.5 13.9142 13.1642 14.25 12.75 14.25H10.5C10.0858 14.25 9.75 13.9142 9.75 13.5V4.5C9.75 4.08579 10.0858 3.75 10.5 3.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
+                                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                                     {currentTime ? `Stop (${currentTime})` : 'Stop Timer'}
                                 </>
                             ) : (
                                 <>
                                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4.5 2.25L15 9L4.5 15.75V2.25Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M4.5 2.25L15 9L4.5 15.75V2.25Z" fill="#3B4A66" />
                                     </svg>
                                     Start Timer
                                 </>
                             )}
                         </button>
-                        {/* <button
-                            onClick={() => setShowEditModal(true)}
-                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro] taskdetails-action-button"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit Task
-                        </button> */}
                     </div>
                 </div>
 
-                {/* Top Information Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 taskdetails-info-cards">
-                    {/* Assigned To */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
-                        <div className="flex justify-between items-center mb-2">
-                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro] taskdetails-info-card-label">Assigned To</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-
-                            </div>
+                {/* Info Cards: 2 columns on mobile, 4 on desktop */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 taskdetails-info-cards">
+                    {[
+                        { label: 'Assigned To', value: transformedTaskData.assignedTo.name, icon: 'user' },
+                        { label: 'Time Spent', value: transformedTaskData.timeSpent, icon: 'clock' },
+                        { label: 'Progress', value: `${transformedTaskData.progress}%`, icon: 'chart' },
+                        { label: 'Client', value: transformedTaskData.client, icon: 'briefcase' }
+                    ].map((card, i) => (
+                        <div key={i} className="bg-white rounded-2xl border border-[#E8F0FF] p-4 shadow-sm hover:border-[#F56D2D]/30 transition-colors">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">{card.label}</p>
+                            <p className="text-sm sm:text-base font-bold text-[#3B4A66] truncate" title={card.value}>{card.value}</p>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.assignedTo.name}</p>
-                    </div>
-                    {/* Time Spent */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
-                        <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Time Spent</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12 6V12L16 14" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-
-                            </div>
-                        </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.timeSpent}</p>
-                    </div>
-                    {/* Progress */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
-                        <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Progress</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12 6V12L16 14" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.progress}%</p>
-                    </div>
-                    {/* Client */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
-                        <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Client</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M8 2V6" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M16 2V6" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M3 10H21" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-
-                            </div>
-                        </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.client}</p>
-                    </div>
+                    ))}
                 </div>
 
-                {/* Main Content Grid */}
+                {/* Main Grid: Stacks on Tablet (lg breakpoint) */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 taskdetails-main-grid">
-                    {/* Left Column */}
-                    <div className="lg:col-span-2 space-y-6 taskdetails-left-column">
-                        {/* Task Details Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6 taskdetails-details-section">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] taskdetails-details-title">Task Details</h4>
 
-                            <div className="space-y-4">
-                                {/* Description */}
+                    {/* Left Column (Task Content) */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-white rounded-2xl border border-[#E8F0FF] p-5 sm:p-8 taskdetails-details-section shadow-sm">
+                            <h4 className="text-xl font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">Task Details</h4>
+
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-details-label">Description</label>
-                                    <p className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-details-text">{transformedTaskData.description}</p>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description</label>
+                                    <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-[BasisGrotesquePro] bg-gray-50 p-4 rounded-xl">
+                                        {transformedTaskData.description}
+                                    </p>
                                 </div>
 
-                                {/* Category and Tags - Same Line */}
-                                <div className="flex flex-col sm:flex-row gap-6 taskdetails-details-row">
-                                    <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-details-label">Category</label>
-                                        <div>
-                                            <span className="inline-flex px-3 py-1 text-xs font-medium bg-[#E8F0FF] !border border-[#E8F0FF] text-[#3B4A66] rounded-full font-[BasisGrotesquePro] taskdetails-details-tag">
-                                                {transformedTaskData.category}
-                                            </span>
-                                        </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Category</label>
+                                        <span className="inline-flex px-4 py-2 text-xs font-bold bg-[#F0F7FF] text-[#007AFF] rounded-xl border border-[#E8F0FF]">
+                                            {transformedTaskData.category}
+                                        </span>
                                     </div>
-
-                                    <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-details-label">Tags</label>
-                                        <div className="flex flex-wrap gap-2 taskdetails-details-tags">
-                                            {transformedTaskData.tags.map((tag, index) => (
-                                                <span key={index} className="inline-flex px-3 py-1 text-xs font-medium bg-[#FFFFFF] text-[#3B4A66] !border border-[#E8F0FF] !rounded-full font-[BasisGrotesquePro] taskdetails-details-tag">
-                                                    {tag}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tags</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {transformedTaskData.tags.map((tag, idx) => (
+                                                <span key={idx} className="px-3 py-1.5 text-[11px] font-bold bg-white text-gray-600 border border-gray-200 rounded-lg">
+                                                    #{tag}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Progress Bar */}
-                                {/* <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Progress</label>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div
-                                                className="bg-[#3AD6F2] h-2 rounded-full"
-                                                style={{ width: `${transformedTaskData.progress}%` }}
-                                            ></div>
-                                        </div>
-                                        <span className="text-sm text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">{transformedTaskData.progress}% complete</span>
+                                <div className="pt-4">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-sm font-bold text-gray-700">Overall Progress</span>
+                                        <span className="text-sm font-black text-[#F56D2D]">{transformedTaskData.progress}%</span>
                                     </div>
-                                </div> */}
-                            </div>
-                        </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-3">
+                                        <div
+                                            className="bg-[#F56D2D] h-3 rounded-full transition-all duration-1000 shadow-inner"
+                                            style={{ width: `${transformedTaskData.progress}%` }}
+                                        />
+                                    </div>
+                                </div>
 
-                        {/* Task Information Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6 taskdetails-info-section">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] taskdetails-info-section-title">Task Information</h4>
-
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center taskdetails-info-row">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Created:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-info-value">{transformedTaskData.created}</span>
-                                </div>
-                                <div className="flex justify-between items-center taskdetails-info-row">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Assigned By:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-info-value">{transformedTaskData.assignedBy}</span>
-                                </div>
-                                <div className="flex justify-between items-center taskdetails-info-row">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Due Date:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-info-value">{transformedTaskData.dueDate}</span>
-                                </div>
-                                <div className="flex justify-between items-center taskdetails-info-row">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Priority:</span>
-                                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] taskdetails-info-value ${getPriorityColor(transformedTaskData.priority)}`}>
-                                        {transformedTaskData.priority}
-                                    </span>
-                                </div>
+                                {/* Submitted Documents: Adaptive Grid */}
+                                {transformedTaskData.taskType === 'document_request' && transformedTaskData.files.length > 0 && (
+                                    <div className="mt-8 pt-8 border-t border-gray-100">
+                                        <h4 className="text-lg font-bold text-gray-900 mb-4">Submitted Documents</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {transformedTaskData.files.map((file, index) => (
+                                                <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all group">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <FaFilePdf size={18} className="text-red-500" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-bold text-gray-800 truncate pr-2">{file.file_name || file.name || `Document ${index + 1}`}</p>
+                                                            {file.file_size && (
+                                                                <p className="text-[10px] text-gray-400 font-bold uppercase">{(file.file_size / (1024 * 1024)).toFixed(2)} MB</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => window.open(file.file_url || file.url, '_blank')} className="p-2 text-gray-400 hover:text-[#F56D2D]">
+                                                        <FaEye size={16} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column */}
-                    <div className="space-y-6 taskdetails-right-column">
-                        {/* Quick Actions Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6 taskdetails-quick-actions">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] taskdetails-quick-actions-title">Quick Actions</h4>
+                    {/* Right Column (Quick Actions) */}
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-2xl border border-[#E8F0FF] p-6 shadow-sm sticky top-6">
+                            <h4 className="text-lg font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">Quick Actions</h4>
 
-                            <div className="space-y-4">
-                                {/* Status Dropdown */}
+                            <div className="space-y-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-status-label">Status</label>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Status</label>
                                     <div className="relative">
                                         <select
-                                            value={taskData.status || 'to_do'}
+                                            className="w-full appearance-none bg-gray-50 border border-transparent rounded-xl px-4 py-3 text-sm font-bold text-[#3B4A66] focus:bg-white focus:border-[#F56D2D] outline-none transition-all cursor-pointer"
+                                            value={taskData.status}
                                             onChange={(e) => handleStatusUpdate(e.target.value)}
-                                            disabled={updatingStatus}
-                                            className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer disabled:opacity-50 taskdetails-status-select"
                                         >
                                             <option value="to_do">To Do</option>
-                                            <option value="pending">Pending</option>
                                             <option value="in_progress">In Progress</option>
+                                            <option value="submitted">Submitted</option>
                                             <option value="completed">Completed</option>
+                                            <option value="pending">Pending</option>
                                             <option value="cancelled">Cancelled</option>
                                         </select>
-                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                            <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                            </svg>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Timer Controls */}
-                                <div className="space-y-2">
-                                    {/* Timer Display */}
-                                    {timeTrackingStatus && (
-                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg taskdetails-timer-display">
-                                            <div className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1 taskdetails-timer-label">Total Time</div>
-                                            <div className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-timer-value">
-                                                {currentTime || timeTrackingStatus.total_time_formatted || '0:00:00'}
-                                            </div>
-                                            {timeTrackingStatus.is_tracking_active && timeTrackingStatus.active_tracking && (
-                                                <div className="text-xs text-green-600 font-[BasisGrotesquePro] mt-1 taskdetails-timer-status">
-                                                    Active • Started by {timeTrackingStatus.active_tracking.started_by}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                    {/* Start and Pause - Same Line */}
-                                    <div className="flex gap-2 taskdetails-timer-buttons">
+                                {/* Action buttons stack on mobile */}
+                                {(transformedTaskData.taskType === 'document_request' || transformedTaskData.taskType === 'signature_request') && taskData.status === 'submitted' && (
+                                    <div className="flex flex-col gap-3">
+                                        <button onClick={() => setShowApproveModal(true)} disabled={processingAction} className="w-full py-3 bg-[#10B981] text-white rounded-xl font-bold hover:bg-[#059669] transition-all active:scale-95 shadow-sm shadow-emerald-100 disabled:opacity-50">
+                                            {processingAction ? 'Processing...' : 'Approve & Complete'}
+                                        </button>
+                                        <button onClick={() => setShowReRequestModal(true)} disabled={processingAction} className="w-full py-3 bg-[#F59E0B] text-white rounded-xl font-bold hover:bg-[#D97706] transition-all active:scale-95 shadow-sm shadow-amber-100 disabled:opacity-50">
+                                            Re-request
+                                        </button>
+                                    </div>
+                                )}
+                                <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+                                    <button
+                                        onClick={() => setShowEditModal(true)}
+                                        className="w-full py-3 bg-white text-[#F56D2D] border border-[#F56D2D] rounded-xl font-bold hover:bg-[#F56D2D]/5 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <FaEdit size={16} />
+                                        Edit Task
+                                    </button>
+
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mt-2 mb-3">Timer</label>
+                                    <div className="bg-gray-50 rounded-2xl p-4 mb-4 text-center">
+                                        <p className="text-3xl font-black text-[#3B4A66] tracking-tight tabular-nums">
+                                            {currentTime || timeTrackingStatus?.total_time_formatted || '0:00:00'}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Total Tracked Time</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={handleResetTimer}
+                                            disabled={timeTrackingLoading || !timeTrackingStatus || timeTrackingStatus.total_sessions === 0}
+                                            className="py-2.5 px-4 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50"
+                                        >
+                                            Reset
+                                        </button>
                                         <button
                                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                                             disabled={timeTrackingLoading}
-                                            className="flex-1 px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50 taskdetails-timer-button"
+                                            className={`py-2.5 px-4 font-bold rounded-xl text-xs transition-all active:scale-95 disabled:opacity-50 ${timeTrackingStatus?.is_tracking_active ? 'bg-red-50 text-red-600' : 'bg-[#F56D2D] text-white'}`}
                                         >
-                                            {timeTrackingStatus?.is_tracking_active ? (
-                                                <>
-                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M9.9165 2.33203H8.74984C8.42767 2.33203 8.1665 2.5932 8.1665 2.91536V11.082C8.1665 11.4042 8.42767 11.6654 8.74984 11.6654H9.9165C10.2387 11.6654 10.4998 11.4042 10.4998 11.082V2.91536C10.4998 2.5932 10.2387 2.33203 9.9165 2.33203Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                        <path d="M5.25 2.33203H4.08333C3.76117 2.33203 3.5 2.5932 3.5 2.91536V11.082C3.5 11.4042 3.76117 11.6654 4.08333 11.6654H5.25C5.57217 11.6654 5.83333 11.4042 5.83333 11.082V2.91536C5.83333 2.5932 5.57217 2.33203 5.25 2.33203Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                    Pause
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M3.5 1.75L11.6667 7L3.5 12.25V1.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                    Start
-                                                </>
-                                            )}
+                                            {timeTrackingStatus?.is_tracking_active ? 'Pause' : 'Start'}
                                         </button>
                                     </div>
-                                    {/* Reset Timer - New Line */}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reset Timer Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showResetTimerConfirm}
+                    onClose={() => {
+                        if (!timeTrackingLoading) {
+                            setShowResetTimerConfirm(false);
+                        }
+                    }}
+                    onConfirm={confirmResetTimer}
+                    title="Reset Time Tracking"
+                    message="Are you sure you want to reset all time tracking records? This action cannot be undone."
+                    confirmText="Reset"
+                    cancelText="Cancel"
+                    isLoading={timeTrackingLoading}
+                    isDestructive={true}
+                />
+
+                {/* Approve Task Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showApproveModal}
+                    onClose={() => setShowApproveModal(false)}
+                    onConfirm={handleApproveTask}
+                    title="Approve Submitted Documents"
+                    message={`Are you sure you want to approve the documents for "${transformedTaskData.task}"? This will mark the task as completed.`}
+                    confirmText="Approve"
+                    cancelText="Cancel"
+                    isLoading={processingAction}
+                />
+
+                {/* Re-request Document Modal */}
+                {showReRequestModal && (
+                    <div className="fixed inset-0 z-[1000] overflow-y-auto">
+                        <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                            </div>
+                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full font-[BasisGrotesquePro]">
+                                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                    <div className="sm:flex sm:items-start">
+                                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 sm:mx-0 sm:h-10 sm:w-10">
+                                            <FaRedo className="h-6 w-6 text-amber-600" />
+                                        </div>
+                                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                            <h3 className="text-lg leading-6 font-bold text-gray-900">Re-request Documents</h3>
+                                            <div className="mt-4">
+                                                <p className="text-sm text-gray-500 mb-4">
+                                                    Provide feedback to the client about why the documents were rejected and what is needed.
+                                                </p>
+                                                <textarea
+                                                    value={reRequestComments}
+                                                    onChange={(e) => setReRequestComments(e.target.value)}
+                                                    placeholder="Enter your reason here... e.g., 'The uploaded W-2 is blurry, please re-upload a clear copy.'"
+                                                    className="w-full h-32 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7A3B] focus:border-transparent outline-none resize-none text-sm transition-all"
+                                                    autoFocus
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
                                     <button
-                                        onClick={handleResetTimer}
-                                        disabled={timeTrackingLoading || !timeTrackingStatus || timeTrackingStatus.total_sessions === 0}
-                                        className="w-full px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50 taskdetails-timer-button"
+                                        type="button"
+                                        onClick={handleReRequestDocument}
+                                        disabled={processingAction || !reRequestComments.trim()}
+                                        className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-[#F59E0B] text-base font-bold text-white hover:bg-[#D97706] focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all font-[BasisGrotesquePro]"
                                     >
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        Reset Timer
+                                        {processingAction ? 'Sending...' : 'Re-request'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowReRequestModal(false)}
+                                        className="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all font-[BasisGrotesquePro]"
+                                    >
+                                        Cancel
                                     </button>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Related Items Section */}
-                        {/* <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Related Items</h4>
-
-                            <div className="space-y-3">
-                                {transformedRelatedItems.length > 0 ? (
-                                    transformedRelatedItems.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => item.url && navigate(item.url)}
-                                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                                        >
-                                            <div className="flex items-center justify-center flex-shrink-0">
-                                                {getIcon(item.icon)}
-                                            </div>
-                                            <div className="flex-1">
-                                                <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{item.name}</span>
-                                                {item.date && (
-                                                    <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">
-                                                        {item.date} {item.time && `• ${item.time}`}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">No related items found</p>
-                                )}
-                            </div>
-                        </div> */}
                     </div>
-                </div>
+                )}
             </div>
-
             {/* Edit Task Modal */}
-            {showEditModal && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-[1070] flex items-center justify-center taskdetails-edit-modal"
-                    onClick={() => setShowEditModal(false)}
-                >
-                    <div
-                        className="bg-white !rounded-lg shadow-xl w-full max-w-4xl taskdetails-edit-modal-content"
-                        style={{
-                            borderRadius: '12px',
-                            maxHeight: '75vh',
-                            display: 'flex',
-                            flexDirection: 'column'
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Modal Header */}
-                        <div className="flex justify-between items-center p-3 border-b border-[#E8F0FF] taskdetails-edit-modal-header">
-                            <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Edit Task</h4>
-                            <button
-                                onClick={() => setShowEditModal(false)}
-                                className="flex items-center justify-center  text-blue-600 transition-colors"
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                                    <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
-                                </svg>
-
-                            </button>
-                        </div>
-
-                        {/* Modal Content */}
-                        <div className="p-3 overflow-y-auto flex-1 taskdetails-edit-modal-body" style={{ maxHeight: 'calc(75vh - 100px)' }}>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 taskdetails-edit-modal-grid">
-                                {/* Left Column - Overview */}
-                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 space-y-3 w-full taskdetails-edit-modal-column">
-                                    <h6 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">Overview</h6>
-
-                                    {/* Title */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro] taskdetails-edit-modal-label">Title</label>
-                                        <input
-                                            type="text"
-                                            defaultValue="Client Onboarding"
-                                            className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm taskdetails-edit-modal-input"
-                                        />
-                                    </div>
-
-                                    {/* Description */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro] taskdetails-edit-modal-label">Description</label>
-                                        <textarea
-                                            rows={2}
-                                            defaultValue="Onboard a new client with required documents and steps"
-                                            className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm taskdetails-edit-modal-textarea"
-                                        />
-                                    </div>
-
-                                    {/* Status and Priority - Same Line */}
-                                    <div className="grid grid-cols-2 gap-3 taskdetails-edit-modal-grid-2">
-                                        {/* Status */}
-                                        <div>
-                                            <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Status</label>
-                                            <div className="relative">
-                                                <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] cursor-pointer text-sm">
-                                                    <option>To Do</option>
-                                                    <option>In Progress</option>
-                                                    <option>Review</option>
-                                                    <option>Completed</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Priority */}
-                                        <div>
-                                            <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Priority</label>
-                                            <div className="relative">
-                                                <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] cursor-pointer text-sm">
-                                                    <option>High</option>
-                                                    <option>Medium</option>
-                                                    <option>Low</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Assignees */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro] taskdetails-edit-modal-label">Assignees</label>
-                                        <div className="flex flex-wrap gap-2 taskdetails-edit-modal-tags">
-                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] taskdetails-edit-modal-tag">Alex Rivera</span>
-                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-[#F56D2D] text-white rounded-full font-[BasisGrotesquePro] taskdetails-edit-modal-tag">Jamie Chen</span>
-                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] taskdetails-edit-modal-tag">Morgan Patel</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Client and Office - Same Line */}
-                                    <div className="grid grid-cols-2 gap-3 taskdetails-edit-modal-grid-2">
-                                        {/* Client */}
-                                        <div>
-                                            <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Client</label>
-                                            <div className="relative">
-                                                <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] cursor-pointer text-sm">
-                                                    <option>Sunrise LLC</option>
-                                                    <option>Client 2</option>
-                                                    <option>Client 3</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Office */}
-                                        <div>
-                                            <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Office</label>
-                                            <div className="relative">
-                                                <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] cursor-pointer text-sm">
-                                                    <option>Select Office</option>
-                                                    <option>Office 1</option>
-                                                    <option>Office 2</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Documents */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Documents</label>
-                                        <div className="flex flex-wrap gap-2">
-                                            <span className="inline-flex px-3 py-1.5 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro]">W-2: W-2: John Doe</span>
-                                            <span className="inline-flex px-3 py-1.5 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro]">1099: 1099: Contractor Set</span>
-                                            <span className="inline-flex px-3 py-1.5 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro]">K-1: K-1: Partner A</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Share Status With Client */}
-                                    <div className="flex items-center gap-2">
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" defaultChecked className="sr-only peer" />
-                                            <div className="w-10 h-5 bg-[#F56D2D] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#E8F0FF] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#F56D2D]"></div>
-                                        </label>
-                                        <span className="text-base text-gray-700 font-[BasisGrotesquePro]">Share Status With Client</span>
-                                    </div>
-
-                                    {/* Dependencies */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Dependencies</label>
-                                        <p className="text-xs text-gray-500 mb-1.5 font-[BasisGrotesquePro]">Task(s) that must be completed before this one starts.</p>
-                                        <div className="bg-white !border border-[#E8F0FF] !rounded-lg p-3 max-h-32 overflow-y-auto">
-                                            <div className="flex flex-col gap-2">
-                                                <span className="inline-flex px-3 py-1.5 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] w-fit">W-2: W-2: John Doe</span>
-                                                <span className="inline-flex px-3 py-1.5 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] w-fit">1099: 1099: Contractor Set</span>
-                                                <span className="inline-flex px-3 py-1.5 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] w-fit">K-1: K-1: Partner A</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right Column - Checklist & Attachments */}
-                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 space-y-3 w-full taskdetails-edit-modal-column">
-                                    <h6 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">Checklist & Attachments</h6>
-
-                                    {/* Checklist */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <label className="block text-base font-medium text-gray-700 font-[BasisGrotesquePro]">Checklist</label>
-                                            <button className="px-3 py-1.5 bg-white text-[#3B4A66] !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-xs">Add Item</button>
-                                        </div>
-                                        <div className="bg-white !border border-[#E8F0FF] !rounded-lg p-3">
-                                            <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
-                                                <div className="flex items-center gap-2">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#3AD6F2] border-[#E8F0FF] rounded focus:ring-[#3AD6F2] flex-shrink-0" />
-                                                    <div className="flex-1 px-3 py-2 bg-white !border border-[#E8F0FF] rounded-lg">
-                                                        <span className="text-xs text-gray-700 font-[BasisGrotesquePro]">Create Client Record</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#3AD6F2] border-[#E8F0FF] rounded focus:ring-[#3AD6F2] flex-shrink-0" />
-                                                    <div className="flex-1 px-3 py-2 bg-white !border border-[#E8F0FF] rounded-lg">
-                                                        <span className="text-xs text-gray-700 font-[BasisGrotesquePro]">Assign Preparer</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <input type="checkbox" defaultChecked className="w-4 h-4 text-[#3AD6F2] border-[#E8F0FF] rounded focus:ring-[#3AD6F2] flex-shrink-0" />
-                                                    <div className="flex-1 px-3 py-2 bg-white !border border-[#E8F0FF] rounded-lg">
-                                                        <span className="text-xs text-gray-700 font-[BasisGrotesquePro]">Send Organizer</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Attachments */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Attachments</label>
-                                        <div className="w-full px-3 py-3 bg-white border-1 border-dashed border-[#E8F0FF] rounded-lg flex flex-col items-center justify-center gap-2 font-[BasisGrotesquePro] cursor-pointer hover:bg-gray-50 transition-colors">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M19 13V17C19 17.5304 18.7893 18.0391 18.4142 18.4142C18.0391 18.7893 17.5304 19 17 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V13M15 6L10 1M10 1L5 6M10 1V13" stroke="var(--firm-primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                            <span className="text-xs text-gray-700">Choose File</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Status and Priority - Same Line */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {/* Status */}
-                                        <div>
-                                            <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Status</label>
-                                            <div className="relative">
-                                                <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] cursor-pointer text-sm">
-                                                    <option>To Do</option>
-                                                    <option>In Progress</option>
-                                                    <option>Review</option>
-                                                    <option>Completed</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Priority */}
-                                        <div>
-                                            <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Priority</label>
-                                            <div className="relative">
-                                                <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] cursor-pointer text-sm">
-                                                    <option>High</option>
-                                                    <option>Medium</option>
-                                                    <option>Low</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Time Tracking */}
-                                    <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Time Tracking</label>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <button className="px-4 py-2 bg-white text-[#3B4A66] !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-xs font-medium">
-                                                Start
-                                            </button>
-                                            <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] text-xs font-medium">
-                                                Stop
-                                            </button>
-                                        </div>
-                                        <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">No logs yet</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Comments & Mentions Section */}
-                            <div className="mt-4">
-                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-comments-section">
-                                    <h6 className="text-base font-semibold text-gray-900 mb-3 font-[BasisGrotesquePro] taskdetails-comments-title">Comments & Mentions</h6>
-                                    <textarea
-                                        rows={3}
-                                        placeholder="Write a comment. Use @Name to mention staff."
-                                        className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm mb-3 taskdetails-comments-textarea"
-                                    />
-                                    <div className="flex items-start justify-between mb-2 taskdetails-comments-info">
-                                        <div className="flex flex-col gap-2">
-                                            <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">Client visible: No</p>
-                                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">No comments yet</p>
-                                        </div>
-                                        <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] text-xs font-medium taskdetails-comments-button">
-                                            Add Item
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div className="flex justify-between items-center gap-2 p-3 border-t border-[#E8F0FF] taskdetails-edit-modal-footer">
-                            <button
-                                onClick={() => setShowEditModal(false)}
-                                className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg hover:bg-[#DC2626] transition-colors font-[BasisGrotesquePro] text-sm"
-                            >
-                                Cancel
-                            </button>
-                            <div className="flex gap-2 taskdetails-edit-modal-footer-buttons">
-                                <button
-                                    onClick={() => setShowEditModal(false)}
-                                    className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => setShowEditModal(false)}
-                                    className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] text-sm"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Reset Timer Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={showResetTimerConfirm}
-                onClose={() => {
-                    if (!timeTrackingLoading) {
-                        setShowResetTimerConfirm(false);
-                    }
+            <EditTaskModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                onTaskUpdated={() => {
+                    fetchTaskDetails();
+                    setShowEditModal(false);
                 }}
-                onConfirm={confirmResetTimer}
-                title="Reset Time Tracking"
-                message="Are you sure you want to reset all time tracking records? This action cannot be undone."
-                confirmText="Reset"
-                cancelText="Cancel"
-                isLoading={timeTrackingLoading}
-                isDestructive={true}
+                task={transformedTaskData}
             />
         </div>
     );
 };
 
 export default TaskDetails;
-

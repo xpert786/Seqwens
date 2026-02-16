@@ -14,6 +14,7 @@ import { AiOutlineCalendar } from "react-icons/ai";
 import "../styles/Dashfirst.css";
 import { dashboardAPI, handleAPIError } from "../utils/apiUtils";
 import { toast } from "react-toastify";
+import { setUserStatus, getUserData, setUserData } from "../utils/userUtils";
 
 export default function DashboardFirst() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function DashboardFirst() {
     const saved = localStorage.getItem('dashboardStartedTasks');
     return saved ? JSON.parse(saved) : {};
   });
+  const [isProceeding, setIsProceeding] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -260,154 +262,200 @@ export default function DashboardFirst() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-
-      <div className="p-4 sm:p-6 rounded-lg mb-4 sm:mb-6 relative bg-[#FFF3E1] border border-[#FFD6A5]">
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-          {/* Left Section: Welcome Message */}
-          <div className="flex-1">
-            <h5 className="text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-medium font-[BasisGrotesquePro] mb-2">
+    <div className="p-3 sm:p-6 lg:p-8 bg-[#FAFBFF] min-h-screen">
+      {/* 1. Progress & Welcome Banner */}
+      <div className="p-4 sm:p-6 rounded-2xl mb-6 relative bg-[#FFF3E1] border border-[#FFD6A5] shadow-sm">
+        <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
+          {/* Welcome Message */}
+          <div className="flex-1 text-center lg:text-left">
+            <h5 className="text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-bold font-[BasisGrotesquePro] mb-2">
               Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
             </h5>
-            <p className="text-gray-600 text-base sm:text-lg font-[BasisGrotesquePro]">
+            <p className="text-gray-600 text-sm sm:text-base lg:text-lg font-[BasisGrotesquePro] max-w-xl mx-auto lg:mx-0">
               Let's get your tax dashboard set up. You're making great progress!
             </p>
           </div>
 
-          {/* Right Section: Progress & Action */}
-          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 flex-shrink-0">
-            {/* Completion Percentage */}
-            <div className="text-right leading-tight">
-              <div className="text-[#3B4A66] text-base sm:text-lg font-semibold">
+          {/* Progress Stats & Action */}
+          <div className="flex flex-col sm:flex-row lg:flex-col items-center lg:items-end justify-center gap-4">
+            <div className="text-center lg:text-right leading-tight">
+              <div className="text-[#3B4A66] text-2xl font-bold">
                 {completionPercentage}%
               </div>
-              <div className="text-sm sm:text-base text-[#6B7280]">
+              <div className="text-xs sm:text-sm uppercase tracking-wider font-semibold text-[#6B7280]">
                 Complete
               </div>
             </div>
 
-            {/* Action Button */}
             <button
               onClick={async () => {
-                try {
-                  await dashboardAPI.updateOnboardingStatus(true);
-                  const { setUserStatus, getStorage, getUserData, setUserData } = await import('../utils/userUtils');
+                if (isProceeding) return;
 
-                  // Update local user data to reflect completion
+                // Set loading state immediately
+                setIsProceeding(true);
+
+                // Fallback navigation after 5 seconds just in case everything hangs
+                const safetyTimeout = setTimeout(() => {
+                  console.log("Onboarding: Safety timeout triggered, forcing navigation");
+                  navigate('/dashboard');
+                }, 5000);
+
+                try {
+                  // 1. Inform the user
+                  toast.info("Preparing your dashboard context...", {
+                    position: "top-center",
+                    autoClose: 1500,
+                    style: { borderRadius: '12px', fontWeight: '600' }
+                  });
+
+                  // 2. Update status on backend
+                  console.log("Onboarding: Updating status on backend...");
+                  try {
+                    await dashboardAPI.updateOnboardingStatus(true);
+                  } catch (apiErr) {
+                    console.warn("Onboarding: Backend update failed, but continuing locally", apiErr);
+                  }
+
+                  // 3. Update local state
+                  console.log("Onboarding: Updating local state...");
                   const userData = getUserData();
                   if (userData) {
                     userData.onboarding_completed = true;
                     setUserData(userData);
                   }
-
                   setUserStatus("existing");
-                  navigate('/dashboard');
-                } catch (e) {
-                  console.error("Failed to update status", e);
+
+                  // 4. Final toast and navigate
+                  clearTimeout(safetyTimeout);
+                  toast.success("Ready! Redirecting...", {
+                    position: "top-center",
+                    autoClose: 1000,
+                    style: { borderRadius: '12px', fontWeight: 'bold' }
+                  });
+
+                  // Final navigation
+                  setTimeout(() => {
+                    window.location.href = '/dashboard'; // Using direct href for a clean context reload
+                  }, 800);
+
+                } catch (err) {
+                  console.error("Onboarding: Error during finalization", err);
+                  clearTimeout(safetyTimeout);
+                  setIsProceeding(false);
+                  // Always navigate as a last resort
+                  toast.warning("Encountered an issue, entering dashboard anyway...");
                   navigate('/dashboard');
                 }
               }}
-              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg font-medium hover:bg-[#e05d20] transition-colors whitespace-nowrap"
-              style={{ borderRadius: "6px" }}
+              disabled={isProceeding}
+              className={`w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white rounded-xl font-bold shadow-lg shadow-orange-100 hover:bg-[#e05d20] transition-all active:scale-95 whitespace-nowrap flex items-center justify-center gap-3 ${isProceeding ? 'opacity-80' : 'hover:shadow-xl'}`}
             >
-              Proceed to Dashboard
+              {isProceeding ? (
+                <>
+                  <div className="spinner-border spinner-border-sm" role="status" style={{ width: '18px', height: '18px' }} />
+                  <span>Finalizing...</span>
+                </>
+              ) : (
+                'Proceed to Dashboard'
+              )}
             </button>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-2 sm:mb-3">
-          <div
-            className="bg-[#F56D2D] h-2 rounded-full transition-all duration-300"
-            role="progressbar"
-            style={{ width: `${completionPercentage}%` }}
-          ></div>
-        </div>
 
-        <div className="mt-2 text-right text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro]">
-          {dashboardData?.data?.profile_completion?.completed_steps || completedCount} of {dashboardData?.data?.profile_completion?.total_steps || setupTasks.length} setup tasks completed
+        {/* Progress Bar Container */}
+        <div className="space-y-2">
+          <div className="w-full bg-white/50 rounded-full h-3 overflow-hidden">
+            <div
+              className="bg-[#F56D2D] h-full rounded-full transition-all duration-700 ease-out"
+              role="progressbar"
+              style={{ width: `${completionPercentage}%` }}
+            ></div>
+          </div>
+          <div className="text-center lg:text-right text-[#3B4A66] text-xs sm:text-sm font-medium">
+            {dashboardData?.data?.profile_completion?.completed_steps || completedCount} of {dashboardData?.data?.profile_completion?.total_steps || setupTasks.length} setup tasks completed
+          </div>
         </div>
       </div>
 
-      {/* Setup Tasks */}
-      <div className="bg-white rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
-        <h6 className="text-[#3B4A66] text-xl sm:text-2xl font-medium font-[BasisGrotesquePro] mb-2">
-          Setup Tasks
-        </h6>
-        <p className="text-[#4B5563] text-sm sm:text-base font-normal font-[BasisGrotesquePro] mb-4">
-          Complete these steps to get the most out of your dashboard
-        </p>
+      {/* 2. Setup Tasks Section */}
+      <div className="bg-white rounded-2xl p-4 sm:p-6 mb-6 border border-[#E8F0FF] shadow-sm">
+        <div className="mb-6">
+          <h6 className="text-[#3B4A66] text-lg sm:text-xl font-bold font-[BasisGrotesquePro] mb-1">
+            Setup Tasks
+          </h6>
+          <p className="text-[#6B7280] text-sm sm:text-base font-[BasisGrotesquePro]">
+            Complete these steps to get the most out of your dashboard
+          </p>
+        </div>
 
-        <ul className="space-y-0">
-          {setupTasks.map((task, idx) => {
-            const status = task.status;
-            const buttonText = getButtonText(task);
-            const buttonClass = getButtonClass(task);
-            return (
-              <div
-                key={idx}
-                className={`border-0 px-0 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between cursor-pointer transition-colors ${status !== "complete" ? "hover:bg-gray-50" : ""
-                  } ${idx !== setupTasks.length - 1 ? "border-b border-gray-200" : ""}`}
-                onClick={() => handleTaskClick(task)}
-              >
-                {/* LEFT SIDE */}
-                <div className="flex items-center gap-3 flex-1 w-full sm:w-auto">
-                  <div className="flex-shrink-0 flex items-center justify-center w-12 h-12">
-                    {getTaskIcon(task.title)}
-                  </div>
-
-                  <div className="min-w-0 flex flex-col justify-center">
-                    <h6 className="mb-0 text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro] leading-tight">
-                      {task.title}
-                    </h6>
-                    <p className="text-[#3B4A66] text-xs sm:text-sm font-[BasisGrotesquePro] mb-0 mt-1 opacity-80">
-                      {task.description}
-                    </p>
-                  </div>
+        <div className="divide-y divide-[#F1F5F9]">
+          {setupTasks.map((task, idx) => (
+            <div
+              key={idx}
+              className={`group py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${task.status !== "complete" ? "hover:bg-gray-50/50" : ""}`}
+              onClick={() => handleTaskClick(task)}
+            >
+              {/* Task Info */}
+              <div className="flex items-center gap-4 w-full">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#F0F7FF] flex items-center justify-center text-2xl">
+                  {getTaskIcon(task.title)}
                 </div>
-
-                {/* RIGHT SIDE */}
-                <div className="flex justify-end w-full sm:w-auto mt-3 sm:mt-0">
-                  <button
-                    className={`${buttonClass} w-24 sm:w-32 py-2 text-xs sm:text-sm font-medium transition-all duration-200`}
-                    onClick={(e) => handleButtonClick(e, task)}
-                    disabled={status === "complete"}
-                    style={{ borderRadius: '6px' }}
-                  >
-                    {buttonText}
-                  </button>
+                <div className="min-w-0">
+                  <h6 className="text-[#3B4A66] text-sm sm:text-base font-semibold truncate mb-0 leading-tight">
+                    {task.title}
+                  </h6>
+                  <p className="text-[#6B7280] text-xs sm:text-sm mb-0 mt-1 line-clamp-1 opacity-90">
+                    {task.description}
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </ul>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg p-4 sm:p-6 mt-4 sm:mt-6">
-        <h6 className="mb-1 text-[#3B4A66] text-base sm:text-lg font-semibold font-[BasisGrotesquePro]">
-          Quick Actions
-        </h6>
-        <p className="text-gray-600 text-xs sm:text-sm font-[BasisGrotesquePro] mb-4">
-          Common tasks you can do right now
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {quickActions.map((action, idx) => (
-            <div key={idx} className="mb-3 sm:mb-0">
-              <div className="p-3 sm:p-4 rounded-lg border border-[#E0E6ED] bg-[#F9FBFF] h-full flex flex-col justify-between">
-                <div className="flex items-center gap-3 mb-4 sm:mb-6 h-10">
-                  <div className="text-[28px] sm:text-[32px] text-cyan-500 font-[BasisGrotesquePro] flex-shrink-0 flex items-center justify-center w-8 sm:w-10">
-                    {action.icon}
-                  </div>
-                  <h6 className="text-sm sm:text-base text-[#3B4A66] font-medium font-[BasisGrotesquePro] mb-0 leading-tight">
-                    {action.title}
-                  </h6>
-                </div>
+              {/* Task Action Button */}
+              <div className="w-full sm:w-auto">
                 <button
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-[#E0E6ED] text-[#3B4A66] font-medium font-[BasisGrotesquePro] rounded hover:bg-gray-50 transition-colors"
-                  onClick={() => navigate(action.route)}
+                  className={`${getButtonClass(task)} w-full sm:w-32 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm`}
+                  onClick={(e) => handleButtonClick(e, task)}
+                  disabled={task.status === "complete"}
                 >
-                  {action.button}
+                  {getButtonText(task)}
                 </button>
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Quick Actions Grid */}
+      <div className="mt-8">
+        <div className="mb-4 px-1">
+          <h6 className="text-[#3B4A66] text-lg font-bold font-[BasisGrotesquePro] mb-1">
+            Quick Actions
+          </h6>
+          <p className="text-[#6B7280] text-sm font-[BasisGrotesquePro]">
+            Common tasks you can do right now
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {quickActions.map((action, idx) => (
+            <div
+              key={idx}
+              className="p-4 rounded-2xl border border-[#E8F0FF] bg-white hover:border-[#F56D2D]/30 transition-all shadow-sm flex flex-col justify-between h-full group"
+            >
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-10 h-10 rounded-lg bg-[#F0FDFD] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                  {action.icon}
+                </div>
+                <h6 className="text-[#3B4A66] font-semibold text-sm sm:text-base m-0 leading-tight">
+                  {action.title}
+                </h6>
+              </div>
+              <button
+                className="w-full py-2.5 text-xs sm:text-sm bg-[#F9FBFF] border border-[#E0E6ED] text-[#3B4A66] font-bold rounded-lg hover:bg-[#F56D2D] hover:text-white hover:border-[#F56D2D] transition-all"
+                onClick={() => navigate(action.route)}
+              >
+                {action.button}
+              </button>
             </div>
           ))}
         </div>

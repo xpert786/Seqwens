@@ -1,6 +1,6 @@
 .custom-topbar {
   height: 70px;
-  z-index: 1030;
+  z-index: 1100 !important;
   position: fixed;
   top: 0;
   left: 0;
@@ -139,7 +139,6 @@
 }
 
 .custom-topbar .navbar-brand img {
-  vertical-align: middle;
   display: block;
 }
 
@@ -304,14 +303,19 @@
     height: 100% !important;
   }
 
+  .custom-topbar .navbar-brand {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
   .custom-topbar .topbar-logo {
-    height: 24px !important;
-    margin-right: 4px !important;
+    height: 26px !important;
+    min-width: 60px !important;
+    margin-right: 8px !important;
     width: auto !important;
-    vertical-align: middle !important;
     display: block !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
+    object-fit: contain !important;
   }
 
   .custom-topbar .topbar-search {
@@ -387,11 +391,13 @@
   .sidebar-toggle-btn {
     padding: 3px !important;
     min-width: 32px !important;
+    flex-shrink: 0 !important;
     height: auto !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
+    z-index: 1101 !important;
   }
 
   .sidebar-toggle-icon svg {
@@ -400,14 +406,14 @@
   }
 
   /* Profile dropdown menu adjustments */
-  .custom-topbar .position-relative > div[role="menu"] {
+  .custom-topbar .position-relative>div[role="menu"] {
     min-width: 180px !important;
     right: 0 !important;
     font-size: 13px !important;
   }
 
-  .custom-topbar .position-relative > div[role="menu"] a,
-  .custom-topbar .position-relative > div[role="menu"] button {
+  .custom-topbar .position-relative>div[role="menu"] a,
+  .custom-topbar .position-relative>div[role="menu"] button {
     font-size: 13px !important;
     padding: 8px 12px !important;
   }

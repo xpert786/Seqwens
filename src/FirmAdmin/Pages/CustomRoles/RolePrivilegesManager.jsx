@@ -14,7 +14,6 @@ const PRIVILEGE_CATEGORIES = [
   { value: 'billing', label: 'Billing' },
   { value: 'workflows', label: 'Workflows' },
   { value: 'communications', label: 'Communications' },
-  { value: 'analytics', label: 'Analytics' },
   { value: 'esignature', label: 'E-Signature / SignWell' }
 ];
 
@@ -49,7 +48,6 @@ const RESOURCE_EXAMPLES = {
   reports: [
     { value: 'all_reports', label: 'All Reports', description: 'Access to all reports' },
     { value: 'generate_reports', label: 'Generate Reports', description: 'Can generate new reports' },
-    { value: 'export_reports', label: 'Export Reports', description: 'Can export reports' }
   ],
   settings: [
     { value: 'firm_settings', label: 'Firm Settings', description: 'Access to firm settings' },
@@ -75,10 +73,6 @@ const RESOURCE_EXAMPLES = {
     { value: 'all_communications', label: 'All Communications', description: 'Access to all communications' },
     { value: 'send_messages', label: 'Send Messages', description: 'Send messages to clients/staff' },
     { value: 'view_messages', label: 'View Messages', description: 'View messages' }
-  ],
-  analytics: [
-    { value: 'view_analytics', label: 'View Analytics', description: 'View analytics and reports' },
-    { value: 'export_analytics', label: 'Export Analytics', description: 'Export analytics data' }
   ],
   esignature: [
     { value: 'extract_signature_fields', label: 'Extract Signature Fields', description: 'Use OCR to automatically detect signature fields in PDF documents' },

@@ -3362,7 +3362,7 @@ export default function DataIntakeForm({ targetClientId }) {
               fontWeight: "400",
               fontFamily: "BasisGrotesquePro"
             }}>
-              Please upload your income documents in the Document Upload section below.
+              Please make sure to upload your income documents in the Document Upload section below.
             </span>
           </div>
         )}
