@@ -306,20 +306,27 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 <p>Drop your file here or click to browse</p>
                 <p>Supported formats: CSV, PDF (Max 10MB)</p>
               </div>
-              <label className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer"
+              <label
+                className="px-4 py-2 text-black text-sm cursor-pointer"
                 style={{
                   border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
-                <Browse /> Browse Files
+                <Browse />
+                <span>Browse Files</span>
+
                 <input
                   type="file"
                   accept=".csv,.pdf"
                   onChange={handleFileUpload}
-                  className="hidden"
+                  style={{ display: 'none' }}
                 />
               </label>
+
               {csvFile && (
                 <div className="mt-2 text-sm text-green-600 font-[BasisGrotesquePro]">
                   ✓ {csvFile.name}
@@ -951,19 +958,30 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       >
         {/* Header */}
         <div className="mb-4">
-          <div className="flex justify-between items-center pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-            <div>
-              <h4 className="taxdashboardr-titler text-[22px] font-bold font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Bulk Import Taxpayers</h4>
-              <p className="text-sm mt-1 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>
+          <div className="flex justify-between items-start pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+            <div className="flex-1 pr-4">
+              <h4 className="taxdashboardr-titler text-lg md:text-[22px] font-bold font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Bulk Import Taxpayers</h4>
+              <p className="text-xs md:text-sm mt-1 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>
                 Import multiple taxpayers from CSV file with validation and preview
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200"
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: '#EFF6FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
-              <IoMdClose size={24} />
+              ✕
             </button>
+
           </div>
 
           {/* Global Error Message */}

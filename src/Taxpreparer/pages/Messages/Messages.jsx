@@ -67,6 +67,13 @@ export default function MessagePage() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const filterOptions = ["All", "Active", "Closed"];
   const dropdownRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [threadToDelete, setThreadToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isSendButtonActive = newMessage.trim().length > 0;
   const sendButtonStyles = {

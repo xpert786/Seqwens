@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Cut, BlackCalender, PlusIcon, CrossIcon, ZoomIcon, GoogleMeetIcon } from '../../component/icons';
+import { FiX } from 'react-icons/fi';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
@@ -259,18 +260,27 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
       <div className="bg-white rounded-lg w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ maxWidth: '750px' }}>
         {/* Modal Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+        <div className="flex justify-between items-start px-6 py-4 border-b border-gray-200">
           <div>
-            <h5 className="font-semibold text-gray-900">Create New Event</h5>
-            <p className="text-sm text-gray-600 mt-1">
+            <h4 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
+              Create New Event
+            </h4>
+            <p className="text-sm text-gray-500 mt-1">
               Schedule appointments with clients
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            aria-label="Close"
+            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              marginTop: '2px'
+            }}
           >
-            <Cut className="w-5 h-5" />
+            <FiX size={18} />
           </button>
         </div>
 

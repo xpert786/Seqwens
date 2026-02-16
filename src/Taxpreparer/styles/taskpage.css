@@ -271,38 +271,27 @@
       max-width: 90vw;
     }
 
-    /* KANBAN BOARD MOBILE RESPONSIVE - Keep columns in same row */
+    /* KANBAN BOARD MOBILE RESPONSIVE - Stack columns vertically */
     .tasks-container {
-      overflow-x: auto !important;
-      /* Enable horizontal scrolling */
-      overflow-y: hidden;
-      /* Prevent vertical scrolling */
-      -webkit-overflow-scrolling: touch;
-      /* Smooth scrolling on iOS */
-      scrollbar-width: thin;
-      /* Thin scrollbar */
+      overflow-x: hidden !important;
+      overflow-y: visible !important;
     }
 
     .tasks-grid {
       display: flex !important;
-      /* Use flexbox instead of grid for horizontal layout */
-      flex-direction: row !important;
-      /* Keep columns in horizontal row */
-      gap: 12px !important;
-      align-items: stretch;
-      min-width: max-content;
-      /* Prevent shrinking */
-      padding-bottom: 8px;
-      /* Space for scrollbar */
+      flex-direction: column !important;
+      /* Stack vertically as columns */
+      gap: 16px !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      min-width: 0 !important;
     }
 
     .task-column {
-      min-width: 280px !important;
-      /* Fixed width for columns */
-      max-width: 280px !important;
-      flex: 0 0 auto !important;
-      /* Don't shrink or grow */
-      width: 280px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
     }
 
     /* Make task cards smaller on mobile */
@@ -443,28 +432,26 @@
       padding: 5px 8px;
     }
 
-    /* Keep Kanban columns in same row on small mobile too */
+    /* Stack Kanban columns vertically on small mobile too */
     .tasks-container {
-      overflow-x: auto !important;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
+      overflow-x: hidden !important;
+      overflow-y: visible !important;
     }
 
     .tasks-grid {
       display: flex !important;
-      flex-direction: row !important;
-      gap: 8px !important;
-      align-items: stretch;
-      min-width: max-content;
-      padding-bottom: 8px;
+      flex-direction: column !important;
+      gap: 12px !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      min-width: 0 !important;
     }
 
     .task-column {
-      min-width: 260px !important;
-      max-width: 260px !important;
-      flex: 0 0 auto !important;
-      width: 260px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
     }
 
     /* Even smaller cards on small mobile */
@@ -550,28 +537,26 @@
       padding: 5px 8px;
     }
 
-    /* Keep Kanban columns in same row on extra small mobile too */
+    /* Stack Kanban columns vertically on extra small mobile too */
     .tasks-container {
-      overflow-x: auto !important;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
+      overflow-x: hidden !important;
+      overflow-y: visible !important;
     }
 
     .tasks-grid {
       display: flex !important;
-      flex-direction: row !important;
-      gap: 6px !important;
-      align-items: stretch;
-      min-width: max-content;
-      padding-bottom: 8px;
+      flex-direction: column !important;
+      gap: 10px !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      min-width: 0 !important;
     }
 
     .task-column {
-      min-width: 240px !important;
-      max-width: 240px !important;
-      flex: 0 0 auto !important;
-      width: 240px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
     }
 
     /* Ultra compact cards on extra small mobile */

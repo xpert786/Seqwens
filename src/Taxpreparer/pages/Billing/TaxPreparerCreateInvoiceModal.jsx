@@ -413,7 +413,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
         height: '100vh',
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()} style={{ zIndex: 10000 }}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()} style={{ zIndex: 10000 }}>
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>

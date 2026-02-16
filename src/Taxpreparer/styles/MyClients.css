@@ -538,6 +538,7 @@ span.info-item {
     flex-direction: row !important;
     gap: 0.75rem !important;
     align-items: flex-start !important;
+    flex-wrap: wrap !important;
   }
 
   /* Left Section - Keep horizontal layout */
@@ -547,6 +548,7 @@ span.info-item {
     flex: 1 !important;
     min-width: 0 !important;
   }
+
 
   /* Client Initials */
   .client-initials {
@@ -640,19 +642,20 @@ span.info-item {
 
   /* Invite Actions */
   .invite-copy-btn-wrapper {
-    width: 100% !important;
-    justify-content: center !important;
-    margin-top: 12px !important;
+    width: auto !important;
+    justify-content: flex-end !important;
+    margin-top: 0 !important;
   }
 
   .invite-copy-btn-wrapper .btn {
-    width: 40px !important;
-    height: 40px !important;
+    width: 32px !important;
+    height: 32px !important;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 8px !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Centering Pagination on Mobile */
@@ -1041,6 +1044,25 @@ span.info-item {
   .modal .modal-body .d-flex.gap-2 .btn:not(.form-control) {
     font-size: 13px !important;
     padding: 8px 12px !important;
-    min-height: 40px !important;
   }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

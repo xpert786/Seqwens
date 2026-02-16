@@ -11,9 +11,9 @@ const CalendarView = () => {
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-    
+
     const days = [];
-    
+
     // Previous month's days
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
@@ -23,7 +23,7 @@ const CalendarView = () => {
         isToday: false
       });
     }
-    
+
     // Current month's days
     const today = new Date();
     for (let i = 1; i <= daysInMonth; i++) {
@@ -33,7 +33,7 @@ const CalendarView = () => {
         isToday: today.getDate() === i && today.getMonth() === month && today.getFullYear() === year
       });
     }
-    
+
     // Next month's days to fill the grid
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
@@ -43,15 +43,15 @@ const CalendarView = () => {
         isToday: false
       });
     }
-    
+
     return days;
   };
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
+
   const days = getDaysInMonth(currentDate);
-  
+
   const tasksData = {
     '2025-7-4': [
       { title: 'IRS Rejection Correction', id: 1 },
@@ -112,7 +112,7 @@ const CalendarView = () => {
       startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
-      
+
       if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
         return `${monthNames[startOfWeek.getMonth()]} ${startOfWeek.getDate()} - ${endOfWeek.getDate()}, ${startOfWeek.getFullYear()}`;
       } else {
@@ -143,11 +143,10 @@ const CalendarView = () => {
           <button
             key={tf}
             onClick={() => setTimeframe(tf)}
-            className={`px-4 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${
-              timeframe === tf
+            className={`px-4 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${timeframe === tf
                 ? 'bg-[#F56D2D] text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50 !border border-[#E8F0FF]'
-            }`}
+              }`}
           >
             {tf}
           </button>
@@ -201,20 +200,18 @@ const CalendarView = () => {
             {/* Calendar Days */}
             {days.map((day, idx) => {
               const tasks = day.isCurrentMonth ? getTasksForDate(currentDate.getFullYear(), currentDate.getMonth(), day.date) : [];
-              
+
               return (
                 <div
                   key={idx}
-                  className={`min-h-[100px] !border border-[#E2E8F0] p-2 ${
-                    !day.isCurrentMonth ? 'bg-[#F7FAFC]' : 'bg-white'
-                  } ${day.isToday ? 'bg-blue-50' : ''}`}
+                  className={`min-h-[100px] !border border-[#E2E8F0] p-2 ${!day.isCurrentMonth ? 'bg-[#F7FAFC]' : 'bg-white'
+                    } ${day.isToday ? 'bg-blue-50' : ''}`}
                 >
-                  <div className={`text-sm mb-1 font-[BasisGrotesquePro] ${
-                    day.isCurrentMonth ? 'text-[#4A5568]' : 'text-[#CBD5E0]'
-                  }`}>
+                  <div className={`text-sm mb-1 font-[BasisGrotesquePro] ${day.isCurrentMonth ? 'text-[#4A5568]' : 'text-[#CBD5E0]'
+                    }`}>
                     {day.date}
                   </div>
-                  
+
                   {tasks.length > 0 && (
                     <div className="space-y-1">
                       {tasks.slice(0, 2).map((task) => (
@@ -284,17 +281,15 @@ const CalendarView = () => {
               return weekDays.map((day, idx) => {
                 const tasks = getTasksForDate(day.getFullYear(), day.getMonth(), day.getDate());
                 const isToday = day.toDateString() === new Date().toDateString();
-                
+
                 return (
                   <div
                     key={idx}
-                    className={`min-h-[200px] !border border-[#E2E8F0] p-2 ${
-                      isToday ? 'bg-blue-50' : 'bg-white'
-                    }`}
+                    className={`min-h-[200px] !border border-[#E2E8F0] p-2 ${isToday ? 'bg-blue-50' : 'bg-white'
+                      }`}
                   >
-                    <div className={`text-sm mb-2 font-[BasisGrotesquePro] ${
-                      isToday ? 'text-blue-600 font-bold' : 'text-[#4A5568]'
-                    }`}>
+                    <div className={`text-sm mb-2 font-[BasisGrotesquePro] ${isToday ? 'text-blue-600 font-bold' : 'text-[#4A5568]'
+                      }`}>
                       {day.getDate()}
                     </div>
                     <div className="space-y-1">
@@ -332,9 +327,8 @@ const CalendarView = () => {
                     setCurrentDate(new Date(y, currentDate.getMonth(), 1));
                     setTimeframe('Monthly');
                   }}
-                  className={`p-4 text-center cursor-pointer hover:bg-gray-50 rounded transition-colors !border border-[#E2E8F0] ${
-                    y === currentDate.getFullYear() ? 'bg-blue-50 !border-blue-400' : ''
-                  }`}
+                  className={`p-4 text-center cursor-pointer hover:bg-gray-50 rounded transition-colors !border border-[#E2E8F0] ${y === currentDate.getFullYear() ? 'bg-blue-50 !border-blue-400' : ''
+                    }`}
                 >
                   <div className="text-lg font-semibold text-[#4A5568] font-[BasisGrotesquePro]">
                     {y}

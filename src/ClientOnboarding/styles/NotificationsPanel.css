@@ -2,16 +2,27 @@
     position: fixed;
     top: 80px;
     right: 20px;
-    width: 540px;
-    max-width: 95%;
+    width: 380px;
+    max-width: calc(100vw - 40px);
     max-height: calc(100vh - 120px);
     background: white;
     overflow-y: auto;
     z-index: 1050;
     padding: 16px;
     padding-bottom: 32px;
-    font-family: "BasisGrotesquePro";
+    font-family: "BasisGrotesquePro", sans-serif;
     border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 576px) {
+    .notifications-panel {
+        top: 70px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-width: none;
+    }
 }
 
 .active-tab {
@@ -98,15 +109,19 @@
 
 .txt-colour2 {
     color: #4B5563;
-    font-size: 9px;
-    font-weight: 400;
-    font-family: "BasisGrotesquePro";
+    font-size: 10px;
+    font-weight: 500;
+    font-family: "BasisGrotesquePro", sans-serif;
+    white-space: nowrap;
 }
 
 .colour4 {
     background-color: #F3F7FF;
-    font-size: 12px;
-    font-family: 400;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    border: 1px dashed #BFDBFE;
 }
 
 .notification-item {
@@ -139,8 +154,8 @@
 }
 
 @media (max-width: 400px) {
-    .firm-topbar-logo{
-      max-height: 22px !important;
-      width: auto !important;
+    .firm-topbar-logo {
+        max-height: 22px !important;
+        width: auto !important;
     }
-  }
+}

@@ -108,13 +108,13 @@ export default function Dashboard() {
             </h5>
           </div>
 
-          <div className="d-flex flex-wrap gap-3 mt-2 mt-md-0 justify-content-center">
+          <div className="d-flex flex-nowrap gap-2 gap-md-3 mt-2 mt-md-0 justify-content-center">
             <button
-              className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
+              className="btn taxdashboard-btn btn-contacted d-flex flex-row align-items-center gap-2 text-nowrap"
               onClick={() => navigate('/taxdashboard/calendar')}
             >
               <Calender />
-              View Calender
+              <span>View Calendar</span>
             </button>
 
             {/* <button className="btn dashboard-btn btn-scan d-flex align-items-center gap-2">
@@ -123,11 +123,11 @@ export default function Dashboard() {
             </button> */}
 
             <button
-              className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2"
+              className="btn taxdashboard-btn btn-uploaded d-flex flex-row align-items-center gap-2 text-nowrap"
               onClick={() => setShowUploadModal(true)}
             >
               <Uploading />
-              Upload Documents
+              <span>Upload Documents</span>
             </button>
 
           </div>
@@ -139,7 +139,7 @@ export default function Dashboard() {
         {[
           {
             label: "Assigned Clients",
-            icon: <Client size={26} style={{ color: "#00C0C6" }} />,
+            icon: <Client size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.assigned_clients?.count || 0,
             content: loading ? "Loading..." : summaryCards.assigned_clients?.status || "",
             statusType: summaryCards.assigned_clients?.status_type || "",
@@ -147,7 +147,7 @@ export default function Dashboard() {
           },
           {
             label: "Client Pending Tasks",
-            icon: <Clock size={26} style={{ color: "#00C0C6" }} />,
+            icon: <Clock size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.pending_tasks?.count || 0,
             content: loading ? "Loading..." : summaryCards.pending_tasks?.status || "",
             statusType: summaryCards.pending_tasks?.status_type || "",
@@ -158,7 +158,7 @@ export default function Dashboard() {
           },
           {
             label: "Completed Today",
-            icon: <Check size={26} style={{ color: "#00C0C6" }} />,
+            icon: <Check size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.completed_today?.count || 0,
             content: loading ? "Loading..." : summaryCards.completed_today?.status || "",
             statusType: summaryCards.completed_today?.status_type || "",
@@ -166,7 +166,7 @@ export default function Dashboard() {
           },
           {
             label: "New Messages",
-            icon: <Msg size={26} style={{ color: "#00C0C6" }} />,
+            icon: <Msg size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.new_messages?.count || 0,
             content: loading ? "Loading..." : summaryCards.new_messages?.status || "",
             statusType: summaryCards.new_messages?.status_type || "",
@@ -187,7 +187,7 @@ export default function Dashboard() {
                 }}
                 onClick={() => card.path && navigate(card.path)}
               >
-                <div className="d-flex justify-content-between align-items-start">
+                <div className="d-flex justify-content-between align-items-center">
                   <div className="dashboarded-carded-labeled">{card.label}</div>
                   {card.icon}
                 </div>

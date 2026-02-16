@@ -525,9 +525,10 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
           <div className="colour4 p-1 rounded-2">
             <button
-              className="btn  d-flex align-items-center gap-2"
+              className="btn w-100 d-flex align-items-center justify-content-start gap-2 py-2 text-nowrap px-3"
               onClick={markAllRead}
               disabled={unreadCount === 0}
+              style={{ color: '#005F62', fontWeight: 600 }}
             >
               <MakeIcon />
               Mark all as read
@@ -562,7 +563,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
           {groupedNotifications[group].map((notification) => (
             <div
               key={notification.id}
-              className={`bg-white rounded-2 border d-flex justify-content-between align-items-start p-3 mx-2 mb-3 notification-item ${notification.read ? "notification-read" : "notification-unread"
+              className={`bg-white rounded-2 border p-3 mx-2 mb-3 notification-item ${notification.read ? "notification-read" : "notification-unread"
                 }`}
               role="button"
               tabIndex={0}
@@ -574,38 +575,40 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
                 }
               }}
             >
-              <div className="d-flex align-items-start gap-3 flex-fill">
-                <span className="notification-icon d-flex align-items-center justify-content-center">
-                  {notification.icon}
-                </span>
+              <div className="d-flex align-items-start justify-content-start w-100 text-start">
+                <div className="flex-shrink-0 me-3">
+                  <span className="notification-icon d-flex align-items-center justify-content-center">
+                    {notification.icon}
+                  </span>
+                </div>
 
-                <div>
-                  <div className="d-flex align-items-center gap-2 mb-1">
-                    <strong className="colour1">{notification.title}</strong>
+                <div className="flex-grow-1 overflow-hidden text-start" style={{ minWidth: 0 }}>
+                  <div className="d-flex align-items-center justify-content-start gap-2 m-0 p-0 text-truncate">
+                    <strong className="colour1 text-start m-0 text-truncate" style={{ textAlign: 'left' }}>{notification.title}</strong>
                     <span
-                      className="priority-badge"
+                      className="priority-badge flex-shrink-0"
                       style={{ backgroundColor: PRIORITY_COLOR[notification.priority] || PRIORITY_COLOR.medium }}
                     >
                       {notification.priorityDisplay || notification.priority}
                     </span>
                   </div>
-                  <small className="text-colour d-block">{notification.message}</small>
+                  <div className="text-colour d-block text-start m-0 p-0 text-truncate" style={{ lineHeight: '1.3', textAlign: 'left' }}>{notification.message}</div>
                 </div>
-              </div>
 
-              <div className="d-flex flex-column align-items-end justify-content-between">
-                <button
-                  type="button"
-                  className="btn btn-link text-muted mb-2 p-0 border-0 notification-dismiss"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removeNotification(notification.id);
-                  }}
-                  aria-label="Dismiss notification"
-                >
-                  <Cross2Icon />
-                </button>
-                <small className="txt-colour2">{notification.time}</small>
+                <div className="d-flex flex-column align-items-end justify-content-between flex-shrink-0 ms-2">
+                  <button
+                    type="button"
+                    className="btn btn-link text-muted mb-2 p-0 border-0 notification-dismiss"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      removeNotification(notification.id);
+                    }}
+                    aria-label="Dismiss notification"
+                  >
+                    <Cross2Icon />
+                  </button>
+                  <small className="txt-colour2">{notification.time}</small>
+                </div>
               </div>
             </div>
           ))}

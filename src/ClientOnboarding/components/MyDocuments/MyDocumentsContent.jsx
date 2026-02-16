@@ -1159,7 +1159,7 @@ export default function MyDocumentsContent() {
                                 const fileUrl = doc.file_url || doc.tax_documents || '';
 
                                 return (
-                                    <div className={view === "grid" ? "col-12 col-md-6" : "col-12"} key={doc.id || doc.document_id || index}>
+                                    <div className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-3" : "col-12"} key={doc.id || doc.document_id || index}>
                                         <div
                                             className="p-3 border rounded-4"
                                             style={{
@@ -1206,7 +1206,7 @@ export default function MyDocumentsContent() {
                                                     </div>
 
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div className="fw-medium mb-1 d-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px", color: "#3B4A66" }}>
+                                                        <div className="fw-medium mb-1 d-none d-md-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px", color: "#3B4A66" }}>
                                                             {docName}
                                                             {/* {(docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && (
                                                                 <span style={{ fontSize: '12px', color: '#EF4444', fontFamily: 'BasisGrotesquePro' }}>

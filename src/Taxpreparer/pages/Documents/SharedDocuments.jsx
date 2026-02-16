@@ -235,7 +235,7 @@ export default function SharedDocuments() {
                         <div className="d-flex align-items-center gap-2">
                           <FiFile size={18} style={{ color: '#00C0C6' }} />
                           <span style={{ color: '#3B4A66', fontWeight: '500', fontSize: '14px' }}>
-                            {getDocumentName(doc)}
+                            <span className="d-none d-md-inline-block">{getDocumentName(doc)}</span>
                           </span>
                         </div>
                       </td>

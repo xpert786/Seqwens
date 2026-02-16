@@ -758,7 +758,7 @@ export default function Folders({ onFolderSelect }) {
                                 {folders.map((folder) => (
                                     <div
                                         key={folder.id}
-                                        className={view === "grid" ? "col-sm-6 col-md-4 col-lg-3" : "col-12 mb-2"}
+                                        className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-3" : "col-12 mb-2"}
                                         onClick={() => handleFolderClick(folder, folders.indexOf(folder))}
                                         style={{ cursor: "pointer" }}
                                     >
@@ -1311,7 +1311,7 @@ export default function Folders({ onFolderSelect }) {
                                 // Trashed folders grid view
                                 <div className="row g-4">
                                     {trashedFolders.map((folder, idx) => (
-                                        <div className="col-12 col-md-6" key={folder.id || idx}>
+                                        <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={folder.id || idx}>
                                             <div
                                                 className="folder-card border rounded-3"
                                                 style={{
@@ -1423,7 +1423,7 @@ export default function Folders({ onFolderSelect }) {
                             ) : (
                                 <div className="row g-4">
                                     {folders.map((folder, idx) => (
-                                        <div className="col-12 col-md-6" key={folder.id || idx}>
+                                        <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={folder.id || idx}>
                                             <div
                                                 className={`folder-card border rounded-3 ${selectedIndex === idx ? "active" : ""}`}
                                                 onClick={() => handleFolderClick(folder, idx)}
@@ -1744,7 +1744,7 @@ export default function Folders({ onFolderSelect }) {
                                                                 <td style={{ padding: "12px", verticalAlign: "middle" }}>
                                                                     <div className="d-flex align-items-center gap-2">
                                                                         <FileIcon />
-                                                                        <span style={{ fontSize: "14px", color: "#3B4A66", fontWeight: "500" }}>
+                                                                        <span className="d-none d-md-inline-block" style={{ fontSize: "14px", color: "#3B4A66", fontWeight: "500" }}>
                                                                             {docName}
                                                                         </span>
                                                                     </div>
@@ -1899,7 +1899,7 @@ export default function Folders({ onFolderSelect }) {
 
                                                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                                                 <div className="d-flex align-items-center gap-2 mb-1">
-                                                                                    <div className="fw-medium" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px" }}>
+                                                                                    <div className="fw-medium d-none d-md-block" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px" }}>
                                                                                         {docName}
                                                                                     </div>
                                                                                     {docVersion && (

@@ -1255,6 +1255,20 @@ export default function MyClients() {
     }
   };
 
+  // Pagination for clients
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientsPerPage = 4;
+
+  const indexOfLastClient = currentPage * clientsPerPage;
+  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+  const currentClients = processedClients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalClientsPages = Math.ceil(processedClients.length / clientsPerPage);
+
+  const handleClientPageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    clientListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   if (loading) {
     return (
       <div className="myclients-container">
@@ -1601,10 +1615,10 @@ export default function MyClients() {
             </div>
           ) : (
             <div className="row g-3">
-              {processedClients.map((client) => (
+              {currentClients.map((client) => (
                 <div
                   key={client.id}
-                  className={processedClients.length === 1 ? "col-12" : "col-md-6 col-12"}
+                  className={currentClients.length === 1 ? "col-12" : "col-md-6 col-12"}
                 >
                   <div
                     className="card client-card"
@@ -1762,6 +1776,33 @@ export default function MyClients() {
               ))}
             </div>
           )}
+
+          {/* Pagination for clients */}
+          {totalClientsPages > 1 && (
+            <div className="d-flex justify-content-between align-items-center mt-4">
+              <div className="text-muted small">
+                Showing {indexOfFirstClient + 1} to{' '}
+                {Math.min(indexOfLastClient, processedClients.length)} of{' '}
+                {processedClients.length} clients
+              </div>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-outline-primary"
+                  onClick={() => handleClientPageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || loading}
+                >
+                  Previous
+                </button>
+                <button
+                  className="btn btn-outline-primary"
+                  onClick={() => handleClientPageChange(currentPage + 1)}
+                  disabled={currentPage >= totalClientsPages || loading}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1794,7 +1835,7 @@ export default function MyClients() {
           ) : (
             <div className="row g-3">
               {pendingInvites.map((invite) => (
-                <div key={invite.id} className="col-md-6 col-12">
+                <div key={invite.id} className="col-xl-6 col-lg-12 col-md-12 col-sm-12 col-12">
                   <div
                     className="card client-card"
                     onClick={() => openInviteActionsModal(invite)}
@@ -1943,7 +1984,7 @@ export default function MyClients() {
             <>
               <div className="row g-3">
                 {unlinkedTaxpayers.map((taxpayer) => (
-                  <div key={taxpayer.id} className="col-md-6 col-12">
+                  <div key={taxpayer.id} className="col-xl-6 col-lg-12 col-md-12 col-sm-12 col-12">
                     <div
                       className="card client-card"
                       style={{
@@ -1979,18 +2020,20 @@ export default function MyClients() {
                             <div className="fw-semibold mb-1">
                               {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
                             </div>
-                            {taxpayer.email && (
-                              <div className="text-muted small mb-2">
-                                <FaEnvelope className="me-1" size={12} />
-                                {taxpayer.email}
-                              </div>
-                            )}
-                            {taxpayer.phone_number && (
-                              <div className="text-muted small mb-2">
-                                <Phone className="me-1" />
-                                {taxpayer.phone_number}
-                              </div>
-                            )}
+                            <div className="text-muted mb-2 d-flex flex-wrap align-items-center gap-3" style={{ fontSize: '11px' }}>
+                              {taxpayer.email && (
+                                <span className="d-flex align-items-center">
+                                  <FaEnvelope className="me-2" size={12} />
+                                  {taxpayer.email}
+                                </span>
+                              )}
+                              {taxpayer.phone_number && (
+                                <span className="d-flex align-items-center">
+                                  <Phone className="me-2" />
+                                  {taxpayer.phone_number}
+                                </span>
+                              )}
+                            </div>
                             <div className="d-flex flex-wrap gap-2 mt-2">
                               {taxpayer.is_active ? (
                                 <span className="badge bg-success text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
@@ -2399,7 +2442,7 @@ export default function MyClients() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
                 <form onSubmit={handleInviteExistingTaxpayer}>
                   <div className="mb-3">
                     <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>

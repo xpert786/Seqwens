@@ -455,7 +455,7 @@ export default function FirmSharedDocuments() {
                             }}
                             onClick={() => canPreview && handlePreview(doc)}
                           >
-                            {getDocumentName(doc)}
+                            <span className="d-none d-md-inline-block">{getDocumentName(doc)}</span>
                           </span>
                         </div>
                       </td>

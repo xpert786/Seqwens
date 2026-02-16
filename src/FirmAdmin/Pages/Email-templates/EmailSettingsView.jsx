@@ -375,8 +375,7 @@ export default function EmailSettingsView() {
           </div>
         </div>
       </div>
-
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <button
           onClick={handleSaveSettings}
           disabled={saving}
