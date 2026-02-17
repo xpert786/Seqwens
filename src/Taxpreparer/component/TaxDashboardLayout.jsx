@@ -87,7 +87,7 @@ export default function TaxDashboardLayout() {
           aria-hidden="true"
         />
       )}
-      <TaxSidebar isSidebarOpen={isSidebarOpen} />
+      <TaxSidebar isSidebarOpen={isSidebarOpen} onNavigate={handleCloseSidebar} />
       <main
         className="tdl-main"
         style={{

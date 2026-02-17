@@ -2420,8 +2420,8 @@ export default function MyClients() {
 
       {/* Invite Taxpayer Modal (existing clients) */}
       {showInviteTaxpayerModal && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
+        <div className="modal invite-taxpayer-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 99999, paddingTop: '60px' }}>
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px', overflow: 'visible', border: 'none' }}>
               <div className="modal-header" style={{ borderBottom: 'none' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
@@ -2443,7 +2443,7 @@ export default function MyClients() {
                 ></button>
               </div>
               <div className="modal-body custom-scrollbar" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
-                <form onSubmit={handleInviteExistingTaxpayer}>
+                <form onSubmit={handleInviteExistingTaxpayer} id="inviteTaxpayerForm">
                   <div className="mb-3">
                     <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
                       First Name <span className="text-danger">*</span>
@@ -2505,37 +2505,38 @@ export default function MyClients() {
                       countryCodeEditable={false}
                     />
                   </div>
-                  <div className="modal-footer" style={{ borderTop: 'none', padding: '16px 0 0 0', marginTop: '16px' }}>
-                    <button
-                      type="button"
-                      className="btn btn-light"
-                      onClick={() => {
-                        setShowInviteTaxpayerModal(false);
-                        setInviteExistingForm({
-                          first_name: "",
-                          last_name: "",
-                          email: "",
-                          phone_number: ""
-                        });
-                      }}
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={inviteLoading}
-                      style={{
-                        backgroundColor: '#00C0C6',
-                        borderColor: '#00C0C6',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      {inviteLoading ? 'Creating Invite...' : 'Create Invite'}
-                    </button>
-                  </div>
                 </form>
+              </div>
+              <div className="modal-footer" style={{ borderTop: '1px solid #E5E7EB', padding: '20px 24px' }}>
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={() => {
+                    setShowInviteTaxpayerModal(false);
+                    setInviteExistingForm({
+                      first_name: "",
+                      last_name: "",
+                      email: "",
+                      phone_number: ""
+                    });
+                  }}
+                  style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="inviteTaxpayerForm"
+                  className="btn btn-primary"
+                  disabled={inviteLoading}
+                  style={{
+                    backgroundColor: '#00C0C6',
+                    borderColor: '#00C0C6',
+                    borderRadius: '8px'
+                  }}
+                >
+                  {inviteLoading ? 'Creating Invite...' : 'Create Invite'}
+                </button>
               </div>
             </div>
           </div>

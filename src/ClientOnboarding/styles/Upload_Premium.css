@@ -414,3 +414,130 @@
         height: 300px;
     }
 }
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+    .upload-modal .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .upload-modal .modal-content {
+        border-radius: 12px;
+        max-height: calc(100vh - 20px);
+    }
+    
+    .upload-modal .modal-body {
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    
+    .upload-heading {
+        font-size: 18px;
+    }
+    
+    .upload-subheading {
+        font-size: 12px;
+    }
+    
+    .premium-dropzone {
+        padding: 40px 20px;
+    }
+    
+    .dropzone-icon-container {
+        font-size: 36px;
+    }
+    
+    .dropzone-text {
+        font-size: 16px;
+    }
+    
+    .dropzone-hint {
+        font-size: 11px;
+    }
+    
+    .config-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 16px;
+    }
+    
+    .file-sidebar {
+        height: 200px;
+        border-radius: 8px;
+    }
+    
+    .file-list-header {
+        padding: 12px;
+    }
+    
+    .file-items-container {
+        padding: 8px;
+    }
+    
+    .file-item-premium {
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+    
+    .file-icon-square {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .file-name-txt {
+        font-size: 12px;
+    }
+    
+    .main-config-area {
+        gap: 12px;
+    }
+    
+    .config-tabs {
+        width: 100%;
+    }
+    
+    .tab-btn {
+        padding: 6px 16px;
+        font-size: 13px;
+        flex: 1;
+    }
+    
+    .config-content-wrapper {
+        padding: 16px;
+        border-radius: 8px;
+    }
+    
+    .premium-folder-select {
+        padding: 10px;
+    }
+    
+    .folder-path-display {
+        font-size: 13px;
+    }
+    
+    .folder-dropdown-premium {
+        max-height: 200px;
+    }
+    
+    .modal-footer-premium {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn-premium-primary,
+    .btn-premium-secondary {
+        width: 100%;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    .error-summary-banner {
+        padding: 10px 12px;
+    }
+    
+    .error-summary-content {
+        font-size: 12px;
+    }
+}

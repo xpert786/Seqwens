@@ -397,11 +397,11 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                     marginLeft: "10px"
                                 }}
                             >
-                                <div className="d-flex justify-content-between align-items-start flex-column flex-md-row">
+                                <div className="d-flex justify-content-between align-items-start flex-column flex-md-row gap-3">
                                     {/* Left Info */}
 
-                                    <div className="mb-3 mb-md-0 flex-grow-1">
-                                        <div className="d-flex align-items-start justify-content-between">
+                                    <div className="mb-3 mb-md-0 flex-grow-1 w-100">
+                                        <div className="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3">
                                             <div>
                                                 <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                                     {inv.invoice_number}
@@ -435,7 +435,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="d-flex gap-2 ms-2">
+                                            <div className="d-flex gap-2 ms-auto ms-md-2">
                                                 <button
                                                     className="btn"
                                                     style={{
@@ -469,7 +469,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                                                         }}
                                                     >
                                                         <PayIcon style={{ fontSize: '30px' }} />
-                                                        <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
+                                                        <span className="d-none d-md-inline" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -573,16 +573,18 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                 </>
             )}
 
+            {/* Payment Modal */}
             {showModal && selectedInvoice && (
                 <div
                     className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, padding: '20px' }}
                 >
                     <div
                         className=" rounded-4 p-4"
                         style={{
-                            width: '550px',
-                            maxHeight: '90vh',
+                            width: '100%',
+                            maxWidth: '550px',
+                            maxHeight: 'calc(100vh - 40px)',
                             overflowY: 'auto',
                             border: "1px solid #E8F0FF",
                             backgroundColor: "#FFFFFF"
@@ -754,15 +756,15 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
             {showInvoiceDetailsModal && selectedInvoice && (
                 <div
                     className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, padding: '20px' }}
                     onClick={handleCloseInvoiceDetailsModal}
                 >
                     <div
                         className="rounded-4 p-0"
                         style={{
-                            width: '85vw',
+                            width: '100%',
                             maxWidth: '550px',
-                            maxHeight: '90vh',
+                            maxHeight: 'calc(100vh - 40px)',
                             overflowY: 'auto',
                             border: "1px solid #E8F0FF",
                             backgroundColor: "#FFFFFF",

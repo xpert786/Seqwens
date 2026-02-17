@@ -15,7 +15,7 @@ import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 import { isFeatureVisible, hasTaxPreparerPermission } from "../../ClientOnboarding/utils/privilegeUtils";
 
-export default function TaxSidebar({ isSidebarOpen = true }) {
+export default function TaxSidebar({ isSidebarOpen = true, onNavigate }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -43,6 +43,12 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
   const bottomLinkClass = (path) =>
     `tsb-bottom-link ${isActive(path) ? "tsb-bottom-active" : ""}`;
+
+  const handleNavClick = () => {
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
@@ -74,21 +80,21 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
       <div className="tsb-top">
         <ul className="nav flex-column px-3" style={{ paddingBottom: '120px' }}>
           {isFeatureVisible('dashboard') && (
-            <Link to="/taxdashboard" className={linkClass("/taxdashboard")}>
+            <Link to="/taxdashboard" className={linkClass("/taxdashboard")} onClick={handleNavClick}>
               <span className={iconWrapperClass("/taxdashboard")}><DashIconed /></span>
               Dashboard
             </Link>
           )}
 
           {isFeatureVisible('clients') && (
-            <Link to="/taxdashboard/clients" className={linkClass("/taxdashboard/clients")}>
+            <Link to="/taxdashboard/clients" className={linkClass("/taxdashboard/clients")} onClick={handleNavClick}>
               <span className={iconWrapperClass("/taxdashboard/clients")}><Clients /></span>
               My Clients
             </Link>
           )}
 
           {isFeatureVisible('documents') && (
-            <Link to="/taxdashboard/documents" className={linkClass("/taxdashboard/documents")}>
+            <Link to="/taxdashboard/documents" className={linkClass("/taxdashboard/documents")} onClick={handleNavClick}>
               <span className={iconWrapperClass("/taxdashboard/documents")}><FileIconed /></span>
               Documents
             </Link>
@@ -96,7 +102,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
           {isFeatureVisible('tasks') && (
             <li className="mb-2">
-              <Link to="/taxdashboard/tasks" className={linkClass("/taxdashboard/tasks")}>
+              <Link to="/taxdashboard/tasks" className={linkClass("/taxdashboard/tasks")} onClick={handleNavClick}>
                 <span className={iconWrapperClass("/taxdashboard/tasks")}>
                   <Task />
                 </span>
@@ -107,7 +113,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
           {isFeatureVisible('messages') && (
             <li className="mb-2">
-              <Link to="/taxdashboard/messages" className={linkClass("/taxdashboard/messages")}>
+              <Link to="/taxdashboard/messages" className={linkClass("/taxdashboard/messages")} onClick={handleNavClick}>
                 <span className={iconWrapperClass("/taxdashboard/messages")}>
                   <MesIconed />
                 </span>
@@ -118,7 +124,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
           {isFeatureVisible('calendar') && (
             <li className="mb-2">
-              <Link to="/taxdashboard/calendar" className={linkClass("/taxdashboard/calendar")}>
+              <Link to="/taxdashboard/calendar" className={linkClass("/taxdashboard/calendar")} onClick={handleNavClick}>
                 <span className={iconWrapperClass("/taxdashboard/calendar")}>
                   <MonthIconed />
                 </span>
@@ -129,7 +135,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
           {isFeatureVisible('eSignatures') && (
             <li className="mb-2">
-              <Link to="/taxdashboard/e-signatures" className={linkClass("/taxdashboard/e-signatures")}>
+              <Link to="/taxdashboard/e-signatures" className={linkClass("/taxdashboard/e-signatures")} onClick={handleNavClick}>
                 <span className={iconWrapperClass("/taxdashboard/e-signatures")}>
                   <SignatureIcon />
                 </span>
@@ -140,7 +146,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
           {isFeatureVisible('workflow') && (
             <li className="mb-2">
-              <Link to="/taxdashboard/workflows" className={linkClass("/taxdashboard/workflows")}>
+              <Link to="/taxdashboard/workflows" className={linkClass("/taxdashboard/workflows")} onClick={handleNavClick}>
                 <span className={iconWrapperClass("/taxdashboard/workflows")}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9C3 10.1046 3.89543 11 5 11H9C10.1046 11 11 10.1046 11 9V5C11 3.89543 10.1046 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -155,7 +161,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
           {isFeatureVisible('billing') && (
             <li className="mb-2">
-              <Link to="/taxdashboard/billing" className={linkClass("/taxdashboard/billing")}>
+              <Link to="/taxdashboard/billing" className={linkClass("/taxdashboard/billing")} onClick={handleNavClick}>
                 <span className={iconWrapperClass("/taxdashboard/billing")}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -175,7 +181,7 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
 
       {/* Fixed Bottom Box */}
       <div className="tsb-bottom-box">
-        <Link to="/taxdashboard/account" className={bottomLinkClass("/taxdashboard/account")}>
+        <Link to="/taxdashboard/account" className={bottomLinkClass("/taxdashboard/account")} onClick={handleNavClick}>
           <span className={`tsb-bottom-icon ${isActive("/taxdashboard/account") ? "active" : ""}`}>
             <AccountIcon />
           </span>

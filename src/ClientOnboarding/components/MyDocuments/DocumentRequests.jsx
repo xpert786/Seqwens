@@ -341,152 +341,174 @@ export default function DocumentRequests() {
   }
 
   return (
-    <div>
-      {/* Pending Requests */}
-      <div className="mydocs-container container-fluid px-2 px-md-3">
-        {/* Header Section */}
-        <div className="mydocs-header pt-3">
-          {/* Update: align-items-md-end and justify-content-between handles the split */}
-          <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center mb-3 gap-3">
+    <div className="px-2 px-md-3 py-3">
+      {/* Title Section */}
+      <div className="mb-4">
+        <h5 style={{ fontSize: "22px", fontWeight: "600", color: "#3B4A66", fontFamily: "BasisGrotesquePro", marginBottom: '4px' }}>
+          Pending Document Requests
+        </h5>
+        <p style={{ fontSize: "14px", color: "#6B7280", margin: 0 }}>
+          Documents requested by your tax professional
+        </p>
+      </div>
 
-            {/* Update: justify-content-md-end keeps buttons on extreme right on desktop */}
-            <div className="d-flex gap-2 w-100 w-md-auto overflow-auto pb-1 justify-content-md-end">
-              {['All', 'Pending', 'Submitted', 'Completed'].map((label) => {
-                const value = label === 'All' ? null : label.toLowerCase();
-                return (
-                  <button
-                    key={label}
-                    onClick={() => setFilterStatus(value)}
-                    className="btn flex-grow-1 flex-md-grow-0"
-                    style={{
-                      backgroundColor: filterStatus === value ? "#00C0C6" : "#fff",
-                      color: filterStatus === value ? "#fff" : "#3B4A66",
-                      border: "1px solid #E8F0FF",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                      fontWeight: "500",
-                      padding: "8px 20px", // Increased horizontal padding for better "right-aligned" look
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* Filter Tabs */}
+      <div className="d-flex gap-2 mb-4 overflow-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {['All', 'Pending', 'Submitted', 'Completed'].map((label) => {
+          const value = label === 'All' ? null : label.toLowerCase();
+          const isActive = filterStatus === value;
+          return (
+            <button
+              key={label}
+              onClick={() => setFilterStatus(value)}
+              className="btn"
+              style={{
+                backgroundColor: isActive ? "#00C0C6" : "#fff",
+                color: isActive ? "#fff" : "#3B4A66",
+                border: "1px solid #E8F0FF",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: "500",
+                padding: "8px 24px",
+                whiteSpace: "nowrap",
+                transition: 'all 0.2s'
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Document List */}
+      {documents.length === 0 ? (
+        <div className="text-center py-5 bg-white rounded-4 border" style={{ borderColor: '#F3F4F6' }}>
+          <h6 className="mb-2" style={{ color: '#3B4A66', fontWeight: '600' }}>No Document Requests</h6>
+          <p className="text-muted px-3" style={{ fontSize: '14px' }}>
+            Your tax professional will send requests here when needed.
+          </p>
         </div>
+      ) : (
+        <div className="d-flex flex-column">
+          {documents
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((doc, idx) => {
+              const overdueDays = calculateOverdueDays(doc.due_date || doc.dueDate);
+              const requestedDocs = doc.requested_documents || doc.requestedDocs || doc.requested_docs || [];
+              const isActionable = doc.status === 'pending' || !doc.status || doc.status === 'in_progress';
+              const priority = (doc.priority || 'Medium').toLowerCase();
+              const status = (doc.status || 'Pending').toLowerCase();
 
-        {/* Document List */}
-        {documents.length === 0 ? (
-          <div className="mt-3 text-center py-5 bg-white rounded-3 border">
-            <h6 className="mb-2" style={{ color: '#3B4A66' }}>No Document Requests</h6>
-            <p className="text-muted px-3" style={{ fontSize: '14px' }}>
-              Your tax professional will send requests here when needed.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-3 d-flex flex-column gap-3">
-            {documents
-              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-              .map((doc, idx) => {
-                const overdueDays = calculateOverdueDays(doc.due_date || doc.dueDate);
-                const requestedDocs = doc.requested_documents || doc.requestedDocs || doc.requested_docs || [];
-                const isActionable = doc.status === 'pending' || !doc.status || doc.status === 'in_progress';
-
-                return (
-                  <div
-                    key={doc.id || `doc-${idx}`}
-                    className={`mydocs-card p-3 shadow-sm bg-white rounded-3 ${activeCard === doc.id ? 'border border-info' : 'border'}`}
-                    style={{ transition: 'all 0.2s' }}
-                    onClick={() => setActiveCard(doc.id)}
-                  >
-                    {/* Top Row: Title, Status, and Upload Button */}
-                    <div className="d-flex align-items-start justify-content-between gap-3 mb-3">
-                      <div className="d-flex align-items-center gap-3 flex-wrap flex-1">
-                        <span className="mydocs-icon-wrapper flex-shrink-0">
-                          <FileIcon />
-                        </span>
-                        <div>
-                          <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
-                            <strong className="mydocs-doc-title" style={{ fontSize: '1rem', color: '#3B4A66' }}>
-                              {doc.task_title || doc.title || `${doc.tax_year || ''} Document Request`.trim()}
-                            </strong>
-                            <div className="d-flex gap-1">
-                              {doc.priority && (
-                                <span className={`badge-priority-${doc.priority.toLowerCase()}`}>
-                                  {doc.priority}
-                                </span>
-                              )}
-                              <span className="badge-status">
-                                {doc.status || 'Pending'}
-                              </span>
-                            </div>
-                          </div>
-                          {overdueDays > 0 && (
-                            <span className="badge bg-danger text-white" style={{ fontSize: '10px' }}>
-                              Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
+              return (
+                <div
+                  key={doc.id || `doc-${idx}`}
+                  className="mydocs-request-card"
+                >
+                  {/* Card Header Row */}
+                  <div className="d-flex justify-content-between align-items-start gap-3">
+                    <div className="d-flex gap-3 align-items-start">
+                      <div className="mydocs-request-icon-wrapper">
+                        <FileIcon />
+                      </div>
+                      <div>
+                        <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                          <h6 className="mb-0" style={{ fontSize: '16px', fontWeight: '700', color: '#3B4A66' }}>
+                            {doc.task_title || doc.title || `${doc.tax_year || ''} Document Request`.trim()}
+                          </h6>
+                          <div className="d-flex gap-1">
+                            <span className={`badge mydocs-request-badge badge-priority-${priority}-premium`}>
+                              {priority.charAt(0).toUpperCase() + priority.slice(1)}
                             </span>
+                            <span className={`badge mydocs-request-badge badge-status-${status}-premium`}>
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '8px' }}>
+                          {doc.description || `Please upload ${doc.title || 'the requested documents'} for ${doc.tax_year || 'the selected period'}`}
+                        </p>
+
+                        {/* Metadata Row */}
+                        <div className="d-flex flex-wrap align-items-center gap-3" style={{ fontSize: '12px', color: '#6B7280' }}>
+                          <div className="d-flex align-items-center gap-1">
+                            <BlackDateIcon size={14} />
+                            <span>Due: <strong>{formatDate(doc.due_date || doc.dueDate)}</strong></span>
+                          </div>
+                          <div className="d-flex align-items-center gap-1">
+                            <span style={{ opacity: 0.6 }}>|</span>
+                            <span>Requested by: <strong>{doc.created_by_name || doc.requested_by_name || 'System'}</strong></span>
+                          </div>
+                          {doc.reminder_count > 0 && (
+                            <div className="d-flex align-items-center gap-1">
+                              <span style={{ opacity: 0.6 }}>|</span>
+                              <span style={{ color: '#10B981' }}>{doc.reminder_count} reminder sent</span>
+                            </div>
                           )}
                         </div>
-                      </div>
 
-                      {isActionable && (
-                        <button
-                          className="btn btn-upload flex-shrink-0"
-                          onClick={(e) => handleSubmitRequestClick(e, doc)}
-                        >
-                          <UpIcon size={18} />
-                          <span>Upload</span>
-                        </button>
-                      )}
+                        {/* Overdue Status */}
+                        {overdueDays > 0 && (
+                          <div className="mydocs-overdue-text mt-2">
+                            <i className="bi bi-info-circle-fill"></i>
+                            <span>Overdue by {overdueDays} days</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-muted mb-3" style={{ fontSize: '14px', lineHeight: '1.5' }}>
-                      {doc.description || doc.instructions || 'Please upload the requested documents'}
-                    </p>
-
-                    {/* Requested Items Chips */}
-                    {requestedDocs.length > 0 && (
-                      <div className="mb-3">
-                        <small className="fw-bold text-muted d-block mb-2" style={{ fontSize: '12px' }}>Required Documents:</small>
-                        <div className="d-flex flex-wrap gap-2">
-                          {requestedDocs.map((item, idx) => (
-                            <span key={idx} className="badge bg-light border text-dark" style={{ fontSize: '12px', padding: '6px 12px', fontWeight: '400' }}>
-                              {typeof item === 'string' ? item : (item.name || item.document_type || item)}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                    {isActionable && (
+                      <button
+                        className="btn-upload"
+                        onClick={(e) => handleSubmitRequestClick(e, doc)}
+                        style={{ padding: '8px 24px !important', borderRadius: '8px !important' }}
+                      >
+                        <i className="bi bi-upload"></i>
+                        <span>Upload</span>
+                      </button>
                     )}
-
-                    {/* Bottom: Due Date Info */}
-                    <div className="d-flex align-items-center gap-2 text-muted pt-2 border-top" style={{ fontSize: '13px' }}>
-                      <BlackDateIcon />
-                      <span>Due: <strong>{formatDate(doc.due_date || doc.dueDate)}</strong></span>
-                      <span className="mx-1">|</span>
-                      <span>Requested by: {doc.created_by_name || doc.requested_by_name || 'System'}</span>
-                    </div>
                   </div>
-                );
-              })}
 
-            {/* Pagination */}
-            {documents.length > itemsPerPage && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(documents.length / itemsPerPage)}
-                onPageChange={setCurrentPage}
-                totalItems={documents.length}
-                itemsPerPage={itemsPerPage}
-                startIndex={(currentPage - 1) * itemsPerPage}
-                endIndex={Math.min(currentPage * itemsPerPage, documents.length)}
-              />
-            )}
-          </div>
-        )}
-      </div>
+                  {/* Instructions Section */}
+                  {(doc.instructions || doc.description) && (
+                    <div className="mydocs-instructions-box">
+                      <p className="mb-1" style={{ fontSize: '13px', fontWeight: '700', color: '#3B4A66' }}>Instructions:</p>
+                      <p className="mb-0" style={{ fontSize: '13px', color: '#4B5563', lineHeight: '1.5' }}>
+                        {doc.instructions || doc.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Required Documents Section */}
+                  {requestedDocs.length > 0 && (
+                    <div className="mt-3">
+                      <p className="mb-2" style={{ fontSize: '13px', fontWeight: '700', color: '#3B4A66' }}>Required Documents:</p>
+                      <div className="d-flex flex-wrap gap-2">
+                        {requestedDocs.map((item, idx) => (
+                          <span key={idx} className="mydocs-req-chip">
+                            {typeof item === 'string' ? item : (item.name || item.document_type || item)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+          {/* Pagination */}
+          {documents.length > itemsPerPage && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(documents.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              totalItems={documents.length}
+              itemsPerPage={itemsPerPage}
+              startIndex={(currentPage - 1) * itemsPerPage}
+              endIndex={Math.min(currentPage * itemsPerPage, documents.length)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && selectedRequest && (
@@ -632,53 +654,18 @@ export default function DocumentRequests() {
             </div>
 
             {/* Modal Footer - Responsive Stacking */}
-            <div style={{
-              padding: '16px 20px',
-              borderTop: '1px solid #F3F4F6',
-              display: 'flex',
-              flexDirection: window.innerWidth < 576 ? 'flex-column-reverse' : 'row', // logic for stacking on small screens
-              justifyContent: 'flex-end',
-              gap: '12px',
-              backgroundColor: '#FFFFFF'
-            }}>
-              {/* CSS workaround for stacking buttons via media queries usually preferred, 
-            but for inline styles, we optimize for standard flex flow */}
+            <div className="modal-footer-container">
               <button
                 onClick={handleCloseUploadModal}
                 disabled={uploading}
-                style={{
-                  flex: window.innerWidth < 576 ? '1' : 'none',
-                  padding: '12px 24px',
-                  backgroundColor: 'white',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '10px',
-                  color: '#374151',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: uploading ? 'not-allowed' : 'pointer',
-                  minHeight: '48px' // Better touch target
-                }}
+                className="modal-btn-cancel"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmitDocumentRequest}
                 disabled={uploading || submittingRequest || uploadFiles.length === 0}
-                style={{
-                  flex: window.innerWidth < 576 ? '1' : 'none',
-                  padding: '12px 24px',
-                  backgroundColor: (uploading || submittingRequest || uploadFiles.length === 0) ? '#9CA3AF' : '#32B582',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: (uploading || submittingRequest || uploadFiles.length === 0) ? 'not-allowed' : 'pointer',
-                  minHeight: '48px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
+                className="modal-btn-submit"
               >
                 {uploading || submittingRequest ? (
                   <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

@@ -461,7 +461,7 @@ export default function Topbar({
               <button
                 type="button"
                 onClick={onToggleSidebar}
-                className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors"
+                className="sidebar-toggle-btn d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors"
                 aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                 style={{ background: "transparent", border: "none", width: '40px', flexShrink: 0 }}
               >

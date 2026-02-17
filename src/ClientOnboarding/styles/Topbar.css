@@ -289,18 +289,22 @@
   .custom-topbar .d-flex.align-items-center.gap-3:first-child {
     flex: 1 1 auto !important;
     min-width: 0 !important;
-    overflow: hidden !important;
     align-items: center !important;
     height: 100% !important;
     display: flex !important;
+    z-index: 1102 !important;
+    /* Ensure toggle button container is above other elements */
   }
 
   .custom-topbar .d-flex.align-items-center.gap-3:last-child {
     gap: 6px !important;
-    flex-shrink: 0 !important;
+    flex: 0 1 auto !important;
+    /* Allow shrinking */
+    min-width: 0 !important;
     align-items: center !important;
     display: flex !important;
     height: 100% !important;
+    justify-content: flex-end !important;
   }
 
   .custom-topbar .navbar-brand {
@@ -319,9 +323,10 @@
   }
 
   .custom-topbar .topbar-search {
-    max-width: 140px !important;
+    max-width: 120px !important;
     margin-left: 0 !important;
-    flex: 0 0 auto !important;
+    flex: 1 1 auto !important;
+    /* Allow growing and shrinking */
     min-width: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -464,8 +469,12 @@
 }
 
 /* Hide search on very small screens if needed */
-@media (max-width: 320px) {
+@media (max-width: 400px) {
   .custom-topbar .topbar-search {
+    display: none !important;
+  }
+
+  .custom-topbar .navbar-brand {
     display: none !important;
   }
 }

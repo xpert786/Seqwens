@@ -63,35 +63,36 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
             default: return 'bg-gray-100 text-gray-700 border-gray-200';
         }
     };
-
     return (
-        <div className="firm-selection-container min-h-screen w-full flex items-center justify-center bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="firm-selection-card bg-white w-full max-w-2xl rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="firm-selection-container min-h-screen w-full flex items-center justify-center bg-gray-50/50 py-4 sm:py-12 px-4 sm:px-6 lg:px-8">
+            <div className="firm-selection-card bg-white w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Header */}
-                <div className="p-8 border-b border-gray-50 relative text-center">
-                    <div className="flex justify-center mb-4">
-                        <div className="p-3 bg-[#3AD6F2]/10 rounded-2xl">
-                            <Building2 className="text-[#3AD6F2]" size={32} />
+                <div className="p-4 sm:p-6 border-b border-gray-50 relative text-left">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="p-2.5 sm:p-3 bg-gradient-to-br from-[#3AD6F2]/20 to-[#3AD6F2]/5 rounded-xl sm:rounded-2xl border border-[#3AD6F2]/10 shrink-0">
+                            <Building2 className="text-[#3AD6F2] w-6 h-6 sm:w-8 sm:h-8" />
+                        </div>
+                        <div className="flex flex-col">
+                            <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                                Select Your Firm
+                            </h1>
+                            <p className="text-gray-500 font-light text-xs sm:text-sm mt-0.5 sm:mt-1">
+                                You are a member of multiple firms. Please select one to continue.
+                            </p>
                         </div>
                     </div>
-                    <div className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
-                        Select Your Firm
-                    </div>
-                    <p className="text-gray-500 font-light text-lg">
-                        You are a member of multiple firms. Please select one to continue.
-                    </p>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mx-8 mt-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-center gap-3">
+                    <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-center gap-3">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                         {error}
                     </div>
                 )}
 
                 {/* Firm List */}
-                <div className="p-8 overflow-y-auto max-h-[50vh] custom-scrollbar">
+                <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] sm:max-h-[50vh] custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {firms.map((firmData) => {
                             const isSelected = selectedMembership === firmData.membership_id;
@@ -99,18 +100,18 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
                                 <div
                                     key={firmData.membership_id}
                                     className={`
-                                        group relative p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer
+                                        group relative p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer
                                         ${isSelected
                                             ? 'border-[#3AD6F2] bg-[#3AD6F2]/5 ring-4 ring-[#3AD6F2]/5 translate-y-[-2px]'
                                             : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-lg hover:translate-y-[-2px]'}
                                     `}
                                     onClick={() => setSelectedMembership(firmData.membership_id)}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex items-center gap-4 mb-4">
                                         <div className={`p-2.5 rounded-xl transition-colors duration-300 ${isSelected ? 'bg-[#3AD6F2]/10' : 'bg-gray-50 group-hover:bg-white'}`}>
                                             <Building2 size={24} className={isSelected ? 'text-[#3AD6F2]' : 'text-gray-400'} />
                                         </div>
-                                        <div className="flex flex-col items-end gap-1.5">
+                                        <div className="flex items-center gap-2">
                                             {firmData.is_current && (
                                                 <span className="flex items-center gap-1 px-2.5 py-1 bg-[#3AD6F2] text-white text-[10px] uppercase tracking-wider font-bold rounded-full shadow-sm shadow-[#3AD6F2]/20">
                                                     <CheckCircle2 size={10} />
@@ -123,11 +124,11 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
                                         </div>
                                     </div>
 
-                                    <div className="text-xl font-bold text-gray-900 mb-4 line-clamp-1 group-hover:text-[#3AD6F2] transition-colors">
+                                    <div className="text-xl font-bold text-gray-900 mb-4 line-clamp-1 group-hover:text-[#3AD6F2] transition-colors text-left pl-1">
                                         {firmData.firm.name}
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-4 pl-1">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-gray-400 flex items-center gap-2">
                                                 <ShieldCheck size={14} className="opacity-70" /> Role
@@ -161,31 +162,34 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
                 </div>
 
                 {/* Actions */}
-                <div className="p-8 bg-gray-50/30 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <p className="text-sm text-gray-400 font-light flex items-center gap-2">
-                        <ShieldCheck size={16} />
-                        Selection determines your available permissions.
+                <div className="p-4 sm:p-6 bg-gray-50/30 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-[13px] sm:text-[15px] text-gray-400 font-medium flex items-center gap-2 text-center sm:text-left">
+                        <ShieldCheck size={14} className="shrink-0 hidden sm:block" />
+                        <span className="leading-tight">Selection determines your available permissions.</span>
                     </p>
                     <button
                         onClick={handleSubmit}
                         disabled={!selectedMembership || loading}
-                        
+                        style={{
+                            borderRadius: '12px',
+                            whiteSpace: 'nowrap'
+                        }}
                         className={`
-                            w-full sm:w-auto relative flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold transition-all duration-300
-                            ${!selectedMembership || loading
+        w-full sm:w-auto relative flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 font-bold transition-all duration-300 text-sm shadow-md
+        ${!selectedMembership || loading
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                : 'bg-[#3AD6F2] text-white hover:bg-[#2BC5E0] hover:shadow-2xl hover:shadow-[#3AD6F2]/30 hover:-translate-y-1 active:translate-y-0'}
-                        `}
+                                : 'bg-gradient-to-r from-[#3AD6F2] to-[#2BB1CC] text-white hover:shadow-xl hover:shadow-[#3AD6F2]/30 hover:-translate-y-0.5 active:translate-y-0 border border-[#3AD6F2]/20'}
+    `}
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="animate-spin" size={20} />
+                                <Loader2 className="animate-spin" size={18} />
                                 Processing...
                             </>
                         ) : (
                             <>
                                 Continue to Dashboard
-                                <ArrowRight size={20} />
+                                <ArrowRight size={18} />
                             </>
                         )}
                     </button>

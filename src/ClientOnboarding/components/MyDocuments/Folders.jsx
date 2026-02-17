@@ -10,7 +10,6 @@ import Pagination from "../Pagination";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import { Modal } from "react-bootstrap";
 import "../../styles/Folders.css";
-
 export default function Folders({ onFolderSelect }) {
     const [view, setView] = useState("grid");
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -19,7 +18,7 @@ export default function Folders({ onFolderSelect }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedDocIndex, setSelectedDocIndex] = useState(null);
-    const [activeButton, setActiveButton] = useState("folder"); // "folder" or "trash"
+    const [activeButton, setActiveButton] = useState("folder"); 
     const [showTrashFolderConfirm, setShowTrashFolderConfirm] = useState(false);
     const [folderToTrash, setFolderToTrash] = useState(null);
     const [folders, setFolders] = useState([]);
@@ -60,6 +59,7 @@ export default function Folders({ onFolderSelect }) {
     const [documentToRename, setDocumentToRename] = useState(null);
     const [newDocumentName, setNewDocumentName] = useState('');
     const [renamingDocumentId, setRenamingDocumentId] = useState(null);
+    const [showMenuIndex, setShowMenuIndex] = useState(null);
 
     // Fetch folders from API using optimized split endpoints
     const fetchFolders = async (folderId = null) => {
@@ -935,8 +935,15 @@ export default function Folders({ onFolderSelect }) {
                                                                     backgroundColor: selectedDocIndex === actualIndex ? "#FFF4E6" : "#FFFFFF",
                                                                     cursor: "pointer",
                                                                     transition: "background-color 0.3s ease",
+                                                                    position: 'relative',
+                                                                    zIndex: showMenuIndex === actualIndex ? 1100 : 1
                                                                 }}
-                                                                onClick={() => setSelectedDocIndex(actualIndex)}
+                                                                onClick={() => {
+                                                                    if (showMenuIndex === actualIndex) {
+                                                                        setShowMenuIndex(null);
+                                                                    }
+                                                                    setSelectedDocIndex(actualIndex);
+                                                                }}
                                                             >
                                                                 <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                                     {/* Left Side: File Info */}
@@ -1043,7 +1050,7 @@ export default function Folders({ onFolderSelect }) {
                                                                         </span>
                                                                         {/* )} */}
 
-                                                                        <div className="dropdown">
+                                                                        <div style={{ position: 'relative' }}>
                                                                             <button
                                                                                 className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
                                                                                 style={{
@@ -1051,38 +1058,48 @@ export default function Folders({ onFolderSelect }) {
                                                                                     height: "32px",
                                                                                     borderRadius: "50%",
                                                                                     fontFamily: "BasisGrotesquePro",
+                                                                                    backgroundColor: showMenuIndex === actualIndex ? '#F3F4F6' : 'transparent',
+                                                                                    border: '1px solid #E5E7EB',
+                                                                                    zIndex: 1050
                                                                                 }}
-                                                                                data-bs-toggle="dropdown"
-                                                                                aria-expanded="false"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setShowMenuIndex(showMenuIndex === actualIndex ? null : actualIndex);
+                                                                                }}
                                                                             >
                                                                                 <i className="bi bi-three-dots-vertical" />
                                                                             </button>
-                                                                            <ul className="dropdown-menu dropdown-menu-end">
-                                                                                <li>
+                                                                            {showMenuIndex === actualIndex && (
+                                                                                <div
+                                                                                    className="mydocs-action-menu"
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                >
                                                                                     <button
-                                                                                        className="dropdown-item"
+                                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                                        style={{ fontSize: '13px', color: '#3B4A66', backgroundColor: 'transparent', gap: '8px' }}
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
+                                                                                            setShowMenuIndex(null);
                                                                                             handleRenameDocument(doc);
                                                                                         }}
                                                                                     >
-                                                                                        <i className="bi bi-pencil me-2"></i>
-                                                                                        Rename
+                                                                                        <i className="bi bi-pencil"></i>
+                                                                                        <span>Rename</span>
                                                                                     </button>
-                                                                                </li>
-                                                                                <li>
                                                                                     <button
-                                                                                        className="dropdown-item text-danger"
+                                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                                        style={{ fontSize: '13px', color: '#EF4444', backgroundColor: 'transparent', gap: '8px', borderTop: '1px solid #F3F4F6' }}
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
+                                                                                            setShowMenuIndex(null);
                                                                                             handleDeleteDocument(doc);
                                                                                         }}
                                                                                     >
-                                                                                        <i className="bi bi-trash me-2"></i>
-                                                                                        Delete
+                                                                                        <i className="bi bi-trash"></i>
+                                                                                        <span>Delete</span>
                                                                                     </button>
-                                                                                </li>
-                                                                            </ul>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1882,8 +1899,15 @@ export default function Folders({ onFolderSelect }) {
                                                                         backgroundColor: selectedDocIndex === actualIndex ? "#FFF4E6" : "#FFFFFF",
                                                                         cursor: "pointer",
                                                                         transition: "background-color 0.3s ease",
+                                                                        position: 'relative',
+                                                                        zIndex: showMenuIndex === actualIndex ? 1100 : 1
                                                                     }}
-                                                                    onClick={() => setSelectedDocIndex(actualIndex)}
+                                                                    onClick={() => {
+                                                                        if (showMenuIndex === actualIndex) {
+                                                                            setShowMenuIndex(null);
+                                                                        }
+                                                                        setSelectedDocIndex(actualIndex);
+                                                                    }}
                                                                 >
                                                                     <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                                         {/* Left Side: File Info */}
@@ -1991,7 +2015,7 @@ export default function Folders({ onFolderSelect }) {
                                                         </span> */}
                                                                             {/* )} */}
 
-                                                                            <div className="dropdown">
+                                                                            <div style={{ position: 'relative' }}>
                                                                                 <button
                                                                                     className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
                                                                                     style={{
@@ -1999,38 +2023,48 @@ export default function Folders({ onFolderSelect }) {
                                                                                         height: "32px",
                                                                                         borderRadius: "50%",
                                                                                         fontFamily: "BasisGrotesquePro",
+                                                                                        backgroundColor: showMenuIndex === actualIndex ? '#F3F4F6' : 'transparent',
+                                                                                        border: '1px solid #E5E7EB',
+                                                                                        zIndex: 1050
                                                                                     }}
-                                                                                    data-bs-toggle="dropdown"
-                                                                                    aria-expanded="false"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setShowMenuIndex(showMenuIndex === actualIndex ? null : actualIndex);
+                                                                                    }}
                                                                                 >
                                                                                     <i className="bi bi-three-dots-vertical" />
                                                                                 </button>
-                                                                                <ul className="dropdown-menu dropdown-menu-end">
-                                                                                    <li>
+                                                                                {showMenuIndex === actualIndex && (
+                                                                                    <div
+                                                                                        className="mydocs-action-menu"
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                    >
                                                                                         <button
-                                                                                            className="dropdown-item"
+                                                                                            className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                                            style={{ fontSize: '13px', color: '#3B4A66', backgroundColor: 'transparent', gap: '8px' }}
                                                                                             onClick={(e) => {
                                                                                                 e.stopPropagation();
+                                                                                                setShowMenuIndex(null);
                                                                                                 handleRenameDocument(doc);
                                                                                             }}
                                                                                         >
-                                                                                            <i className="bi bi-pencil me-2"></i>
-                                                                                            Rename
+                                                                                            <i className="bi bi-pencil"></i>
+                                                                                            <span>Rename</span>
                                                                                         </button>
-                                                                                    </li>
-                                                                                    <li>
                                                                                         <button
-                                                                                            className="dropdown-item text-danger"
+                                                                                            className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                                            style={{ fontSize: '13px', color: '#EF4444', backgroundColor: 'transparent', gap: '8px', borderTop: '1px solid #F3F4F6' }}
                                                                                             onClick={(e) => {
                                                                                                 e.stopPropagation();
+                                                                                                setShowMenuIndex(null);
                                                                                                 handleDeleteDocument(doc);
                                                                                             }}
                                                                                         >
-                                                                                            <i className="bi bi-trash me-2"></i>
-                                                                                            Delete
+                                                                                            <i className="bi bi-trash"></i>
+                                                                                            <span>Delete</span>
                                                                                         </button>
-                                                                                    </li>
-                                                                                </ul>
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>

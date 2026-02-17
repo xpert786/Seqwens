@@ -730,14 +730,21 @@
         gap: 4px;
     }
 
-    /* Cards row responsive */
-    .row.g-3.mb-3 {
-        display: flex;
-        flex-direction: column;
+    /* Cards row responsive - Allow grid but stack on very small screens */
+    .row.g-3.mb-3 .col-6 {
+        padding: 6px !important;
     }
 
-    .row.g-3.mb-3 .col-md-4 {
-        width: 100%;
+    .row.g-3.mb-3 .col-6>div {
+        height: 110px !important;
+        padding: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .row.g-3.mb-3 .col-6 {
+        width: 100% !important;
+        flex: 0 0 100%;
     }
 }
 

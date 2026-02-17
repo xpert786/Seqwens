@@ -314,14 +314,15 @@ export default function ArchivedDocuments() {
                     </div>
 
                     {/* Search and Filter Bar */}
-                    <div className="d-flex align-items-center justify-content-between mb-4" style={{ flexWrap: "wrap", gap: "12px" }}>
-                        <div className="d-flex align-items-center" style={{ gap: "12px", flexWrap: "wrap" }}>
+                    <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between mb-4 gap-3">
+                        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2">
                             <div className="position-relative" style={{
-                                width: "250px",
+                                width: "100%",
+                                maxWidth: "400px",
                                 border: "1px solid #E5E7EB",
                                 borderRadius: "6px",
                                 backgroundColor: "#F3F7FF",
-                                height: "32px",
+                                height: "38px",
                                 display: "flex",
                                 alignItems: "center"
                             }}>
@@ -368,16 +369,18 @@ export default function ArchivedDocuments() {
                                 />
                             </div>
 
-                           
+
 
                             <select
                                 className="form-select"
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value)}
                                 style={{
-                                    width: "140px",
+                                    width: "100%",
+                                    maxWidth: "200px",
                                     fontFamily: "BasisGrotesquePro",
-                                    fontSize: "14px"
+                                    fontSize: "14px",
+                                    height: "38px"
                                 }}
                             >
                                 <option>All Status</option>

@@ -9,6 +9,7 @@ import Pagination from "../Pagination";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import { Modal } from "react-bootstrap";
 import NewFolderModal from "./NewFolderModal";
+import RenameFolderModal from "./RenameFolderModal";
 import * as XLSX from "xlsx";
 
 export default function MyDocumentsContent() {
@@ -34,6 +35,8 @@ export default function MyDocumentsContent() {
     const [documentToDelete, setDocumentToDelete] = useState(null);
     const [deletingDocumentId, setDeletingDocumentId] = useState(null);
     const [showMenuIndex, setShowMenuIndex] = useState(null);
+    const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+    const [itemToArchive, setItemToArchive] = useState(null);
 
     // Assign for E-Sign states
     const [showAssignModal, setShowAssignModal] = useState(false);
@@ -50,6 +53,9 @@ export default function MyDocumentsContent() {
     const [currentFolderId, setCurrentFolderId] = useState(null);
     const [breadcrumbs, setBreadcrumbs] = useState([]);
     const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+    const [showRenameFolderModal, setShowRenameFolderModal] = useState(false);
+    const [folderToRename, setFolderToRename] = useState(null);
+    const [newFolderName, setNewFolderName] = useState('');
 
     // Excel preview state
     const [excelPreviewData, setExcelPreviewData] = useState(null);
@@ -412,6 +418,7 @@ export default function MyDocumentsContent() {
 
     // Check if document is a file (not a folder)
     const isFile = (doc) => {
+        if (!doc) return false;
         // Folders typically have is_folder: true or type: 'folder'
         return !doc.is_folder && doc.type !== 'folder' && doc.document_type !== 'folder';
     };
@@ -497,8 +504,6 @@ export default function MyDocumentsContent() {
 
     // Delete folder (soft delete/trash)
     const handleDeleteFolder = async (folder) => {
-        if (!confirm(`Are you sure you want to delete folder "${folder.title}" and all its contents?`)) return;
-
         try {
             setLoading(true);
             const API_BASE_URL = getApiBaseUrl();
@@ -527,13 +532,13 @@ export default function MyDocumentsContent() {
         } finally {
             setLoading(false);
             setShowMenuIndex(null);
+            setShowDeleteDocumentConfirm(false);
+            setDocumentToDelete(null);
         }
     };
 
     // Archive folder (move to trash)
     const handleArchiveFolder = async (folder) => {
-        if (!confirm(`Archive folder "${folder.title}" and all its contents? You can recover it from trash.`)) return;
-
         try {
             setLoading(true);
             const API_BASE_URL = getApiBaseUrl();
@@ -561,6 +566,8 @@ export default function MyDocumentsContent() {
         } finally {
             setLoading(false);
             setShowMenuIndex(null);
+            setShowArchiveConfirm(false);
+            setItemToArchive(null);
         }
     };
     const fetchTaxpayers = async () => {
@@ -921,12 +928,13 @@ export default function MyDocumentsContent() {
                         <React.Fragment key={crumb.id}>
                             <span style={{ color: '#6B7280' }}>/</span>
                             {idx === breadcrumbs.length - 1 ? (
-                                <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                                <span className="text-truncate d-inline-block" style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500', maxWidth: '150px', verticalAlign: 'bottom' }}>
                                     {crumb.title}
                                 </span>
                             ) : (
                                 <button
                                     onClick={() => handleBreadcrumbClick(crumb.id)}
+                                    className="text-truncate d-inline-block"
                                     style={{
                                         background: 'none',
                                         border: 'none',
@@ -934,10 +942,13 @@ export default function MyDocumentsContent() {
                                         cursor: 'pointer',
                                         fontSize: '14px',
                                         padding: '4px 8px',
-                                        borderRadius: '4px'
+                                        borderRadius: '4px',
+                                        maxWidth: '150px',
+                                        verticalAlign: 'bottom'
                                     }}
                                     onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
                                     onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                    title={crumb.title}
                                 >
                                     {crumb.title}
                                 </button>
@@ -962,7 +973,7 @@ export default function MyDocumentsContent() {
                     const filterKey = label.toLowerCase();
 
                     return (
-                        <div className="col-sm-6 col-md-3" key={index}>
+                        <div className="col-6 col-md-3" key={index}>
                             <div
                                 className="bg-white p-3 d-flex flex-column justify-content-between"
                                 style={{
@@ -1109,7 +1120,6 @@ export default function MyDocumentsContent() {
                         </p>
                     )}
                 </div>
-
                 {filteredDocuments.length === 0 && documents.length === 0 && (
                     <div className="pt-4 pb-4 text-center">
                         <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
@@ -1165,6 +1175,8 @@ export default function MyDocumentsContent() {
                                                 backgroundColor: selectedIndex === (startIndex + index) ? "#FFF4E6" : "#FFFFFF",
                                                 cursor: "pointer",
                                                 transition: "background-color 0.3s ease",
+                                                position: 'relative',
+                                                zIndex: showMenuIndex === (startIndex + index) ? 1100 : 1
                                             }}
                                             onClick={() => {
                                                 // Close menu if clicking on document
@@ -1190,7 +1202,7 @@ export default function MyDocumentsContent() {
                                         >
                                             <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                 {/* Left Side: File Info */}
-                                                <div className="d-flex gap-3 align-items-start" style={{ flex: 1, minWidth: 0 }}>
+                                                <div className="d-flex gap-3 align-items-start" style={{ flex: 1, minWidth: 0, overflow: 'hidden', width: '100%' }}>
                                                     <div
                                                         className="d-flex align-items-center justify-content-center"
                                                         style={{ width: 40, height: 40, flexShrink: 0 }}
@@ -1204,17 +1216,21 @@ export default function MyDocumentsContent() {
                                                         )}
                                                     </div>
 
-                                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div className="fw-medium mb-1 d-none d-md-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px", color: "#3B4A66" }}>
+                                                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', maxWidth: 'calc(100% - 50px)' }}>
+                                                        <div
+                                                            className="fw-medium mb-1 text-truncate"
+                                                            style={{
+                                                                fontFamily: "BasisGrotesquePro",
+                                                                fontSize: "15px",
+                                                                color: "#3B4A66",
+                                                                display: 'block',
+                                                                width: '100%'
+                                                            }}
+                                                            title={docName}
+                                                        >
                                                             {docName}
-                                                            {/* {(docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && (
-                                                                <span style={{ fontSize: '12px', color: '#EF4444', fontFamily: 'BasisGrotesquePro' }}>
-                                                                    <i className="bi bi-file-pdf me-1"></i>
-                                                                    PDF
-                                                                </span>
-                                                            )} */}
                                                         </div>
-                                                        <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
+                                                        <div className="text-muted text-truncate d-block" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400", width: '100%', overflow: 'hidden' }}>
                                                             {doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? (
                                                                 <>Folder • Updated: {docDate}</>
                                                             ) : (
@@ -1224,9 +1240,8 @@ export default function MyDocumentsContent() {
                                                                     )}</>
                                                             )}
                                                         </div>
-
                                                         {docCategory && docCategory.trim() && (
-                                                            <div className="mt-2 d-flex flex-wrap gap-2">
+                                                            <div className="mt-2 d-flex flex-wrap gap-2" style={{ width: '100%', overflow: 'hidden' }}>
                                                                 {docCategory.split(', ').map((category, catIndex) => (
                                                                     <span
                                                                         key={catIndex}
@@ -1247,7 +1262,7 @@ export default function MyDocumentsContent() {
                                                 </div>
 
                                                 {/* Right Side: Status + Actions + Menu */}
-                                                <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
+                                                <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 ms-auto ms-md-0" style={{ flexShrink: 0 }}>
                                                     {/* Status badge for files */}
                                                     {!(doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder') && (
                                                         <>
@@ -1307,7 +1322,9 @@ export default function MyDocumentsContent() {
                                                                     backgroundColor: showMenuIndex === (startIndex + index) ? '#F3F4F6' : 'transparent',
                                                                     border: '1px solid #E5E7EB',
                                                                     cursor: 'pointer',
-                                                                    transition: 'all 0.2s ease'
+                                                                    transition: 'all 0.2s ease',
+                                                                    position: 'relative',
+                                                                    zIndex: 1050
                                                                 }}
                                                                 onMouseEnter={(e) => {
                                                                     e.currentTarget.style.backgroundColor = '#F3F4F6';
@@ -1333,135 +1350,56 @@ export default function MyDocumentsContent() {
                                                             </button>
                                                             {showMenuIndex === (startIndex + index) && (
                                                                 <div
-                                                                    style={{
-                                                                        position: 'absolute',
-                                                                        right: 0,
-                                                                        top: '100%',
-                                                                        marginTop: '4px',
-                                                                        backgroundColor: 'white',
-                                                                        border: '1px solid #E5E7EB',
-                                                                        borderRadius: '8px',
-                                                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                                                        zIndex: 1000,
-                                                                        minWidth: '150px',
-                                                                        padding: '4px 0'
-                                                                    }}
+                                                                    className="mydocs-action-menu"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                 >
-                                                                    {/* Only show Assign for E-Sign for files, not folders */}
-                                                                    {isFile(doc) ? (
-                                                                        <>
-
-
-                                                                            <button
-                                                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                                style={{
-                                                                                    fontFamily: 'BasisGrotesquePro',
-                                                                                    fontSize: '14px',
-                                                                                    color: '#FF9800',
-                                                                                    cursor: 'pointer',
-                                                                                    borderBottom: '1px solid #E5E7EB'
-                                                                                }}
-                                                                                onMouseEnter={(e) => {
-                                                                                    e.target.style.backgroundColor = '#FFF4E5';
-                                                                                }}
-                                                                                onMouseLeave={(e) => {
-                                                                                    e.target.style.backgroundColor = 'white';
-                                                                                }}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setShowMenuIndex(null);
-                                                                                    handleArchiveDocument(doc.id || doc.document_id, false);
-                                                                                }}
-                                                                            >
-                                                                                <i className="bi bi-archive me-2"></i>
-                                                                                Archive
-                                                                            </button>
-                                                                        </>
-                                                                    ) : (
-                                                                        /* Folder options: Rename + Archive */
-                                                                        <>
-                                                                            <button
-                                                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                                style={{
-                                                                                    fontFamily: 'BasisGrotesquePro',
-                                                                                    fontSize: '14px',
-                                                                                    color: '#3B4A66',
-                                                                                    cursor: 'pointer',
-                                                                                    borderBottom: '1px solid #E5E7EB'
-                                                                                }}
-                                                                                onMouseEnter={(e) => {
-                                                                                    e.target.style.backgroundColor = '#F3F4F6';
-                                                                                }}
-                                                                                onMouseLeave={(e) => {
-                                                                                    e.target.style.backgroundColor = 'white';
-                                                                                }}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setShowMenuIndex(null);
-                                                                                    // Simple rename prompt for MVP
-                                                                                    const newName = prompt("Enter new folder name:", doc.title || doc.name);
-                                                                                    if (newName && newName !== doc.title && newName !== doc.name) {
-                                                                                        handleRenameFolder(doc, newName);
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                <i className="bi bi-pencil-square me-2"></i>
-                                                                                Rename
-                                                                            </button>
-
-                                                                            <button
-                                                                                className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                                style={{
-                                                                                    fontFamily: 'BasisGrotesquePro',
-                                                                                    fontSize: '14px',
-                                                                                    color: '#FF9800',
-                                                                                    cursor: 'pointer',
-                                                                                    borderBottom: '1px solid #E5E7EB'
-                                                                                }}
-                                                                                onMouseEnter={(e) => {
-                                                                                    e.target.style.backgroundColor = '#FFF4E5';
-                                                                                }}
-                                                                                onMouseLeave={(e) => {
-                                                                                    e.target.style.backgroundColor = 'white';
-                                                                                }}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setShowMenuIndex(null);
-                                                                                    handleArchiveFolder(doc);
-                                                                                }}
-                                                                            >
-                                                                                <i className="bi bi-archive me-2"></i>
-                                                                                Archive
-                                                                            </button>
-                                                                        </>
+                                                                    {!isFile(doc) && (
+                                                                        <button
+                                                                            className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                            style={{ fontSize: '13px', color: '#3B4A66', backgroundColor: 'transparent', gap: '8px', transition: 'all 0.2s' }}
+                                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setShowMenuIndex(null);
+                                                                                setFolderToRename(doc);
+                                                                                setNewFolderName(doc.title || doc.name);
+                                                                                setShowRenameFolderModal(true);
+                                                                            }}
+                                                                        >
+                                                                            <i className="bi bi-pencil-square"></i>
+                                                                            <span>Rename</span>
+                                                                        </button>
                                                                     )}
-
                                                                     <button
-                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2"
-                                                                        style={{
-                                                                            fontFamily: 'BasisGrotesquePro',
-                                                                            fontSize: '14px',
-                                                                            color: '#EF4444',
-                                                                            cursor: 'pointer'
-                                                                        }}
-                                                                        onMouseEnter={(e) => {
-                                                                            e.target.style.backgroundColor = '#FEF2F2';
-                                                                        }}
-                                                                        onMouseLeave={(e) => {
-                                                                            e.target.style.backgroundColor = 'white';
-                                                                        }}
+                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                        style={{ fontSize: '13px', color: '#6B7280', backgroundColor: 'transparent', gap: '8px', borderTop: !isFile(doc) ? '1px solid #F3F4F6' : 'none', transition: 'all 0.2s' }}
+                                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            if (isFile(doc)) {
-                                                                                handleDeleteDocument(doc);
-                                                                            } else {
-                                                                                handleDeleteFolder(doc);
-                                                                            }
+                                                                            setShowMenuIndex(null);
+                                                                            setItemToArchive(doc);
+                                                                            setShowArchiveConfirm(true);
                                                                         }}
                                                                     >
-                                                                        <i className="bi bi-trash me-2"></i>
-                                                                        Delete
+                                                                        <i className="bi bi-archive"></i>
+                                                                        <span>Archive</span>
+                                                                    </button>
+                                                                    <button
+                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2 d-flex align-items-center"
+                                                                        style={{ fontSize: '13px', color: '#EF4444', backgroundColor: 'transparent', gap: '8px', borderTop: '1px solid #F3F4F6', transition: 'all 0.2s' }}
+                                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setShowMenuIndex(null);
+                                                                            setDocumentToDelete(doc);
+                                                                            setShowDeleteDocumentConfirm(true);
+                                                                        }}
+                                                                    >
+                                                                        <i className="bi bi-trash"></i>
+                                                                        <span>Delete</span>
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -1504,7 +1442,7 @@ export default function MyDocumentsContent() {
                         right: 0,
                         bottom: 0,
                         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                        zIndex: 1050,
+                        zIndex: 9999,
                         padding: '20px'
                     }}
                     onClick={(e) => {
@@ -1517,9 +1455,9 @@ export default function MyDocumentsContent() {
                     <div className="pdf-modal-container"
                         style={{
                             width: '100%',
-                            maxWidth: 'min(880px, 70vw)',
-                            minHeight: '70vh',
-                            maxHeight: '90vh',
+                            maxWidth: '800px',
+                            height: 'auto',
+                            maxHeight: 'calc(100vh - 40px)',
                             backgroundColor: 'white',
                             borderRadius: '12px',
                             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
@@ -1530,19 +1468,22 @@ export default function MyDocumentsContent() {
                     >
                         {/* Modal Header */}
                         <div style={{
-                            padding: '16px 20px',
+                            padding: '12px 16px',
                             borderBottom: '1px solid #E5E7EB',
                             display: 'flex',
+                            flexDirection: 'row',
+                            flexWrap: 'wrap',
+                            gap: '8px',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             backgroundColor: 'white',
                             borderTopLeftRadius: '12px',
                             borderTopRightRadius: '12px'
                         }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <h5 style={{
+                            <div style={{ flex: '1 1 auto', minWidth: '0', maxWidth: '100%' }}>
+                                <h5 className="file-modal-title" style={{
                                     margin: 0,
-                                    fontSize: '18px',
+                                    fontSize: '16px',
                                     fontWeight: '600',
                                     color: '#3B4A66',
                                     fontFamily: 'BasisGrotesquePro',
@@ -1560,35 +1501,37 @@ export default function MyDocumentsContent() {
                                     {selectedDocument.file_size_formatted || 'PDF Document'}
                                 </small>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                {/* Download button */}
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                                {/* Download button - icon only on mobile */}
                                 <a
                                     href={selectedDocument.file_url || selectedDocument.tax_documents}
                                     download={selectedDocument.file_name || 'document.pdf'}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    className="file-modal-btn-download"
                                     style={{
-                                        padding: '8px 12px',
+                                        padding: '6px 10px',
                                         backgroundColor: '#F3F4F6',
                                         border: '1px solid #E5E7EB',
                                         borderRadius: '6px',
                                         color: '#3B4A66',
-                                        fontSize: '14px',
+                                        fontSize: '13px',
                                         textDecoration: 'none',
                                         fontFamily: 'BasisGrotesquePro',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '6px',
-                                        transition: 'background-color 0.2s'
+                                        gap: '4px',
+                                        transition: 'background-color 0.2s',
+                                        whiteSpace: 'nowrap'
                                     }}
                                     onMouseEnter={(e) => e.target.style.backgroundColor = '#E5E7EB'}
                                     onMouseLeave={(e) => e.target.style.backgroundColor = '#F3F4F6'}
                                 >
                                     <i className="bi bi-download"></i>
-                                    Download
+                                    <span className="d-none d-sm-inline">Download</span>
                                 </a>
-                                {/* Archive/Unarchive button */}
+                                {/* Archive/Unarchive button - icon only on mobile */}
                                 {selectedDocument && (
                                     <button
                                         onClick={(e) => {
@@ -1600,20 +1543,22 @@ export default function MyDocumentsContent() {
                                             }
                                         }}
                                         disabled={archivingDocumentId === (selectedDocument.id || selectedDocument.document_id)}
+                                        className="file-modal-btn-archive"
                                         style={{
-                                            padding: '8px 12px',
+                                            padding: '6px 10px',
                                             backgroundColor: selectedDocument.is_archived ? '#10B981' : '#F3F4F6',
                                             border: '1px solid #E5E7EB',
                                             borderRadius: '6px',
                                             color: selectedDocument.is_archived ? '#FFFFFF' : '#3B4A66',
-                                            fontSize: '14px',
+                                            fontSize: '13px',
                                             fontFamily: 'BasisGrotesquePro',
                                             cursor: archivingDocumentId === (selectedDocument.id || selectedDocument.document_id) ? 'not-allowed' : 'pointer',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '6px',
+                                            gap: '4px',
                                             transition: 'background-color 0.2s',
-                                            opacity: archivingDocumentId === (selectedDocument.id || selectedDocument.document_id) ? 0.6 : 1
+                                            opacity: archivingDocumentId === (selectedDocument.id || selectedDocument.document_id) ? 0.6 : 1,
+                                            whiteSpace: 'nowrap'
                                         }}
                                         onMouseEnter={(e) => {
                                             if (archivingDocumentId !== (selectedDocument.id || selectedDocument.document_id)) {
@@ -1627,30 +1572,68 @@ export default function MyDocumentsContent() {
                                         }}
                                     >
                                         <i className="bi bi-archive"></i>
-                                        {archivingDocumentId === (selectedDocument.id || selectedDocument.document_id)
-                                            ? 'Processing...'
-                                            : (selectedDocument.is_archived ? 'Archived' : 'Archive')
-                                        }
+                                        <span className="d-none d-sm-inline">
+                                            {archivingDocumentId === (selectedDocument.id || selectedDocument.document_id)
+                                                ? 'Processing...'
+                                                : (selectedDocument.is_archived ? 'Archived' : 'Archive')
+                                            }
+                                        </span>
                                     </button>
                                 )}
-                                {/* Close button */}
+                                {/* Mobile-only close button */}
                                 <button
                                     onClick={() => {
                                         setShowPdfModal(false);
                                         setSelectedDocument(null);
                                     }}
+                                    className="file-modal-btn-close-mobile d-sm-none"
                                     style={{
                                         background: 'none',
                                         border: 'none',
                                         cursor: 'pointer',
                                         color: '#6B7280',
-                                        fontSize: '24px',
-                                        padding: '4px 8px',
+                                        fontSize: '20px',
+                                        padding: '6px',
                                         borderRadius: '6px',
                                         transition: 'background-color 0.2s',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        minWidth: '32px',
+                                        minHeight: '32px'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = '#F3F4F6';
+                                        e.target.style.color = '#111827';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = 'transparent';
+                                        e.target.style.color = '#6B7280';
+                                    }}
+                                >
+                                    <i className="bi bi-x-lg"></i>
+                                </button>
+                                {/* Web-only close button */}
+                                <button
+                                    onClick={() => {
+                                        setShowPdfModal(false);
+                                        setSelectedDocument(null);
+                                    }}
+                                    className="file-modal-btn-close d-none d-sm-flex"
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#6B7280',
+                                        fontSize: '20px',
+                                        borderRight: "10px",
+                                        padding: '6px',
+                                        borderRadius: '6px',
+                                        transition: 'background-color 0.2s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+
                                     }}
                                     onMouseEnter={(e) => {
                                         e.target.style.backgroundColor = '#F3F4F6';
@@ -1669,12 +1652,12 @@ export default function MyDocumentsContent() {
                         {/* PDF Viewer */}
                         <div style={{
                             flex: 1,
-                            overflow: 'hidden',
+                            overflow: 'auto',
                             position: 'relative',
                             backgroundColor: '#F9FAFB',
                             display: 'flex',
                             justifyContent: 'center',
-                            padding: '24px 16px'
+                            padding: '16px'
                         }}>
                             {(() => {
                                 const fileExt = (selectedDocument.file_extension || selectedDocument.file_type || '').toLowerCase();
@@ -1687,12 +1670,13 @@ export default function MyDocumentsContent() {
                                         <iframe
                                             src={`${selectedDocument.file_url || selectedDocument.tax_documents}#toolbar=1`}
                                             title={selectedDocument.file_name || 'PDF Viewer'}
+                                            className="pdf-viewer-iframe"
                                             style={{
                                                 width: '100%',
-                                                maxWidth: '700px',
+                                                maxWidth: '100%',
                                                 height: '100%',
+                                                minHeight: '300px',
                                                 border: 'none',
-                                                minHeight: '500px'
                                             }}
                                         ></iframe>
                                     );
@@ -1865,12 +1849,20 @@ export default function MyDocumentsContent() {
                         setDocumentToDelete(null);
                     }
                 }}
-                onConfirm={confirmDeleteDocument}
-                title="Delete Document"
-                message={documentToDelete ? `Are you sure you want to delete "${documentToDelete.file_name || documentToDelete.name || documentToDelete.document_name || 'this document'}"? This action cannot be undone.` : "Are you sure you want to delete this document? This action cannot be undone."}
+                onConfirm={() => {
+                    if (documentToDelete) {
+                        if (isFile(documentToDelete)) {
+                            confirmDeleteDocument();
+                        } else {
+                            handleDeleteFolder(documentToDelete);
+                        }
+                    }
+                }}
+                title={`Delete ${documentToDelete ? (isFile(documentToDelete) ? 'Document' : 'Folder') : 'Item'}`}
+                message={documentToDelete ? `Are you sure you want to delete "${documentToDelete.file_name || documentToDelete.name || documentToDelete.document_name || documentToDelete.title}"? This action cannot be undone.` : "Are you sure you want to delete this item? This action cannot be undone."}
                 confirmText="Delete"
                 cancelText="Cancel"
-                confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
+                confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444', borderRadius: '8px' }}
                 isLoading={!!deletingDocumentId}
             />
 
@@ -1900,7 +1892,7 @@ export default function MyDocumentsContent() {
                     {documentToAssign && (
                         <div className="mb-3 p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
                             <div style={{ fontSize: '14px', color: '#6B7280', marginBottom: '4px' }}>Document</div>
-                            <div style={{ fontSize: '16px', color: '#3B4A66', fontWeight: '500' }}>
+                            <div className="text-truncate" style={{ fontSize: '16px', color: '#3B4A66', fontWeight: '500' }} title={documentToAssign.file_name || documentToAssign.name || documentToAssign.document_name}>
                                 {documentToAssign.file_name || documentToAssign.name || documentToAssign.document_name || 'Untitled Document'}
                             </div>
                         </div>
@@ -2048,6 +2040,38 @@ export default function MyDocumentsContent() {
                 show={showNewFolderModal}
                 handleClose={() => setShowNewFolderModal(false)}
                 onCreateFolder={handleCreateFolder}
+            />
+            <RenameFolderModal
+                show={showRenameFolderModal}
+                handleClose={() => {
+                    setShowRenameFolderModal(false);
+                    setFolderToRename(null);
+                }}
+                currentName={folderToRename?.title || folderToRename?.name || ''}
+                onRenameFolder={(newName) => handleRenameFolder(folderToRename, newName)}
+            />
+
+            <ConfirmationModal
+                isOpen={showArchiveConfirm}
+                onClose={() => {
+                    setShowArchiveConfirm(false);
+                    setItemToArchive(null);
+                }}
+                onConfirm={() => {
+                    if (itemToArchive) {
+                        if (isFile(itemToArchive)) {
+                            handleArchiveDocument(itemToArchive.id || itemToArchive.document_id, false);
+                        } else {
+                            handleArchiveFolder(itemToArchive);
+                        }
+                    }
+                    setShowArchiveConfirm(false);
+                    setItemToArchive(null);
+                }}
+                title="Archive Item"
+                message={`Are you sure you want to archive this ${itemToArchive ? (isFile(itemToArchive) ? 'document' : 'folder') : 'item'}? You can recover it later if needed.`}
+                confirmText="Archive"
+                isDestructive={false}
             />
         </div>
     );

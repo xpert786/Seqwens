@@ -191,3 +191,64 @@
   background: #9CA3AF;
 }
 
+
+@media (max-width: 768px) {
+  .account-switcher-button {
+    min-width: 140px;
+    padding: 6px 10px;
+  }
+
+  .account-switcher-firm-name {
+    font-size: 13px;
+  }
+
+  .account-switcher-meta {
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .account-switcher-dropdown {
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-switcher-container {
+    margin-right: 4px;
+    max-width: 150px;
+    overflow: hidden;
+  }
+
+  .account-switcher-button {
+    min-width: 0;
+    width: 100%;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .account-switcher-firm-name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .account-switcher-meta {
+    display: none;
+    /* Hide role and status on very small screens to save space */
+  }
+
+  .account-switcher-arrow {
+    font-size: 14px;
+  }
+
+  .account-switcher-dropdown {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+}

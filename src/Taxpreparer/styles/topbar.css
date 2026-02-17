@@ -1,6 +1,6 @@
 .custom-topbar {
   height: 70px;
-  z-index: 1030;
+  z-index: 1100 !important;
 }
 
 .custom-topbar .topbar-logo {
@@ -204,9 +204,15 @@
   outline: none;
 }
 
-.sidebar-toggle-icon {
+.sidebar-toggle-btn {
+  border: none;
+  background: transparent;
   display: inline-flex;
-  transition: transform 0.3s ease;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  z-index: 1105 !important;
 }
 
 .sidebar-toggle-icon.collapsed {
@@ -260,6 +266,14 @@
 
   .custom-topbar .container-fluid>div:first-child {
     gap: 0.5rem !important;
+    z-index: 1106 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .custom-topbar .ms-auto {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
   }
 
   .custom-topbar .topbar-logo {

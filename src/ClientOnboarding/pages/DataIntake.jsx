@@ -4442,16 +4442,16 @@ export default function DataIntakeForm({ targetClientId }) {
       </div>
 
       {/* Buttons */}
-      <div className="d-flex justify-content-between">
+      <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
         <button
-          className="btn btn-outline-secondary"
+          className="btn btn-outline-secondary w-100 w-sm-auto"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
           {isSubmitting ? "Saving..." : "Save Draft"}
         </button>
         <button
-          className="btn text-white"
+          className="btn text-white w-100 w-sm-auto"
           style={{ backgroundColor: '#F56D2D' }}
           onClick={(e) => {
             console.log("Submit button onClick triggered");
