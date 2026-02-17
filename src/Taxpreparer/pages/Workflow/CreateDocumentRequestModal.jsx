@@ -143,17 +143,26 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       style={{ zIndex: 9999, padding: '24px' }}
     >
-      <div className="bg-white max-w-2xl w-full max-h-[calc(100vh-48px)] overflow-y-auto" style={{ borderRadius: '12px', padding: '24px' }}>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-gray-900 font-[BasisGrotesquePro]">
-            Create Document Request
-          </h3>
+      <div className="bg-white max-w-2xl w-full overflow-y-auto" style={{ borderRadius: '12px', padding: '24px', maxHeight: "80vh", overflowY: "auto", marginTop: "63px" }}>
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900 font-[BasisGrotesquePro]">
+              Create Document Request
+            </h3>
+          </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 ml-auto"
+            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm ml-4"
             disabled={loading}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              flexShrink: 0,
+              marginTop: '-4px'
+            }}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

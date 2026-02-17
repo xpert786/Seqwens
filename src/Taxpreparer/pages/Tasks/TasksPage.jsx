@@ -2585,7 +2585,7 @@ export default function TasksPage() {
       {showAddTaskModal && (
         <div className="modal task-modal-mobile" style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
           position: 'fixed',
           top: 0,
@@ -2593,18 +2593,20 @@ export default function TasksPage() {
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1050,
-          padding: '1rem'
+          zIndex: 1070,
+          padding: '60px 1rem 1rem 1rem',
+          overflowY: 'auto'
         }}>
           <div style={{
             width: '100%',
-            maxWidth: '500px',
+            maxWidth: '650px',
             background: 'white',
             borderRadius: '16px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
             position: 'relative',
-            maxHeight: '90vh',
-            overflowY: 'auto'
+            maxHeight: '83vh',
+            overflowY: 'auto',
+            marginTop: "30px",
           }} className="custom-scrollbar">
             {/* Header */}
             <div style={{
@@ -3437,9 +3439,22 @@ export default function TasksPage() {
 
       {/* Document Upload Modal for Document Request Tasks */}
       {showDocumentUploadModal && selectedTask && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="modal task-modal-mobile" style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 1070,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: '60px 1rem 1rem 1rem',
+          overflowY: 'auto'
+        }}>
+          <div className="modal-dialog modal-lg" style={{ width: '100%', maxWidth: '800px', margin: 0 }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: 'none', display: 'flex', flexDirection: 'column' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E5E7EB' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
                   Upload Documents for {selectedTask.title}
@@ -3735,27 +3750,29 @@ export default function TasksPage() {
       {/* Approve Modal */}
       {showApproveModal && selectedTask && (
         <div
-          className="modal"
+          className="modal task-modal-mobile"
           style={{
-            display: 'block',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
             backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 1060,
+            zIndex: 1070,
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            overflow: 'auto',
-            padding: '1rem'
+            overflowY: 'auto',
+            padding: '100px 1rem 1rem 1rem'
           }}
           onClick={() => setShowApproveModal(false)}
         >
           <div
-            className="modal-dialog modal-dialog-centered"
+            className="modal-dialog"
             style={{
               maxWidth: '500px',
               width: '100%',
-              margin: '0 auto'
+              margin: 0
             }}
             onClick={(e) => e.stopPropagation()}
           >

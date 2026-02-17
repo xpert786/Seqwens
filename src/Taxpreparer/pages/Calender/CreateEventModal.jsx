@@ -320,8 +320,8 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
-      <div className="bg-white rounded-lg w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ maxWidth: '750px' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999, padding: '40px 1rem', overflowY: 'auto' }}>
+      <div className="bg-white rounded-lg w-full custom-scrollbar" style={{ maxWidth: '664px', maxHeight: '80vh', overflowY: 'auto', marginTop: '63px' }}>
         {/* Modal Header */}
         <div className="flex justify-between items-start px-6 py-4 border-b border-gray-200">
           <div>

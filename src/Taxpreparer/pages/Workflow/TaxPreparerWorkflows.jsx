@@ -335,16 +335,16 @@ const TaxPreparerWorkflows = () => {
                 <div className="p-6 md:p-8">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex-1">
-                      <div className="flex flex-row flex-wrap items-center gap-3 mb-4">
+                      <div className="flex flex-row items-center gap-3 mb-4">
                         <span
                           className="status-badge inline-flex items-center gap-1"
-                          style={{ backgroundColor: style.bg, color: style.text }}
+                          style={{ backgroundColor: style.bg, color: style.text, whiteSpace: 'nowrap' }}
                         >
                           {style.icon}
                           <span>{workflow.status_display || workflow.status || 'Active'}</span>
                         </span>
                         <span className="text-gray-400">•</span>
-                        <span className="text-gray-500 text-sm font-medium">Last updated 2 days ago</span>
+                        <span className="text-gray-500 text-sm font-medium whitespace-nowrap">Last updated 2 days ago</span>
                       </div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#3AD6F2] transition-colors">
                         {workflow.template_name || 'Workflow'}
@@ -432,7 +432,7 @@ const TaxPreparerWorkflows = () => {
                           </button>
 
                           {openActionMenuId === workflow.id && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-2xl border border-[#E8F0FF] z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <div className="absolute right-0 top-full mt-1 w-max bg-white rounded-lg shadow-lg border border-[#E8F0FF] z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ minWidth: '160px' }}>
                               {getAvailableStatusActions(workflow).map((action) => (
                                 <button
                                   key={action.value}
@@ -441,12 +441,12 @@ const TaxPreparerWorkflows = () => {
                                     handleStatusUpdate(workflow.id, action.value);
                                     setOpenActionMenuId(null);
                                   }}
-                                  className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                                 >
-                                  {action.value === 'paused' ? <Pause size={16} /> :
-                                    action.value === 'active' ? <Play size={16} /> :
-                                      action.value === 'advance' ? <ArrowRight size={16} /> :
-                                        <CheckCircle size={16} />}
+                                  {action.value === 'paused' ? <Pause size={14} /> :
+                                    action.value === 'active' ? <Play size={14} /> :
+                                      action.value === 'advance' ? <ArrowRight size={14} /> :
+                                        <CheckCircle size={14} />}
                                   {action.label}
                                 </button>
                               ))}

@@ -12,14 +12,14 @@
 
 @media (max-width: 767px) {
 
-  /* Remove desktop offsets */
+  /* Full screen modal feel with equal gaps */
   .invoice-modal-mobile {
-    margin-left: 0 !important;
-    margin-top: 0 !important;
-    padding: 16px !important;
+    margin: 0 !important;
+    padding: 100px 1rem 40px 1rem !important;
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
+    overflow-y: auto !important;
   }
 
   /* Full screen modal feel with equal gaps */

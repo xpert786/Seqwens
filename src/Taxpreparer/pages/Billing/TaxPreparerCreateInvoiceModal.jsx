@@ -402,33 +402,33 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4 invoice-modal-mobile"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center invoice-modal-mobile"
       onClick={onClose}
       style={{
-        zIndex: 9999,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
+        zIndex: 99999,
+        padding: '40px 1rem',
+        overflowY: 'auto'
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()} style={{ zIndex: 10000 }}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-h-[80vh] overflow-y-auto invoice-modal-box custom-scrollbar" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "664px", margin: 'auto' }}>
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+        <div className="flex justify-between items-start p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
+          <div className="flex-1">
+            <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+          </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm ml-4"
             style={{
-              width: '36px',
-              height: '36px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
+              flexShrink: 0,
+              marginTop: '-2px'
             }}
           >
-            <FiX size={20} />
+            <FiX size={18} />
           </button>
         </div>
         {/* Content */}

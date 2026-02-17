@@ -952,9 +952,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       <div
         className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mx-4"
         style={{
-          borderRadius: '12px',
-          maxHeight: '90vh',
-          overflowY: 'auto'
+          borderRadius: "12px", maxHeight: '90vh', overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1018,7 +1016,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
         {/* Dynamic Step Content */}
         {renderStepContent()}
       </div>
-    </div>
+    </div >
   );
 }
 

@@ -385,18 +385,26 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center invoice-modal-mobile" onClick={onClose} style={{ zIndex: 99999, padding: '40px 1rem', overflowY: 'auto' }}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-h-[80vh] overflow-y-auto invoice-modal-box custom-scrollbar" style={{ maxWidth: "664px", margin: 'auto' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+        <div className="flex justify-between items-start p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
+          <div className="flex-1">
+            <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+          </div>
           <button
             onClick={onClose}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors shadow-sm"
+            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm ml-4"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              flexShrink: 0,
+              marginTop: '-2px'
+            }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-              <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
@@ -496,8 +504,8 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                   onChange={(e) => handleDateChange('due_date', e)}
                   placeholder="mm/dd/yyyy"
                   className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${fieldErrors.due_date
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-[#E8F0FF] focus:ring-blue-500'
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-[#E8F0FF] focus:ring-blue-500'
                     }`}
                   required
                 />

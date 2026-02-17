@@ -199,11 +199,12 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative"
+        className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto relative"
         style={{
           border: "1px solid #E8F0FF",
           borderRadius: "12px",
-          zIndex: 10000
+          zIndex: 10000,
+          marginTop: "70px"
         }}
         onClick={(e) => e.stopPropagation()}
       >
