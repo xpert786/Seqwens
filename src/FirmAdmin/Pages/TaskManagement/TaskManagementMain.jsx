@@ -170,7 +170,7 @@ const TaskManagementMain = () => {
             client_ids: task.client_ids || (task.clients_info ? task.clients_info.map(c => c.id) : []),
             folder_id: task.folder_id || (task.folder_info ? task.folder_info.id : null),
             dueDateRaw: task.due_date,
-            assignedToId: assignedToId 
+            assignedToId: assignedToId
           };
         });
 

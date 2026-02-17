@@ -191,20 +191,20 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
 
   // Created by information
   const createdByName = invoice?.created_by_name;
-
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4"
+      style={{ zIndex: 99999, padding: '40px 1rem', overflowY: 'auto' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto relative"
+        className="bg-white rounded-xl w-full max-h-[80vh] overflow-y-auto relative custom-scrollbar"
         style={{
+          maxWidth: "664px",
           border: "1px solid #E8F0FF",
           borderRadius: "12px",
           zIndex: 10000,
-          marginTop: "70px"
+          margin: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >

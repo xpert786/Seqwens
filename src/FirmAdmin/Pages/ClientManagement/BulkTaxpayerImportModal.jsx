@@ -393,41 +393,41 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       return (
         <div>
           {/* Summary Cards */}
-          <div className="grid grid-cols-5 gap-4 mb-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
                 {valid_rows || 0}
               </div>
-              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Valid Rows</div>
+              <div className="text-xs sm:text-sm text-green-700 font-[BasisGrotesquePro]">Valid Rows</div>
             </div>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">
                 {error_rows || 0}
               </div>
-              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Error Rows</div>
+              <div className="text-xs sm:text-sm text-red-700 font-[BasisGrotesquePro]">Error Rows</div>
             </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-orange-700 font-[BasisGrotesquePro]">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-orange-700 font-[BasisGrotesquePro]">
                 {existing_taxpayers_count || 0}
               </div>
-              <div className="text-sm text-orange-700 font-[BasisGrotesquePro]">Duplicates Found</div>
+              <div className="text-xs sm:text-sm text-orange-700 font-[BasisGrotesquePro]">Duplicates</div>
               {existing_taxpayers_count > 0 && (
-                <div className="text-xs text-orange-600 mt-1 font-[BasisGrotesquePro]">
-                  {existing_in_firm_count || 0} in this firm
+                <div className="text-[10px] sm:text-xs text-orange-600 mt-1 font-[BasisGrotesquePro]">
+                  {existing_in_firm_count || 0} in firm
                 </div>
               )}
             </div>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
                 {error_summary?.total_warnings || 0}
               </div>
-              <div className="text-sm text-yellow-700 font-[BasisGrotesquePro]">Warnings</div>
+              <div className="text-xs sm:text-sm text-yellow-700 font-[BasisGrotesquePro]">Warnings</div>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 col-span-2 md:col-span-1">
+              <div className="text-xl sm:text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
                 {total_rows || 0}
               </div>
-              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Total Rows</div>
+              <div className="text-xs sm:text-sm text-blue-700 font-[BasisGrotesquePro]">Total Rows</div>
             </div>
           </div>
 
@@ -767,36 +767,36 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-5 gap-4 mb-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
                 {importResults.imported_count || 0}
               </div>
-              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Imported</div>
+              <div className="text-xs sm:text-sm text-green-700 font-[BasisGrotesquePro]">Imported</div>
             </div>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
                 {importResults.skipped_count || 0}
               </div>
-              <div className="text-sm text-yellow-700 font-[BasisGrotesquePro]">Skipped</div>
+              <div className="text-xs sm:text-sm text-yellow-700 font-[BasisGrotesquePro]">Skipped</div>
             </div>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">
                 {importResults.error_count || 0}
               </div>
-              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
+              <div className="text-xs sm:text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
             </div>
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-purple-700 font-[BasisGrotesquePro]">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+              <div className="text-xl sm:text-2xl font-bold text-purple-700 font-[BasisGrotesquePro]">
                 {importResults.invitations_sent || 0}
               </div>
-              <div className="text-sm text-purple-700 font-[BasisGrotesquePro]">Invitations Sent</div>
+              <div className="text-xs sm:text-sm text-purple-700 font-[BasisGrotesquePro]">Invites Sent</div>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 col-span-2 md:col-span-1">
+              <div className="text-xl sm:text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
                 {importResults.import_results?.length || 0}
               </div>
-              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Total Processed</div>
+              <div className="text-xs sm:text-sm text-blue-700 font-[BasisGrotesquePro]">Processed</div>
             </div>
           </div>
 
@@ -945,32 +945,36 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10"
+      style={{ zIndex: 99999 }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mx-4"
+        className="bg-white rounded-lg shadow-lg p-4 sm:p-6 max-w-5xl w-full mx-auto"
         style={{
-          borderRadius: "12px", maxHeight: '90vh', overflowY: 'auto'
+          borderRadius: "12px",
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          position: 'relative'
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
+        >
+          <IoMdClose size={24} />
+        </button>
+
         {/* Header */}
         <div className="mb-4">
-          <div className="flex justify-between items-center pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-            <div>
-              <h4 className="taxdashboardr-titler text-[22px] font-bold font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Bulk Import Taxpayers</h4>
-              <p className="text-sm mt-1 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>
-                Import multiple taxpayers from CSV file with validation and preview
+          <div className="flex justify-between items-start pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+            <div className="pr-10">
+              <h4 className="taxdashboardr-titler text-lg sm:text-[22px] font-bold font-[BasisGrotesquePro] leading-tight" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Bulk Import Taxpayers</h4>
+              <p className="text-xs sm:text-sm mt-1 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>
+                Import multiple taxpayers from CSV/PDF with validation
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200"
-            >
-              <IoMdClose size={24} />
-            </button>
           </div>
 
           {/* Global Error Message */}
@@ -996,7 +1000,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           ].map((s, i) => (
             <div key={s.step} className="flex items-center">
               <span
-                className={`text-sm font-medium ${s.step <= currentStep ? "font-bold" : ""}`}
+                className={`text-[10px] sm:text-sm font-medium ${s.step <= currentStep ? "font-bold" : ""}`}
                 style={s.step <= currentStep ? { color: '#F56D2D' } : { color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}
               >
                 {s.step}. {s.label}

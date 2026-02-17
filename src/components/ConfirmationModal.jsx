@@ -8,15 +8,15 @@ const ConfirmationModal = ({
   message = "Are you sure you want to proceed?",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmButtonStyle = { backgroundColor: '#F56D2D', color: '#FFFFFF', borderRadius: '7px' },
-  cancelButtonStyle = { border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' },
+  confirmButtonStyle = { backgroundColor: '#F56D2D', color: '#FFFFFF', borderRadius: '10px' },
+  cancelButtonStyle = { border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '10px' },
   isLoading = false,
   isDestructive = false
 }) => {
   if (!isOpen) return null;
 
   const defaultConfirmStyle = isDestructive
-    ? { backgroundColor: '#EF4444', color: '#FFFFFF', borderRadius: '7px' }
+    ? { backgroundColor: '#EF4444', color: '#FFFFFF', borderRadius: '10px' }
     : confirmButtonStyle;
 
   return (

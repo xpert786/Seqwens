@@ -86,7 +86,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
-        
+
         // Parse array format error messages
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage[0] || errorMessage;
@@ -100,7 +100,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             // Keep original if parsing fails
           }
         }
-        
+
         // Also check errorData.errors or errorData.error fields
         if (errorData.errors) {
           if (Array.isArray(errorData.errors)) {
@@ -109,7 +109,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             errorMessage = errorData.errors;
           }
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -127,41 +127,41 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
 
       // If successful (new user or confirmed existing user)
       if (result.success && result.data) {
-      // Reset form
-      setFormData({
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone_number: "",
-        role: "tax_preparer",
-      });
-      setDeliveryMethods({
-        email: true,
-        sms: false,
-        link: false,
-      });
+        // Reset form
+        setFormData({
+          first_name: "",
+          last_name: "",
+          email: "",
+          phone_number: "",
+          role: "tax_preparer",
+        });
+        setDeliveryMethods({
+          email: true,
+          sms: false,
+          link: false,
+        });
 
-      if (typeof onRefresh === "function") {
-        onRefresh();
-      }
-      onClose();
+        if (typeof onRefresh === "function") {
+          onRefresh();
+        }
+        onClose();
 
-      if (typeof onInviteCreated === "function" && result.data) {
-        onInviteCreated(result.data);
-      }
+        if (typeof onInviteCreated === "function" && result.data) {
+          onInviteCreated(result.data);
+        }
 
-      // Show success toast
+        // Show success toast
         toast.success(result.message || "Staff member added successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: false,
-        className: "custom-toast-success",
-        bodyClassName: "custom-toast-body",
-      });
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
       } else {
         // Handle other error cases
         throw new Error(result.message || "Failed to create staff member");
@@ -291,7 +291,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       let hasDeliveryError = false;
       if (result.success && result.data?.delivery_summary?.error) {
         let errorMessage = result.data.delivery_summary.error;
-        
+
         // Handle array format (e.g., "[\"No active template found...\"]")
         if (typeof errorMessage === 'string' && errorMessage.trim().startsWith('[')) {
           try {
@@ -303,12 +303,12 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             // Keep original if parsing fails
           }
         }
-        
+
         // Check if error message indicates missing template
         const errorStr = typeof errorMessage === 'string' ? errorMessage.toLowerCase() : String(errorMessage).toLowerCase();
-        hasDeliveryError = errorStr.includes('no active template') || 
-                          errorStr.includes('no template found') ||
-                          errorStr.includes('email template');
+        hasDeliveryError = errorStr.includes('no active template') ||
+          errorStr.includes('no template found') ||
+          errorStr.includes('email template');
       }
 
       // Reset form
@@ -386,9 +386,9 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 sm:p-10"
       style={{
-        zIndex: 9999,
+        zIndex: 99999,
         marginTop: 0,
       }}
       onClick={(e) => {
@@ -398,30 +398,50 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       }}
     >
       <div
-        className="bg-white w-full rounded-xl shadow-lg p-6 relative"
+        className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-6 relative modal-body-scroll"
         style={{
-          maxWidth: "600px",
-          maxHeight: "90vh",
+          maxHeight: "75vh",
           overflowY: "auto",
+          position: 'relative',
+          fontFamily: 'BasisGrotesquePro'
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <style>
+          {`
+            .modal-body-scroll::-webkit-scrollbar {
+              width: 8px;
+            }
+            .modal-body-scroll::-webkit-scrollbar-track {
+              background: #f8fafc;
+            }
+            .modal-body-scroll::-webkit-scrollbar-thumb {
+              background: #cbd5e1;
+              border-radius: 10px;
+              border: 2px solid #f8fafc;
+            }
+            .modal-body-scroll::-webkit-scrollbar-thumb:hover {
+              background: #94a3b8;
+            }
+          `}
+        </style>
+        <button
+          onClick={handleClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
+        >
+          <CrossesIcon className="w-5 h-5" />
+        </button>
+
         {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h4 className="text-base font-semibold text-gray-800 font-[BasisGrotesquePro]">
+        <div className="flex justify-between items-start mb-4 pb-3 border-b border-gray-100">
+          <div className="pr-10">
+            <h4 className="text-lg sm:text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
               Invite New Staff Member
             </h4>
-            <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-0.5">
-              Send an invitation email/SMS to add a preparer to your firm
+            <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-1">
+              Send an invitation to add a staff member to your firm
             </p>
           </div>
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
-          >
-            <CrossesIcon className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Error Message */}

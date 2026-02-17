@@ -1406,17 +1406,21 @@ export default function StaffManagement() {
 
             {/* Pending Invites Pagination */}
             {activeFilter === 'pending_invites' && pendingInvitesPagination.total_count > pendingInvitesPagination.page_size && (
-              <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between staff-pagination">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] staff-pagination-info">
-                  Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of {pendingInvitesPagination.total_count} invites
+              <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
+                <div className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">
+                  Showing {((pendingInvitesPage - 1) * pendingInvitesPagination.page_size) + 1} to {Math.min(pendingInvitesPage * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of {pendingInvitesPagination.total_count}
                 </div>
-                <div className="flex items-center gap-2 staff-pagination-buttons">
+                <div className="flex items-center gap-1 sm:gap-2 flex-nowrap">
                   <button
                     onClick={() => setPendingInvitesPage(prev => Math.max(1, prev - 1))}
                     disabled={pendingInvitesPage === 1}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                    className={`px-2 py-1 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] h-7 flex items-center justify-center ${pendingInvitesPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
-                    Previous
+                    <span className="hidden sm:inline">Prev</span>
+                    <span className="sm:hidden">&lt;</span>
                   </button>
                   <div className="flex items-center gap-1">
                     {(() => {
@@ -1437,19 +1441,19 @@ export default function StaffManagement() {
                           return (
                             <React.Fragment key={page}>
                               {showEllipsisBefore && (
-                                <span className="px-2 text-gray-500">...</span>
+                                <span className="px-1 sm:px-2 text-gray-500 text-[10px] sm:text-sm">...</span>
                               )}
                               <button
                                 onClick={() => setPendingInvitesPage(page)}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${pendingInvitesPage === page
-                                  ? 'bg-[#3B82F6] text-white border border-[#3B82F6]'
-                                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                className={`w-7 h-7 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] flex items-center justify-center ${pendingInvitesPage === page
+                                  ? 'bg-blue-600 text-white border border-blue-600'
+                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                   }`}
                               >
                                 {page}
                               </button>
                               {showEllipsisAfter && (
-                                <span className="px-2 text-gray-500">...</span>
+                                <span className="px-1 sm:px-2 text-gray-500 text-[10px] sm:text-sm">...</span>
                               )}
                             </React.Fragment>
                           );
@@ -1459,9 +1463,13 @@ export default function StaffManagement() {
                   <button
                     onClick={() => setPendingInvitesPage(prev => Math.min(Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size), prev + 1))}
                     disabled={pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                    className={`px-2 py-1 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] h-7 flex items-center justify-center ${pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
+                    <span className="sm:hidden">&gt;</span>
                   </button>
                 </div>
               </div>
@@ -1620,17 +1628,21 @@ export default function StaffManagement() {
 
                 {/* Staff Pagination */}
                 {activeFilter !== 'pending_invites' && staffData.length > staffPageSize && (
-                  <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between staff-pagination">
-                    <div className="text-sm text-gray-600 font-[BasisGrotesquePro] staff-pagination-info">
-                      Showing {((staffPage - 1) * staffPageSize) + 1} to {Math.min(staffPage * staffPageSize, staffData.length)} of {staffData.length} members
+                  <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">
+                      Showing {((staffPage - 1) * staffPageSize) + 1} to {Math.min(staffPage * staffPageSize, staffData.length)} of {staffData.length}
                     </div>
-                    <div className="flex items-center gap-2 staff-pagination-buttons">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-nowrap">
                       <button
                         onClick={() => setStaffPage(prev => Math.max(1, prev - 1))}
                         disabled={staffPage === 1}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                        className={`px-2 py-1 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] h-7 flex items-center justify-center ${staffPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
                       >
-                        Previous
+                        <span className="hidden sm:inline">Prev</span>
+                        <span className="sm:hidden">&lt;</span>
                       </button>
                       <div className="flex items-center gap-1">
                         {(() => {
@@ -1651,19 +1663,20 @@ export default function StaffManagement() {
                               return (
                                 <React.Fragment key={page}>
                                   {showEllipsisBefore && (
-                                    <span className="px-2 text-gray-500">...</span>
+                                    <span className="px-1 sm:px-2 text-gray-500 text-[10px] sm:text-sm">...</span>
                                   )}
                                   <button
                                     onClick={() => setStaffPage(page)}
-                                    className={`px-3 py-2 text-sm font-medium !rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
-                                      ? 'bg-firm-primary text-white border border-firm-primary'
-                                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                    className={`w-7 h-7 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] flex items-center justify-center ${staffPage === page
+                                      ? 'text-white border border-firm-primary hover:brightness-95'
+                                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                       }`}
+                                    style={staffPage === page ? { backgroundColor: 'var(--firm-primary-color, #3AD6F2)' } : {}}
                                   >
                                     {page}
                                   </button>
                                   {showEllipsisAfter && (
-                                    <span className="px-2 text-gray-500">...</span>
+                                    <span className="px-1 sm:px-2 text-gray-500 text-[10px] sm:text-sm">...</span>
                                   )}
                                 </React.Fragment>
                               );
@@ -1673,9 +1686,13 @@ export default function StaffManagement() {
                       <button
                         onClick={() => setStaffPage(prev => Math.min(Math.ceil(staffData.length / staffPageSize), prev + 1))}
                         disabled={staffPage >= Math.ceil(staffData.length / staffPageSize)}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
+                        className={`px-2 py-1 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] h-7 flex items-center justify-center ${staffPage >= Math.ceil(staffData.length / staffPageSize)
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
+                        <span className="sm:hidden">&gt;</span>
                       </button>
                     </div>
                   </div>

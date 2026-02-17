@@ -1844,39 +1844,38 @@ export default function FirmAdminDashboard() {
           </div>
         )}
 
-        {/* Subscription Status Section */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 sm:p-6 mb-6">
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-2">Subscription Status</h3>
-            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your current plan and usage details</p>
+            <h3 className="text-lg sm:text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-2">Subscription Status</h3>
+            <p className="text-xs sm:text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your current plan and usage details</p>
           </div>
 
-          <div className="bg-[#F3F7FF] rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-8">
+          <div className="bg-[#F3F7FF] rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12">
                 <div>
-                  <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Current Plan</div>
-                  <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                  <div className="text-xs sm:text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Current Plan</div>
+                  <div className="text-base sm:text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
                     {loading ? '...' : (dashboardData?.subscription?.current_plan || 'N/A')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Price</div>
-                  <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                  <div className="text-xs sm:text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Price</div>
+                  <div className="text-base sm:text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
                     {loading ? '...' : (dashboardData?.subscription?.price_formatted || '$0')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Next Billing</div>
-                  <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                  <div className="text-xs sm:text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Next Billing</div>
+                  <div className="text-base sm:text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
                     {loading ? '...' : (dashboardData?.subscription?.next_billing_date_formatted || 'N/A')}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => navigate('/firmadmin/subscription')}
-                className="px-4 py-2 bg-white border border-[#dee2e6] text-[#343a40] text-sm font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2"
-                style={{ borderRadius: '12px' }}
+                className="w-full lg:w-auto px-6 py-2.5 bg-white border border-[#dee2e6] text-[#343a40] text-sm sm:text-base font-semibold font-[BasisGrotesquePro] hover:bg-gray-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                style={{ borderRadius: '10px' }}
               >
                 Manage Subscription
               </button>

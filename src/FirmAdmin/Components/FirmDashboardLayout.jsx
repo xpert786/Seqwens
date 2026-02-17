@@ -403,7 +403,11 @@ export default function FirmDashboardLayout() {
           />
         )}
 
-        <FirmSidebar isSidebarOpen={isSidebarOpen} />
+        <FirmSidebar
+          isSidebarOpen={isSidebarOpen}
+          isMobile={isMobile}
+          onNavItemClick={handleCloseSidebar}
+        />
         <main
           className="h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
           style={{

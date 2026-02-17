@@ -15,7 +15,6 @@
   position: relative;
   transition: all 0.2s ease-in-out;
 }
-
 .clickable-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);

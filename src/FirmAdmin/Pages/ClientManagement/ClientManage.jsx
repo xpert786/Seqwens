@@ -1940,183 +1940,147 @@ export default function ClientManage() {
           </div>
 
           {/* Toolbar - Only show for clients tab */}
-          {activeTab === 'clients' && (
-            <div className="p-4 sm:p-6 border-b border-gray-200">
-              <div className="flex items-center gap-4 sm:gap-6">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="Search clients by name, email or company.."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        setCurrentPage(1);
-                      }
-                    }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <SearchIcon />
-                  </div>
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="d-flex flex-column gap-4">
+              {/* Search Bar Row */}
+              <div className="w-100 position-relative">
+                <input
+                  type="text"
+                  placeholder="Search clients by name, email or company.."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setCurrentPage(1);
+                    }
+                  }}
+                  className="w-100 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)',
+                    height: '45px',
+                    paddingLeft: '40px'
+                  }}
+                />
+                <div className="position-absolute left-3 top-50 translate-middle-y" style={{ left: '12px', zIndex: 1 }}>
+                  <SearchIcon />
                 </div>
-                {/* Active/Inactive Filter Button */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="position-absolute right-3 top-50 translate-middle-y text-gray-400 hover:text-gray-600 border-0 bg-transparent"
+                    style={{ right: '12px' }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '20px' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Filters Section */}
+              <div className="d-flex flex-column gap-3">
+                {/* Status Filter Row */}
+                <div className="d-flex align-items-center gap-3">
+                  <span className="text-secondary small fw-bold" style={{ minWidth: '85px', fontFamily: 'BasisGrotesquePro' }}>Filter Status:</span>
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'true'
-                        ? 'bg-[#00C0C6] text-white'
+                        ? 'bg-[#00C0C6] text-white border-0'
                         : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setActiveFilter('true');
                         setCurrentPage(1);
                       }}
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '80px' }}
                     >
                       Active
                     </button>
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'false'
-                        ? 'bg-[#00C0C6] text-white'
+                        ? 'bg-[#00C0C6] text-white border-0'
                         : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setActiveFilter('false');
                         setCurrentPage(1);
                       }}
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '80px' }}
                     >
                       Inactive
                     </button>
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'all'
-                        ? 'bg-[#00C0C6] text-white'
+                        ? 'bg-[#00C0C6] text-white border-0'
                         : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setActiveFilter('all');
                         setCurrentPage(1);
                       }}
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '80px' }}
                     >
                       All
                     </button>
                   </div>
+                </div>
 
-                  {/* Link Status Filter */}
-                  <div className="flex items-center gap-2 border-l border-gray-300 pl-2 ml-2">
-                    <span className="text-xs text-gray-600 font-[BasisGrotesquePro] mr-1">Link:</span>
+                {/* Link Status Filter Row */}
+                <div className="d-flex align-items-center gap-3">
+                  <span className="text-secondary small fw-bold" style={{ minWidth: '85px', fontFamily: 'BasisGrotesquePro' }}>Link Status:</span>
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${linkStatusFilter === 'all'
-                        ? 'bg-[#00C0C6] text-white'
+                        ? 'bg-[#00C0C6] text-white border-0'
                         : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setLinkStatusFilter('all');
                         setCurrentPage(1);
                       }}
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '80px' }}
                     >
                       All
                     </button>
                     <button
-                      className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${linkStatusFilter === 'linked'
-                        ? 'bg-[#00C0C6] text-white'
+                      className={`px-3 py-2 text-sm font-medium transition-colors d-flex align-items-center justify-content-center gap-1 ${linkStatusFilter === 'linked'
+                        ? 'bg-[#00C0C6] text-white border-0'
                         : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setLinkStatusFilter('linked');
                         setCurrentPage(1);
                       }}
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '100px' }}
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style={{ width: '16px' }}>
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       Linked
                     </button>
                     <button
-                      className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${linkStatusFilter === 'unlinked'
-                        ? 'bg-[#00C0C6] text-white'
+                      className={`px-3 py-2 text-sm font-medium transition-colors d-flex align-items-center justify-content-center gap-1 ${linkStatusFilter === 'unlinked'
+                        ? 'bg-[#00C0C6] text-white border-0'
                         : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setLinkStatusFilter('unlinked');
                         setCurrentPage(1);
                       }}
-                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '100px' }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '16px' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                       Unlinked
                     </button>
                   </div>
                 </div>
-                {/* <button
-              className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
-              style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-              onClick={() => setShowFiltersModal(true)}
-            > */}
-                {/* <Filter />
-              Filter */}
-                {/* </button> */}
-                {/* <button
-              className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
-              style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-              onClick={() => setShowBulkActionModal(true)}
-            > */}
-                {/* <BulkAction />
-              Bulk Action ({selectedClients.length}) */}
-                {/* </button> */}
-                {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
-              <Archived className="w-4 h-4" />
-              Archived Clients
-            </button> */}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Search Bar for Pending Invites Tab */}
-          {activeTab === 'pending-invites' && (
-            <div className="p-4 sm:p-6 border-b border-gray-200">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="Search invites by name, email or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
-                />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <SearchIcon />
-                </div>
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+
 
           {/* Client Table */}
           <div className="overflow-x-auto px-4 sm:px-6">
@@ -2400,20 +2364,21 @@ export default function ClientManage() {
 
           {/* Pagination */}
           {pagination.total_count > 0 && (
-            <div className="p-6 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} clients
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
+              <div className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">
+                Showing {((pagination.page - 1) * pagination.page_size) + 1}-{Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-nowrap">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={!pagination.has_previous || currentPage === 1}
-                  className={`px-3 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_previous || currentPage === 1
+                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] h-7 flex items-center justify-center ${!pagination.has_previous || currentPage === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                 >
-                  Previous
+                  <span className="hidden sm:inline">Prev</span>
+                  <span className="sm:hidden">&lt;</span>
                 </button>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
@@ -2431,7 +2396,7 @@ export default function ClientManage() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
+                        className={`w-7 h-7 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] flex items-center justify-center ${currentPage === pageNum
                           ? 'text-white shadow-sm hover:brightness-90'
                           : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
@@ -2445,19 +2410,48 @@ export default function ClientManage() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
                   disabled={!pagination.has_next || currentPage === pagination.total_pages}
-                  className={`px-3 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_next || currentPage === pagination.total_pages
+                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium !rounded-[6px] transition-colors font-[BasisGrotesquePro] h-7 flex items-center justify-center ${!pagination.has_next || currentPage === pagination.total_pages
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
+                  <span className="sm:hidden">&gt;</span>
                 </button>
               </div>
             </div>
           )}
         </div>
-      )
-      }
+      )}
+
+      {/* Search Bar for Pending Invites Tab */}
+      {activeTab === 'pending-invites' && (
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search invites by name, email or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <SearchIcon />
+            </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Client Message Modal */}
       <ClientMessageModal
@@ -3062,140 +3056,143 @@ export default function ClientManage() {
       }
 
       {/* Delete Invite Confirmation Modal */}
-      {showDeleteInviteConfirmModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center p-4 shadow-2xl"
-          style={{ 
-            zIndex: 10000,
-            backgroundColor: "rgba(19, 19, 35, 0.4)",
-            backdropFilter: "blur(4px)",
-            animation: "fadeIn 0.2s ease-out"
-          }}
-          onClick={() => !deletingInvite && setShowDeleteInviteConfirmModal(false)}
-        >
+      {
+        showDeleteInviteConfirmModal && (
           <div
-            className="bg-white w-full max-w-sm overflow-hidden"
-            style={{ 
-              borderRadius: '24px',
-              padding: '32px',
-              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
-              animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+            className="fixed inset-0 flex items-center justify-center p-4 shadow-2xl"
+            style={{
+              zIndex: 10000,
+              backgroundColor: "rgba(19, 19, 35, 0.4)",
+              backdropFilter: "blur(4px)",
+              animation: "fadeIn 0.2s ease-out"
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => !deletingInvite && setShowDeleteInviteConfirmModal(false)}
           >
-            <div className="text-center">
-              <div
-                className="mx-auto mb-5 flex items-center justify-center"
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  backgroundColor: "#FFF5F5",
-                  color: "#FF4D4F",
-                  borderRadius: "18px",
-                  fontSize: "24px"
-                }}
-              >
-                <FaTrash />
+            <div
+              className="bg-white w-full max-w-sm overflow-hidden"
+              style={{
+                borderRadius: '24px',
+                padding: '32px',
+                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
+                animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div
+                  className="mx-auto mb-5 flex items-center justify-center"
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                    backgroundColor: "#FFF5F5",
+                    color: "#FF4D4F",
+                    borderRadius: "18px",
+                    fontSize: "24px"
+                  }}
+                >
+                  <FaTrash />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Delete Invitation</h3>
+                <p className="text-sm text-gray-500 mb-8 font-[BasisGrotesquePro] leading-relaxed">
+                  Are you sure you want to delete this invitation? This action cannot be undone.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Delete Invitation</h3>
-              <p className="text-sm text-gray-500 mb-8 font-[BasisGrotesquePro] leading-relaxed">
-                Are you sure you want to delete this invitation? This action cannot be undone.
-              </p>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={confirmDeleteInvite}
-                disabled={deletingInvite}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
-                style={{ 
-                  backgroundColor: '#FF4D4F',
-                  boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
-                }}
-              >
-                {deletingInvite && <div className="spinner-border spinner-border-sm" role="status" />}
-                {deletingInvite ? 'Deleting...' : 'Yes, Delete'}
-              </button>
-              <button
-                onClick={() => setShowDeleteInviteConfirmModal(false)}
-                disabled={deletingInvite}
-                className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
-              >
-                Cancel
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={confirmDeleteInvite}
+                  disabled={deletingInvite}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
+                  style={{
+                    backgroundColor: '#FF4D4F',
+                    boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
+                  }}
+                >
+                  {deletingInvite && <div className="spinner-border spinner-border-sm" role="status" />}
+                  {deletingInvite ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteInviteConfirmModal(false)}
+                  disabled={deletingInvite}
+                  className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Delete Client Confirmation Modal */}
-      {showDeleteConfirmModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center p-4 shadow-2xl"
-          style={{ 
-            zIndex: 10000,
-            backgroundColor: "rgba(19, 19, 35, 0.4)",
-            backdropFilter: "blur(4px)",
-            animation: "fadeIn 0.2s ease-out"
-          }}
-          onClick={() => !deleting && setShowDeleteConfirmModal(false)}
-        >
+      {
+        showDeleteConfirmModal && (
           <div
-            className="bg-white w-full max-w-sm overflow-hidden"
-            style={{ 
-              borderRadius: '24px',
-              padding: '32px',
-              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
-              animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+            className="fixed inset-0 flex items-center justify-center p-4 shadow-2xl"
+            style={{
+              zIndex: 10000,
+              backgroundColor: "rgba(19, 19, 35, 0.4)",
+              backdropFilter: "blur(4px)",
+              animation: "fadeIn 0.2s ease-out"
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => !deleting && setShowDeleteConfirmModal(false)}
           >
-            <div className="text-center">
-              <div
-                className="mx-auto mb-5 flex items-center justify-center"
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  backgroundColor: "#FFF5F5",
-                  color: "#FF4D4F",
-                  borderRadius: "18px",
-                  fontSize: "24px"
-                }}
-              >
-                <FaExclamationTriangle />
+            <div
+              className="bg-white w-full max-w-sm overflow-hidden"
+              style={{
+                borderRadius: '24px',
+                padding: '32px',
+                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
+                animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div
+                  className="mx-auto mb-5 flex items-center justify-center"
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                    backgroundColor: "#FFF5F5",
+                    color: "#FF4D4F",
+                    borderRadius: "18px",
+                    fontSize: "24px"
+                  }}
+                >
+                  <FaExclamationTriangle />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Remove Client</h3>
+                <p className="text-sm text-gray-500 mb-8 font-[BasisGrotesquePro] leading-relaxed">
+                  Are you sure you want to remove this client? This will permanently remove their record and free up their email address.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Remove Client</h3>
-              <p className="text-sm text-gray-500 mb-8 font-[BasisGrotesquePro] leading-relaxed">
-                Are you sure you want to remove this client? This will permanently remove their record and free up their email address.
-              </p>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => selectedClientForDelete && handleDeleteTaxpayer(selectedClientForDelete)}
-                disabled={deleting}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
-                style={{ 
-                  backgroundColor: '#FF4D4F',
-                  boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
-                }}
-              >
-                {deleting && <div className="spinner-border spinner-border-sm" role="status" />}
-                {deleting ? 'Removing...' : 'Confirm removal'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeleteConfirmModal(false);
-                  setSelectedClientForDelete(null);
-                }}
-                disabled={deleting}
-                className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
-              >
-                Cancel
-              </button>
-            </div>
-            
-            <style>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => selectedClientForDelete && handleDeleteTaxpayer(selectedClientForDelete)}
+                  disabled={deleting}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
+                  style={{
+                    backgroundColor: '#FF4D4F',
+                    boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
+                  }}
+                >
+                  {deleting && <div className="spinner-border spinner-border-sm" role="status" />}
+                  {deleting ? 'Removing...' : 'Confirm removal'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirmModal(false);
+                    setSelectedClientForDelete(null);
+                  }}
+                  disabled={deleting}
+                  className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <style>
                 {`
                 @keyframes fadeIn {
                     from { opacity: 0; }
@@ -3206,10 +3203,11 @@ export default function ClientManage() {
                     to { transform: scale(1); opacity: 1; }
                 }
                 `}
-            </style>
+              </style>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

@@ -318,8 +318,14 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
                     style={{
                       backgroundColor: '#E0F2FE',
                       color: '#0369A1',
-                      fontSize: '12px',
-                      padding: '4px 8px'
+                      fontSize: '11px',
+                      padding: '4px 8px',
+                      maxWidth: '100px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: 'inline-block',
+                      verticalAlign: 'middle'
                     }}
                   >
                     {docName}

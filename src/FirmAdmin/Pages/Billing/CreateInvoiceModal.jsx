@@ -386,7 +386,25 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center invoice-modal-mobile" onClick={onClose} style={{ zIndex: 99999, padding: '40px 1rem', overflowY: 'auto' }}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-h-[80vh] overflow-y-auto invoice-modal-box custom-scrollbar" style={{ maxWidth: "664px", margin: 'auto' }} onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-h-[75vh] overflow-y-auto invoice-modal-box modal-body-scroll" style={{ maxWidth: "600px", margin: 'auto' }} onClick={(e) => e.stopPropagation()}>
+        <style>
+          {`
+            .modal-body-scroll::-webkit-scrollbar {
+              width: 8px;
+            }
+            .modal-body-scroll::-webkit-scrollbar-track {
+              background: #f8fafc;
+            }
+            .modal-body-scroll::-webkit-scrollbar-thumb {
+              background: #cbd5e1;
+              border-radius: 10px;
+              border: 2px solid #f8fafc;
+            }
+            .modal-body-scroll::-webkit-scrollbar-thumb:hover {
+              background: #94a3b8;
+            }
+          `}
+        </style>
         {/* Header */}
         <div className="flex justify-between items-start p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <div className="flex-1">

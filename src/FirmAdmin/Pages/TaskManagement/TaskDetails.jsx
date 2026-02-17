@@ -291,7 +291,7 @@ const TaskDetails = () => {
                     <p className="text-red-600 font-[BasisGrotesquePro]">{error}</p>
                     <button
                         onClick={fetchTaskDetails}
-                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+                        className="mt-4 px-4 py-2 bg-red-600 text-white !rounded-[10px] hover:bg-red-700 font-[BasisGrotesquePro]"
                     >
                         Retry
                     </button>
@@ -419,7 +419,7 @@ const TaskDetails = () => {
                 <div className="mb-6 taskdetails-back-button">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-all active:scale-95 font-[BasisGrotesquePro] shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 transition-all active:scale-95 font-[BasisGrotesquePro] shadow-sm"
                     >
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -452,7 +452,7 @@ const TaskDetails = () => {
                         <button
                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                             disabled={timeTrackingLoading}
-                            className="px-6 py-3 bg-white text-[#3B4A66] border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-bold shadow-sm disabled:opacity-50 active:scale-95"
+                            className="px-6 py-3 bg-white text-[#3B4A66] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-bold shadow-sm disabled:opacity-50 active:scale-95"
                         >
                             {timeTrackingStatus?.is_tracking_active ? (
                                 <>
@@ -574,7 +574,7 @@ const TaskDetails = () => {
                                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Status</label>
                                     <div className="relative">
                                         <select
-                                            className="w-full appearance-none bg-gray-50 border border-transparent rounded-xl px-4 py-3 text-sm font-bold text-[#3B4A66] focus:bg-white focus:border-[#F56D2D] outline-none transition-all cursor-pointer"
+                                            className="w-full appearance-none bg-gray-50 border border-transparent !rounded-[10px] px-4 py-3 text-sm font-bold text-[#3B4A66] focus:bg-white focus:border-[#F56D2D] outline-none transition-all cursor-pointer"
                                             value={taskData.status}
                                             onChange={(e) => handleStatusUpdate(e.target.value)}
                                         >
@@ -594,10 +594,10 @@ const TaskDetails = () => {
                                 {/* Action buttons stack on mobile */}
                                 {(transformedTaskData.taskType === 'document_request' || transformedTaskData.taskType === 'signature_request') && taskData.status === 'submitted' && (
                                     <div className="flex flex-col gap-3">
-                                        <button onClick={() => setShowApproveModal(true)} disabled={processingAction} className="w-full py-3 bg-[#10B981] text-white rounded-xl font-bold hover:bg-[#059669] transition-all active:scale-95 shadow-sm shadow-emerald-100 disabled:opacity-50">
+                                        <button onClick={() => setShowApproveModal(true)} disabled={processingAction} className="w-full py-3 bg-[#10B981] text-white !rounded-[10px] font-bold hover:bg-[#059669] transition-all active:scale-95 shadow-sm shadow-emerald-100 disabled:opacity-50">
                                             {processingAction ? 'Processing...' : 'Approve & Complete'}
                                         </button>
-                                        <button onClick={() => setShowReRequestModal(true)} disabled={processingAction} className="w-full py-3 bg-[#F59E0B] text-white rounded-xl font-bold hover:bg-[#D97706] transition-all active:scale-95 shadow-sm shadow-amber-100 disabled:opacity-50">
+                                        <button onClick={() => setShowReRequestModal(true)} disabled={processingAction} className="w-full py-3 bg-[#F59E0B] text-white !rounded-[10px] font-bold hover:bg-[#D97706] transition-all active:scale-95 shadow-sm shadow-amber-100 disabled:opacity-50">
                                             Re-request
                                         </button>
                                     </div>
@@ -605,7 +605,7 @@ const TaskDetails = () => {
                                 <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
                                     <button
                                         onClick={() => setShowEditModal(true)}
-                                        className="w-full py-3 bg-white text-[#F56D2D] border border-[#F56D2D] rounded-xl font-bold hover:bg-[#F56D2D]/5 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                        className="w-full py-3 bg-white text-[#F56D2D] border border-[#F56D2D] !rounded-[10px] font-bold hover:bg-[#F56D2D]/5 transition-all active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         <FaEdit size={16} />
                                         Edit Task
@@ -622,14 +622,14 @@ const TaskDetails = () => {
                                         <button
                                             onClick={handleResetTimer}
                                             disabled={timeTrackingLoading || !timeTrackingStatus || timeTrackingStatus.total_sessions === 0}
-                                            className="py-2.5 px-4 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50"
+                                            className="py-2.5 px-4 bg-white border border-gray-200 text-gray-500 font-bold !rounded-[10px] text-xs hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50"
                                         >
                                             Reset
                                         </button>
                                         <button
                                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                                             disabled={timeTrackingLoading}
-                                            className={`py-2.5 px-4 font-bold rounded-xl text-xs transition-all active:scale-95 disabled:opacity-50 ${timeTrackingStatus?.is_tracking_active ? 'bg-red-50 text-red-600' : 'bg-[#F56D2D] text-white'}`}
+                                            className={`py-2.5 px-4 font-bold !rounded-[10px] text-xs transition-all active:scale-95 disabled:opacity-50 ${timeTrackingStatus?.is_tracking_active ? 'bg-red-50 text-red-600' : 'bg-[#F56D2D] text-white'}`}
                                         >
                                             {timeTrackingStatus?.is_tracking_active ? 'Pause' : 'Start'}
                                         </button>
@@ -705,14 +705,14 @@ const TaskDetails = () => {
                                         type="button"
                                         onClick={handleReRequestDocument}
                                         disabled={processingAction || !reRequestComments.trim()}
-                                        className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-[#F59E0B] text-base font-bold text-white hover:bg-[#D97706] focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all font-[BasisGrotesquePro]"
+                                        className="w-full inline-flex justify-center !rounded-[10px] border border-transparent shadow-sm px-4 py-2 bg-[#F59E0B] text-base font-bold text-white hover:bg-[#D97706] focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all font-[BasisGrotesquePro]"
                                     >
                                         {processingAction ? 'Sending...' : 'Re-request'}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowReRequestModal(false)}
-                                        className="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all font-[BasisGrotesquePro]"
+                                        className="mt-3 w-full inline-flex justify-center !rounded-[10px] border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all font-[BasisGrotesquePro]"
                                     >
                                         Cancel
                                     </button>
