@@ -9,17 +9,16 @@ import { toast } from 'react-toastify';
 const WorkflowStatisticsCards = ({ statistics, loading, onStatClick }) => {
     if (loading) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 w-full">
                 {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4 animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-20 mb-3"></div>
-                        <div className="h-8 bg-gray-200 rounded w-16"></div>
+                    <div key={i} className="bg-white !rounded-lg !border border-[#E8F0FF] pt-4 sm:pt-6 px-3 sm:px-4 pb-3 sm:pb-4 animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-16 sm:w-20 mb-3"></div>
+                        <div className="h-6 sm:h-8 bg-gray-200 rounded w-12 sm:w-16"></div>
                     </div>
                 ))}
             </div>
         );
     }
-
     const stats = [
         {
             key: 'total_templates',
@@ -68,20 +67,20 @@ const WorkflowStatisticsCards = ({ statistics, loading, onStatClick }) => {
     ];
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 w-full">
             {stats.map((stat) => (
                 <div
                     key={stat.key}
                     onClick={() => onStatClick && onStatClick(stat.key)}
-                    className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4 cursor-pointer"
+                    className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:pt-6 sm:px-4 sm:pb-4 cursor-pointer hover:shadow-md transition-shadow"
                     title={stat.description}
                 >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between sm:flex-row">
                         <div className="flex flex-col">
-                            <div className="text-[#3AD6F2] mb-2">{stat.icon}</div>
-                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-4">{stat.label}</p>
+                            <div className="text-[#3AD6F2] mb-1 sm:mb-2 scale-90 sm:scale-100 origin-left">{stat.icon}</div>
+                            <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] mt-2 sm:mt-4">{stat.label}</p>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-none">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-none">
                             {stat.value}
                         </p>
                     </div>
@@ -153,8 +152,18 @@ const WorkflowExecutionLogViewer = ({ instanceId, isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[1070] flex items-center justify-center bg-black bg-opacity-40 p-6">
-            <div className="bg-white !rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div
+            className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
+            <div
+                className="bg-white w-full max-w-2xl rounded-xl shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-[#E8F0FF] flex-shrink-0">
                     <div>
@@ -177,7 +186,7 @@ const WorkflowExecutionLogViewer = ({ instanceId, isOpen, onClose }) => {
                 </div>
 
                 {/* Content */}
-                <div className="p-4 overflow-y-auto flex-1">
+                <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3AD6F2]"></div>

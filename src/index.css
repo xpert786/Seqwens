@@ -604,6 +604,34 @@ body.is-impersonating .Toastify__toast-container--top-left {
   background: #9CA3AF;
 }
 
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E8F0FF;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #3AD6F2;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Modal Z-Index Overrides - Ensure modals appear above sidebar and header */
 /* Sidebar: z-index 1000 (desktop), 1050 (mobile) */
 /* Header: z-index 1030 */

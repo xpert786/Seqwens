@@ -402,37 +402,26 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center invoice-modal-mobile"
+      className="fixed inset-0 z-[1200] flex items-start justify-center p-4 bg-black/50 overflow-y-auto sm:pt-24 pt-20"
       onClick={onClose}
-      style={{
-        zIndex: 99999,
-        padding: '40px 1rem',
-        overflowY: 'auto'
-      }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-h-[80vh] overflow-y-auto invoice-modal-box custom-scrollbar" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "664px", margin: 'auto' }}>
+      <div className="bg-white !rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col my-auto sm:my-0" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex justify-between items-start p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <div className="flex-1">
-            <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+        <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#E8F0FF]">
+          <div>
+            <h4 className="text-xl sm:text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 font-[BasisGrotesquePro]">Draft a new invoice for your client</p>
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
-            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm ml-4"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              flexShrink: 0,
-              marginTop: '-2px'
-            }}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <FiX size={18} />
+            <FiX size={20} />
           </button>
         </div>
         {/* Content */}
-        <div className="p-6 space-y-6">
+        {/* Content */}
+        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-280px)] custom-scrollbar">
           {/* Error/Success Messages */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -712,19 +701,19 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t invoice-modal-footer" style={{ borderColor: '#E5E7EB' }}>
+          {/* Footer Buttons */}
+          <div className="flex justify-end gap-3 p-5 sm:p-6 border-t border-[#E8F0FF] bg-gray-50/50">
             <button
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2 bg-white border !rounded-lg text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50"
-              style={{ borderColor: '#D1D5DB', color: '#374151' }}
+              className="px-6 py-2.5 bg-white border border-gray-300 !rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveInvoice}
               disabled={loading}
-              className="px-6 py-2 text-white !rounded-lg text-sm font-medium disabled:opacity-50"
+              className="px-8 py-2.5 text-white !rounded-lg text-sm font-bold shadow-md shadow-orange-100 transition-all active:scale-95 disabled:opacity-50"
               style={{ backgroundColor: '#F97316' }}
             >
               {loading ? 'Creating...' : 'Save Invoice'}

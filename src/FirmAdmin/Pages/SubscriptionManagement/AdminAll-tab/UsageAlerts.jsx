@@ -74,33 +74,46 @@ const UsageAlerts = () => {
     }
 
     return (
-        <div>
+        <div className="space-y-6">
             {/* Summary Header */}
             {hasCritical && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium">
-                    ⚠️ Critical: You have usage limits that have been exceeded. Please review and take action.
+                <div className="bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-xl text-sm font-bold flex items-center gap-3 animate-pulse">
+                    <span className="text-xl">⚠️</span>
+                    <p>CRITICAL: Usage limits exceeded. Please review and take action immediately.</p>
                 </div>
             )}
 
             {alerts.length === 0 ? (
-                <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
-                    <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="mt-4 text-sm text-green-700 font-[BasisGrotesquePro]">All usage is within normal limits. No alerts at this time.</p>
+                <div className="text-center py-20 bg-green-50/50 rounded-2xl border border-dashed border-green-200">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                        <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h6 className="text-lg font-bold text-green-800 font-[BasisGrotesquePro]">System All Clear</h6>
+                    <p className="mt-1 text-sm text-green-600 font-[BasisGrotesquePro]">All usage is within normal limits. No active alerts.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
                     {alerts.map((alert) => (
-                        <div key={alert.id} className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6">
-                            <div className="flex items-start justify-between gap-4">
+                        <div key={alert.id} className="bg-white !rounded-xl !border border-[#E8F0FF] p-5 sm:p-6 shadow-sm hover:shadow-md transition-all group">
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                 <div className="flex-1">
-                                    <h6 className="text-base font-bold text-gray-900 mb-1 font-[BasisGrotesquePro]">{alert.title}</h6>
-                                    <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-1">{alert.description}</p>
-                                    <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">{alert.timestamp}</p>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className={`w-2 h-2 rounded-full ${(alert.severity || '').toLowerCase() === 'critical' ? 'bg-red-500' : 'bg-yellow-500'
+                                            }`}></div>
+                                        <h6 className="text-base sm:text-lg font-bold text-[#1F2A55] font-[BasisGrotesquePro]">{alert.title}</h6>
+                                    </div>
+                                    <p className="text-sm text-gray-600 font-[BasisGrotesquePro] leading-relaxed mb-3">{alert.description}</p>
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {alert.timestamp}
+                                    </div>
                                 </div>
-                                <div className="flex-shrink-0">
-                                    <span className={`px-3 py-1 ${alert.severityColor} text-white !rounded-full text-xs font-medium font-[BasisGrotesquePro]`}>
+                                <div className="w-full sm:w-auto text-right">
+                                    <span className={`inline-block px-4 py-1.5 ${alert.severityColor} text-white !rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm`}>
                                         {alert.severity}
                                     </span>
                                 </div>
@@ -111,12 +124,15 @@ const UsageAlerts = () => {
             )}
 
             {/* Refresh Button */}
-            <div className="mt-6 text-center">
+            <div className="pt-4 flex justify-center">
                 <button
                     onClick={fetchAlerts}
-                    className="px-4 py-2 bg-white !border border-gray-300 text-gray-700 !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+                    className="flex items-center gap-2 px-8 py-3 bg-white !border border-[#E8F0FF] text-[#3B4A66] !rounded-xl hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-sm"
                 >
-                    Refresh Alerts
+                    <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {loading ? 'Refreshing...' : 'Refresh Alerts'}
                 </button>
             </div>
         </div>

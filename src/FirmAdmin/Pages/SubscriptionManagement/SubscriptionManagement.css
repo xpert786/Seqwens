@@ -1,17 +1,24 @@
 @media (max-width: 767px) {
   .subscription-tabs-wrapper {
-    width: 100%;
-    max-width: 100%;
+    width: auto;
+    max-width: none;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
   }
 
   .subscription-tabs-scroll {
     display: flex;
+    gap: 8px;
+    padding-bottom: 4px;
+    /* Space for custom scrollbar if it appears */
   }
 
   .subscription-tab-btn {
-    flex: 1 0 0;
-    text-align: center;
+    flex: none;
+    white-space: nowrap;
+    border: 1px solid #E8F0FF !important;
+    background: white !important;
+    padding: 8px 16px !important;
   }
 }
-
-

@@ -177,64 +177,58 @@ const SavedPaymentMethods = () => {
 
   if (loading) {
     return (
-      <div className="saved-payment-methods-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading saved cards...</p>
-        </div>
+      <div className="p-12 text-center">
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2]"></div>
+        <p className="mt-4 text-sm text-gray-500 font-[BasisGrotesquePro]">Loading saved cards...</p>
       </div>
     );
   }
 
   return (
-    <div className="saved-payment-methods-container">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="spm-header">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 sm:p-5 rounded-xl border border-[#E8F0FF] shadow-sm">
         <div>
-          <h4 className="spm-title">Saved Payment Methods</h4>
-          <p className="spm-subtitle">
+          <h4 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Saved Payment Methods</h4>
+          <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">
             Manage your saved cards for automatic subscription renewals
           </p>
         </div>
         <button
-          className="btn btn-primary btn-add-card"
+          className="w-full sm:w-auto px-5 py-2.5 !rounded-lg flex items-center justify-center gap-2 text-white font-bold shadow-sm transition-transform active:scale-95 bg-[#F97316] font-[BasisGrotesquePro]"
           onClick={() => setIsAddModalOpen(true)}
         >
-          <div className="flex items-center gap-2">
-            <PlusIcon /> <span className="text-white">Add New Card</span>
-          </div>
+          <PlusIcon /> <span>Add New Card</span>
         </button>
       </div>
 
       {/* Alerts */}
       {error && (
-        <div className="alert alert-error">
-          <span className="alert-icon"><CrossIcon /></span>
-          <div className="alert-content">
-            <p className="alert-title">Error</p>
-            <p className="alert-message">{error}</p>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+              <CrossIcon />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-red-800">Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
           </div>
-          <button
-            className="alert-close"
-            onClick={() => setError('')}
-            aria-label="Close alert"
-          >
+          <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
             <CrossIcon />
           </button>
         </div>
       )}
 
       {success && (
-        <div className="alert alert-success">
-          <span className="alert-icon"><CompletedIcon /></span>
-          <div className="alert-content">
-            <p className="alert-message">{success}</p>
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+              <CompletedIcon />
+            </div>
+            <p className="text-sm font-medium">{success}</p>
           </div>
-          <button
-            className="alert-close"
-            onClick={() => setSuccess('')}
-            aria-label="Close alert"
-          >
+          <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
             <CrossIcon />
           </button>
         </div>
@@ -243,50 +237,52 @@ const SavedPaymentMethods = () => {
 
       {/* Cards List */}
       {cards.length > 0 ? (
-        <div className="cards-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {cards.map((card) => (
-            <div key={card.id} className="card-item">
-              <div className="card-header">
-                <div className="card-brand-info">
-                  <span className="card-icon">{getCardIcon(card.brand)}</span>
-                  <div className="card-brand-text">
-                    <p className="card-brand">{card.brand?.toUpperCase() || 'Card'}</p>
-                    <p className="card-number">•••• {card.last4}</p>
+            <div key={card.id} className="bg-white border border-[#E8F0FF] rounded-xl p-5 sm:p-6 flex flex-col shadow-sm hover:shadow-md transition-all">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shadow-inner">
+                    <span className="text-2xl">{getCardIcon(card.brand)}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] uppercase tracking-wider">{card.brand || 'Card'}</p>
+                    <p className="text-base font-bold text-gray-400 font-[BasisGrotesquePro]">•••• {card.last4}</p>
                   </div>
                 </div>
 
                 {card.is_default && (
-                  <span className="badge badge-default">Default</span>
+                  <span className="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-green-100">Default</span>
                 )}
               </div>
 
-              <div className="card-details">
-                <div className="detail-row">
-                  <span className="detail-label">Expires:</span>
-                  <span className="detail-value">{formatExpiry(card.exp_month, card.exp_year)}</span>
+              <div className="space-y-3 mb-6 flex-1 py-4 border-y border-gray-50">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Expires</span>
+                  <span className="font-bold text-gray-700 font-[BasisGrotesquePro]">{formatExpiry(card.exp_month, card.exp_year)}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Added:</span>
-                  <span className="detail-value">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Added</span>
+                  <span className="font-bold text-gray-700 font-[BasisGrotesquePro]">
                     {new Date(card.created_at).toLocaleDateString()}
                   </span>
                 </div>
               </div>
 
-              <div className="card-actions">
+              <div className="flex gap-2 mt-auto">
                 {!card.is_default && (
                   <button
-                    className="btn  btn-secondary"
+                    className="flex-1 px-3 py-2 text-xs font-bold text-[#3B82F6] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-[BasisGrotesquePro]"
                     onClick={() => handleSetDefault(card.id)}
                     disabled={settingDefaultId === card.id || deletingId === card.id}
                   >
-                    {settingDefaultId === card.id ? 'Setting...' : 'Set as Default'}
+                    {settingDefaultId === card.id ? 'Setting...' : 'Set Default'}
                   </button>
                 )}
 
                 <button
-                  className="btn  btn-danger"
+                  className="flex-1 px-3 py-2 text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors font-[BasisGrotesquePro]"
                   onClick={() => handleDeleteCard(card.id)}
                   disabled={deletingId === card.id || settingDefaultId === card.id}
                 >
@@ -297,14 +293,16 @@ const SavedPaymentMethods = () => {
           ))}
         </div>
       ) : (
-        <div className="empty-state">
-          <div className="empty-icon"><BillIcon /></div>
-          <p className="empty-title">No Saved Cards</p>
-          <p className="empty-description">
+        <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-12 sm:p-16 text-center shadow-sm">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <BillIcon size={32} />
+          </div>
+          <p className="text-lg font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">No Saved Cards</p>
+          <p className="text-sm text-gray-500 mb-8 max-w-sm mx-auto font-[BasisGrotesquePro]">
             Add your first card to enable automatic billing for subscription renewals
           </p>
           <button
-            className="btn btn-primary"
+            className="px-8 py-3 bg-[#F97316] text-white rounded-lg font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-100 active:scale-95 font-[BasisGrotesquePro]"
             onClick={() => setIsAddModalOpen(true)}
           >
             Add Your First Card
@@ -313,33 +311,43 @@ const SavedPaymentMethods = () => {
       )}
 
       {/* Info Section */}
-      <div className="info-section">
-        <div className="info-card">
-          <h3 className="info-card-title flex items-center gap-2"><LockIcon /> Security</h3>
-          <p className="info-card-text">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+        <div className="bg-white p-5 rounded-xl border border-[#E8F0FF] shadow-sm">
+          <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-3 flex items-center gap-2 font-[BasisGrotesquePro]">
+            <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+              <LockIcon />
+            </div>
+            Security
+          </h3>
+          <p className="text-xs text-gray-500 leading-relaxed font-[BasisGrotesquePro]">
             Your card information is securely processed and stored by Stripe.
             We never store your full card details.
           </p>
         </div>
 
-        <div className="info-card">
-          <h3 className="info-card-title flex items-center gap-2"><SettingIcon /> Auto-Renewal</h3>
-          <p className="info-card-text">
+        <div className="bg-white p-5 rounded-xl border border-[#E8F0FF] shadow-sm">
+          <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-3 flex items-center gap-2 font-[BasisGrotesquePro]">
+            <div className="w-6 h-6 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+              <SettingIcon />
+            </div>
+            Renewal
+          </h3>
+          <p className="text-xs text-gray-500 leading-relaxed font-[BasisGrotesquePro]">
             Your default payment method will be used for automatic subscription renewals.
-            You can change or update it anytime.
+            You can change it anytime.
           </p>
         </div>
 
-        <div className="info-card">
-          <h3 className="info-card-title flex items-center gap-2">
-            <div style={{ backgroundColor: '#EF4444', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="bg-white p-5 rounded-xl border border-[#E8F0FF] shadow-sm">
+          <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-3 flex items-center gap-2 font-[BasisGrotesquePro]">
+            <div className="w-6 h-6 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
               <DelIcon />
             </div>
             Deletion
           </h3>
-          <p className="info-card-text">
+          <p className="text-xs text-gray-500 leading-relaxed font-[BasisGrotesquePro]">
             Deleted cards are removed from your account and Stripe.
-            You cannot use them for future charges.
+            They cannot be used for future charges.
           </p>
         </div>
       </div>
@@ -352,23 +360,37 @@ const SavedPaymentMethods = () => {
       />
 
       {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro' }} className="text-lg font-semibold text-gray-900">Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p className="text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            Are you sure you want to delete this card? This action cannot be undone.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} style={{ fontFamily: 'BasisGrotesquePro' }}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDelete} style={{ fontFamily: 'BasisGrotesquePro' }} disabled={deletingId}>
-            {deletingId ? 'Deleting...' : 'Delete Card'}
-          </Button>
-        </Modal.Footer>
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered contentClassName="!rounded-2xl border-none shadow-2xl overflow-hidden">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h4 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Confirm Deletion</h4>
+            <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <CrossIcon />
+            </button>
+          </div>
+
+          <div className="p-4 bg-red-50 rounded-xl border border-red-100 mb-6">
+            <p className="text-sm text-red-700 font-medium font-[BasisGrotesquePro]">
+              Are you sure you want to delete this card? This action cannot be undone and may affect active subscriptions.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg font-bold text-sm hover:bg-red-600 shadow-lg shadow-red-100 transition-all font-[BasisGrotesquePro]"
+              disabled={deletingId}
+            >
+              {deletingId ? 'Deleting...' : 'Delete Card'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

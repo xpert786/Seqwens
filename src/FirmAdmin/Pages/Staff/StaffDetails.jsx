@@ -289,6 +289,17 @@ export default function StaffDetails() {
                   </svg>
                   Edit Staff
                 </button>
+
+                {/* Permissions Button - Mobile */}
+                <button
+                  onClick={() => setShowPermissionsModal(true)}
+                  className="px-3 py-1.5 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs text-gray-700 whitespace-nowrap"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.3334 8.66566C13.3334 11.999 11.0001 13.6657 8.22675 14.6323C8.08152 14.6815 7.92377 14.6792 7.78008 14.6257C5.00008 13.6657 2.66675 11.999 2.66675 8.66566V3.999C2.66675 3.82219 2.73699 3.65262 2.86201 3.52759C2.98703 3.40257 3.1566 3.33233 3.33341 3.33233C4.66675 3.33233 6.33341 2.53233 7.49341 1.519C7.63465 1.39833 7.81432 1.33203 8.00008 1.33203C8.18585 1.33203 8.36551 1.39833 8.50675 1.519C9.67342 2.539 11.3334 3.33233 12.6667 3.33233C12.8436 3.33233 13.0131 3.40257 13.1382 3.52759C13.2632 3.65262 13.3334 3.82219 13.3334 3.999V8.66566Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Permissions
+                </button>
               </div>
             </div>
           </div>
@@ -399,13 +410,13 @@ export default function StaffDetails() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white rounded-xl border border-gray-200 p-2 mb-6">
-        <div className="flex items-center gap-2">
+      <div className="bg-white rounded-xl border border-gray-200 p-2 mb-6 overflow-x-auto custom-scrollbar">
+        <div className="flex items-center gap-2 min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 !rounded-lg text-sm font-medium transition font-[BasisGrotesquePro] ${activeTab === tab
+              className={`px-4 py-2 !rounded-lg text-sm font-medium transition font-[BasisGrotesquePro] whitespace-nowrap ${activeTab === tab
                 ? 'bg-[#3AD6F2] text-white'
                 : 'text-gray-700 hover:bg-gray-50'
                 }`}

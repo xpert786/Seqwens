@@ -196,7 +196,7 @@ export default function BusinessTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Business Hours */}
         <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF] overflow-hidden">
-          <div className="mb-4 sm:mb-5">
+          <div className="mb-4 sm:mb-5 text-center sm:text-left">
             <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
               Business Hours
             </h5>
@@ -207,8 +207,8 @@ export default function BusinessTab() {
 
           <div className="space-y-3 sm:space-y-4">
             {days.map((day) => (
-              <div key={day.key} className="flex items-center justify-between gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 min-w-0">
-                <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0">
+              <div key={day.key} className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 sm:gap-4 py-2 border-b border-gray-50 last:border-0">
+                <div className="flex items-center gap-3">
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
                       type="checkbox"
@@ -216,18 +216,18 @@ export default function BusinessTab() {
                       checked={businessHours[day.key].enabled}
                       onChange={() => toggleDay(day.key)}
                     />
-                    <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${businessHours[day.key].enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                    <div className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full px-1 transition-colors ${businessHours[day.key].enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
                       }`}>
-                      <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${businessHours[day.key].enabled ? 'translate-x-5' : 'translate-x-0'
+                      <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${businessHours[day.key].enabled ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                         }`} />
                     </div>
                   </label>
-                  <span className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 2xl:w-24 text-xs sm:text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                  <span className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro] min-w-[70px]">
                     {day.label}
                   </span>
                 </div>
                 {businessHours[day.key].enabled ? (
-                  <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 flex-shrink-0 min-w-0">
+                  <div className="flex items-center gap-2 xs:ml-auto">
                     <input
                       type="text"
                       value={formatTime12Hour(businessHours[day.key].open)}
@@ -240,10 +240,9 @@ export default function BusinessTab() {
                           }));
                         }
                       }}
-                      placeholder="09:00 am"
-                      className="w-[70px] sm:w-[75px] md:w-[85px] lg:w-[100px] xl:w-[120px] 2xl:w-[130px] !rounded-lg !border border-[#E8F0FF] px-1 sm:px-1.5 md:px-2 lg:px-2.5 xl:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] bg-white"
+                      className="w-[90px] sm:w-[100px] !rounded-lg !border border-[#E8F0FF] px-2 py-2 text-[11px] sm:text-xs text-[#3B4A66] font-medium focus:outline-none font-[BasisGrotesquePro] bg-white text-center shadow-sm"
                     />
-                    <span className="text-xs sm:text-sm text-[#1F2A55] font-[BasisGrotesquePro] flex-shrink-0">To</span>
+                    <span className="text-xs text-[#1F2A55] font-bold font-[BasisGrotesquePro]">To</span>
                     <input
                       type="text"
                       value={formatTime12Hour(businessHours[day.key].close)}
@@ -256,12 +255,11 @@ export default function BusinessTab() {
                           }));
                         }
                       }}
-                      placeholder="05:00 pm"
-                      className="w-[70px] sm:w-[75px] md:w-[85px] lg:w-[100px] xl:w-[120px] 2xl:w-[130px] !rounded-lg !border border-[#E8F0FF] px-1 sm:px-1.5 md:px-2 lg:px-2.5 xl:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] bg-white"
+                      className="w-[90px] sm:w-[100px] !rounded-lg !border border-[#E8F0FF] px-2 py-2 text-[11px] sm:text-xs text-[#3B4A66] font-medium focus:outline-none font-[BasisGrotesquePro] bg-white text-center shadow-sm"
                     />
                   </div>
                 ) : (
-                  <span className="text-xs sm:text-sm text-[#1F2A55] font-[BasisGrotesquePro] flex-shrink-0">Closed</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-400 font-[BasisGrotesquePro] xs:ml-auto pr-2 italic">Closed</span>
                 )}
               </div>
             ))}
@@ -269,8 +267,8 @@ export default function BusinessTab() {
         </div>
 
         {/* Regional Settings */}
-        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-          <div className="mb-5">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+          <div className="mb-5 text-center sm:text-left">
             <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
               Regional Settings
             </h5>
@@ -318,11 +316,11 @@ export default function BusinessTab() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-center sm:justify-end">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
         >
           {saving ? (
             <>

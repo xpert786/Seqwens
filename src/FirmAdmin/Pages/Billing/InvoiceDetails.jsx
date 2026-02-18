@@ -394,7 +394,7 @@ export default function InvoiceDetails() {
 
     const config = configs[statusLower] || { color: colorMap[statusColor] || 'bg-gray-500', text: status };
     return (
-      <span className={`${config.color} text-white px-2 py-0.5 !rounded-[10px] text-xs font-medium whitespace-nowrap`}>
+      <span className={`${config.color} text-white px-2.5 py-1 !rounded-[10px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap inline-flex items-center justify-center min-w-[80px]`}>
         {config.text}
       </span>
     );
@@ -463,7 +463,7 @@ export default function InvoiceDetails() {
   }
 
   return (
-    <div className="p-6" style={{ minHeight: '100vh' }}>
+    <div className="p-3 sm:p-4 lg:p-6" style={{ minHeight: '100vh', backgroundColor: '#F8F9FA' }}>
       {/* Back Button */}
       <div className="mb-4">
         <button
@@ -479,71 +479,68 @@ export default function InvoiceDetails() {
       </div>
 
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h4 className="text-3xl font-bold font-[BasisGrotesquePro] mb-2" style={{ color: '#1F2937' }}>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 mb-8">
+          <div className="flex-1">
+            <h4 className="text-2xl sm:text-4xl font-black font-[BasisGrotesquePro] mb-3 text-gray-900 tracking-tight">
               {invoiceData.invoiceNumber}
             </h4>
-            <div className="flex items-center gap-3">
-              <span className="text-base font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                {invoiceData.client} • ${invoiceData.amount.toLocaleString()}
+            <div className="flex flex-wrap items-center gap-3 text-gray-500">
+              <span className="text-sm sm:text-base font-bold font-[BasisGrotesquePro]">
+                {invoiceData.client} • {invoiceData.formattedAmount || `$${invoiceData.total.toLocaleString()}`}
               </span>
               {getStatusBadge(invoiceData.status, invoiceData.statusColor)}
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
             <button
               onClick={() => setShowSendModal(true)}
-              className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
+              className="flex-1 sm:flex-none px-4 py-2.5 !rounded-xl !border border-gray-200 bg-white flex items-center justify-center gap-2 hover:bg-gray-50 transition shadow-sm text-sm font-bold font-[BasisGrotesquePro]"
             >
               {getIcon('send')}
-              Send to Client
+              <span>Send</span>
             </button>
             <button
               onClick={handleDownloadPDF}
-              className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
+              className="flex-1 sm:flex-none px-4 py-2.5 !rounded-xl !border border-gray-200 bg-white flex items-center justify-center gap-2 hover:bg-gray-50 transition shadow-sm text-sm font-bold font-[BasisGrotesquePro]"
             >
               {getIcon('download')}
-              Download PDF
+              <span>PDF</span>
             </button>
             <button
               onClick={() => setShowEditModal(true)}
-              className="px-5 py-2 !rounded-lg flex items-center gap-2  !border border-gray-300 bg-white font-medium"
+              className="col-span-2 sm:col-auto px-6 py-2.5 !rounded-xl flex items-center justify-center gap-2 bg-[#F97316] text-white font-bold text-sm shadow-lg shadow-orange-100 transition-transform active:scale-95"
             >
               {getIcon('edit')}
-              Edit Invoice
+              <span>Edit Invoice</span>
             </button>
           </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h6 className="text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Total Amount</h6>
-            <p className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.formattedAmount || `$${invoiceData.total.toLocaleString()}`}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E8F0FF]">
+            <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2 font-[BasisGrotesquePro]">Total Amount</h6>
+            <p className="text-xl sm:text-2xl font-black font-[BasisGrotesquePro] text-gray-900 tracking-tight">{invoiceData.formattedAmount || `$${invoiceData.total.toLocaleString()}`}</p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h6 className="text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Paid Amount</h6>
-            <p className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#10B981' }}>{invoiceData.formattedPaidAmount || `$${invoiceData.paidAmount.toLocaleString()}`}</p>
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E8F0FF]">
+            <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2 font-[BasisGrotesquePro]">Paid Amount</h6>
+            <p className="text-xl sm:text-2xl font-black font-[BasisGrotesquePro] text-green-500 tracking-tight">{invoiceData.formattedPaidAmount || `$${invoiceData.paidAmount.toLocaleString()}`}</p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h6 className="text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Remaining Amount</h6>
-            <p className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: invoiceData.remainingAmount > 0 ? '#EF4444' : '#10B981' }}>
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E8F0FF]">
+            <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2 font-[BasisGrotesquePro]">Remaining</h6>
+            <p className={`text-xl sm:text-2xl font-black font-[BasisGrotesquePro] tracking-tight ${invoiceData.remainingAmount > 0 ? 'text-red-500' : 'text-green-500'}`}>
               ${invoiceData.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h6 className="text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Issue Date</h6>
-            <p className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.issueDate}</p>
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E8F0FF]">
+            <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2 font-[BasisGrotesquePro]">Issue Date</h6>
+            <p className="text-lg sm:text-xl font-bold font-[BasisGrotesquePro] text-gray-900 tracking-tight">{invoiceData.issueDate}</p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h6 className="text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Due Date</h6>
-            <p className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: invoiceData.isOverdue ? '#EF4444' : '#1F2937' }}>
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E8F0FF]">
+            <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2 font-[BasisGrotesquePro]">Due Date</h6>
+            <p className={`text-lg sm:text-xl font-bold font-[BasisGrotesquePro] tracking-tight ${invoiceData.isOverdue ? 'text-red-500' : 'text-gray-900'}`}>
               {invoiceData.dueDate}
-              {invoiceData.isOverdue && (
-                <span className="block text-xs text-red-500 mt-1 font-normal">Overdue</span>
-              )}
             </p>
           </div>
         </div>
@@ -555,107 +552,92 @@ export default function InvoiceDetails() {
       {/* Edit Invoice Modal */}
       {showEditModal && createPortal(
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowEditModal(false)}
         >
           <div
-            className="bg-white rounded-4 p-4"
-            style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}
+            className="bg-white rounded-2xl shadow-2xl relative max-w-[550px] w-full my-auto flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="mb-0 font-[BasisGrotesquePro]" style={{ fontWeight: 600, fontSize: '20px', color: '#3B4A66' }}>
-                Edit Invoice
-              </h5>
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9]">
+              <div>
+                <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Edit Invoice</h5>
+                <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Update invoice details and status</p>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                  <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label mb-1 font-[BasisGrotesquePro]" style={{ fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                Status
-              </label>
-              <select
-                className="form-select form-select-sm"
-                value={editFormData.status}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
-                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-              >
-                <option value="draft">Draft</option>
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="overdue">Overdue</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="partial">Partially Paid</option>
-              </select>
+            <div className="p-5 sm:p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Status</label>
+                  <select
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 !rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-[BasisGrotesquePro]"
+                    value={editFormData.status}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="partial">Partially Paid</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Paid Amount ($)</label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 !rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-[BasisGrotesquePro]"
+                    value={editFormData.paid_amount}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, paid_amount: e.target.value }))}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Due Date</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 !rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-[BasisGrotesquePro]"
+                  value={editFormData.due_date}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Internal Notes</label>
+                <textarea
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 !rounded-xl text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-[BasisGrotesquePro]"
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={4}
+                  placeholder="Enter invoice notes..."
+                />
+              </div>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label mb-1 font-[BasisGrotesquePro]" style={{ fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                Paid Amount
-              </label>
-              <input
-                type="number"
-                className="form-control form-control-sm"
-                value={editFormData.paid_amount}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, paid_amount: e.target.value }))}
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label mb-1 font-[BasisGrotesquePro]" style={{ fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                Due Date
-              </label>
-              <input
-                type="date"
-                className="form-control form-control-sm"
-                value={editFormData.due_date}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, due_date: e.target.value }))}
-                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label mb-1 font-[BasisGrotesquePro]" style={{ fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                Notes
-              </label>
-              <textarea
-                className="form-control form-control-sm"
-                value={editFormData.notes}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, notes: e.target.value }))}
-                rows={4}
-                placeholder="Enter notes..."
-                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-              />
-            </div>
-
-            <div className="d-flex justify-content-end gap-2">
+            {/* Modal Footer */}
+            <div className="flex flex-row justify-end gap-3 p-5 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
                 disabled={updating}
-                className="btn "
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  color: '#3B4A66',
-                  border: '1px solid #E8F0FF',
-                  fontFamily: 'BasisGrotesquePro',
-                  fontSize: '14px',
-                  padding: '8px 16px'
-                }}
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-gray-200 !rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all font-[BasisGrotesquePro]"
               >
                 Cancel
               </button>
@@ -663,17 +645,10 @@ export default function InvoiceDetails() {
                 type="button"
                 onClick={handleUpdateInvoice}
                 disabled={updating}
-                className="btn "
-                style={{
-                  backgroundColor: '#F56D2D',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontFamily: 'BasisGrotesquePro',
-                  fontSize: '14px',
-                  padding: '8px 16px'
-                }}
+                className="flex-1 sm:flex-none px-8 py-2.5 text-white !rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-100 active:scale-95 disabled:opacity-50 font-[BasisGrotesquePro]"
+                style={{ backgroundColor: '#F97316' }}
               >
-                {updating ? 'Updating...' : 'Update Invoice'}
+                {updating ? 'Updating...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -684,65 +659,66 @@ export default function InvoiceDetails() {
       {/* Send Invoice Modal */}
       {showSendModal && createPortal(
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowSendModal(false)}
         >
           <div
-            className="bg-white rounded-4 p-4"
-            style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}
+            className="bg-white rounded-2xl shadow-2xl relative max-w-[480px] w-full my-auto flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="mb-0 font-[BasisGrotesquePro]" style={{ fontWeight: 600, fontSize: '20px', color: '#3B4A66' }}>
-                Send Invoice to Client
-              </h5>
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9]">
+              <div>
+                <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Send Invoice</h5>
+                <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Email this invoice to your client</p>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowSendModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                  <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
             </div>
 
-            <div className="mb-3">
-              <p className="font-[BasisGrotesquePro]" style={{ fontSize: '14px', color: '#6B7280' }}>
-                Invoice will be sent to: <strong>{invoiceData.clientInfo.email}</strong>
-              </p>
+            <div className="p-5 sm:p-8 space-y-6">
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest">Recipient</p>
+                    <p className="text-sm font-bold text-blue-900">{invoiceData.clientInfo.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Custom Message</label>
+                <textarea
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 !rounded-xl text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-[BasisGrotesquePro]"
+                  value={sendMessage}
+                  onChange={(e) => setSendMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Include a personal note to the client..."
+                />
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label className="form-label mb-1 font-[BasisGrotesquePro]" style={{ fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                Custom Message (Optional)
-              </label>
-              <textarea
-                className="form-control form-control-sm"
-                value={sendMessage}
-                onChange={(e) => setSendMessage(e.target.value)}
-                rows={4}
-                placeholder="Enter a custom message to include in the email..."
-                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-              />
-            </div>
-
-            <div className="d-flex justify-content-end gap-2">
+            {/* Modal Footer */}
+            <div className="flex flex-row justify-end gap-3 p-5 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
               <button
                 type="button"
                 onClick={() => setShowSendModal(false)}
                 disabled={sending}
-                className="btn "
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  color: '#3B4A66',
-                  border: '1px solid #E8F0FF',
-                  fontFamily: 'BasisGrotesquePro',
-                  fontSize: '14px',
-                  padding: '8px 16px'
-                }}
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-gray-200 !rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all font-[BasisGrotesquePro]"
               >
                 Cancel
               </button>
@@ -750,17 +726,10 @@ export default function InvoiceDetails() {
                 type="button"
                 onClick={handleSendInvoice}
                 disabled={sending}
-                className="btn "
-                style={{
-                  backgroundColor: '#F56D2D',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontFamily: 'BasisGrotesquePro',
-                  fontSize: '14px',
-                  padding: '8px 16px'
-                }}
+                className="flex-1 sm:flex-none px-8 py-2.5 text-white !rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-100 active:scale-95 disabled:opacity-50 font-[BasisGrotesquePro]"
+                style={{ backgroundColor: '#F97316' }}
               >
-                {sending ? 'Sending...' : 'Send Invoice'}
+                {sending ? 'Sending...' : 'Send Now'}
               </button>
             </div>
           </div>

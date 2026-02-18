@@ -103,46 +103,49 @@ export default function AdvancedTab() {
       <EmailTemplatesTab />
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-2xl p-6 border border-[#E8F0FF]">
-        <div className="mb-5">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <div className="mb-5 text-left">
           <h5 className="text-lg font-semibold text-[#EF4444] mb-1">Danger Zone</h5>
           <p className="text-[15px] text-[#4B5563]">Irreversible and destructive actions</p>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-start justify-between p-4 bg-[#EF444417] rounded-lg border border-[#EF4444]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-[#EF444417] rounded-lg border border-[#EF4444] gap-4">
             <div className="flex-1">
-              <h6 className="text-sm font-medium text-[#1F2A55] mb-1">Delete Firm Account</h6>
+              <h6 className="text-sm font-bold text-[#1F2A55] mb-1">Delete Firm Account</h6>
               <p className="text-xs text-[#4B5563]">Permanently delete your firm account and all data</p>
             </div>
-            <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] rounded-lg hover:bg-red-700" style={{ borderRadius: '8px' }}>Delete Account</button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-white bg-[#EF4444] !rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+            >
+              Delete Account
+            </button>
           </div>
         </div>
       </div>
 
-     <div className="flex justify-end">
- <button
-  onClick={handleSave}
-  disabled={saving}
-  style={{ borderRadius: '8px' }}
-  className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
->
-  {saving ? (
-    <>
-      <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-      <span>Saving...</span>
-    </>
-  ) : (
-    <>
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
-      <span>Save Changes</span>
-    </>
-  )}
-</button>
-
-</div>
+      <div className="flex justify-center sm:justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+        >
+          {saving ? (
+            <>
+              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Save Changes</span>
+            </>
+          )}
+        </button>
+      </div>
 
 
       {showDeleteModal && (

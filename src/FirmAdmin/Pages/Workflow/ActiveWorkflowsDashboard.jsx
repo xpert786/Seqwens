@@ -92,27 +92,27 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
   return (
     <div className="bg-white rounded-lg border border-[#E8F0FF] p-3 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-          <div>
-            <h4 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-1 sm:mb-2 font-[BasisGrotesquePro]">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
+          <div className="flex-1">
+            <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 font-[BasisGrotesquePro]">
               Active Workflows
             </h4>
             <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">
               Monitor and manage your automated workflows
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input
               type="text"
               placeholder="Search workflows..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
+              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] w-full sm:w-48 lg:w-64"
             />
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
+              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] w-full sm:w-auto"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -203,15 +203,15 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
                   </div>
 
                   {/* Main Info Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3">
                     {/* Client/Tax Case */}
                     <div className="bg-gray-50 rounded-lg p-3" style={{ borderRadius: '8px' }}>
-                      <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Client/Tax Case</p>
-                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">
+                      <p className="text-[10px] text-gray-500 mb-1 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Client</p>
+                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
                         {taxCaseName}
                       </p>
                       {taxCaseEmail && (
-                        <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
+                        <p className="text-[11px] text-gray-500 mt-1 font-[BasisGrotesquePro] truncate">
                           {taxCaseEmail}
                         </p>
                       )}
@@ -219,36 +219,36 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
 
                     {/* Current Stage */}
                     <div className="bg-gray-50 rounded-lg p-3" style={{ borderRadius: '8px' }}>
-                      <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Current Stage</p>
-                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">
+                      <p className="text-[10px] text-gray-500 mb-1 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Current Stage</p>
+                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
                         {currentStageName}
                       </p>
                       {instance.current_stage_details?.stage_order !== undefined && (
-                        <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-                          Stage Order: {instance.current_stage_details.stage_order + 1}
+                        <p className="text-[11px] text-gray-500 mt-1 font-[BasisGrotesquePro] truncate">
+                          Stage {instance.current_stage_details.stage_order + 1}
                         </p>
                       )}
                     </div>
 
                     {/* Assigned Preparer */}
                     <div className="bg-gray-50 rounded-lg p-3" style={{ borderRadius: '8px' }}>
-                      <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Assigned Preparer</p>
-                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">
+                      <p className="text-[10px] text-gray-500 mb-1 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Assigned Preparer</p>
+                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
                         {assignedPreparer || 'Not Assigned'}
                       </p>
                     </div>
 
                     {/* Progress */}
                     <div className="bg-gray-50 rounded-lg p-3" style={{ borderRadius: '8px' }}>
-                      <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Progress</p>
+                      <p className="text-[10px] text-gray-500 mb-1 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Progress</p>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-1.5 sm:h-2">
                           <div
-                            className="bg-[#3AD6F2] h-2 rounded-full transition-all"
+                            className="bg-[#3AD6F2] h-1.5 sm:h-2 rounded-full transition-all"
                             style={{ width: `${formatProgress(instance.progress_percentage || 0)}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs font-medium text-gray-900 font-[BasisGrotesquePro]">
+                        <span className="text-[11px] font-bold text-gray-900 font-[BasisGrotesquePro]">
                           {formatProgress(instance.progress_percentage || 0)}%
                         </span>
                       </div>

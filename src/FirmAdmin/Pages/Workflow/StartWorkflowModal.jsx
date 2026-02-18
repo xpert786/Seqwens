@@ -232,15 +232,14 @@ const StartWorkflowModal = ({
     const email = (client.email || '').toLowerCase();
     return name.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
   });
-
   // Get selected template details
   const selectedTemplate = templates.find(t => t.id?.toString() === selectedTemplateId);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ zIndex: 1070 }}>
-      <div className="bg-white !rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 sm:pt-24 pt-20" style={{ zIndex: 1100 }}>
+      <div className="bg-white !rounded-xl max-w-2xl w-full max-h-[77vh] overflow-hidden shadow-2xl flex flex-col" style={{ marginTop: "100px" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#E8F0FF] flex-shrink-0">
           <div>
@@ -264,7 +263,7 @@ const StartWorkflowModal = ({
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-5 overflow-y-auto flex-1">
+        <div className="p-5 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
           {/* Client Selection or Display */}
           {clientId && clientName ? (
             <div className="bg-[#FFF4E6] !border border-[#F56D2D] border-opacity-30 !rounded-lg p-4">

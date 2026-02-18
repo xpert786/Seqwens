@@ -437,7 +437,7 @@ export default function BillingManagement() {
     const displayText = statusDisplay || config.text;
 
     return (
-      <span className={`${config.color} text-white px-2 py-0.5 !rounded-[10px] text-xs font-medium whitespace-nowrap`}>
+      <span className={`${config.color} text-white px-2.5 py-1 !rounded-[10px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap inline-flex items-center justify-center min-w-[80px]`}>
         {displayText}
       </span>
     );
@@ -446,135 +446,126 @@ export default function BillingManagement() {
   return (
     <div className="p-6 !bg-[#F3F7FF]" style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h4 className="text-3xl font-bold mb-2" style={{ color: '#1F2937' }}>
+          <h4 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 text-gray-900 font-[BasisGrotesquePro]">
             Billing & Invoicing
           </h4>
-          <p className="text-base" style={{ color: '#6B7280' }}>
+          <p className="text-sm sm:text-base text-gray-500 font-[BasisGrotesquePro]">
             Manage invoices, payments, and saved payment methods
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-row sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           {!advancedReportingEnabled && activeTab === "invoices" && (
             <button
               onClick={exportInvoicesToPDF}
-              className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
+              className="flex-1 sm:flex-none px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center justify-center gap-2 hover:bg-gray-50 transition text-sm sm:text-base font-[BasisGrotesquePro]"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Export Report
+              <span className="hidden xs:inline">Export</span>
+              <span className="xs:hidden">Report</span>
             </button>
           )}
           {activeTab === "invoices" && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="px-5 py-2 !rounded-lg flex items-center gap-2 text-white font-medium"
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2 !rounded-lg flex items-center justify-center gap-2 text-white font-medium shadow-sm transition-transform active:scale-95 text-sm sm:text-base font-[BasisGrotesquePro]"
               style={{ backgroundColor: 'var(--firm-primary-color)' }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Create Invoice
+              <span>Create Invoice</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-        <div className="flex gap-8">
-          <button
-            onClick={() => setActiveTab("invoices")}
-            className={`pb-4 px-2 font-medium transition-colors ${activeTab === "invoices"
-              ? "border-b-2 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
-              }`}
-            style={
-              activeTab === "invoices"
-                ? { borderColor: '#3B82F6', color: '#3B82F6' }
-                : {}
-            }
-          >
-            <span className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Invoices
-            </span>
-          </button>
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab("invoices")}
+          className={`px-4 sm:px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap font-[BasisGrotesquePro] ${activeTab === "invoices"
+            ? "border-[#3AD6F2] text-[#3AD6F2]"
+            : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Invoices
+          </div>
+        </button>
 
-          <button
-            onClick={() => setActiveTab("payment-methods")}
-            className={`pb-4 px-2 font-medium transition-colors ${activeTab === "payment-methods"
-              ? "border-b-2 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
-              }`}
-            style={
-              activeTab === "payment-methods"
-                ? { borderColor: '#3B82F6', color: '#3B82F6' }
-                : {}
-            }
-          >
-            <span className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h10m4 0a1 1 0 11-2 0 1 1 0 012 0zM7 6h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z" />
-              </svg>
-              Saved Cards
-            </span>
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveTab("payment-methods")}
+          className={`px-4 sm:px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap font-[BasisGrotesquePro] ${activeTab === "payment-methods"
+            ? "border-[#3AD6F2] text-[#3AD6F2]"
+            : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h10m4 0a1 1 0 11-2 0 1 1 0 012 0zM7 6h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z" />
+            </svg>
+            Saved Cards
+          </div>
+        </button>
       </div>
 
       {/* Invoices Tab */}
       {activeTab === "invoices" && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
             <div
               onClick={() => handleMetricCardClick('outstanding')}
-              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'outstanding' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+              className={`bg-white rounded-xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition-all border border-[#E8F0FF] ${activeMetricFilter === 'outstanding' ? 'border-2 !border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
                 }`}
             >
-              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Outstanding Balance</h6>
-              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+              <h6 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2 font-[BasisGrotesquePro]">Outstanding Balance</h6>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro]">
                 {formatCurrency(summary.outstanding_balance || 0)}
               </p>
             </div>
             <div
               onClick={() => handleMetricCardClick('paid')}
-              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'paid' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+              className={`bg-white rounded-xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition-all border border-[#E8F0FF] ${activeMetricFilter === 'paid' ? 'border-2 !border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
                 }`}
             >
-              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Paid This Year</h6>
-              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+              <h6 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2 font-[BasisGrotesquePro]">Paid This Year</h6>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro]">
                 {formatCurrency(summary.paid_this_year || 0)}
               </p>
             </div>
             <div
               onClick={() => handleMetricCardClick('total')}
-              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'total' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+              className={`bg-white rounded-xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition-all border border-[#E8F0FF] ${activeMetricFilter === 'total' ? 'border-2 !border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
                 }`}
             >
-              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Total Invoices</h6>
-              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+              <h6 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2 font-[BasisGrotesquePro]">Total Invoices</h6>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro]">
                 {summary.total_invoices || invoices.length}
               </p>
             </div>
             <div
               onClick={() => handleMetricCardClick('overdue')}
-              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-all ${activeMetricFilter === 'overdue' ? 'border-2 border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
+              className={`bg-white rounded-xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition-all border border-[#E8F0FF] ${activeMetricFilter === 'overdue' ? 'border-2 !border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : ''
                 }`}
             >
-              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Overdue Invoices</h6>
-              <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+              <h6 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2 font-[BasisGrotesquePro]">Overdue Invoices</h6>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro]">
                 {summary.overdue_count || 0}
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h6 className="text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Next Due Date</h6>
-              <p className="text-lg font-semibold" style={{ color: '#1F2937' }}>
+            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-[#E8F0FF] col-span-2 lg:col-span-1">
+              <h6 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2 font-[BasisGrotesquePro]">Next Due Date</h6>
+              <p className="text-lg sm:text-xl font-black text-gray-900 font-[BasisGrotesquePro]">
                 {summary.next_due_date || 'N/A'}
               </p>
             </div>
@@ -588,201 +579,201 @@ export default function BillingManagement() {
           )}
 
           {/* Invoice List */}
-          <div ref={invoiceListRef} className="bg-white rounded-lg p-6">
-            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          {/* Invoice List */}
+          <div ref={invoiceListRef} className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-[#E8F0FF]">
+            <div className="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div>
-                <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
+                <h5 className="text-lg sm:text-xl font-bold mb-1 text-gray-900 font-[BasisGrotesquePro]">
                   All Invoices ({invoices.length})
                 </h5>
-                <p className="text-sm" style={{ color: '#6B7280' }}>
+                <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">
                   Complete list of invoices with payment status and details
                 </p>
               </div>
 
-              <div className="flex items-start gap-3 justify-end ml-auto">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Issue Date:</span>
-                  <DatePicker
-                    value={filters.issue_date}
-                    onChange={(e) => setFilters(prev => ({ ...prev, issue_date: e.target.value }))}
-                    placeholder="Select Date"
-                    className="w-[150px] !border border-[#E8F0FF] rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap font-[BasisGrotesquePro]">Issue:</span>
+                  <div className="flex-1 sm:w-[130px]">
+                    <DatePicker
+                      value={filters.issue_date}
+                      onChange={(e) => setFilters(prev => ({ ...prev, issue_date: e.target.value }))}
+                      placeholder="Select Date"
+                      className="w-full !border border-[#E8F0FF] rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Due Date:</span>
+                <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap font-[BasisGrotesquePro]">Due:</span>
+                  <div className="flex-1 sm:w-[130px]">
                     <DatePicker
                       value={filters.due_date}
                       onChange={(e) => setFilters(prev => ({ ...prev, due_date: e.target.value }))}
                       placeholder="Select Date"
-                      className="w-[150px] !border border-[#E8F0FF] rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full !border border-[#E8F0FF] rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
                     />
                   </div>
-                  {invoices.length > itemsPerPage && (
-                    <div className="text-[10px] text-gray-500 pr-1">
-                      Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
-                    </div>
-                  )}
                 </div>
                 {(filters.status || filters.client_id || filters.issue_date || filters.due_date) && (
                   <button
                     onClick={() => setFilters({ status: "", client_id: "", issue_date: "", due_date: "" })}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors py-1.5"
+                    className="text-xs text-blue-600 hover:text-blue-800 font-bold transition-colors py-1.5 text-center sm:text-right"
                   >
-                    Reset Filters
+                    Reset
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Loading State */}
+            {/* Loading/Empty State */}
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-4 text-sm" style={{ color: '#6B7280' }}>Loading invoices...</p>
+              <div className="text-center py-20">
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2]"></div>
+                <p className="mt-4 text-sm text-gray-500 font-[BasisGrotesquePro]">Loading invoices...</p>
               </div>
             ) : invoices.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-sm" style={{ color: '#6B7280' }}>No invoices found</p>
+              <div className="p-12 sm:p-20 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </div>
+                <p className="text-gray-500 font-[BasisGrotesquePro]">No invoices found</p>
               </div>
             ) : (
-              /* Table */
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: '#E5E7EB' }}>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Invoice #</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Client</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Amount</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Paid</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Remaining</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Issue Date</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Due Date</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium" style={{ color: '#6B7280' }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedInvoices.map((invoice) => {
-                      // Map API response fields to display fields
-                      const invoiceNumber = invoice.invoice_number || invoice.invoiceNumber || `INV-${invoice.id}`;
-                      const clientName = invoice.client_name ||
-                        (invoice.client ? `${invoice.client.first_name || ''} ${invoice.client.last_name || ''}`.trim() : '') ||
-                        invoice.client || 'N/A';
-                      const amount = parseFloat(invoice.amount || invoice.total_amount || 0);
-                      const paidAmount = parseFloat(invoice.paid_amount || 0);
-                      const remainingAmount = parseFloat(invoice.remaining_amount || invoice.remainingAmount || amount - paidAmount);
-                      const issueDate = invoice.formatted_issue_date || formatDate(invoice.issue_date || invoice.issueDate);
-                      const dueDate = invoice.formatted_due_date || formatDate(invoice.due_date || invoice.dueDate);
-                      const description = invoice.description || '';
+              <>
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: '#E8F0FF' }}>
+                        <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Invoice #</th>
+                        <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Client</th>
+                        <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Amount</th>
+                        <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Remaining</th>
+                        <th className="text-center py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Status</th>
+                        <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Due Date</th>
+                        <th className="text-right py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {paginatedInvoices.map((invoice) => {
+                        const invoiceNumber = invoice.invoice_number || invoice.invoiceNumber || `INV-${invoice.id}`;
+                        const clientName = invoice.client_name || (invoice.client ? `${invoice.client.first_name || ''} ${invoice.client.last_name || ''}`.trim() : '') || invoice.client || 'N/A';
+                        const amount = parseFloat(invoice.amount || invoice.total_amount || 0);
+                        const paidAmount = parseFloat(invoice.paid_amount || 0);
+                        const remainingAmount = parseFloat(invoice.remaining_amount || invoice.remainingAmount || amount - paidAmount);
+                        const dueDate = invoice.formatted_due_date || formatDate(invoice.due_date || invoice.dueDate);
 
-                      return (
-                        <tr
-                          key={invoice.id}
-                          onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
-                          className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                          style={{ borderColor: '#F3F4F6' }}
-                        >
-                          <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
-                            {invoiceNumber}
-                          </td>
-                          <td className="py-4 px-4 text-sm" style={{ color: '#1F2937' }}>
-                            {clientName}
-                          </td>
-                          <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
-                            {formatCurrency(amount)}
-                          </td>
-                          <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
-                            {formatCurrency(paidAmount)}
-                          </td>
-                          <td className="py-4 px-4 text-sm font-medium" style={{ color: remainingAmount > 0 ? '#EF4444' : '#22C55E' }}>
-                            {formatCurrency(remainingAmount)}
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            {getStatusBadge(invoice)}
-                          </td>
-                          <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
-                            {issueDate}
-                          </td>
-                          <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
-                            {dueDate}
-                          </td>
-                          <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
-                              className="p-2 hover:bg-gray-100 !rounded-lg transition"
-                              title="View Details"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#3B82F6' }}>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        return (
+                          <tr
+                            key={invoice.id}
+                            onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
+                            className="hover:bg-[#F9FBFF] transition-colors cursor-pointer"
+                          >
+                            <td className="py-4 px-4 text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">{invoiceNumber}</td>
+                            <td className="py-4 px-4 text-sm text-gray-600 font-[BasisGrotesquePro]">{clientName}</td>
+                            <td className="py-4 px-4 text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">{formatCurrency(amount)}</td>
+                            <td className={`py-4 px-4 text-sm font-bold font-[BasisGrotesquePro] ${remainingAmount > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                              {formatCurrency(remainingAmount)}
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              {getStatusBadge(invoice)}
+                            </td>
+                            <td className="py-4 px-4 text-sm text-gray-500 font-[BasisGrotesquePro]">{dueDate}</td>
+                            <td className="py-4 px-4 text-right">
+                              <button className="p-2 hover:bg-white !rounded-lg text-[#3AD6F2] transition-colors shadow-sm">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4">
+                  {paginatedInvoices.map((invoice) => {
+                    const invoiceNumber = invoice.invoice_number || invoice.invoiceNumber || `INV-${invoice.id}`;
+                    const clientName = invoice.client_name || (invoice.client ? `${invoice.client.first_name || ''} ${invoice.client.last_name || ''}`.trim() : '') || invoice.client || 'N/A';
+                    const amount = parseFloat(invoice.amount || invoice.total_amount || 0);
+                    const paidAmount = parseFloat(invoice.paid_amount || 0);
+                    const remainingAmount = parseFloat(invoice.remaining_amount || invoice.remainingAmount || amount - paidAmount);
+                    const dueDate = invoice.formatted_due_date || formatDate(invoice.due_date || invoice.dueDate);
+
+                    return (
+                      <div
+                        key={invoice.id}
+                        onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
+                        className="p-4 border border-[#E8F0FF] rounded-xl bg-white shadow-sm active:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <span className="text-sm font-black text-gray-900 font-[BasisGrotesquePro]">{invoiceNumber}</span>
+                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">{clientName}</p>
+                          </div>
+                          {getStatusBadge(invoice)}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-50">
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Due Date</p>
+                            <p className="text-xs font-medium text-gray-700 font-[BasisGrotesquePro]">{dueDate}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Balance</p>
+                            <p className={`text-sm font-black font-[BasisGrotesquePro] ${remainingAmount > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                              {formatCurrency(remainingAmount)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             {/* Pagination Controls */}
             {!loading && invoices.length > itemsPerPage && (
-              <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: '#E5E7EB' }}>
-                <div className="flex items-center gap-2">
+              <div className="mt-6 flex flex-row items-center justify-between gap-2 border-t pt-6 flex-nowrap overflow-hidden" style={{ borderColor: '#E8F0FF' }}>
+                <div className="text-[9px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro] flex-shrink-0">
+                  <span className="hidden xs:inline">Showing </span>
+                  <span className="text-gray-900">{startIndex + 1}-{Math.min(endIndex, invoices.length)}</span>
+                  <span className="hidden xs:inline"> of </span>
+                  <span className="xs:hidden"> / </span>
+                  <span className="text-gray-900">{invoices.length}</span>
+                  <span className="hidden md:inline font-black"> Invoices</span>
+                </div>
+
+                <div className="flex flex-row items-center gap-1 sm:gap-2 flex-nowrap ml-auto">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
-                      color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
-                      backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white'
-                    }}
+                    className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0 !rounded-lg sm:!rounded-xl border border-gray-100 bg-white text-gray-400 hover:text-gray-900 disabled:opacity-30 transition-all shadow-sm"
                   >
-                    Previous
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                   </button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-row items-center gap-1 flex-nowrap">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                      // Show first page, last page, current page, and pages around current
-                      if (
-                        page === 1 ||
-                        page === totalPages ||
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      ) {
+                      const isAround = page >= currentPage - 1 && page <= currentPage + 1;
+                      const isEdge = page === 1 || page === totalPages;
+
+                      if (isEdge || isAround) {
                         return (
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-2 !rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                              ? 'text-white'
-                              : 'border'
+                            className={`w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0 !rounded-lg sm:!rounded-xl text-[10px] sm:text-sm font-black transition-all ${currentPage === page
+                              ? 'bg-[#3AD6F2] text-white shadow-lg shadow-blue-100'
+                              : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'
                               }`}
-                            style={
-                              currentPage === page
-                                ? { backgroundColor: '#3B82F6' }
-                                : {
-                                  borderColor: '#D1D5DB',
-                                  color: '#6B7280',
-                                  backgroundColor: 'white'
-                                }
-                            }
                           >
                             {page}
                           </button>
                         );
-                      } else if (
-                        page === currentPage - 2 ||
-                        page === currentPage + 2
-                      ) {
-                        return (
-                          <span key={page} className="px-2 text-sm" style={{ color: '#6B7280' }}>
-                            ...
-                          </span>
-                        );
+                      } else if (page === currentPage - 2 || page === currentPage + 2) {
+                        return <span key={page} className="px-0.5 text-gray-300 font-bold text-[10px] flex-shrink-0">..</span>;
                       }
                       return null;
                     })}
@@ -791,19 +782,10 @@ export default function BillingManagement() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
-                      color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
-                      backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white'
-                    }}
+                    className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0 !rounded-lg sm:!rounded-xl border border-gray-100 bg-white text-gray-400 hover:text-gray-900 disabled:opacity-30 transition-all shadow-sm"
                   >
-                    Next
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                   </button>
-                </div>
-
-                <div className="text-sm" style={{ color: '#6B7280' }}>
-                  Page {currentPage} of {totalPages}
                 </div>
               </div>
             )}

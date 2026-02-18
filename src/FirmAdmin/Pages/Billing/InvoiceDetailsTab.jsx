@@ -1,4 +1,4 @@
-import {SmIcon} from "../../Components/icons";
+import { SmIcon } from "../../Components/icons";
 export default function InvoiceDetailsTab({ invoiceData }) {
   const getIcon = (iconName) => {
     const icons = {
@@ -8,7 +8,7 @@ export default function InvoiceDetailsTab({ invoiceData }) {
         </svg>
       ),
       building: (
-       <SmIcon/>
+        <SmIcon />
       ),
       location: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@ export default function InvoiceDetailsTab({ invoiceData }) {
       blue: 'bg-blue-500',
       gray: 'bg-gray-500'
     };
-    
+
     const configs = {
       paid: { color: statusColor === 'green' ? colorMap.green : 'bg-green-500', text: 'Paid' },
       sent: { color: statusColor === 'blue' ? colorMap.blue : 'bg-blue-500', text: 'Sent' },
@@ -51,56 +51,56 @@ export default function InvoiceDetailsTab({ invoiceData }) {
       partial: { color: statusColor === 'orange' ? colorMap.orange : 'bg-orange-500', text: 'Partially Paid' },
       cancelled: { color: statusColor === 'gray' ? colorMap.gray : 'bg-gray-500', text: 'Cancelled' }
     };
-    
+
     const config = configs[statusLower] || { color: colorMap[statusColor] || 'bg-gray-500', text: status };
     return (
-      <span className={`${config.color} text-white px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium`}>
+      <span className={`${config.color} text-white px-3 py-1 rounded-full inline-flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest min-w-[90px]`}>
         {config.text}
       </span>
     );
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
       {/* Left: Invoice Items */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h6 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Invoice Items</h6>
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-[#E8F0FF] flex flex-col">
+        <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-6 font-[BasisGrotesquePro]">Invoice Items</h6>
+        <div className="overflow-x-auto -mx-2 sm:mx-0">
           <table className="w-full">
             <thead>
-              <tr className="border-b" style={{ borderColor: '#E5E7EB' }}>
-                <th className="text-left py-3 px-4 text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Description</th>
-                <th className="text-right py-3 px-4 text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Amount</th>
+              <tr className="border-b-2 border-[#F8FAFC]">
+                <th className="text-left py-3 px-2 sm:px-4 text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Description</th>
+                <th className="text-right py-3 px-2 sm:px-4 text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Amount</th>
               </tr>
             </thead>
             <tbody>
               {invoiceData.items && invoiceData.items.length > 0 ? (
                 invoiceData.items.map((item, idx) => (
-                  <tr key={idx} className="border-b" style={{ borderColor: '#F3F4F6' }}>
-                    <td className="py-4 px-4 text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{item.description}</td>
-                    <td className="py-4 px-4 text-right text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${item.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+                  <tr key={idx} className="border-b border-[#F8FAFC] group hover:bg-gray-50/50 transition-colors">
+                    <td className="py-4 px-2 sm:px-4 text-sm font-bold text-gray-700 font-[BasisGrotesquePro]">{item.description}</td>
+                    <td className="py-4 px-2 sm:px-4 text-right text-sm font-black text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">${item.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="2" className="py-4 px-4 text-center text-sm text-gray-500 font-[BasisGrotesquePro]">No items found</td>
+                  <td colSpan="2" className="py-8 px-4 text-center text-sm text-gray-400 font-[BasisGrotesquePro]">No items listed in this invoice</td>
                 </tr>
               )}
             </tbody>
-            <tfoot>
-              <tr className="border-t-2" style={{ borderColor: '#E5E7EB' }}>
-                <td className="py-4 px-4 text-left text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Subtotal:</td>
-                <td className="py-4 px-4 text-right text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+            <tfoot className="bg-gray-50/50">
+              <tr className="border-t border-[#E2E8F0]">
+                <td className="py-3 px-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Subtotal</td>
+                <td className="py-3 px-4 text-right text-sm font-bold text-gray-700 font-[BasisGrotesquePro]">${invoiceData.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
               </tr>
               {invoiceData.tax > 0 && (
-                <tr className="border-t" style={{ borderColor: '#E5E7EB' }}>
-                  <td className="py-4 px-4 text-left text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Tax:</td>
-                  <td className="py-4 px-4 text-right text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.tax?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+                <tr className="border-t border-[#F1F5F9]">
+                  <td className="py-3 px-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Tax</td>
+                  <td className="py-3 px-4 text-right text-sm font-bold text-gray-700 font-[BasisGrotesquePro]">${invoiceData.tax?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
                 </tr>
               )}
-              <tr>
-                <td className="py-4 px-4 text-left text-lg font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Total:</td>
-                <td className="py-4 px-4 text-right text-lg font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+              <tr className="border-t-2 border-[#E2E8F0]">
+                <td className="py-5 px-4 text-right text-sm font-black text-gray-900 uppercase tracking-widest font-[BasisGrotesquePro]">Total Amount</td>
+                <td className="py-5 px-4 text-right text-xl font-black text-gray-900 font-[BasisGrotesquePro]">${invoiceData.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
               </tr>
             </tfoot>
           </table>
@@ -108,89 +108,108 @@ export default function InvoiceDetailsTab({ invoiceData }) {
       </div>
 
       {/* Right: Client Info & Invoice Details */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Client Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h6 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Client Information</h6>
-          <div className="space-y-3">
-            <p className="text-lg font-bold font-[BasisGrotesquePro] mb-3" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.name}</p>
-            {invoiceData.clientInfo.address && (
-              <div className="flex items-center gap-3">
-                <div style={{ color: '#3AD6F2' }}>
-                  {getIcon('location')}
+        <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-[#E8F0FF]">
+          <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-6 font-[BasisGrotesquePro]">Client Information</h6>
+          <div className="space-y-5">
+            <div>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro] leading-tight">{invoiceData.clientInfo.name}</p>
+              {invoiceData.clientInfo.company && <p className="text-sm font-bold text-gray-500 mt-1 font-[BasisGrotesquePro]">{invoiceData.clientInfo.company}</p>}
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-[#F8FAFC]">
+              {invoiceData.clientInfo.address && (
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                    {getIcon('location')}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Billing Address</p>
+                    <p className="text-sm sm:text-base font-bold text-gray-700 font-[BasisGrotesquePro] leading-relaxed">{invoiceData.clientInfo.address}</p>
+                  </div>
                 </div>
-                <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.address}</p>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {invoiceData.clientInfo.email && (
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+                      {getIcon('email')}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Email</p>
+                      <p className="text-sm font-bold text-gray-700 font-[BasisGrotesquePro] break-all">{invoiceData.clientInfo.email}</p>
+                    </div>
+                  </div>
+                )}
+
+                {invoiceData.clientInfo.phone && (
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-500 shrink-0">
+                      {getIcon('phone')}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Phone</p>
+                      <p className="text-sm font-bold text-gray-700 font-[BasisGrotesquePro]">{invoiceData.clientInfo.phone}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            {invoiceData.clientInfo.email && (
-              <div className="flex items-center gap-3">
-                <div style={{ color: '#3AD6F2' }}>
-                  {getIcon('email')}
-                </div>
-                <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.email}</p>
-              </div>
-            )}
-            {invoiceData.clientInfo.phone && (
-              <div className="flex items-center gap-3">
-                <div style={{ color: '#3AD6F2' }}>
-                  {getIcon('phone')}
-                </div>
-                <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.phone}</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
         {/* Invoice Details */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h6 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Invoice Details</h6>
+        <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-[#E8F0FF]">
+          <h6 className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-6 font-[BasisGrotesquePro]">Invoice Details</h6>
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Invoice Number:</p>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.invoiceDetails.invoiceNumber}</p>
+            <div className="flex justify-between items-center py-3 border-b border-[#F8FAFC]">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Invoice Number</p>
+              <p className="text-sm sm:text-base font-black text-gray-900 font-[BasisGrotesquePro]">{invoiceData.invoiceDetails.invoiceNumber}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Assigned To:</p>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.invoiceDetails.assignedTo}</p>
+            <div className="flex justify-between items-center py-3 border-b border-[#F8FAFC]">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Created By</p>
+              <p className="text-sm sm:text-base font-bold text-gray-700 font-[BasisGrotesquePro]">{invoiceData.invoiceDetails.assignedTo}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Firm:</p>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.rawData?.firm_name || 'N/A'}</p>
+            <div className="flex justify-between items-center py-3 border-b border-[#F8FAFC]">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Firm Provider</p>
+              <p className="text-sm sm:text-base font-bold text-gray-700 font-[BasisGrotesquePro]">{invoiceData.rawData?.firm_name || 'N/A'}</p>
             </div>
-            {/* Partial Payment Information */}
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Partial Payment:</p>
-              <div className="text-right">
-                {invoiceData.paidAmount > 0 ? (
-                  <>
-                    <p className="text-base font-bold font-[BasisGrotesquePro]" style={{ color: '#10B981' }}>
-                      Paid: {invoiceData.formattedPaidAmount || `$${invoiceData.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                    </p>
-                    {invoiceData.remainingAmount > 0 && (
-                      <p className="text-sm font-[BasisGrotesquePro]" style={{ color: '#EF4444' }}>
-                        Remaining: ${invoiceData.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>No payment received</p>
-                )}
+
+            {/* Payment Summary */}
+            <div className="py-4 bg-gray-50/50 rounded-xl px-4 mt-2">
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Payment Status</p>
+                {getStatusBadge(invoiceData.invoiceDetails.status.toLowerCase(), invoiceData.statusColor)}
+              </div>
+              <div className="flex justify-between items-end mt-4">
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Paid Amount</p>
+                  <p className="text-lg font-black text-green-500 font-[BasisGrotesquePro]">
+                    {invoiceData.formattedPaidAmount || `$${invoiceData.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Balance Due</p>
+                  <p className={`text-lg font-black font-[BasisGrotesquePro] ${invoiceData.remainingAmount > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    ${invoiceData.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                </div>
               </div>
             </div>
+
             {invoiceData.rawData?.notes && (
-              <div className="flex justify-between items-start">
-                <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Notes:</p>
-                <p className="text-base font-[BasisGrotesquePro] text-right flex-1 ml-4" style={{ color: '#1F2937' }}>{invoiceData.rawData.notes}</p>
+              <div className="pt-4 mt-2">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 font-[BasisGrotesquePro]">Internal Notes</p>
+                <div className="p-3 bg-yellow-50/50 border border-yellow-100/50 rounded-xl">
+                  <p className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] leading-relaxed italic">"{invoiceData.rawData.notes}"</p>
+                </div>
               </div>
             )}
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Status:</p>
-              {getStatusBadge(invoiceData.invoiceDetails.status.toLowerCase(), invoiceData.statusColor)}
-            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

@@ -1463,7 +1463,7 @@ export default function SecurityCompliance() {
                                                     setSelectedCompliance(detail);
                                                     setIsReviewModalOpen(true);
                                                 }}
-                                                className="inline-flex items-center rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
+                                                className="inline-flex items-center rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white transition-colors"
                                                 style={{ borderRadius: '8px' }}
                                                 type="button"
                                             >
@@ -2580,19 +2580,19 @@ export default function SecurityCompliance() {
     };
 
     const renderGeoRestrictions = () => (
-        <div className="rounded-xl bg-white p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
+        <div className="rounded-xl bg-white p-4 sm:p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
             {/* Header */}
             <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                     <div className="flex items-center gap-3">
-                        <FiGlobe className="text-[#3B4A66]" size={28} />
-                        <h3 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        <FiGlobe className="text-[#3B4A66] shrink-0" size={28} />
+                        <h3 className="text-xl sm:text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
                             Geo Restrictions
                         </h3>
                     </div>
                     <button
                         onClick={() => handleOpenGeoRestrictionModal()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors"
                         style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                     >
                         <FiGlobe size={16} />
@@ -2608,7 +2608,7 @@ export default function SecurityCompliance() {
             {geoRestrictionsError && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center gap-2">
-                        <FiAlertCircle className="text-red-600" size={20} />
+                        <FiAlertCircle className="text-red-600 shrink-0" size={20} />
                         <p className="text-red-700 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>{geoRestrictionsError}</p>
                     </div>
                 </div>
@@ -2625,40 +2625,39 @@ export default function SecurityCompliance() {
                     </div>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
                     {/* Regions List */}
                     {geoLocationsList.map((region) => {
                         const restriction = geoRestrictionsList.find(r => r.region_code === region.region_code);
                         return (
                             <div
                                 key={region.region_code}
-                                className="border border-[#E8F0FF] rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                                style={{ borderRadius: '8px' }}
+                                className="border border-[#E8F0FF] rounded-lg p-4 sm:p-5 hover:bg-gray-50 transition-colors"
+                                style={{ borderRadius: '10px' }}
                             >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h4 className="text-lg font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <h4 className="text-lg font-bold text-[#1F2A55] truncate" style={{ fontFamily: 'BasisGrotesquePro' }}>
                                                 {region.region_name}
                                             </h4>
-
                                         </div>
                                         {restriction ? (
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                                    Session Timeout: <span className="font-semibold text-[#1F2A55]">{restriction.session_timeout_minutes} minutes ({restriction.session_timeout_hours} hours)</span>
+                                            <div className="space-y-2">
+                                                <p className="text-sm text-[#4B5563]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    Session Timeout: <span className="font-bold text-[#3AD6F2]">{restriction.session_timeout_minutes}m ({restriction.session_timeout_hours}h)</span>
                                                 </p>
                                                 {restriction.description && (
-                                                    <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    <p className="text-sm text-[#6B7280] line-clamp-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                                                         {restriction.description}
                                                     </p>
                                                 )}
                                                 {restriction.country_codes && restriction.country_codes.length > 0 && (
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <span className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Countries:</span>
-                                                        <div className="flex flex-wrap gap-1">
+                                                    <div className="flex items-start gap-2 mt-3">
+                                                        <span className="text-[10px] uppercase font-bold text-[#9CA3AF] mt-1 shrink-0">Countries:</span>
+                                                        <div className="flex flex-wrap gap-1.5">
                                                             {restriction.country_codes.map((code) => (
-                                                                <span key={code} className="px-2 py-1 text-xs bg-[#E8F0FF] text-[#3B4A66] rounded" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '4px' }}>
+                                                                <span key={code} className="px-2 py-0.5 text-[10px] font-bold bg-[#F3F7FF] text-[#3AD6F2] border border-[#E8F0FF] rounded" style={{ borderRadius: '4px' }}>
                                                                     {code}
                                                                 </span>
                                                             ))}
@@ -2667,16 +2666,16 @@ export default function SecurityCompliance() {
                                                 )}
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                                Default Timeout: {region.default_timeout_minutes} minutes
+                                            <p className="text-sm text-[#6B7280] italic" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                Default Timeout: <span className="text-[#1F2A55] font-medium">{region.default_timeout_minutes} minutes</span>
                                             </p>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-2 ml-4">
+                                    <div className="flex flex-row sm:flex-row items-center gap-2 shrink-0">
                                         <button
                                             onClick={() => handleOpenGeoRestrictionModal(region)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors"
-                                            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 px-5 py-2.5 bg-[#F3F7FF] text-[#3AD6F2] text-sm font-bold rounded-lg hover:bg-[#E8F0FF] transition-all"
+                                            style={{ borderRadius: '8px' }}
                                         >
                                             {restriction ? 'Edit' : 'Configure'}
                                         </button>
@@ -2684,10 +2683,10 @@ export default function SecurityCompliance() {
                                             <button
                                                 onClick={() => handleDeleteGeoRestriction(restriction.id)}
                                                 disabled={deletingGeoRestrictionId === restriction.id}
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
-                                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                                className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-500 text-sm font-bold rounded-lg hover:bg-red-100 transition-all disabled:opacity-50"
+                                                style={{ borderRadius: '8px' }}
                                             >
-                                                {deletingGeoRestrictionId === restriction.id ? 'Deleting...' : 'Delete'}
+                                                {deletingGeoRestrictionId === restriction.id ? '...' : 'Delete'}
                                             </button>
                                         )}
                                     </div>
@@ -2710,14 +2709,21 @@ export default function SecurityCompliance() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-[#E5E7EB]">
-                            <h3 className="text-xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                {selectedGeoRegion ? `Configure ${selectedGeoRegion.region_name || selectedGeoRegion.region_code}` : 'Add Geo Restriction'}
-                            </h3>
+                        <div className="sticky top-0 bg-white p-4 sm:p-6 border-b border-[#E8F0FF] z-10 rounded-t-xl relative">
+                            <div className="pr-12 flex-1">
+                                <h3 className="text-[18px] sm:text-[20px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
+                                    {selectedGeoRegion ? `${selectedGeoRegion.region_name || selectedGeoRegion.region_code}` : 'Add Geo Restriction'}
+                                </h3>
+                                <p className="text-[11px] sm:text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-1">
+                                    Configure regional session security settings
+                                </p>
+                            </div>
                             <button
                                 onClick={() => !savingGeoRestriction && setShowGeoRestrictionModal(false)}
-                                className="text-[#6B7280] hover:text-[#1F2937] transition-colors"
+                                className="absolute top-3 right-3 sm:top-5 sm:right-5 w-10 h-10 flex items-center justify-center rounded-full bg-[#F3F7FF] hover:bg-[#E8F0FF] text-[#3AD6F2] transition-colors shrink-0"
+                                style={{ borderRadius: '50%' }}
                                 disabled={savingGeoRestriction}
+                                type="button"
                             >
                                 <FiX size={24} />
                             </button>
@@ -2923,7 +2929,7 @@ export default function SecurityCompliance() {
                                 onClick={() => !savingGeoRestriction && setShowGeoRestrictionModal(false)}
                                 disabled={savingGeoRestriction}
                                 className="px-4 py-2 border border-[#E5E7EB] bg-white text-[#3B4A66] text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
                             >
                                 Cancel
                             </button>
@@ -2969,64 +2975,57 @@ export default function SecurityCompliance() {
 
         return (
             <div
-                className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50"
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    zIndex: 9999
-                }}
+                className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50"
                 onClick={() => setIsReviewModalOpen(false)}
             >
                 <div
-                    className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col mx-auto"
-                    style={{
-                        maxWidth: '672px',
-                        position: 'relative',
-                        zIndex: 10000,
-                        borderRadius: '12px'
-                    }}
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4 custom-scrollbar"
+                    style={{ borderRadius: '12px' }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Modal Header */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-[#E5E7EB] gap-2 sm:gap-0 sticky top-0 bg-white z-10 rounded-t-xl">
-                        <div className="flex-1 min-w-0">
-                            <p className="text-lg sm:text-xl font-semibold text-gray-600 truncate">
+                    {/* Modal Header - Sticky */}
+                    <div className="sticky top-0 bg-white flex items-center justify-between p-6 border-b border-[#E8F0FF] z-10 rounded-t-2xl">
+                        <div>
+                            <h3 className="text-[22px] font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
                                 Review: {selectedCompliance.client}
-                            </p>
-                            <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
+                            </h3>
+                            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro] mt-1">
                                 Last updated: {selectedCompliance.lastUpdated}
                             </p>
                         </div>
                         <button
                             onClick={() => setIsReviewModalOpen(false)}
-                            className="text-[#6B7280] hover:text-[#1F2937] transition-colors bg-[#E8F0FF] rounded-full p-2 flex-shrink-0 ml-auto sm:ml-0"
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F3F7FF] hover:bg-[#E8F0FF] text-[#3AD6F2] transition-colors"
                             type="button"
-                            aria-label="Close modal"
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
                         </button>
                     </div>
 
                     {/* Modal Body */}
-                    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
+                    <div className="p-6 space-y-6">
                         {/* Checklist Section */}
-                        <div>
-                            <p className="text-sm font-medium text-gray-600 mb-3">Checklist</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                {['eic', 'ctc', 'hoh'].map((item) => (
-                                    <label key={item} className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={checklistItems[item]}
-                                            onChange={() => handleChecklistChange(item)}
-                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
-                                        />
-                                        <span className="text-sm text-[#4B5563] ml-2">{item.toUpperCase()}</span>
+                        <div className="bg-[#F8FAFF] rounded-xl p-4 border border-[#E8F0FF]">
+                            <p className="text-sm font-bold text-[#3B4A66] mb-4 font-[BasisGrotesquePro]">Compliance Checklist</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                {[
+                                    { id: 'eic', label: 'EIC Eligibility' },
+                                    { id: 'ctc', label: 'CTC Verification' },
+                                    { id: 'hoh', label: 'HOH Status' }
+                                ].map((item) => (
+                                    <label key={item.id} className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={checklistItems[item.id]}
+                                                onChange={() => handleChecklistChange(item.id)}
+                                                className="peer h-5 w-5 rounded border-[#E8F0FF] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-offset-0 transition-all cursor-pointer"
+                                            />
+                                        </div>
+                                        <span className="text-sm font-medium text-[#4B5563] group-hover:text-[#3AD6F2] transition-colors">{item.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -3034,23 +3033,23 @@ export default function SecurityCompliance() {
 
                         {/* Notes Section */}
                         <div>
-                            <p className="text-sm font-medium text-gray-600 mb-3">Notes</p>
+                            <p className="text-sm font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Review Notes</p>
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                placeholder="Add internal notes..."
+                                placeholder="Add internal notes for this compliance review..."
                                 rows={4}
-                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 resize-none"
+                                className="w-full rounded-xl border border-[#E8F0FF] px-4 py-3 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-4 focus:ring-[#3AD6F2]/10 transition-all resize-none font-[BasisGrotesquePro]"
                             />
                         </div>
 
                         {/* Add Files Section */}
                         <div>
-                            <p className="text-sm font-medium text-gray-600 mb-3">Add Files</p>
+                            <p className="text-sm font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Supporting Documents</p>
                             <div
                                 onDrop={handleFileDrop}
                                 onDragOver={handleFileDragOver}
-                                className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-[#3AD6F2] transition-colors bg-[#F8FAFF]"
+                                className="border-2 border-dashed border-[#E8F0FF] rounded-xl p-8 text-center cursor-pointer hover:border-[#3AD6F2] hover:bg-[#F3F7FF] transition-all bg-[#F8FAFF] group"
                                 onClick={() => document.getElementById('file-upload').click()}
                             >
                                 <input
@@ -3060,45 +3059,55 @@ export default function SecurityCompliance() {
                                     onChange={handleFileUpload}
                                     className="hidden"
                                 />
-                                <div className="flex flex-col items-center gap-2">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#9CA3AF]">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
-                                        <path d="M12 8V16M12 8L9 11M12 8L15 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                    <p className="text-sm text-[#4B5563] font-medium">
-                                        Drop files here or click to browse
-                                    </p>
-                                    <p className="text-xs text-[#9CA3AF]">
-                                        {uploadedFiles.length > 0 ? `${uploadedFiles.length} file(s) uploaded` : 'No file uploaded'}
-                                    </p>
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#9CA3AF] group-hover:text-[#3AD6F2] group-hover:scale-110 transition-all shadow-sm">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-[#4B5563] font-bold">
+                                            Drop files here or click to browse
+                                        </p>
+                                        <p className="text-xs text-[#9CA3AF] mt-1">
+                                            {uploadedFiles.length > 0 ? `${uploadedFiles.length} file(s) ready to upload` : 'PDF, JPG, PNG up to 10MB'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Modal Footer */}
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-4 sm:p-6 border-t border-[#E5E7EB] sticky bottom-0 bg-white rounded-b-xl">
-                        {['Add Note', 'Send Reminder', 'Marked Resolved'].map((label) => (
-                            <button
-                                key={label}
-                                onClick={() => setIsReviewModalOpen(false)}
-                                className={`flex-1 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors ${label === 'Send Reminder'
-                                    ? 'bg-gray-300 text-[#4B5563] hover:bg-gray-400'
-                                    : 'bg-[#F56D2D] text-white hover:bg-orange-600'
-                                    }`}
-                                style={{ borderRadius: '8px' }}
-                                type="button"
-                            >
-                                {label}
-                            </button>
-                        ))}
+                    <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-[#E8F0FF] bg-white rounded-b-2xl sticky bottom-0">
+                        <button
+                            onClick={() => setIsReviewModalOpen(false)}
+                            className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-[#4B5563] bg-[#F3F7FF] hover:bg-[#E8F0FF] transition-all duration-200"
+                            type="button"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                // Logic for saving
+                                setIsReviewModalOpen(false);
+                            }}
+                            className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-white bg-[#F56D2D] hover:bg-[#E55A1D] shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                            style={{ borderRadius: "10px" }}
+                            type="button"
+                        >
+                            <span>Save Review</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
         );
     };
-
-
 
     return (
         <div className="bg-[rgb(243,247,255)] px-4 pt-0 pb-6 md:px-6">
@@ -3110,13 +3119,13 @@ export default function SecurityCompliance() {
                             <p className="text-sm text-[#6B7280]">Monitor security, manage access, and ensure compliance</p>
                         </div>
                     </div>
-                    <div className="mt-4 flex flex-nowrap gap-1.5 w-full bg-white rounded-lg p-1 border border-blue-50 overflow-hidden">
+                    <div className="mt-4 flex flex-nowrap gap-1.5 w-full bg-white rounded-lg p-1 border border-blue-50 overflow-x-auto md:overflow-hidden custom-scrollbar">
                         {tabs.map((tab) => (
                             <button
                                 key={tab}
                                 type="button"
                                 onClick={() => setActiveTab(tab)}
-                                className={`flex-1 px-1 py-1.5 text-[7px] font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab ? 'bg-[#3AD6F2] text-white shadow-sm' : 'text-[#4B5563] hover:text-[#3AD6F2]'
+                                className={`flex-none md:flex-1 px-3 md:px-1 py-2 md:py-1.5 text-[11px] md:text-[7px] font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab ? 'bg-[#3AD6F2] text-white shadow-sm' : 'text-[#4B5563] hover:text-[#3AD6F2]'
                                     }`}
                                 style={{ borderRadius: '6px' }}
                             >

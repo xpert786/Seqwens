@@ -764,7 +764,7 @@ const TaskManagementMain = () => {
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070]"
+            className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
             onClick={(e) => {
               if (e.target === e.currentTarget && !deleting) {
                 setShowDeleteConfirm(false);
@@ -772,7 +772,7 @@ const TaskManagementMain = () => {
               }
             }}
           >
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 taskmanage-delete-modal">
+            <div className="bg-white !rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl taskmanage-delete-modal">
               <h3 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
                 Delete Task
               </h3>

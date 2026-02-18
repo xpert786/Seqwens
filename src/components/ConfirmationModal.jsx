@@ -21,16 +21,11 @@ const ConfirmationModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+      className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
       onClick={onClose}
-      style={{ zIndex: 9999 }}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
-        style={{
-          borderRadius: '12px',
-          border: '1px solid #E8F0FF'
-        }}
+        className="bg-white !rounded-xl shadow-2xl relative max-w-md w-full mx-4 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

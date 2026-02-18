@@ -268,38 +268,38 @@ const WorkflowManagement = () => {
 
   // Main dashboard view
   return (
-    <div className="min-h-screen bg-[#F3F7FF] p-6">
-      <div className="max-w-full mx-auto space-y-6">
+    <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6 w-full">
+      <div className="w-full mx-auto space-y-4 sm:space-y-6">
 
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
-          <div>
-            <h4 className="text-2xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
+          <div className="flex-1">
+            <h4 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
               Workflow Management
             </h4>
-            <p className="text-gray-600 font-[BasisGrotesquePro]">
+            <p className="text-sm sm:text-base text-gray-600 font-[BasisGrotesquePro]">
               Create, manage, and track standard workflows for your clients
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={handleCreateTemplate}
-              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors flex items-center font-[BasisGrotesquePro]"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm sm:text-base"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              New Template
+              <span>New Template</span>
             </button>
             <button
               onClick={() => handleStartWorkflow()}
-              className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg transition-colors flex items-center font-[BasisGrotesquePro]"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm sm:text-base whitespace-nowrap"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Start Workflow
+              <span>Start Workflow</span>
             </button>
           </div>
         </div>
@@ -315,22 +315,22 @@ const WorkflowManagement = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex flex-col lg:flex-row justify-between mb-6 items-start">
-          <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-2">
-            <div className="flex gap-2">
+        <div className="flex flex-col lg:flex-row justify-between mb-6 items-start gap-4">
+          <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-1.5 sm:p-2 w-full sm:w-auto overflow-x-auto custom-scrollbar">
+            <div className="flex gap-1.5 sm:gap-2 min-w-max">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 font-[BasisGrotesquePro] !rounded-lg ${isActive
-                      ? 'bg-[#3AD6F2] !text-white font-semibold'
-                      : 'bg-transparent !text-black'
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 font-[BasisGrotesquePro] !rounded-lg text-sm sm:text-base transition-all ${isActive
+                      ? 'bg-[#3AD6F2] !text-white font-semibold shadow-sm'
+                      : 'bg-transparent !text-black hover:bg-gray-50'
                       }`}
                   >
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
+                    <span className="shrink-0">{tab.icon}</span>
+                    <span className="whitespace-nowrap">{tab.label}</span>
                   </button>
                 );
               })}
