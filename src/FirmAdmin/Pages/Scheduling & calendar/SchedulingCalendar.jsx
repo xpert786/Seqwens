@@ -786,6 +786,83 @@ const SchedulingCalendar = () => {
         }
     };
 
+    // Handle update appointment status (complete, reschedule/cancel)
+    const handleUpdateStatus = async (appointmentId, status) => {
+        try {
+            const response = await firmAdminMeetingsAPI.updateAppointmentStatus(appointmentId, status);
+            // Check for success in response (some APIs return success: true, others just data)
+            if (response.success || response.status === 'success' || response.id) {
+                toast.success(`Appointment marked as ${status}`, { position: 'top-right', asutoClose: 3000 });
+                await fetchCalendarData();
+                // Update local modal state
+                if (eventsModal.open) {
+                    setEventsModal(prev => ({
+                        ...prev,
+                        events: prev.events.map(evt => {
+                            if (evt.id === appointmentId) {
+                                return {
+                                    ...evt,
+                                    appointment_status: status,
+                                    status_display: status.charAt(0).toUpperCase() + status.slice(1)
+                                };
+                            }
+                            return evt;
+                        })
+                    }));
+                }
+            } else {
+                toast.error(response.message || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            handleAPIError(error);
+        }
+    };
+
+    const handleReschedule = (event) => {
+        // Pre-fill form
+        setEventTitle(event.subject || event.title || `Rescheduled: ${event.client?.name || 'Meeting'}`);
+
+        // Calculate duration if possible, default to 30
+        let duration = 30;
+        if (event.appointment_duration) {
+            duration = event.appointment_duration;
+        }
+        setAppointmentDuration(duration);
+
+        // Use client info if available
+        if (event.client_id) {
+            setSlots([{ id: 1, time: '09:00', client_id: event.client_id }]);
+        } else if (event.client) {
+            setSlots([{ id: 1, time: '09:00', client_id: event.client.id }]);
+        }
+
+        // Set staff
+        if (event.appointment_with?.id) {
+            setAssignedStaffId(event.appointment_with.id);
+        } else if (event.staff_id) {
+            setAssignedStaffId(event.staff_id);
+        }
+
+        setMeetingType(event.meeting_type || 'zoom');
+        setDescription(event.description || '');
+        setAppointmentDate(''); // Clear date to force selection of new date
+        
+        // Open modal
+        setIsAddEventModalOpen(true);
+        setEventsModal(prev => ({ ...prev, open: false }));
+
+        toast.info("Previous appointment info copied. Please select a new date and time.", { autoClose: 5000 });
+    };
+
+    // Helper to check if event is past
+    const isEventPast = (event) => {
+        if (!event.appointment_date || !event.appointment_time) return false;
+        // Construct ISO string for comparison
+        const eventDateTime = new Date(`${event.appointment_date}T${event.appointment_time}`);
+        return eventDateTime < new Date();
+    };
+
     // Handle confirm overwrite
     const handleConfirmOverwrite = async () => {
         if (!newAppointmentDetails) return;
@@ -1626,28 +1703,71 @@ const SchedulingCalendar = () => {
                                             )}
                                         </div>
 
-                                        {event.appointment_status === 'pending' && (
-                                            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-[#F8FAFF]">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleManageAppointment(event.id, 'approve');
-                                                    }}
-                                                    className="px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.2em]"
-                                                >
-                                                    Accept
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleManageAppointment(event.id, 'cancel');
-                                                    }}
-                                                    className="px-4 py-2.5 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-[0.2em]"
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#F8FAFF]">
+                                            {event.appointment_status === 'pending' ? (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleManageAppointment(event.id, 'approve');
+                                                        }}
+                                                        className="flex-1 px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.2em]"
+                                                    >
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleManageAppointment(event.id, 'cancel');
+                                                        }}
+                                                        className="flex-1 px-4 py-2.5 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-[0.2em]"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {(event.google_meet_link || event.zoom_meeting_link) && event.appointment_status !== 'cancelled' && event.appointment_status !== 'completed' && (
+                                                        <a
+                                                            href={event.google_meet_link || event.zoom_meeting_link}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 py-2.5 text-[10px] font-black text-white bg-[#3AD6F2] hover:bg-[#34c2db] !rounded-xl transition-all shadow-md shadow-blue-100 uppercase tracking-[0.1em]"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                            Join
+                                                        </a>
+                                                    )}
+
+                                                    {isEventPast(event) && event.appointment_status !== 'cancelled' && event.appointment_status !== 'completed' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleUpdateStatus(event.id, 'completed');
+                                                            }}
+                                                            className="flex-1 min-w-[100px] px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.1em]"
+                                                        >
+                                                            Complete
+                                                        </button>
+                                                    )}
+
+                                                    {(isEventPast(event) || event.appointment_status === 'cancelled') && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleReschedule(event);
+                                                            }}
+                                                            className="flex-1 min-w-[100px] px-4 py-2.5 text-[10px] font-black text-white bg-orange-500 hover:bg-orange-600 !rounded-xl transition-all shadow-md shadow-orange-100 uppercase tracking-[0.1em]"
+                                                        >
+                                                            Reschedule
+                                                        </button>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 ))
                             )}

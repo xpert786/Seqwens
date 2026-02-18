@@ -68,7 +68,7 @@
 .send-btn {
   width: 100%;
   padding: 10px;
-  background-color: var(--firm-primary-color, #f56d2d) !important;
+  background-color: #f56d2d !important;
   color: white !important;
   border: none;
   border-radius: 8px;

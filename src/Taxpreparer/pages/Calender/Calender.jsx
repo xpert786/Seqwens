@@ -30,6 +30,18 @@ export default function CalendarPage() {
   const [showPendingMeetingsModal, setShowPendingMeetingsModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState({});
   const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'confirmed'
+  const [viewEventModalOpen, setViewEventModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
+  const handleViewEvent = (event) => {
+    setSelectedEvent(event);
+    setViewEventModalOpen(true);
+  };
+
+  const closeViewEventModal = () => {
+    setViewEventModalOpen(false);
+    setSelectedEvent(null);
+  };
 
   // Fetch calendar data from API
   const fetchCalendarData = async () => {
@@ -716,11 +728,7 @@ export default function CalendarPage() {
                             }`}>
                             {displayValue}
                           </div>
-                          {dayEvents.length > 0 && (
-                            <span className="calendar-task-badge badge border rounded-pill" style={{ fontSize: '0.65rem', backgroundColor: '#3B4A66', color: '#FFFFFF' }}>
-                              {dayEvents.length}
-                            </span>
-                          )}
+
                         </div>
                         <div className="calendar-tasks-container d-flex flex-column gap-1 overflow-auto" style={{ flex: 1, maxHeight: '90px' }}>
                           {dayEvents.map(event => (
@@ -729,10 +737,7 @@ export default function CalendarPage() {
                               className="calendar-task-item bg-orange-500 text-white p-1 rounded text-xs mb-1 shadow-sm cursor-pointer hover:bg-orange-600"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Show event details or launch meeting
-                                if (event.appointment?.meeting_link || event.appointment?.zoom_meeting_link) {
-                                  handleLaunchMeeting(event.appointment);
-                                }
+                                handleViewEvent(event);
                               }}
                             >
                               <div className="flex items-center gap-1">
@@ -906,6 +911,135 @@ export default function CalendarPage() {
         </div>
       </div>
 
+      {/* View Event Modal */}
+      {viewEventModalOpen && selectedEvent && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999999] p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header */}
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900">Event Details</h3>
+              <button onClick={closeViewEventModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {/* Event Title */}
+              <h4 className="text-xl font-bold text-gray-800">{selectedEvent.title}</h4>
+
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 flex justify-center text-xl">📅</div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Date & Time</p>
+                    <p>{selectedEvent.date.toLocaleDateString()} at {selectedEvent.time}</p>
+                  </div>
+                </div>
+
+                {(selectedEvent.user || selectedEvent.appointment?.user_name) && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 flex justify-center text-xl">👤</div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Client</p>
+                      <p>{selectedEvent.user || selectedEvent.appointment?.user_name}</p>
+                      {(selectedEvent.userEmail || selectedEvent.appointment?.user_email) && (
+                        <p className="text-xs text-gray-500">{selectedEvent.userEmail || selectedEvent.appointment?.user_email}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Meeting Type */}
+                {(selectedEvent.meetingType || selectedEvent.appointment?.meeting_type) && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 flex justify-center text-xl">🎥</div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Meeting Type</p>
+                      <p className="capitalize">{(selectedEvent.meetingType || selectedEvent.appointment?.meeting_type || '').replace('_', ' ')}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Status Badge */}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 flex justify-center text-xl">🏷️</div>
+                  <div>
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide inline-block ${selectedEvent.status === 'confirmed' ? 'bg-green-100 text-green-700' : selectedEvent.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {selectedEvent.statusDisplay || selectedEvent.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {selectedEvent.appointment?.description && (
+                  <div className="mt-2 text-gray-500 italic border-l-2 border-gray-200 pl-3">
+                    "{selectedEvent.appointment.description}"
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-5 border-t border-gray-100 bg-gray-50/50 flex flex-col gap-3">
+              {/* Launch Meeting Button */}
+              {(selectedEvent.appointment?.meeting_link || selectedEvent.appointment?.zoom_meeting_link || selectedEvent.appointment?.google_meet_link) && selectedEvent.status !== 'cancelled' && (
+                <button
+                  onClick={() => handleLaunchMeeting(selectedEvent.appointment)}
+                  className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2"
+                >
+                  <ZoomIcon className="w-5 h-5" /> Join Meeting
+                </button>
+              )}
+
+              {/* Pending Actions */}
+              {selectedEvent.status === 'pending' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      handleApproveAppointment(selectedEvent);
+                      closeViewEventModal();
+                    }}
+                    className="py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-all shadow-md shadow-green-200"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleCancelAppointment(selectedEvent);
+                      closeViewEventModal();
+                    }}
+                    className="py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all shadow-md shadow-red-200"
+                  >
+                    Decline
+                  </button>
+                </div>
+              )}
+
+              {/* Cancel Button for Confirmed Appointments */}
+              {selectedEvent.status === 'confirmed' && (
+                <button
+                  onClick={() => {
+                    handleCancelAppointment(selectedEvent);
+                    closeViewEventModal();
+                  }}
+                  className="w-full py-2 bg-white hover:bg-gray-50 text-red-500 border border-red-200 font-semibold rounded-xl transition-all text-sm"
+                >
+                  Cancel Appointment
+                </button>
+              )}
+
+              <button
+                onClick={closeViewEventModal}
+                className="w-full py-2 text-gray-500 hover:text-gray-700 font-medium text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Set Availability Modal */}
       <SetAvailabilityModal
         isOpen={isSetAvailabilityModalOpen}
@@ -923,7 +1057,7 @@ export default function CalendarPage() {
 
       {/* Pending Meetings Modal */}
       {showPendingMeetingsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ padding: '40px 1rem', overflowY: 'auto' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999999] p-4" style={{ padding: '40px 1rem', overflowY: 'auto' }}>
           <div className="bg-white rounded-lg shadow-xl  max-h-[80vh] overflow-hidden flex flex-col" style={{ marginTop: '63px', maxWidth: '664px' }}>
             {/* Header */}
             <div className="p-6 border-b border-gray-200">

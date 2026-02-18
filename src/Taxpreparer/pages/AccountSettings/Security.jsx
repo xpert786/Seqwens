@@ -37,6 +37,18 @@ const Security = ({ security, onUpdate }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Email verification states
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpError, setEmailOtpError] = useState(null);
+  const [emailVerifying, setEmailVerifying] = useState(false);
+
+  // Phone verification states
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [phoneOtpError, setPhoneOtpError] = useState(null);
+  const [phoneVerifying, setPhoneVerifying] = useState(false);
+
   useEffect(() => {
     const fetchSecurityPreferences = async () => {
       setLoading(true);
@@ -142,7 +154,7 @@ const Security = ({ security, onUpdate }) => {
     } catch (err) {
       console.error('Error fetching updated security preferences:', err);
     }
-    
+
     if (onUpdate) {
       onUpdate();
     }
@@ -159,13 +171,13 @@ const Security = ({ security, onUpdate }) => {
 
     try {
       const response = await userAPI.disable2FA(disablePassword);
-      
+
       if (response.success) {
         setTwoFactor(false);
         setTwoFactorEnabledAt(null);
         setShowDisable2FA(false);
         setDisablePassword('');
-        
+
         toast.success("2FA disabled successfully", {
           position: "top-right",
           autoClose: 3000,
@@ -263,6 +275,96 @@ const Security = ({ security, onUpdate }) => {
       });
     } finally {
       setPasswordSaving(false);
+    }
+  };
+
+  // Email Verification Handlers
+  const handleSendEmailOtp = async () => {
+    setEmailVerifying(true);
+    setEmailOtpError(null);
+    try {
+      const response = await taxPreparerSecurityAPI.sendEmailVerificationOtp();
+      if (response?.success !== false) {
+        setEmailOtpSent(true);
+        setEmailOtp('');
+        toast.success('OTP sent to your email address!', { position: 'top-right', autoClose: 3000 });
+      } else {
+        throw new Error(response?.message || 'Failed to send OTP');
+      }
+    } catch (err) {
+      const msg = handleAPIError(err);
+      setEmailOtpError(msg);
+      toast.error(msg || 'Failed to send email OTP', { position: 'top-right', autoClose: 3000 });
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async () => {
+    if (!emailOtp) return;
+    setEmailVerifying(true);
+    setEmailOtpError(null);
+    try {
+      const response = await taxPreparerSecurityAPI.verifyEmailOtp(emailOtp);
+      if (response?.success !== false) {
+        setIsEmailVerified(true);
+        setEmailOtpSent(false);
+        setEmailOtp('');
+        toast.success('Email verified successfully!', { position: 'top-right', autoClose: 3000 });
+        if (onUpdate) onUpdate();
+      } else {
+        throw new Error(response?.message || 'Invalid OTP');
+      }
+    } catch (err) {
+      const msg = handleAPIError(err);
+      setEmailOtpError(msg || 'Invalid or expired OTP. Please try again.');
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  // Phone Verification Handlers
+  const handleSendPhoneOtp = async () => {
+    setPhoneVerifying(true);
+    setPhoneOtpError(null);
+    try {
+      const response = await taxPreparerSecurityAPI.sendPhoneVerificationOtp();
+      if (response?.success !== false) {
+        setPhoneOtpSent(true);
+        setPhoneOtp('');
+        toast.success('OTP sent to your phone number!', { position: 'top-right', autoClose: 3000 });
+      } else {
+        throw new Error(response?.message || 'Failed to send OTP');
+      }
+    } catch (err) {
+      const msg = handleAPIError(err);
+      setPhoneOtpError(msg);
+      toast.error(msg || 'Failed to send phone OTP', { position: 'top-right', autoClose: 3000 });
+    } finally {
+      setPhoneVerifying(false);
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (!phoneOtp) return;
+    setPhoneVerifying(true);
+    setPhoneOtpError(null);
+    try {
+      const response = await taxPreparerSecurityAPI.verifyPhoneOtp(phoneOtp);
+      if (response?.success !== false) {
+        setIsPhoneVerified(true);
+        setPhoneOtpSent(false);
+        setPhoneOtp('');
+        toast.success('Phone number verified successfully!', { position: 'top-right', autoClose: 3000 });
+        if (onUpdate) onUpdate();
+      } else {
+        throw new Error(response?.message || 'Invalid OTP');
+      }
+    } catch (err) {
+      const msg = handleAPIError(err);
+      setPhoneOtpError(msg || 'Invalid or expired OTP. Please try again.');
+    } finally {
+      setPhoneVerifying(false);
     }
   };
 
@@ -403,7 +505,7 @@ const Security = ({ security, onUpdate }) => {
               <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro", marginBottom: "16px" }}>
                 For security reasons, please enter your current password to disable 2FA.
               </p>
-              
+
               <div className="mb-3">
                 <label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>
                   Current Password
@@ -540,54 +642,281 @@ const Security = ({ security, onUpdate }) => {
 
         {/* Verification Status */}
         <div className="py-3 border-top border-bottom" style={{ borderColor: "#E8F0FF" }}>
-          <div className="mb-2">
+          <div className="mb-3">
             <label
               style={{
                 color: "#3B4A66",
                 fontSize: "16px",
                 fontWeight: "500",
                 fontFamily: "BasisGrotesquePro",
-                marginBottom: "12px",
+                marginBottom: "4px",
                 display: "block"
               }}
             >
               Account Verification Status
             </label>
+            <p style={{ color: "#4B5563", fontSize: "13px", fontFamily: "BasisGrotesquePro", marginBottom: "0" }}>
+              Verify your email and phone number to secure your account.
+            </p>
           </div>
-          <div className="d-flex flex-column gap-2">
-            <div className="d-flex align-items-center justify-content-between">
-              <span style={{
-                color: "#4B5563",
-                fontSize: "14px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}>
-                Email Verification
-              </span>
-              <span className={`badge ${isEmailVerified ? 'bg-success' : 'bg-warning'}`} style={{
-                fontSize: "12px",
-                fontFamily: "BasisGrotesquePro",
-                padding: "4px 8px"
-              }}>
-                {isEmailVerified ? 'Verified' : 'Not Verified'}
-              </span>
+
+          <div className="d-flex flex-column gap-3">
+            {/* Email Verification Row */}
+            <div className="p-3 rounded-lg" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E8F0FF" }}>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-envelope" style={{ color: "#3B4A66", fontSize: "16px" }}></i>
+                  <span style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                    Email Verification
+                  </span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <span
+                    className={`badge ${isEmailVerified ? 'bg-success' : 'bg-warning text-dark'}`}
+                    style={{ fontSize: "11px", fontFamily: "BasisGrotesquePro", padding: "4px 8px" }}
+                  >
+                    {isEmailVerified ? '✓ Verified' : 'Not Verified'}
+                  </span>
+                  {!isEmailVerified && !emailOtpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendEmailOtp}
+                      disabled={emailVerifying}
+                      style={{
+                        backgroundColor: "#F56D2D",
+                        color: "#fff",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "none",
+                        padding: "4px 12px",
+                        borderRadius: "6px",
+                        cursor: emailVerifying ? "not-allowed" : "pointer",
+                        opacity: emailVerifying ? 0.6 : 1,
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {emailVerifying ? 'Sending...' : 'Verify Now'}
+                    </button>
+                  )}
+                  {!isEmailVerified && emailOtpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendEmailOtp}
+                      disabled={emailVerifying}
+                      style={{
+                        backgroundColor: "transparent",
+                        color: "#F56D2D",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "1px solid #F56D2D",
+                        padding: "4px 12px",
+                        borderRadius: "6px",
+                        cursor: emailVerifying ? "not-allowed" : "pointer",
+                        opacity: emailVerifying ? 0.6 : 1,
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Email OTP Input */}
+              {!isEmailVerified && emailOtpSent && (
+                <div className="mt-2">
+                  <p style={{ color: "#4B5563", fontSize: "12px", fontFamily: "BasisGrotesquePro", marginBottom: "8px" }}>
+                    An OTP has been sent to your email. Enter it below to verify.
+                  </p>
+                  <div className="d-flex gap-2 align-items-center">
+                    <input
+                      type="text"
+                      value={emailOtp}
+                      onChange={(e) => { setEmailOtp(e.target.value); setEmailOtpError(null); }}
+                      placeholder="Enter 4-digit OTP"
+                      maxLength={4}
+                      style={{
+                        width: "140px",
+                        border: emailOtpError ? "1px solid #dc3545" : "1px solid #E8F0FF",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "14px",
+                        fontFamily: "BasisGrotesquePro",
+                        color: "#3B4A66",
+                        letterSpacing: "4px",
+                        textAlign: "center"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyEmailOtp}
+                      disabled={emailVerifying || emailOtp.length < 4}
+                      style={{
+                        backgroundColor: "#3B4A66",
+                        color: "#fff",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "none",
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        cursor: (emailVerifying || emailOtp.length < 4) ? "not-allowed" : "pointer",
+                        opacity: (emailVerifying || emailOtp.length < 4) ? 0.6 : 1,
+                      }}
+                    >
+                      {emailVerifying ? 'Verifying...' : 'Confirm'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmailOtpSent(false); setEmailOtp(''); setEmailOtpError(null); }}
+                      style={{
+                        backgroundColor: "transparent",
+                        color: "#6B7280",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "none",
+                        padding: "6px 8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {emailOtpError && (
+                    <div style={{ color: "#dc3545", fontSize: "12px", fontFamily: "BasisGrotesquePro", marginTop: "4px" }}>
+                      {emailOtpError}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="d-flex align-items-center justify-content-between">
-              <span style={{
-                color: "#4B5563",
-                fontSize: "14px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}>
-                Phone Verification
-              </span>
-              <span className={`badge ${isPhoneVerified ? 'bg-success' : 'bg-warning'}`} style={{
-                fontSize: "12px",
-                fontFamily: "BasisGrotesquePro",
-                padding: "4px 8px"
-              }}>
-                {isPhoneVerified ? 'Verified' : 'Not Verified'}
-              </span>
+
+            {/* Phone Verification Row */}
+            <div className="p-3 rounded-lg" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E8F0FF" }}>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-phone" style={{ color: "#3B4A66", fontSize: "16px" }}></i>
+                  <span style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                    Phone Verification
+                  </span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <span
+                    className={`badge ${isPhoneVerified ? 'bg-success' : 'bg-warning text-dark'}`}
+                    style={{ fontSize: "11px", fontFamily: "BasisGrotesquePro", padding: "4px 8px" }}
+                  >
+                    {isPhoneVerified ? '✓ Verified' : 'Not Verified'}
+                  </span>
+                  {!isPhoneVerified && !phoneOtpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendPhoneOtp}
+                      disabled={phoneVerifying}
+                      style={{
+                        backgroundColor: "#F56D2D",
+                        color: "#fff",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "none",
+                        padding: "4px 12px",
+                        borderRadius: "6px",
+                        cursor: phoneVerifying ? "not-allowed" : "pointer",
+                        opacity: phoneVerifying ? 0.6 : 1,
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {phoneVerifying ? 'Sending...' : 'Verify Now'}
+                    </button>
+                  )}
+                  {!isPhoneVerified && phoneOtpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendPhoneOtp}
+                      disabled={phoneVerifying}
+                      style={{
+                        backgroundColor: "transparent",
+                        color: "#F56D2D",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "1px solid #F56D2D",
+                        padding: "4px 12px",
+                        borderRadius: "6px",
+                        cursor: phoneVerifying ? "not-allowed" : "pointer",
+                        opacity: phoneVerifying ? 0.6 : 1,
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Phone OTP Input */}
+              {!isPhoneVerified && phoneOtpSent && (
+                <div className="mt-2">
+                  <p style={{ color: "#4B5563", fontSize: "12px", fontFamily: "BasisGrotesquePro", marginBottom: "8px" }}>
+                    An OTP has been sent to your phone number. Enter it below to verify.
+                  </p>
+                  <div className="d-flex gap-2 align-items-center">
+                    <input
+                      type="text"
+                      value={phoneOtp}
+                      onChange={(e) => { setPhoneOtp(e.target.value); setPhoneOtpError(null); }}
+                      placeholder="Enter 4-digit OTP"
+                      maxLength={4}
+                      style={{
+                        width: "140px",
+                        border: phoneOtpError ? "1px solid #dc3545" : "1px solid #E8F0FF",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontSize: "14px",
+                        fontFamily: "BasisGrotesquePro",
+                        color: "#3B4A66",
+                        letterSpacing: "4px",
+                        textAlign: "center"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyPhoneOtp}
+                      disabled={phoneVerifying || phoneOtp.length < 4}
+                      style={{
+                        backgroundColor: "#3B4A66",
+                        color: "#fff",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "none",
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        cursor: (phoneVerifying || phoneOtp.length < 4) ? "not-allowed" : "pointer",
+                        opacity: (phoneVerifying || phoneOtp.length < 4) ? 0.6 : 1,
+                      }}
+                    >
+                      {phoneVerifying ? 'Verifying...' : 'Confirm'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPhoneOtpSent(false); setPhoneOtp(''); setPhoneOtpError(null); }}
+                      style={{
+                        backgroundColor: "transparent",
+                        color: "#6B7280",
+                        fontSize: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        border: "none",
+                        padding: "6px 8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {phoneOtpError && (
+                    <div style={{ color: "#dc3545", fontSize: "12px", fontFamily: "BasisGrotesquePro", marginTop: "4px" }}>
+                      {phoneOtpError}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

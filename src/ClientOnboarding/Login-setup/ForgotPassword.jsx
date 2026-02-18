@@ -13,32 +13,32 @@ export default function ForgotPassword() {
   const handleSendCode = async () => {
     // Clear previous errors
     setErrors({});
-    
+
     // Validate email
     if (!email.trim()) {
       setErrors({ email: 'Email is required' });
       return;
     }
-    
+
     if (!validateEmail(email)) {
       setErrors({ email: 'Please enter a valid email address' });
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       const response = await userAPI.forgotPassword(email);
-      
+
       // Store email for OTP verification page
       localStorage.setItem('resetEmail', email);
-      
+
       // Navigate to OTP verification
       navigate("/otp-verification");
     } catch (error) {
       console.error('Forgot password error:', error);
-      setErrors({ 
-        general: handleAPIError(error) 
+      setErrors({
+        general: handleAPIError(error)
       });
     } finally {
       setIsLoading(false);
@@ -83,8 +83,8 @@ export default function ForgotPassword() {
               )}
             </div>
 
-            <button 
-              className="btn send-btn" 
+            <button
+              className="btn send-btn"
               onClick={handleSendCode}
               disabled={isLoading}
             >

@@ -677,7 +677,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             </div>
 
             {/* Add-On Pricing Configuration */}
-            <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+            {/* <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
               <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Add-On Pricing Configuration</h3>
               <p className="text-sm mb-4 text-gray-500">Configure specific add-on pricing for this plan. Overrides global default pricing.</p>
 
@@ -763,7 +763,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   <p className="text-sm text-gray-400 italic">No active add-ons found.</p>
                 )}
               </div>
-            </div>
+            </div> */}
 
             {/* Display Settings Section */}
             <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>

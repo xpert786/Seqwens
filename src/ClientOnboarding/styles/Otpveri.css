@@ -41,7 +41,7 @@
 }
 
 .highlighted-email {
-  color: var(--firm-primary-color, #f49c2d);
+  color: #f56d2d;
   font-weight: bold;
 }
 
@@ -75,7 +75,7 @@
 .otp-btn {
   width: 100%;
   padding: 6px;
-  background-color: var(--firm-primary-color, #f56d2d);
+  background-color: #f56d2d;
   color: white;
   border: none;
   border-radius: 8px;
@@ -89,7 +89,7 @@
 .otp-btn:hover,
 .otp-btn:focus,
 .otp-btn:active {
-  background-color: var(--firm-primary-color, #f56d2d) !important;
+  background-color: #f56d2d !important;
   color: white !important;
   box-shadow: none !important;
   outline: none !important;
@@ -105,12 +105,12 @@
 }
 
 .resend-link {
-  color: var(--firm-primary-color, #f56d2d);
+  color: #f56d2d;
   cursor: pointer;
   font-weight: 500;
   font-size: 16px;
   font-family: BasisGrotesquePro;
-  border-bottom: 2px solid var(--firm-primary-color, #f56d2d);
+  border-bottom: 2px solid #f56d2d;
   padding-bottom: 2px;
 }
 
