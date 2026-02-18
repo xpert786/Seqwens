@@ -96,3 +96,7 @@ export default function ForgotPassword() {
     </FixedLayout>
   );
 }
+
+
+
+

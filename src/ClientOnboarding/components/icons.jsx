@@ -37,8 +37,8 @@ export function Message2Icon() {
 }
 
 
-export function PasswordStrengthBar({ v1, v2, v3, v4 }) {
-  const getFill = (isValid) => (isValid ? "#22C55E" : "#E8F0FF");
+export function PasswordStrengthBar({ v1, v2, v3, v4, inactiveColor = "#E8F0FF" }) {
+  const getFill = (isValid) => (isValid ? "#22C55E" : inactiveColor);
   return (
     <svg
       width="100%"

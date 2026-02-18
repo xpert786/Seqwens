@@ -7,11 +7,13 @@ import { setTokens } from "../utils/userUtils";
 import { toast } from "react-toastify";
 import DataSharingModal from "../components/DataSharingModal";
 import { getPathWithPrefix, getLoginUrl } from "../utils/urlUtils";
+import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 
 export default function AcceptInvite() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
+    const { updateBranding } = useFirmPortalColors();
     const [invitationData, setInvitationData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isAccepting, setIsAccepting] = useState(false);
@@ -90,6 +92,11 @@ export default function AcceptInvite() {
 
                 if (response.success && response.is_valid && response.data) {
                     console.log('Invitation is valid');
+
+                    // Apply firm branding from invitation data
+                    if (response.data.branding) {
+                        updateBranding(response.data.branding);
+                    }
 
                     // Check if backend says user needs to sign in
                     if (response.requires_signin === true) {
@@ -331,8 +338,8 @@ export default function AcceptInvite() {
 
                         // Redirect to role selection page
                         setTimeout(() => {
-                            navigate("/select-role", { 
-                                state: { 
+                            navigate("/select-role", {
+                                state: {
                                     fromInvitation: true,
                                     userData: user,
                                     message: "Please select your role to continue"

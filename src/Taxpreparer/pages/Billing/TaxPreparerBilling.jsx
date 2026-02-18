@@ -535,6 +535,7 @@ export default function TaxPreparerBilling() {
                   <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
                     <button
                       onClick={() => setShowPaymentModal(true)}
+                      style={{ borderRadius: "10px" }}
                       className="px-8 py-3 bg-[#F97316] text-white rounded-lg font-bold hover:bg-orange-600 transition-all shadow-md shadow-orange-100"
                     >
                       Pay Outstanding Portion

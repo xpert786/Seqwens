@@ -57,7 +57,7 @@ const buildSearchQuery = (search) => {
 };
 
 // Public API request function (no authentication required)
-const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
+export const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
     const config = {
       method,
@@ -7589,7 +7589,10 @@ export const firmAdminSettingsAPI = {
   },
 
   // Get subdomain settings
-  getSubdomainSettings: async () => {
+  getSubdomainSettings: async (isPublic = false) => {
+    if (isPublic) {
+      return await publicApiRequest('/firm/subdomain/settings/', 'GET');
+    }
     return await apiRequest('/firm/subdomain/settings/', 'GET');
   },
 

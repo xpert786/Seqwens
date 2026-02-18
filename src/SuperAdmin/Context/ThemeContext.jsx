@@ -14,10 +14,11 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-    // Check localStorage for saved preference, default to light mode
+    // Check localStorage for saved preference, default to dark mode
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('superadmin-theme');
-        return saved === 'dark';
+        // Default to dark mode (true) if no preference saved, or if saved is 'dark'
+        return saved === null ? true : saved === 'dark';
     });
 
     // Apply theme to document

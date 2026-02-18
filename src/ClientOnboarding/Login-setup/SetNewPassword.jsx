@@ -11,6 +11,7 @@ export default function SetNewPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState('');
+  const [hasTyped, setHasTyped] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -62,13 +63,21 @@ export default function SetNewPassword() {
     }
 
     if (password !== confirmPassword) {
-      setErrors({ confirmPassword: 'Passwords do not match' });
+      setErrors({ confirmPassword: '⚠️ Passwords do not match.' });
       return;
     }
 
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      setErrors({ password: 'Password does not meet requirements' });
+    const getFirstMissingRequirement = () => {
+      if (!validateLength) return "Password must be at least 8 characters.";
+      if (!validateUpperLower) return "Password must include both uppercase and lowercase letters.";
+      if (!validateNumber) return "Password must include at least one number.";
+      if (!validateSpecialChar) return "Password must include at least one special character.";
+      return null;
+    };
+
+    const missingRequirement = getFirstMissingRequirement();
+    if (missingRequirement) {
+      setErrors({ password: `⚠️ ${missingRequirement}` });
       return;
     }
 
@@ -108,9 +117,9 @@ export default function SetNewPassword() {
     <FixedLayout>
       <div className="set-password-wrapper">
         <div className="set-password-box">
-          <h5 className="password-title">SET NEW PASSWORD</h5>
+          <h5 className="password-title">Set Your Password</h5>
           <p className="password-subtitle">
-            Use at least 8 characters with a mix of uppercase, lowercase, numbers, and special characters.
+            Choose a strong password to protect your account.
           </p>
 
           {errors.general && (
@@ -125,10 +134,11 @@ export default function SetNewPassword() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 className={`form-control custom-input ${errors.password ? 'is-invalid' : ''}`}
-                placeholder="Enter your password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
+                  if (!hasTyped && e.target.value) setHasTyped(true);
                   if (errors.password) {
                     setErrors(prev => ({ ...prev, password: '' }));
                   }
@@ -143,30 +153,32 @@ export default function SetNewPassword() {
               </button>
             </div>
             {errors.password && (
-              <div className="invalid-feedback">{errors.password}</div>
+              <div className="invalid-feedback d-block text-danger mt-2">{errors.password}</div>
             )}
 
             <div className="password-strength-box">
-              <div className="d-flex align-items-start mb-2">
+              <div className="password-strength-label mb-2">Password Strength:</div>
+              <div className="d-flex align-items-start mb-3">
                 <PasswordStrengthBar
-                  v1={validateLength}
-                  v2={validateNumber}
-                  v3={validateUpperLower}
-                  v4={validateSpecialChar}
+                  v1={hasTyped && validateLength}
+                  v2={hasTyped && validateNumber}
+                  v3={hasTyped && validateUpperLower}
+                  v4={hasTyped && validateSpecialChar}
+                  inactiveColor="#D1D5DB"
                 />
               </div>
-              <div className="d-flex flex-wrap gap-4 mb-2 password-criteria">
-                <div className={`small ${validateLength ? 'text-success' : 'text-danger'}`}>
-                  {validateLength ? '✔' : '✘'} At least 8 characters
+              <div className="d-flex flex-column gap-2 password-criteria">
+                <div className={`small d-flex align-items-center gap-2 ${hasTyped && validateLength ? 'text-success' : ''}`} style={{ color: hasTyped && validateLength ? '#22C55E' : '#6B7280' }}>
+                  {hasTyped && validateLength ? '✔' : '•'} At least 8 characters
                 </div>
-                <div className={`small ${validateNumber ? 'text-success' : 'text-danger'}`}>
-                  {validateNumber ? '✔' : '✘'} At least one number
+                <div className={`small d-flex align-items-center gap-2 ${hasTyped && validateUpperLower ? 'text-success' : ''}`} style={{ color: hasTyped && validateUpperLower ? '#22C55E' : '#6B7280' }}>
+                  {hasTyped && validateUpperLower ? '✔' : '•'} One uppercase and one lowercase letter
                 </div>
-                <div className={`small ${validateUpperLower ? 'text-success' : 'text-danger'}`}>
-                  {validateUpperLower ? '✔' : '✘'} Uppercase/Lowercase letter
+                <div className={`small d-flex align-items-center gap-2 ${hasTyped && validateNumber ? 'text-success' : ''}`} style={{ color: hasTyped && validateNumber ? '#22C55E' : '#6B7280' }}>
+                  {hasTyped && validateNumber ? '✔' : '•'} One number
                 </div>
-                <div className={`small ${validateSpecialChar ? 'text-success' : 'text-danger'}`}>
-                  {validateSpecialChar ? '✔' : '✘'} At least one special character
+                <div className={`small d-flex align-items-center gap-2 ${hasTyped && validateSpecialChar ? 'text-success' : ''}`} style={{ color: hasTyped && validateSpecialChar ? '#22C55E' : '#6B7280' }}>
+                  {hasTyped && validateSpecialChar ? '✔' : '•'} One special character
                 </div>
               </div>
             </div>
@@ -194,7 +206,7 @@ export default function SetNewPassword() {
               <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
             </button>
           </div>
-          {errors.confirmPassword && <div className="invalid-feedback d-block">{errors.confirmPassword}</div>}
+          {errors.confirmPassword && <div className="invalid-feedback d-block text-danger mt-2">{errors.confirmPassword}</div>}
 
           <button
             className="reset-button"

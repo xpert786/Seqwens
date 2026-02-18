@@ -11,6 +11,7 @@ const FirmPortalColorsContext = createContext({
   loading: false,
   error: null,
   refreshColors: () => { },
+  updateBranding: () => { },
 });
 
 export const useFirmPortalColors = () => {
@@ -40,22 +41,19 @@ export const FirmPortalColorsProvider = ({ children }) => {
       const userType = storage?.getItem('userType');
       const isLoggedIn = storage?.getItem('isLoggedIn') === 'true';
 
-      if (!isLoggedIn) {
-        // Not logged in, use default colors
-        setLoading(false);
-        return;
-      }
-
       // Don't fetch for Super Admin or Admin as they don't have subdomain settings
       // and this avoids 403 Forbidden errors in those panels
-      const adminTypes = ['super_admin', 'support_admin', 'billing_admin'];
-      if (adminTypes.includes(userType)) {
-        console.log('Skipping portal colors fetch for admin type:', userType);
-        setLoading(false);
-        return;
+      if (isLoggedIn) {
+        const adminTypes = ['super_admin', 'support_admin', 'billing_admin'];
+        if (adminTypes.includes(userType)) {
+          console.log('Skipping portal colors fetch for admin type:', userType);
+          setLoading(false);
+          return;
+        }
       }
 
-      const response = await firmAdminSettingsAPI.getSubdomainSettings();
+      // Fetch settings - use public API if not logged in
+      const response = await firmAdminSettingsAPI.getSubdomainSettings(!isLoggedIn);
 
       if (response.success && response.data) {
         const primary = response.data.primary_color || '#178109';
@@ -143,6 +141,24 @@ export const FirmPortalColorsProvider = ({ children }) => {
     // For now, we store it in the context so components can access it
   };
 
+  // Manually update branding (e.g., from unauthenticated invite data)
+  const updateBranding = (brandingData) => {
+    if (!brandingData) return;
+
+    const primary = brandingData.primary_color || brandingData.primaryColor || '#178109';
+    const secondary = brandingData.secondary_color || brandingData.secondaryColor || '#ffffff';
+    const logo = brandingData.logo_url || brandingData.logoUrl || null;
+    const favicon = brandingData.favicon_url || brandingData.faviconUrl || null;
+
+    setPrimaryColor(primary);
+    setSecondaryColor(secondary);
+    setLogoUrl(logo);
+    setFaviconUrl(favicon);
+
+    applyColorsToDocument(primary, secondary);
+    applyLogoAndFavicon(logo, favicon);
+  };
+
   // Refresh colors, logo, and favicon (call after updating in settings)
   const refreshColors = async () => {
     await fetchPortalColors();
@@ -196,10 +212,10 @@ export const FirmPortalColorsProvider = ({ children }) => {
     primaryColor,
     secondaryColor,
     logoUrl,
-    faviconUrl,
     loading,
     error,
     refreshColors,
+    updateBranding,
   };
 
   return (

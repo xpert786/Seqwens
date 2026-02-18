@@ -1,5 +1,14 @@
 /* Global Theme Overrides for Super Admin */
 
+/* Smooth Theme Switch Animation */
+*,
+*::before,
+*::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-in-out;
+}
+
 /* Base overrides */
 .dark-mode {
     color-scheme: dark;
@@ -251,7 +260,42 @@
 
     .theme-toggle-container,
     .theme-toggle-container svg,
-    .theme-toggle-container::before {
+    .theme-toggle-container::before,
+    body,
+    div,
+    nav,
+    header,
+    aside,
+    main,
+    section,
+    article,
+    footer,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    span,
+    a,
+    input,
+    select,
+    textarea,
+    button,
+    label,
+    table,
+    tr,
+    td,
+    th,
+    ul,
+    li,
+    form,
+    img,
+    svg,
+    path,
+    circle,
+    rect {
         transition: none !important;
         animation: none !important;
     }

@@ -110,7 +110,7 @@
 
 .login-btn {
   width: 100%;
-  background-color: #f56d2d;
+  background-color: var(--firm-primary-color, #f56d2d);
   color: white;
   font-weight: 500;
   padding: 10px;
