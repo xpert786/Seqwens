@@ -523,7 +523,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
           {/* Preview Table */}
           <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+            <div className="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
               <table className="w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
@@ -803,7 +803,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             <div className="mb-6">
               <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">Import Results</h6>
               <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <div className="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
@@ -943,15 +943,15 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center bulk-import-modal-backdrop"
+      style={{ zIndex: 9999, overflowY: 'auto', alignItems: 'center', padding: '40px 1rem' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mx-4"
+        className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mx-4 custom-scrollbar"
         style={{
           borderRadius: '12px',
-          maxHeight: '90vh',
+          maxHeight: '80vh',
           overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}

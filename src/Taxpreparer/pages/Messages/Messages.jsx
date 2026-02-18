@@ -1650,7 +1650,8 @@ export default function MessagePage() {
               maxHeight: "85vh",
               overflowY: "auto",
               boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-              position: "relative"
+              position: "relative",
+              marginTop: "60px",
             }}
               onClick={(e) => e.stopPropagation()}
             >

@@ -156,29 +156,31 @@ const WorkflowPipelineView = ({
     return (
         <div className="space-y-4">
             {/* Header with Template Selector and Filters */}
-            <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <select
-                            value={selectedTemplate || ''}
-                            onChange={(e) => onSelectTemplate(parseInt(e.target.value))}
-                            className="px-4 py-2.5 !border border-[#E8F0FF] !rounded-lg bg-white font-[BasisGrotesquePro] text-gray-700 focus:outline-none"
-                        >
-                            <option value="">Select Template</option>
-                            {templates?.map(t => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
-                            ))}
-                        </select>
-                        <div className="hidden lg:block h-8 w-px bg-[#E8F0FF]"></div>
-                        <div>
-                            <h4 className="text-lg font-semibold text-gray-800 font-[BasisGrotesquePro]">
+            <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                        <div className="relative flex-1 sm:flex-none">
+                            <select
+                                value={selectedTemplate || ''}
+                                onChange={(e) => onSelectTemplate(parseInt(e.target.value))}
+                                className="w-full sm:w-64 px-3 sm:px-4 py-2 sm:py-2.5 !border border-[#E8F0FF] !rounded-lg bg-white font-[BasisGrotesquePro] text-gray-700 focus:outline-none text-sm sm:text-base appearance-none bg-no-repeat bg-[right_1rem_center]"
+                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%233B4A66'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1.25rem' }}
+                            >
+                                <option value="">Select Template</option>
+                                {templates?.map(t => (
+                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="hidden md:block h-8 w-px bg-[#E8F0FF]"></div>
+                        <div className="hidden sm:block">
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-800 font-[BasisGrotesquePro]">
                                 {templateData?.name || 'Workflow Pipeline'}
                             </h4>
-                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
-                                Track progress of workflows through each stage
+                            <p className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">
+                                Track progress through stages
                             </p>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -368,28 +370,28 @@ const WorkflowPipelineView = ({
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
-                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Active Workflows</p>
-                    <p className="text-2xl font-bold text-[#3AD6F2] font-[BasisGrotesquePro]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-3 sm:p-4">
+                    <p className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Active</p>
+                    <p className="text-xl sm:text-2xl font-bold text-[#3AD6F2] font-[BasisGrotesquePro]">
                         {filteredInstances.filter(i => i.status === 'active').length}
                     </p>
                 </div>
-                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
-                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">On Hold</p>
-                    <p className="text-2xl font-bold text-amber-600 font-[BasisGrotesquePro]">
+                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-3 sm:p-4">
+                    <p className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">On Hold</p>
+                    <p className="text-xl sm:text-2xl font-bold text-amber-600 font-[BasisGrotesquePro]">
                         {filteredInstances.filter(i => i.status === 'paused').length}
                     </p>
                 </div>
-                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
-                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Completed</p>
-                    <p className="text-2xl font-bold text-green-600 font-[BasisGrotesquePro]">
+                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-3 sm:p-4">
+                    <p className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Completed</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-600 font-[BasisGrotesquePro]">
                         {filteredInstances.filter(i => i.status === 'completed').length}
                     </p>
                 </div>
-                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
-                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Average Progress</p>
-                    <p className="text-2xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
+                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-3 sm:p-4">
+                    <p className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] uppercase tracking-wider font-semibold">Avg. Progress</p>
+                    <p className="text-xl sm:text-2xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
                         {filteredInstances.length > 0
                             ? Math.round(filteredInstances.reduce((acc, i) => acc + (i.progress_percentage || 0), 0) / filteredInstances.length)
                             : 0}%

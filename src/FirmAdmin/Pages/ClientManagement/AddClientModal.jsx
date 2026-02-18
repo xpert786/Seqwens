@@ -748,31 +748,54 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       {/* Add Client Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10"
           onClick={onClose}
-          style={{ zIndex: 9999 }}
+          style={{ zIndex: 99999 }}
         >
           <div
-            className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative"
+            className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-6 relative modal-body-scroll"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxHeight: '90vh', overflowY: 'auto' }}
+            style={{
+              maxHeight: '75vh',
+              overflowY: 'auto',
+              fontFamily: 'BasisGrotesquePro'
+            }}
           >
+            <style>
+              {`
+                .modal-body-scroll::-webkit-scrollbar {
+                  width: 8px;
+                }
+                .modal-body-scroll::-webkit-scrollbar-track {
+                  background: #f8fafc;
+                }
+                .modal-body-scroll::-webkit-scrollbar-thumb {
+                  background: #cbd5e1;
+                  border-radius: 10px;
+                  border: 2px solid #f8fafc;
+                }
+                .modal-body-scroll::-webkit-scrollbar-thumb:hover {
+                  background: #94a3b8;
+                }
+              `}
+            </style>
+            <button
+              onClick={onClose}
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
             {/* Header */}
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Add New Client</h5>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+            <div className="flex justify-between items-start mb-6 pb-2 border-b border-gray-100">
+              <div className="pr-10">
+                <h4 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">Add New Client</h4>
+                <p className="text-sm text-gray-500 font-[BasisGrotesquePro] mt-1">
                   Create a new client profile
                 </p>
               </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center !rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
             </div>
 
             {/* Error/Success Messages */}

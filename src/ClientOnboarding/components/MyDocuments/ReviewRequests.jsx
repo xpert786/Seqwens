@@ -236,7 +236,7 @@ const ReviewRequests = () => {
                                     e.currentTarget.style.boxShadow = 'none';
                                 }}
                             >
-                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                <div className="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-3">
                                     <div className="flex-grow-1">
                                         <div className="d-flex align-items-center gap-2 mb-2">
                                             <h6

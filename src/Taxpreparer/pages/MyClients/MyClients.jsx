@@ -87,6 +87,29 @@ export default function MyClients() {
   const [phoneCountry, setPhoneCountry] = useState('us');
   const [invitePhoneCountry, setInvitePhoneCountry] = useState('us');
   const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
+  const [isPhoneDropdownOpen, setIsPhoneDropdownOpen] = useState(false);
+
+  // Handle phone dropdown open/close detection
+  useEffect(() => {
+    if (!showInviteTaxpayerModal) {
+      setIsPhoneDropdownOpen(false);
+      return;
+    }
+
+    const handleDocumentClick = (e) => {
+      const flagDropdown = document.querySelector('.invite-taxpayer-phone-container .flag-dropdown');
+      if (flagDropdown) {
+        // Small delay to allow the PhoneInput library to toggle its 'open' class
+        setTimeout(() => {
+          const isOpen = flagDropdown.classList.contains('open');
+          setIsPhoneDropdownOpen(isOpen);
+        }, 50);
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
+  }, [showInviteTaxpayerModal]);
 
   // Create taxpayer form state
   const [createTaxpayerForm, setCreateTaxpayerForm] = useState({
@@ -2106,9 +2129,22 @@ export default function MyClients() {
 
       {/* Create Taxpayer Modal */}
       {showCreateTaxpayerModal && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px' }}>
+        <div className="modal" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: '40px 1rem',
+          overflowY: 'auto'
+        }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible', width: '100%', maxWidth: '500px', margin: 'auto' }}>
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Create New Taxpayer</h5>
                 <button
@@ -2129,7 +2165,7 @@ export default function MyClients() {
                 ></button>
               </div>
               <form onSubmit={handleCreateTaxpayer}>
-                <div className="modal-body" style={{ padding: '24px' }}>
+                <div className="modal-body custom-scrollbar" style={{ padding: '24px', maxHeight: '65vh', overflowY: 'auto' }}>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">
                       First Name <span className="text-danger">*</span>
@@ -2242,9 +2278,22 @@ export default function MyClients() {
 
       {/* Invite actions modal */}
       {showInviteActionsModal && activeInviteDetails && (
-        <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
-          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
+        <div className="modal invite-actions-modal" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: '40px 1rem',
+          overflowY: 'auto'
+        }}>
+          <div className="modal-dialog" style={{ overflow: 'visible', margin: 'auto', width: '100%', maxWidth: '520px' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', overflow: 'visible' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF', padding: '16px 24px' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
                 <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close" style={{ fontSize: '12px' }}></button>
@@ -2420,9 +2469,22 @@ export default function MyClients() {
 
       {/* Invite Taxpayer Modal (existing clients) */}
       {showInviteTaxpayerModal && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px', overflow: 'visible', border: 'none' }}>
+        <div className="modal invite-taxpayer-modal" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: '40px 1rem',
+          overflowY: 'auto'
+        }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible', width: "500px", margin: 'auto' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
               <div className="modal-header" style={{ borderBottom: 'none' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
                   Invite Taxpayer
@@ -2442,8 +2504,8 @@ export default function MyClients() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body custom-scrollbar" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
-                <form onSubmit={handleInviteExistingTaxpayer}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '24px' }}>
+                <form onSubmit={handleInviteExistingTaxpayer} id="inviteTaxpayerForm">
                   <div className="mb-3">
                     <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
                       First Name <span className="text-danger">*</span>
@@ -2496,47 +2558,53 @@ export default function MyClients() {
                       onChange={(phone) => setInviteExistingForm(prev => ({ ...prev, phone_number: phone }))}
                       onCountryChange={(countryCode) => {
                         setInvitePhoneCountry(countryCode.toLowerCase());
+                        setIsPhoneDropdownOpen(false);
                       }}
                       inputClass="form-control"
                       containerClass="w-100 phone-input-container invite-taxpayer-phone-container"
                       inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                      dropdownStyle={{ zIndex: 1061 }}
+                      dropdownStyle={{ zIndex: 999999 }}
                       enableSearch={true}
                       countryCodeEditable={false}
                     />
                   </div>
-                  <div className="modal-footer" style={{ borderTop: 'none', padding: '16px 0 0 0', marginTop: '16px' }}>
-                    <button
-                      type="button"
-                      className="btn btn-light"
-                      onClick={() => {
-                        setShowInviteTaxpayerModal(false);
-                        setInviteExistingForm({
-                          first_name: "",
-                          last_name: "",
-                          email: "",
-                          phone_number: ""
-                        });
-                      }}
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={inviteLoading}
-                      style={{
-                        backgroundColor: '#00C0C6',
-                        borderColor: '#00C0C6',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      {inviteLoading ? 'Creating Invite...' : 'Create Invite'}
-                    </button>
-                  </div>
+                  {isPhoneDropdownOpen && <div style={{ height: '260px' }}></div>}
                 </form>
               </div>
+              {!isPhoneDropdownOpen && (
+                <div className="modal-footer" style={{ borderTop: '1px solid #E5E7EB', padding: '20px 24px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    onClick={() => {
+                      setShowInviteTaxpayerModal(false);
+                      setIsPhoneDropdownOpen(false);
+                      setInviteExistingForm({
+                        first_name: "",
+                        last_name: "",
+                        email: "",
+                        phone_number: ""
+                      });
+                    }}
+                    style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    form="inviteTaxpayerForm"
+                    className="btn btn-primary"
+                    disabled={inviteLoading}
+                    style={{
+                      backgroundColor: '#00C0C6',
+                      borderColor: '#00C0C6',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    {inviteLoading ? 'Creating Invite...' : 'Create Invite'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2544,9 +2612,22 @@ export default function MyClients() {
 
       {/* Send Invite Modal - Simple modal with Email and SMS buttons */}
       {showSendInviteModal && selectedClientForInvite && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '450px' }}>
+        <div className="modal" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: '40px 1rem',
+          overflowY: 'auto'
+        }}>
+          <div className="modal-dialog" style={{ margin: 'auto', width: '100%', maxWidth: '450px' }}>
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF', padding: '20px 24px' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', margin: 0 }}>
                   Send Invite
@@ -2563,7 +2644,7 @@ export default function MyClients() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body" style={{ padding: '24px' }}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
                 <div className="mb-4">
                   <p className="mb-2 fw-semibold" style={{ color: '#3B4A66', fontSize: '16px' }}>
                     {selectedClientForInvite.first_name} {selectedClientForInvite.last_name}

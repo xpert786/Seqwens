@@ -1026,8 +1026,8 @@ export default function Appointments() {
                     >
 
 
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <div className="d-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro" }}>
+                      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
+                        <div className="d-flex align-items-center gap-2 flex-wrap" style={{ fontFamily: "BasisGrotesquePro" }}>
                           <strong>{appt.title}</strong>
 
 
@@ -1057,8 +1057,8 @@ export default function Appointments() {
 
                         </div>
 
-                        {/* Edit & Delete buttons */}
-                        <div className="d-flex align-items-center gap-2">
+                        {/* Edit & Delete buttons - right aligned */}
+                        <div className="d-flex align-items-center gap-2 ms-auto mt-2 mt-md-0">
                           <button
                             className="btn "
                             style={{
@@ -1098,15 +1098,15 @@ export default function Appointments() {
                       </div>
 
 
-                      {/* Date, Time, Type in one line */}
-                      <div className="small text-muted d-flex align-items-center mb-2" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
+                      {/* Date, Time, Type - stack on mobile */}
+                      <div className="small text-muted d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2" style={{ gap: "8px", fontFamily: "BasisGrotesquePro" }}>
                         <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
                         <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
                         <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
                       </div>
 
 
-                      <div className="small text-muted d-flex align-items-center" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
+                      <div className="small text-muted d-flex flex-column flex-md-row align-items-start align-items-md-center" style={{ gap: "8px", fontFamily: "BasisGrotesquePro" }}>
                         <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
                         <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
                       </div>
@@ -1287,7 +1287,8 @@ export default function Appointments() {
       {/* ---------- Custom Modal Popup ---------- */}
       {showModal && (
         <div
-          className="custom-popup-overlay"
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, padding: '10px' }}
           onClick={(e) => {
             // Close modal if clicking on overlay (outside the container)
             if (e.target === e.currentTarget) {
@@ -1296,40 +1297,41 @@ export default function Appointments() {
             }
           }}
         >
-          <div className="custom-popup-container" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="rounded-4 overflow-hidden d-flex flex-column"
+            style={{ 
+              width: '100%',
+              maxWidth: '600px',
+              maxHeight: 'calc(100vh - 20px)',
+              backgroundColor: '#fff'
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="popup-header">
-              <div className="popup-header-top">
-                <h5 className="popup-title">Schedule New Appointment</h5>
+            <div className="p-3 border-bottom" style={{ flexShrink: 0 }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0" style={{ color: '#3B4A66', fontSize: '18px', fontWeight: '500', fontFamily: 'BasisGrotesquePro' }}>Schedule New Appointment</h5>
                 <button onClick={() => {
                   resetAppointmentForm();
                   setShowModal(false);
-                }} className="popup-close-btn">
+                }} className="btn p-1" style={{ background: 'none', border: 'none' }}>
                   <CrossIcon />
                 </button>
               </div>
-              <div
+              <p
+                className="mb-0 mt-1"
                 style={{
-                  borderBottom: "1px solid #E5E7EB",
-                  paddingBottom: "16px",
-                  marginTop: "2px",
-                  position: "relative"
+                  color: '#4B5563',
+                  fontSize: '13px',
+                  fontFamily: 'BasisGrotesquePro'
                 }}
               >
-                <p
-                  className="popup-subtitle"
-                  style={{
-                    marginBottom: "0",
-                    marginRight: "40px"
-                  }}
-                >
-                  Schedule a meeting with your tax professional
-                </p>
-              </div>
+                Schedule a meeting with your tax professional
+              </p>
             </div>
 
-            {/* Step 1 - Always visible */}
-            <div className="popup-body">
+            {/* Scrollable Body */}
+            <div className="p-3 overflow-auto" style={{ flex: 1 }}>
               {/* Staff Error Message - Show prominently if staff couldn't be loaded */}
               {staffError && staffError.includes('associated with a firm') && (
                 <div className="alert alert-warning mb-3" role="alert" style={{
@@ -1636,15 +1638,15 @@ export default function Appointments() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="row">
-                                <div className="col-7">
-                                  <h6 className="selection-title">Select a date</h6>
+                              <div className="row flex-column flex-md-row">
+                                <div className="col-12 col-md-7">
+                                  <h6 className="selection-title" style={{ fontSize: '14px' }}>Select a date</h6>
 
                                   {/* Month/Year Navigation */}
                                   <div className="d-flex justify-content-between align-items-center mb-2" style={{
                                     fontFamily: "BasisGrotesquePro",
                                     color: "#6B7280",
-                                    fontSize: "14px"
+                                    fontSize: "13px"
                                   }}>
                                     <span>{monthNames[currentMonth]} {currentYear}</span>
                                     <div className="d-flex align-items-center gap-2">
@@ -1657,14 +1659,14 @@ export default function Appointments() {
                                           border: "none",
                                           background: "transparent",
                                           cursor: "pointer",
-                                          fontSize: "16px",
+                                          fontSize: "14px",
                                           color: "#374151",
                                           padding: "4px 8px"
                                         }}
                                       >
                                         &lt;
                                       </button>
-                                      <span style={{ minWidth: "50px", textAlign: "center" }}>
+                                      <span style={{ minWidth: "40px", textAlign: "center" }}>
                                         {monthNamesShort[currentMonth]}
                                       </span>
                                       <button
@@ -1676,7 +1678,7 @@ export default function Appointments() {
                                           border: "none",
                                           background: "transparent",
                                           cursor: "pointer",
-                                          fontSize: "16px",
+                                          fontSize: "14px",
                                           color: "#374151",
                                           padding: "4px 8px"
                                         }}
@@ -1689,7 +1691,7 @@ export default function Appointments() {
                                   {/* Days of Week Header */}
                                   <div className="d-flex mb-2" style={{
                                     borderBottom: "1px solid #E5E7EB",
-                                    paddingBottom: "8px"
+                                    paddingBottom: "4px"
                                   }}>
                                     {dayNames.map((day) => (
                                       <div
@@ -1697,7 +1699,7 @@ export default function Appointments() {
                                         style={{
                                           flex: 1,
                                           textAlign: "center",
-                                          fontSize: "12px",
+                                          fontSize: "11px",
                                           color: "#6B7280",
                                           fontFamily: "BasisGrotesquePro",
                                           fontWeight: 400
@@ -1709,7 +1711,7 @@ export default function Appointments() {
                                   </div>
 
                                   {/* Calendar Grid */}
-                                  <div className="calendar-grid">
+                                  <div className="calendar-grid" style={{ gap: '2px' }}>
                                     {loadingAvailableDates && (
                                       <div className="d-flex justify-content-center align-items-center" style={{
                                         gridColumn: "1 / -1",
@@ -1756,7 +1758,9 @@ export default function Appointments() {
                                             fontWeight: isCurrentMonth ? 400 : 300,
                                             opacity: canSelect ? 1 : 0.4,
                                             cursor: canSelect ? 'pointer' : 'not-allowed',
-                                            backgroundColor: isSelected ? '#FF6600' : 'transparent'
+                                            backgroundColor: isSelected ? '#FF6600' : 'transparent',
+                                            fontSize: '12px',
+                                            padding: '6px 4px'
                                           }}
                                         >
                                           {date.getDate()}
@@ -1766,8 +1770,8 @@ export default function Appointments() {
                                   </div>
                                 </div>
 
-                                <div className="col-5">
-                                  <h6 className="selection-title">
+                                <div className="col-12 col-md-5 mt-3 mt-md-0">
+                                  <h6 className="selection-title" style={{ fontSize: '14px' }}>
                                     Select a time
                                     {loadingTimeSlots && (
                                       <span className="ms-2">

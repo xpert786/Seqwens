@@ -256,8 +256,7 @@ export default function TaxPreparerPermissionsModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -265,15 +264,15 @@ export default function TaxPreparerPermissionsModal({
       }}
     >
       <div
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar"
+        className="bg-white w-full max-w-2xl rounded-xl shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {/* Header */}
-        <div className="bg-white border-b-2 border-[#E8F0FF] p-6">
+        <div className="bg-white border-b-2 border-[#E8F0FF] p-4 sm:p-6">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
                   <FiShield className="text-[#3AD6F2] w-5 h-5" />
                   <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
@@ -286,16 +285,16 @@ export default function TaxPreparerPermissionsModal({
               </div>
 
               {/* User Info Card */}
-              <div className="flex flex-wrap items-center gap-6">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6">
                 <div className="flex items-center gap-2">
                   <FiUser className="text-[#32B582] w-5 h-5 flex-shrink-0" />
-                  <p className="font-semibold text-gray-900 font-[BasisGrotesquePro] text-base m-0">
+                  <p className="font-semibold text-gray-900 font-[BasisGrotesquePro] text-sm sm:text-base m-0">
                     {userInfo.name || preparerName || 'Tax Preparer'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <FiMail className="text-gray-500 w-5 h-5 flex-shrink-0" />
-                  <p className="text-sm text-gray-600 font-[BasisGrotesquePro] m-0">
+                  <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] m-0 break-all">
                     {userInfo.email || preparerEmail}
                   </p>
                 </div>
@@ -313,36 +312,36 @@ export default function TaxPreparerPermissionsModal({
         </div>
 
         {/* Summary Bar */}
-        <div className="bg-white border-b border-[#E8F0FF] px-6 py-3">
-          <div className="flex items-center justify-between flex-nowrap">
-            <div className="flex items-center gap-3 whitespace-nowrap overflow-hidden">
+        <div className="bg-white border-b border-[#E8F0FF] px-4 sm:px-6 py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#32B582] rounded-full"></div>
-                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
                   {allowedPermissions} Allowed
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
                   {disallowedPermissions} Disallowed
                 </span>
               </div>
-              <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
-                {totalPermissions} Total Permissions
+              <div className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">
+                {totalPermissions} Total
               </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-[#3AD6F2] rounded-full whitespace-nowrap flex-shrink-0">
-              <FiInfo size={14} className="text-white" />
-              <span className="text-xs text-white font-[BasisGrotesquePro] font-medium">
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#3AD6F2] rounded-full w-fit">
+              <FiInfo size={14} className="text-white flex-shrink-0" />
+              <span className="text-[10px] sm:text-xs text-white font-[BasisGrotesquePro] font-medium">
                 Changes apply only to this preparer
               </span>
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content Area */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
@@ -366,27 +365,27 @@ export default function TaxPreparerPermissionsModal({
                 return (
                   <div
                     key={category}
-                    className="bg-white border border-[#E8F0FF] rounded-lg p-5 hover:border-[#3AD6F2] transition-all shadow-sm"
+                    className="bg-white border border-[#E8F0FF] rounded-lg p-4 sm:p-5 hover:border-[#3AD6F2] transition-all shadow-sm"
                   >
                     {/* Category Header */}
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 flex items-center text-gray-500">
                           {React.isValidElement(categoryData.icon) ?
                             React.cloneElement(categoryData.icon, { className: "w-5 h-5" }) :
                             categoryData.icon}
                         </div>
-                        <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
+                        <h5 className="text-base sm:text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
                           {category}
                         </h5>
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
-                          {categoryPermissions.length} {categoryPermissions.length === 1 ? 'permission' : 'permissions'}
+                        <span className="text-[10px] sm:text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
+                          {categoryPermissions.length} {categoryPermissions.length === 1 ? 'perm' : 'perms'}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(categoryCodes, allSelected)}
-                        className={`px-4 py-1.5 !rounded-lg font-[BasisGrotesquePro] text-sm font-medium
+                        className={`w-full sm:w-auto px-4 py-1.5 !rounded-lg font-[BasisGrotesquePro] text-xs sm:text-sm font-medium
     hover:bg-[inherit] hover:text-[inherit] active:bg-[inherit] active:text-[inherit]
     !text-white`}
                         style={{
@@ -399,7 +398,6 @@ export default function TaxPreparerPermissionsModal({
                       >
                         {allSelected ? 'Deselect All' : 'Select All'}
                       </button>
-
                     </div>
 
                     {/* Permissions List */}
@@ -412,28 +410,28 @@ export default function TaxPreparerPermissionsModal({
                           <div
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
-                            className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
+                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
                               ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
                               : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
                               }`}
                           >
                             {/* Toggle Switch */}
-                            <div className={`relative w-12 h-6 rounded-full transition-colors ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
+                            <div className={`relative w-10 sm:w-12 h-5 sm:h-6 rounded-full transition-colors flex-shrink-0 ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
                               }`}>
-                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-6' : 'translate-x-0'
+                              <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-[20px] sm:translate-x-6' : 'translate-x-0'
                                 }`}></div>
                             </div>
 
                             {/* Permission Label */}
                             <div className="flex-1">
-                              <p className={`text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
+                              <p className={`text-xs sm:text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
                                 }`}>
                                 {permissionLabel}
                               </p>
                             </div>
 
                             {/* Status Badge */}
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
+                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
                               ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
                               : 'bg-gray-100 text-gray-600 border-gray-300'
                               }`}>
@@ -469,14 +467,14 @@ export default function TaxPreparerPermissionsModal({
 
                 return (
                   <div className="bg-white border border-[#E8F0FF] rounded-lg p-5 hover:border-[#3AD6F2] transition-all shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                       <div className="flex items-center gap-3">
                         <FiList className="text-gray-500 w-5 h-5 flex-shrink-0" />
-                        <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
+                        <h5 className="text-base sm:text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
                           Other Permissions
                         </h5>
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
-                          {uncategorizedPermissions.length} {uncategorizedPermissions.length === 1 ? 'permission' : 'permissions'}
+                        <span className="text-[10px] sm:text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
+                          {uncategorizedPermissions.length} {uncategorizedPermissions.length === 1 ? 'perm' : 'perms'}
                         </span>
                       </div>
                     </div>
@@ -490,23 +488,23 @@ export default function TaxPreparerPermissionsModal({
                           <div
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
-                            className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
+                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
                               ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
                               : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
                               }`}
                           >
-                            <div className={`relative w-12 h-6 rounded-full transition-colors ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
+                            <div className={`relative w-10 sm:w-12 h-5 sm:h-6 rounded-full transition-colors flex-shrink-0 ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
                               }`}>
-                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-6' : 'translate-x-0'
+                              <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-[20px] sm:translate-x-6' : 'translate-x-0'
                                 }`}></div>
                             </div>
                             <div className="flex-1">
-                              <p className={`text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
+                              <p className={`text-xs sm:text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
                                 }`}>
                                 {permissionLabel}
                               </p>
                             </div>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
+                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
                               ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
                               : 'bg-gray-100 text-gray-600 border-gray-300'
                               }`}>
@@ -534,29 +532,35 @@ export default function TaxPreparerPermissionsModal({
         </div>
 
         {/* Footer */}
-        <div className="bg-white border-t border-[#E8F0FF] px-6 py-4 flex justify-between items-center">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="px-6 py-2.5 border border-[#E8F0FF] bg-white text-gray-700 !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Cancel
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+        <div className="bg-white border-t border-[#E8F0FF] px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="px-4 sm:px-6 py-2.5 border border-[#E8F0FF] bg-white text-gray-700 !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <div className="sm:hidden text-xs text-gray-600 font-[BasisGrotesquePro]">
+              <span className="font-semibold text-gray-900">{allowedPermissions}</span>/{totalPermissions}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <div className="hidden sm:block text-sm text-gray-600 font-[BasisGrotesquePro]">
               <span className="font-semibold text-gray-900">{allowedPermissions}</span> of {totalPermissions} permissions allowed
             </div>
             <button
               type="button"
               onClick={handleSave}
               disabled={saving || loading}
-              className="px-6 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55D1D] transition-colors font-[BasisGrotesquePro] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55D1D] transition-colors font-[BasisGrotesquePro] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Saving Changes...</span>
+                  <span>Saving...</span>
                 </>
               ) : (
                 <>

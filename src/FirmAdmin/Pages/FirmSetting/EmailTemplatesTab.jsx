@@ -114,9 +114,9 @@ export default function EmailTemplatesTab() {
       )}
 
       {/* Email Templates Management */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-6 flex justify-between items-end">
-          <div>
+      <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+          <div className="text-center sm:text-left">
             <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
               Email Template Management
             </h5>
@@ -126,7 +126,8 @@ export default function EmailTemplatesTab() {
           </div>
           <Link
             to="/firmadmin/email-templates"
-            className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg text-sm font-medium font-[BasisGrotesquePro]"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#3AD6F2] !text-white rounded-lg text-sm font-medium font-[BasisGrotesquePro] !no-underline hover:!no-underline hover:!text-white text-center shadow-sm"
+            style={{ textDecoration: 'none' }}
           >
             Create New Template
           </Link>
@@ -142,11 +143,11 @@ export default function EmailTemplatesTab() {
                 {/* Header */}
                 <button
                   onClick={() => setExpandedType(isExpanded ? null : emailType.id)}
-                  className="group w-full px-4 py-2 bg-[#F9FAFC] transition-colors flex items-center justify-between"
+                  className="group w-full px-3 sm:px-4 py-3 bg-[#F9FAFC] transition-colors flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full xs:w-auto">
                     <svg
-                      className={`w-4 h-4 transition-all ${isExpanded ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 transition-all shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
                       fill="none"
                       stroke={isExpanded ? '#000000' : '#3AD6F2'}
                       viewBox="0 0 24 24"
@@ -154,18 +155,18 @@ export default function EmailTemplatesTab() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
-                    <div className="text-left">
-                      <h6 className="text-[11px] font-medium !text-[#1F2A55] font-[BasisGrotesquePro] whitespace-nowrap">
+                    <div className="text-left min-w-0 flex-1">
+                      <h6 className="text-[11px] sm:text-xs font-semibold !text-[#1F2A55] font-[BasisGrotesquePro] truncate">
                         {typeData.label}
                       </h6>
-                      <p className="text-[10px] !text-[#4B5563] font-regular font-[BasisGrotesquePro] whitespace-nowrap">
+                      <p className="text-[10px] !text-[#4B5563] font-regular font-[BasisGrotesquePro] truncate">
                         {typeData.active_template
                           ? `Active: ${typeData.active_template.name}`
                           : 'No active template'}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 ml-7 xs:ml-0">
                     <span className="inline-block px-2 py-0.5 bg-[#E0F2FE] !text-[#0369A1] rounded text-[10px] font-semibold font-[BasisGrotesquePro] whitespace-nowrap">
                       {typeData.templates?.length || 0} custom
                     </span>
@@ -185,9 +186,9 @@ export default function EmailTemplatesTab() {
                 {isExpanded && (
                   <div className="px-4 py-4 bg-white border-t border-[#E8F0FF] space-y-3">
                     {/* System Default Template Item */}
-                    <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 gap-3">
                       <div className="flex-1">
-                        <h6 className="text-[11px] font-medium text-gray-700 font-[BasisGrotesquePro]">
+                        <h6 className="text-[11px] font-semibold text-gray-700 font-[BasisGrotesquePro]">
                           System Default Template
                         </h6>
                         <p className="text-[10px] text-gray-500 font-regular font-[BasisGrotesquePro]">
@@ -204,9 +205,9 @@ export default function EmailTemplatesTab() {
                       <button
                         onClick={() => handleRevertToDefault(emailType.id)}
                         disabled={saving || !typeData.active_template}
-                        className={`px-3 py-1.5 !rounded-lg text-[10px] font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ml-3 ${!typeData.active_template
+                        className={`w-full sm:w-auto px-3 py-2 sm:py-1.5 !rounded-lg text-[10px] font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ${!typeData.active_template
                           ? 'bg-gray-200 text-gray-500 cursor-default'
-                          : 'bg-white border border-gray-300 text-gray-700 font-medium'
+                          : 'bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50'
                           }`}
                       >
                         {!typeData.active_template ? 'Active' : 'Revert to Default'}
@@ -217,10 +218,10 @@ export default function EmailTemplatesTab() {
                       typeData.templates.map((template) => (
                         <div
                           key={template.id}
-                          className="flex items-center justify-between p-2.5 bg-[#F9FAFC] rounded-lg border border-[#E8F0FF] transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-[#F9FAFC] rounded-lg border border-[#E8F0FF] transition-colors gap-3"
                         >
                           <div className="flex-1">
-                            <h6 className="text-[11px] font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                            <h6 className="text-[11px] font-semibold text-[#1F2A55] font-[BasisGrotesquePro]">
                               {template.name}
                             </h6>
                             <p className="text-[10px] text-[#4B5563] font-regular font-[BasisGrotesquePro]">
@@ -237,19 +238,19 @@ export default function EmailTemplatesTab() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
                             <Link
                               to={`/firmadmin/email-templates?edit=${template.id}`}
-                              className="px-2 py-1.5 rounded-lg text-[10px] font-medium font-[BasisGrotesquePro] text-[#0369A1] transition-colors"
+                              className="flex-1 sm:flex-none text-center px-3 py-2 sm:py-1.5 rounded-lg text-[10px] font-semibold font-[BasisGrotesquePro] text-[#0369A1] bg-white border border-[#E8F0FF] hover:bg-gray-50 transition-colors shadow-sm"
                             >
                               Edit
                             </Link>
                             <button
                               onClick={() => handleAssignTemplate(template.id, emailType.id)}
                               disabled={saving || template.is_active}
-                              className={`px-3 py-1.5 !rounded-lg text-[10px] font-medium font-[BasisGrotesquePro] transition-colors whitespace-nowrap ${template.is_active
+                              className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 !rounded-lg text-[10px] font-bold font-[BasisGrotesquePro] transition-colors whitespace-nowrap shadow-sm ${template.is_active
                                 ? 'bg-[#DCFCE7] text-[#166534] cursor-default'
-                                : 'bg-[#F56D2D] text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                                : 'bg-[#F56D2D] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E45A1C]'
                                 }`}
                             >
                               {template.is_active ? 'Active' : 'Assign'}
@@ -264,7 +265,7 @@ export default function EmailTemplatesTab() {
                         </p>
                         <Link
                           to="/firmadmin/email-templates"
-                          className="text-sm text-[#3AD6F2] font-medium hover:underline"
+                          className="text-sm text-[#3AD6F2] font-medium !no-underline hover:!no-underline"
                         >
                           Create a custom template
                         </Link>
@@ -302,14 +303,14 @@ export default function EmailTemplatesTab() {
               <span>"System Default" template is read-only and serves as a verified fallback</span>
             </li>
           </ul>
-          <div className="flex flex-col gap-2 justify-center border-l border-[#3AD6F2]/30 pl-6 min-w-[200px]">
-            <Link to="/firmadmin/email-templates" className="text-sm font-medium text-[#0284C7] hover:underline flex items-center gap-1">
-              Manage All Templates
+          <div className="flex flex-col gap-3 justify-center md:border-l md:border-[#3AD6F2]/30 md:pl-6 min-w-[200px] mt-4 md:mt-0">
+            <Link to="/firmadmin/email-templates" className="text-sm font-semibold text-[#0284C7] !no-underline hover:!no-underline flex items-center gap-2 bg-white/50 p-2 rounded-lg md:bg-transparent md:p-0">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              Manage All Templates
             </Link>
-            <Link to="/firmadmin/email-templates" className="text-sm font-medium text-[#0284C7] hover:underline flex items-center gap-1">
-              Create New Template
+            <Link to="/firmadmin/email-templates" className="text-sm font-semibold text-[#0284C7] !no-underline hover:!no-underline flex items-center gap-2 bg-white/50 p-2 rounded-lg md:bg-transparent md:p-0">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Create New Template
             </Link>
           </div>
         </div>

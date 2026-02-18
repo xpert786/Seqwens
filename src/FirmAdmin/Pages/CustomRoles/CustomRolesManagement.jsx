@@ -198,15 +198,14 @@ export default function CustomRolesManagement() {
       </div>
     );
   }
-
   return (
-    <div className="p-6 bg-white min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
+    <div className="p-4 sm:p-6 bg-[#F6F7FF] min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1 sm:mb-2 text-center sm:text-left">
           Tax Preparer Permissions Management
         </h1>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+        <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] text-center sm:text-left">
           Manage individual permissions for each tax preparer in your firm. Each preparer can have their own unique set of permissions.
         </p>
       </div>
@@ -246,18 +245,18 @@ export default function CustomRolesManagement() {
 
         <div
           onClick={() => setTypeFilter('permissions')}
-          className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'permissions' ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]' : 'border-[#E8F0FF]'}`}
+          className={`cursor-pointer bg-white rounded-xl border p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${typeFilter === 'permissions' ? 'border-[#00C0C6] ring-1 ring-[#00C0C6]' : 'border-[#E8F0FF]'}`}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">With Permissions</p>
-            <div className="w-10 h-10 rounded-lg bg-[#3AD6F2]/10 flex items-center justify-center">
-              <FiUsers size={20} color="#3AD6F2" />
+            <div className="w-10 h-10 rounded-lg bg-[#00C0C6]/10 flex items-center justify-center">
+              <FiShield size={20} color="#00C0C6" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-bold font-[BasisGrotesquePro] mb-1" style={{ color: '#3B4A66' }}>
             {loading ? '...' : summary.with_permissions}
           </p>
-          <p className="text-xs sm:text-sm text-cyan-600 font-medium font-[BasisGrotesquePro] hover:underline">View Custom permissions</p>
+          <p className="text-xs sm:text-sm text-teal-600 font-medium font-[BasisGrotesquePro] hover:underline">View Custom permissions</p>
         </div>
 
         <div
@@ -279,10 +278,10 @@ export default function CustomRolesManagement() {
       {/* Main Content Card */}
       <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-md overflow-hidden">
         {/* Toolbar */}
-        <div className="p-6 border-b border-[#E8F0FF] bg-white">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="p-4 sm:p-6 border-b border-[#E8F0FF] bg-white">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Search Bar */}
-            <div className="relative flex-1 max-w-2xl flex gap-2">
+            <div className="relative flex flex-col sm:flex-row gap-2 w-full max-w-2xl">
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                   <FiSearch className="text-[#00C0C6]" size={18} />
@@ -290,7 +289,7 @@ export default function CustomRolesManagement() {
                 <input
                   id="search-input"
                   type="text"
-                  placeholder="Search tax preparers by name or email..."
+                  placeholder="Search tax preparers..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-10 py-2.5 border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00C0C6] focus:border-[#00C0C6] font-[BasisGrotesquePro] text-sm transition-all duration-200 bg-white hover:border-[#00C0C6]/50"
@@ -308,7 +307,7 @@ export default function CustomRolesManagement() {
               </div>
               <button
                 onClick={() => setDebouncedSearchTerm(searchTerm)}
-                className="px-6 py-2.5 text-white !rounded-lg hover:shadow-md transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm"
+                className="px-6 py-2.5 text-white !rounded-lg hover:shadow-md transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
                 style={{ backgroundColor: 'var(--firm-primary-color)' }}
                 title="Search"
               >
@@ -316,7 +315,6 @@ export default function CustomRolesManagement() {
                 Search
               </button>
             </div>
-
           </div>
         </div>
 
@@ -352,100 +350,99 @@ export default function CustomRolesManagement() {
           ) : (
             <>
               <div className="px-6 py-3 bg-[#F3F7FF] border-b border-[#E8F0FF]">
-                <p className="text-xs font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                <p className="text-[10px] sm:text-xs font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                   💡 <strong>Tip:</strong> Click on any tax preparer row or use the "Manage" button to customize their individual permissions. Changes only affect the selected preparer.
                 </p>
               </div>
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-[#E8F0FF] bg-[#F9FAFB]">
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
-                      Name
-                    </th>
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
-                      Email
-                    </th>
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
-                      Role
-                    </th>
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
-                      Permissions
-                    </th>
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
-                      Status
-                    </th>
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPreparers.map((preparer) => (
-                    <tr
-                      key={preparer.id}
-                      className="border-b border-[#E8F0FF] hover:bg-gray-50 transition-all duration-200 cursor-pointer group"
-                      onClick={() => {
-                        setSelectedPreparer({
-                          id: preparer.id,
-                          name: preparer.full_name,
-                          email: preparer.email,
-                          role: preparer.role
-                        });
-                        setShowPermissionsModal(true);
-                      }}
-                    >
-                      <td className="py-2 px-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`p-1.5 rounded-lg transition-all duration-200 ${preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20 shadow-sm' : 'bg-gray-100 group-hover:bg-gray-200'
+
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-[#E8F0FF] bg-[#F9FAFB]">
+                      <th className="text-left py-3 px-6 text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        Name
+                      </th>
+                      <th className="text-left py-3 px-6 text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        Email
+                      </th>
+                      <th className="text-left py-3 px-6 text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        Role
+                      </th>
+                      <th className="text-left py-3 px-6 text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        Permissions
+                      </th>
+                      <th className="text-left py-3 px-6 text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-6 text-xs font-semibold font-[BasisGrotesquePro] uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPreparers.map((preparer) => (
+                      <tr
+                        key={preparer.id}
+                        className="border-b border-[#E8F0FF] hover:bg-gray-50 transition-all duration-200 cursor-pointer group"
+                        onClick={() => {
+                          setSelectedPreparer({
+                            id: preparer.id,
+                            name: preparer.full_name,
+                            email: preparer.email,
+                            role: preparer.role
+                          });
+                          setShowPermissionsModal(true);
+                        }}
+                      >
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg transition-all duration-200 ${preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20 shadow-sm' : 'bg-gray-100 group-hover:bg-gray-200'
+                              }`}>
+                              <FiUsers
+                                size={16}
+                                color={preparer.is_active ? "#32B582" : "#9CA3AF"}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-semibold font-[BasisGrotesquePro] block truncate transition-colors duration-200" style={{ color: '#3B4A66' }}>
+                                {preparer.full_name || 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="text-sm font-[BasisGrotesquePro] truncate block" style={{ color: '#6B7280' }}>
+                            {preparer.email || '—'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="px-2 py-1 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-xs font-semibold rounded-md font-[BasisGrotesquePro] capitalize border border-gray-200">
+                            {preparer.role || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            {preparer.has_permissions ? (
+                              <span className="px-2 py-1 bg-gradient-to-r from-[#E8F0FF] to-[#F0FDFF] text-xs font-semibold rounded-md font-[BasisGrotesquePro] border border-[#00C0C6]/30 shadow-sm" style={{ color: '#00C0C6' }}>
+                                {preparer.permissions_count || 0} {preparer.permissions_count === 1 ? 'permission' : 'permissions'}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-md font-[BasisGrotesquePro] border border-gray-200">
+                                No permissions
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-md font-[BasisGrotesquePro] border shadow-sm ${preparer.is_active
+                            ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200'
+                            : 'bg-gray-100 text-gray-600 border-gray-200'
                             }`}>
-                            <FiUsers
-                              size={14}
-                              color={preparer.is_active ? "#32B582" : "#9CA3AF"}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-[10px] font-semibold font-[BasisGrotesquePro] block truncate transition-colors duration-200" style={{ color: '#3B4A66' }}>
-                              {preparer.full_name || 'N/A'}
-                            </span>
-                            <span className="text-[9px] font-[BasisGrotesquePro] block truncate transition-colors duration-200" style={{ color: '#6B7280' }}>
-                              Click to manage
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className="text-[10px] font-[BasisGrotesquePro] truncate block" style={{ color: '#6B7280' }}>
-                          {preparer.email || '—'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] capitalize border border-gray-200 shadow-sm">
-                          {preparer.role || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          {preparer.has_permissions ? (
-                            <span className="px-2 py-1 bg-gradient-to-r from-[#E8F0FF] to-[#F0FDFF] text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] border border-[#00C0C6]/30 shadow-sm" style={{ color: '#00C0C6' }}>
-                              {preparer.permissions_count || 0} {preparer.permissions_count === 1 ? 'permission' : 'permissions'}
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] border border-gray-200">
-                              No permissions
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 text-[10px] font-semibold rounded-md font-[BasisGrotesquePro] border shadow-sm ${preparer.is_active
-                          ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200'
-                          : 'bg-gray-100 text-gray-600 border-gray-200'
-                          }`}>
-                          {preparer.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-2">
+                            {preparer.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -457,83 +454,161 @@ export default function CustomRolesManagement() {
                               });
                               setShowPermissionsModal(true);
                             }}
-                            className="px-3 py-1.5 text-white !rounded-md hover:shadow-md transition-all duration-200 font-[BasisGrotesquePro] text-[10px] font-medium flex items-center gap-1 shadow-sm"
+                            className="px-4 py-2 text-white !rounded-lg hover:shadow-md transition-all duration-200 font-[BasisGrotesquePro] text-xs font-medium flex items-center gap-2 shadow-sm"
                             style={{ backgroundColor: 'var(--firm-primary-color)' }}
-                            title="Manage Permissions"
                           >
-                            <FiEdit2 size={12} />
+                            <FiEdit2 size={14} />
                             Manage
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View - Card Layout */}
+              <div className="md:hidden divide-y divide-[#E8F0FF]">
+                {filteredPreparers.map((preparer) => (
+                  <div
+                    key={preparer.id}
+                    className="p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                    onClick={() => {
+                      setSelectedPreparer({
+                        id: preparer.id,
+                        name: preparer.full_name,
+                        email: preparer.email,
+                        role: preparer.role
+                      });
+                      setShowPermissionsModal(true);
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${preparer.is_active ? 'bg-[#32B582]/10' : 'bg-gray-100'}`}>
+                          <FiUsers size={16} color={preparer.is_active ? "#32B582" : "#9CA3AF"} />
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <div>
+                          <h4 className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                            {preparer.full_name || 'N/A'}
+                          </h4>
+                          <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                            {preparer.email || 'No email'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${preparer.is_active
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-gray-50 text-gray-500 border-gray-200'
+                        }`}>
+                        {preparer.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                        <p className="text-[10px] text-gray-500 font-medium uppercase mb-1">Role</p>
+                        <p className="text-xs font-bold text-gray-700 capitalize">{preparer.role || 'N/A'}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                        <p className="text-[10px] text-gray-500 font-medium uppercase mb-1">Permissions</p>
+                        <p className={`text-xs font-bold ${preparer.has_permissions ? 'text-[#00C0C6]' : 'text-gray-400'}`}>
+                          {preparer.permissions_count || 0} Sets
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPreparer({
+                          id: preparer.id,
+                          name: preparer.full_name,
+                          email: preparer.email,
+                          role: preparer.role
+                        });
+                        setShowPermissionsModal(true);
+                      }}
+                      className="w-full py-2.5 text-white !rounded-lg font-[BasisGrotesquePro] text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
+                      style={{ backgroundColor: 'var(--firm-primary-color)' }}
+                    >
+                      <FiShield size={16} />
+                      Manage Permissions
+                    </button>
+                  </div>
+                ))}
+              </div>
 
               {/* Pagination */}
               {pagination.total_count > 0 && (
-                <div className="p-6 border-t border-[#E8F0FF] bg-gradient-to-r from-[#F9FAFB] to-[#F0FDFF] flex items-center justify-between">
-                  <div className="text-sm font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                    Showing <span className="font-semibold" style={{ color: '#3B4A66' }}>{((currentPage - 1) * pageSize) + 1}</span> to <span className="font-semibold" style={{ color: '#3B4A66' }}>{Math.min(currentPage * pageSize, pagination.total_count)}</span> of <span className="font-semibold" style={{ color: '#3B4A66' }}>{pagination.total_count}</span> tax preparer{pagination.total_count !== 1 ? 's' : ''}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={isViewAll ? () => handleResetPagination(5) : handleViewAll}
-                      className="px-4 py-2 text-sm font-semibold !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] bg-[#F0FDFF] border border-[#00C0C6]/30 text-[#00C0C6] hover:bg-[#00C0C6] hover:text-white shadow-sm"
-                    >
-                      {isViewAll ? 'Paginate' : 'View All'}
-                    </button>
-                    {!isViewAll && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                          disabled={!pagination.has_previous || currentPage === 1}
-                          className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${!pagination.has_previous || currentPage === 1
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                            : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
-                            }`}
-                        >
-                          Previous
-                        </button>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                            let pageNum;
-                            if (pagination.total_pages <= 5) {
-                              pageNum = i + 1;
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1;
-                            } else if (currentPage >= pagination.total_pages - 2) {
-                              pageNum = pagination.total_pages - 4 + i;
-                            } else {
-                              pageNum = currentPage - 2 + i;
-                            }
-                            return (
-                              <button
-                                key={pageNum}
-                                onClick={() => setCurrentPage(pageNum)}
-                                className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${currentPage === pageNum
-                                  ? 'bg-[#F56D2D] text-white shadow-md'
-                                  : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
-                                  }`}
-                              >
-                                {pageNum}
-                              </button>
-                            );
-                          })}
+                <div className="p-4 sm:p-6 border-t border-[#E8F0FF] bg-gradient-to-r from-[#F9FAFB] to-[#F0FDFF]">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-xs sm:text-sm font-[BasisGrotesquePro] order-2 sm:order-1 text-center sm:text-left" style={{ color: '#6B7280' }}>
+                      Showing <span className="font-semibold" style={{ color: '#3B4A66' }}>{((currentPage - 1) * pageSize) + 1}</span> to <span className="font-semibold" style={{ color: '#3B4A66' }}>{Math.min(currentPage * pageSize, pagination.total_count)}</span> of <span className="font-semibold" style={{ color: '#3B4A66' }}>{pagination.total_count}</span> tax preparer{pagination.total_count !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex items-center gap-2 order-1 sm:order-2">
+                      <button
+                        onClick={isViewAll ? () => handleResetPagination(5) : handleViewAll}
+                        className="px-3 py-1.5 text-xs sm:text-sm font-semibold !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] bg-[#F0FDFF] border border-[#00C0C6]/30 text-[#00C0C6] hover:bg-[#00C0C6] hover:text-white shadow-sm whitespace-nowrap"
+                      >
+                        {isViewAll ? 'Paginate' : 'View All'}
+                      </button>
+                      {!isViewAll && (
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={!pagination.has_previous || currentPage === 1}
+                            className={`px-3 py-1.5 text-xs sm:text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm border ${!pagination.has_previous || currentPage === 1
+                              ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                              : 'bg-white border-[#E8F0FF] hover:border-[#00C0C6] text-gray-700'
+                              }`}
+                          >
+                            <span className="hidden sm:inline">Prev</span>
+                            <span className="sm:hidden">&lt;</span>
+                          </button>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(pagination.total_pages <= 3 ? 3 : 3, pagination.total_pages) }, (_, i) => {
+                              let pageNum;
+                              if (pagination.total_pages <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage === 1) {
+                                pageNum = i + 1;
+                              } else if (currentPage === pagination.total_pages) {
+                                pageNum = pagination.total_pages - 2 + i;
+                              } else {
+                                pageNum = currentPage - 1 + i;
+                              }
+
+                              if (pageNum > pagination.total_pages || pageNum < 1) return null;
+
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm border ${currentPage === pageNum
+                                    ? 'bg-[#F56D2D] text-white border-[#F56D2D] shadow-md'
+                                    : 'bg-white border-[#E8F0FF] hover:border-[#00C0C6] text-gray-700'
+                                    }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
+                            disabled={!pagination.has_next || currentPage === pagination.total_pages}
+                            className={`px-3 py-1.5 text-xs sm:text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm border ${!pagination.has_next || currentPage === pagination.total_pages
+                              ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                              : 'bg-white border-[#E8F0FF] hover:border-[#00C0C6] text-gray-700'
+                              }`}
+                          >
+                            <span className="hidden sm:inline">Next</span>
+                            <span className="sm:hidden">&gt;</span>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
-                          disabled={!pagination.has_next || currentPage === pagination.total_pages}
-                          className={`px-4 py-2 text-sm font-medium !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] shadow-sm ${!pagination.has_next || currentPage === pagination.total_pages
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                            : 'bg-white border border-[#E8F0FF] hover:border-[#00C0C6] hover:bg-[#F0FDFF] text-gray-700'
-                            }`}
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

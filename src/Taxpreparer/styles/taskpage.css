@@ -349,7 +349,7 @@
     /* Modal alignment */
     .task-modal-mobile {
       align-items: flex-start !important;
-      padding: 12px !important;
+      padding: 80px 16px !important;
     }
 
     /* Full-width modal */

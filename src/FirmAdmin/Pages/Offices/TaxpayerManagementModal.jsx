@@ -198,36 +198,40 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
       `}</style>
 
       {/* Custom Modal Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 1070 }}>
+      <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto custom-scrollbar" style={{ zIndex: 9999 }}>
         {/* Modal Container */}
         <div
-          className="bg-white !rounded-xl shadow-2xl flex flex-col overflow-hidden"
-          style={{ width: '85vw', maxWidth: '1200px', height: '85vh', maxHeight: '900px' }}
+          className="bg-white !rounded-xl shadow-2xl flex flex-col mx-auto my-24"
+          style={{ width: '95%', maxWidth: '900px', minHeight: '400px', maxHeight: 'auto', borderRadius: '12px' }}
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Fixed Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8F0FF] flex-shrink-0">
-            <div>
-              <h3 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+          {/* Modal Header */}
+          <div className="bg-white flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#E8F0FF] rounded-t-xl">
+            <div className="flex-1 pr-2">
+              <h3 className="text-lg sm:text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
                 Manage Taxpayers - {officeName}
               </h3>
-              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
                 View and assign clients to this office
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#F3F7FF] text-[#3AD6F2] transition-colors shrink-0"
+              style={{ borderRadius: '50%' }}
+              type="button"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
+              <svg width="20" height="20" className="sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
           </div>
 
-          {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-6 taxpayer-modal-body">
+          {/* Modal Body */}
+          <div className="p-4 sm:p-6">
             {/* Search and Filter */}
-            <div className="mb-6 flex items-center gap-4 sticky top-0 bg-white pb-4 z-10 border-b border-gray-50">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 bg-white pb-4 border-b border-gray-50">
               <div className="flex-1 relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -238,15 +242,18 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
                   className="w-full pl-10 pr-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Form.Check
-                  type="switch"
-                  id="assigned-only"
-                  checked={showAssignedOnly}
-                  onChange={(e) => setShowAssignedOnly(e.target.checked)}
-                  className="mt-0 custom-switch"
-                />
-                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">Assigned Only</span>
+              <div className="flex items-center justify-between sm:justify-start gap-2 border-t sm:border-t-0 pt-3 sm:pt-0">
+                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro] sm:hidden">Assigned Only</span>
+                <div className="flex items-center gap-2">
+                  <Form.Check
+                    type="switch"
+                    id="assigned-only"
+                    checked={showAssignedOnly}
+                    onChange={(e) => setShowAssignedOnly(e.target.checked)}
+                    className="mt-0 custom-switch"
+                  />
+                  <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro] hidden sm:inline">Assigned Only</span>
+                </div>
               </div>
             </div>
 
@@ -262,22 +269,22 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
                 <p className="text-gray-500 font-[BasisGrotesquePro]">No taxpayers found matching your search</p>
               </div>
             ) : (
-              <div className="border border-[#E8F0FF] rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-sm font-[BasisGrotesquePro]">
+              <div className="border border-[#E8F0FF] rounded-xl overflow-x-auto shadow-sm custom-scrollbar">
+                <table className="w-full text-sm font-[BasisGrotesquePro] min-w-[700px]">
                   <thead className="bg-[#F8FAFF]">
                     <tr>
-                      <th className="px-6 py-4 text-left font-semibold text-[#3B4A66] w-12 text-xs uppercase tracking-wider">Select</th>
-                      <th className="px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Phone</th>
-                      <th className="px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-center font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Actions</th>
+                      <th className="px-4 sm:px-6 py-4 text-left font-semibold text-[#3B4A66] w-12 text-xs uppercase tracking-wider">Select</th>
+                      <th className="px-4 sm:px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Name</th>
+                      <th className="px-4 sm:px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Email</th>
+                      <th className="px-4 sm:px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Phone</th>
+                      <th className="px-4 sm:px-6 py-4 text-left font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Status</th>
+                      <th className="px-4 sm:px-6 py-4 text-center font-semibold text-[#3B4A66] text-xs uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E8F0FF] bg-white">
                     {filteredTaxpayers.map((taxpayer) => (
                       <tr key={taxpayer.id} className="hover:bg-[#F9FBFF] transition-colors">
-                        <td className="px-6 py-4">
+                        <td className="px-4 sm:px-6 py-4">
                           {!isAssigned(taxpayer.id) && (
                             <input
                               type="checkbox"
@@ -287,30 +294,30 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
                             />
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="font-semibold text-gray-900">
+                        <td className="px-4 sm:px-6 py-4">
+                          <div className="font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-none">
                             {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-600">{taxpayer.email}</td>
-                        <td className="px-6 py-4 text-gray-600">{taxpayer.phone_number || 'N/A'}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 sm:px-6 py-4 text-gray-600 font-medium">{taxpayer.email}</td>
+                        <td className="px-4 sm:px-6 py-4 text-gray-600 whitespace-nowrap">{taxpayer.phone_number || 'N/A'}</td>
+                        <td className="px-4 sm:px-6 py-4">
                           {isAssigned(taxpayer.id) ? (
-                            <span className="px-3 py-1 text-[11px] font-bold bg-green-50 text-green-700 rounded-full border border-green-100 uppercase tracking-tight">
+                            <span className="inline-block px-2.5 py-1 text-[9px] font-bold bg-green-50 text-green-700 rounded-full border border-green-100 uppercase tracking-wider whitespace-nowrap">
                               Assigned
                             </span>
                           ) : (
-                            <span className="px-3 py-1 text-[11px] font-bold bg-gray-50 text-gray-500 rounded-full border border-gray-100 uppercase tracking-tight">
+                            <span className="inline-block px-2.5 py-1 text-[9px] font-bold bg-gray-50 text-gray-500 rounded-full border border-gray-100 uppercase tracking-wider whitespace-nowrap">
                               Not Assigned
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-4 sm:px-6 py-4 text-center">
                           {isAssigned(taxpayer.id) && (
                             <button
                               onClick={() => handleRemoveTaxpayer(taxpayer.id)}
                               disabled={removing}
-                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-2 text-red-400 transition-colors disabled:opacity-50"
                               title="Remove from office"
                             >
                               <FaUserMinus size={16} />
@@ -326,22 +333,22 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
 
             {/* Selected Count Indicator */}
             {selectedTaxpayers.length > 0 && (
-              <div className="mt-6 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+              <div className="mt-6 flex items-center gap-3 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
                   {selectedTaxpayers.length}
                 </div>
-                <p className="text-sm font-medium text-blue-800 font-[BasisGrotesquePro]">
-                  {selectedTaxpayers.length} taxpayer(s) selected to be assigned to {officeName}.
+                <p className="text-[11px] sm:text-sm font-medium text-blue-800 font-[BasisGrotesquePro]">
+                  {selectedTaxpayers.length} taxpayer(s) selected for {officeName}.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Fixed Footer */}
-          <div className="px-6 py-4 border-t border-[#E8F0FF] bg-[#F8FAFF] flex justify-end gap-3 flex-shrink-0">
+          {/* Modal Footer */}
+          <div className="mt-auto px-4 sm:px-6 py-4 border-t border-[#E8F0FF] bg-[#F8FAFF] flex justify-end items-center gap-3 flex-shrink-0 rounded-b-xl">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
             >
               Close
             </button>
@@ -349,9 +356,9 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
               <button
                 onClick={handleAssignTaxpayers}
                 disabled={assigning}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-[#00C0C6] !rounded-lg hover:bg-[#00A8AD] transition-all shadow-md disabled:opacity-50 font-[BasisGrotesquePro]"
+                className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#00C0C6] !rounded-lg hover:bg-[#00A8AD] transition-all shadow-md disabled:opacity-50 font-[BasisGrotesquePro]"
               >
-                {assigning ? 'Assigning...' : `Assign ${selectedTaxpayers.length} Taxpayer(s)`}
+                {assigning ? 'Assigning...' : `Assign ${selectedTaxpayers.length}`}
               </button>
             )}
           </div>

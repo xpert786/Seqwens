@@ -17,7 +17,7 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave, stages = [], curre
 
   const handleSave = () => {
     let triggerData;
-    
+
     if (triggerType === 'time_based') {
       triggerData = {
         trigger_type: 'time_based',
@@ -47,8 +47,8 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave, stages = [], curre
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999, position: 'fixed' }}>
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-24 pt-20 overflow-y-auto" style={{ zIndex: 1100, position: 'fixed' }}>
+      <div className="bg-white !rounded-xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
           <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Add Trigger</h3>
@@ -64,7 +64,7 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave, stages = [], curre
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
           {/* Trigger Type */}
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">

@@ -385,24 +385,49 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[99999] p-2 sm:p-4 overflow-y-auto" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-auto relative flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
+        style={{ maxHeight: "calc(100vh - 40px)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <style>
+          {`
+            .modal-body-scroll::-webkit-scrollbar {
+              width: 8px;
+            }
+            .modal-body-scroll::-webkit-scrollbar-track {
+              background: #f8fafc;
+            }
+            .modal-body-scroll::-webkit-scrollbar-thumb {
+              background: #cbd5e1;
+              border-radius: 10px;
+              border: 2px solid #f8fafc;
+            }
+            .modal-body-scroll::-webkit-scrollbar-thumb:hover {
+              background: #94a3b8;
+            }
+          `}
+        </style>
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
+        <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9] bg-white sticky top-0 z-10">
+          <div>
+            <h4 className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro]">Create Invoice</h4>
+            <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">Generate a new professional invoice for your client</p>
+          </div>
           <button
             onClick={onClose}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors shadow-sm"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-              <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-8 custom-scrollbar bg-white">
           {/* Error/Success Messages */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -496,8 +521,8 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                   onChange={(e) => handleDateChange('due_date', e)}
                   placeholder="mm/dd/yyyy"
                   className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${fieldErrors.due_date
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-[#E8F0FF] focus:ring-blue-500'
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-[#E8F0FF] focus:ring-blue-500'
                     }`}
                   required
                 />
@@ -680,22 +705,26 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t invoice-modal-footer" style={{ borderColor: '#E5E7EB' }}>
+          <div className="flex flex-row justify-end gap-3 p-5 sm:p-6 border-t border-[#F1F5F9] bg-gray-50 sticky bottom-0 z-10">
             <button
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2 bg-white border !rounded-lg text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50"
-              style={{ borderColor: '#D1D5DB', color: '#374151' }}
+              className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-gray-200 !rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all font-[BasisGrotesquePro]"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveInvoice}
               disabled={loading}
-              className="px-6 py-2 text-white !rounded-lg text-sm font-medium disabled:opacity-50"
+              className="flex-1 sm:flex-none px-8 py-2.5 text-white !rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-100 active:scale-95 disabled:opacity-50 font-[BasisGrotesquePro]"
               style={{ backgroundColor: '#F97316' }}
             >
-              {loading ? 'Creating...' : 'Save Invoice'}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Saving...</span>
+                </div>
+              ) : 'Save Invoice'}
             </button>
           </div>
         </div>

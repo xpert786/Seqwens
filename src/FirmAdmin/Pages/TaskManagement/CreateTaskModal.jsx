@@ -483,13 +483,12 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
 
   const modalContent = (
     <div
-      className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999 }}
+      className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-4"
-        style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+        className="bg-white rounded-xl shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
+        style={{ width: '90%', maxWidth: '800px' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -508,7 +507,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
         </div>
 
         {/* Modal Content */}
-        <div className="p-4 overflow-y-auto flex-1" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg border p-4" style={{ borderColor: '#E8F0FF' }}>
               {/* Task Type */}

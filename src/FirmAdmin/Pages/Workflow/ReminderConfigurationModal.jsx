@@ -53,7 +53,7 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(false);
-    
+
     const placeholder = e.dataTransfer.getData('text/plain');
     if (!placeholder) return;
 
@@ -62,16 +62,16 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
 
     const start = textarea.selectionStart || messageTemplate.length;
     const end = textarea.selectionEnd || messageTemplate.length;
-    
+
     // Add space before if needed
     const beforeText = messageTemplate.slice(0, start);
     const afterText = messageTemplate.slice(end);
     const needsSpaceBefore = beforeText && !beforeText.endsWith(' ') && !beforeText.endsWith('\n') ? ' ' : '';
     const needsSpaceAfter = afterText && !afterText.startsWith(' ') && !afterText.startsWith('\n') ? ' ' : '';
-    
+
     const newValue = beforeText + needsSpaceBefore + placeholder + needsSpaceAfter + afterText;
     setMessageTemplate(newValue);
-    
+
     // Set cursor position after the inserted variable
     setTimeout(() => {
       const newPosition = start + needsSpaceBefore.length + placeholder.length + needsSpaceAfter.length;
@@ -86,16 +86,16 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
 
     const start = textarea.selectionStart || messageTemplate.length;
     const end = textarea.selectionEnd || messageTemplate.length;
-    
+
     // Add space before if needed
     const beforeText = messageTemplate.slice(0, start);
     const afterText = messageTemplate.slice(end);
     const needsSpaceBefore = beforeText && !beforeText.endsWith(' ') && !beforeText.endsWith('\n') ? ' ' : '';
     const needsSpaceAfter = afterText && !afterText.startsWith(' ') && !afterText.startsWith('\n') ? ' ' : '';
-    
+
     const newValue = beforeText + needsSpaceBefore + placeholder + needsSpaceAfter + afterText;
     setMessageTemplate(newValue);
-    
+
     // Set cursor position after the inserted variable
     setTimeout(() => {
       const newPosition = start + needsSpaceBefore.length + placeholder.length + needsSpaceAfter.length;
@@ -109,13 +109,13 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
       alert('Message template is required');
       return;
     }
-    
+
     const selectedChannels = Object.keys(channels).filter(key => channels[key]);
     if (selectedChannels.length === 0) {
       alert('At least one notification channel must be selected');
       return;
     }
-    
+
     const reminderData = {
       reminder_type: userTypeGroup,
       timing_value: timingDays,
@@ -137,8 +137,8 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999, position: 'fixed' }}>
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-24 pt-20 overflow-y-auto" style={{ zIndex: 1100, position: 'fixed' }}>
+      <div className="bg-white !rounded-xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
           <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Add Reminder</h3>
@@ -154,7 +154,7 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
           {/* Remind */}
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
@@ -216,7 +216,7 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
             <label className="block text-sm font-semibold text-gray-900 mb-3 font-[BasisGrotesquePro]">
               Message Template <span className="text-red-500">*</span>
             </label>
-            
+
             {/* Available Variables - Button Style */}
             <div className="mb-3">
               <p className="text-xs font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
@@ -250,11 +250,10 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
               onDrop={handleTextareaDrop}
               placeholder="Reminder: {stage_name} is due soon. Please complete required actions for {workflow_name} for {client_name}."
               rows={5}
-              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] resize-none transition-all ${
-                isDraggingOver 
-                  ? 'border-[#00C0C6] bg-[#F0FDFF]' 
+              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] resize-none transition-all ${isDraggingOver
+                  ? 'border-[#00C0C6] bg-[#F0FDFF]'
                   : 'border-[#E8F0FF] bg-white'
-              }`}
+                }`}
             />
             <p className="text-xs text-gray-500 mt-2 font-[BasisGrotesquePro]">
               💡 Tip: Drag variables above into the message or click them to insert at cursor position

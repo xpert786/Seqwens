@@ -152,8 +152,8 @@ export default function IntegrationsTab() {
       )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Preferences */}
-        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-          <div className="mb-5">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+          <div className="mb-5 text-left">
             <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
               System Preferences
             </h5>
@@ -163,12 +163,12 @@ export default function IntegrationsTab() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+            <div className="flex items-center justify-between gap-4 py-1">
+              <div className="min-w-0">
+                <h5 className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro] truncate">
                   Client Portal Access
                 </h5>
-                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                <p className="text-[11px] sm:text-xs text-[#4B5563] font-[BasisGrotesquePro] leading-tight">
                   Allow clients to access their portal
                 </p>
               </div>
@@ -179,20 +179,20 @@ export default function IntegrationsTab() {
                   checked={preferences.client_portal_access}
                   onChange={() => togglePreference('client_portal_access')}
                 />
-                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.client_portal_access ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                <div className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full px-1 transition-colors ${preferences.client_portal_access ? 'bg-[#F56D2D]' : 'bg-gray-300'
                   }`}>
-                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.client_portal_access ? 'translate-x-5' : 'translate-x-0'
+                  <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${preferences.client_portal_access ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                     }`} />
                 </div>
               </label>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+            <div className="flex items-center justify-between gap-4 py-1">
+              <div className="min-w-0">
+                <h5 className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro] truncate">
                   Email Notifications
                 </h5>
-                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                <p className="text-[11px] sm:text-xs text-[#4B5563] font-[BasisGrotesquePro] leading-tight">
                   Send automated email notifications
                 </p>
               </div>
@@ -203,20 +203,20 @@ export default function IntegrationsTab() {
                   checked={preferences.email_notifications}
                   onChange={() => togglePreference('email_notifications')}
                 />
-                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.email_notifications ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                <div className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full px-1 transition-colors ${preferences.email_notifications ? 'bg-[#F56D2D]' : 'bg-gray-300'
                   }`}>
-                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.email_notifications ? 'translate-x-5' : 'translate-x-0'
+                  <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${preferences.email_notifications ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                     }`} />
                 </div>
               </label>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+            <div className="flex items-center justify-between gap-4 py-1">
+              <div className="min-w-0">
+                <h5 className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro] truncate">
                   Workflow Automation
                 </h5>
-                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                <p className="text-[11px] sm:text-xs text-[#4B5563] font-[BasisGrotesquePro] leading-tight">
                   Enable automated workflows
                 </p>
               </div>
@@ -227,20 +227,20 @@ export default function IntegrationsTab() {
                   checked={preferences.workflow_automation}
                   onChange={() => togglePreference('workflow_automation')}
                 />
-                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.workflow_automation ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                <div className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full px-1 transition-colors ${preferences.workflow_automation ? 'bg-[#F56D2D]' : 'bg-gray-300'
                   }`}>
-                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.workflow_automation ? 'translate-x-5' : 'translate-x-0'
+                  <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${preferences.workflow_automation ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                     }`} />
                 </div>
               </label>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+            <div className="flex items-center justify-between gap-4 py-1">
+              <div className="min-w-0">
+                <h5 className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro] truncate">
                   Advanced Reporting
                 </h5>
-                <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                <p className="text-[11px] sm:text-xs text-[#4B5563] font-[BasisGrotesquePro] leading-tight">
                   Generate detailed reports
                 </p>
               </div>
@@ -251,9 +251,9 @@ export default function IntegrationsTab() {
                   checked={preferences.advanced_reporting}
                   onChange={() => togglePreference('advanced_reporting')}
                 />
-                <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.advanced_reporting ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                <div className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full px-1 transition-colors ${preferences.advanced_reporting ? 'bg-[#F56D2D]' : 'bg-gray-300'
                   }`}>
-                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.advanced_reporting ? 'translate-x-5' : 'translate-x-0'
+                  <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${preferences.advanced_reporting ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                     }`} />
                 </div>
               </label>
@@ -262,9 +262,9 @@ export default function IntegrationsTab() {
         </div>
 
         {/* Data Management */}
-        <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-          <div className="mb-5">
-            <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1 flex items-center gap-2">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+          <div className="mb-5 text-left">
+            <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1 flex items-center justify-start gap-2">
               Data Management
               <button
                 onClick={() => setShowInfoModal(true)}
@@ -317,27 +317,25 @@ export default function IntegrationsTab() {
             </div>
 
             {!advancedReportingEnabled && (
-              <div className="space-y-3 pt-2">
+              <div className="flex flex-col xs:flex-row gap-3 pt-4 border-t border-gray-50">
                 <button
                   onClick={handleExport}
-                  className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-all font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-
-                  Download Data Export
+                  Export Data
                 </button>
                 <button
                   onClick={handleImport}
-                  className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2 mt-3"
+                  className="flex-1 px-4 py-2.5 text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-all font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M12.75 6L9 2.25L5.25 6" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M9 2.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-
                   Import Data
                 </button>
               </div>
@@ -347,11 +345,11 @@ export default function IntegrationsTab() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-center sm:justify-end">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
         >
           {saving ? (
             <>

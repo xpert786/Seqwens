@@ -47,7 +47,66 @@
     background-color: #991B1B !important;
 }
 
-
 .modal-content {
     border-radius: 20px !important;
+}
+
+/* File Viewer Modal Responsive Styles */
+@media (max-width: 576px) {
+    .pdf-modal-overlay {
+        padding: 10px !important;
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+    }
+
+    .pdf-modal-container {
+        max-height: calc(100vh - 20px) !important;
+        height: auto !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        overflow-x: hidden !important;
+    }
+
+    .file-modal-title {
+        font-size: 13px !important;
+        max-width: 100px !important;
+    }
+
+    /* Ensure close button is always visible */
+    .file-modal-btn-close {
+        display: flex !important;
+        font-size: 18px !important;
+        padding: 4px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        background-color: #F3F4F6 !important;
+        z-index: 10000 !important;
+    }
+
+    .file-modal-btn-download,
+    .file-modal-btn-archive {
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
+
+    .file-modal-btn-download span,
+    .file-modal-btn-archive span {
+        display: none !important;
+    }
+
+    .pdf-viewer-iframe {
+        min-height: 250px !important;
+        max-width: 100% !important;
+    }
+
+    /* Prevent horizontal scroll */
+    body.modal-open {
+        overflow-x: hidden !important;
+    }
+
+    .pdf-modal-overlay * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
 }

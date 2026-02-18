@@ -84,124 +84,134 @@ const UsageDashboard = () => {
     };
 
     return (
-        <div>
+        <div className="space-y-6 sm:space-y-8">
             {/* Error Message */}
             {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                     {error}
                 </div>
             )}
 
             {/* Usage Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {loading ? (
                     <>
                         {[1, 2, 3].map((index) => (
-                            <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6">
+                            <div key={index} className="bg-white !rounded-xl !border border-[#E8F0FF] p-5 sm:p-6 shadow-sm">
                                 <div className="animate-pulse">
-                                    <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
-                                    <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
-                                    <div className="h-2 bg-gray-200 rounded"></div>
+                                    <div className="h-4 bg-gray-100 rounded w-24 mb-4"></div>
+                                    <div className="h-8 bg-gray-100 rounded w-32 mb-4"></div>
+                                    <div className="h-2 bg-gray-100 rounded"></div>
                                 </div>
                             </div>
                         ))}
                     </>
                 ) : overallUsage.length === 0 ? (
-                    <div className="col-span-full text-center py-12">
-                        <p className="text-sm text-gray-600">No usage data available</p>
+                    <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">No usage data available at this time</p>
                     </div>
                 ) : (
                     overallUsage.map((card, index) => (
-                        <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-6">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] mb-2 text-[15px]">{card.label}</p>
-                            <div className="flex justify-between items-center mb-2">
-                                <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">{card.status}</p>
-                                <p className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                        <div key={index} className="bg-white !rounded-xl !border border-[#E8F0FF] p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <p className="text-xs sm:text-sm text-[#3B4A66] font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">{card.label}</p>
+                            <div className="flex justify-between items-end mb-3">
+                                <p className="text-2xl sm:text-3xl font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
                                     {card.display || `${card.used}/${card.total}`}
                                 </p>
+                                <p className="text-sm font-bold text-[#3AD6F2] font-[BasisGrotesquePro]">
+                                    {card.percentage?.toFixed(1)}%
+                                </p>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                    className={`h-2 rounded-full transition-all ${
-                                        card.percentage >= 90 
-                                            ? 'bg-[#EF4444]' 
-                                            : card.percentage >= 70 
-                                            ? 'bg-[#F59E0B]' 
+                            <div className="w-full bg-[#F3F7FF] rounded-full h-2.5 overflow-hidden border border-[#E8F0FF]">
+                                <div
+                                    className={`h-full rounded-full transition-all duration-500 ease-out ${card.percentage >= 90
+                                        ? 'bg-red-500'
+                                        : card.percentage >= 70
+                                            ? 'bg-orange-500'
                                             : 'bg-[#3AD6F2]'
-                                    }`}
+                                        }`}
                                     style={{ width: `${Math.min(card.percentage || 0, 100)}%` }}
                                 ></div>
                             </div>
-                            {card.percentage !== undefined && (
-                                <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
-                                    {card.percentage.toFixed(1)}% used
-                                </p>
-                            )}
+                            <p className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] mt-2 flex items-center">
+                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${(card.status || '').toLowerCase() === 'normal' ? 'bg-green-500' : 'bg-orange-500'
+                                    }`}></span>
+                                {card.status}
+                            </p>
                         </div>
                     ))
                 )}
             </div>
 
             {/* Individual Usage Breakdown */}
-            <div className="p-4 sm:p-6">
-                <h6 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Individual Usage Breakdown</h6>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">Monitor resource consumption by staff member</p>
+            <div className="bg-white !rounded-xl !border border-[#E8F0FF] p-4 sm:p-6 shadow-sm">
+                <div className="mb-6">
+                    <h6 className="text-lg sm:text-xl font-bold text-[#1F2A55] mb-1 font-[BasisGrotesquePro]">Individual Usage Breakdown</h6>
+                    <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">Monitor resource consumption by staff member</p>
+                </div>
 
                 {loading ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        <p className="mt-4 text-sm text-gray-600">Loading usage data...</p>
+                    <div className="text-center py-20">
+                        <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-[#3AD6F2]/30 border-t-[#3AD6F2]"></div>
+                        <p className="mt-4 text-sm text-gray-500 font-[BasisGrotesquePro]">Analyzing usage patterns...</p>
                     </div>
                 ) : individualUsage.length === 0 ? (
-                    <div className="text-center py-12">
-                        <p className="text-sm text-gray-600">No individual usage data available</p>
+                    <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">No individual usage records found</p>
                     </div>
                 ) : (
-                    <>
-                        {/* Table Header */}
-                        <div className="grid grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
-                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Staff Member</div>
-                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">E-Signatures</div>
-                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Storage (GB)</div>
-                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">API Calls</div>
-                            <div className="font-regular text-gray-900 text-xs sm:text-sm font-[BasisGrotesquePro]">Status</div>
+                    <div className="overflow-x-auto custom-scrollbar -mx-4 sm:mx-0">
+                        <div className="min-w-[800px] px-4 sm:px-0">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-gray-100">
+                                        <th className="text-left py-4 px-4 text-xs font-bold text-[#3B4A66] uppercase tracking-wider">Staff Member</th>
+                                        <th className="text-left py-4 px-4 text-xs font-bold text-[#3B4A66] uppercase tracking-wider">E-Signatures</th>
+                                        <th className="text-left py-4 px-4 text-xs font-bold text-[#3B4A66] uppercase tracking-wider">Storage (GB)</th>
+                                        <th className="text-left py-4 px-4 text-xs font-bold text-[#3B4A66] uppercase tracking-wider">API Calls</th>
+                                        <th className="text-left py-4 px-4 text-xs font-bold text-[#3B4A66] uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {individualUsage.map((staff) => (
+                                        <tr key={staff.staff_id} className="hover:bg-[#F8FAFF] transition-colors group">
+                                            <td className="py-4 px-4">
+                                                <div>
+                                                    <p className="text-sm font-bold text-[#1F2A55] font-[BasisGrotesquePro]">{staff.staff_name}</p>
+                                                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">{staff.staff_email}</p>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                                                    {staff.e_signatures || 0}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                                                    {formatStorage(staff.storage_mb)} GB
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                                                    {staff.api_calls || 0}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight border ${(staff.status || '').toLowerCase() === 'normal'
+                                                    ? 'bg-green-50 text-green-700 border-green-100'
+                                                    : (staff.status || '').toLowerCase() === 'warning'
+                                                        ? 'bg-yellow-50 text-yellow-700 border-yellow-100'
+                                                        : 'bg-red-50 text-red-700 border-red-100'
+                                                    }`}>
+                                                    {staff.status || 'Normal'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-
-                        {/* Staff Rows */}
-                        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-                            {individualUsage.map((staff) => (
-                                <div key={staff.staff_id} className="grid grid-cols-5 gap-2 sm:gap-3 lg:gap-4 items-center p-2 sm:p-3 lg:p-4 !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors">
-                                    {/* Staff Member Column */}
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro] mb-0.5">{staff.staff_name}</p>
-                                        <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">{staff.staff_email}</p>
-                                    </div>
-
-                                    {/* E-Signatures Column */}
-                                    <div className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                                        {staff.e_signatures || 0}
-                                    </div>
-
-                                    {/* Storage Column */}
-                                    <div className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                                        {formatStorage(staff.storage_mb)}
-                                    </div>
-
-                                    {/* API Calls Column */}
-                                    <div className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                                        {staff.api_calls || 0}
-                                    </div>
-
-                                    {/* Status Column */}
-                                    <div>
-                                        <span className={`px-3 py-1 !rounded-full text-xs font-medium font-[BasisGrotesquePro] ${getStatusColor(staff.status)}`}>
-                                            {staff.status || 'Normal'}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
+                    </div>
                 )}
             </div>
         </div>

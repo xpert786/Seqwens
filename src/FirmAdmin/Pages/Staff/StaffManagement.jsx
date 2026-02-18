@@ -1406,63 +1406,73 @@ export default function StaffManagement() {
 
             {/* Pending Invites Pagination */}
             {activeFilter === 'pending_invites' && pendingInvitesPagination.total_count > pendingInvitesPagination.page_size && (
-              <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between staff-pagination">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] staff-pagination-info">
-                  Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of {pendingInvitesPagination.total_count} invites
-                </div>
-                <div className="flex items-center gap-2 staff-pagination-buttons">
-                  <button
-                    onClick={() => setPendingInvitesPage(prev => Math.max(1, prev - 1))}
-                    disabled={pendingInvitesPage === 1}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
-                  >
-                    Previous
-                  </button>
-                  <div className="flex items-center gap-1">
-                    {(() => {
-                      const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
-                      return Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter((page) => {
-                          return (
-                            page === 1 ||
-                            page === totalPages ||
-                            (page >= pendingInvitesPage - 1 && page <= pendingInvitesPage + 1)
-                          );
-                        })
-                        .map((page, index, array) => {
-                          const prevPage = array[index - 1];
-                          const showEllipsisBefore = prevPage && page - prevPage > 1;
-                          const showEllipsisAfter = index === array.length - 1 && page < totalPages;
-
-                          return (
-                            <React.Fragment key={page}>
-                              {showEllipsisBefore && (
-                                <span className="px-2 text-gray-500">...</span>
-                              )}
-                              <button
-                                onClick={() => setPendingInvitesPage(page)}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${pendingInvitesPage === page
-                                  ? 'bg-[#3B82F6] text-white border border-[#3B82F6]'
-                                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                  }`}
-                              >
-                                {page}
-                              </button>
-                              {showEllipsisAfter && (
-                                <span className="px-2 text-gray-500">...</span>
-                              )}
-                            </React.Fragment>
-                          );
-                        });
-                    })()}
+              <div className="p-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-xs text-gray-600 font-[BasisGrotesquePro] order-2 sm:order-1 text-center sm:text-left">
+                    Showing <span className="font-semibold text-gray-900">{((pendingInvitesPage - 1) * pendingInvitesPagination.page_size) + 1}</span> to <span className="font-semibold text-gray-900">{Math.min(pendingInvitesPage * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)}</span> of <span className="font-semibold text-gray-900">{pendingInvitesPagination.total_count}</span>
                   </div>
-                  <button
-                    onClick={() => setPendingInvitesPage(prev => Math.min(Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size), prev + 1))}
-                    disabled={pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
-                  >
-                    Next
-                  </button>
+                  <div className="flex items-center gap-2 order-1 sm:order-2">
+                    <button
+                      onClick={() => setPendingInvitesPage(prev => Math.max(1, prev - 1))}
+                      disabled={pendingInvitesPage === 1}
+                      className={`px-3 py-1.5 text-xs font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] h-8 flex items-center justify-center border ${pendingInvitesPage === 1
+                        ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden text-lg">&lt;</span>
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
+                        return Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter((page) => {
+                            return (
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= pendingInvitesPage - 1 && page <= pendingInvitesPage + 1)
+                            );
+                          })
+                          .map((page, index, array) => {
+                            const prevPage = array[index - 1];
+                            const showEllipsisBefore = prevPage && page - prevPage > 1;
+                            const showEllipsisAfter = index === array.length - 1 && page < totalPages;
+
+                            return (
+                              <React.Fragment key={page}>
+                                {showEllipsisBefore && (
+                                  <span className="px-1 text-gray-500 text-xs">...</span>
+                                )}
+                                <button
+                                  onClick={() => setPendingInvitesPage(page)}
+                                  className={`w-8 h-8 text-xs font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] flex items-center justify-center border ${pendingInvitesPage === page
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  {page}
+                                </button>
+                                {showEllipsisAfter && (
+                                  <span className="px-1 text-gray-500 text-xs">...</span>
+                                )}
+                              </React.Fragment>
+                            );
+                          });
+                      })()}
+                    </div>
+                    <button
+                      onClick={() => setPendingInvitesPage(prev => Math.min(Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size), prev + 1))}
+                      disabled={pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)}
+                      className={`px-3 py-1.5 text-xs font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] h-8 flex items-center justify-center border ${pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)
+                        ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <span className="sm:hidden text-lg">&gt;</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1620,63 +1630,74 @@ export default function StaffManagement() {
 
                 {/* Staff Pagination */}
                 {activeFilter !== 'pending_invites' && staffData.length > staffPageSize && (
-                  <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between staff-pagination">
-                    <div className="text-sm text-gray-600 font-[BasisGrotesquePro] staff-pagination-info">
-                      Showing {((staffPage - 1) * staffPageSize) + 1} to {Math.min(staffPage * staffPageSize, staffData.length)} of {staffData.length} members
-                    </div>
-                    <div className="flex items-center gap-2 staff-pagination-buttons">
-                      <button
-                        onClick={() => setStaffPage(prev => Math.max(1, prev - 1))}
-                        disabled={staffPage === 1}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
-                      >
-                        Previous
-                      </button>
-                      <div className="flex items-center gap-1">
-                        {(() => {
-                          const totalPages = Math.ceil(staffData.length / staffPageSize);
-                          return Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter((page) => {
-                              return (
-                                page === 1 ||
-                                page === totalPages ||
-                                (page >= staffPage - 1 && page <= staffPage + 1)
-                              );
-                            })
-                            .map((page, index, array) => {
-                              const prevPage = array[index - 1];
-                              const showEllipsisBefore = prevPage && page - prevPage > 1;
-                              const showEllipsisAfter = index === array.length - 1 && page < totalPages;
-
-                              return (
-                                <React.Fragment key={page}>
-                                  {showEllipsisBefore && (
-                                    <span className="px-2 text-gray-500">...</span>
-                                  )}
-                                  <button
-                                    onClick={() => setStaffPage(page)}
-                                    className={`px-3 py-2 text-sm font-medium !rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${staffPage === page
-                                      ? 'bg-firm-primary text-white border border-firm-primary'
-                                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                      }`}
-                                  >
-                                    {page}
-                                  </button>
-                                  {showEllipsisAfter && (
-                                    <span className="px-2 text-gray-500">...</span>
-                                  )}
-                                </React.Fragment>
-                              );
-                            });
-                        })()}
+                  <div className="p-4 border-t border-gray-200">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="text-xs text-gray-600 font-[BasisGrotesquePro] order-2 sm:order-1 text-center sm:text-left">
+                        Showing <span className="font-semibold text-gray-900">{((staffPage - 1) * staffPageSize) + 1}</span> to <span className="font-semibold text-gray-900">{Math.min(staffPage * staffPageSize, staffData.length)}</span> of <span className="font-semibold text-gray-900">{staffData.length}</span>
                       </div>
-                      <button
-                        onClick={() => setStaffPage(prev => Math.min(Math.ceil(staffData.length / staffPageSize), prev + 1))}
-                        disabled={staffPage >= Math.ceil(staffData.length / staffPageSize)}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
-                      >
-                        Next
-                      </button>
+                      <div className="flex items-center gap-2 order-1 sm:order-2">
+                        <button
+                          onClick={() => setStaffPage(prev => Math.max(1, prev - 1))}
+                          disabled={staffPage === 1}
+                          className={`px-3 py-1.5 text-xs font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] h-8 flex items-center justify-center border ${staffPage === 1
+                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                          <span className="hidden sm:inline">Previous</span>
+                          <span className="sm:hidden text-lg">&lt;</span>
+                        </button>
+                        <div className="flex items-center gap-1">
+                          {(() => {
+                            const totalPages = Math.ceil(staffData.length / staffPageSize);
+                            return Array.from({ length: totalPages }, (_, i) => i + 1)
+                              .filter((page) => {
+                                return (
+                                  page === 1 ||
+                                  page === totalPages ||
+                                  (page >= staffPage - 1 && page <= staffPage + 1)
+                                );
+                              })
+                              .map((page, index, array) => {
+                                const prevPage = array[index - 1];
+                                const showEllipsisBefore = prevPage && page - prevPage > 1;
+                                const showEllipsisAfter = index === array.length - 1 && page < totalPages;
+
+                                return (
+                                  <React.Fragment key={page}>
+                                    {showEllipsisBefore && (
+                                      <span className="px-1 text-gray-500 text-xs">...</span>
+                                    )}
+                                    <button
+                                      onClick={() => setStaffPage(page)}
+                                      className={`w-8 h-8 text-xs font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] flex items-center justify-center border ${staffPage === page
+                                        ? 'text-white border-blue-600 shadow-sm'
+                                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                      style={staffPage === page ? { backgroundColor: 'var(--firm-primary-color, #3AD6F2)', borderColor: 'var(--firm-primary-color, #3AD6F2)' } : {}}
+                                    >
+                                      {page}
+                                    </button>
+                                    {showEllipsisAfter && (
+                                      <span className="px-1 text-gray-500 text-xs">...</span>
+                                    )}
+                                  </React.Fragment>
+                                );
+                              });
+                          })()}
+                        </div>
+                        <button
+                          onClick={() => setStaffPage(prev => Math.min(Math.ceil(staffData.length / staffPageSize), prev + 1))}
+                          disabled={staffPage >= Math.ceil(staffData.length / staffPageSize)}
+                          className={`px-3 py-1.5 text-xs font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] h-8 flex items-center justify-center border ${staffPage >= Math.ceil(staffData.length / staffPageSize)
+                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                          <span className="hidden sm:inline">Next</span>
+                          <span className="sm:hidden text-lg">&gt;</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

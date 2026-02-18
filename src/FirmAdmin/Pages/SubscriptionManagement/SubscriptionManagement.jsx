@@ -642,42 +642,38 @@ const SubscriptionManagement = () => {
 
                 {/* Header Section */}
 
-                <div className="mb-6">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+                <div className="mb-6 sm:mb-10">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-5 mb-8">
                         <div>
-                            <h4 className="text-2xl font-bold text-gray-900 mb-1 font-[BasisGrotesquePro]">Subscription Management</h4>
-                            <p className="text-gray-600 font-[BasisGrotesquePro]">Manage your plan, usage, and billing</p>
+                            <h4 className="text-2xl sm:text-3xl font-bold text-[#1F2A55] mb-1 font-[BasisGrotesquePro]">Subscription Management</h4>
+                            <p className="text-sm sm:text-base text-gray-500 font-[BasisGrotesquePro]">Manage your enterprise plan, resource usage, and billing</p>
                         </div>
                         <button
                             onClick={() => setIsUpgradePlanModalOpen(true)}
-                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#EA580C] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] text-sm sm:text-base whitespace-nowrap"
+                            className="w-full sm:w-auto px-6 py-3 bg-[#F56D2D] text-white !rounded-xl hover:bg-[#EA580C] transition-all shadow-md shadow-[#F56D2D]/20 flex items-center justify-center gap-2 font-bold text-sm sm:text-base whitespace-nowrap"
                         >
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16.5 5.25L10.125 11.625L6.375 7.875L1.5 12.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M12 5.25H16.5V9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-
-                            {currentPlan ? 'Change Plan' : 'Upgrade Plan'}
+                            {currentPlan ? 'Modify Subscription' : 'Upgrade Plan'}
                         </button>
                     </div>
 
-                    {/* Navigation Tabs */}
-                    <div className="mb-6">
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-1.5 sm:p-2 w-fit subscription-tabs-wrapper">
-                            <div className="flex gap-2 sm:gap-3 overflow-x-auto subscription-tabs-scroll">
-                                {tabs.map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg whitespace-nowrap subscription-tab-btn ${activeTab === tab
-                                            ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                            : 'bg-transparent !text-black hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
+                    {/* Navigation Tabs - Optimized for Mobile Swipe */}
+                    <div className="overflow-x-auto custom-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0 scroll-smooth">
+                        <div className="bg-[#F8FAFF] !rounded-xl !border border-[#E8F0FF] p-1.5 flex gap-1.5 sm:gap-2 w-fit min-w-full sm:min-w-0">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-4 py-2 sm:px-6 !rounded-lg font-[BasisGrotesquePro] text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 ${activeTab === tab
+                                        ? 'bg-[#3AD6F2] text-white shadow-md shadow-[#3AD6F2]/20'
+                                        : 'bg-transparent text-[#6B7280] hover:text-[#3B4A66] hover:bg-white/50'
+                                        }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -708,70 +704,70 @@ const SubscriptionManagement = () => {
                     <>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
                             {/* Plan Card */}
-                            <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6 sm:p-8 relative shadow-sm overflow-hidden">
+                            <div className="bg-white !rounded-xl !border border-[#E8F0FF] p-5 sm:p-8 relative shadow-sm overflow-hidden flex flex-col">
                                 {/* Premium Background Accent */}
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#F3F7FF] rounded-bl-full -mr-16 -mt-16 opacity-50 z-0"></div>
 
-                                <div className="relative z-10">
+                                <div className="relative z-10 flex-1">
                                     {subscriptionOverview?.overview?.plan ? (
                                         <>
-                                            <div className="flex justify-between items-start mb-6">
+                                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <h5 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                        <h5 className="text-xl sm:text-2xl font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
                                                             {subscriptionOverview.overview.plan.name || 'Current Plan'}
                                                         </h5>
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider ${subscriptionOverview.overview.plan.status === 'active'
-                                                                ? 'bg-green-100 text-green-700 border border-green-200'
-                                                                : 'bg-red-100 text-red-700 border border-red-200'
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`px-3 py-1 !rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider ${subscriptionOverview.overview.plan.status === 'active'
+                                                                ? 'bg-green-50 text-green-600 border border-green-100'
+                                                                : 'bg-red-50 text-red-600 border border-red-100'
                                                                 }`}>
                                                                 {subscriptionOverview.overview.plan.status || 'Active'}
                                                             </span>
                                                             {subscriptionOverview.overview.plan.billing_cycle && (
-                                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                                                <span className="px-3 py-1 !rounded-full text-[10px] font-bold font-[BasisGrotesquePro] uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
                                                                     {subscriptionOverview.overview.plan.billing_cycle}
                                                                 </span>
                                                             )}
                                                         </div>
                                                     </div>
                                                     <div className="flex items-baseline gap-1">
-                                                        <p className="text-3xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
+                                                        <p className="text-3xl sm:text-4xl font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
                                                             ${subscriptionOverview.overview.plan.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                                                         </p>
-                                                        <span className="text-sm font-medium text-gray-500 font-[BasisGrotesquePro]">
+                                                        <span className="text-sm font-medium text-gray-400 font-[BasisGrotesquePro]">
                                                             /{subscriptionOverview.overview.plan.billing_cycle === 'yearly' ? 'year' : 'month'}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-xs text-gray-400 font-[BasisGrotesquePro] uppercase tracking-tighter mb-1">
+                                                <div className="text-left sm:text-right">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
                                                         {subscriptionOverview.overview.plan.expiry_date ? (subscriptionOverview.overview.plan.status === 'active' ? 'Next Billing' : 'Expires On') : 'Status'}
                                                     </p>
-                                                    <p className={`text-sm font-bold font-[BasisGrotesquePro] ${!subscriptionOverview.overview.plan.expiry_date ? 'text-red-500' : 'text-gray-700'}`}>
+                                                    <p className={`text-sm font-bold font-[BasisGrotesquePro] ${!subscriptionOverview.overview.plan.expiry_date ? 'text-red-500' : 'text-[#3B4A66]'}`}>
                                                         {subscriptionOverview.overview.plan.expiry_date
                                                             ? new Date(subscriptionOverview.overview.plan.expiry_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                                                            : 'N/A'}
+                                                            : 'Not Available'}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div className="mb-8 p-5 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF]">
-                                                <h6 className="text-sm font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] flex items-center gap-2">
-                                                    <div className="p-1 bg-orange-100 rounded-md">
-                                                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M14 4L6.66667 11.3333L3 7.66667" stroke="var(--firm-primary-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            <div className="mb-8 p-4 sm:p-5 bg-[#F8FAFF] !rounded-xl border border-[#E8F0FF]">
+                                                <h6 className="text-sm font-bold text-[#1F2A55] mb-4 font-[BasisGrotesquePro] flex items-center gap-2">
+                                                    <div className="p-1 bg-[#F56D2D]/10 rounded-md">
+                                                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                                            <path d="M14 4L6.66667 11.3333L3 7.66667" stroke="#F56D2D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                                         </svg>
                                                     </div>
                                                     Plan Privileges
                                                 </h6>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-3">
                                                     {subscriptionOverview.overview.plan.features &&
                                                         subscriptionOverview.overview.plan.features.length > 0 ? (
                                                         subscriptionOverview.overview.plan.features.map((feature, index) => (
                                                             <div key={index} className="flex items-center gap-2.5">
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-[#3AD6F2]"></div>
-                                                                <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro] leading-tight">{feature}</span>
+                                                                <span className="text-xs text-[#3B4A66] font-medium font-[BasisGrotesquePro] leading-tight">{feature}</span>
                                                             </div>
                                                         ))
                                                     ) : (
@@ -781,109 +777,106 @@ const SubscriptionManagement = () => {
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="text-center py-12">
-                                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#F56D2D]"></div>
-                                            <p className="mt-4 text-sm text-gray-600">Syncing plan details...</p>
+                                        <div className="text-center py-20">
+                                            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-[#F56D2D]/30 border-t-[#F56D2D]"></div>
+                                            <p className="mt-4 text-sm text-gray-500 font-[BasisGrotesquePro]">Syncing plan details...</p>
                                         </div>
                                     )}
-
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 mt-auto">
-                                        {subscriptionOverview?.overview?.plan?.status !== 'canceled' && (
-                                            <button
-                                                onClick={() => setIsUpgradePlanModalOpen(true)}
-                                                className="flex-1 px-4 py-3 bg-[#F56D2D] text-white rounded-lg hover:bg-[#EA580C] transition-all shadow-sm hover:shadow-md font-bold text-sm"
-                                                style={{ borderRadius: '8px' }}
-                                            >
-                                                Modify Subscription
-                                            </button>
-                                        )}
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 mt-auto">
+                                    {subscriptionOverview?.overview?.plan?.status !== 'canceled' && (
                                         <button
-                                            onClick={handleCancelSubscriptionClick}
-                                            disabled={cancellingSubscription || subscriptionOverview?.overview?.plan?.status === 'canceled'}
-                                            className={`px-4 py-3 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all font-bold text-sm disabled:opacity-50 ${subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'w-full' : ''}`}
-                                            style={{ borderRadius: '8px' }}
+                                            onClick={() => setIsUpgradePlanModalOpen(true)}
+                                            className="flex-1 px-6 py-3 bg-[#F56D2D] text-white !rounded-xl hover:bg-[#EA580C] transition-all shadow-md hover:shadow-lg font-bold text-sm font-[BasisGrotesquePro]"
                                         >
-                                            {cancellingSubscription ? 'Processing...' : (subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'Canceled' : 'Cancel Service')}
+                                            Modify Subscription
                                         </button>
-                                    </div>
+                                    )}
+                                    <button
+                                        onClick={handleCancelSubscriptionClick}
+                                        disabled={cancellingSubscription || subscriptionOverview?.overview?.plan?.status === 'canceled'}
+                                        className={`flex-1 px-6 py-3 bg-white border border-red-100 text-red-500 !rounded-xl hover:bg-red-50 hover:border-red-200 transition-all font-bold text-sm font-[BasisGrotesquePro] disabled:opacity-50 ${subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'w-full !text-gray-400 !border-gray-100' : ''}`}
+                                    >
+                                        {cancellingSubscription ? 'Processing...' : (subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'Service Canceled' : 'Cancel Service')}
+                                    </button>
+                                </div>
 
-                                    {/* Additional Info Row */}
-                                    <div className="mt-6 grid grid-cols-2 gap-4">
-                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
-                                            <div className={`w-2 h-2 rounded-full ${subscriptionOverview?.overview?.automatic_payment_failover ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Failover: {subscriptionOverview?.overview?.automatic_payment_failover ? 'Active' : 'Disabled'}</span>
-                                        </div>
-                                        <div
-                                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
-                                            onClick={() => setActiveTab('Add-ons')}
-                                        >
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6 2V10M2 6H10" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Add-ons: {subscriptionOverview?.overview?.addons?.count || 0} (${subscriptionOverview?.overview?.addons?.total_monthly_cost || 0}/mo)</span>
-                                        </div>
+                                {/* Additional Info Row */}
+                                <div className="mt-6 grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                                        <div className={`w-2 h-2 rounded-full ${subscriptionOverview?.overview?.automatic_payment_failover ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Failover: {subscriptionOverview?.overview?.automatic_payment_failover ? 'Active' : 'Disabled'}</span>
+                                    </div>
+                                    <div
+                                        className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
+                                        onClick={() => setActiveTab('Add-ons')}
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 2V10M2 6H10" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-[BasisGrotesquePro]">Add-ons: {subscriptionOverview?.overview?.addons?.count || 0} (${subscriptionOverview?.overview?.addons?.total_monthly_cost || 0}/mo)</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Usage Overview Card */}
-                            <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6 sm:p-8 relative shadow-sm">
+                            <div className="bg-white !rounded-xl !border border-[#E8F0FF] p-5 sm:p-8 relative shadow-sm">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Resource Usage</h5>
-                                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Real-time tracking of your active limits</p>
+                                        <h5 className="text-xl font-bold text-[#1F2A55] font-[BasisGrotesquePro]">Resource Usage</h5>
+                                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Real-time tracking of active limits</p>
                                     </div>
-                                    <div className="p-2.5 bg-[#F3F7FF] rounded-xl border border-[#E8F0FF]">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 20V10" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            <path d="M18 20V4" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            <path d="M6 20V16" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <div className="p-2 sm:p-3 bg-[#F3F7FF] !rounded-xl border border-[#E8F0FF]">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="w-5 h-5 sm:w-6 sm:h-6">
+                                            <path d="M12 20V10M18 20V4M6 20V16" stroke="#3AD6F2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                     </div>
                                 </div>
 
                                 {subscriptionOverview?.overview?.usage ? (
-                                    <div className="space-y-7">
-                                        {/* Helper for Unlimited Display */}
-                                        {(() => {
-                                            const isUnlimited = (val) => val === null || val === 'Unlimited' || val === 'unlimited';
-                                            const renderUsageBar = (title, used, limit, colorClass = 'bg-[#3AD6F2]') => {
-                                                const unlimited = isUnlimited(limit);
-                                                const percentage = unlimited ? 0 : Math.min((used / limit) * 100, 100);
+                                    <div className="space-y-6 sm:space-y-8">
+                                        {/* Usage Bar Rendering */}
+                                        <div className="space-y-6">
+                                            {(() => {
+                                                const isUnlimited = (val) => val === null || val === 'Unlimited' || val === 'unlimited';
+                                                const renderUsageBar = (title, used, limit, colorClass = 'bg-[#3AD6F2]') => {
+                                                    const unlimited = isUnlimited(limit);
+                                                    const percentage = unlimited ? 0 : Math.min((used / limit) * 100, 100);
+
+                                                    return (
+                                                        <div>
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <span className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{title}</span>
+                                                                <span className="text-sm font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
+                                                                    {used} <span className="text-gray-300 font-medium">/ {unlimited ? '∞' : limit}</span>
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-full bg-[#F8FAFF] !rounded-full h-2 sm:h-2.5 overflow-hidden border border-[#E8F0FF]">
+                                                                <div
+                                                                    className={`${unlimited ? 'bg-gradient-to-r from-[#3AD6F2] to-[#BEEAF2]' : colorClass} h-full rounded-full transition-all duration-700 ease-out shadow-sm`}
+                                                                    style={{ width: unlimited ? '100%' : `${percentage}%`, opacity: unlimited ? 0.4 : 1 }}
+                                                                ></div>
+                                                            </div>
+                                                            {unlimited && <p className="text-[10px] text-gray-400 mt-1.5 font-medium italic font-[BasisGrotesquePro]">Unlimited capacity included</p>}
+                                                        </div>
+                                                    );
+                                                };
 
                                                 return (
-                                                    <div>
-                                                        <div className="flex justify-between items-center mb-2">
-                                                            <span className="text-sm font-bold text-gray-700 font-[BasisGrotesquePro]">{title}</span>
-                                                            <span className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                                {used} <span className="text-gray-400 font-medium">/{unlimited ? '∞' : limit}</span>
-                                                            </span>
-                                                        </div>
-                                                        <div className="w-full bg-[#F3F7FF] rounded-full h-2.5 overflow-hidden border border-[#E8F0FF]">
-                                                            <div
-                                                                className={`${unlimited ? 'bg-gradient-to-r from-[#3AD6F2] to-[#BEEAF2]' : colorClass} h-full rounded-full transition-all duration-700 ease-out`}
-                                                                style={{ width: unlimited ? '100%' : `${percentage}%`, opacity: unlimited ? 0.4 : 1 }}
-                                                            ></div>
-                                                        </div>
-                                                        {unlimited && <p className="text-[10px] text-gray-400 mt-1 font-medium italic font-[BasisGrotesquePro]">Unlimited capacity with your current plan</p>}
-                                                    </div>
+                                                    <>
+                                                        {renderUsageBar('Client Accounts', subscriptionOverview.overview.usage.clients.used, subscriptionOverview.overview.usage.clients.limit)}
+                                                        {renderUsageBar('Staff Members', subscriptionOverview.overview.usage.staff_users.used, subscriptionOverview.overview.usage.staff_users.limit, 'bg-indigo-500')}
+                                                    </>
                                                 );
-                                            };
+                                            })()}
+                                        </div>
 
-                                            return (
-                                                <>
-                                                    {renderUsageBar('Client Accounts', subscriptionOverview.overview.usage.clients.used, subscriptionOverview.overview.usage.clients.limit)}
-                                                    {renderUsageBar('Staff Members', subscriptionOverview.overview.usage.staff_users.used, subscriptionOverview.overview.usage.staff_users.limit, 'bg-indigo-500')}
-                                                </>
-                                            );
-                                        })()}
-
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3 gap-4 pt-2">
                                             {/* Storage */}
-                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF] flex flex-col justify-between">
+                                            <div className="p-4 bg-[#F8FAFF] !rounded-xl border border-[#E8F0FF] flex flex-col justify-between hover:bg-white transition-colors group">
                                                 <div>
-                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">Cloud Storage</p>
-                                                    <p className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro] group-hover:text-[#3AD6F2] transition-colors">Cloud Storage</p>
+                                                    <p className="text-lg font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
                                                         {(() => {
                                                             const bytes = subscriptionOverview.overview.usage.storage_gb.used_bytes;
                                                             if (bytes !== undefined && bytes !== null) {
@@ -897,34 +890,34 @@ const SubscriptionManagement = () => {
                                                         })()}
                                                     </p>
                                                 </div>
-                                                <div className="mt-3">
-                                                    <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                                <div className="mt-4">
+                                                    <div className="w-full bg-[#F3F7FF] h-1.5 !rounded-full overflow-hidden border border-[#E8F0FF]">
                                                         <div
-                                                            className="bg-[#3AD6F2] h-full rounded-full"
+                                                            className="bg-[#3AD6F2] h-full rounded-full transition-all duration-500"
                                                             style={{ width: `${Math.min((subscriptionOverview.overview.usage.storage_gb.used / subscriptionOverview.overview.usage.storage_gb.limit) * 100, 100)}%` }}
                                                         ></div>
                                                     </div>
-                                                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium font-[BasisGrotesquePro]">
-                                                        of {subscriptionOverview.overview.usage.storage_gb.limit} GB total
+                                                    <p className="text-[10px] text-gray-400 mt-1.5 font-bold font-[BasisGrotesquePro]">
+                                                        OF {subscriptionOverview.overview.usage.storage_gb.limit} GB
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* Workflows */}
-                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF] flex flex-col justify-between">
+                                            <div className="p-4 bg-[#F8FAFF] !rounded-xl border border-[#E8F0FF] flex flex-col justify-between hover:bg-white transition-colors group">
                                                 <div>
-                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">Workflows</p>
-                                                    <p className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro] group-hover:text-green-500 transition-colors">Workflows</p>
+                                                    <p className="text-lg font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
                                                         {subscriptionOverview.overview.usage.workflows.used}
-                                                        <span className="text-gray-400 font-medium text-sm ml-1">
-                                                            / {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null ? '∞' : subscriptionOverview.overview.usage.workflows.limit}
+                                                        <span className="text-gray-300 font-medium text-sm ml-1">
+                                                            / {(subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null) ? '∞' : subscriptionOverview.overview.usage.workflows.limit}
                                                         </span>
                                                     </p>
                                                 </div>
-                                                <div className="mt-3">
-                                                    <div className="w-full bg-green-100 h-1.5 rounded-full overflow-hidden">
+                                                <div className="mt-4">
+                                                    <div className="w-full bg-[#F3F7FF] h-1.5 !rounded-full overflow-hidden border border-[#E8F0FF]">
                                                         <div
-                                                            className="bg-green-500 h-full rounded-full"
+                                                            className="bg-green-500 h-full rounded-full transition-all duration-500"
                                                             style={{
                                                                 width: (subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null)
                                                                     ? '100%'
@@ -933,27 +926,27 @@ const SubscriptionManagement = () => {
                                                             }}
                                                         ></div>
                                                     </div>
-                                                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium font-[BasisGrotesquePro]">
-                                                        {subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null ? 'Unlimited Access' : 'Monthly quota'}
+                                                    <p className="text-[10px] text-gray-400 mt-1.5 font-bold font-[BasisGrotesquePro]">
+                                                        {(subscriptionOverview.overview.usage.workflows.limit === 'Unlimited' || subscriptionOverview.overview.usage.workflows.limit === null) ? 'UNLIMITED' : 'MONTHLY QUOTA'}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* E-Signatures */}
-                                            <div className="p-4 bg-[#F8FAFF] rounded-xl border border-[#E8F0FF] flex flex-col justify-between">
+                                            <div className="p-4 bg-[#F8FAFF] !rounded-xl border border-[#E8F0FF] flex flex-col justify-between hover:bg-white transition-colors group">
                                                 <div>
-                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">E-Signatures</p>
-                                                    <p className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 font-[BasisGrotesquePro] group-hover:text-purple-500 transition-colors">E-Signatures</p>
+                                                    <p className="text-lg font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
                                                         {subscriptionOverview.overview.usage.esignatures?.used || 0}
-                                                        <span className="text-gray-400 font-medium text-sm ml-1">
-                                                            / {subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null ? '∞' : (subscriptionOverview.overview.usage.esignatures?.limit || 0)}
+                                                        <span className="text-gray-300 font-medium text-sm ml-1">
+                                                            / {(subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null) ? '∞' : (subscriptionOverview.overview.usage.esignatures?.limit || 0)}
                                                         </span>
                                                     </p>
                                                 </div>
-                                                <div className="mt-3">
-                                                    <div className="w-full bg-purple-100 h-1.5 rounded-full overflow-hidden">
+                                                <div className="mt-4">
+                                                    <div className="w-full bg-[#F3F7FF] h-1.5 !rounded-full overflow-hidden border border-[#E8F0FF]">
                                                         <div
-                                                            className="bg-purple-500 h-full rounded-full"
+                                                            className="bg-purple-500 h-full rounded-full transition-all duration-500"
                                                             style={{
                                                                 width: (subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null)
                                                                     ? '100%'
@@ -962,17 +955,17 @@ const SubscriptionManagement = () => {
                                                             }}
                                                         ></div>
                                                     </div>
-                                                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium font-[BasisGrotesquePro]">
-                                                        {subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null ? 'Unlimited Requesting' : 'Monthly quota'}
+                                                    <p className="text-[10px] text-gray-400 mt-1.5 font-bold font-[BasisGrotesquePro]">
+                                                        {(subscriptionOverview.overview.usage.esignatures?.limit === 'Unlimited' || subscriptionOverview.overview.usage.esignatures?.limit === null) ? 'UNLIMITED' : 'MONTHLY QUOTA'}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12">
-                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3AD6F2]"></div>
-                                        <p className="mt-4 text-sm text-gray-600">Calculating your usage metrics...</p>
+                                    <div className="text-center py-20">
+                                        <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-[#3AD6F2]/30 border-t-[#3AD6F2]"></div>
+                                        <p className="mt-4 text-sm text-gray-500 font-[BasisGrotesquePro]">Calculating usage metrics...</p>
                                     </div>
                                 )}
                             </div>
@@ -982,23 +975,18 @@ const SubscriptionManagement = () => {
                         <div className="mt-8">
                             <SavedPaymentMethods />
                         </div>
-
                     </>
                 )}
 
+                {/* Upgrade Plan Modal */}
+                <UpgradePlanModal
+                    isOpen={isUpgradePlanModalOpen}
+                    onClose={() => setIsUpgradePlanModalOpen(false)}
+                    currentPlanName={currentPlan}
+                />
 
-            </div>
-
-            {/* Upgrade Plan Modal */}
-            <UpgradePlanModal
-                isOpen={isUpgradePlanModalOpen}
-                onClose={() => setIsUpgradePlanModalOpen(false)}
-                currentPlanName={currentPlan}
-            />
-
-            {/* Cancel Subscription Confirmation Modal */}
-            {
-                showCancelConfirmModal && (
+                {/* Cancel Subscription Confirmation Modal */}
+                {showCancelConfirmModal && (
                     <div
                         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
                         onClick={() => {
@@ -1066,26 +1054,26 @@ const SubscriptionManagement = () => {
                             </div>
                         </div>
                     </div>
-                )
-            }
+                )}
 
-            {/* Delete Payment Method Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={showDeletePaymentConfirm}
-                onClose={() => {
-                    if (!deletingPaymentMethod) {
-                        setShowDeletePaymentConfirm(false);
-                        setPaymentMethodToDelete(null);
-                    }
-                }}
-                onConfirm={confirmDeletePaymentMethod}
-                title="Delete Payment Method"
-                message="Are you sure you want to delete this payment method?"
-                confirmText="Delete"
-                cancelText="Cancel"
-                isLoading={deletingPaymentMethod}
-                isDestructive={true}
-            />
+                {/* Delete Payment Method Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showDeletePaymentConfirm}
+                    onClose={() => {
+                        if (!deletingPaymentMethod) {
+                            setShowDeletePaymentConfirm(false);
+                            setPaymentMethodToDelete(null);
+                        }
+                    }}
+                    onConfirm={confirmDeletePaymentMethod}
+                    title="Delete Payment Method"
+                    message="Are you sure you want to delete this payment method?"
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    isLoading={deletingPaymentMethod}
+                    isDestructive={true}
+                />
+            </div>
         </div>
     );
 };

@@ -1061,44 +1061,33 @@ const SchedulingCalendar = () => {
     const currentMonthName = monthNames[currentDate.getMonth()];
     const currentYear = currentDate.getFullYear();
     const currentDay = currentDate.getDate();
-
     return (
-        <div className="min-h-screen bg-[#F3F7FF] p-6">
-            <div className="mx-auto">
+        <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6">
+            <div className="mx-auto max-w-[1600px]">
                 {/* Header Section */}
                 <div className="mb-6">
-                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6">
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
                         <div>
-                            <h4 className="text-2xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Firm Calendar</h4>
-                            <p className="text-gray-600 font-[BasisGrotesquePro]">Manage appointments, deadlines, and meetings</p>
+                            <h4 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 lg:mb-2 font-[BasisGrotesquePro]">Firm Calendar</h4>
+                            <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Manage appointments, deadlines, and meetings</p>
                         </div>
-                        <div className="flex items-center gap-3 mt-4 lg:mt-0">
-                            {/* <button
-                                onClick={() => setIsSetAvailabilityModalOpen(true)}
-                                className="px-4 py-2 bg-white border border-[#E8F0FF] text-[#3B4A66] !rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Set Availability
-                            </button> */}
+                        <div className="flex items-center gap-2 sm:gap-3">
                             <button
                                 onClick={() => setIsAddEventModalOpen(true)}
-                                className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
+                                className="flex-1 sm:flex-none px-4 py-2.5 bg-[#F56D2D] text-white !rounded-xl hover:bg-[#E55A1D] transition-all flex items-center justify-center gap-2 font-[BasisGrotesquePro] text-sm shadow-sm hover:shadow-md"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                                 </svg>
-                                Add Event
+                                <span className="whitespace-nowrap">Add Event</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* Metric Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {/* Metric Cards - Premium responsive grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                         {metricCards.map((card, index) => {
-                            // Determine if this card is clickable
-                            const isClickable = index === 0 || index === 1; // Scheduled and Completed
+                            const isClickable = index === 0 || index === 1;
                             const metricType = index === 0 ? 'scheduled' : index === 1 ? 'completed' : null;
                             const isActive = activeMetricFilter === metricType;
 
@@ -1106,18 +1095,20 @@ const SchedulingCalendar = () => {
                                 <div
                                     key={index}
                                     onClick={() => handleMetricCardClick(metricType)}
-                                    className={`bg-white !rounded-lg !border pt-6 px-4 pb-4 transition-all ${isClickable ? 'cursor-pointer hover:shadow-md' : ''
+                                    className={`bg-white !rounded-xl !border p-3 sm:p-4 transition-all duration-200 ${isClickable ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1' : ''
                                         } ${isActive
-                                            ? 'border-[#3AD6F2] ring-1 ring-[#3AD6F2]'
+                                            ? 'border-[#3AD6F2] ring-2 ring-[#3AD6F2]/10'
                                             : 'border-[#E8F0FF]'
                                         }`}
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex flex-col">
-                                            <div className="text-[#3AD6F2] mb-2">{card.icon}</div>
-                                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-4">{card.label}</p>
+                                    <div className="flex flex-col h-full justify-between gap-3">
+                                        <div className="flex items-start justify-between">
+                                            <div className="p-2 bg-[#F3F7FF] !rounded-lg text-[#3AD6F2]">
+                                                {React.cloneElement(card.icon, { width: 20, height: 20 })}
+                                            </div>
+                                            <p className="text-lg sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro] leading-tight-none">{card.value}</p>
                                         </div>
-                                        <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-none">{card.value}</p>
+                                        <p className="text-[10px] sm:text-xs font-bold text-gray-400 font-[BasisGrotesquePro] uppercase tracking-widest">{card.label}</p>
                                     </div>
                                 </div>
                             );
@@ -1125,20 +1116,19 @@ const SchedulingCalendar = () => {
                     </div>
 
                     {/* Navigation Tabs and Event Filters */}
-                    <div className="flex flex-col lg:flex-row justify-between mb-6 items-start">
-                        {/* Navigation Tabs - Left Side */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-2">
-                            <div className="flex gap-2">
+                    <div className="flex flex-col lg:flex-row justify-between mb-6 items-start gap-4">
+                        {/* Navigation Tabs - Scrollable on mobile */}
+                        <div className="w-full lg:w-auto bg-white !rounded-xl !border border-[#E8F0FF] p-1.5 overflow-x-auto no-scrollbar">
+                            <div className="flex gap-1.5 whitespace-nowrap min-w-max">
                                 {navTabs.map((tab) => {
                                     const tabPath = tab === 'Calendar' ? '/firmadmin/calendar' : `/firmadmin/calendar/${tab.toLowerCase()}`;
-
                                     return (
                                         <Link
                                             key={tab}
                                             to={tabPath}
-                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${activeTab === tab
-                                                ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                : 'bg-transparent hover:bg-gray-50 !text-black'
+                                            className={`px-4 sm:px-6 py-2 text-xs sm:text-sm font-bold font-[BasisGrotesquePro] transition-all !rounded-lg ${activeTab === tab
+                                                ? 'bg-[#3AD6F2] !text-white shadow-md shadow-blue-100'
+                                                : 'bg-transparent hover:bg-gray-50 !text-gray-500 hover:text-gray-900'
                                                 }`}
                                         >
                                             {tab}
@@ -1147,102 +1137,33 @@ const SchedulingCalendar = () => {
                                 })}
                             </div>
                         </div>
-
-                        {/* Event Filters - Right Side */}
-                        <div className="flex flex-col sm:flex-row gap-2 mt-2 lg:mt-0">
-                            <div className="w-full sm:w-auto">
-                                {/* <div className="relative">
-                                    <select
-                                        value={calendarType}
-                                        onChange={(e) => setCalendarType(e.target.value)}
-                                        className="w-full sm:w-[150px] appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
-                                    >
-                                        <option>Firm Calendar</option>
-                                        <option>Personal Calendar</option>
-                                        <option>Team Calendar</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div> */}
-                            </div>
-                        </div>
                     </div>
-
-                    {/* External Calendar Sync */}
-                    {/* <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mb-6">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]">External Calendar Sync</h4>
-                        <div className="flex flex-col sm:flex-row gap-4 items-end">
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Provider</label>
-                                <div className="relative">
-                                    <select
-                                        value={provider}
-                                        onChange={(e) => setProvider(e.target.value)}
-                                        className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
-                                    >
-                                        <option>Google Calendar</option>
-                                        <option>Outlook Calendar</option>
-                                        <option>Apple Calendar</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Direction</label>
-                                <div className="relative">
-                                    <select
-                                        value={direction}
-                                        onChange={(e) => setDirection(e.target.value)}
-                                        className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
-                                    >
-                                        <option>One-way (Pull)</option>
-                                        <option>One-way (Push)</option>
-                                        <option>Two-way</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
-                                Sync Now
-                            </button>
-                        </div>
-                    </div> */}
                 </div>
 
                 {/* Main Content Area */}
                 <div ref={calendarSectionRef} className="flex flex-col lg:flex-row gap-6">
                     {/* Calendar Section */}
-                    <div className="flex-1">
-                        {/* View Controls */}
-                        <div className="flex gap-2 mb-4 flex-wrap">
+                    <div className="w-full lg:flex-1 min-w-0">
+                        {/* View Controls - Scrollable on mobile */}
+                        <div className="flex gap-1.5 mb-6 overflow-x-auto no-scrollbar p-0.5">
                             {viewTabs.map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setViewMode(tab)}
-                                    className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg ${viewMode === tab
-                                        ? 'bg-[#F56D2D] text-white'
-                                        : 'bg-white !border border-[#E8F0FF] text-gray-600 hover:text-gray-900'
+                                    className={`px-4 sm:px-5 py-2 text-xs font-bold font-[BasisGrotesquePro] transition-all !rounded-lg whitespace-nowrap ${viewMode === tab
+                                        ? 'bg-[#F56D2D] text-white shadow-md shadow-orange-100'
+                                        : 'bg-white !border border-[#E8F0FF] text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                         }`}
                                 >
                                     {tab}
                                 </button>
                             ))}
                         </div>
+
                         {/* Dynamic Navigation */}
-                        <div className="sm:p-4 mb-4">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <h5 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                        <div className="bg-white !rounded-xl border border-[#E8F0FF] p-3 sm:p-4 mb-4 shadow-sm">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <h5 className="text-base sm:text-lg font-black text-gray-900 font-[BasisGrotesquePro] text-center sm:text-left">
                                     {viewMode === 'Day' && `${dayNames[currentDate.getDay()]}, ${currentMonthName} ${currentDay}, ${currentYear}`}
                                     {viewMode === 'Week' && `Week of ${currentMonthName} ${weekDays[0].date}, ${currentYear}`}
                                     {viewMode === 'Monthly' && `${currentMonthName} ${currentYear}`}
@@ -1257,15 +1178,15 @@ const SchedulingCalendar = () => {
                                             else if (viewMode === 'Years') navigateYear(-1);
                                             else navigateMonth(-1);
                                         }}
-                                        className="px-2 sm:px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors"
+                                        className="w-9 h-9 flex items-center justify-center bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900 active:scale-95"
                                     >
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                                         </svg>
                                     </button>
                                     <button
                                         onClick={goToToday}
-                                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] transition-colors text-gray-600"
+                                        className="h-9 px-4 text-xs font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 font-[BasisGrotesquePro] transition-all text-gray-500 hover:text-gray-900 active:scale-95 uppercase tracking-wider"
                                     >
                                         Today
                                     </button>
@@ -1276,10 +1197,10 @@ const SchedulingCalendar = () => {
                                             else if (viewMode === 'Years') navigateYear(1);
                                             else navigateMonth(1);
                                         }}
-                                        className="px-2 sm:px-3 py-2 bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+                                        className="w-9 h-9 flex items-center justify-center bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900 active:scale-95"
                                     >
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
                                     </button>
                                 </div>
@@ -1287,179 +1208,40 @@ const SchedulingCalendar = () => {
                         </div>
 
                         {/* Dynamic Calendar Views */}
-                        <div className="bg-white rounded-lg !border border-[#E8F0FF] p-2 sm:p-4 lg:p-6 overflow-x-auto">
+                        <div className="bg-white !rounded-xl !border border-[#E8F0FF] p-1.5 sm:p-2 overflow-x-auto no-scrollbar shadow-sm min-h-[500px]">
                             {viewMode === 'Day' && (
-                                <div className="min-h-[400px]">
-                                    <div className="text-center mb-4">
-                                        <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{currentDay}</h5>
-                                        <p className="text-gray-600 font-[BasisGrotesquePro]">{dayNames[currentDate.getDay()]}, {currentMonthName} {currentYear}</p>
+                                <div className="p-3 sm:p-5">
+                                    <div className="text-center mb-6">
+                                        <h5 className="text-3xl font-black text-gray-900 font-[BasisGrotesquePro] leading-none mb-2">{currentDay}</h5>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">{dayNames[currentDate.getDay()]}, {currentMonthName} {currentYear}</p>
                                     </div>
-                                    <div className="space-y-2">
-                                        {Array.from({ length: 24 }, (_, i) => (
-                                            <div key={i} className="flex items-center border-b border-[#E8F0FF] py-2">
-                                                <div className="w-20 text-sm text-gray-600 font-[BasisGrotesquePro]">{String(i).padStart(2, '0')}:00</div>
-                                                <div className="flex-1">
-                                                    {i === 6 && currentDay === 21 && currentDate.getMonth() === 6 && currentDate.getFullYear() === 2025 && (
-                                                        <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2">
-                                                            <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
-                                                            <div>
-                                                                <div className="text-xs text-gray-900 font-[BasisGrotesquePro]">Schedule a free Phone...</div>
-                                                                <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>06:00 - 08:00</div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {viewMode === 'Week' && (
-                                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 min-w-[600px]">
-                                    {dayNames.map((day) => (
-                                        <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF]">
-                                            {day}
-                                        </div>
-                                    ))}
-                                    {weekDays.map((day, index) => {
-                                        const dateObj = new Date(day.year, day.month, day.date);
-                                        const dayAppointments = getAppointmentsForDate(dateObj);
-                                        const hasAppointments = dayAppointments.length > 0;
-                                        const isHighlighted =
-                                            highlightDate ? isSameCalendarDay(dateObj, highlightDate) : day.isToday;
-                                        const weekCellClasses = [
-                                            'min-h-[300px] p-2 border rounded-lg transition-colors duration-150',
-                                            isHighlighted ? 'bg-[#FFF4E6] border-[#F56D2D]' : 'border-[#E8F0FF]',
-                                            hasAppointments && !day.isToday ? 'bg-[#FFF7ED] border-[#F56D2D]' : '',
-                                        ].join(' ');
-
-                                        const topEventTime = hasAppointments ? getEventTimeRange(dayAppointments[0]) : '';
-
-                                        return (
-                                            <div key={index} className={weekCellClasses}>
-                                                <div className="mb-2 flex justify-end">
-                                                    <span
-                                                        className={[
-                                                            'w-6 h-6 flex items-center justify-center rounded-full text-sm font-[BasisGrotesquePro]',
-                                                            isHighlighted
-                                                                ? 'bg-[#FFE0B2] text-[#F56D2D] font-bold'
-                                                                : hasAppointments
-                                                                    ? 'bg-[#F56D2D] text-white font-semibold'
-                                                                    : 'text-gray-900',
-                                                        ].join(' ')}
-                                                    >
-                                                        {day.date}
-                                                    </span>
-                                                </div>
-                                                {topEventTime && (
-                                                    <div className="text-[11px] text-[#00C0C6] font-[BasisGrotesquePro] text-right mb-1 whitespace-nowrap">
-                                                        {topEventTime}
-                                                    </div>
-                                                )}
-                                                {hasAppointments &&
-                                                    dayAppointments.slice(0, 3).map((appointment, idx) => (
-                                                        <div key={idx} className="bg-white/80 border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 mb-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                                                            <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-xs text-gray-900 font-[BasisGrotesquePro]">{appointment.subject || 'Appointment'}</div>
-                                                                <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
-                                                                    {formatTime(appointment.appointment_time)}{' '}
-                                                                    {appointment.end_time ? `- ${formatTime(appointment.end_time)}` : appointment.appointment_duration ? `(${appointment.appointment_duration}m)` : ''}
-                                                                </div>
-                                                                {getEventParticipants(appointment) && (
-                                                                    <div className="text-[11px] text-gray-500 font-[BasisGrotesquePro]">
-                                                                        {getEventParticipants(appointment)}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                {dayAppointments.length > 3 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => openEventsModal(dateObj, dayAppointments)}
-                                                        className="w-full mt-1 text-xs text-[#F56D2D] font-[BasisGrotesquePro] text-center flex items-center justify-center gap-1 hover:underline"
-                                                    >
-                                                        View {dayAppointments.length - 3} more <span aria-hidden="true">➔</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-
-                            {viewMode === 'Monthly' && (
-                                <div className="border border-[#E8F0FF] rounded-lg overflow-hidden min-w-[600px]">
-                                    <div className="grid grid-cols-7">
-                                        {dayNames.map((day) => (
-                                            <div
-                                                key={day}
-                                                className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF] border-r border-[#E8F0FF] last:border-r-0 bg-white"
-                                            >
-                                                {day}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="grid grid-cols-7">
-                                        {calendarDays.map((day, index) => {
-                                            const dayAppointments = getAppointmentsForDate(day);
-                                            const isCurrentMonth =
-                                                day.getMonth() === currentDate.getMonth() &&
-                                                day.getFullYear() === currentDate.getFullYear();
-                                            const isHighlighted = highlightDate
-                                                ? isSameCalendarDay(day, highlightDate)
-                                                : isSameCalendarDay(day, new Date());
+                                    <div className="space-y-0.5">
+                                        {Array.from({ length: 24 }, (_, i) => {
+                                            const hour = i;
+                                            const appointments = getAppointmentsForDate(currentDate).filter(apt => {
+                                                const aptHour = parseInt(apt.appointment_time?.split(':')[0] || '0');
+                                                return aptHour === hour;
+                                            });
 
                                             return (
-                                                <div
-                                                    key={index}
-                                                    className={`min-h-[160px] p-2 sm:p-3 border-r border-b border-[#E8F0FF] transition-colors ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
-                                                        } ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
-                                                >
-                                                    <div
-                                                        className={`text-sm font-medium mb-1 ${isHighlighted
-                                                            ? 'bg-[#F56D2D] text-white rounded-full w-6 h-6 flex items-center justify-center'
-                                                            : ''
-                                                            }`}
-                                                    >
-                                                        {day.getDate()}
+                                                <div key={i} className="flex gap-4 border-b border-[#F8FAFF] group last:border-0 min-h-[60px] py-1">
+                                                    <div className="w-16 flex-shrink-0 text-[10px] font-black text-gray-400 font-[BasisGrotesquePro] uppercase tracking-tighter pt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                        {String(hour).padStart(2, '0')}:00
                                                     </div>
-                                                    {dayAppointments.slice(0, 3).map((event, idx) => (
-                                                        <div
-                                                            key={`${event.id || idx}-${event.appointment_time || idx}`}
-                                                            className={`${getEventChipClasses(
-                                                                event.appointment_status
-                                                            )} text-[11px] px-2 py-1.5 rounded-md mb-1 shadow-sm cursor-pointer transition-all flex flex-col gap-0.5`}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                openEventsModal(day, dayAppointments);
-                                                            }}
-                                                        >
-                                                            <span className="font-medium leading-tight break-words line-clamp-2">
-                                                                {event.subject || event.title || 'Meeting'}
-                                                            </span>
-                                                            <div className="flex items-center gap-1 opacity-100">
-                                                                <div className="w-1 h-1 bg-white rounded-full flex-shrink-0"></div>
-                                                                <span className="text-[10px] whitespace-nowrap font-medium">
-                                                                    {formatTime(event.appointment_time)}
-                                                                </span>
+                                                    <div className="flex-1 space-y-1">
+                                                        {appointments.map((apt, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="bg-[#3AD6F2]/5 border-l-4 border-[#3AD6F2] !rounded-lg p-2 transition-all hover:bg-[#3AD6F2]/10 cursor-pointer shadow-sm group/card"
+                                                                onClick={() => openEventsModal(currentDate, [apt])}
+                                                            >
+                                                                <div className="text-xs font-black text-gray-900 mb-0.5">{apt.subject || 'Meeting'}</div>
+                                                                <div className="text-[10px] font-bold text-[#3AD6F2] uppercase tracking-wider">
+                                                                    {formatTime(apt.appointment_time)} - {apt.end_time ? formatTime(apt.end_time) : `${apt.appointment_duration}m`}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
-                                                    {dayAppointments.length > 3 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                openEventsModal(day, dayAppointments);
-                                                            }}
-                                                            className="w-full text-[11px] text-[#F56D2D] font-bold mt-1.5 py-1 bg-[#FFF4E6] rounded-md transition-colors"
-                                                        >
-                                                            + {dayAppointments.length - 3} more
-                                                        </button>
-                                                    )}
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -1467,12 +1249,114 @@ const SchedulingCalendar = () => {
                                 </div>
                             )}
 
+                            {viewMode === 'Week' && (
+                                <div className="grid grid-cols-7 gap-1 min-w-[700px] sm:min-w-0">
+                                    {dayNames.map((day) => (
+                                        <div key={day} className="text-center text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest py-3 font-[BasisGrotesquePro] border-b border-[#E8F0FF]">
+                                            {day}
+                                        </div>
+                                    ))}
+                                    {weekDays.map((day, index) => {
+                                        const dateObj = new Date(day.year, day.month, day.date);
+                                        const dayAppointments = getAppointmentsForDate(dateObj);
+                                        const isHighlighted = highlightDate ? isSameCalendarDay(dateObj, highlightDate) : day.isToday;
+
+                                        return (
+                                            <div key={index} className={`min-h-[250px] p-1.5 sm:p-2 border-r last:border-r-0 border-[#E8F0FF]/50 transition-colors ${isHighlighted ? 'bg-[#F3F7FF]/30' : ''}`}>
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className={`text-xs font-black w-6 h-6 flex items-center justify-center !rounded-lg ${isHighlighted ? 'bg-[#3AD6F2] text-white shadow-sm' : 'text-gray-400'}`}>
+                                                        {day.date}
+                                                    </span>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    {dayAppointments.slice(0, 3).map((apt, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="p-1 rounded bg-[#3AD6F2]/5 border-l-2 border-[#3AD6F2] text-[9px] font-bold text-gray-700 truncate cursor-pointer hover:bg-[#3AD6F2]/10 transition-colors"
+                                                            onClick={() => openEventsModal(dateObj, [apt])}
+                                                        >
+                                                            {apt.subject}
+                                                        </div>
+                                                    ))}
+                                                    {dayAppointments.length > 3 && (
+                                                        <button
+                                                            className="w-full text-[9px] font-black text-[#F56D2D] hover:underline"
+                                                            onClick={() => openEventsModal(dateObj, dayAppointments)}
+                                                        >
+                                                            + {dayAppointments.length - 3} more
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {viewMode === 'Monthly' && (
+                                <div className="grid grid-cols-7 min-w-[800px] lg:min-w-0">
+                                    {dayNames.map((day) => (
+                                        <div key={day} className="text-center text-[10px] font-black text-gray-400 uppercase tracking-widest py-4 border-b border-[#E8F0FF] border-r border-[#E8F0FF]/50 last:border-r-0">
+                                            {day}
+                                        </div>
+                                    ))}
+                                    {calendarDays.map((date, index) => {
+                                        const dayAppointments = getAppointmentsForDate(date);
+                                        const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+                                        const isHighlighted = highlightDate ? isSameCalendarDay(date, highlightDate) : isSameCalendarDay(date, new Date());
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`min-h-[140px] p-1.5 sm:p-2 border-b border-r border-[#E8F0FF]/50 transition-all ${(index + 1) % 7 === 0 ? 'border-r-0' : ''} ${!isCurrentMonth ? 'bg-gray-50/50' : 'bg-white'}`}
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className={`text-[10px] sm:text-xs font-black w-6 h-6 flex items-center justify-center !rounded-lg ${isHighlighted ? 'bg-[#3AD6F2] text-white shadow-md' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                        {date.getDate()}
+                                                    </span>
+                                                    {dayAppointments.length > 0 && (
+                                                        <div className="w-1.5 h-1.5 bg-[#F56D2D] !rounded-full shadow-sm"></div>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-1 overflow-y-auto max-h-[100px] no-scrollbar">
+                                                    {dayAppointments.slice(0, 3).map((apt, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            onClick={() => openEventsModal(date, dayAppointments)}
+                                                            className={`p-1 rounded text-[9px] font-bold truncate transition-all cursor-pointer ${getEventChipClasses(apt.appointment_status)} hover:brightness-95`}
+                                                        >
+                                                            <span className="opacity-70 mr-1">{formatTime(apt.appointment_time).split(' ')[0]}</span>
+                                                            {apt.subject}
+                                                        </div>
+                                                    ))}
+                                                    {dayAppointments.length > 3 && (
+                                                        <button
+                                                            className="w-full text-center text-[9px] font-black text-[#F56D2D] bg-[#F56D2D]/5 py-0.5 rounded"
+                                                            onClick={() => openEventsModal(date, dayAppointments)}
+                                                        >
+                                                            +{dayAppointments.length - 3} more
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
                             {viewMode === 'Years' && (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3 sm:p-5">
                                     {yearMonths.map((month, index) => (
-                                        <div key={index} className="p-4 border border-[#E8F0FF] rounded-lg hover:bg-gray-50 cursor-pointer">
-                                            <h6 className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">{month.name}</h6>
-                                            <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">{month.year}</div>
+                                        <div
+                                            key={index}
+                                            onClick={() => {
+                                                setCurrentDate(new Date(month.year, month.index, 1));
+                                                setViewMode('Monthly');
+                                            }}
+                                            className="p-4 sm:p-6 bg-white border border-[#E8F0FF] !rounded-2xl hover:border-[#3AD6F2] hover:shadow-xl hover:shadow-blue-50/50 cursor-pointer transition-all group"
+                                        >
+                                            <h6 className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] mb-1 group-hover:text-[#3AD6F2] transition-colors uppercase tracking-widest">{month.name}</h6>
+                                            <div className="text-[10px] font-bold text-gray-400 font-[BasisGrotesquePro] uppercase tracking-tighter">{month.year}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -1556,155 +1440,200 @@ const SchedulingCalendar = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-full lg:w-64 space-y-4">
-                        {/* Today's Events */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
-                            <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Today's Events</h6>
-                            <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">{todayEvents.date_display || 'N/A'}</p>
-                            {loading ? (
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">Loading...</p>
-                            ) : todayEvents.count === 0 ? (
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No events scheduled for today</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {todayEvents.events.map((event, index) => (
-                                        <div key={index} className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5">
-                                            <div className="text-xs font-medium text-gray-900 font-[BasisGrotesquePro] mb-0.5">
-                                                {event.subject || 'Event'}
-                                            </div>
-                                            <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
-                                                {formatTime(event.appointment_time)} - {formatTime(event.end_time || (event.appointment_time && (() => {
-                                                    const [hours, minutes] = event.appointment_time.split(':');
-                                                    const duration = event.appointment_duration || 30;
-                                                    const totalMinutes = parseInt(hours) * 60 + parseInt(minutes) + duration;
-                                                    const endHours = Math.floor(totalMinutes / 60) % 24;
-                                                    const endMins = totalMinutes % 60;
-                                                    return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
-                                                })()))}
-                                            </div>
-                                            {getEventParticipants(event) && (
-                                                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-0.5">
-                                                    {getEventParticipants(event)}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                    {/* Right Sidebar - Premium desktop sidebar, stacks on mobile */}
+                    <div className="w-full lg:w-80 flex flex-col gap-6">
+                        {/* Today's Events Card */}
+                        <div className="bg-white !rounded-2xl !border border-[#E8F0FF] shadow-sm overflow-hidden flex flex-col">
+                            <div className="px-4 py-3 border-b border-[#F8FAFF] bg-[#F8FAFF]/50 flex items-center gap-2">
+                                <h6 className="text-[10px] font-black text-[#3AD6F2] font-[BasisGrotesquePro] uppercase tracking-[0.2em] whitespace-nowrap">Schedule Today</h6>
+                                <span className="text-[#3AD6F2] font-black text-[10px] opacity-40">·</span>
+                                <h5 className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Today's Events</h5>
+                            </div>
+
+                            <div className="p-4 flex flex-col gap-3">
+                                <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 font-[BasisGrotesquePro] uppercase tracking-wider mb-1">
+                                    <span>Date</span>
+                                    <span className="text-gray-900">{todayEvents.date_display || 'N/A'}</span>
                                 </div>
-                            )}
+
+                                {loading ? (
+                                    <div className="py-8 flex flex-col items-center justify-center gap-2">
+                                        <div className="w-5 h-5 border-2 border-[#3AD6F2] border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Loading...</span>
+                                    </div>
+                                ) : todayEvents.count === 0 ? (
+                                    <div className="py-8 bg-gray-50/50 !rounded-xl border border-dashed border-gray-100 flex flex-col items-center justify-center p-4 text-center">
+                                        <p className="text-[11px] font-bold text-gray-400 font-[BasisGrotesquePro]">No events scheduled</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {todayEvents.events.map((event, index) => (
+                                            <div key={index} className="group p-3 bg-white !rounded-xl !border border-[#E8F0FF] hover:border-[#3AD6F2] hover:shadow-md transition-all cursor-pointer">
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="text-xs font-black text-gray-900 font-[BasisGrotesquePro] leading-tight group-hover:text-[#3AD6F2] transition-colors">
+                                                        {event.subject || 'Event'}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-[#3AD6F2]/10 !rounded-lg">
+                                                            <div className="w-1 h-1 bg-[#3AD6F2] !rounded-full"></div>
+                                                            <span className="text-[9px] font-black text-[#3AD6F2] uppercase tracking-wider">
+                                                                {formatTime(event.appointment_time)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {getEventParticipants(event) && (
+                                                        <div className="text-[10px] font-bold text-gray-400 font-[BasisGrotesquePro] pt-1 border-t border-[#F8FAFF]">
+                                                            {getEventParticipants(event)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Upcoming Events */}
-                        <div className="bg-white rounded-lg !border border-[#E8F0FF] p-4">
-                            <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Upcoming Events</h6>
-                            <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">{upcomingEvents.period || 'Next 7 Days'}</p>
-                            {loading ? (
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">Loading...</p>
-                            ) : upcomingEvents.count === 0 ? (
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No upcoming events</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {upcomingEvents.events.slice(0, 5).map((event, index) => (
-                                        <div key={index} className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5">
-                                            <div className="text-xs font-medium text-gray-900 font-[BasisGrotesquePro] mb-0.5">
-                                                {event.subject || 'Event'}
-                                            </div>
-                                            <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-0.5">
-                                                {event.appointment_date || ''}
-                                            </div>
-                                            <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
-                                                {formatTime(event.appointment_time)} - {formatTime(event.end_time || (event.appointment_time && (() => {
-                                                    const [hours, minutes] = event.appointment_time.split(':');
-                                                    const duration = event.appointment_duration || 30;
-                                                    const totalMinutes = parseInt(hours) * 60 + parseInt(minutes) + duration;
-                                                    const endHours = Math.floor(totalMinutes / 60) % 24;
-                                                    const endMins = totalMinutes % 60;
-                                                    return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
-                                                })()))}
-                                            </div>
-                                            {getEventParticipants(event) && (
-                                                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-0.5">
-                                                    {getEventParticipants(event)}
+                        {/* Upcoming Events Card */}
+                        <div className="bg-white !rounded-2xl !border border-[#E8F0FF] shadow-sm overflow-hidden flex flex-col">
+                            <div className="px-4 py-3 border-b border-[#F8FAFF] bg-[#F8FAFF]/50 flex items-center gap-2">
+                                <h6 className="text-[10px] font-black text-[#F56D2D] font-[BasisGrotesquePro] uppercase tracking-[0.2em] whitespace-nowrap">Coming Up</h6>
+                                <span className="text-[#F56D2D] font-black text-[10px] opacity-40">·</span>
+                                <h5 className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Upcoming {upcomingEvents.period || 'Events'}</h5>
+                            </div>
+
+                            <div className="p-4 flex flex-col gap-3">
+                                {loading ? (
+                                    <div className="py-8 flex flex-col items-center justify-center gap-2">
+                                        <div className="w-5 h-5 border-2 border-[#F56D2D] border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Loading...</span>
+                                    </div>
+                                ) : upcomingEvents.count === 0 ? (
+                                    <div className="py-8 bg-gray-50/50 !rounded-xl border border-dashed border-gray-100 flex flex-col items-center justify-center p-4 text-center">
+                                        <p className="text-[11px] font-bold text-gray-400 font-[BasisGrotesquePro]">No upcoming events</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {upcomingEvents.events.slice(0, 5).map((event, index) => (
+                                            <div key={index} className="group p-3 bg-white !rounded-xl !border border-[#E8F0FF] hover:border-[#F56D2D] hover:shadow-md transition-all cursor-pointer">
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{event.appointment_date}</span>
+                                                        <div className="px-2 py-0.5 bg-[#F56D2D]/10 !rounded-lg">
+                                                            <span className="text-[9px] font-black text-[#F56D2D] uppercase tracking-wider">{formatTime(event.appointment_time)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-xs font-black text-gray-900 font-[BasisGrotesquePro] leading-tight group-hover:text-[#F56D2D] transition-colors">
+                                                        {event.subject || 'Event'}
+                                                    </div>
+                                                    {getEventParticipants(event) && (
+                                                        <div className="text-[10px] font-bold text-gray-400 font-[BasisGrotesquePro] pt-1 border-t border-[#F8FAFF]">
+                                                            {getEventParticipants(event)}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => setViewMode('Agenda')}
+                                    className="w-full mt-2 py-2 text-[10px] font-black text-gray-400 hover:text-gray-900 uppercase tracking-[0.2em] transition-colors"
+                                >
+                                    View Full Agenda
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Events modal for viewing all meetings on a date */}
+            {/* Events modal for viewing all meetings on a date - Premium Responsive */}
             {eventsModal.open && (
                 <div
-                    className="fixed inset-0 z-[1100] bg-black bg-opacity-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-[1100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
                     onClick={closeEventsModal}
                 >
                     <div
-                        className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
+                        className="bg-white !rounded-2xl !border border-[#E8F0FF] w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between p-4 border-b border-[#E8F0FF]">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-5 border-b border-[#F8FAFF]">
                             <div>
-                                <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">Scheduled Meetings</h5>
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">{eventsModal.dateLabel}</p>
+                                <h6 className="text-[10px] font-black text-[#3AD6F2] font-[BasisGrotesquePro] uppercase tracking-[0.2em] mb-1">Daily Schedule</h6>
+                                <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro] leading-none">{eventsModal.dateLabel}</h5>
                             </div>
                             <button
                                 onClick={closeEventsModal}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
                                 aria-label="Close"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                                    <path
-                                        d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z"
-                                        fill="#3B4A66"
-                                    />
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </button>
                         </div>
-                        <div className="p-4 space-y-3 overflow-y-auto">
+
+                        {/* Modal Body */}
+                        <div className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
                             {eventsModal.events.length === 0 ? (
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center py-4">No meetings scheduled.</p>
+                                <div className="py-12 flex flex-col items-center justify-center text-center">
+                                    <div className="w-16 h-16 bg-[#F3F7FF] !rounded-full flex items-center justify-center mb-4">
+                                        <svg className="w-8 h-8 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-400 font-[BasisGrotesquePro] uppercase tracking-widest">No meetings scheduled</p>
+                                </div>
                             ) : (
                                 eventsModal.events.map((event, idx) => (
-                                    <div key={`${event.id || idx}-${event.appointment_time || idx}`} className="border border-[#E8F0FF] rounded-lg p-3">
-                                        <div className="flex items-start justify-between mb-1">
-                                            <div>
-                                                <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
-                                                    {event.subject || 'Meeting'}
-                                                </p>
-                                                {renderParticipantButtons(event)}
+                                    <div key={`${event.id || idx}-${event.appointment_time || idx}`} className="group relative bg-white !rounded-2xl !border border-[#E8F0FF] p-4 hover:border-[#3AD6F2] hover:shadow-lg transition-all">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className={`w-2 h-2 !rounded-full ${event.appointment_status === 'cancelled' ? 'bg-red-500' : event.appointment_status === 'pending' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
+                                                    <p className="text-sm font-black text-gray-900 font-[BasisGrotesquePro]">
+                                                        {event.subject || 'Untitled Meeting'}
+                                                    </p>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <div className="px-2 py-0.5 bg-[#3AD6F2]/10 !rounded-lg text-[10px] font-black text-[#3AD6F2] uppercase tracking-wider">
+                                                        {formatTime(event.appointment_time)}
+                                                        {event.end_time ? ` - ${formatTime(event.end_time)}` : event.appointment_duration ? ` (${event.appointment_duration}m)` : ''}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <span
-                                                className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] ${event.appointment_status === 'cancelled'
-                                                    ? 'bg-red-100 text-red-700'
+                                                className={`text-[9px] font-black px-2.5 py-1 !rounded-lg uppercase tracking-widest ${event.appointment_status === 'cancelled'
+                                                    ? 'bg-red-50 text-red-600'
                                                     : event.appointment_status === 'pending'
-                                                        ? 'bg-yellow-100 text-yellow-700'
-                                                        : 'bg-green-100 text-green-700'
+                                                        ? 'bg-yellow-50 text-yellow-600'
+                                                        : 'bg-green-50 text-green-600'
                                                     }`}
                                             >
                                                 {event.status_display || event.appointment_status || 'Scheduled'}
                                             </span>
                                         </div>
-                                        <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
-                                            {formatTime(event.appointment_time)}{' '}
-                                            {event.end_time ? `- ${formatTime(event.end_time)}` : event.appointment_duration ? `(${event.appointment_duration}m)` : ''}
+
+                                        <div className="flex flex-col gap-2">
+                                            {renderParticipantButtons(event)}
+                                            {event.description && (
+                                                <p className="text-xs text-gray-500 font-[BasisGrotesquePro] leading-relaxed line-clamp-2 italic">
+                                                    "{event.description}"
+                                                </p>
+                                            )}
                                         </div>
-                                        {event.description && (
-                                            <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-2 line-clamp-3">{event.description}</p>
-                                        )}
+
                                         {event.appointment_status === 'pending' && (
-                                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#E8F0FF]">
+                                            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-[#F8FAFF]">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleManageAppointment(event.id, 'approve');
                                                     }}
-                                                    className="flex-1 px-3 py-1.5 text-xs font-bold text-white bg-[#059669] hover:bg-[#047857] rounded-lg transition-colors font-[BasisGrotesquePro]"
-                                                    style={{ borderRadius: "10px" }}
-
+                                                    className="px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.2em]"
                                                 >
                                                     Accept
                                                 </button>
@@ -1713,8 +1642,7 @@ const SchedulingCalendar = () => {
                                                         e.stopPropagation();
                                                         handleManageAppointment(event.id, 'cancel');
                                                     }}
-                                                    className="flex-1 px-3 py-1.5 text-xs font-bold text-white bg-[#DC2626] hover:bg-[#B91C1C] rounded-lg transition-colors font-[BasisGrotesquePro]"
-                                                    style={{ borderRadius: "10px" }}
+                                                    className="px-4 py-2.5 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-[0.2em]"
                                                 >
                                                     Reject
                                                 </button>
@@ -1724,11 +1652,11 @@ const SchedulingCalendar = () => {
                                 ))
                             )}
                         </div>
-                        <div className="flex items-center justify-end gap-2 p-4 border-t border-[#E8F0FF]">
+
+                        <div className="p-5 border-t border-[#F8FAFF] flex justify-end">
                             <button
                                 onClick={closeEventsModal}
-                                className="px-4 py-2 text-sm bg-white !border border-[#E8F0FF] rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
-                                style={{ borderRadius: "10px" }}
+                                className="px-8 py-3 text-[10px] font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 text-gray-900 transition-all uppercase tracking-[0.2em]"
                             >
                                 Close
                             </button>
@@ -1737,17 +1665,23 @@ const SchedulingCalendar = () => {
                 </div>
             )}
 
-            {/* Overlap Warning Modal */}
+
+            {/* Overlap Warning Modal - Premium Responsive */}
             {showOverlapModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
-                    <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-2xl max-h-[80vh] flex flex-col">
+                <div className="fixed inset-0 z-[1110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white !rounded-2xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
                         {/* Modal Header */}
-                        <div className="flex items-start justify-between p-4 border-b border-[#E8F0FF] flex-shrink-0">
-                            <div>
-                                <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-0.5">Time Slot Conflict</h5>
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                                    This time slot conflicts with {overlappingAppointments.length} existing {overlappingAppointments.length === 1 ? 'meeting' : 'meetings'}
-                                </p>
+                        <div className="flex items-center justify-between p-5 border-b border-[#F8FAFF]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-red-50 !rounded-xl flex items-center justify-center text-red-500">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h6 className="text-[10px] font-black text-red-500 font-[BasisGrotesquePro] uppercase tracking-[0.2em] mb-1">Scheduling Conflict</h6>
+                                    <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Time Slot Conflict</h5>
+                                </div>
                             </div>
                             <button
                                 onClick={() => {
@@ -1755,88 +1689,81 @@ const SchedulingCalendar = () => {
                                     setOverlappingAppointments([]);
                                     setNewAppointmentDetails(null);
                                 }}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                                    <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </button>
                         </div>
 
-                        {/* Modal Body - Scrollable */}
-                        <div className="p-4 space-y-4 overflow-y-auto flex-1">
-                            {/* New Appointment Details */}
-                            <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg p-3">
-                                <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">New Appointment</h6>
-                                <div className="space-y-1 text-sm text-gray-700 font-[BasisGrotesquePro]">
-                                    <p><span className="font-medium">Title:</span> {newAppointmentDetails?.event_title || eventTitle}</p>
-                                    <p><span className="font-medium">Date:</span> {newAppointmentDetails?.date || appointmentDate}</p>
-                                    <p><span className="font-medium">Time:</span> {newAppointmentDetails?.time || (slots.length > 0 ? slots[0].time : '')}</p>
-                                    <p><span className="font-medium">Duration:</span> {newAppointmentDetails?.duration || appointmentDuration} minutes</p>
-                                    {slots.length > 0 && slots[0].client_id && (
-                                        <p><span className="font-medium">Client:</span> {
-                                            clients.find(c => c.id === slots[0].client_id)
-                                                ? `${clients.find(c => c.id === slots[0].client_id).first_name || ''} ${clients.find(c => c.id === slots[0].client_id).last_name || ''}`.trim()
-                                                : `Client #${slots[0].client_id}`
-                                        }</p>
-                                    )}
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                            <div className="bg-[#F3F7FF]/50 !rounded-2xl border border-[#E8F0FF] p-5">
+                                <h6 className="text-[10px] font-black text-gray-400 font-[BasisGrotesquePro] uppercase tracking-widest mb-3">Proposed Appointment</h6>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Title</span>
+                                        <span className="text-sm font-black text-gray-900">{newAppointmentDetails?.event_title || eventTitle}</span>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Date & Time</span>
+                                        <span className="text-sm font-black text-gray-900">
+                                            {newAppointmentDetails?.date || appointmentDate} @ {newAppointmentDetails?.time || (slots.length > 0 ? slots[0].time : '')} ({newAppointmentDetails?.duration || appointmentDuration}m)
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Overlapping Appointments */}
-                            <div>
-                                <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">
-                                    Overlapping Appointments ({overlappingAppointments.length})
-                                </h6>
-                                <div className="space-y-2">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h6 className="text-[10px] font-black text-red-500 font-[BasisGrotesquePro] uppercase tracking-widest">Conflicting Appointments ({overlappingAppointments.length})</h6>
+                                </div>
+                                <div className="grid gap-3">
                                     {overlappingAppointments.map((appointment, index) => (
-                                        <div key={appointment.id || index} className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                            <div className="flex items-start justify-between mb-2">
+                                        <div key={appointment.id || index} className="p-4 bg-white !rounded-2xl !border border-red-100 hover:border-red-200 transition-all flex flex-col gap-3 relative overflow-hidden group">
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-400"></div>
+                                            <div className="flex items-start justify-between">
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">
+                                                    <p className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] group-hover:text-red-600 transition-colors">
                                                         {appointment.subject || 'Untitled Meeting'}
                                                     </p>
-                                                    {appointment.client && (
-                                                        <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-0.5">
-                                                            Client: {appointment.client.name || appointment.client.email || 'N/A'}
-                                                        </p>
-                                                    )}
+                                                    <div className="flex items-center gap-3 mt-1">
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{appointment.appointment_date}</span>
+                                                        <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">{formatTime(appointment.appointment_time)}</span>
+                                                    </div>
                                                 </div>
-                                                <span className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${appointment.appointment_status === 'confirmed'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : appointment.appointment_status === 'scheduled'
-                                                        ? 'bg-orange-100 text-orange-800'
-                                                        : 'bg-gray-100 text-gray-800'
-                                                    }`}>
+                                                <span className={`text-[9px] font-black px-2 py-1 !rounded-lg uppercase tracking-widest ${appointment.appointment_status === 'confirmed' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                                                     {appointment.appointment_status || 'scheduled'}
                                                 </span>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 font-[BasisGrotesquePro]">
-                                                <p><span className="font-medium">Date:</span> {appointment.appointment_date}</p>
-                                                <p><span className="font-medium">Time:</span> {formatTime(appointment.appointment_time)} ({appointment.appointment_duration || 30}m)</p>
-                                                {appointment.meeting_location && (
-                                                    <p><span className="font-medium">Location:</span> {appointment.meeting_location}</p>
-                                                )}
-                                                {appointment.appointment_type && (
-                                                    <p><span className="font-medium">Type:</span> {appointment.appointment_type}</p>
-                                                )}
-                                            </div>
+                                            {appointment.client && (
+                                                <div className="flex items-center gap-2 pt-2 border-t border-red-50">
+                                                    <div className="w-5 h-5 !rounded-full bg-red-50 flex items-center justify-center text-[10px] font-bold text-red-500">
+                                                        {appointment.client.name?.charAt(0) || 'C'}
+                                                    </div>
+                                                    <p className="text-[10px] font-bold text-gray-600">
+                                                        Client: {appointment.client.name || appointment.client.email || 'N/A'}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Warning Message */}
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                <p className="text-sm text-amber-800 font-[BasisGrotesquePro]">
-                                    <strong>Warning:</strong> Creating this meeting will cancel the overlapping appointment{overlappingAppointments.length > 1 ? 's' : ''} listed above.
+                            <div className="p-4 bg-red-50 border border-red-100 !rounded-xl flex gap-3">
+                                <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="text-xs font-bold text-red-700 font-[BasisGrotesquePro] leading-relaxed">
+                                    Warning: Confirming this meeting will automatically <span className="underline decoration-2">cancel</span> all conflicting appointments listed above.
                                 </p>
                             </div>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex items-center justify-end gap-2 p-4 border-t border-[#E8F0FF] flex-shrink-0">
+                        <div className="p-5 border-t border-[#F8FAFF] flex items-center justify-end gap-3">
                             <button
                                 onClick={() => {
                                     setShowOverlapModal(false);
@@ -1844,254 +1771,303 @@ const SchedulingCalendar = () => {
                                     setNewAppointmentDetails(null);
                                 }}
                                 disabled={confirmingOverwrite}
-                                className="px-4 py-1.5 text-sm bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-gray-700 disabled:opacity-50"
+                                className="px-6 py-3 text-[10px] font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 text-gray-900 transition-all uppercase tracking-[0.2em] disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmOverwrite}
                                 disabled={confirmingOverwrite}
-                                className="px-4 py-1.5 text-sm bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 max-w-sm px-6 py-3 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-lg shadow-red-100 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {confirmingOverwrite ? 'Creating...' : `Create Meeting & Cancel ${overlappingAppointments.length} Conflicting ${overlappingAppointments.length === 1 ? 'Meeting' : 'Meetings'}`}
+                                {confirmingOverwrite ? 'Processing...' : `Overwrite & Cancel (${overlappingAppointments.length}) Conflicts`}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-
-            {/* Add Calendar Event Modal */}
+            {/* Add Calendar Event Modal - Premium Responsive */}
             {isAddEventModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[75vh] flex flex-col">
+                <div className="fixed inset-0 z-[1120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white !rounded-3xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex items-start justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0">
-                            <div>
-                                <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-0.5">Add Calendar Event</h5>
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Schedule a new meeting, appointment, or deadline</p>
+                        <div className="flex items-center justify-between p-6 border-b border-[#F8FAFF] bg-white">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-[#F56D2D]/10 !rounded-2xl flex items-center justify-center text-[#F56D2D]">
+                                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h6 className="text-[10px] font-black text-[#F56D2D] font-[BasisGrotesquePro] uppercase tracking-[0.2em] mb-1">Event Creator</h6>
+                                    <h5 className="text-2xl font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Add Calendar Event</h5>
+                                </div>
                             </div>
                             <button
                                 onClick={() => setIsAddEventModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="w-12 h-12 flex items-center justify-center !rounded-2xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                                    <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-
                             </button>
                         </div>
 
-                        {/* Modal Body - Scrollable - Matching Tax Preparer Modal Structure */}
-                        <div className="px-6 py-4 space-y-5 overflow-y-auto flex-1">
-                            {/* Event Title */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                    Event Title <span style={{ color: "#EF4444" }}>*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={eventTitle}
-                                    onChange={(e) => setEventTitle(e.target.value)}
-                                    placeholder="Enter event title"
-                                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-[BasisGrotesquePro]"
-                                    style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                    required
-                                />
-                            </div>
-
-                            {/* Appointment Duration & Timezone */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                        Appointment Duration (minutes) <span style={{ color: "#EF4444" }}>*</span>
-                                    </label>
-                                    <select
-                                        value={appointmentDuration}
-                                        onChange={(e) => setAppointmentDuration(parseInt(e.target.value))}
-                                        className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white font-[BasisGrotesquePro]"
-                                        style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                        required
-                                    >
-                                        <option value={30}>30 minutes</option>
-                                        <option value={60}>60 minutes</option>
-                                    </select>
+                        {/* Modal Body */}
+                        <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar bg-white">
+                            {/* Section: Basic Details */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-4 w-1 bg-[#F56D2D] rounded-full"></div>
+                                    <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Event Information</h6>
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                        Timezone <span style={{ color: "#EF4444" }}>*</span>
+                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        Event Title <span className="text-red-500">*</span>
                                     </label>
-                                    <select
-                                        value={timezone}
-                                        onChange={(e) => setTimezone(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white font-[BasisGrotesquePro]"
-                                        style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+                                    <input
+                                        type="text"
+                                        value={eventTitle}
+                                        onChange={(e) => setEventTitle(e.target.value)}
+                                        placeholder="e.g., Quarterly Tax Review"
+                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300"
                                         required
-                                    >
-                                        <option value="America/New_York">America/New_York (EST)</option>
-                                        <option value="America/Chicago">America/Chicago (CST)</option>
-                                        <option value="America/Denver">America/Denver (MST)</option>
-                                        <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
-                                        <option value="America/Phoenix">America/Phoenix (MST - No DST)</option>
-                                    </select>
+                                    />
                                 </div>
-                            </div>
 
-                            {/* Date */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                    Appointment Date <span style={{ color: "#EF4444" }}>*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    value={appointmentDate}
-                                    onChange={(e) => setAppointmentDate(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-[BasisGrotesquePro]"
-                                    style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                    required
-                                />
-                            </div>
-
-                            {/* Time Slots */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                    Time Slots <span style={{ color: "#EF4444" }}>*</span>
-                                </label>
-                                <div className="space-y-3">
-                                    {slots.map((slot) => (
-                                        <div key={slot.id} className="flex items-center gap-2 flex-wrap">
-                                            <input
-                                                type="time"
-                                                value={slot.time}
-                                                onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
-                                                className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-[BasisGrotesquePro]"
-                                                style={{ minWidth: '120px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                                required
-                                            />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                            Duration <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
                                             <select
-                                                value={slot.client_id}
-                                                onChange={(e) => handleTimeSlotChange(slot.id, 'client_id', e.target.value)}
-                                                className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white font-[BasisGrotesquePro]"
-                                                style={{ minWidth: '200px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+                                                value={appointmentDuration}
+                                                onChange={(e) => setAppointmentDuration(parseInt(e.target.value))}
+                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                 required
-                                                disabled={loadingClients}
                                             >
-                                                <option value="">Select Client</option>
-                                                {clients.map((client) => (
-                                                    <option key={client.id} value={client.id}>
-                                                        {client.first_name && client.last_name
-                                                            ? `${client.first_name} ${client.last_name}`
-                                                            : client.email || `Client #${client.id}`}
-                                                    </option>
-                                                ))}
+                                                <option value={15}>15 minutes</option>
+                                                <option value={30}>30 minutes</option>
+                                                <option value={45}>45 minutes</option>
+                                                <option value={60}>1 hour</option>
+                                                <option value={90}>1.5 hours</option>
+                                                <option value={120}>2 hours</option>
                                             </select>
-                                            {slots.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeTimeSlot(slot.id)}
-                                                    className="w-8 h-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
-                                                >
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                </button>
-                                            )}
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
                                         </div>
-                                    ))}
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                            Timezone <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={timezone}
+                                                onChange={(e) => setTimezone(e.target.value)}
+                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                required
+                                            >
+                                                <option value="America/New_York">America/New_York (EST)</option>
+                                                <option value="America/Chicago">America/Chicago (CST)</option>
+                                                <option value="America/Denver">America/Denver (MST)</option>
+                                                <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                                                <option value="America/Phoenix">America/Phoenix (MST)</option>
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Logistics */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-4 w-1 bg-[#3AD6F2] rounded-full"></div>
+                                    <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Logistics & Timing</h6>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        Appointment Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={appointmentDate}
+                                        onChange={(e) => setAppointmentDate(e.target.value)}
+                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        Time Slots & Clients <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="space-y-3">
+                                        {slots.map((slot, index) => (
+                                            <div key={slot.id} className="flex gap-3 group/slot items-start animate-in slide-in-from-left duration-200" style={{ animationDelay: `${index * 50}ms` }}>
+                                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <input
+                                                        type="time"
+                                                        value={slot.time}
+                                                        onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
+                                                        className="px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                        required
+                                                    />
+                                                    <div className="relative">
+                                                        <select
+                                                            value={slot.client_id}
+                                                            onChange={(e) => handleTimeSlotChange(slot.id, 'client_id', e.target.value)}
+                                                            className="w-full px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                            required
+                                                            disabled={loadingClients}
+                                                        >
+                                                            <option value="">Select Client</option>
+                                                            {clients.map((client) => (
+                                                                <option key={client.id} value={client.id}>
+                                                                    {client.first_name && client.last_name
+                                                                        ? `${client.first_name} ${client.last_name}`
+                                                                        : client.email || `Client #${client.id}`}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {slots.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeTimeSlot(slot.id)}
+                                                        className="mt-3 w-10 h-10 flex items-center justify-center !rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover/slot:opacity-100"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={addTimeSlot}
-                                        className="px-3 py-2 text-sm font-medium text-[#F56D2D] hover:bg-[#FFF5E0] transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
-                                        style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)', borderRadius: '8px' }}
+                                        className="flex items-center gap-2 px-5 py-3 text-[10px] font-black text-[#F56D2D] bg-[#F56D2D]/5 hover:bg-[#F56D2D]/10 !rounded-xl transition-all uppercase tracking-[0.2em] border-2 border-dashed border-[#F56D2D]/20 hover:border-[#F56D2D]/40"
                                     >
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" />
                                         </svg>
-                                        Add Time Slot
+                                        Add Multi-Slot
                                     </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                            Meeting Type <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={meetingType}
+                                                onChange={(e) => setMeetingType(e.target.value)}
+                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                required
+                                            >
+                                                <option value="zoom">Zoom Video</option>
+                                                <option value="google_meet">Google Meet</option>
+                                                <option value="in_person">In-Person Meeting</option>
+                                                <option value="on_call">Phone Consultation</option>
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                            Assign Staff <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={assignedStaffId}
+                                                onChange={(e) => setAssignedStaffId(e.target.value)}
+                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                required
+                                                disabled={loadingStaff}
+                                            >
+                                                <option value="">Select Staff Member</option>
+                                                {staffMembers.map((staff) => {
+                                                    const staffName = staff.staff_member?.name || staff.name || 'Unknown Staff';
+                                                    return <option key={staff.id} value={staff.id}>{staffName}</option>;
+                                                })}
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        {loadingStaff && <p className="text-[9px] font-bold text-[#3AD6F2] mt-2 uppercase tracking-widest">Loading staff roster...</p>}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Meeting Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                    Meeting Type <span style={{ color: "#EF4444" }}>*</span>
-                                </label>
-                                <select
-                                    value={meetingType}
-                                    onChange={(e) => setMeetingType(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white font-[BasisGrotesquePro]"
-                                    style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                    required
-                                >
-                                    <option value="zoom">Zoom</option>
-                                    <option value="google_meet">Google Meet</option>
-                                    <option value="in_person">In Person</option>
-                                    <option value="on_call">Phone Call</option>
-                                </select>
-                            </div>
+                            {/* Section: Additional Information */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-4 w-1 bg-gray-300 rounded-full"></div>
+                                    <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Additional Information</h6>
+                                </div>
 
-                            {/* Assign Staff */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                    Assign Staff <span style={{ color: "#EF4444" }}>*</span>
-                                </label>
-                                <select
-                                    value={assignedStaffId}
-                                    onChange={(e) => setAssignedStaffId(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white font-[BasisGrotesquePro]"
-                                    style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                    required
-                                    disabled={loadingStaff}
-                                >
-                                    <option value="">Select Staff Member</option>
-                                    {staffMembers.map((staff) => {
-                                        const staffName = staff.staff_member?.name || staff.name || 'Unknown Staff';
-                                        const staffEmail = staff.contact?.email || staff.email || '';
-                                        const staffRole = staff.role?.primary || staff.role?.display || '';
-                                        return (
-                                            <option key={staff.id} value={staff.id}>
-                                                {staffName}{staffEmail ? ` (${staffEmail})` : ''}{staffRole ? ` - ${staffRole}` : ''}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                                {loadingStaff && (
-                                    <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">Loading staff members...</p>
-                                )}
-                            </div>
-
-                            {/* Description */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                                    Description (Optional)
-                                </label>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Enter description"
-                                    rows={3}
-                                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none font-[BasisGrotesquePro]"
-                                    style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                                />
+                                <div>
+                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        Description (Optional)
+                                    </label>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder="Add notes, agenda items, or specific instructions..."
+                                        rows={4}
+                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300 resize-none shadow-inner"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex items-center justify-end gap-2 p-3 border-t border-[#E8F0FF] flex-shrink-0">
+                        <div className="p-6 border-t border-[#F8FAFF] bg-white flex items-center justify-end gap-4 shadow-[0_-4px_20px_0_rgba(0,0,0,0.02)]">
                             <button
                                 onClick={() => setIsAddEventModalOpen(false)}
-                                className="px-4 py-1.5 text-sm bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-gray-700"
+                                className="px-8 py-4 text-[10px] font-black bg-white !border !border-[#E8F0FF] !rounded-2xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all uppercase tracking-[0.2em]"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreateMeeting}
                                 disabled={creatingMeeting || !eventTitle.trim() || !appointmentDate || slots.every(slot => !slot.time || !slot.client_id) || !assignedStaffId}
-                                className="px-4 py-2 bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
-                                style={{ borderRadius: '8px' }}
+                                className="flex-1 max-w-[240px] px-8 py-4 text-[10px] font-black text-white bg-[#F56D2D] hover:bg-[#E55A1D] !rounded-2xl transition-all shadow-xl shadow-orange-100 hover:shadow-orange-200 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
                             >
-                                {creatingMeeting ? 'Creating...' : 'Create Meeting'}
+                                {creatingMeeting ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        <span>Saving...</span>
+                                    </div>
+                                ) : 'Create Meeting'}
                             </button>
                         </div>
                     </div>

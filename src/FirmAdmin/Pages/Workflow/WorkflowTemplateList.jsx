@@ -60,32 +60,32 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
   return (
     <div className="bg-white rounded-lg border border-[#E8F0FF] p-3 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-          <div>
-            <h4 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-1 sm:mb-2 font-[BasisGrotesquePro]">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
+          <div className="flex-1">
+            <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 font-[BasisGrotesquePro]">
               Workflow Templates
             </h4>
             <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">
               Create and manage workflow templates for your firm
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input
               type="text"
               placeholder="Search templates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
+              className="px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] w-full sm:w-48 lg:w-64"
             />
             <button
               onClick={onCreateTemplate}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg font-[BasisGrotesquePro] flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg font-[BasisGrotesquePro] flex items-center justify-center gap-2 whitespace-nowrap shadow-sm hover:bg-[#e45d1d] transition-colors"
               style={{ borderRadius: '8px' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Create New
+              <span>Create New</span>
             </button>
           </div>
         </div>

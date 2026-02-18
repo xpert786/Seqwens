@@ -393,19 +393,18 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                 }}
             >
 
-                <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] p-0">
-
+                <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] px-2 sm:px-4">
                     {/* Left Section */}
                     <div className="d-flex align-items-center h-full">
+                        {/* Desktop Logo & Toggle Container */}
                         <div
-                            className="d-flex align-items-center border-end"
+                            className="d-none d-lg-flex align-items-center border-end h-full"
                             style={{
-                                width: "281px",
-                                height: '100%',
+                                width: isSidebarOpen ? "281px" : "80px",
                                 transition: 'width 0.3s ease'
                             }}
                         >
-                            <div className="d-flex align-items-center px-4 flex-grow-1">
+                            <div className={`d-flex align-items-center px-4 flex-grow-1 ${!isSidebarOpen ? 'd-none' : ''}`}>
                                 <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                                     <img
                                         ref={logoRef}
@@ -418,14 +417,12 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                 </Link>
                             </div>
 
-                            {/* Sidebar Toggle - Positioned at the right edge corner */}
                             <div
                                 onClick={onToggleSidebar}
                                 className="d-flex align-items-center justify-content-center h-full cursor-pointer hover:bg-gray-50 transition-colors border-start"
                                 style={{
                                     width: '50px',
                                     flexShrink: 0,
-                                    marginRight: '2px'
                                 }}
                             >
                                 <div
@@ -439,8 +436,31 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                             </div>
                         </div>
 
-                        {/* Search Bar */}
-                        <div className="ms-4 d-none d-md-block" style={{ width: '350px' }}>
+                        {/* Mobile Logo & Toggle */}
+                        <div className="d-flex d-lg-none align-items-center gap-2">
+                            <div
+                                onClick={onToggleSidebar}
+                                className="d-flex align-items-center justify-content-center cursor-pointer hover:bg-gray-50 transition-colors rounded-lg"
+                                style={{
+                                    width: '35px',
+                                    height: '35px',
+                                    backgroundColor: '#F3F7FF'
+                                }}
+                            >
+                                <LogoIcon />
+                            </div>
+                            <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
+                                <img
+                                    src={logoUrl || logo}
+                                    alt="Logo"
+                                    className="firm-topbar-logo"
+                                    style={{ maxHeight: "28px", width: "auto" }}
+                                />
+                            </Link>
+                        </div>
+
+                        {/* Search Bar - Hidden on mobile */}
+                        <div className="ms-4 d-none d-xl-block" style={{ width: '350px' }}>
                             <div className="position-relative" ref={searchRef}>
                                 <div className="d-flex align-items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 transition-all focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
                                     <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -476,12 +496,6 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                         </div>
                                     </div>
                                 )}
-
-                                {showSuggestions && filteredSuggestions.length === 0 && searchQuery.trim() !== "" && (
-                                    <div className="position-absolute w-100 bg-white shadow-xl border border-gray-200 rounded-lg mt-2 p-4 text-center text-sm text-gray-500" style={{ zIndex: 1100 }}>
-                                        No results found for "{searchQuery}"
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -489,7 +503,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
                     {/* Right Section */}
                     <div
-                        className="d-flex align-items-center gap-3 pe-4"
+                        className="d-flex align-items-center gap-2 sm:gap-3 px-1 sm:pe-4"
                         style={{ minWidth: "fit-content" }}
                     >
                         {/* Account Switcher - Wrapped in error boundary to prevent blocking */}

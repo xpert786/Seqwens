@@ -374,7 +374,7 @@ const EditTaskModal = ({ isOpen, onClose, onTaskUpdated, task }) => {
                                                     type="file"
                                                     className="form-control form-control-sm border-slate-200"
                                                     onChange={(e) => setSelectedFile(e.target.files[0])}
-                                                    style={{ borderRadius: '8px' }}
+                                                    style={{ borderRadius: '10px' }}
                                                 />
                                                 {selectedFile && (
                                                     <div className="mt-1 small text-success d-flex align-items-center gap-1">

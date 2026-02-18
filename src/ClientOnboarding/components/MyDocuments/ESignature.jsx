@@ -368,7 +368,7 @@ export default function ESignature() {
       {/* Cards Row */}
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (
-          <div className="col-md-4" key={index}>
+          <div className="col-6 col-md-4" key={index}>
             <div
               className={`bg-white rounded p-3 d-flex flex-column justify-content-between ${item.filterKey ? 'cursor-pointer' : ''}`}
               style={{
@@ -439,7 +439,7 @@ export default function ESignature() {
           </div>
 
           {/* Filter Buttons */}
-          <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0">
+          <div className="d-flex gap-2 flex-nowrap mt-2 mt-md-0 tabs-container">
             <button
               onClick={() => {
                 setFilter(null);

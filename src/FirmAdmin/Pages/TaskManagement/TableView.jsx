@@ -107,7 +107,7 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                                     e.stopPropagation();
                                     handleActionSelect('View Details', task.id);
                                   }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:!text-black transition-colors font-[BasisGrotesquePro]"
                                   style={{ borderRadius: '7px' }}
                                 >
                                   View Details
@@ -115,19 +115,9 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleActionSelect('Start Timer', task.id);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-100 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
-                                  style={{ borderRadius: '7px' }}
-                                >
-                                  Start Timer
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
                                     handleActionSelect('Delete Task', task.id);
                                   }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-100 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:!text-red-600 transition-colors font-[BasisGrotesquePro]"
                                   style={{ borderRadius: '7px' }}
                                 >
                                   Delete Task

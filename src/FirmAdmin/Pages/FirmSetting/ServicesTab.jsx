@@ -426,19 +426,19 @@ export default function ServicesTab() {
       </div>
 
       {/* Service Pricing Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF] service-card">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF] service-card">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <h5 className="text-base sm:text-lg font-bold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
               Services & Base Pricing
             </h5>
-            <p className="text-sm text-[#7B8AB2] font-[BasisGrotesquePro]">
+            <p className="text-[11px] sm:text-sm text-[#7B8AB2] font-[BasisGrotesquePro]">
               Manage your firm's services, pricing, and categories
             </p>
           </div>
           <button
             onClick={() => setShowAddService(true)}
-            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center gap-2"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -528,57 +528,67 @@ export default function ServicesTab() {
           {services.map((service) => (
             <div
               key={service.id || service.name}
-              className="flex items-start justify-between p-4 !border border-[#E8F0FF] rounded-lg service-item"
+              className="p-2 sm:p-4 !border border-[#E8F0FF] rounded-xl service-item bg-white hover:shadow-sm transition-all"
             >
-              <div className="flex items-start gap-4 flex-1 service-item-inner">
-                <label className="relative inline-flex cursor-pointer items-center flex-shrink-0 service-item-toggle mt-1">
-                  <input
-                    type="checkbox"
-                    className="peer sr-only"
-                    checked={service.enabled}
-                    onChange={() => toggleService(service.id)}
-                  />
-                  <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${service.enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                    }`}>
-                    <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${service.enabled ? 'translate-x-5' : 'translate-x-0'
-                      }`} />
-                  </div>
-                </label>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h6 className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro]">
+              <div className="flex flex-row items-center justify-between gap-1 sm:gap-4">
+                {/* Left Side: Toggle and Name/Category */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={service.enabled}
+                      onChange={() => toggleService(service.id)}
+                    />
+                    <div className={`relative inline-flex h-4 w-7 sm:h-6 sm:w-11 items-center rounded-full px-0.5 transition-colors ${service.enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                      }`}>
+                      <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${service.enabled ? 'translate-x-3 sm:translate-x-5' : 'translate-x-0'
+                        }`} />
+                    </div>
+                  </label>
+
+                  <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                    <h6 className="text-[11px] sm:text-sm font-bold text-[#1F2A55] font-[BasisGrotesquePro] truncate">
                       {service.name}
                     </h6>
                     {service.category && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                      <span className="hidden xs:block px-1 py-0.5 text-[8px] sm:text-xs font-bold bg-blue-50 text-blue-600 rounded-md border border-blue-100 uppercase tracking-tighter flex-shrink-0">
                         {service.category}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#4B5563] font-[BasisGrotesquePro] mt-1">
-                    {service.description || (service.enabled ? 'Active service' : 'Inactive service')}
-                  </p>
                 </div>
-                <div className="flex items-center gap-3 service-item-actions">
+
+                {/* Right Side: Price and Actions */}
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                   <div className="text-right">
-                    <div className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
+                    <div className="text-[10px] sm:text-sm font-bold text-[#F56D2D] sm:text-[#1F2A55] font-[BasisGrotesquePro]">
                       ${typeof service.base_price === 'number' ? service.base_price.toFixed(2) : parseFloat(service.base_price || 0).toFixed(2)}
                     </div>
-                    <div className="text-xs text-[#7B8AB2] font-[BasisGrotesquePro]">Base price</div>
+                    <div className="hidden sm:block text-[10px] text-[#7B8AB2] font-medium font-[BasisGrotesquePro] uppercase">Base price</div>
                   </div>
-                  <button
-                    onClick={() => handleEditService(service)}
-                    className="px-3 py-1.5 text-xs font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteService(service.id)}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white !border border-red-200 !rounded-lg hover:bg-red-50 transition font-[BasisGrotesquePro]"
-                  >
-                    Delete
-                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <button
+                      onClick={() => handleEditService(service)}
+                      className="px-2 py-1 text-[10px] sm:text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-all font-[BasisGrotesquePro]"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteService(service.id)}
+                      className="px-2 py-1 text-[10px] sm:text-xs font-bold text-red-600 bg-white !border border-red-100 !rounded-lg hover:bg-red-50 transition-all font-[BasisGrotesquePro]"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
+              </div>
+              {/* Description shown only on desktop or if specifically needed, but hidden here for ultra-compact mobile view */}
+              <div className="hidden sm:block mt-2">
+                <p className="text-xs text-[#4B5563] font-[BasisGrotesquePro] leading-relaxed">
+                  {service.description || (service.enabled ? 'Active service' : 'Inactive service')}
+                </p>
               </div>
             </div>
           ))}
@@ -586,9 +596,9 @@ export default function ServicesTab() {
       </div>
 
       {/* Discounts & Adjustments Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
+      <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="text-center sm:text-left">
             <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
               Discounts & Adjustments
             </h5>
@@ -598,7 +608,7 @@ export default function ServicesTab() {
           </div>
           <button
             onClick={() => setShowAddDiscount(true)}
-            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center gap-2"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -691,37 +701,39 @@ export default function ServicesTab() {
             {discounts.map((discount) => (
               <div
                 key={discount.id}
-                className="flex items-center justify-between p-4 !border border-[#E8F0FF] rounded-lg"
+                className="p-4 !border border-[#E8F0FF] rounded-lg bg-white hover:shadow-sm transition-all"
               >
-                <div className="flex items-center gap-4 flex-1">
-                  <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
-                    <input
-                      type="checkbox"
-                      className="peer sr-only"
-                      checked={discount.enabled}
-                      onChange={() => toggleDiscount(discount.id)}
-                    />
-                    <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${discount.enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                      }`}>
-                      <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${discount.enabled ? 'translate-x-5' : 'translate-x-0'
-                        }`} />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        className="peer sr-only"
+                        checked={discount.enabled}
+                        onChange={() => toggleDiscount(discount.id)}
+                      />
+                      <div className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full px-1 transition-colors ${discount.enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                        }`}>
+                        <span className={`inline-block h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white transition-transform ${discount.enabled ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
+                          }`} />
+                      </div>
+                    </label>
+                    <div className="flex-1 min-w-0">
+                      <h6 className="text-sm font-bold text-[#1F2A55] font-[BasisGrotesquePro] truncate">
+                        {discount.name}
+                      </h6>
+                      <p className="text-xs text-[#4B5563] font-[BasisGrotesquePro]">
+                        {discount.type === 'percentage' ? `${discount.value}%` : `$${discount.value.toFixed(2)}`} discount
+                        {discount.auto_apply && ' • Auto-apply'}
+                      </p>
                     </div>
-                  </label>
-                  <div className="flex-1">
-                    <h6 className="text-sm font-semibold text-[#1F2A55] font-[BasisGrotesquePro]">
-                      {discount.name}
-                    </h6>
-                    <p className="text-xs text-[#4B5563] font-[BasisGrotesquePro]">
-                      {discount.type === 'percentage' ? `${discount.value}%` : `$${discount.value.toFixed(2)}`} discount
-                      {discount.auto_apply && ' • Auto-apply'}
-                    </p>
+                    <button
+                      onClick={() => handleDeleteDiscount(discount.id)}
+                      className="px-3 py-1.5 text-xs font-bold text-red-600 bg-white !border border-red-100 !rounded-lg hover:bg-red-50 transition-all font-[BasisGrotesquePro] shadow-sm ml-auto"
+                    >
+                      Delete
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDeleteDiscount(discount.id)}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white !border border-red-200 !rounded-lg hover:bg-red-50 transition font-[BasisGrotesquePro]"
-                  >
-                    Delete
-                  </button>
                 </div>
               </div>
             ))}
@@ -734,8 +746,8 @@ export default function ServicesTab() {
       </div>
 
       {/* Payment Terms Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <div className="mb-5 text-center sm:text-left">
           <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
             Payment Terms
           </h5>
@@ -768,8 +780,8 @@ export default function ServicesTab() {
       </div>
 
       {/* Late Fees & Interest Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
-        <div className="mb-5">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <div className="mb-5 text-center sm:text-left">
           <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
             Late Fees & Interest
           </h5>
@@ -818,12 +830,11 @@ export default function ServicesTab() {
         </div>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end services-save-container">
+      <div className="flex justify-center sm:justify-end">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
         >
           {saving ? (
             <>
@@ -919,17 +930,17 @@ export default function ServicesTab() {
               </div>
             </div>
 
-            <div className="p-6 bg-gray-50 flex gap-3 justify-end">
+            <div className="p-4 sm:p-6 bg-gray-50 flex flex-col xs:flex-row gap-3 justify-end border-t border-gray-100">
               <button
                 onClick={handleCancelEdit}
-                className="px-5 py-2 text-sm font-medium text-[#1F2A55] bg-white border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+                className="w-full xs:w-auto px-6 py-2.5 text-sm font-bold text-[#1F2A55] bg-white border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 transition font-[BasisGrotesquePro] shadow-sm order-2 xs:order-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={saving}
-                className="px-5 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-[10px] hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full xs:w-auto px-8 py-2.5 text-sm font-bold text-white bg-[#F56D2D] !rounded-xl hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm order-1 xs:order-2"
               >
                 {saving ? (
                   <>

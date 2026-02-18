@@ -64,8 +64,7 @@ export default function MyDocumentsMain() {
           </div>
 
           {/* Right: The Fixed Primary Button */}
-          {/* Use align-self-end on mobile to keep it right-aligned if the title wraps */}
-          <div className="w-100 w-md-auto d-flex justify-content-end align-self-end align-self-md-center">
+          <div className="w-100 w-md-auto d-flex justify-content-center justify-content-md-end align-self-center align-self-md-center">
             <button
               className="btn text-white fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm transition-all"
               onClick={() => setShowUploadModal(true)}
@@ -96,16 +95,7 @@ export default function MyDocumentsMain() {
       </div>
 
       {/* Tabs Section - Scrollable on Mobile */}
-      <div
-        className="tabs-container mb-4"
-        style={{
-          overflowX: "auto",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none"
-        }}
-      >
-        <style>{`.tabs-container::-webkit-scrollbar { display: none; }`}</style>
+      <div className="tabs-container mb-4">
         <div
           className="d-inline-flex p-1 shadow-sm"
           style={{
