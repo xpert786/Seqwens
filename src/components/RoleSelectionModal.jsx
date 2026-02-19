@@ -43,7 +43,6 @@ export default function RoleSelectionModal({ roles, onSelect, onClose }) {
             setLoading(false);
         }
     };
-
     return (
         <div className="role-selection-modal-overlay">
             <div className="role-selection-modal">
