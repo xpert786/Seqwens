@@ -23,7 +23,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
   const [workflowName, setWorkflowName] = useState('');
   const [description, setDescription] = useState('');
   const [taxFormType, setTaxFormType] = useState('');
-  const [triggerEvent, setTriggerEvent] = useState('manual');
+  const [triggerEvents, setTriggerEvents] = useState(['manual']);
   const [isActive, setIsActive] = useState(true);
 
   const TRIGGER_OPTIONS = [
@@ -61,8 +61,11 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       setDescription(template.description || '');
       setTaxFormType(template.tax_form_type || '');
       setIsActive(template.is_active !== undefined ? template.is_active : true);
-      setTriggerEvent(template.trigger_event || 'manual');
-      setStages(template.stages || []);
+      setTriggerEvents(template.trigger_events || (template.trigger_event ? [template.trigger_event] : ['manual']));
+      setStages((template.stages || []).map(s => ({
+        ...s,
+        assigned_roles: s.assigned_roles || (s.user_type_group ? [s.user_type_group] : [])
+      })));
     }
   }, [template]);
 
@@ -91,6 +94,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       name: stageTemplate.name,
       description: stageTemplate.desc,
       user_type_group: stageTemplate.who,
+      assigned_roles: [stageTemplate.who],
       estimated_duration_days: stageTemplate.days,
       stage_order: stages.length,
       actions: [],
@@ -107,6 +111,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       name: '',
       description: '',
       user_type_group: 'taxpayer',
+      assigned_roles: ['taxpayer'],
       estimated_duration_days: 3,
       stage_order: stages.length,
       actions: [],
@@ -118,7 +123,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
 
   // Update a stage
   const updateStage = (stageId, field, value) => {
-    setStages(stages.map(stage =>
+    setStages(prevStages => prevStages.map(stage =>
       stage.id === stageId ? { ...stage, [field]: value } : stage
     ));
   };
@@ -171,10 +176,12 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
         description: description,
         tax_form_type: taxFormType,
         is_active: isActive,
-        trigger_event: triggerEvent,
+        trigger_event: triggerEvents[0] || 'manual', // Backward compat
+        trigger_events: triggerEvents,
         stages: stages.map((stage, index) => ({
           ...stage,
           stage_order: index,
+          assigned_roles: stage.assigned_roles && stage.assigned_roles.length > 0 ? stage.assigned_roles : [stage.user_type_group],
           id: String(stage.id).startsWith('temp-') ? undefined : stage.id
         }))
       };
@@ -341,17 +348,28 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
               <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
                 Automation Trigger
               </label>
-              <select
-                value={triggerEvent}
-                onChange={(e) => setTriggerEvent(e.target.value)}
-                className="w-full px-4 py-2.5 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent font-[BasisGrotesquePro] bg-white"
-              >
+              <div className="space-y-2 bg-white !rounded-lg !border border-[#E8F0FF] p-3">
                 {TRIGGER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+                  <div key={opt.value} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`trigger-${opt.value}`}
+                      checked={triggerEvents.includes(opt.value)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setTriggerEvents(prev => {
+                          if (checked) return [...prev, opt.value];
+                          return prev.filter(t => t !== opt.value);
+                        });
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-[#F56D2D] focus:ring-[#F56D2D]"
+                    />
+                    <label htmlFor={`trigger-${opt.value}`} className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                      {opt.label}
+                    </label>
+                  </div>
                 ))}
-              </select>
+              </div>
               <p className="text-xs text-gray-500 mt-1.5 font-[BasisGrotesquePro] leading-relaxed">
                 When selected event occurs, this workflow will start automatically for the client.
               </p>
@@ -516,17 +534,49 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                             <label className="block text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">
                               Who does this?
                             </label>
-                            <select
-                              value={stage.user_type_group}
-                              onChange={(e) => updateStage(stage.id, 'user_type_group', e.target.value)}
-                              className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white"
-                            >
-                              {USER_TYPE_GROUPS.map((group) => (
-                                <option key={group.value} value={group.value}>
-                                  {group.label}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="flex flex-wrap gap-2">
+                              {USER_TYPE_GROUPS.map((group) => {
+                                const isSelected = (stage.assigned_roles || []).includes(group.value);
+                                return (
+                                  <button
+                                    key={group.value}
+                                    type="button"
+                                    onClick={() => {
+                                      const currentRoles = stage.assigned_roles || [];
+                                      let newRoles;
+
+                                      if (group.value === 'all') {
+                                        // If 'all' is clicked, select only 'all' or toggle it
+                                        newRoles = isSelected ? [] : ['all'];
+                                      } else {
+                                        // If specific role clicked, remove 'all' if present
+                                        const rolesWithoutAll = currentRoles.filter(r => r !== 'all');
+                                        if (isSelected) {
+                                          newRoles = rolesWithoutAll.filter(r => r !== group.value);
+                                        } else {
+                                          newRoles = [...rolesWithoutAll, group.value];
+                                        }
+                                      }
+
+                                      // Batch the updates by updating the stage object directly in the mapper
+                                      setStages(prevStages => prevStages.map(s =>
+                                        s.id === stage.id ? {
+                                          ...s,
+                                          assigned_roles: newRoles,
+                                          user_type_group: newRoles.length > 0 ? newRoles[0] : 'taxpayer'
+                                        } : s
+                                      ));
+                                    }}
+                                    className={`px-2 py-1 text-xs rounded border transition-colors ${isSelected
+                                      ? 'bg-[#E5F9FD] text-[#00A3BF] border-[#3AD6F2]'
+                                      : 'bg-white text-gray-600 border-[#E8F0FF] hover:border-gray-300'
+                                      }`}
+                                  >
+                                    {group.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
 
                           <div>

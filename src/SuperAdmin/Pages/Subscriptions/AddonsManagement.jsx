@@ -2,13 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { superAdminAddonsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
-const ADDON_TYPES = [
+const ADDON_CATEGORIES = [
   { value: 'esign', label: 'E-Signatures' },
   { value: 'storage', label: 'Storage' },
-  { value: 'offices', label: 'Additional Offices' },
-  { value: 'clients', label: 'Clients' },
-  { value: 'staff', label: 'Staff Members' },
-  { value: 'workflow', label: 'Workflows' }
+  { value: 'office', label: 'Offices' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'workflow', label: 'Workflows' },
+  { value: 'other', label: 'Other' }
+];
+
+const SCOPE_TYPES = [
+  { value: 'firm', label: 'Firm-wide' },
+  { value: 'office', label: 'Per Office' }
 ];
 
 const LIMIT_TYPES = [
@@ -29,6 +34,7 @@ export default function AddonsManagement() {
   const [formData, setFormData] = useState({
     name: '',
     addon_type: '',
+    category: 'other',
     description: '',
     features: [''],
     price: '',
@@ -36,7 +42,10 @@ export default function AddonsManagement() {
     billing_frequency: 'monthly',
     is_active: true,
     limit_type: 'enabled',
-    limit_value: ''
+    limit_value: '',
+    unit_type: 'unit',
+    unit_quantity: 1,
+    scope: 'firm'
   });
 
   // Fetch addons
@@ -101,6 +110,7 @@ export default function AddonsManagement() {
     setFormData({
       name: '',
       addon_type: '',
+      category: 'other',
       description: '',
       features: [''],
       price: '',
@@ -108,7 +118,10 @@ export default function AddonsManagement() {
       billing_frequency: 'monthly',
       is_active: true,
       limit_type: 'enabled',
-      limit_value: ''
+      limit_value: '',
+      unit_type: 'unit',
+      unit_quantity: 1,
+      scope: 'firm'
     });
     setShowAddModal(true);
   };
@@ -118,6 +131,7 @@ export default function AddonsManagement() {
     setFormData({
       name: addon.name || '',
       addon_type: addon.addon_type || '',
+      category: addon.category || 'other',
       description: addon.description || '',
       features: Array.isArray(addon.features) && addon.features.length > 0 ? addon.features : [''],
       price: addon.price || '',
@@ -125,7 +139,10 @@ export default function AddonsManagement() {
       billing_frequency: addon.billing_frequency || 'monthly',
       is_active: addon.is_active !== false,
       limit_type: addon.limit_type || 'enabled',
-      limit_value: addon.limit_value || ''
+      limit_value: addon.limit_value || '',
+      unit_type: addon.unit_type || 'unit',
+      unit_quantity: addon.unit_quantity || 1,
+      scope: addon.scope || 'firm'
     });
     setShowEditModal(true);
   };
@@ -159,6 +176,7 @@ export default function AddonsManagement() {
       const payload = {
         name: formData.name,
         addon_type: formData.addon_type,
+        category: formData.category,
         description: formData.description || '',
         features: formData.features.filter(f => f.trim() !== ''),
         price: parseFloat(formData.price).toFixed(2),
@@ -166,7 +184,10 @@ export default function AddonsManagement() {
         billing_frequency: formData.billing_frequency || 'monthly',
         is_active: formData.is_active !== false,
         limit_type: formData.limit_type,
-        limit_value: formData.limit_type === 'limited' ? parseInt(formData.limit_value) : null
+        limit_value: formData.limit_type === 'limited' ? parseInt(formData.limit_value) : null,
+        unit_type: formData.unit_type,
+        unit_quantity: parseInt(formData.unit_quantity),
+        scope: formData.scope
       };
 
       let response;
@@ -277,7 +298,10 @@ export default function AddonsManagement() {
                   Name
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">
-                  Addon Type
+                  Addon Type / Category
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">
+                  Scope
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">
                   Mode/Limit
@@ -313,12 +337,20 @@ export default function AddonsManagement() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
-                      <code className="px-2 py-1 bg-gray-100 rounded text-xs">{addon.addon_type}</code>
+                      <div className="flex flex-col gap-1">
+                        <code className="w-fit px-2 py-1 bg-gray-100 rounded text-[10px] uppercase font-bold text-gray-600">{addon.addon_type}</code>
+                        <span className="text-xs text-blue-600 font-medium capitalize">{addon.category}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${addon.scope === 'office' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+                        {addon.scope === 'office' ? 'Per Office' : 'Firm-wide'}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${addon.limit_type === 'unlimited' ? 'bg-purple-100 text-purple-700' :
-                          addon.limit_type === 'limited' ? 'bg-blue-100 text-blue-700' :
-                            'bg-green-100 text-green-700'
+                        addon.limit_type === 'limited' ? 'bg-blue-100 text-blue-700' :
+                          'bg-green-100 text-green-700'
                         }`}>
                         {getLimitDisplay(addon)}
                       </span>
@@ -420,14 +452,86 @@ export default function AddonsManagement() {
                       required
                       className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
                     >
-                      <option value="">Select an addon type...</option>
-                      {ADDON_TYPES.map((type) => (
+                      <option value="">Select an technical type...</option>
+                      {ADDON_CATEGORIES.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label}
                         </option>
                       ))}
                     </select>
                   )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                    Display Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
+                  >
+                    {ADDON_CATEGORIES.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                    Scope <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-4 mt-2">
+                    {SCOPE_TYPES.map((scope) => (
+                      <label key={scope.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="scope"
+                          value={scope.value}
+                          checked={formData.scope === scope.value}
+                          onChange={(e) => handleInputChange('scope', e.target.value)}
+                          className="w-4 h-4 text-[#3AD6F2] border-gray-300 focus:ring-[#3AD6F2]"
+                        />
+                        <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">{scope.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                    Unit Label <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.unit_type}
+                    onChange={(e) => handleInputChange('unit_type', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
+                    placeholder="e.g. 100 requests, 500GB, office"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1">What is being sold (e.g., '100 requests', '500GB', 'location')</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                    Base Unit Quantity <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.unit_quantity}
+                    onChange={(e) => handleInputChange('unit_quantity', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
+                  />
                 </div>
               </div>
 

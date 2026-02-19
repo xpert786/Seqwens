@@ -71,8 +71,28 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     isFullyConfigurable: false
   });
 
-  // State for Add-On Pricing
-  const [addonsPricing, setAddonsPricing] = useState([]);
+  // State for Add-Ons
+  const [planAddons, setPlanAddons] = useState([]);
+  const [selectedAddonCategory, setSelectedAddonCategory] = useState('all');
+
+  // State for "Add New Addon for This Plan" modal
+  const [showNewAddonModal, setShowNewAddonModal] = useState(false);
+  const [newAddonForm, setNewAddonForm] = useState({
+    name: '',
+    description: '',
+    category: 'other',
+    price: '',
+    price_unit: 'per month',
+    scope: 'firm',
+    billing_frequency: 'monthly',
+    unit_type: 'unit',
+    unit_quantity: 1,
+  });
+  const [creatingAddon, setCreatingAddon] = useState(false);
+
+  // State for editing an existing addon
+  const [editingAddonId, setEditingAddonId] = useState(null);
+  const [editAddonForm, setEditAddonForm] = useState({});
 
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -151,11 +171,11 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             isFullyConfigurable: planData.is_fully_configurable || false
           });
 
-          // Load Add-On Pricing
+          // Load plan add-ons
           if (planData.addons_with_pricing) {
-            setAddonsPricing(planData.addons_with_pricing);
+            setPlanAddons(planData.addons_with_pricing);
           } else {
-            setAddonsPricing([]);
+            setPlanAddons([]);
           }
         }
       }
@@ -293,15 +313,6 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     setError('');
     setSuccess(false);
 
-    // Prepare addon pricing update payload
-    const addonsPricingPayload = addonsPricing.map(addon => ({
-      addon_id: addon.id,
-      price: addon.price,
-      price_unit: addon.price_unit,
-      is_included: addon.is_included,
-      is_available: addon.is_available
-    }));
-
     const payload = {
       subscription_type: activeTab.toLowerCase(),
       monthly_price: Number(pricing.monthly || 0),
@@ -318,7 +329,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       priority_support_addon: true,
       is_active: true,
 
-      // New display settings
+      // Display settings
       display_name: displaySettings.displayName || null,
       description: displaySettings.description || null,
       show_on_website: displaySettings.showOnWebsite,
@@ -337,9 +348,6 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       badge_text: displaySettings.badgeText || null,
       badge_color: displaySettings.badgeColor || null,
       is_fully_configurable: displaySettings.isFullyConfigurable,
-
-      // Add-ons Pricing Update
-      addons_pricing_update: addonsPricingPayload
     };
 
     try {
@@ -379,6 +387,134 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   // Check if value is "Unlimited"
   const isUnlimited = (value) => {
     return value === 'Unlimited' || value.toString().toLowerCase() === 'unlimited';
+  };
+
+  // Delete add-on permanently
+  const handleDeleteAddon = async (addonId, addonName) => {
+    if (!window.confirm(`Delete "${addonName}" from the ${activeTab} plan? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/user/superadmin/add-ons/${addonId}/delete/`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getAccessToken()}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete add-on');
+      setPlanAddons(prev => prev.filter(a => a.id !== addonId));
+      toast.success(`"${addonName}" deleted.`, { position: 'top-right', autoClose: 3000 });
+    } catch (e) {
+      toast.error(e.message || 'Error deleting add-on', { position: 'top-right', autoClose: 3000 });
+    }
+  };
+
+  // Start editing an addon inline
+  const handleStartEdit = (addon) => {
+    setEditingAddonId(addon.id);
+    setEditAddonForm({
+      name: addon.name || '',
+      description: addon.description || '',
+      price: addon.price || '',
+      price_unit: addon.price_unit || 'per month',
+      scope: addon.scope || 'firm',
+      category: addon.category || 'other',
+      unit_quantity: addon.unit_quantity || 1,
+      unit_type: addon.unit_type || 'unit',
+    });
+  };
+
+  // Save addon edit via PATCH
+  const handleSaveEdit = async (addonId) => {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/user/superadmin/add-ons/${addonId}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAccessToken()}` },
+        body: JSON.stringify({
+          name: editAddonForm.name,
+          description: editAddonForm.description,
+          price: parseFloat(editAddonForm.price) || 0,
+          price_unit: editAddonForm.price_unit,
+          scope: editAddonForm.scope,
+          category: editAddonForm.category,
+          unit_quantity: parseInt(editAddonForm.unit_quantity) || 1,
+          unit_type: editAddonForm.unit_type,
+        })
+      });
+      if (!res.ok) throw new Error('Failed to update add-on');
+      const result = await res.json();
+      const updatedAddon = result.data || result;
+      setPlanAddons(prev => prev.map(a => a.id === addonId ? { ...a, ...updatedAddon } : a));
+      setEditingAddonId(null);
+      toast.success('Add-on updated.', { position: 'top-right', autoClose: 3000 });
+    } catch (e) {
+      toast.error(e.message || 'Error updating add-on', { position: 'top-right', autoClose: 3000 });
+    }
+  };
+
+  // Create a new add-on for this plan
+  const handleAddNewAddonForPlan = async () => {
+    if (!newAddonForm.name.trim()) {
+      toast.error('Add-on name is required.', { position: 'top-right', autoClose: 3000 });
+      return;
+    }
+    setCreatingAddon(true);
+    try {
+      let derivedPriceUnit = 'per month';
+      if (newAddonForm.billing_frequency === 'yearly') derivedPriceUnit = 'per year';
+      if (newAddonForm.billing_frequency === 'one_time') derivedPriceUnit = 'one-time';
+
+      const payload = {
+        name: newAddonForm.name.trim(),
+        description: newAddonForm.description.trim(),
+        category: newAddonForm.category,
+        addon_type: `${newAddonForm.category}_${Date.now()}`,
+        price: parseFloat(newAddonForm.price) || 0,
+        price_unit: derivedPriceUnit,
+        unit_type: newAddonForm.unit_type || 'unit',
+        unit_quantity: parseInt(newAddonForm.unit_quantity) || 1,
+        scope: newAddonForm.scope,
+        billing_frequency: newAddonForm.billing_frequency,
+        is_active: true,
+        plan_type: activeTab.toLowerCase(),
+      };
+
+      const response = await fetch(`${getApiBaseUrl()}/user/superadmin/add-ons/create/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAccessToken()}` },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData?.message || errData?.detail || 'Failed to create add-on');
+      }
+      const result = await response.json();
+      const createdAddon = result.data || result;
+
+      // Add to local state
+      setPlanAddons(prev => [...prev, {
+        id: createdAddon.id,
+        name: createdAddon.name,
+        category: createdAddon.category,
+        description: createdAddon.description,
+        billing_frequency: createdAddon.billing_frequency,
+        price: parseFloat(createdAddon.price) || 0,
+        price_unit: createdAddon.price_unit,
+        scope: createdAddon.scope,
+        is_available: true,
+      }]);
+      setSelectedAddonCategory('all');
+      setShowNewAddonModal(false);
+      setNewAddonForm({
+        name: '', description: '', category: 'other',
+        price: '', price_unit: 'per month',
+        scope: 'firm', billing_frequency: 'monthly',
+        unit_type: 'unit', unit_quantity: 1,
+      });
+      toast.success(`"${createdAddon.name}" created for the ${activeTab} plan.`, {
+        position: 'top-right', autoClose: 3000,
+      });
+    } catch (e) {
+      toast.error(e.message || 'Error creating add-on', { position: 'top-right', autoClose: 3000 });
+    } finally {
+      setCreatingAddon(false);
+    }
   };
 
   return (
@@ -676,94 +812,219 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               </>
             </div>
 
-            {/* Add-On Pricing Configuration */}
-            {/* <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
-              <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Add-On Pricing Configuration</h3>
-              <p className="text-sm mb-4 text-gray-500">Configure specific add-on pricing for this plan. Overrides global default pricing.</p>
+            <div className="p-6 bg-white" id="addon-config" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Plan Add-Ons</h3>
+                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                    Add-ons available only to firms on the <span className="font-bold" style={{ color: '#3B4A66' }}>{activeTab}</span> plan.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowNewAddonModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
+                  style={{ backgroundColor: '#3B4A66' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                  New Add-on
+                </button>
+              </div>
 
-              <div className="space-y-4">
-                {addonsPricing.length > 0 ? (
-                  addonsPricing.map((addon, index) => (
-                    <div key={addon.id} className="p-3 rounded-lg border border-gray-100 bg-gray-50">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="font-medium text-sm text-[#3B4A66]">{addon.name}</h4>
-                          <p className="text-xs text-gray-500">Global Default: ${addon.default_price} {addon.default_price_unit}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <label className="flex items-center gap-1 cursor-pointer">
+              {/* Category Filter Tabs */}
+              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-gray-50/50 rounded-xl border border-gray-100">
+                {['all', 'esign', 'storage', 'workflow', 'office', 'staff', 'other'].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedAddonCategory(cat)}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${selectedAddonCategory === cat
+                      ? 'bg-[#3B4A66] text-white shadow-sm'
+                      : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                      }`}
+                  >
+                    {cat === 'all' ? 'All Types' : cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {planAddons.filter(a => selectedAddonCategory === 'all' || (a.category && a.category === selectedAddonCategory)).length > 0 ? (
+                  planAddons
+                    .filter(a => selectedAddonCategory === 'all' || (a.category && a.category === selectedAddonCategory))
+                    .map((addon) => (
+                      <div
+                        key={addon.id}
+                        className="p-5 bg-white transition-all"
+                        style={{ border: '1px solid #E8F0FF', borderRadius: '12px' }}
+                      >
+                        {editingAddonId === addon.id ? (
+                          /* ── Inline Edit Mode ── */
+                          <div className="space-y-3">
                             <input
-                              type="checkbox"
-                              checked={addon.is_available}
-                              onChange={(e) => {
-                                const newAddons = [...addonsPricing];
-                                newAddons[index].is_available = e.target.checked;
-                                setAddonsPricing(newAddons);
-                              }}
-                              className="w-3 h-3 rounded"
+                              type="text" value={editAddonForm.name}
+                              onChange={e => setEditAddonForm(f => ({ ...f, name: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                              placeholder="Add-on name"
                             />
-                            <span className="text-xs text-gray-600">Available</span>
-                          </label>
-                          <label className="flex items-center gap-1 cursor-pointer ml-2">
-                            <input
-                              type="checkbox"
-                              checked={addon.is_included}
-                              onChange={(e) => {
-                                const newAddons = [...addonsPricing];
-                                newAddons[index].is_included = e.target.checked;
-                                // If included, price is 0 (or irrelevant)
-                                if (e.target.checked) {
-                                  newAddons[index].price = 0;
-                                }
-                                setAddonsPricing(newAddons);
-                              }}
-                              className="w-3 h-3 rounded"
+                            <textarea
+                              value={editAddonForm.description}
+                              onChange={e => setEditAddonForm(f => ({ ...f, description: e.target.value }))}
+                              rows={2}
+                              className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                              style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                              placeholder="Description"
                             />
-                            <span className="text-xs text-gray-600">Included (Free)</span>
-                          </label>
-                        </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: '#3B4A66' }}>$</span>
+                                <input
+                                  type="number" step="0.01" min="0"
+                                  value={editAddonForm.price}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, price: e.target.value }))}
+                                  className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                />
+                              </div>
+                              <select
+                                value={editAddonForm.scope}
+                                onChange={e => setEditAddonForm(f => ({ ...f, scope: e.target.value }))}
+                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                              >
+                                <option value="firm">Firm-wide</option>
+                                <option value="office">Per Office</option>
+                              </select>
+                              <select
+                                value={editAddonForm.category}
+                                onChange={e => setEditAddonForm(f => ({ ...f, category: e.target.value }))}
+                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                              >
+                                <option value="esign">E-Sign</option>
+                                <option value="storage">Storage</option>
+                                <option value="workflow">Workflow</option>
+                                <option value="office">Office</option>
+                                <option value="staff">Staff</option>
+                                <option value="other">Other</option>
+                              </select>
+                            </div>
+                            {/* Capacity Edit Grid */}
+                            <div className="grid grid-cols-2 gap-3 mt-2 mb-2">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">Qty</span>
+                                <input
+                                  type="number" min="1"
+                                  value={editAddonForm.unit_quantity}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
+                                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                />
+                              </div>
+                              <input
+                                type="text"
+                                value={editAddonForm.unit_type}
+                                onChange={e => setEditAddonForm(f => ({ ...f, unit_type: e.target.value }))}
+                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                placeholder="Unit (e.g. GB)"
+                              />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid #E8F0FF' }}>
+                              <button
+                                onClick={() => setEditingAddonId(null)}
+                                className="px-4 py-1.5 text-xs font-semibold rounded-lg border transition-colors"
+                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                              >Cancel</button>
+                              <button
+                                onClick={() => handleSaveEdit(addon.id)}
+                                className="px-4 py-1.5 text-xs font-bold text-white rounded-lg transition-all"
+                                style={{ backgroundColor: '#3B4A66' }}
+                              >Save</button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* ── View Mode ── */
+                          <>
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-bold text-sm" style={{ color: '#3B4A66' }}>{addon.name}</h4>
+                                  <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-tight border border-gray-200">
+                                    {addon.category || 'other'}
+                                  </span>
+                                </div>
+                                {addon.description && (
+                                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{addon.description}</p>
+                                )}
+                                {(addon.unit_quantity > 0 || addon.unit_type) && (
+                                  <p className="text-[10px] font-semibold mt-1" style={{ color: '#4B5563' }}>
+                                    Includes: {addon.unit_quantity || 1} {addon.unit_type === 'unit' ? 'Units' : addon.unit_type}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {/* Edit button */}
+                                <button
+                                  type="button" title="Edit"
+                                  onClick={() => handleStartEdit(addon)}
+                                  className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-blue-50 transition-colors"
+                                  style={{ border: '1px solid #BFDBFE', color: '#3B82F6' }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </button>
+                                {/* Delete button */}
+                                <button
+                                  type="button" title="Delete"
+                                  onClick={() => handleDeleteAddon(addon.id, addon.name)}
+                                  className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-red-50 transition-colors"
+                                  style={{ border: '1px solid #FCA5A5', color: '#EF4444' }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                                    <path d="M10 11v6M14 11v6" />
+                                    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid #E8F0FF' }}>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-lg font-bold" style={{ color: '#3B4A66' }}>${parseFloat(addon.price || 0).toFixed(2)}</span>
+                                <span className="text-[10px] font-medium opacity-60" style={{ color: '#3B4A66' }}>{addon.price_unit || 'per month'}</span>
+                              </div>
+                              <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full" style={{
+                                backgroundColor: addon.scope === 'office' ? '#FEF3C7' : '#DBEAFE',
+                                color: addon.scope === 'office' ? '#92400E' : '#1E40AF',
+                                border: `1px solid ${addon.scope === 'office' ? '#FDE68A' : '#93C5FD'}`
+                              }}>
+                                {addon.scope === 'office' ? 'Per Office' : 'Firm-wide'}
+                              </span>
+                              {addon.billing_frequency && (
+                                <span className="text-[10px] font-medium" style={{ color: '#9CA3AF' }}>
+                                  {addon.billing_frequency === 'monthly' ? 'Billed Monthly' : addon.billing_frequency === 'yearly' ? 'Billed Yearly' : 'One-Time'}
+                                </span>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
-
-                      {!addon.is_included && addon.is_available && (
-                        <div className="flex gap-4 mt-2">
-                          <div className="flex-1">
-                            <label className="block text-xs font-medium mb-1 text-[#3B4A66]">Plan Price ($)</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={addon.price}
-                              onChange={(e) => {
-                                const newAddons = [...addonsPricing];
-                                newAddons[index].price = e.target.value === '' ? '' : parseFloat(e.target.value);
-                                setAddonsPricing(newAddons);
-                              }}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <label className="block text-xs font-medium mb-1 text-[#3B4A66]">Unit</label>
-                            <input
-                              type="text"
-                              value={addon.price_unit || ''}
-                              onChange={(e) => {
-                                const newAddons = [...addonsPricing];
-                                newAddons[index].price_unit = e.target.value;
-                                setAddonsPricing(newAddons);
-                              }}
-                              placeholder={addon.default_price_unit}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))
+                    ))
                 ) : (
-                  <p className="text-sm text-gray-400 italic">No active add-ons found.</p>
+                  <div className="md:col-span-2 py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <p className="text-sm font-medium italic" style={{ color: '#9CA3AF' }}>
+                      {selectedAddonCategory === 'all'
+                        ? 'No add-ons for this plan yet. Click "New Add-on" to create one.'
+                        : `No "${selectedAddonCategory}" add-ons for this plan.`}
+                    </p>
+                  </div>
                 )}
               </div>
-            </div> */}
+            </div>
 
             {/* Display Settings Section */}
             <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
@@ -1019,6 +1280,198 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* ─── Create New Add-on Modal ─── */}
+      {showNewAddonModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[9999] p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowNewAddonModal(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" style={{ border: '1px solid #E8F0FF' }}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E8F0FF' }}>
+              <div>
+                <h4 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Create New Add-on</h4>
+                <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
+                  Create an add-on exclusively for the{' '}
+                  <span className="font-bold" style={{ color: '#3B4A66' }}>{activeTab}</span> plan.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowNewAddonModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: '65vh' }}>
+
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Add-on Name *</label>
+                <input
+                  type="text"
+                  value={newAddonForm.name}
+                  onChange={e => setNewAddonForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. Priority E-Sign Pack"
+                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Description</label>
+                <textarea
+                  value={newAddonForm.description}
+                  onChange={e => setNewAddonForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Brief description of what this add-on provides..."
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                />
+              </div>
+
+              {/* Category + Billing */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Category</label>
+                  <select
+                    value={newAddonForm.category}
+                    onChange={e => setNewAddonForm(f => ({ ...f, category: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  >
+                    <option value="esign">E-Sign</option>
+                    <option value="storage">Storage</option>
+                    <option value="workflow">Workflow</option>
+                    <option value="office">Office</option>
+                    <option value="staff">Staff</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Billing</label>
+                  <select
+                    value={newAddonForm.billing_frequency}
+                    onChange={e => setNewAddonForm(f => ({ ...f, billing_frequency: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="one_time">One-Time</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Price + Scope */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Price ($)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: '#3B4A66' }}>$</span>
+                    <input
+                      type="number" step="0.01" min="0"
+                      value={newAddonForm.price}
+                      onChange={e => setNewAddonForm(f => ({ ...f, price: e.target.value }))}
+                      placeholder="0.00"
+                      className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Scope</label>
+                  <select
+                    value={newAddonForm.scope}
+                    onChange={e => setNewAddonForm(f => ({ ...f, scope: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  >
+                    <option value="firm">Firm-wide</option>
+                    <option value="office">Per Office</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Unit Label + Quantity */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Unit Label <span className="text-gray-400 font-normal">(e.g. signatures, GB)</span></label>
+                  <input
+                    type="text"
+                    value={newAddonForm.unit_type}
+                    onChange={e => setNewAddonForm(f => ({ ...f, unit_type: e.target.value }))}
+                    placeholder="e.g. signatures, GB, users"
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Quantity</label>
+                  <input
+                    type="number" min="1"
+                    value={newAddonForm.unit_quantity}
+                    onChange={e => setNewAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  />
+                </div>
+              </div>
+
+              {/* Info note */}
+              <div className="flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
+                </svg>
+                <p className="text-xs" style={{ color: '#1E40AF' }}>
+                  This add-on will be created exclusively for the <strong>{activeTab}</strong> plan. Only firms subscribed to this plan will see it.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 p-6 border-t" style={{ borderColor: '#E8F0FF' }}>
+              <button
+                onClick={() => setShowNewAddonModal(false)}
+                className="px-5 py-2.5 text-sm font-semibold rounded-lg border transition-colors"
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddNewAddonForPlan}
+                disabled={creatingAddon || !newAddonForm.name.trim()}
+                className="px-6 py-2.5 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                style={{ backgroundColor: '#3B4A66' }}
+              >
+                {creatingAddon ? (
+                  <>
+                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12a9 9 0 11-6.219-8.56" />
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                    Create &amp; Add to {activeTab}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
