@@ -57,7 +57,7 @@ const buildSearchQuery = (search) => {
 };
 
 // Public API request function (no authentication required)
-const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
+export const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
     const config = {
       method,
@@ -4697,10 +4697,15 @@ export const firmAdminMeetingsAPI = {
     return await apiRequest(endpoint, 'POST', overwriteData);
   },
 
-  // Manage client appointment (approve or cancel)
   manageAppointment: async (appointmentId, action, reason = '') => {
     const endpoint = `/taxpayer/staff/appointments/${appointmentId}/action/`;
     return await apiRequest(endpoint, 'POST', { action, reason });
+  },
+
+  // Update appointment status (generic)
+  updateAppointmentStatus: async (appointmentId, status) => {
+    const endpoint = `/taxpayer/appointments/${appointmentId}/update-status/`;
+    return await apiRequest(endpoint, 'PATCH', { appointment_status: status });
   }
 };
 
@@ -4919,7 +4924,27 @@ export const taxPreparerSecurityAPI = {
   // Update password
   updatePassword: async (passwordData) => {
     return await apiRequest('/user/security-settings/', 'PATCH', passwordData);
-  }
+  },
+
+  // Send email verification OTP
+  sendEmailVerificationOtp: async () => {
+    return await apiRequest('/user/verify-email/', 'POST', {});
+  },
+
+  // Verify email OTP
+  verifyEmailOtp: async (otp) => {
+    return await apiRequest('/user/verify-email-otp/', 'POST', { otp });
+  },
+
+  // Send phone verification OTP
+  sendPhoneVerificationOtp: async () => {
+    return await apiRequest('/user/verify-phone/', 'POST', {});
+  },
+
+  // Verify phone OTP
+  verifyPhoneOtp: async (otp) => {
+    return await apiRequest('/user/verify-phone-otp/', 'POST', { otp });
+  },
 };
 
 // Super Admin Billing Management API functions
@@ -6080,7 +6105,7 @@ export const watermarkToolAPI = {
 export const taxPreparerThreadsAPI = {
   // List clients assigned to the authenticated staff member
   listAssignedClients: async () => {
-    return await apiRequest('/firm/staff/clients/list/', 'GET');
+    return await apiRequest('/taxpayer/tax-preparer/clients/assigned-list/', 'GET');
   },
   // Get all chat threads for the current tax preparer
   // Uses tax-preparer specific endpoint
@@ -7589,7 +7614,10 @@ export const firmAdminSettingsAPI = {
   },
 
   // Get subdomain settings
-  getSubdomainSettings: async () => {
+  getSubdomainSettings: async (isPublic = false) => {
+    if (isPublic) {
+      return await publicApiRequest('/firm/subdomain/settings/', 'GET');
+    }
     return await apiRequest('/firm/subdomain/settings/', 'GET');
   },
 

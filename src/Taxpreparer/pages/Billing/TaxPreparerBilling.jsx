@@ -5,9 +5,7 @@ import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import TaxPreparerCreateInvoiceModal from "./TaxPreparerCreateInvoiceModal";
 import TaxPreparerInvoiceDetailsModal from "./TaxPreparerInvoiceDetailsModal";
 import { hasTaxPreparerPermission } from "../../../ClientOnboarding/utils/privilegeUtils";
-import StripePaymentForm from "../../../components/StripePaymentForm";
 import { toast } from "react-toastify";
-import { loadStripe } from "@stripe/stripe-js";
 import { FiFileText, FiDollarSign, FiCheckCircle, FiClock, FiAlertCircle, FiCalendar } from "react-icons/fi";
 
 const API_BASE_URL = getApiBaseUrl();
@@ -156,18 +154,23 @@ export default function TaxPreparerBilling() {
     }
   }, [activeTab, fetchPlatformBilling, fetchStripeKey]);
 
-  const handlePlatformPayment = async (paymentMethodId) => {
+  const handlePlatformPayment = async () => {
     try {
       setPaymentProcessing(true);
       const token = getAccessToken();
 
-      // 1. Create payment intent
+      // Create checkout session
       const response = await fetchWithCors(`${API_BASE_URL}/user/staff/split-billing-management/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-        }
+        },
+        body: JSON.stringify({
+          // Current URL + params
+          success_url: window.location.origin + window.location.pathname + '?payment=success',
+          cancel_url: window.location.origin + window.location.pathname + '?payment=cancelled'
+        })
       });
 
       const result = await response.json();
@@ -175,27 +178,18 @@ export default function TaxPreparerBilling() {
         throw new Error(result.message || 'Failed to initiate payment');
       }
 
-      const { client_secret } = result.data;
+      const { url } = result.data;
 
-      // 2. Confirm payment with Stripe
-      const stripe = await loadStripe(stripeKey);
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
-        payment_method: paymentMethodId
-      });
-
-      if (stripeError) {
-        throw new Error(stripeError.message);
+      if (url) {
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+      } else {
+        throw new Error("Invalid payment URL received from server");
       }
 
-      if (paymentIntent.status === 'succeeded') {
-        toast.success("Payment completed successfully!");
-        setShowPaymentModal(false);
-        fetchPlatformBilling();
-      }
     } catch (err) {
       console.error('Payment error:', err);
       toast.error(err.message || "Payment failed");
-    } finally {
       setPaymentProcessing(false);
     }
   };
@@ -523,7 +517,7 @@ export default function TaxPreparerBilling() {
                   ))}
                 </div>
 
-                {platformBilling.billing_summary.estimated_monthly_total > 0 && (
+                {platformBilling.billing_summary.estimated_monthly_total > 0 && platformBilling.billing_summary.status !== "Paid" ? (
                   <div className="mt-8 pt-6 border-t border-gray-100">
                     <button
                       onClick={() => setShowPaymentModal(true)}
@@ -533,6 +527,12 @@ export default function TaxPreparerBilling() {
                       Pay Outstanding Portion
                     </button>
                     <div className="clear-both"></div>
+                  </div>
+                ) : (
+                  <div className="mt-8 pt-6 border-t border-gray-100 text-right">
+                    <span className="text-green-600 font-bold text-lg bg-green-50 px-4 py-2 rounded-full border border-green-200">
+                      Fully Paid <FiCheckCircle className="inline ml-1 mb-1" />
+                    </span>
                   </div>
                 )}
               </div>
@@ -598,12 +598,29 @@ export default function TaxPreparerBilling() {
                 <span className="text-2xl sm:text-3xl font-black text-orange-900 font-[BasisGrotesquePro]">${platformBilling?.billing_summary.estimated_monthly_total.toFixed(2)}</span>
               </div>
 
-              <StripePaymentForm
-                stripePublishableKey={stripeKey}
-                onSubmit={handlePlatformPayment}
-                onCancel={() => setShowPaymentModal(false)}
-                processing={paymentProcessing}
-              />
+              <button
+                onClick={handlePlatformPayment}
+                disabled={paymentProcessing}
+                className="w-full py-4 bg-[#635BFF] hover:bg-[#5851E1] text-white rounded-lg font-bold text-lg shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2"
+              >
+                {paymentProcessing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Pay with Stripe</span>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </>
+                )}
+              </button>
+
+              <p className="text-center text-xs text-gray-500 mt-4">
+                You will be redirected to Stripe's secure checkout page to complete your payment.
+              </p>
             </div>
           </div>
         </div>

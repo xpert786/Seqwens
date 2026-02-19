@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
- 
+
 }
 
 .otp-box {
@@ -35,7 +35,7 @@
 }
 
 .highlight {
-  color: #F49C2D;
+  color: #f56d2d;
   font-weight: bold;
 }
 
@@ -59,7 +59,7 @@
 .verify-btn {
   width: 100%;
   padding: 10px;
-  background-color: #f5663f;
+  background-color: #f56d2d;
   color: white;
   border: none;
   border-radius: 8px;
@@ -79,11 +79,11 @@
 }
 
 .resend-link {
-  color: #F56D2D;
+  color: #f56d2d;
   cursor: pointer;
   font-weight: 500;
   font-size: 16px;
-  border-bottom: 2px solid #F56D2D;
+  border-bottom: 2px solid #f56d2d;
   padding-bottom: 2px;
 }
 
@@ -132,7 +132,7 @@
 }
 
 .goto-dashboard-btn {
-  background-color: #F56D2D;
+  background-color: #f56d2d;
   color: #FFFFFF;
   border: none;
   padding: 12px 16px;
@@ -145,12 +145,12 @@
 
 @media (max-height: 750px) {
   .otp-box {
-     padding: 60px 40px !important;
-    min-height: auto !important;  
+    padding: 60px 40px !important;
+    min-height: auto !important;
   }
 
   .otp-title {
-    font-size: 26px !important; 
+    font-size: 26px !important;
     margin-bottom: 10px !important;
   }
 
@@ -180,6 +180,7 @@
     font-size: 14px;
   }
 }
+
 @media (max-width: 1100px) {
   .otp-box {
     padding: 40px 30px;

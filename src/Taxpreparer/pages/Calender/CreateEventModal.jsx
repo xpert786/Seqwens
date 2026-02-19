@@ -320,7 +320,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999, padding: '40px 1rem', overflowY: 'auto' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 999999, padding: '40px 1rem', overflowY: 'auto' }}>
       <div className="bg-white rounded-lg w-full modal-body-scroll" style={{ maxWidth: '600px', maxHeight: '75vh', overflowY: 'auto', marginTop: '63px' }}>
         <style>
           {`

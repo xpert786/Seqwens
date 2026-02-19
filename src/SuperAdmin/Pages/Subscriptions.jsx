@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaChevronDown, FaDownload, FaEdit, FaEllipsisV } from 'react-icons/fa';
+import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaChevronDown, FaDownload, FaEdit, FaEllipsisV, FaBell } from 'react-icons/fa';
 import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
 import AddSubscription from './AddSubscription';
@@ -1671,6 +1671,20 @@ const SubscriptionInvoicesTab = () => {
     });
   };
 
+  const handleSendReminder = async (invoiceId) => {
+    try {
+      const response = await superAdminAPI.sendSubscriptionInvoiceReminder(invoiceId);
+      if (response.success) {
+        toast.success('Payment reminder sent successfully');
+      } else {
+        toast.error(response.message || 'Failed to send reminder');
+      }
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      toast.error(handleAPIError(error));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -1786,12 +1800,15 @@ const SubscriptionInvoicesTab = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
                 </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center">
+                  <td colSpan="7" className="px-6 py-4 text-center">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     </div>
@@ -1799,7 +1816,7 @@ const SubscriptionInvoicesTab = () => {
                 </tr>
               ) : invoices.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                     No subscription invoices found
                   </td>
                 </tr>
@@ -1836,6 +1853,18 @@ const SubscriptionInvoicesTab = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(invoice.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {(invoice.status === 'pending' || invoice.status === 'overdue') && (
+                        <button
+                          onClick={() => handleSendReminder(invoice.id)}
+                          className="text-blue-600 hover:text-blue-900 flex items-center justify-end gap-1 ml-auto"
+                          title="Send payment reminder"
+                        >
+                          <FaBell className="h-4 w-4" />
+                          <span className="hidden sm:inline">Remind</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

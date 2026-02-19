@@ -397,6 +397,7 @@ export default function Login() {
                   <input
                     type="checkbox"
                     className="form-check-input"
+                    
                     checked={rememberMe}
                     onChange={(e) => {
                       const newRememberMe = e.target.checked;

@@ -41,7 +41,7 @@
 }
 
 .highlighted-email {
-  color: #f49c2d;
+  color: #f56d2d;
   font-weight: bold;
 }
 
@@ -116,13 +116,13 @@
 
 @media (max-height: 700px) {
   .otp-box {
-    padding: 30px !important;      
-    max-height: 80vh !important;  
+    padding: 30px !important;
+    max-height: 80vh !important;
     border-radius: 20px !important;
   }
 
   .otp-title {
-    font-size: 26px !important; 
+    font-size: 26px !important;
   }
 
   .otp-description {
@@ -143,7 +143,8 @@
     padding: 5px;
   }
 
-  .resend-info, .resend-link {
+  .resend-info,
+  .resend-link {
     font-size: 14px;
   }
 }

@@ -12,7 +12,7 @@
   padding: 60px;
   border-radius: 25px;
   width: 100%;
-  max-width: 590px;  
+  max-width: 590px;
   min-height: 500px;
   color: white;
   display: flex;
@@ -82,8 +82,8 @@
 @media (max-height: 700px) {
   .forgot-box {
     padding: 20px 30px !important;
-    max-height: 65vh !important;    
-     min-height: 400px !important;  
+    max-height: 65vh !important;
+    min-height: 400px !important;
   }
 
   .forgot-title {

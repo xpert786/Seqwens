@@ -220,7 +220,7 @@ const Notifications = () => {
   };
 
   // View notification details
-  const handleViewDetails = useCallback(async (notificationId) => {
+  const handleViewDetails = async (notificationId) => {
     try {
       setLoadingDetails(true);
       const response = await superAdminNotificationAPI.getNotificationDetails(notificationId);
@@ -240,7 +240,7 @@ const Notifications = () => {
     } finally {
       setLoadingDetails(false);
     }
-  }, [selectedNotification]); // Add necessary dependencies
+  };
 
   // Handle deep linking to a specific notification
   useEffect(() => {
@@ -249,7 +249,7 @@ const Notifications = () => {
       // Clear state to prevent modal from re-opening on every render/navigation
       window.history.replaceState({}, document.title);
     }
-  }, [location.state, loading, handleViewDetails]);
+  }, [location.state, loading]);
 
   // Handle tab change
   const handleTabChange = (tabKey) => {

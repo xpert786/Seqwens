@@ -288,6 +288,11 @@ export const superAdminAPI = {
     return await apiRequest('/user/superadmin/subscriptions/', 'PATCH', payload);
   },
 
+  // Send subscription invoice reminder
+  sendSubscriptionInvoiceReminder: async (invoiceId) => {
+    return await apiRequest(`/user/admin/subscription-invoices/${invoiceId}/remind/`, 'POST');
+  },
+
   // Get superadmin plan performance metrics
   // Optional params: mrr_month, mrr_year, churn_month, churn_year
   getSuperadminPlanPerformance: async (params = {}) => {
