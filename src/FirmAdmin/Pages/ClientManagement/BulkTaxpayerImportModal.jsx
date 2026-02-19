@@ -344,8 +344,8 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 <div>• CSV: Include headers: First Name, Last Name, Email, Phone, SSN / ITIN (Tax ID), etc.</div>
                 <div>• PDF: System will extract data using OCR</div>
                 <div>• System will auto-detect column mapping</div>
-                <div>• Required fields: First Name, Last Name, SSN / ITIN (Tax ID)</div>
-                <div>• Optional fields: Email, Phone, Address, City, State, ZIP</div>
+                <div>• Required fields: First Name, Last Name</div>
+                <div>• Optional fields: Email, Phone, SSN / ITIN (Tax ID), Address fields</div>
               </div>
             </div>
 
