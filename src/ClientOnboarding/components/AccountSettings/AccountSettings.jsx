@@ -5,7 +5,6 @@ import Invites from "./Invites";
 import Notifications from "./Notifications";
 import Security from "./Security";
 import Billing from "./Billing";
-import Membership from "./Membership";
 import RoleManagement from "../RoleManagement";
 import UserProfileWithRoles from "../UserProfileWithRoles";
 import '../../styles/AccountSetting.css';
@@ -24,7 +23,6 @@ export default function AccountSettings() {
     const tabs = [
         { id: "profile", label: "Profile" },
         { id: "invites", label: "Invites" },
-        { id: "membership", label: "Membership" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
         { id: "roles", label: "Roles" },
@@ -115,7 +113,6 @@ export default function AccountSettings() {
                 }}>
                     {activeTab === "profile" && <Profile />}
                     {activeTab === "invites" && <Invites />}
-                    {activeTab === "membership" && <Membership />}
                     {activeTab === "notifications" && <Notifications />}
                     {activeTab === "security" && <Security />}
                     {activeTab === "roles" && <UserProfileWithRoles />}

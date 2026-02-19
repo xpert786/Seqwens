@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { Building2, CheckCircle2, Clock, ShieldCheck, X, ArrowRight, Loader2 } from 'lucide-react';
+import { Building2, CheckCircle2, Clock, ShieldCheck, X, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import './FirmSelectionModal.css';
 import { userAPI } from '../ClientOnboarding/utils/apiUtils';
 import { setTokens } from '../ClientOnboarding/utils/userUtils';
 
 export default function FirmSelectionModal({ firms, onSelect, onClose }) {
+    const navigate = useNavigate();
     const [selectedMembership, setSelectedMembership] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -63,12 +65,51 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
             default: return 'bg-gray-100 text-gray-700 border-gray-200';
         }
     };
+
     return (
         <div className="firm-selection-container min-h-screen w-full flex items-center justify-center bg-gray-50/50 py-4 sm:py-12 px-4 sm:px-6 lg:px-8">
             <div className="firm-selection-card bg-white w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Header */}
                 <div className="p-4 sm:p-6 border-b border-gray-50 relative text-left">
                     <div className="flex items-start gap-3 sm:gap-4">
+                        <button
+                            onClick={() => (onClose ? onClose() : navigate(-1))}
+                            title="Go Back"
+                            style={{
+                                width: "52px",
+                                height: "52px",
+                                borderRadius: "50%",
+                                border: "1px solid #E5E7EB",
+                                backgroundColor: "#ffffff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#F9FAFB";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "#ffffff";
+                            }}
+                        >
+                            <ArrowLeft
+                                style={{
+                                    width: "26px",
+                                    height: "26px",
+                                    color: "#6B7280",
+                                    transition: "transform 0.2s ease"
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = "translateX(-2px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = "translateX(0)";
+                                }}
+                            />
+                        </button>
+
                         <div className="p-2.5 sm:p-3 bg-gradient-to-br from-[#3AD6F2]/20 to-[#3AD6F2]/5 rounded-xl sm:rounded-2xl border border-[#3AD6F2]/10 shrink-0">
                             <Building2 className="text-[#3AD6F2] w-6 h-6 sm:w-8 sm:h-8" />
                         </div>
@@ -137,7 +178,6 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
                                                 {firmData.role_display}
                                             </span>
                                         </div>
-
                                         {firmData.last_active_at && (
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-gray-400 flex items-center gap-2">

@@ -36,6 +36,14 @@ export default function SelectContext() {
     }, [location.state, navigate, needs_role_selection, needs_firm_selection, user]);
 
     const handleRoleSelected = (selectedUser) => {
+        // If client role is selected, redirect to client dashboard immediately
+        // bypassing firm selection even if it was initially required
+        const userRole = selectedUser.active_role || selectedUser.user_type;
+        if (userRole === 'client') {
+            redirectToDashboard(selectedUser);
+            return;
+        }
+
         // If firm selection is also needed, show firm modal
         if (needs_firm_selection) {
             setCurrentStep('firm');
@@ -69,7 +77,7 @@ export default function SelectContext() {
 
     return (
         <FixedLayout>
-            {currentStep === 'role' && needs_role_selection && (
+            {currentStep === 'role' && all_roles && all_roles.length > 0 && (
                 <RoleSelectionModal
                     roles={all_roles}
                     onSelect={handleRoleSelected}
@@ -80,6 +88,7 @@ export default function SelectContext() {
                 <FirmSelectionModal
                     firms={all_firms}
                     onSelect={handleFirmSelected}
+                    onClose={all_roles && all_roles.length > 0 ? () => setCurrentStep('role') : undefined}
                 />
             )}
         </FixedLayout>
