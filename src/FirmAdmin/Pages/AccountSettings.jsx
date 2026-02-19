@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Profile from "./AccountSettings/Profile";
 import Security from "./AccountSettings/Security";
+import Membership from "./AccountSettings/Membership";
 
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
@@ -8,6 +9,7 @@ export default function AccountSettings() {
     const tabs = [
         { id: "profile", label: "Profile" },
         { id: "security", label: "Security" },
+        { id: "membership", label: "Membership" },
     ];
 
     return (
@@ -80,6 +82,7 @@ export default function AccountSettings() {
             <div>
                 {activeTab === "profile" && <Profile />}
                 {activeTab === "security" && <Security />}
+                {activeTab === "membership" && <Membership />}
             </div>
         </div>
     );

@@ -1399,7 +1399,6 @@ const SchedulingCalendar = () => {
                                                     </div>
                                                 );
                                             }
-
                                             // Group by date
                                             const groupedByDate = {};
                                             monthAppointments.forEach(apt => {
@@ -1438,8 +1437,6 @@ const SchedulingCalendar = () => {
                             )}
                         </div>
                     </div>
-
-                    {/* Right Sidebar */}
                     {/* Right Sidebar - Premium desktop sidebar, stacks on mobile */}
                     <div className="w-full lg:w-80 flex flex-col gap-6">
                         {/* Today's Events Card */}
