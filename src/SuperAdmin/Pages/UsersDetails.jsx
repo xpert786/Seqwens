@@ -118,6 +118,7 @@ const UsersDetails = () => {
     const [manualPassword, setManualPassword] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showReset2FAModal, setShowReset2FAModal] = useState(false);
 
     const loggedInUser = getUserData();
     const isSuperAdmin = loggedInUser?.user_type === 'super_admin';
@@ -406,6 +407,40 @@ const UsersDetails = () => {
         }
     };
 
+    const handleReset2FA = async () => {
+        if (!userDetails || actionLoading) return;
+
+        try {
+            setActionLoading(true);
+            const response = await superAdminAPI.resetUser2FA(userId);
+            if (response.success) {
+                toast.success(response.message || 'Two-factor authentication disabled successfully', superToastOptions);
+                setShowReset2FAModal(false);
+
+                // Update local state to reflect 2FA is now off
+                setUserDetails(prev => ({
+                    ...prev,
+                    two_factor_authentication: false,
+                    profile: {
+                        ...prev.profile,
+                        two_factor_authentication: false
+                    },
+                    actions: {
+                        ...prev.actions,
+                        can_reset_2fa: false
+                    }
+                }));
+            } else {
+                throw new Error(response.message || 'Failed to reset 2FA');
+            }
+        } catch (err) {
+            const message = handleAPIError(err);
+            toast.error(message, superToastOptions);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const avatarInitials =
         profile.avatar_initials ||
         (profile.first_name && profile.last_name
@@ -499,6 +534,16 @@ const UsersDetails = () => {
                                     Password Options
                                 </button>
                             )}
+                            {isSuperAdmin && actions.can_reset_2fa && (
+                                <button
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
+                                    onClick={() => setShowReset2FAModal(true)}
+                                    disabled={actionLoading}
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Reset 2FA
+                                </button>
+                            )}
                             {isSuperAdmin && !isLookupMode && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
                                 <button
                                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -565,237 +610,294 @@ const UsersDetails = () => {
                         </div>
                     )}
                 </div>
+                {
+                    showSuspendModal && (
+                        <div
+                            className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                            style={{ background: 'var(--Color-overlay, #00000099)' }}
+                        >
+                            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-semibold text-[#3B4A66]">Suspend User</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Provide a reason for suspending this user. This will be recorded for audit purposes.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-[#3B4A66]" htmlFor="suspension-reason">
+                                        Suspension Reason
+                                    </label>
+                                    <textarea
+                                        id="suspension-reason"
+                                        className="w-full min-h-[120px] border border-[#E8F0FF] rounded-lg px-3 py-2 text-sm text-[#3B4A66] focus:outline-none focus:ring-2 focus:ring-[#5B21B6] resize-none"
+                                        value={suspensionReason}
+                                        onChange={(event) => {
+                                            setSuspensionReason(event.target.value);
+                                            if (reasonError) {
+                                                setReasonError('');
+                                            }
+                                        }}
+                                        placeholder="Enter suspension reason..."
+                                        disabled={actionLoading}
+                                    />
+                                    {reasonError && <p className="text-xs text-[#B91C1C]">{reasonError}</p>}
+                                </div>
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                        onClick={handleCancelSuspend}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                        onClick={handleConfirmSuspend}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        {actionLoading ? 'Processing...' : 'Confirm Suspension'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+
+
+                {
+                    showPasswordModal && (
+                        <div
+                            className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                            style={{ background: 'var(--Color-overlay, #00000099)' }}
+                        >
+                            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-semibold text-[#3B4A66]">Password Management</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Choose how you want to reset the user's password.
+                                    </p>
+                                </div>
+
+                                <div className="flex p-1 bg-gray-100 rounded-lg">
+                                    <button
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'generate' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
+                                        onClick={() => setPasswordMode('generate')}
+                                        style={{ borderRadius: "12px" }}
+                                    >
+                                        Generate & Email
+                                    </button>
+                                    <button
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'manual' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
+                                        onClick={() => setPasswordMode('manual')}
+                                        style={{ borderRadius: "12px" }}
+                                    >
+                                        Set Manually
+                                    </button>
+                                </div>
+
+                                {passwordMode === 'generate' ? (
+                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-700">
+                                        <p>Clicking "Confirm" will generate a secure random password and email it to <strong>{profile.email}</strong>.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-[#3B4A66]">New Password</label>
+                                        <input
+                                            type="text" // Visible text as requested for manual management, or password? usually admin setting password manually implies they know it. Using text for clarity or password for security? "Manually update... with audit logging". I'll use type="text" so admin sees what they type, or a toggle. Let's use type="text" for simplicity of admin tools often.
+                                            className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B21B6] bg-white"
+                                            placeholder="Enter new password"
+                                            value={manualPassword}
+                                            onChange={(e) => setManualPassword(e.target.value)}
+                                        />
+                                        <p className="text-xs text-gray-500">The user will be emailed this new password.</p>
+                                    </div>
+                                )}
+
+                                {passwordSuccess && (
+                                    <div className="bg-green-50 border border-green-100 text-green-700 px-3 py-2 rounded-lg text-sm">
+                                        {passwordMode === 'manual' ? "Password changed!" : "Reset email sent!"}
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3 mt-4">
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                        onClick={closePasswordModal}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                        onClick={handlePasswordAction}
+                                        disabled={actionLoading || (passwordMode === 'manual' && !manualPassword)}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        {actionLoading ? 'Processing...' : 'Confirm Update'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Admin Type Change Modal */}
+                {
+                    showAdminTypeModal && (
+                        <div
+                            className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                            style={{ background: 'var(--Color-overlay, #00000099)' }}
+                        >
+                            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-semibold text-[#3B4A66]">Change Admin Type</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Select a new admin type for this user. This will change their permissions and access level.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-[#3B4A66]" htmlFor="admin-type">
+                                        Admin Type
+                                    </label>
+                                    <select
+                                        id="admin-type"
+                                        className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B21B6] bg-white"
+                                        value={selectedAdminType}
+                                        onChange={(e) => setSelectedAdminType(e.target.value)}
+                                        disabled={actionLoading}
+                                    >
+                                        <option value="super_admin">Super Admin</option>
+                                        <option value="support_admin">Support Admin</option>
+                                        <option value="billing_admin">Billing Admin</option>
+                                    </select>
+                                    <p className="text-xs text-gray-500">
+                                        Current: {profile.role_display_name || profile.role}
+                                    </p>
+                                </div>
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                        onClick={handleCancelAdminTypeChange}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                        onClick={handleConfirmAdminTypeChange}
+                                        disabled={actionLoading || !selectedAdminType}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        {actionLoading ? 'Updating...' : 'Update Admin Type'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Permanent Delete Confirmation Modal */}
+                {
+                    showDeleteModal && (
+                        <div
+                            className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                            style={{ background: 'var(--Color-overlay, #00000099)' }}
+                        >
+                            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                                <div className="flex items-center gap-3 text-red-600">
+                                    <div className="p-2 bg-red-50 rounded-full">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33975 16C2.56995 17.3333 3.53225 19 5.07183 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-bold">Irreversible Action</h3>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-700">
+                                        Are you sure you want to permanently delete <strong>{fullName}</strong> ({profile.email})?
+                                    </p>
+                                    <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">
+                                        Warning: This will permanently remove all account data, login credentials, and firm associations. This action cannot be undone.
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        onClick={() => setShowDeleteModal(false)}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                        onClick={handleConfirmDelete}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        {actionLoading ? 'Deleting...' : 'Permanently Delete'}
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    )
+                }
+                {/* 2FA Reset Confirmation Modal */}
+                {
+                    showReset2FAModal && (
+                        <div
+                            className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
+                            style={{ background: 'var(--Color-overlay, #00000099)' }}
+                        >
+                            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+                                <div className="flex items-center gap-3 text-orange-600">
+                                    <div className="p-2 bg-orange-50 rounded-full">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33975 16C2.56995 17.3333 3.53225 19 5.07183 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-bold">Reset 2FA</h3>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-700">
+                                        Are you sure you want to disable Two-Factor Authentication for <strong>{fullName}</strong>?
+                                    </p>
+                                    <p className="text-xs text-orange-600 font-medium bg-orange-50 p-2 rounded">
+                                        This will allow the user to log in with just their password. They will need to set up 2FA again if they wish to re-enable it.
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        onClick={() => setShowReset2FAModal(false)}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                                        onClick={handleReset2FA}
+                                        disabled={actionLoading}
+                                        style={{ borderRadius: '7px' }}
+                                    >
+                                        {actionLoading ? 'Resetting...' : 'Confirm Reset'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
             </div>
-            {showSuspendModal && (
-                <div
-                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
-                    style={{ background: 'var(--Color-overlay, #00000099)' }}
-                >
-                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-lg font-semibold text-[#3B4A66]">Suspend User</h3>
-                            <p className="text-sm text-gray-600">
-                                Provide a reason for suspending this user. This will be recorded for audit purposes.
-                            </p>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#3B4A66]" htmlFor="suspension-reason">
-                                Suspension Reason
-                            </label>
-                            <textarea
-                                id="suspension-reason"
-                                className="w-full min-h-[120px] border border-[#E8F0FF] rounded-lg px-3 py-2 text-sm text-[#3B4A66] focus:outline-none focus:ring-2 focus:ring-[#5B21B6] resize-none"
-                                value={suspensionReason}
-                                onChange={(event) => {
-                                    setSuspensionReason(event.target.value);
-                                    if (reasonError) {
-                                        setReasonError('');
-                                    }
-                                }}
-                                placeholder="Enter suspension reason..."
-                                disabled={actionLoading}
-                            />
-                            {reasonError && <p className="text-xs text-[#B91C1C]">{reasonError}</p>}
-                        </div>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
-                                onClick={handleCancelSuspend}
-                                disabled={actionLoading}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
-                                onClick={handleConfirmSuspend}
-                                disabled={actionLoading}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                {actionLoading ? 'Processing...' : 'Confirm Suspension'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-
-
-            {showPasswordModal && (
-                <div
-                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
-                    style={{ background: 'var(--Color-overlay, #00000099)' }}
-                >
-                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-lg font-semibold text-[#3B4A66]">Password Management</h3>
-                            <p className="text-sm text-gray-600">
-                                Choose how you want to reset the user's password.
-                            </p>
-                        </div>
-
-                        <div className="flex p-1 bg-gray-100 rounded-lg">
-                            <button
-                                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'generate' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
-                                onClick={() => setPasswordMode('generate')}
-                            >
-                                Generate & Email
-                            </button>
-                            <button
-                                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'manual' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
-                                onClick={() => setPasswordMode('manual')}
-                            >
-                                Set Manually
-                            </button>
-                        </div>
-
-                        {passwordMode === 'generate' ? (
-                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-700">
-                                <p>Clicking "Confirm" will generate a secure random password and email it to <strong>{profile.email}</strong>.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-[#3B4A66]">New Password</label>
-                                <input
-                                    type="text" // Visible text as requested for manual management, or password? usually admin setting password manually implies they know it. Using text for clarity or password for security? "Manually update... with audit logging". I'll use type="text" so admin sees what they type, or a toggle. Let's use type="text" for simplicity of admin tools often.
-                                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B21B6] bg-white"
-                                    placeholder="Enter new password"
-                                    value={manualPassword}
-                                    onChange={(e) => setManualPassword(e.target.value)}
-                                />
-                                <p className="text-xs text-gray-500">The user will be emailed this new password.</p>
-                            </div>
-                        )}
-
-                        {passwordSuccess && (
-                            <div className="bg-green-50 border border-green-100 text-green-700 px-3 py-2 rounded-lg text-sm">
-                                {passwordMode === 'manual' ? "Password changed!" : "Reset email sent!"}
-                            </div>
-                        )}
-
-                        <div className="flex justify-end gap-3 mt-4">
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
-                                onClick={closePasswordModal}
-                                disabled={actionLoading}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
-                                onClick={handlePasswordAction}
-                                disabled={actionLoading || (passwordMode === 'manual' && !manualPassword)}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                {actionLoading ? 'Processing...' : 'Confirm Update'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Admin Type Change Modal */}
-            {showAdminTypeModal && (
-                <div
-                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
-                    style={{ background: 'var(--Color-overlay, #00000099)' }}
-                >
-                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-lg font-semibold text-[#3B4A66]">Change Admin Type</h3>
-                            <p className="text-sm text-gray-600">
-                                Select a new admin type for this user. This will change their permissions and access level.
-                            </p>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#3B4A66]" htmlFor="admin-type">
-                                Admin Type
-                            </label>
-                            <select
-                                id="admin-type"
-                                className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B21B6] bg-white"
-                                value={selectedAdminType}
-                                onChange={(e) => setSelectedAdminType(e.target.value)}
-                                disabled={actionLoading}
-                            >
-                                <option value="super_admin">Super Admin</option>
-                                <option value="support_admin">Support Admin</option>
-                                <option value="billing_admin">Billing Admin</option>
-                            </select>
-                            <p className="text-xs text-gray-500">
-                                Current: {profile.role_display_name || profile.role}
-                            </p>
-                        </div>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
-                                onClick={handleCancelAdminTypeChange}
-                                disabled={actionLoading}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
-                                onClick={handleConfirmAdminTypeChange}
-                                disabled={actionLoading || !selectedAdminType}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                {actionLoading ? 'Updating...' : 'Update Admin Type'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Permanent Delete Confirmation Modal */}
-            {showDeleteModal && (
-                <div
-                    className="fixed inset-0 z-[1070] flex items-center justify-center px-4"
-                    style={{ background: 'var(--Color-overlay, #00000099)' }}
-                >
-                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
-                        <div className="flex items-center gap-3 text-red-600">
-                            <div className="p-2 bg-red-50 rounded-full">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33975 16C2.56995 17.3333 3.53225 19 5.07183 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-bold">Irreversible Action</h3>
-                        </div>
-
-                        <div className="space-y-2">
-                            <p className="text-sm text-gray-700">
-                                Are you sure you want to permanently delete <strong>{fullName}</strong> ({profile.email})?
-                            </p>
-                            <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">
-                                Warning: This will permanently remove all account data, login credentials, and firm associations. This action cannot be undone.
-                            </p>
-                        </div>
-
-                        <div className="flex justify-end gap-3 mt-6">
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                onClick={() => setShowDeleteModal(false)}
-                                disabled={actionLoading}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                                onClick={handleConfirmDelete}
-                                disabled={actionLoading}
-                                style={{ borderRadius: '7px' }}
-                            >
-                                {actionLoading ? 'Deleting...' : 'Permanently Delete'}
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
