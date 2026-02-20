@@ -1493,105 +1493,148 @@ export default function Messages() {
                       // Admin/Staff messages (received) appear on left
                       if (msg.type === "admin") {
                         return (
-                          <div key={msg.id} className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
-                            {/* <JdIcon color="#f97316" className="me-2" /> */}
-                            <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
-                              <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
-                                {msg.sender}
-                              </div>
-                              <div style={{ color: msg.type === "user" ? "#FFFFFF" : "inherit" }}>{msg.text}</div>
-                              {msg.hasAttachment && (
-                                <div className="mt-2">
-                                  <FileIcon className="me-2 text-primary" />
-                                  <a
-                                    href={msg.attachment || msg.attachmentObj?.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                      fontSize: "12px",
-                                      color: "#3B82F6",
-                                      textDecoration: "underline",
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    {msg.attachmentName || "Attachment"}
-                                  </a>
-                                  {msg.attachmentSize && (
-                                    <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                      ({msg.attachmentSize})
-                                    </span>
-                                  )}
+                          <React.Fragment key={msg.id}>
+                            {msg.text && (
+                              <div className={`d-flex w-100 ${msg.hasAttachment ? 'mb-1' : 'mb-3'}`} style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
+                                <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
+                                  <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
+                                    {msg.sender}
+                                  </div>
+                                  <div style={{ color: msg.type === "user" ? "#FFFFFF" : "inherit" }}>{msg.text}</div>
+                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
+                                    {new Date(msg.date).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}
+                                    {msg.isEdited && (
+                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
-                                {new Date(msg.date).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}
-                                {msg.isEdited && (
-                                  <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                )}
                               </div>
-                            </div>
-                          </div>
+                            )}
+                            {msg.hasAttachment && (
+                              <div className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
+                                <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
+                                  {!msg.text && (
+                                    <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
+                                      {msg.sender}
+                                    </div>
+                                  )}
+                                  <div className={msg.text ? "" : "mt-2"}>
+                                    <FileIcon className="me-2 text-primary" />
+                                    <a
+                                      href={msg.attachment || msg.attachmentObj?.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#3B82F6",
+                                        textDecoration: "underline",
+                                        cursor: "pointer"
+                                      }}
+                                    >
+                                      {msg.attachmentName || "Attachment"}
+                                    </a>
+                                    {msg.attachmentSize && (
+                                      <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                        ({msg.attachmentSize})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
+                                    {new Date(msg.date).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}
+                                    {msg.isEdited && (
+                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </React.Fragment>
                         );
                       }
                       // User/Client messages (sent by current user) appear on right
                       else if (msg.type === "user") {
                         return (
-                          <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
-                            <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
-                              <div style={{ color: "#1F2937" }}>{msg.text}</div>
-                              {msg.hasAttachment && (
-                                <div className="mt-2">
-                                  <FileIcon className="me-2 text-primary" />
-                                  {msg.isUploading ? (
-                                    <span className="d-inline-flex align-items-center">
-                                      <span className="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
-                                      <span className="text-muted small" style={{ fontSize: "12px" }}>Uploading {msg.attachmentName}...</span>
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
-                                    </>
-                                  )}
+                          <React.Fragment key={msg.id}>
+                            {msg.text && (
+                              <div className={`d-flex w-100 justify-content-end ${msg.hasAttachment ? 'mb-1' : 'mb-3'}`}>
+                                <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
+                                  <div style={{ color: "#1F2937" }}>{msg.text}</div>
+                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
+                                    {new Date(msg.date).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}
+                                    {msg.isEdited && (
+                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
-                                {new Date(msg.date).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}
-                                {msg.isEdited && (
-                                  <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                )}
                               </div>
-                            </div>
-                            {/* <JdIcon color="#f97316" className="ms-2" /> */}
-                          </div>
+                            )}
+                            {msg.hasAttachment && (
+                              <div className="d-flex mb-3 w-100 justify-content-end">
+                                <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
+                                  <div className={msg.text ? "" : "mt-2"}>
+                                    <FileIcon className="me-2 text-primary" />
+                                    {msg.isUploading ? (
+                                      <span className="d-inline-flex align-items-center">
+                                        <span className="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                                        <span className="text-muted small" style={{ fontSize: "12px" }}>Uploading {msg.attachmentName}...</span>
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <a
+                                          href={msg.attachment || msg.attachmentObj?.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{
+                                            fontSize: "12px",
+                                            color: "#3B82F6",
+                                            textDecoration: "underline",
+                                            cursor: "pointer"
+                                          }}
+                                        >
+                                          {msg.attachmentName || "Attachment"}
+                                        </a>
+                                        {msg.attachmentSize && (
+                                          <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                            ({msg.attachmentSize})
+                                          </span>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                  <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
+                                    {new Date(msg.date).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}
+                                    {msg.isEdited && (
+                                      <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </React.Fragment>
                         );
                       }
                       return null;
