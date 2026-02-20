@@ -59,6 +59,8 @@ export default function AccountSwitcher() {
   const processMemberships = useCallback((rawFirms, currentFirmId = null, currentRole = null, activeUserType = null) => {
     if (!Array.isArray(rawFirms)) return [];
 
+    let hasFoundCurrent = false;
+
     return rawFirms.map(firm => {
       // Handle various data structures from different API endpoints
       const rawRole = firm.membership?.role || firm.role || 'team_member';
@@ -68,11 +70,14 @@ export default function AccountSwitcher() {
       const firmName = firm.firm?.name || firm.name || 'Firm';
 
       // Determine if this is the current membership
-      // Prioritize strict client-side validation if we have context (to fix multi-tick bugs)
       let isCurrent = false;
 
-      // 1. Strict validation: Matches Firm ID AND Active Role Type
-      if (currentFirmId && activeUserType) {
+      // 1. API authoritative flag (Backend directly handles this logic accurately)
+      if (firm.is_current === true) {
+        isCurrent = true;
+      }
+      // 2. Fallback strict validation: Matches Firm ID AND Active Role Type
+      else if (currentFirmId && activeUserType) {
         const isSameFirm = firmId === parseInt(currentFirmId);
         let isRoleMatch = false;
 
@@ -96,14 +101,17 @@ export default function AccountSwitcher() {
         isCurrent = isSameFirm && isRoleMatch;
       }
 
-      // 2. Fallback to API flag if strict validation wasn't possible (e.g. no userType yet)
-      else if (firm.is_current === true) {
-        isCurrent = true;
-      }
-
       // 3. Last resort fallback
       else if (currentFirmId) {
         isCurrent = firmId === parseInt(currentFirmId) && (!currentRole || role === normalizeRole(currentRole));
+      }
+
+      if (isCurrent) {
+        if (hasFoundCurrent) {
+          isCurrent = false;
+        } else {
+          hasFoundCurrent = true;
+        }
       }
 
       return {
