@@ -462,30 +462,30 @@ export default function UserProfileWithRoles() {
         </div>
 
         {primaryRole && (
-      <div className="mb-4">
-        <p className="small fw-bold text-uppercase text-muted mb-2" style={{ letterSpacing: '0.5px' }}>
-          Primary Role
-        </p>
-        <div className="d-flex flex-wrap gap-2">
-          <div
-            className="px-3 py-2 rounded-3 d-flex align-items-center gap-3 transition-all duration-200 hover:shadow-sm"
-            style={{
-              backgroundColor: primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.bg : "#F8FAFC",
-              color: primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.text : "#64748B",
-              border: `1px solid ${primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.border : "#E2E8F0"}`,
-              fontSize: "13px",
-              fontWeight: "600",
-              minWidth: "fit-content"
-            }}
-          >
-            <div className="d-flex align-items-center gap-2">
-              <FiUser size={14} />
-              <span className="text-truncate">
-                {primaryRoleDetails.display_name || ROLE_DISPLAY_NAMES[primaryRole] || primaryRole}
-              </span>
-            </div>
-            
-            <div className="d-flex align-items-center gap-2">
+          <div className="mb-4">
+            <p className="small fw-bold text-uppercase text-muted mb-2" style={{ letterSpacing: '0.5px' }}>
+              Primary Role
+            </p>
+            <div className="d-flex flex-wrap gap-2">
+              <div
+                className="px-3 py-2 rounded-3 d-flex align-items-center gap-3 transition-all duration-200 hover:shadow-sm"
+                style={{
+                  backgroundColor: primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.bg : "#F8FAFC",
+                  color: primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.text : "#64748B",
+                  border: `1px solid ${primaryRoleDetails.is_active ? ROLE_TYPE_COLORS.user_role.border : "#E2E8F0"}`,
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  minWidth: "fit-content"
+                }}
+              >
+                <div className="d-flex align-items-center gap-2">
+                  <FiUser size={14} />
+                  <span className="text-truncate">
+                    {primaryRoleDetails.display_name || ROLE_DISPLAY_NAMES[primaryRole] || primaryRole}
+                  </span>
+                </div>
+
+                {/* <div className="d-flex align-items-center gap-2">
               {primaryRoleDetails.is_active ? (
                 <span className="badge rounded-pill" style={{ backgroundColor: ROLE_TYPE_COLORS.user_role.text, fontSize: '9px', padding: '4px 8px' }}>
                   Active
@@ -507,14 +507,14 @@ export default function UserProfileWithRoles() {
                   ) : (
                     <FiRefreshCw size={12} />
                   )}
-                  Switch
+                  Switch111
                 </button>
               )}
+            </div> */}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    )}
+        )}
 
         {additionalRolesDetails.length > 0 && (
           <div>
