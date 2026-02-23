@@ -21,16 +21,15 @@ const TAXPAYER_ROLES = new Set([
  */
 function getRoleCategory(roleValue) {
     if (!roleValue) return 'other';
-    const lower = roleValue.toLowerCase();
-    if (
-        lower === 'firm' || lower === 'admin' || lower === 'firmadmin' ||
-        lower === 'staff' || lower === 'tax_preparer' || lower === 'team_member' ||
-        lower === 'accountant' || lower === 'bookkeeper' || lower === 'assistant' ||
-        lower === 'preparer'
-    ) {
+    const lower = String(roleValue).toLowerCase().trim();
+    // Firm-level roles
+    if (['firm', 'admin', 'firmadmin', 'firm_admin', 'staff', 'tax_preparer',
+        'team_member', 'teammember', 'accountant', 'bookkeeper', 'assistant',
+        'preparer'].includes(lower)) {
         return 'firm';
     }
-    if (lower === 'client' || lower === 'taxpayer') {
+    // Taxpayer/client roles
+    if (['client', 'taxpayer'].includes(lower)) {
         return 'taxpayer';
     }
     return 'other';
@@ -43,14 +42,14 @@ function getRoleCategory(roleValue) {
  * - 'other' → show all
  */
 function filterFirmsForCategory(allFirms, loginCategory) {
-    if (!allFirms || allFirms.length === 0) return allFirms;
+    if (!allFirms || allFirms.length === 0) return [];
     if (loginCategory === 'firm') {
-        const filtered = allFirms.filter(f => getRoleCategory(f.role) === 'firm');
-        return filtered.length > 0 ? filtered : allFirms;
+        // Strictly only firm-level memberships — never mix in taxpayer accounts
+        return allFirms.filter(f => getRoleCategory(f.role) === 'firm');
     }
     if (loginCategory === 'taxpayer') {
-        const filtered = allFirms.filter(f => getRoleCategory(f.role) === 'taxpayer');
-        return filtered.length > 0 ? filtered : allFirms;
+        // Strictly only taxpayer/client memberships — never mix in firm accounts
+        return allFirms.filter(f => getRoleCategory(f.role) === 'taxpayer');
     }
     return allFirms;
 }
@@ -87,20 +86,29 @@ export default function SelectContext() {
         }
     }, [location.state, navigate, needs_role_selection, needs_firm_selection, user]);
 
+    // Block the browser's back button while on this page.
+    // Pressing back here is dangerous — tokens may be partially set.
+    // Instead, send the user to /login.
+    useEffect(() => {
+        // Push a dummy entry so the back button has something to pop
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = () => {
+            // Every time the user tries to go back, push the state again
+            // to keep them on this page, then redirect to login cleanly.
+            navigate('/login', { replace: true });
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [navigate]);
+
     const handleRoleSelected = (selectedUser, loginCategory) => {
         // Track which login category was selected so we can filter firms
         const category = loginCategory || getRoleCategory(
             selectedUser?.active_role || selectedUser?.user_type
         );
         setSelectedLoginCategory(category);
-
-        // If client/taxpayer role is selected, redirect to client dashboard immediately
-        // bypassing firm selection even if it was initially required
-        const userRole = selectedUser.active_role || selectedUser.user_type;
-        if (userRole === 'client' || userRole === 'taxpayer') {
-            redirectToDashboard(selectedUser);
-            return;
-        }
 
         // If firm selection is also needed, show firm modal (with filtered firms)
         if (needs_firm_selection) {

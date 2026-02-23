@@ -64,19 +64,8 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
     // What roles are shown in the second phase
     const rolesForType = loginType === 'firm' ? firmRoles : loginType === 'taxpayer' ? taxpayerRoles : [];
 
-    // Auto-select if only one role in chosen type
-    const handleLoginTypeSelect = (type) => {
-        setLoginType(type);
-        setSelectedRole(null);
-        setError(null);
-        const list = type === 'firm' ? firmRoles : taxpayerRoles;
-        if (list.length === 1) {
-            setSelectedRole(list[0].role);
-        }
-    };
-
-    const handleSubmit = async () => {
-        if (!selectedRole) {
+    const submitRole = async (roleToSubmit, type) => {
+        if (!roleToSubmit) {
             setError('Please select an account to continue');
             return;
         }
@@ -85,7 +74,7 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
         setError(null);
 
         try {
-            const data = await userAPI.selectRole(selectedRole);
+            const data = await userAPI.selectRole(roleToSubmit);
 
             if (data.success) {
                 const rememberMe =
@@ -98,7 +87,7 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                 storage.setItem('userType', data.user.active_role || data.user.user_type);
 
                 // Pass the login category back so SelectContext can filter firms
-                onSelect(data.user, loginType);
+                onSelect(data.user, type);
             } else {
                 setError(data.message || 'Failed to select role');
             }
@@ -108,6 +97,23 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleLoginTypeSelect = (type) => {
+        setError(null);
+        const list = type === 'firm' ? firmRoles : taxpayerRoles;
+
+        if (list.length === 1) {
+            // Auto-submit if there's only one role, bypassing the redundant selection step
+            submitRole(list[0].role, type);
+        } else {
+            setLoginType(type);
+            setSelectedRole(null);
+        }
+    };
+
+    const handleSubmit = () => {
+        submitRole(selectedRole, loginType);
     };
 
     // Count how many firms are relevant per category (for the info hint)
@@ -142,12 +148,12 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                                         Back to login type
                                     </button>
                                     <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                                        {loginType === 'firm' ? 'Select Your Firm Account' : 'Select Your Taxpayer Account'}
+                                        {loginType === 'firm' ? 'Select Your Firm Role' : 'Select Your Taxpayer Role'}
                                     </h1>
                                     <p className="text-gray-500 font-light text-xs sm:text-sm mt-0.5 sm:mt-1">
                                         {loginType === 'firm'
-                                            ? 'Choose the firm-level account you want to access.'
-                                            : 'Choose your taxpayer / client account to continue.'}
+                                            ? 'Choose the role you want to access.'
+                                            : 'Confirm your taxpayer role to continue.'}
                                     </p>
                                 </>
                             ) : (

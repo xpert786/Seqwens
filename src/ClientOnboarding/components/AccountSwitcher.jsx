@@ -157,19 +157,31 @@ export default function AccountSwitcher() {
           }
         }
 
+        const getRoleCategory = (roleCode) => {
+          const r = normalizeRole(roleCode);
+          if (['client', 'taxpayer'].includes(r)) return 'taxpayer';
+          return 'firm';
+        };
+
+        const activeCategory = (userType === 'client' || currentRole === 'client' || currentRole === 'taxpayer')
+          ? 'taxpayer'
+          : 'firm';
+
         // 1. Try to load from "firmsData" storage (fastest)
         const firmsDataStr = storage?.getItem('firmsData');
         let initialMemberships = [];
         if (firmsDataStr) {
           try {
             const storedFirms = JSON.parse(firmsDataStr);
-            initialMemberships = processMemberships(storedFirms, currentFirmId, currentRole, userType);
+            const processed = processMemberships(storedFirms, currentFirmId, currentRole, userType);
+            initialMemberships = processed.filter(m => getRoleCategory(m.role) === activeCategory);
           } catch (e) { }
         }
 
         // 2. Also check userData.firms (fallback)
         if (initialMemberships.length === 0 && userData?.firms) {
-          initialMemberships = processMemberships(userData.firms, currentFirmId, currentRole, userType);
+          const processed = processMemberships(userData.firms, currentFirmId, currentRole, userType);
+          initialMemberships = processed.filter(m => getRoleCategory(m.role) === activeCategory);
         }
 
         if (mounted && initialMemberships.length > 0) {
@@ -182,7 +194,8 @@ export default function AccountSwitcher() {
         try {
           const response = await userAPI.getMemberships();
           if (mounted && response.success && Array.isArray(response.data)) {
-            const freshMemberships = processMemberships(response.data, currentFirmId, currentRole, userType);
+            const processedFresh = processMemberships(response.data, currentFirmId, currentRole, userType);
+            let freshMemberships = processedFresh.filter(m => getRoleCategory(m.role) === activeCategory);
 
             // Sort: Active first, then by name
             freshMemberships.sort((a, b) => {
