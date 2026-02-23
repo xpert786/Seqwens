@@ -6,7 +6,7 @@ import './FirmSelectionModal.css';
 import { userAPI } from '../ClientOnboarding/utils/apiUtils';
 import { setTokens } from '../ClientOnboarding/utils/userUtils';
 
-export default function FirmSelectionModal({ firms, onSelect, onClose }) {
+export default function FirmSelectionModal({ firms, onSelect, onClose, loginCategory }) {
     const navigate = useNavigate();
     const [selectedMembership, setSelectedMembership] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -115,10 +115,12 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
                         </div>
                         <div className="flex flex-col">
                             <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                                Select Your Firm
+                                {loginCategory === 'taxpayer' ? 'Select Your Tax Office' : 'Select Your Firm'}
                             </h1>
                             <p className="text-gray-500 font-light text-xs sm:text-sm mt-0.5 sm:mt-1">
-                                You are a member of multiple firms. Please select one to continue.
+                                {loginCategory === 'taxpayer'
+                                    ? 'You are a client at multiple tax offices. Choose one to continue.'
+                                    : 'You are a member of multiple firms. Please select one to continue.'}
                             </p>
                         </div>
                     </div>
@@ -134,71 +136,83 @@ export default function FirmSelectionModal({ firms, onSelect, onClose }) {
 
                 {/* Firm List */}
                 <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] sm:max-h-[50vh] custom-scrollbar">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        {firms.map((firmData) => {
-                            const isSelected = selectedMembership === firmData.membership_id;
-                            return (
-                                <div
-                                    key={firmData.membership_id}
-                                    className={`
-                                        group relative p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer
-                                        ${isSelected
-                                            ? 'border-[#3AD6F2] bg-[#3AD6F2]/5 ring-4 ring-[#3AD6F2]/5 translate-y-[-2px]'
-                                            : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-lg hover:translate-y-[-2px]'}
-                                    `}
-                                    onClick={() => setSelectedMembership(firmData.membership_id)}
-                                >
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className={`p-2.5 rounded-xl transition-colors duration-300 ${isSelected ? 'bg-[#3AD6F2]/10' : 'bg-gray-50 group-hover:bg-white'}`}>
-                                            <Building2 size={24} className={isSelected ? 'text-[#3AD6F2]' : 'text-gray-400'} />
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {firmData.is_current && (
-                                                <span className="flex items-center gap-1 px-2.5 py-1 bg-[#3AD6F2] text-white text-[10px] uppercase tracking-wider font-bold rounded-full shadow-sm shadow-[#3AD6F2]/20">
-                                                    <CheckCircle2 size={10} />
-                                                    Current
+                    {firms && firms.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {firms.map((firmData) => {
+                                const isSelected = selectedMembership === firmData.membership_id;
+                                return (
+                                    <div
+                                        key={firmData.membership_id}
+                                        className={`
+                                            group relative p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer
+                                            ${isSelected
+                                                ? 'border-[#3AD6F2] bg-[#3AD6F2]/5 ring-4 ring-[#3AD6F2]/5 translate-y-[-2px]'
+                                                : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-lg hover:translate-y-[-2px]'}
+                                        `}
+                                        onClick={() => setSelectedMembership(firmData.membership_id)}
+                                    >
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div className={`p-2.5 rounded-xl transition-colors duration-300 ${isSelected ? 'bg-[#3AD6F2]/10' : 'bg-gray-50 group-hover:bg-white'}`}>
+                                                <Building2 size={24} className={isSelected ? 'text-[#3AD6F2]' : 'text-gray-400'} />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {firmData.is_current && (
+                                                    <span className="flex items-center gap-1 px-2.5 py-1 bg-[#3AD6F2] text-white text-[10px] uppercase tracking-wider font-bold rounded-full shadow-sm shadow-[#3AD6F2]/20">
+                                                        <CheckCircle2 size={10} />
+                                                        Current
+                                                    </span>
+                                                )}
+                                                <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-full uppercase tracking-wider shadow-sm ${getStatusColor(firmData.status)}`}>
+                                                    {firmData.status}
                                                 </span>
-                                            )}
-                                            <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-full uppercase tracking-wider shadow-sm ${getStatusColor(firmData.status)}`}>
-                                                {firmData.status}
-                                            </span>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="text-xl font-bold text-gray-900 mb-4 line-clamp-1 group-hover:text-[#3AD6F2] transition-colors text-left pl-1">
-                                        {firmData.firm.name}
-                                    </div>
-
-                                    <div className="space-y-4 pl-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-400 flex items-center gap-2">
-                                                <ShieldCheck size={14} className="opacity-70" /> Role
-                                            </span>
-                                            <span className={`font-semibold bg-white border border-gray-100 px-2.5 py-1 rounded-lg ${isSelected ? 'text-[#3AD6F2]' : 'text-gray-700'}`}>
-                                                {firmData.role_display}
-                                            </span>
+                                        <div className="text-xl font-bold text-gray-900 mb-4 line-clamp-1 group-hover:text-[#3AD6F2] transition-colors text-left pl-1">
+                                            {firmData.firm.name}
                                         </div>
-                                        {firmData.last_active_at && (
+
+                                        <div className="space-y-4 pl-1">
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-gray-400 flex items-center gap-2">
-                                                    <Clock size={14} className="opacity-70" /> Last Active
+                                                    <ShieldCheck size={14} className="opacity-70" /> Role
                                                 </span>
-                                                <span className="text-gray-600 font-medium">
-                                                    {formatDate(firmData.last_active_at)}
+                                                <span className={`font-semibold bg-white border border-gray-100 px-2.5 py-1 rounded-lg ${isSelected ? 'text-[#3AD6F2]' : 'text-gray-700'}`}>
+                                                    {firmData.role_display}
                                                 </span>
+                                            </div>
+                                            {firmData.last_active_at && (
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-400 flex items-center gap-2">
+                                                        <Clock size={14} className="opacity-70" /> Last Active
+                                                    </span>
+                                                    <span className="text-gray-600 font-medium">
+                                                        {formatDate(firmData.last_active_at)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {isSelected && (
+                                            <div className="absolute top-3 right-3 text-[#3AD6F2]">
+                                                <CheckCircle2 size={18} fill="currentColor" className="text-white" />
                                             </div>
                                         )}
                                     </div>
-
-                                    {isSelected && (
-                                        <div className="absolute top-3 right-3 text-[#3AD6F2]">
-                                            <CheckCircle2 size={18} fill="currentColor" className="text-white" />
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                            <Building2 size={40} className="text-gray-200 mb-3" />
+                            <p className="text-gray-500 font-semibold text-sm">
+                                {loginCategory === 'taxpayer'
+                                    ? 'No tax office memberships found for your taxpayer account.'
+                                    : 'No firm memberships found for your account.'}
+                            </p>
+                            <p className="text-gray-400 text-xs mt-1">Please contact your administrator or try a different login type.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions */}
@@ -258,6 +272,7 @@ FirmSelectionModal.propTypes = {
     ).isRequired,
     onSelect: PropTypes.func.isRequired,
     onClose: PropTypes.func,
+    loginCategory: PropTypes.oneOf(['firm', 'taxpayer']),
 };
 
 

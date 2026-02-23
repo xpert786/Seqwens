@@ -97,6 +97,10 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       assigned_roles: [stageTemplate.who],
       estimated_duration_days: stageTemplate.days,
       stage_order: stages.length,
+      trigger_type: 'on_entry',
+      trigger_delay_days: null,
+      trigger_time_of_day: null,
+      business_hours_only: false,
       actions: [],
       triggers: [],
       reminders: []
@@ -114,6 +118,10 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       assigned_roles: ['taxpayer'],
       estimated_duration_days: 3,
       stage_order: stages.length,
+      trigger_type: 'on_entry',
+      trigger_delay_days: null,
+      trigger_time_of_day: null,
+      business_hours_only: false,
       actions: [],
       triggers: [],
       reminders: []
@@ -182,6 +190,10 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
           ...stage,
           stage_order: index,
           assigned_roles: stage.assigned_roles && stage.assigned_roles.length > 0 ? stage.assigned_roles : [stage.user_type_group],
+          trigger_type: stage.trigger_type || 'on_entry',
+          trigger_delay_days: stage.trigger_delay_days ?? null,
+          trigger_time_of_day: stage.trigger_time_of_day || null,
+          business_hours_only: !!stage.business_hours_only,
           id: String(stage.id).startsWith('temp-') ? undefined : stage.id
         }))
       };
@@ -579,21 +591,126 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                             </div>
                           </div>
 
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">
-                              Estimated time
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                value={stage.estimated_duration_days}
-                                onChange={(e) => updateStage(stage.id, 'estimated_duration_days', parseInt(e.target.value) || 1)}
-                                min="1"
-                                className="w-20 px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                              />
-                              <span className="text-sm text-gray-500 font-[BasisGrotesquePro]">days</span>
+                        </div>
+
+                        {/* ─── Time & Trigger Settings ───────────────────────── */}
+                        <div className="md:col-span-2 border border-[#E8F0FF] !rounded-xl p-3 bg-[#F8FBFF]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4 text-[#F56D2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs font-semibold text-gray-700 font-[BasisGrotesquePro]">Time &amp; Trigger Settings</span>
+                          </div>
+
+                          {/* Row 1: Estimated time + Trigger mode */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Estimated stage duration</label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  value={stage.estimated_duration_days}
+                                  onChange={(e) => updateStage(stage.id, 'estimated_duration_days', parseInt(e.target.value) || 1)}
+                                  min="1"
+                                  className="w-20 px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                                />
+                                <span className="text-sm text-gray-500 font-[BasisGrotesquePro]">days</span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">When to trigger automations</label>
+                              <select
+                                value={stage.trigger_type || 'on_entry'}
+                                onChange={(e) => updateStage(stage.id, 'trigger_type', e.target.value)}
+                                className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white"
+                              >
+                                <option value="on_entry">Immediately on stage entry</option>
+                                <option value="delay_from_entry">X days after stage entry</option>
+                                <option value="delay_from_workflow_start">X days from workflow start</option>
+                              </select>
                             </div>
                           </div>
+
+                          {/* Row 2: Delay + Time of day (only when delay chosen) */}
+                          {(stage.trigger_type === 'delay_from_entry' || stage.trigger_type === 'delay_from_workflow_start') && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">
+                                  Delay (days)
+                                  <span className="ml-1 text-gray-400">
+                                    {stage.trigger_type === 'delay_from_entry' ? '— after entering this stage' : '— from workflow start'}
+                                  </span>
+                                </label>
+                                <input
+                                  type="number"
+                                  value={stage.trigger_delay_days ?? ''}
+                                  onChange={(e) => updateStage(stage.id, 'trigger_delay_days', parseInt(e.target.value) >= 0 ? parseInt(e.target.value) : null)}
+                                  min="0"
+                                  placeholder="e.g. 3"
+                                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">
+                                  Send at time of day <span className="text-gray-400">(optional)</span>
+                                </label>
+                                <input
+                                  type="time"
+                                  value={stage.trigger_time_of_day || ''}
+                                  onChange={(e) => updateStage(stage.id, 'trigger_time_of_day', e.target.value || null)}
+                                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] !rounded-lg focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Row 3: Business hours toggle */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-[#E8F0FF]">
+                            <button
+                              type="button"
+                              onClick={() => updateStage(stage.id, 'business_hours_only', !stage.business_hours_only)}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${stage.business_hours_only ? 'bg-[#F56D2D]' : 'bg-gray-200'}`}
+                              id={`biz-hours-toggle-${stage.id}`}
+                              aria-pressed={!!stage.business_hours_only}
+                            >
+                              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${stage.business_hours_only ? 'translate-x-4' : 'translate-x-0'}`} />
+                            </button>
+                            <label htmlFor={`biz-hours-toggle-${stage.id}`} className="text-xs text-gray-600 font-[BasisGrotesquePro] cursor-pointer select-none">
+                              <span className="font-medium">Business hours only</span>
+                              <span className="ml-1 text-gray-400">— never send at night or on weekends (Mon–Fri, 9 AM–5 PM)</span>
+                            </label>
+                          </div>
+
+                          {/* Live scheduled-send summary */}
+                          {(() => {
+                            const tt = stage.trigger_type || 'on_entry';
+                            const dd = stage.trigger_delay_days ?? 0;
+                            const tod = stage.trigger_time_of_day;
+                            const bh = stage.business_hours_only;
+                            let txt = '';
+                            if (tt === 'on_entry') {
+                              txt = 'Automations fire immediately when this stage is entered.';
+                            } else if (tt === 'delay_from_entry') {
+                              txt = `Send ${dd} day${dd !== 1 ? 's' : ''} after stage entry`;
+                              if (tod) txt += ` at ${tod}`;
+                              if (bh) txt += ', during business hours only (Mon–Fri 9 AM–5 PM)';
+                              txt += '.';
+                            } else {
+                              txt = `Send ${dd} day${dd !== 1 ? 's' : ''} from workflow start`;
+                              if (tod) txt += ` at ${tod}`;
+                              if (bh) txt += ', during business hours only (Mon–Fri 9 AM–5 PM)';
+                              txt += '.';
+                            }
+                            return (
+                              <div className="mt-2 flex items-start gap-2 bg-blue-50 border border-blue-100 !rounded-lg px-3 py-2">
+                                <svg className="w-3.5 h-3.5 mt-0.5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-xs text-blue-700 font-[BasisGrotesquePro]">{txt}</p>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         <div>
