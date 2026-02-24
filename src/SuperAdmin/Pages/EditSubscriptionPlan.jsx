@@ -332,10 +332,6 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       // Display settings
       display_name: displaySettings.displayName || null,
       description: displaySettings.description || null,
-      show_on_website: displaySettings.showOnWebsite,
-      show_price_on_website: displaySettings.showPriceOnWebsite,
-      price_cta_text: displaySettings.priceCtaText || null,
-      price_cta_url: displaySettings.priceCtaUrl || null,
       show_client_limit: displaySettings.showClientLimit,
       show_user_limit: displaySettings.showUserLimit,
       show_storage_limit: displaySettings.showStorageLimit,
@@ -347,7 +343,6 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       display_order: displaySettings.displayOrder,
       badge_text: displaySettings.badgeText || null,
       badge_color: displaySettings.badgeColor || null,
-      is_fully_configurable: displaySettings.isFullyConfigurable,
     };
 
     try {
@@ -363,7 +358,23 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       });
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData?.message || errData?.detail || 'Failed to update subscription plan');
+
+        // Log detailed error for debugging
+        console.error('API Error Response:', errData);
+
+        let errorMessage = errData?.message || errData?.detail || 'Failed to update subscription plan';
+
+        // Check for specific field errors
+        if (errData?.errors && typeof errData.errors === 'object') {
+          const fieldErrors = Object.entries(errData.errors)
+            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+            .join(' | ');
+          if (fieldErrors) {
+            errorMessage = `Validation failed: ${fieldErrors}`;
+          }
+        }
+
+        throw new Error(errorMessage);
       }
       setSuccess(true);
       toast.success('Subscription plan updated successfully!', {
@@ -374,6 +385,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
         onClose();
       }, 500);
     } catch (e) {
+      console.error('Update Error:', e);
       setError(e.message || 'Error occurred');
       toast.error(e.message || 'Error occurred', {
         position: "top-right",
@@ -1083,66 +1095,9 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   />
                 </div>
 
-                {/* Visibility Toggles */}
-                <div className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={displaySettings.showOnWebsite}
-                      onChange={(e) => setDisplaySettings(prev => ({ ...prev, showOnWebsite: e.target.checked }))}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-sm" style={{ color: '#3B4A66' }}>Show on Website</span>
-                  </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={displaySettings.showPriceOnWebsite}
-                      onChange={(e) => setDisplaySettings(prev => ({ ...prev, showPriceOnWebsite: e.target.checked }))}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-sm" style={{ color: '#3B4A66' }}>Show Price</span>
-                  </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={displaySettings.isFullyConfigurable}
-                      onChange={(e) => setDisplaySettings(prev => ({ ...prev, isFullyConfigurable: e.target.checked }))}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-sm" style={{ color: '#3B4A66' }}>Fully Configurable</span>
-                  </label>
-                </div>
 
-                {/* CTA Settings (shown when price is hidden) */}
-                {!displaySettings.showPriceOnWebsite && (
-                  <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4 p-3 bg-yellow-50 rounded-lg">
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>CTA Button Text</label>
-                      <input
-                        type="text"
-                        value={displaySettings.priceCtaText}
-                        onChange={(e) => setDisplaySettings(prev => ({ ...prev, priceCtaText: e.target.value }))}
-                        placeholder="Contact Sales"
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>CTA URL (Optional)</label>
-                      <input
-                        type="url"
-                        value={displaySettings.priceCtaUrl}
-                        onChange={(e) => setDisplaySettings(prev => ({ ...prev, priceCtaUrl: e.target.value }))}
-                        placeholder="https://calendly.com/your-link"
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Advanced Settings */}
