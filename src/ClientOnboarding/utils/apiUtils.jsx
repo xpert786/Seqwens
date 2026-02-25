@@ -5047,6 +5047,16 @@ export const superAdminAddonsAPI = {
     return await apiRequest(`/user/superadmin/firms/${firmId}/add-ons/`, 'GET');
   },
 
+  // Add addon to firm
+  addAddonToFirm: async (firmId, addonId, quantity = 1) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/add-ons/`, 'POST', { addon_id: addonId, quantity });
+  },
+
+  // Remove addon from firm
+  removeAddonFromFirm: async (firmId, addonId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/add-ons/`, 'DELETE', { addon_id: addonId });
+  },
+
   // Get simple addons list (for creating new addons)
   getSimpleAddons: async () => {
     return await apiRequest('/user/superadmin/add-ons/simple/', 'GET');
