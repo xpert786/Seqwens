@@ -425,6 +425,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       description: addon.description || '',
       price: addon.price || '',
       price_unit: addon.price_unit || 'per month',
+      billing_frequency: addon.billing_frequency || 'monthly',
       scope: addon.scope || 'firm',
       category: addon.category || 'other',
       unit_quantity: addon.unit_quantity || 1,
@@ -443,6 +444,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           description: editAddonForm.description,
           price: parseFloat(editAddonForm.price) || 0,
           price_unit: editAddonForm.price_unit,
+          billing_frequency: editAddonForm.billing_frequency || 'monthly',
           scope: editAddonForm.scope,
           category: editAddonForm.category,
           unit_quantity: parseInt(editAddonForm.unit_quantity) || 1,
@@ -450,11 +452,11 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
         })
       });
       if (!res.ok) throw new Error('Failed to update add-on');
-      const result = await res.json();
-      const updatedAddon = result.data || result;
-      setPlanAddons(prev => prev.map(a => a.id === addonId ? { ...a, ...updatedAddon } : a));
       setEditingAddonId(null);
       toast.success('Add-on updated.', { position: 'top-right', autoClose: 3000 });
+      // Re-fetch plan data so the addon card reflects the latest server values in the
+      // correct addons_with_pricing shape (avoids type-mismatch from AddOnSerializer output).
+      await fetchPlanData(activeTab);
     } catch (e) {
       toast.error(e.message || 'Error updating add-on', { position: 'top-right', autoClose: 3000 });
     }
@@ -872,77 +874,119 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       >
                         {editingAddonId === addon.id ? (
                           /* ── Inline Edit Mode ── */
-                          <div className="space-y-3">
-                            <input
-                              type="text" value={editAddonForm.name}
-                              onChange={e => setEditAddonForm(f => ({ ...f, name: e.target.value }))}
-                              className="w-full px-3 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                              placeholder="Add-on name"
-                            />
-                            <textarea
-                              value={editAddonForm.description}
-                              onChange={e => setEditAddonForm(f => ({ ...f, description: e.target.value }))}
-                              rows={2}
-                              className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                              style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                              placeholder="Description"
-                            />
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: '#3B4A66' }}>$</span>
-                                <input
-                                  type="number" step="0.01" min="0"
-                                  value={editAddonForm.price}
-                                  onChange={e => setEditAddonForm(f => ({ ...f, price: e.target.value }))}
-                                  className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                                />
-                              </div>
-                              <select
-                                value={editAddonForm.scope}
-                                onChange={e => setEditAddonForm(f => ({ ...f, scope: e.target.value }))}
-                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                              >
-                                <option value="firm">Firm-wide</option>
-                                <option value="office">Per Office</option>
-                              </select>
-                              <select
-                                value={editAddonForm.category}
-                                onChange={e => setEditAddonForm(f => ({ ...f, category: e.target.value }))}
-                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                              >
-                                <option value="esign">E-Sign</option>
-                                <option value="storage">Storage</option>
-                                <option value="workflow">Workflow</option>
-                                <option value="office">Office</option>
-                                <option value="staff">Staff</option>
-                                <option value="other">Other</option>
-                              </select>
-                            </div>
-                            {/* Capacity Edit Grid */}
-                            <div className="grid grid-cols-2 gap-3 mt-2 mb-2">
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">Qty</span>
-                                <input
-                                  type="number" min="1"
-                                  value={editAddonForm.unit_quantity}
-                                  onChange={e => setEditAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
-                                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                                />
-                              </div>
+                          <div className="space-y-4">
+                            {/* Name */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Add-on Name</label>
                               <input
-                                type="text"
-                                value={editAddonForm.unit_type}
-                                onChange={e => setEditAddonForm(f => ({ ...f, unit_type: e.target.value }))}
-                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                type="text" value={editAddonForm.name}
+                                onChange={e => setEditAddonForm(f => ({ ...f, name: e.target.value }))}
+                                className="w-full px-3 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                                placeholder="Unit (e.g. GB)"
+                                placeholder="Add-on name"
                               />
                             </div>
+
+                            {/* Description */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Description</label>
+                              <textarea
+                                value={editAddonForm.description}
+                                onChange={e => setEditAddonForm(f => ({ ...f, description: e.target.value }))}
+                                rows={2}
+                                className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                placeholder="Description"
+                              />
+                            </div>
+
+                            {/* Price, Billing Term, Scope, Category — 2×2 grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Price</label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: '#3B4A66' }}>$</span>
+                                  <input
+                                    type="number" step="0.01" min="0"
+                                    value={editAddonForm.price}
+                                    onChange={e => setEditAddonForm(f => ({ ...f, price: e.target.value }))}
+                                    className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Billing Term</label>
+                                <select
+                                  value={editAddonForm.billing_frequency}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, billing_frequency: e.target.value }))}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                >
+                                  <option value="monthly">Monthly</option>
+                                  <option value="yearly">Annually</option>
+                                  <option value="one_time">One-time Fee</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Scope</label>
+                                <select
+                                  value={editAddonForm.scope}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, scope: e.target.value }))}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                >
+                                  <option value="firm">Firm-wide</option>
+                                  <option value="office">Per Office</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Category</label>
+                                <select
+                                  value={editAddonForm.category}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, category: e.target.value }))}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                >
+                                  <option value="esign">E-Sign</option>
+                                  <option value="storage">Storage</option>
+                                  <option value="workflow">Workflow</option>
+                                  <option value="office">Office</option>
+                                  <option value="staff">Staff</option>
+                                  <option value="other">Other</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Capacity Edit Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Limit Value</label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">Qty</span>
+                                  <input
+                                    type="number" min="1"
+                                    value={editAddonForm.unit_quantity}
+                                    onChange={e => setEditAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
+                                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Unit Type</label>
+                                <input
+                                  type="text"
+                                  value={editAddonForm.unit_type}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, unit_type: e.target.value }))}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  placeholder="Unit (e.g. GB)"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Actions */}
                             <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid #E8F0FF' }}>
                               <button
                                 onClick={() => setEditingAddonId(null)}
@@ -951,7 +995,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                               >Cancel</button>
                               <button
                                 onClick={() => handleSaveEdit(addon.id)}
-                                className="px-4 py-1.5 text-xs font-bold text-white rounded-lg transition-all"
+                                className="px-4 py-2 text-xs font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
                                 style={{ backgroundColor: '#3B4A66' }}
                               >Save</button>
                             </div>
@@ -1007,7 +1051,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid #E8F0FF' }}>
                               <div className="flex items-center gap-1.5">
                                 <span className="text-lg font-bold" style={{ color: '#3B4A66' }}>${parseFloat(addon.price || 0).toFixed(2)}</span>
-                                <span className="text-[10px] font-medium opacity-60" style={{ color: '#3B4A66' }}>{addon.price_unit || 'per month'}</span>
+                                <span className="text-[10px] font-medium opacity-60" style={{ color: '#3B4A66' }}>{addon.billing_frequency === 'one_time' ? 'one-time' : addon.billing_frequency === 'yearly' ? 'per year' : 'per month'}</span>
                               </div>
                               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full" style={{
                                 backgroundColor: addon.scope === 'office' ? '#FEF3C7' : '#DBEAFE',
@@ -1370,13 +1414,16 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Quantity</label>
-                  <input
-                    type="number" min="1"
-                    value={newAddonForm.unit_quantity}
-                    onChange={e => setNewAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">Qty</span>
+                    <input
+                      type="number" min="1"
+                      value={newAddonForm.unit_quantity}
+                      onChange={e => setNewAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
+                      className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    />
+                  </div>
                 </div>
               </div>
 

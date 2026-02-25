@@ -16,6 +16,7 @@ const PersonalInfo = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [hasTyped, setHasTyped] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -116,18 +117,27 @@ const PersonalInfo = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    const passwordValidation = validatePassword(password);
+    const validateLength = password.length >= 8;
+    const validateNumber = /\d/.test(password);
+    const validateUpperLower = /(?=.*[a-z])(?=.*[A-Z])/.test(password);
+    const validateSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (!passwordValidation.isValid) {
-      newErrors.password = 'Password does not meet requirements';
+      newErrors.password = '⚠️ Password is required.';
+    } else if (!validateLength) {
+      newErrors.password = '⚠️ Password must be at least 8 characters.';
+    } else if (!validateUpperLower) {
+      newErrors.password = '⚠️ Password must include both uppercase and lowercase letters.';
+    } else if (!validateNumber) {
+      newErrors.password = '⚠️ Password must include at least one number.';
+    } else if (!validateSpecialChar) {
+      newErrors.password = '⚠️ Password must include at least one special character.';
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = '⚠️ Please confirm your password.';
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = '⚠️ Passwords do not match.';
     }
 
     if (!termsAccepted) {
@@ -137,6 +147,7 @@ const PersonalInfo = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -188,6 +199,7 @@ const PersonalInfo = () => {
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
+                      if (!hasTyped && e.target.value) setHasTyped(true);
                       if (errors.password) {
                         setErrors(prev => ({ ...prev, password: '' }));
                       }
@@ -205,43 +217,34 @@ const PersonalInfo = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <div className="invalid-feedback">{errors.password}</div>
+                  <div className="invalid-feedback d-block" style={{ color: '#dc3545', marginTop: '6px', fontSize: '13px' }}>{errors.password}</div>
                 )}
               </div>
 
               {/* Strength Meter */}
-              <div className="password-strength">
-                <PasswordStrengthBar
-                  v1={validateLength}
-                  v2={validateNumber}
-                  v3={validateUpperLower}
-                  v4={validateSpecialChar}
-                />
-                <div className="criteria">
-                  <div
-                    className={`criteria-item ${validateLength ? "valid" : "invalid"
-                      }`}
-                  >
-                    {validateLength ? "✔" : "✘"} At Least 8 Characters
+              <div className="password-strength-box">
+                <div className="password-strength-label mb-2">Password Strength:</div>
+                <div className="d-flex align-items-start mb-3">
+                  <PasswordStrengthBar
+                    v1={hasTyped && validateLength}
+                    v2={hasTyped && validateNumber}
+                    v3={hasTyped && validateUpperLower}
+                    v4={hasTyped && validateSpecialChar}
+                    inactiveColor="#D1D5DB"
+                  />
+                </div>
+                <div className="d-flex flex-column gap-2 password-criteria">
+                  <div className="small d-flex align-items-center gap-2" style={{ color: hasTyped && validateLength ? '#22C55E' : '#6B7280' }}>
+                    {hasTyped && validateLength ? '✔' : '•'} At least 8 characters
                   </div>
-                  <div
-                    className={`criteria-item ${validateNumber ? "valid" : "invalid"
-                      }`}
-                  >
-                    {validateNumber ? "✔" : "✘"} At least one number
+                  <div className="small d-flex align-items-center gap-2" style={{ color: hasTyped && validateUpperLower ? '#22C55E' : '#6B7280' }}>
+                    {hasTyped && validateUpperLower ? '✔' : '•'} One uppercase and one lowercase letter
                   </div>
-                  <div
-                    className={`criteria-item ${validateUpperLower ? "valid" : "invalid"
-                      }`}
-                  >
-                    {validateUpperLower ? "✔" : "✘"} Uppercase/Lowercase letter
+                  <div className="small d-flex align-items-center gap-2" style={{ color: hasTyped && validateNumber ? '#22C55E' : '#6B7280' }}>
+                    {hasTyped && validateNumber ? '✔' : '•'} One number
                   </div>
-                  <div
-                    className={`criteria-item ${validateSpecialChar ? "valid" : "invalid"
-                      }`}
-                  >
-                    {validateSpecialChar ? "✔" : "✘"} At least one special
-                    character
+                  <div className="small d-flex align-items-center gap-2" style={{ color: hasTyped && validateSpecialChar ? '#22C55E' : '#6B7280' }}>
+                    {hasTyped && validateSpecialChar ? '✔' : '•'} One special character
                   </div>
                 </div>
               </div>
@@ -274,7 +277,7 @@ const PersonalInfo = () => {
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <div className="invalid-feedback">{errors.confirmPassword}</div>
+                  <div className="invalid-feedback d-block" style={{ color: '#dc3545', marginTop: '6px', fontSize: '13px' }}>{errors.confirmPassword}</div>
                 )}
               </div>
 

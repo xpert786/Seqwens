@@ -234,6 +234,16 @@ const AddOns = () => {
                                 Per Office
                             </div>
                         )}
+                        {!isIncluded && addon.billing_frequency && (
+                            <div className="text-[10px] font-bold uppercase tracking-wider mt-1" style={{
+                                color: addon.billing_frequency === 'one_time' ? '#7C3AED' :
+                                    addon.billing_frequency === 'yearly' ? '#065F46' : '#1D4ED8'
+                            }}>
+                                {addon.billing_frequency === 'monthly' ? '● Billed Monthly' :
+                                    addon.billing_frequency === 'yearly' ? '● Billed Annually' :
+                                        addon.billing_frequency === 'one_time' ? '● One-time Fee' : ''}
+                            </div>
+                        )}
                     </div>
 
                     {!isIncluded && (

@@ -82,32 +82,24 @@
   z-index: 10 !important;
 }
 
-.password-strength {
-  background: #ffffff !important;
+.password-strength-box {
+  background-color: #ffffff !important;
   border: 1px solid #e8f0ff !important;
   border-radius: 8px !important;
-  padding: 15px !important;
-  margin-bottom: 15px !important;
-}
-
-.criteria {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 15px !important;
   margin-top: 10px !important;
+  margin-bottom: 15px !important;
+  padding: 16px !important;
 }
 
-.criteria-item {
-  font-family: "BasisGrotesquePro" !important;
-  font-size: 13px !important;
+.password-strength-label {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #3B4A66 !important;
+  font-family: "BasisGrotesquePro", sans-serif !important;
 }
 
-.criteria-item.valid {
-  color: green !important;
-}
-
-.criteria-item.invalid {
-  color: red !important;
+.password-criteria .small {
+  font-family: "BasisGrotesquePro", sans-serif !important;
 }
 
 .highlight {

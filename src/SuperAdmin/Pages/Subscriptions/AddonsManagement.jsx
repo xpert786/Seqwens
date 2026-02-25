@@ -360,7 +360,12 @@ export default function AddonsManagement() {
                       <div className="text-xs text-gray-500">{addon.price_unit || 'per month'}</div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
-                      <span className="capitalize">{addon.billing_frequency || 'monthly'}</span>
+                      <span className="capitalize">
+                        {addon.billing_frequency === 'monthly' ? 'Monthly' :
+                          addon.billing_frequency === 'yearly' ? 'Annually' :
+                            addon.billing_frequency === 'one_time' ? 'One-time Fee' :
+                              (addon.billing_frequency || 'Monthly')}
+                      </span>
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${addon.is_active
@@ -667,7 +672,8 @@ export default function AddonsManagement() {
                     className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
                   >
                     <option value="monthly">Monthly</option>
-                    <option value="one_time">One Time</option>
+                    <option value="yearly">Annually</option>
+                    <option value="one_time">One-time Fee</option>
                   </select>
                 </div>
               </div>
