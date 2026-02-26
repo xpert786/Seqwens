@@ -40,7 +40,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
   // Fetch available addons
   const fetchAvailableAddons = useCallback(async () => {
     try {
-      const response = await superAdminAddonsAPI.listAddons();
+      const response = await superAdminAddonsAPI.listAddons(firmId);
 
       if (response.success && response.data) {
         // Filter to only show active addons that aren't already added
@@ -336,15 +336,26 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                             {addon.description}
                           </p>
                         )}
+                        <div className="flex flex-col gap-1 mb-2">
+                          <p className="text-sm font-medium text-[#F56D2D] font-[BasisGrotesquePro]">
+                            {addon.limit_type === 'unlimited'
+                              ? `Unlimited ${addon.unit_type || addon.category}`
+                              : `Gives ${addon.unit_quantity || 0} ${addon.unit_type || (addon.category === 'storage' ? 'GB' : 'Units')} ${addon.billing_frequency === 'one_time' ? '' : 'per month'}`
+                            }
+                          </p>
+                        </div>
                         <div className="flex items-center gap-4 text-sm">
                           <span className="font-semibold text-gray-900 font-[BasisGrotesquePro]">
                             {addon.price_display || formatCurrency(addon.price)}
                           </span>
-                          <span className="text-gray-600 font-[BasisGrotesquePro]">
-                            {addon.price_unit || 'per use'}
+                          <span className="text-gray-500 font-[BasisGrotesquePro] lowercase">
+                            {addon.price_unit || (addon.billing_frequency === 'one_time' ? 'total' : 'per month')}
                           </span>
-                          <span className="text-gray-600 font-[BasisGrotesquePro] capitalize">
-                            {addon.billing_frequency || 'one_time'} billing
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${addon.billing_frequency === 'one_time'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-indigo-100 text-indigo-700'
+                            }`}>
+                            {addon.billing_frequency || 'one_time'}
                           </span>
                         </div>
                       </div>

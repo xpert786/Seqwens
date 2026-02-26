@@ -5012,9 +5012,10 @@ export const superAdminBillingAPI = {
 
 // Super Admin Addons API functions
 export const superAdminAddonsAPI = {
-  // List all addons
-  listAddons: async () => {
-    return await apiRequest('/user/superadmin/add-ons/', 'GET');
+  // List all available addons for super admin
+  listAddons: async (firmId = null) => {
+    const url = firmId ? `/user/superadmin/add-ons/?firm_id=${firmId}` : '/user/superadmin/add-ons/';
+    return await apiRequest(url, 'GET');
   },
 
   // Create addon
