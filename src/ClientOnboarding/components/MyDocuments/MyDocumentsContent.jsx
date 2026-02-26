@@ -1678,7 +1678,7 @@ export default function MyDocumentsContent() {
                                                 minHeight: '300px',
                                                 border: 'none',
                                             }}
-                                        ></iframe>
+                                        ></iframe>  
                                     );
                                 } else if (isImage) {
                                     return (
