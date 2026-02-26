@@ -10,7 +10,7 @@ export default function FeedbackWrapper({ children }) {
   useEffect(() => {
     const checkFeedbackStatus = async () => {
       console.log('FeedbackWrapper: Starting feedback check...');
-      
+
       // Only check if user is logged in
       if (!isLoggedIn()) {
         console.log('FeedbackWrapper: User not logged in, skipping feedback check');
@@ -34,18 +34,18 @@ export default function FeedbackWrapper({ children }) {
         // First, check account age from maintenance mode API
         console.log('FeedbackWrapper: Checking account age...');
         const maintenanceResponse = await maintenanceModeAPI.getMaintenanceStatus();
-        
+
         if (maintenanceResponse.success) {
           const accountAgeDays = maintenanceResponse.account_age_days || 0;
           console.log('FeedbackWrapper: Account age (days):', accountAgeDays);
-          
+
           // Only proceed if account is older than 5 days
           if (accountAgeDays <= 5) {
             console.log('FeedbackWrapper: Account age is', accountAgeDays, 'days (must be > 5), skipping feedback check');
             setCheckedFeedback(true);
             return;
           }
-          
+
           console.log('FeedbackWrapper: Account age is', accountAgeDays, 'days (> 5), proceeding with feedback check');
         } else {
           console.log('FeedbackWrapper: Could not get account age, skipping feedback check');
@@ -57,40 +57,41 @@ export default function FeedbackWrapper({ children }) {
         console.log('FeedbackWrapper: Calling feedback status API...');
         const response = await firmAdminMessagingAPI.getFeedbackStatus();
         console.log('FeedbackWrapper: API response:', response);
-        
+
         if (response.success) {
           // Check if feedback has been submitted (API is the source of truth)
           // The API might return has_feedback, submitted, or feedback_submitted
           const hasFeedback = response.has_feedback || response.submitted || response.feedback_submitted || false;
-          
+
           console.log('FeedbackWrapper: Has feedback:', hasFeedback);
-          
+
           // If feedback is already submitted, never show the modal
           if (hasFeedback) {
             console.log('FeedbackWrapper: ❌ User has already submitted feedback, not showing modal');
             setCheckedFeedback(true);
             return;
           }
-          
+
           // Feedback not submitted - check localStorage to see if we've shown it before
+          // NOTE: Always use localStorage (not sessionStorage) so this flag persists across sessions
           const feedbackShownKey = 'feedback_modal_shown';
-          const hasShownBefore = storage?.getItem(feedbackShownKey) === 'true';
-          
+          const hasShownBefore = localStorage.getItem(feedbackShownKey) === 'true';
+
           if (hasShownBefore) {
             console.log('FeedbackWrapper: Modal already shown before, skipping');
             setCheckedFeedback(true);
             return;
           }
-          
+
           // Show modal only if feedback has NOT been submitted AND we haven't shown it before
           console.log('FeedbackWrapper: ✅ User has not submitted feedback and modal not shown before, showing modal in 1 second');
-          // Mark as shown in localStorage to prevent showing again
-          storage?.setItem(feedbackShownKey, 'true');
-            // Small delay to ensure page is loaded
-            setTimeout(() => {
-              console.log('FeedbackWrapper: ✅ Setting showFeedbackModal to true');
-              setShowFeedbackModal(true);
-            }, 1000);
+          // Mark as shown in localStorage BEFORE showing to prevent race conditions
+          localStorage.setItem(feedbackShownKey, 'true');
+          // Small delay to ensure page is loaded
+          setTimeout(() => {
+            console.log('FeedbackWrapper: ✅ Setting showFeedbackModal to true');
+            setShowFeedbackModal(true);
+          }, 1000);
         } else {
           console.log('FeedbackWrapper: API response was not successful:', response);
         }
@@ -106,16 +107,14 @@ export default function FeedbackWrapper({ children }) {
   }, []);
 
   const handleFeedbackSubmitted = () => {
-    // Mark feedback as submitted in localStorage to prevent showing again
-    const storage = getStorage();
-    storage?.setItem('feedback_modal_shown', 'true');
+    // Always use localStorage (not sessionStorage) so this persists across sessions
+    localStorage.setItem('feedback_modal_shown', 'true');
     setShowFeedbackModal(false);
   };
 
   const handleCloseModal = () => {
-    // Mark as shown in localStorage to prevent showing again even if closed without submitting
-    const storage = getStorage();
-    storage?.setItem('feedback_modal_shown', 'true');
+    // Always use localStorage (not sessionStorage) so this persists across sessions
+    localStorage.setItem('feedback_modal_shown', 'true');
     setShowFeedbackModal(false);
   };
 

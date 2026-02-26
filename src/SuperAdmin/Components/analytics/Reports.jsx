@@ -466,11 +466,11 @@ export default function Reports() {
         time_period: platformReportForm.time_period,
         format: platformReportForm.format,
         include_detailed_breakdowns: platformReportForm.include_detailed_breakdowns,
+        include_charts: platformReportForm.include_charts,
+        include_raw_data: platformReportForm.include_raw_data,
         // Include dynamic filters if they exist
         ...(platformReportForm.firm_filter && { firm_filter: platformReportForm.firm_filter }),
         ...(platformReportForm.user_type_filter && { user_type_filter: platformReportForm.user_type_filter }),
-        ...(platformReportForm.include_charts !== undefined && { include_charts: platformReportForm.include_charts }),
-        ...(platformReportForm.include_raw_data !== undefined && { include_raw_data: platformReportForm.include_raw_data })
       };
 
       // Add custom dates if time period is custom
@@ -481,12 +481,41 @@ export default function Reports() {
 
       const response = await superAdminAPI.generateReport(requestData);
 
+      // Handle synchronous completion (Celery fallback)
+      if (response?.status === 'SUCCESS' && response?.success) {
+        setPlatformReportTaskId(response.task_id);
+        setPlatformReportStatus('SUCCESS');
+        setPlatformReportFileUrl(response.file_url);
+        setPlatformReportDetails({
+          report_id: response.report_id,
+          rows_count: response.rows_count,
+          generation_time: response.generation_time
+        });
+        setPlatformReportLoading(false);
+        setFeedback({ type: 'success', message: 'Report generated successfully! Downloading...' });
+        toast.success('Report generated successfully! Downloading...', superToastOptions);
+        fetchGeneratedReportsHistory();
+
+        // Trigger download
+        if (response.file_url) {
+          const link = document.createElement('a');
+          link.href = response.file_url;
+          link.download = `report_${response.report_id || 'download'}.${platformReportForm.format}`;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        return;
+      }
+
+      // Handle async (Celery) dispatch — start polling
       if (response?.task_id) {
         setPlatformReportTaskId(response.task_id);
         setFeedback({ type: 'info', message: 'Report generation started. Please wait...' });
         toast.info('Report generation started. Checking status...', superToastOptions);
 
-        // Start polling for status with exponential backoff
         let pollCount = 0;
         const pollInterval = setInterval(async () => {
           pollCount++;
@@ -500,9 +529,9 @@ export default function Reports() {
             setFeedback({ type: 'error', message: 'Report generation timed out. Please try again.' });
             toast.error('Report generation timed out', superToastOptions);
           }
-        }, 3000); // Poll every 3 seconds
+        }, 3000);
       } else {
-        throw new Error(response?.message || 'Failed to start report generation');
+        throw new Error(response?.error || response?.message || 'Failed to start report generation');
       }
     } catch (err) {
       const errorMsg = handleAPIError(err);
@@ -923,8 +952,8 @@ export default function Reports() {
           {/* Status indicator */}
           {platformReportStatus && (
             <div className={`p-3 rounded-lg border ${platformReportStatus === 'SUCCESS' ? 'bg-green-50 border-green-200' :
-                platformReportStatus === 'FAILED' ? 'bg-red-50 border-red-200' :
-                  'bg-blue-50 border-blue-200'
+              platformReportStatus === 'FAILED' ? 'bg-red-50 border-red-200' :
+                'bg-blue-50 border-blue-200'
               }`}>
               <div className="flex items-center gap-2">
                 {platformReportStatus === 'SUCCESS' && (
@@ -944,10 +973,10 @@ export default function Reports() {
                   </svg>
                 )}
                 <span className={`text-sm font-medium ${platformReportStatus === 'SUCCESS' ? 'text-green-800' :
-                    platformReportStatus === 'FAILED' ? 'text-red-800' :
-                      platformReportStatus === 'TIMEOUT' ? 'text-red-800' :
-                        platformReportStatus === 'PROGRESS' ? 'text-orange-800' :
-                          'text-blue-800'
+                  platformReportStatus === 'FAILED' ? 'text-red-800' :
+                    platformReportStatus === 'TIMEOUT' ? 'text-red-800' :
+                      platformReportStatus === 'PROGRESS' ? 'text-orange-800' :
+                        'text-blue-800'
                   }`}>
                   {platformReportStatus === 'SUCCESS' && 'Report Ready'}
                   {platformReportStatus === 'PENDING' && 'Report queued for processing...'}
@@ -1065,9 +1094,9 @@ export default function Reports() {
                     </td>
                     <td className="py-2 px-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${report.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          report.status === 'failed' ? 'bg-red-100 text-red-800' :
-                            report.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
+                        report.status === 'failed' ? 'bg-red-100 text-red-800' :
+                          report.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
                         }`}>
                         {report.status === 'completed' && (
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -1179,8 +1208,8 @@ export default function Reports() {
                         <button
                           onClick={() => handleToggleScheduledReport(schedule.id, schedule.is_active)}
                           className={`px-3 py-1 rounded text-xs font-medium transition-colors ${schedule.is_active
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                             }`}
                         >
                           {schedule.is_active ? 'Active' : 'Paused'}

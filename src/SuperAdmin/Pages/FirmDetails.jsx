@@ -6,6 +6,7 @@ import { setTokens, clearUserData, setImpersonationData } from '../../ClientOnbo
 import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import FirmAddonsTab from './FirmDetails/FirmAddonsTab';
 
 import '../style/FirmDetails.css';
 
@@ -271,6 +272,7 @@ export default function FirmDetails() {
     const tabs = useMemo(() => [
         { id: 'Overview', label: 'Overview' },
         { id: 'Billing', label: 'Billing' },
+        { id: 'Add-ons', label: 'Add-ons' },
         { id: 'Settings', label: 'Settings' }
     ], []);
 
@@ -724,8 +726,8 @@ export default function FirmDetails() {
                                         type="button"
                                         onClick={() => setShowActionConfirm(true)}
                                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${getActionType() === 'reactivate'
-                                                ? 'bg-white text-green-600 border-green-200 hover:bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-900'
-                                                : 'bg-white text-red-600 border-red-200 hover:bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-900'
+                                            ? 'bg-white text-green-600 border-green-200 hover:bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-900'
+                                            : 'bg-white text-red-600 border-red-200 hover:bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-900'
                                             }`}
                                         style={{ borderRadius: '8px' }}
                                     >
@@ -906,7 +908,12 @@ export default function FirmDetails() {
                             />
                         )}
 
-
+                        {activeTab === 'Add-ons' && (
+                            <FirmAddonsTab
+                                firmId={firmId}
+                                firmName={firmDetails?.name}
+                            />
+                        )}
 
                         {activeTab === 'Settings' && (
                             <div className="rounded-xl bg-white/95 dark:bg-gray-800/95 p-6">

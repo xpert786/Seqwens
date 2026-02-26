@@ -410,6 +410,11 @@ export const superAdminAPI = {
     return await apiRequest(`/user/superadmin/users/${userId}/reset-password/`, 'POST', payload);
   },
 
+  // Reset user 2FA (disable)
+  resetUser2FA: async (userId) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/reset-2fa/`, 'POST');
+  },
+
   // Permanently delete user from platform (HARD delete)
   hardDeleteUser: async (userId) => {
     return await apiRequest(`/user/superadmin/users/${userId}/hard-delete/`, 'POST');

@@ -69,23 +69,23 @@ export default function FirmAddonsTab({ firmId, firmName }) {
   const handleAddAddon = async (addonId) => {
     try {
       setAddingAddon(addonId);
-      // Note: This endpoint might need to be created on the backend
-      // For now, we'll use the firm admin endpoint if super admin has access
-      // Or we might need to create a super admin specific endpoint
+
       toast.info('Adding addon to firm...', {
         position: 'top-right',
         autoClose: 2000
       });
 
-      // TODO: Implement super admin endpoint to add addon to firm
-      // For now, show a message that this needs backend support
-      toast.warning('Super admin add addon endpoint needs to be implemented', {
-        position: 'top-right',
-        autoClose: 3000
-      });
+      const response = await superAdminAddonsAPI.addAddonToFirm(firmId, addonId, 1);
 
-      // After implementation, refresh the list
-      // await fetchFirmAddons();
+      if (response.success) {
+        toast.success(response.message || 'Addon added successfully', {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        fetchFirmAddons();
+      } else {
+        throw new Error(response.message || 'Failed to add addon');
+      }
     } catch (err) {
       console.error('Error adding addon:', err);
       const errorMsg = handleAPIError(err);
@@ -109,18 +109,19 @@ export default function FirmAddonsTab({ firmId, firmName }) {
 
     try {
       setRemovingAddon(addonToRemove.id);
-      // TODO: Implement super admin endpoint to remove addon from firm
-      toast.warning('Super admin remove addon endpoint needs to be implemented', {
-        position: 'top-right',
-        autoClose: 3000
-      });
 
-      // After implementation:
-      // const response = await superAdminAddonsAPI.removeAddonFromFirm(firmId, addonToRemove.id);
-      // if (response.success) {
-      //   toast.success(response.message || 'Addon removed successfully');
-      //   fetchFirmAddons();
-      // }
+      const addonId = addonToRemove.addon?.id || addonToRemove.addon_id;
+      const response = await superAdminAddonsAPI.removeAddonFromFirm(firmId, addonId);
+
+      if (response.success) {
+        toast.success(response.message || 'Addon removed successfully', {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        fetchFirmAddons();
+      } else {
+        throw new Error(response.message || 'Failed to remove addon');
+      }
 
       setShowRemoveConfirm(false);
       setAddonToRemove(null);
@@ -230,8 +231,8 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                         {addon.name || 'Unknown Addon'}
                       </h6>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full font-[BasisGrotesquePro] ${firmAddon.is_active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-700'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-700'
                         }`}>
                         {firmAddon.is_active ? 'Active' : 'Inactive'}
                       </span>

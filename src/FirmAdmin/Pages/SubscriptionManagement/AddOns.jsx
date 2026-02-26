@@ -51,6 +51,13 @@ const CATEGORIES = [
                 <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
         )
+    },
+    {
+        id: 'other', label: 'Extensions', icon: (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+        )
     }
 ];
 
@@ -162,7 +169,7 @@ const AddOns = () => {
     const filteredAddons = useMemo(() => {
         return marketplaceAddOns.filter(addon => {
             const matchesCategory = selectedCategory === 'all' ||
-                (addon.addon_type && addon.addon_type.toLowerCase().includes(selectedCategory.toLowerCase()));
+                (addon.category && addon.category.toLowerCase() === selectedCategory.toLowerCase());
             const matchesSearch = !searchQuery ||
                 addon.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (addon.description && addon.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -220,11 +227,23 @@ const AddOns = () => {
                 <div className="pt-6 border-t border-gray-50 flex flex-col gap-4">
                     <div className="flex flex-col text-left">
                         <div className="text-2xl font-bold text-gray-900">
-                            {isIncluded ? 'Free' : (addon.price_display ? addon.price_display.split('/')[0] : `$${parseFloat(addon.price || 0).toFixed(0)}`)}
+                            {isIncluded ? 'Included' : (addon.price_display || `$${parseFloat(addon.price || 0).toFixed(0)}`)}
                         </div>
-                        <div className="text-xs text-gray-400 uppercase font-bold tracking-widest mt-1">
-                            {addon.billing_frequency === 'monthly' ? 'PER MONTH' : 'ONE-TIME'}
-                        </div>
+                        {addon.scope === 'office' && !isIncluded && (
+                            <div className="text-[10px] text-orange-600 font-bold uppercase tracking-wider mt-0.5">
+                                Per Office
+                            </div>
+                        )}
+                        {!isIncluded && addon.billing_frequency && (
+                            <div className="text-[10px] font-bold uppercase tracking-wider mt-1" style={{
+                                color: addon.billing_frequency === 'one_time' ? '#7C3AED' :
+                                    addon.billing_frequency === 'yearly' ? '#065F46' : '#1D4ED8'
+                            }}>
+                                {addon.billing_frequency === 'monthly' ? '● Billed Monthly' :
+                                    addon.billing_frequency === 'yearly' ? '● Billed Annually' :
+                                        addon.billing_frequency === 'one_time' ? '● One-time Fee' : ''}
+                            </div>
+                        )}
                     </div>
 
                     {!isIncluded && (

@@ -349,11 +349,11 @@ export default function Login() {
           {!requires2FA ? (
             <form onSubmit={handleLogin} className="login-form">
               <div className="form-group">
-                <label className="form-label">Email or Username</label>
+                <label className="form-label">Email</label>
                 <input
                   type="email"
                   className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                  placeholder="Enter your email or username"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);

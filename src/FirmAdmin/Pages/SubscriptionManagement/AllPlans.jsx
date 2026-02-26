@@ -280,6 +280,13 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
 
     // Get available addons for a plan
     const getAvailableAddons = (plan) => {
+        // Use the new dynamic addons_with_pricing if available
+        if (plan.addons_with_pricing && Array.isArray(plan.addons_with_pricing)) {
+            return plan.addons_with_pricing
+                .filter(addon => addon.is_available && !addon.is_included)
+                .map(addon => addon.name);
+        }
+
         const addons = [];
         if (plan.additional_storage_addon) {
             addons.push('Additional Storage');
@@ -291,6 +298,15 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
             addons.push('Priority Support');
         }
         return addons;
+    };
+
+    const getIncludedAddons = (plan) => {
+        if (plan.addons_with_pricing && Array.isArray(plan.addons_with_pricing)) {
+            return plan.addons_with_pricing
+                .filter(addon => addon.is_included)
+                .map(addon => addon.name);
+        }
+        return [];
     };
 
     // Handle upgrade button click
@@ -423,6 +439,7 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                         const isMostPopular = plan.most_popular || false;
                         const discountPercentage = plan.discount_percentage || plan.discount_percentage_yearly || 0;
                         const availableAddons = getAvailableAddons(plan);
+                        const includedAddons = getIncludedAddons(plan);
                         const isCurrent = isCurrentPlan(plan);
 
                         return (
@@ -567,6 +584,17 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                                         </span>
                                                     </div>
                                                 )}
+                                                {/* Add included add-ons */}
+                                                {includedAddons.map((addon, index) => (
+                                                    <div key={`inc-${index}`} className="flex items-start gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        <span className="text-[10px] sm:text-[11px] text-gray-700 font-[BasisGrotesquePro] leading-tight font-bold">
+                                                            {addon} Included
+                                                        </span>
+                                                    </div>
+                                                ))}
                                             </>
                                         )}
                                     </div>

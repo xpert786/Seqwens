@@ -230,6 +230,29 @@ const CreateAccount = () => {
               </button>
             </form>
           </div>
+
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <span style={{ color: '#ffffffcc', fontSize: '14px', fontFamily: 'BasisGrotesquePro, sans-serif' }}>
+              Already have an account?{' '}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#F49C2D',
+                fontSize: '14px',
+                fontFamily: 'BasisGrotesquePro, sans-serif',
+                fontWeight: '600',
+                cursor: 'pointer',
+                padding: 0,
+                textDecoration: 'underline',
+              }}
+            >
+              Back to Login
+            </button>
+          </div>
         </div>
       </div>
     </FixedLayout>
