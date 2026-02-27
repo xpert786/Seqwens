@@ -40,6 +40,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
   // Link identity confirmation state
   const [linkConfirmation, setLinkConfirmation] = useState(null);
+  const [archivedConfirmation, setArchivedConfirmation] = useState(null);
+  const [restoring, setRestoring] = useState(false);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -67,6 +69,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setInviteActionMethod(null);
       setInviteLinkRefreshing(false);
       setLinkConfirmation(null);
+      setArchivedConfirmation(null);
+      setRestoring(false);
     }
   }, [isOpen]);
 
@@ -584,6 +588,16 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
           return;
         }
 
+        // Handle Archived Client Confirmation
+        if (errorData.archived === true) {
+          setLoading(false);
+          setArchivedConfirmation({
+            message: errorData.message || "This email is associated with an archived client. Do you want to restore them?",
+            clientId: errorData.client_id
+          });
+          return;
+        }
+
         throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
@@ -742,6 +756,49 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     }
   };
 
+  const handleRestoreArchivedClient = async () => {
+    if (!archivedConfirmation?.clientId) return;
+
+    try {
+      setRestoring(true);
+      setError('');
+
+      const response = await firmAdminClientsAPI.restoreClient(archivedConfirmation.clientId);
+
+      if (response.success) {
+        setRestoring(false);
+        setArchivedConfirmation(null);
+
+        // Reset form
+        setFormData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone_number: ''
+        });
+
+        // Close modal
+        onClose();
+
+        // Show success message
+        toast.success(response.message || "Client restored successfully!", getToastOptions());
+
+        // Refresh list
+        if (onClientCreated) {
+          onClientCreated();
+        }
+      } else {
+        throw new Error(response.message || 'Failed to restore client');
+      }
+    } catch (err) {
+      console.error('Error restoring client:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to restore client.');
+      setRestoring(false);
+    }
+  };
+
+
 
   return (
     <>
@@ -852,6 +909,50 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                       </>
                     ) : (
                       'Yes, Link Identity'
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : archivedConfirmation ? (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="bg-orange-100 p-3 rounded-full">
+                    <FaExclamationTriangle className="text-orange-600 text-2xl" />
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">Archived Client Found</h3>
+
+                <p className="text-gray-700 font-[BasisGrotesquePro]">
+                  {archivedConfirmation.message}
+                </p>
+
+                <div className="flex gap-3 justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setArchivedConfirmation(null)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium font-[BasisGrotesquePro]"
+                    disabled={restoring}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRestoreArchivedClient}
+                    disabled={restoring}
+                    className="px-4 py-2 text-white rounded-lg hover:brightness-90 font-medium font-[BasisGrotesquePro] flex items-center"
+                    style={{ backgroundColor: 'var(--firm-primary-color, #ea580c)' }}
+                  >
+                    {restoring ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Restoring...
+                      </>
+                    ) : (
+                      'Yes, Restore Client'
                     )}
                   </button>
                 </div>
