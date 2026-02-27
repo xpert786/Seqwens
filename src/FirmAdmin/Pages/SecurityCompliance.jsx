@@ -919,7 +919,6 @@ export default function SecurityCompliance() {
                                                         </button>
                                                     </>
                                                 )}
-
                                             </div>
                                         </td>
                                     </tr>

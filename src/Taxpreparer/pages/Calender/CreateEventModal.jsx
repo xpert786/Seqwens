@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Cut, BlackCalender, PlusIcon, CrossIcon, ZoomIcon, GoogleMeetIcon } from '../../component/icons';
 import { FiX } from 'react-icons/fi';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError, staffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { US_TIMEZONES } from '../../../utils/timezoneConstants';
+import DatePicker from '../../../components/DatePicker';
 
 const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   const [formData, setFormData] = useState({
@@ -23,15 +24,38 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [availableSlots, setAvailableSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-
-  // Fetch clients list
+  const [availableDates, setAvailableDates] = useState([]);
+  const [loadingDates, setLoadingDates] = useState(false);
+  const [currentPreparerId, setCurrentPreparerId] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  // Fetch clients and available dates
   useEffect(() => {
     if (isOpen) {
       fetchClients();
+      const userData = getUserData();
+      if (userData && (userData.id || userData.user_id)) {
+        const preparerId = userData.id || userData.user_id;
+        setCurrentPreparerId(preparerId);
+        fetchAvailableDates(preparerId);
+      }
     }
   }, [isOpen]);
+
+  const fetchAvailableDates = async (preparerId) => {
+    try {
+      setLoadingDates(true);
+      const response = await staffAPI.getAvailableDates(preparerId);
+      if (response.success && response.data && response.data.available_dates) {
+        setAvailableDates(response.data.available_dates);
+      }
+    } catch (error) {
+      console.error('Error fetching available dates:', error);
+      // Fallback: don't restrict if fetch fails, but log it
+    } finally {
+      setLoadingDates(false);
+    }
+  };
 
   // Fetch available slots when date changes
   useEffect(() => {
@@ -188,9 +212,17 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
       });
       return;
     }
-
     if (!formData.appointment_date) {
       toast.error('Please select a date', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    const today = new Date().toLocaleDateString('en-CA');
+    if (formData.appointment_date < today) {
+      toast.error('Cannot schedule appointments for past dates', {
         position: "top-right",
         autoClose: 3000,
       });
@@ -429,6 +461,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
               type="date"
               value={formData.appointment_date}
               onChange={(e) => handleInputChange('appointment_date', e.target.value)}
+              min={new Date().toLocaleDateString('en-CA')}
               className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
               required
