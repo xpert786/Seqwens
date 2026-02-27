@@ -42,6 +42,7 @@ export default function ClientManage() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [selectedClientForDelete, setSelectedClientForDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [reassigning, setReassigning] = useState(false);
   const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
   const [selectedStaffIdForModal, setSelectedStaffIdForModal] = useState(null);
@@ -86,6 +87,9 @@ export default function ClientManage() {
     new_this_month: {
       count: 0,
       vs_last_month: 0
+    },
+    archived_clients: {
+      count: 0
     },
     revenue_by_type: {
       individual: 0,
@@ -467,7 +471,8 @@ export default function ClientManage() {
                 documentsCount: client.documents_count || 0,
                 assignedStaff: client.assigned_staff || [],
                 is_linked: client.is_linked !== undefined ? client.is_linked : true, // Default to true if not provided
-                link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked')
+                link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked'),
+                is_deleted: client.is_deleted || false
               };
             });
             setClients(mappedClients);
@@ -1094,6 +1099,42 @@ export default function ClientManage() {
     }
   };
 
+  // Restore archived taxpayer
+  const handleRestoreClient = async (clientId) => {
+    try {
+      setRestoring(true);
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/taxpayers/${clientId}/restore/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Client restored successfully', getToastOptions());
+        // Refresh clients list
+        await refreshClientsList();
+      } else {
+        throw new Error(result.message || 'Failed to restore client');
+      }
+    } catch (err) {
+      console.error('Error restoring client:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to restore client', getToastOptions());
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   // Reassign/Assign Tax Preparer (uses same API for both)
   const handleReassignTaxPreparer = async (clientId, selectedStaffId, isFirm = false) => {
     try {
@@ -1423,7 +1464,7 @@ export default function ClientManage() {
         </div>
       )}
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
         {[
           {
             label: "Active Clients",
@@ -1455,6 +1496,19 @@ export default function ClientManage() {
             value: dashboardLoading ? '...' : dashboardStats.new_this_month?.count || 0,
             change: dashboardStats.new_this_month?.vs_last_month,
             isCurrency: false
+          },
+          {
+            label: "Archived Clients",
+            value: dashboardLoading ? '...' : dashboardStats.archived_clients?.count || 0,
+            isCurrency: false,
+            clickable: true,
+            onClick: () => {
+              handleTabChange('clients');
+              setActiveFilter('archived');
+              setTimeout(() => {
+                clientsListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }
           },
         ].map((card, index) => {
           const changeValue = card.change !== undefined && card.change !== null ? card.change : null;
@@ -2022,6 +2076,19 @@ export default function ClientManage() {
                     >
                       All
                     </button>
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'archived'
+                        ? 'bg-[#00C0C6] text-white border-0'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setActiveFilter('archived');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px', minWidth: '80px' }}
+                    >
+                      Archived
+                    </button>
                   </div>
                 </div>
 
@@ -2192,7 +2259,10 @@ export default function ClientManage() {
                             <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
                               <span
                                 className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-white`}
-                                style={client.clientStatus === 'Active' ? {
+                                style={client.is_deleted ? {
+                                  background: '#6B7280',
+                                  border: '0.5px solid #6B7280'
+                                } : client.clientStatus === 'Active' ? {
                                   background: '#22C55E',
                                   border: '0.5px solid #22C55E'
                                 } : {
@@ -2200,9 +2270,18 @@ export default function ClientManage() {
                                   border: '0.5px solid var(--color-red-500, #EF4444)'
                                 }}
                               >
-                                {client.clientStatus === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
-                                {client.clientStatus === 'Inactive' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
-                                <span className="">{client.clientStatus}</span>
+                                {client.is_deleted ? (
+                                  <>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>
+                                    <span className="">Archived</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    {client.clientStatus === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                    {client.clientStatus === 'Inactive' && <span className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>}
+                                    <span className="">{client.clientStatus}</span>
+                                  </>
+                                )}
                               </span>
                             </div>
 
@@ -2267,76 +2346,90 @@ export default function ClientManage() {
                                   }}
                                 >
                                   <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
-                                    {/* View Details removed - clicking on client name now redirects to details page */}
-                                    {/* <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Client</button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Timeline</button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Send Message</button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedule Meeting</button> */}
-                                    {client.assignedStaff && client.assignedStaff.length > 0 ? (
+                                    {client.is_deleted ? (
                                       <button
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700"
-                                        style={{
-                                          transition: 'none',
-                                          backgroundColor: 'transparent',
-                                          color: '#374151'
-                                        }}
-                                        onClick={() => {
-                                          setSelectedClientForReassign(client.id);
-                                          setIsAssignMode(false);
-                                          setShowReassignStaffModal(true);
+                                        className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 font-bold"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRestoreClient(client.id);
                                           setShowDropdown(null);
                                         }}
                                       >
-                                        Reassign Staff
+                                        Restore Client
                                       </button>
                                     ) : (
-                                      <button
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700"
-                                        style={{
-                                          transition: 'none',
-                                          backgroundColor: 'transparent',
-                                          color: '#374151'
-                                        }}
-                                        onClick={() => {
-                                          setSelectedClientForReassign(client.id);
-                                          setIsAssignMode(true);
-                                          setShowReassignStaffModal(true);
-                                          setShowDropdown(null);
-                                        }}
-                                      >
-                                        Assign Staff
-                                      </button>
+                                      <>
+                                        {client.assignedStaff && client.assignedStaff.length > 0 ? (
+                                          <button
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700"
+                                            style={{
+                                              transition: 'none',
+                                              backgroundColor: 'transparent',
+                                              color: '#374151'
+                                            }}
+                                            onClick={() => {
+                                              setSelectedClientForReassign(client.id);
+                                              setIsAssignMode(false);
+                                              setShowReassignStaffModal(true);
+                                              setShowDropdown(null);
+                                            }}
+                                          >
+                                            Reassign Staff
+                                          </button>
+                                        ) : (
+                                          <button
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700"
+                                            style={{
+                                              transition: 'none',
+                                              backgroundColor: 'transparent',
+                                              color: '#374151'
+                                            }}
+                                            onClick={() => {
+                                              setSelectedClientForReassign(client.id);
+                                              setIsAssignMode(true);
+                                              setShowReassignStaffModal(true);
+                                              setShowDropdown(null);
+                                            }}
+                                          >
+                                            Assign Staff
+                                          </button>
+                                        )}
+                                      </>
                                     )}
-                                    <button
-                                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedClientForWorkflow({
-                                          id: client.id,
-                                          name: client.name || client.company || 'Client',
-                                          assignedPreparerId: client.assignedStaff?.[0]?.id || null
-                                        });
-                                        setShowStartWorkflowModal(true);
-                                        setShowDropdown(null);
-                                      }}
-                                    >
-                                      Start Workflow
-                                    </button>
-                                    <button
-                                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedClientForMessage({
-                                          id: client.id,
-                                          name: client.name || 'Client'
-                                        });
-                                        setIsMessageModalOpen(true);
-                                        setShowDropdown(null);
-                                      }}
-                                    >
-                                      Send Message
-                                    </button>
-                                    <div style={{ borderTop: '0.2px solid #000000' }}></div>
+                                    {!client.is_deleted && (
+                                      <>
+                                        <button
+                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedClientForWorkflow({
+                                              id: client.id,
+                                              name: client.name || client.company || 'Client',
+                                              assignedPreparerId: client.assignedStaff?.[0]?.id || null
+                                            });
+                                            setShowStartWorkflowModal(true);
+                                            setShowDropdown(null);
+                                          }}
+                                        >
+                                          Start Workflow
+                                        </button>
+                                        <button
+                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedClientForMessage({
+                                              id: client.id,
+                                              name: client.name || 'Client'
+                                            });
+                                            setIsMessageModalOpen(true);
+                                            setShowDropdown(null);
+                                          }}
+                                        >
+                                          Send Message
+                                        </button>
+                                        <div style={{ borderTop: '0.2px solid #000000' }}></div>
+                                      </>
+                                    )}
                                     <button
                                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                                       style={{ color: 'var(--color-red-500, #EF4444)' }}
@@ -2346,7 +2439,7 @@ export default function ClientManage() {
                                         setShowDropdown(null);
                                       }}
                                     >
-                                      Remove from Firm
+                                      {client.is_deleted ? 'Permanently Remove' : 'Remove from Firm'}
                                     </button>
                                   </div>
                                 </div>

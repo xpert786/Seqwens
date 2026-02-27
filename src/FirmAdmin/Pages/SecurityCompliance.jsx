@@ -950,6 +950,8 @@ export default function SecurityCompliance() {
                                 onPageChange={(page) => setSecurityAlertsPagination(prev => ({ ...prev, page }))}
                                 totalItems={securityAlertsPagination.total_count}
                                 itemsPerPage={securityAlertsPagination.page_size}
+                                startIndex={(securityAlertsPagination.page - 1) * securityAlertsPagination.page_size}
+                                endIndex={Math.min(securityAlertsPagination.page * securityAlertsPagination.page_size, securityAlertsPagination.total_count)}
                             />
                         </div>
                     )}
@@ -1116,6 +1118,8 @@ export default function SecurityCompliance() {
                             onPageChange={(page) => setActiveSessionsPagination(prev => ({ ...prev, page }))}
                             totalItems={activeSessionsPagination.total_count}
                             itemsPerPage={activeSessionsPagination.page_size}
+                            startIndex={(activeSessionsPagination.page - 1) * activeSessionsPagination.page_size}
+                            endIndex={Math.min(activeSessionsPagination.page * activeSessionsPagination.page_size, activeSessionsPagination.total_count)}
                         />
                     </div>
                 )}
@@ -1144,9 +1148,9 @@ export default function SecurityCompliance() {
                                         type="button"
                                         onClick={() => handleAuditLoggingToggle(!auditLoggingEnabled)}
                                         disabled={auditLogSettingsSaving}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-400'
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-[#9CA3AF]'
                                             } ${auditLogSettingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        style={{ borderRadius: '999px', visibility: 'visible', display: 'inline-flex' }}
+                                        style={{ borderRadius: '999px', visibility: 'visible', display: 'inline-flex', opacity: 1 }}
                                     >
                                         <span
                                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
@@ -1199,8 +1203,8 @@ export default function SecurityCompliance() {
             <div className="rounded-xl bg-white p-6">
                 <div className="gap-4 mb-6">
                     <div>
-                        <h5 className="text-base font-semibold text-[#1F2937] mb-1">Active User Sessions</h5>
-                        <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
+                        <h5 className="text-base font-semibold text-[#1F2937] mb-1">Audit Logs History</h5>
+                        <p className="text-sm text-[#6B7280] mb-0">Detailed history of security and compliance events</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-4">
                         <select
@@ -1296,6 +1300,8 @@ export default function SecurityCompliance() {
                             onPageChange={(page) => setAuditLogsPagination(prev => ({ ...prev, page }))}
                             totalItems={auditLogsPagination.total_count}
                             itemsPerPage={auditLogsPagination.page_size}
+                            startIndex={(auditLogsPagination.page - 1) * auditLogsPagination.page_size}
+                            endIndex={Math.min(auditLogsPagination.page * auditLogsPagination.page_size, auditLogsPagination.total_count)}
                         />
                     </div>
                 )}
@@ -1420,63 +1426,7 @@ export default function SecurityCompliance() {
                 </div>
             </div>
 
-            {/* Compliance Detail Table */}
-            <div className="rounded-xl bg-white p-6">
-                <p className="text-base font-semibold text-gray-600 mb-4">Compliance Detail</p>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                        <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
-                            <tr>
-                                <th className="px-4 py-3">Client</th>
-                                <th className="px-4 py-3">Type</th>
-                                <th className="px-4 py-3">Issue</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Last Updated</th>
-                                <th className="px-4 py-3 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
-                            {isLoadingCompliance ? (
-                                <tr>
-                                    <td colSpan="6" className="px-4 py-8 text-center text-sm text-gray-500">
-                                        Loading compliance details...
-                                    </td>
-                                </tr>
-                            ) : (
-                                complianceData.complianceDetails.map((detail, index) => (
-                                    <tr key={index} className="hover:bg-[#F8FAFF]">
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.client}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.type}</td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.issue}</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${detail.status === 'Resolved'
-                                                ? 'bg-[#22C55E] text-white'
-                                                : 'bg-[#FBBF24] text-white'
-                                                }`}>
-                                                {detail.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.lastUpdated}</td>
-                                        <td className="px-4 py-3">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedCompliance(detail);
-                                                    setIsReviewModalOpen(true);
-                                                }}
-                                                className="inline-flex items-center rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white transition-colors"
-                                                style={{ borderRadius: '8px' }}
-                                                type="button"
-                                            >
-                                                {detail.action}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+
 
 
         </div>

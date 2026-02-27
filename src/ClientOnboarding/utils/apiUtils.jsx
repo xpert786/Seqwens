@@ -3748,46 +3748,39 @@ export const firmAdminClientsAPI = {
           body: JSON.stringify(payload || {}),
         });
       };
-
-      let response = await makeRequest();
-
-      if (response.status === 401) {
-        await refreshAccessToken();
-        headers = getHeaders();
-        response = await makeRequest();
-      }
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const error = new Error(data.message || 'Failed to update client profile');
-        error.data = data;
-        error.status = response.status;
-        throw error;
-      }
-
-      return data;
+      return await (await makeRequest()).json();
     } catch (error) {
-      console.error('Error updating client profile:', error);
+      console.error('Update client API Error:', error);
       throw error;
     }
   },
 
-  // Get shareable invite link
-  // Supports both URL path parameter and query parameters
-  getInviteLink: async (inviteIdOrParams) => {
-    // If it's a number or string (invite_id), use URL path
-    if (typeof inviteIdOrParams === 'number' || (typeof inviteIdOrParams === 'string' && !inviteIdOrParams.includes('='))) {
-      return await apiRequest(`/user/firm-admin/clients/invite/${inviteIdOrParams}/link/`, 'GET');
-    }
-    // If it's an object with query params
-    const { invite_id, client_id } = inviteIdOrParams || {};
-    const queryParams = new URLSearchParams();
-    if (invite_id) queryParams.append('invite_id', invite_id.toString());
-    if (client_id) queryParams.append('client_id', client_id.toString());
-    const queryString = queryParams.toString();
-    return await apiRequest(`/user/firm-admin/clients/invite/link/${queryString ? `?${queryString}` : ''}`, 'GET');
+  // Soft delete a client
+  softDeleteClient: async (clientId) => {
+    return await apiRequest(`/firm/taxpayers/${clientId}/soft-delete/`, 'DELETE');
   },
+
+  // Restore a soft-deleted client
+  restoreClient: async (clientId) => {
+    return await apiRequest(`/firm/taxpayers/${clientId}/restore/`, 'POST');
+  },
+
+
+// Get shareable invite link
+// Supports both URL path parameter and query parameters
+getInviteLink: async (inviteIdOrParams) => {
+  // If it's a number or string (invite_id), use URL path
+  if (typeof inviteIdOrParams === 'number' || (typeof inviteIdOrParams === 'string' && !inviteIdOrParams.includes('='))) {
+    return await apiRequest(`/user/firm-admin/clients/invite/${inviteIdOrParams}/link/`, 'GET');
+  }
+  // If it's an object with query params
+  const { invite_id, client_id } = inviteIdOrParams || {};
+  const queryParams = new URLSearchParams();
+  if (invite_id) queryParams.append('invite_id', invite_id.toString());
+  if (client_id) queryParams.append('client_id', client_id.toString());
+  const queryString = queryParams.toString();
+  return await apiRequest(`/user/firm-admin/clients/invite/link/${queryString ? `?${queryString}` : ''}`, 'GET');
+},
 
   // Generate or regenerate invite link (POST method)
   generateInviteLink: async (data) => {
@@ -3799,212 +3792,212 @@ export const firmAdminClientsAPI = {
     return await apiRequest('/user/firm-admin/clients/invite/link/', 'POST', payload);
   },
 
-  // Send invite notifications
-  sendInvite: async (inviteId, payload) => {
-    return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/send/`, 'POST', payload);
-  },
+    // Send invite notifications
+    sendInvite: async (inviteId, payload) => {
+      return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/send/`, 'POST', payload);
+    },
 
-  deleteInvite: async (inviteId) => {
-    return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/delete/`, 'DELETE');
-  },
-
-  // Get pending invite details by invite_id
-  getPendingInviteDetails: async (inviteId) => {
-    return await apiRequest(`/user/firm-admin/clients/invites/pending/${inviteId}/`, 'GET');
-  },
-
-  // Update pending invite details
-  updatePendingInvite: async (inviteId, payload) => {
-    return await apiRequest(`/user/firm-admin/clients/invites/pending/${inviteId}/`, 'PATCH', payload);
-  },
-
-  // Get pending client invites
-  getPendingInvites: async (params = {}) => {
-    const { page = 1, page_size = 20, search, sort_by, sort_order } = params;
-    const queryParams = new URLSearchParams();
-    if (page) queryParams.append('page', page.toString());
-    if (page_size) queryParams.append('page_size', page_size.toString());
-    if (search) queryParams.append('search', search);
-    if (sort_by) queryParams.append('sort_by', sort_by);
-    if (sort_order) queryParams.append('sort_order', sort_order);
-    const queryString = queryParams.toString();
-    return await apiRequest(`/user/firm-admin/pending-taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
-  },
-  // Bulk taxpayer import - Step 1: Preview
-  bulkImportTaxpayersPreview: async (csvFile) => {
-    const token = getAccessToken();
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const formData = new FormData();
-    formData.append('csv_file', csvFile);
-
-    const url = `${API_BASE_URL}/taxpayer/firm-admin/taxpayers/import/preview/`;
-    const config = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
+      deleteInvite: async (inviteId) => {
+        return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/delete/`, 'DELETE');
       },
-      body: formData,
-    };
 
-    const response = await fetchWithCors(url, config);
+        // Get pending invite details by invite_id
+        getPendingInviteDetails: async (inviteId) => {
+          return await apiRequest(`/user/firm-admin/clients/invites/pending/${inviteId}/`, 'GET');
+        },
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-    }
+          // Update pending invite details
+          updatePendingInvite: async (inviteId, payload) => {
+            return await apiRequest(`/user/firm-admin/clients/invites/pending/${inviteId}/`, 'PATCH', payload);
+          },
 
-    return await response.json();
-  },
-  // Bulk taxpayer import - Step 2: Confirm
-  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport, invitationOptions = {}) => {
-    const payload = {
-      import_log_id: importLogId,
-      rows_to_import: rowsToImport
-    };
+            // Get pending client invites
+            getPendingInvites: async (params = {}) => {
+              const { page = 1, page_size = 20, search, sort_by, sort_order } = params;
+              const queryParams = new URLSearchParams();
+              if (page) queryParams.append('page', page.toString());
+              if (page_size) queryParams.append('page_size', page_size.toString());
+              if (search) queryParams.append('search', search);
+              if (sort_by) queryParams.append('sort_by', sort_by);
+              if (sort_order) queryParams.append('sort_order', sort_order);
+              const queryString = queryParams.toString();
+              return await apiRequest(`/user/firm-admin/pending-taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
+            },
+              // Bulk taxpayer import - Step 1: Preview
+              bulkImportTaxpayersPreview: async (csvFile) => {
+                const token = getAccessToken();
+                if (!token) {
+                  throw new Error('No authentication token found');
+                }
 
-    // Add invitation options if provided
-    if (invitationOptions.invitation_timing) {
-      payload.invitation_timing = invitationOptions.invitation_timing;
-    }
-    if (invitationOptions.rows_to_invite && Array.isArray(invitationOptions.rows_to_invite)) {
-      payload.rows_to_invite = invitationOptions.rows_to_invite;
-    }
-    if (invitationOptions.invitation_preferences && typeof invitationOptions.invitation_preferences === 'object') {
-      payload.invitation_preferences = invitationOptions.invitation_preferences;
-    }
-    // Add duplicate handling preferences if provided
-    if (invitationOptions.duplicate_handling && typeof invitationOptions.duplicate_handling === 'object') {
-      payload.duplicate_handling = invitationOptions.duplicate_handling;
-    }
+                const formData = new FormData();
+                formData.append('csv_file', csvFile);
 
-    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', payload);
-  },
-  // Bulk taxpayer import - Send invitations manually
-  bulkImportTaxpayersSendInvitations: async (importLogId, options = {}) => {
-    const payload = {
-      import_log_id: importLogId
-    };
+                const url = `${API_BASE_URL}/taxpayer/firm-admin/taxpayers/import/preview/`;
+                const config = {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                  },
+                  body: formData,
+                };
 
-    if (options.taxpayer_ids && Array.isArray(options.taxpayer_ids)) {
-      payload.taxpayer_ids = options.taxpayer_ids;
-    }
-    if (options.row_indices && Array.isArray(options.row_indices)) {
-      payload.row_indices = options.row_indices;
-    }
+                const response = await fetchWithCors(url, config);
 
-    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
-  },
+                if (!response.ok) {
+                  const errorData = await response.json().catch(() => ({}));
+                  throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+                }
 
-  // ========== Client Document Management ==========
+                return await response.json();
+              },
+                // Bulk taxpayer import - Step 2: Confirm
+                bulkImportTaxpayersConfirm: async (importLogId, rowsToImport, invitationOptions = {}) => {
+                  const payload = {
+                    import_log_id: importLogId,
+                    rows_to_import: rowsToImport
+                  };
 
-  // Upload documents for a client/taxpayer
-  // POST /api/firm/clients/<client_id>/documents/upload/
-  uploadClientDocuments: async (clientId, uploadData) => {
-    const token = getAccessToken();
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
+                  // Add invitation options if provided
+                  if (invitationOptions.invitation_timing) {
+                    payload.invitation_timing = invitationOptions.invitation_timing;
+                  }
+                  if (invitationOptions.rows_to_invite && Array.isArray(invitationOptions.rows_to_invite)) {
+                    payload.rows_to_invite = invitationOptions.rows_to_invite;
+                  }
+                  if (invitationOptions.invitation_preferences && typeof invitationOptions.invitation_preferences === 'object') {
+                    payload.invitation_preferences = invitationOptions.invitation_preferences;
+                  }
+                  // Add duplicate handling preferences if provided
+                  if (invitationOptions.duplicate_handling && typeof invitationOptions.duplicate_handling === 'object') {
+                    payload.duplicate_handling = invitationOptions.duplicate_handling;
+                  }
 
-    const { files, category_id, folder_id, tags } = uploadData;
+                  return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', payload);
+                },
+                  // Bulk taxpayer import - Send invitations manually
+                  bulkImportTaxpayersSendInvitations: async (importLogId, options = {}) => {
+                    const payload = {
+                      import_log_id: importLogId
+                    };
 
-    // Create FormData for file upload
-    const formData = new FormData();
+                    if (options.taxpayer_ids && Array.isArray(options.taxpayer_ids)) {
+                      payload.taxpayer_ids = options.taxpayer_ids;
+                    }
+                    if (options.row_indices && Array.isArray(options.row_indices)) {
+                      payload.row_indices = options.row_indices;
+                    }
 
-    // Append files - files should be an array of File objects
-    if (Array.isArray(files)) {
-      files.forEach((file) => {
-        if (file instanceof File) {
-          formData.append('files', file);
-        }
-      });
-    } else if (files instanceof File) {
-      formData.append('files', files);
-    }
+                    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
+                  },
 
-    // Append optional fields
-    if (category_id !== undefined && category_id !== null) {
-      formData.append('category_id', category_id.toString());
-    }
-    if (folder_id !== undefined && folder_id !== null) {
-      formData.append('folder_id', folder_id.toString());
-    }
-    if (tags !== undefined && tags !== null) {
-      // Handle tags as array or JSON string
-      if (Array.isArray(tags)) {
-        formData.append('tags', JSON.stringify(tags));
-      } else if (typeof tags === 'string') {
-        formData.append('tags', tags);
-      }
-    }
+                    // ========== Client Document Management ==========
 
-    if (uploadData.mark_for_esign) {
-      formData.append('mark_for_esign', 'true');
-    }
+                    // Upload documents for a client/taxpayer
+                    // POST /api/firm/clients/<client_id>/documents/upload/
+                    uploadClientDocuments: async (clientId, uploadData) => {
+                      const token = getAccessToken();
+                      if (!token) {
+                        throw new Error('No authentication token found');
+                      }
 
-    const url = `${API_BASE_URL}/firm/clients/${clientId}/documents/upload/`;
-    const config = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-        // Don't set Content-Type for FormData, browser will set it with boundary
-      },
-      body: formData
-    };
+                      const { files, category_id, folder_id, tags } = uploadData;
 
-    return await fetchWithCors(url, config)
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      });
-  },
+                      // Create FormData for file upload
+                      const formData = new FormData();
 
-  // Get document details
-  // GET /api/firm/clients/<client_id>/documents/<document_id>/
-  getClientDocumentDetails: async (clientId, documentId) => {
-    const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
-    return await apiRequest(endpoint, 'GET');
-  },
+                      // Append files - files should be an array of File objects
+                      if (Array.isArray(files)) {
+                        files.forEach((file) => {
+                          if (file instanceof File) {
+                            formData.append('files', file);
+                          }
+                        });
+                      } else if (files instanceof File) {
+                        formData.append('files', files);
+                      }
 
-  // Update document details
-  // PATCH /api/firm/clients/<client_id>/documents/<document_id>/
-  updateClientDocument: async (clientId, documentId, updateData) => {
-    const { status, category_id, folder_id, tags } = updateData;
-    const payload = {};
+                      // Append optional fields
+                      if (category_id !== undefined && category_id !== null) {
+                        formData.append('category_id', category_id.toString());
+                      }
+                      if (folder_id !== undefined && folder_id !== null) {
+                        formData.append('folder_id', folder_id.toString());
+                      }
+                      if (tags !== undefined && tags !== null) {
+                        // Handle tags as array or JSON string
+                        if (Array.isArray(tags)) {
+                          formData.append('tags', JSON.stringify(tags));
+                        } else if (typeof tags === 'string') {
+                          formData.append('tags', tags);
+                        }
+                      }
 
-    if (status !== undefined && status !== null) {
-      payload.status = status;
-    }
-    if (category_id !== undefined) {
-      payload.category_id = category_id; // Can be null to remove category
-    }
-    if (folder_id !== undefined) {
-      payload.folder_id = folder_id; // Can be null to remove folder
-    }
-    if (tags !== undefined && tags !== null) {
-      payload.tags = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags) : tags);
-    }
+                      if (uploadData.mark_for_esign) {
+                        formData.append('mark_for_esign', 'true');
+                      }
 
-    const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
-    return await apiRequest(endpoint, 'PATCH', payload);
-  },
+                      const url = `${API_BASE_URL}/firm/clients/${clientId}/documents/upload/`;
+                      const config = {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${token}`
+                          // Don't set Content-Type for FormData, browser will set it with boundary
+                        },
+                        body: formData
+                      };
 
-  // Reset taxpayer password (for firm admins)
-  // POST /api/firm/taxpayers/{taxpayer_id}/reset-password/
-  // Alternative: POST /api/firm/clients/{client_id}/reset-password/
-  resetTaxpayerPassword: async (taxpayerId, passwordData = {}) => {
-    return await apiRequest(`/firm/taxpayers/${taxpayerId}/reset-password/`, 'POST', passwordData);
-  },
+                      return await fetchWithCors(url, config)
+                        .then(async (response) => {
+                          if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+                          }
+                          return response.json();
+                        });
+                    },
 
-  // Reset taxpayer password using clients endpoint (alternative)
-  resetClientPassword: async (clientId) => {
-    return await apiRequest(`/firm/clients/${clientId}/reset-password/`, 'POST', {});
-  }
+                      // Get document details
+                      // GET /api/firm/clients/<client_id>/documents/<document_id>/
+                      getClientDocumentDetails: async (clientId, documentId) => {
+                        const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
+                        return await apiRequest(endpoint, 'GET');
+                      },
+
+                        // Update document details
+                        // PATCH /api/firm/clients/<client_id>/documents/<document_id>/
+                        updateClientDocument: async (clientId, documentId, updateData) => {
+                          const { status, category_id, folder_id, tags } = updateData;
+                          const payload = {};
+
+                          if (status !== undefined && status !== null) {
+                            payload.status = status;
+                          }
+                          if (category_id !== undefined) {
+                            payload.category_id = category_id; // Can be null to remove category
+                          }
+                          if (folder_id !== undefined) {
+                            payload.folder_id = folder_id; // Can be null to remove folder
+                          }
+                          if (tags !== undefined && tags !== null) {
+                            payload.tags = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags) : tags);
+                          }
+
+                          const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
+                          return await apiRequest(endpoint, 'PATCH', payload);
+                        },
+
+                          // Reset taxpayer password (for firm admins)
+                          // POST /api/firm/taxpayers/{taxpayer_id}/reset-password/
+                          // Alternative: POST /api/firm/clients/{client_id}/reset-password/
+                          resetTaxpayerPassword: async (taxpayerId, passwordData = {}) => {
+                            return await apiRequest(`/firm/taxpayers/${taxpayerId}/reset-password/`, 'POST', passwordData);
+                          },
+
+                            // Reset taxpayer password using clients endpoint (alternative)
+                            resetClientPassword: async (clientId) => {
+                              return await apiRequest(`/firm/clients/${clientId}/reset-password/`, 'POST', {});
+                            }
 };
 
 // Firm Admin Email Templates API functions
