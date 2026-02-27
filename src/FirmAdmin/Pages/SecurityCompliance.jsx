@@ -919,21 +919,7 @@ export default function SecurityCompliance() {
                                                         </button>
                                                     </>
                                                 )}
-                                                <button
-                                                    onClick={() => {
-                                                        // View details - could open a modal
-                                                        console.log('View alert details:', alert);
-                                                    }}
-                                                    className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                                                    title="View Details"
-                                                >
-                                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
-                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" strokeWidth="0.5" />
-                                                        <path d="M3.1665 8.9974C3.1665 8.9974 4.9165 4.91406 8.99984 4.91406C13.0832 4.91406 14.8332 8.9974 14.8332 8.9974C14.8332 8.9974 13.0832 13.0807 8.99984 13.0807C4.9165 13.0807 3.1665 8.9974 3.1665 8.9974Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                        <path d="M9 10.75C9.9665 10.75 10.75 9.9665 10.75 9C10.75 8.0335 9.9665 7.25 9 7.25C8.0335 7.25 7.25 8.0335 7.25 9C7.25 9.9665 8.0335 10.75 9 10.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                </button>
+
                                             </div>
                                         </td>
                                     </tr>
