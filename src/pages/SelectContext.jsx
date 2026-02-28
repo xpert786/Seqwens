@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import RoleSelectionModal from '../components/RoleSelectionModal';
 import FirmSelectionModal from '../components/FirmSelectionModal';
 import FixedLayout from '../ClientOnboarding/components/FixedLayout';
+import { userAPI } from '../ClientOnboarding/utils/apiUtils';
+import { setTokens } from '../ClientOnboarding/utils/userUtils';
 
 // Role categories for strict filtering
 const FIRM_ROLES = new Set([
-    'firm', 'admin', 'FirmAdmin', 'firmadmin',
-    'staff', 'tax_preparer', 'TeamMember', 'team_member',
+    'firm', 'admin', 'FirmAdmin', 'firmadmin', 'firm_admin',
+    'staff', 'tax_preparer', 'TeamMember', 'team_member', 'teammember',
     'accountant', 'bookkeeper', 'assistant', 'preparer',
 ]);
 
@@ -23,13 +25,13 @@ function getRoleCategory(roleValue) {
     if (!roleValue) return 'other';
     const lower = String(roleValue).toLowerCase().trim();
     // Firm-level roles
-    if (['firm', 'admin', 'firmadmin', 'firm_admin', 'staff', 'tax_preparer',
-        'team_member', 'teammember', 'accountant', 'bookkeeper', 'assistant',
-        'preparer'].includes(lower)) {
+    if (FIRM_ROLES.has(lower) ||
+        ['firm', 'admin', 'firmadmin', 'firm_admin', 'staff', 'tax_preparer',
+            'team_member', 'teammember', 'accountant', 'bookkeeper', 'assistant', 'preparer'].includes(lower)) {
         return 'firm';
     }
     // Taxpayer/client roles
-    if (['client', 'taxpayer'].includes(lower)) {
+    if (TAXPAYER_ROLES.has(lower) || ['client', 'taxpayer'].includes(lower)) {
         return 'taxpayer';
     }
     return 'other';
@@ -75,6 +77,20 @@ export default function SelectContext() {
             return;
         }
 
+        // Determine initial login category if role selection is skipped
+        if (!needs_role_selection && needs_firm_selection) {
+            const initialCategory = getRoleCategory(user?.active_role || user?.user_type || user?.role?.[0] || user?.role);
+            setSelectedLoginCategory(initialCategory);
+
+            // Auto-select if there's only one firm in this category
+            const firmsForCat = filterFirmsForCategory(all_firms, initialCategory);
+            if (firmsForCat.length === 1) {
+                console.log('Skipping firm selection: only one membership available');
+                autoSelectFirm(firmsForCat[0]);
+                return;
+            }
+        }
+
         // Determine which step to show first
         if (needs_role_selection) {
             setCurrentStep('role');
@@ -87,36 +103,61 @@ export default function SelectContext() {
     }, [location.state, navigate, needs_role_selection, needs_firm_selection, user]);
 
     // Block the browser's back button while on this page.
-    // Pressing back here is dangerous — tokens may be partially set.
-    // Instead, send the user to /login.
     useEffect(() => {
-        // Push a dummy entry so the back button has something to pop
         window.history.pushState(null, '', window.location.href);
-
         const handlePopState = () => {
-            // Every time the user tries to go back, push the state again
-            // to keep them on this page, then redirect to login cleanly.
             navigate('/login', { replace: true });
         };
-
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [navigate]);
 
+    const autoSelectFirm = async (firmData) => {
+        try {
+            const data = await userAPI.selectFirm(firmData.membership_id);
+            if (data.success) {
+                const rememberMe = localStorage.getItem('rememberMe') === 'true' || sessionStorage.getItem('rememberMe') === 'true';
+                setTokens(data.access_token, data.refresh_token, rememberMe);
+                const storage = rememberMe ? localStorage : sessionStorage;
+                storage.setItem('userData', JSON.stringify(data.user));
+                storage.setItem('userType', data.user.active_role || data.user.user_type);
+                redirectToDashboard(data.user);
+            }
+        } catch (err) {
+            console.error('Auto-select firm error:', err);
+            setCurrentStep('firm'); // Show manual selection as fallback
+        }
+    };
+
     const handleRoleSelected = (selectedUser, loginCategory) => {
         // Track which login category was selected so we can filter firms
         const category = loginCategory || getRoleCategory(
-            selectedUser?.active_role || selectedUser?.user_type
+            selectedUser?.active_role || selectedUser?.user_type || selectedUser?.role?.[0] || selectedUser?.role
         );
         setSelectedLoginCategory(category);
 
-        // If firm selection is also needed, show firm modal (with filtered firms)
+        // If firm selection is also needed, check if we can auto-select or skip
         if (needs_firm_selection) {
-            setCurrentStep('firm');
+            const applicableFirms = filterFirmsForCategory(all_firms, category);
+
+            if (applicableFirms.length === 0) {
+                // No membership-based firms for this role category.
+                // This happens when the firm role comes from a linked User record (not a Membership).
+                // select-role/ has already resolved the context — just go to dashboard.
+                console.log('No firm memberships for selected category, proceeding to dashboard directly.');
+                redirectToDashboard(selectedUser);
+            } else if (applicableFirms.length === 1) {
+                // Only one firm — auto-select without prompting
+                autoSelectFirm(applicableFirms[0]);
+            } else {
+                // Multiple firms — show the selection screen
+                setCurrentStep('firm');
+            }
         } else {
             redirectToDashboard(selectedUser);
         }
     };
+
 
     const handleFirmSelected = (selectedUser) => {
         redirectToDashboard(selectedUser);
