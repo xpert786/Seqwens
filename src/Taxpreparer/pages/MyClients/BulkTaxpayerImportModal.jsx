@@ -324,7 +324,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             <p>Supported formats: CSV, PDF (Max 10MB)</p>
           </div>
           <label
-            className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer d-flex justify-center"
             style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
           >
             <Browse /> Browse Files

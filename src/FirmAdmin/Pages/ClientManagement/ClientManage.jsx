@@ -3267,7 +3267,10 @@ export default function ClientManage() {
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200"
                   style={{
                     backgroundColor: '#FF4D4F',
-                    boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)"
+                    boxShadow: "0 4px 12px rgba(255, 77, 79, 0.2)",
+                    color: '#FFFFFF',
+                    fontWeight: 'bold',
+                    borderRadius: "12px"
                   }}
                 >
                   {deleting && <div className="spinner-border spinner-border-sm" role="status" />}
@@ -3279,6 +3282,7 @@ export default function ClientManage() {
                     setSelectedClientForDelete(null);
                   }}
                   disabled={deleting}
+                  style={{ borderRadius: "12px" }}
                   className="w-full px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200"
                 >
                   Cancel

@@ -35,7 +35,7 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
     // Validate file type (CSV or PDF)
     const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel';
     const isPDF = file.name.endsWith('.pdf') || file.type === 'application/pdf';
-    
+
     if (!isCSV && !isPDF) {
       setError('Please upload a CSV or PDF file');
       return;
@@ -71,7 +71,7 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
           .filter((row, idx) => row.is_valid && !(row.existing_preparer && row.existing_preparer.exists))
           .map((row) => row.row_index);
         setSelectedRows(validRowIndices);
-        
+
         setCurrentStep(2);
       } else {
         throw new Error(response.message || 'Preview failed');
@@ -104,11 +104,11 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
       if (response.success && response.data) {
         setImportResults(response.data);
         setCurrentStep(3);
-        
+
         // Check if there are any errors
-        const hasErrors = (response.data.error_count && response.data.error_count > 0) || 
-                         (response.data.import_results && response.data.import_results.some(r => r.status === 'error'));
-        
+        const hasErrors = (response.data.error_count && response.data.error_count > 0) ||
+          (response.data.import_results && response.data.import_results.some(r => r.status === 'error'));
+
         if (hasErrors) {
           toast.warning(`Import completed with ${response.data.error_count || 0} error(s). Please review the errors.`);
         } else {
@@ -173,7 +173,7 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
                 <p>Drop your file here or click to browse</p>
                 <p>Supported formats: CSV, PDF (Max 10MB)</p>
               </div>
-              <label className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer"
+              <label className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer d-flex justify-center"
                 style={{
                   border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
                   borderRadius: '8px'
@@ -243,17 +243,17 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
 
     if (currentStep === 2 && previewData) {
       const { total_rows, valid_rows, error_rows, preview_data, error_summary } = previewData;
-      
+
       // Calculate duplicate counts
       const existing_preparers_count = preview_data?.filter(row => row.existing_preparer && row.existing_preparer.exists).length || 0;
       const existing_in_firm_count = preview_data?.filter(row => {
         const existingPreparer = row.existing_preparer;
-        return existingPreparer && existingPreparer.exists && 
-               (existingPreparer.match_type === 'email_and_firm');
+        return existingPreparer && existingPreparer.exists &&
+          (existingPreparer.match_type === 'email_and_firm');
       }).length || 0;
-      
+
       // Calculate valid non-duplicate rows count
-      const validNonDuplicateRowsCount = preview_data?.filter(row => 
+      const validNonDuplicateRowsCount = preview_data?.filter(row =>
         row.is_valid && !(row.existing_preparer && row.existing_preparer.exists)
       ).length || 0;
 
@@ -382,7 +382,7 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
                     All Valid Rows Are Duplicates
                   </h6>
                   <p className="text-xs text-orange-700 font-[BasisGrotesquePro]">
-                    All {valid_rows} valid row(s) in this import are duplicates that already exist in your firm. 
+                    All {valid_rows} valid row(s) in this import are duplicates that already exist in your firm.
                     No rows have been selected for import.
                   </p>
                 </div>
@@ -433,8 +433,8 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
                     const workStatus = rowData.work_status || '-';
 
                     return (
-                      <tr 
-                        key={row.row_index} 
+                      <tr
+                        key={row.row_index}
                         className={`hover:bg-gray-50 ${isDisabled ? 'opacity-50' : ''} ${hasDuplicate ? (isDuplicateInFirm ? 'bg-orange-50' : 'bg-yellow-50') : ''}`}
                       >
                         <td className="px-4 py-3">
@@ -549,9 +549,9 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
 
     if (currentStep === 3 && importResults) {
       // Check if there are errors in import results
-      const hasErrors = (importResults.error_count && importResults.error_count > 0) || 
-                       (importResults.import_results && importResults.import_results.some(r => r.status === 'error'));
-      
+      const hasErrors = (importResults.error_count && importResults.error_count > 0) ||
+        (importResults.import_results && importResults.import_results.some(r => r.status === 'error'));
+
       return (
         <div>
           {/* Import Completed */}
@@ -621,20 +621,20 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {importResults.import_results.slice(0, 20).map((result, idx) => {
                         // Use data from API response (new structure) or fallback to preview data
-                        const userName = result.preparer_name || 
-                                        (result.first_name && result.last_name ? `${result.first_name} ${result.last_name}` : null) ||
-                                        (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data ? 
-                                          `${previewData.preview_data.find(r => r.row_index === result.row_index).data.first_name || ''} ${previewData.preview_data.find(r => r.row_index === result.row_index).data.last_name || ''}`.trim() : null) ||
-                                        'N/A';
-                        const userEmail = result.email || 
-                                         (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.email) ||
-                                         'N/A';
-                        const userPhone = result.phone || 
-                                        (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.phone) ||
-                                        'N/A';
+                        const userName = result.preparer_name ||
+                          (result.first_name && result.last_name ? `${result.first_name} ${result.last_name}` : null) ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data ?
+                            `${previewData.preview_data.find(r => r.row_index === result.row_index).data.first_name || ''} ${previewData.preview_data.find(r => r.row_index === result.row_index).data.last_name || ''}`.trim() : null) ||
+                          'N/A';
+                        const userEmail = result.email ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.email) ||
+                          'N/A';
+                        const userPhone = result.phone ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.phone) ||
+                          'N/A';
                         // Use details if available, otherwise use message
                         const errorMessage = result.details || result.message || '-';
-                        
+
                         return (
                           <tr key={idx} className={`hover:bg-gray-50 ${result.status === 'error' ? 'bg-red-50' : ''}`}>
                             <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.row_index + 1}</td>

@@ -486,7 +486,7 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
                 <p>Drop your file here or click to browse</p>
                 <p>Supported formats: CSV, XLS, XLSX (Max 10MB)</p>
               </div>
-              <label className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer"
+              <label className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer d-flex justify-center"
                 style={{
                   border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
                   borderRadius: '8px'
