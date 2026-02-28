@@ -1181,6 +1181,8 @@ export default function ESignatureManagement() {
       <div className="mb-2 md:mb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex-1">
+            <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">E-Signature Management</h4>
+            <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Track and manage all document signature requests across the firm</p>
           </div>
           <button
             onClick={() => {

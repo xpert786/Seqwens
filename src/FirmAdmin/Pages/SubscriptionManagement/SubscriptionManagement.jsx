@@ -866,6 +866,7 @@ const SubscriptionManagement = () => {
                                                     <>
                                                         {renderUsageBar('Client Accounts', subscriptionOverview.overview.usage.clients.used, subscriptionOverview.overview.usage.clients.limit)}
                                                         {renderUsageBar('Staff Members', subscriptionOverview.overview.usage.staff_users.used, subscriptionOverview.overview.usage.staff_users.limit, 'bg-indigo-500')}
+                                                        {renderUsageBar('Offices', subscriptionOverview.overview.usage.offices?.used || 0, subscriptionOverview.overview.usage.offices?.limit, 'bg-emerald-500')}
                                                     </>
                                                 );
                                             })()}
