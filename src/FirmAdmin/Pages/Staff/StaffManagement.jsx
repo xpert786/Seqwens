@@ -1926,8 +1926,8 @@ export default function StaffManagement() {
             <div className="mt-6 text-right">
               <button
                 type="button"
-                className="btn btn-secondary"
-                style={{ textColor: "white" }}
+                className="btn btn-secondary hover:!bg-white hover:!text-black hover:!opacity-100 !transition-none hover:!shadow-none"
+                style={{ color: "black", backgroundColor: "white" }}
                 onClick={closeInviteActionsModal}
               >
                 Done

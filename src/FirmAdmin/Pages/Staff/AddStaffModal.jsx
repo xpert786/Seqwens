@@ -389,7 +389,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 sm:p-10"
       style={{
-        zIndex: 99999,
+        zIndex: 999999,
         marginTop: 0,
       }}
       onClick={(e) => {
