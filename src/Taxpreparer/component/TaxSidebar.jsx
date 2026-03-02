@@ -15,7 +15,7 @@ import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 import { isFeatureVisible, hasTaxPreparerPermission } from "../../ClientOnboarding/utils/privilegeUtils";
 
-export default function TaxSidebar({ isSidebarOpen = true, onNavigate }) {
+export default function TaxSidebar({ isSidebarOpen = true, onNavigate, isImpersonating = false }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -76,6 +76,11 @@ export default function TaxSidebar({ isSidebarOpen = true, onNavigate }) {
     <div
       className={`tsb-container ${isSidebarOpen ? "" : "collapsed"}`}
       aria-hidden={!isSidebarOpen}
+      style={{
+        top: isImpersonating ? '110px' : '70px',
+        height: isImpersonating ? 'calc(100vh - 110px)' : 'calc(100vh - 70px)',
+        transition: 'top 0.3s ease, transform 0.3s ease'
+      }}
     >
       <div className="tsb-top">
         <ul className="nav flex-column px-3" style={{ paddingBottom: '120px' }}>

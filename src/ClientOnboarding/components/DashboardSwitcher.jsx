@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronDown, FiLayers } from "react-icons/fi";
 import { roleAPI, handleAPIError } from "../utils/apiUtils";
+import { setTokens, getStorage } from "../utils/userUtils";
 import { toast } from "react-toastify";
 
 const ROLE_DISPLAY_NAMES = {
@@ -57,11 +58,30 @@ export default function DashboardSwitcher() {
     try {
       setSwitching(true);
       const response = await roleAPI.switchRole(targetRole);
-      
+
       if (response.success) {
-        setActiveRole(response.data.active_role);
+        // Update tokens for the session
+        const rememberMe = localStorage.getItem("rememberMe") === "true" || sessionStorage.getItem("rememberMe") === "true";
+        const accessToken = response.access_token || response.tokens?.access || response.data?.access_token;
+        const refreshToken = response.refresh_token || response.tokens?.refresh || response.data?.refresh_token;
+
+        if (accessToken && refreshToken) {
+          setTokens(accessToken, refreshToken, rememberMe);
+        }
+
+        // Update storage user data if available
+        const storage = getStorage();
+        if (response.user && storage) {
+          storage.setItem('userData', JSON.stringify(response.user));
+          storage.setItem('userType', targetRole);
+        } else if (response.data?.user && storage) {
+          storage.setItem('userData', JSON.stringify(response.data.user));
+          storage.setItem('userType', targetRole);
+        }
+
+        setActiveRole(response.data?.active_role || targetRole);
         setShowDropdown(false);
-        
+
         toast.success(`Switched to ${ROLE_DISPLAY_NAMES[targetRole] || targetRole} dashboard`, {
           position: "top-right",
           autoClose: 2000,
@@ -70,7 +90,10 @@ export default function DashboardSwitcher() {
         // Navigate to the appropriate dashboard
         const dashboardRoute = DASHBOARD_ROUTES[targetRole];
         if (dashboardRoute) {
-          navigate(dashboardRoute);
+          // Delay navigation slightly to ensure tokens are set
+          setTimeout(() => {
+            window.location.href = dashboardRoute;
+          }, 300);
         } else {
           // Fallback: reload page
           window.location.reload();
@@ -130,7 +153,7 @@ export default function DashboardSwitcher() {
 
   // Build dashboards list from primary + linked users
   const availableDashboards = [];
-  
+
   // Add primary role dashboard
   if (roles.primary_user) {
     const role = roles.primary_user.role;
@@ -143,7 +166,7 @@ export default function DashboardSwitcher() {
       is_active: isActive
     });
   }
-  
+
   // Add linked users dashboards
   if (roles.linked_users && Array.isArray(roles.linked_users)) {
     roles.linked_users.forEach(linkedUser => {

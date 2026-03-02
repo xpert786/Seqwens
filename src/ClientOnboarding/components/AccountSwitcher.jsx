@@ -302,9 +302,13 @@ export default function AccountSwitcher() {
 
       // Handle Successful Switch
       if (responseData) {
-        // 1. Update Tokens
+        // 1. Update Tokens - handle both wrapped and flat formats
         if (responseData.tokens) {
           setTokens(responseData.tokens.access, responseData.tokens.refresh, true);
+        } else if (responseData.access_token && responseData.refresh_token) {
+          setTokens(responseData.access_token, responseData.refresh_token, true);
+        } else if (responseData.access && responseData.refresh) {
+          setTokens(responseData.access, responseData.refresh, true);
         }
 
         // 2. Get Fresh Storage Reference (Critical step!)
