@@ -319,8 +319,7 @@ export default function AcceptInvite() {
                     // Check if this was an existing user linking a new role
                     if (invitationData?.user_exists && response.data.tokens) {
                         // User was already logged in and accepted invitation
-                        // Update their tokens and redirect to role selection
-                        const { setTokens } = require('../utils/userUtils');
+                        // Update their tokens and redirect to context selection
                         setTokens(
                             response.data.tokens.access,
                             response.data.tokens.refresh,
@@ -336,13 +335,18 @@ export default function AcceptInvite() {
                             autoClose: 2000,
                         });
 
-                        // Redirect to role selection page
+                        // Redirect to select-context so user can choose the newly-linked firm
                         setTimeout(() => {
-                            navigate("/select-role", {
+                            // Re-fetch available contexts to include the new membership
+                            navigate("/select-context", {
                                 state: {
                                     fromInvitation: true,
-                                    userData: user,
-                                    message: "Please select your role to continue"
+                                    needs_role_selection: false,
+                                    needs_firm_selection: true,
+                                    all_firms: null, // Will be fetched fresh by the page
+                                    all_roles: null,
+                                    user: user,
+                                    message: "Please select your firm context to continue"
                                 },
                                 replace: true
                             });

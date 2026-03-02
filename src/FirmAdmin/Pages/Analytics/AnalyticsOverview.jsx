@@ -142,11 +142,12 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
 
   // Prepare revenue trend chart data
   const revenueTrendData = analyticsData?.revenue_trend?.map(item => ({
-    month: item.month,
+    month: item.month, // This will be the year if period is 'yearly'
     monthFull: item.month_full,
     revenue: item.revenue || 0,
     expenses: item.expenses || 0,
-    profit: item.profit || 0
+    profit: item.profit || 0,
+    year: item.year
   })) || [];
 
   // Prepare client growth chart data
@@ -248,8 +249,12 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
         {/* Revenue Trend Chart */}
         <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 shadow-sm">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
-            <p className="text-sm text-gray-600">Monthly revenue, expenses, and profit</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {period === 'yearly' ? 'Yearly Revenue Trend' : 'Monthly Revenue Trend'}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {period === 'yearly' ? 'Yearly revenue, expenses, and profit' : 'Monthly revenue, expenses, and profit'}
+            </p>
           </div>
           <div className="h-56 sm:h-64">
             {revenueTrendData.length > 0 ? (
@@ -300,7 +305,9 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
         {/* Client Growth Chart */}
         <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 shadow-sm">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Client Growth</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {period === 'yearly' ? 'Yearly Client Growth' : 'Monthly Client Growth'}
+            </h3>
             <p className="text-sm text-gray-600">New vs lost clients and retention rate</p>
           </div>
           <div className="h-56 sm:h-64">

@@ -148,7 +148,20 @@ export default function Login() {
     // Set tokens first so they are available for the new route
     setTokens(accessToken, refreshToken, rememberMe);
 
-    // NEW: Check for role/firm selection using available-contexts API
+    // IMPORTANT: Check for returnTo FIRST — before the role/firm selection redirect.
+    // This ensures that invite links (and any other returnTo paths) are never lost
+    // when the user happens to have multiple firm memberships or roles.
+    const queryParams = new URLSearchParams(location.search);
+    const returnTo = location.state?.returnTo || queryParams.get('returnTo');
+
+    if (returnTo) {
+      console.log(`returnTo detected before context check — redirecting to: ${returnTo}`);
+      navigate(returnTo);
+      return;
+    }
+
+    // Check for role/firm selection using available-contexts API
+    // (Only reached when there is no returnTo destination)
     try {
       const contextsData = await userAPI.getAvailableContexts();
 
@@ -173,24 +186,6 @@ export default function Login() {
     } catch (error) {
       console.error('Error checking available contexts:', error);
       // Continue with normal login flow if context check fails
-    }
-
-    // Check for returnTo in location state or search params
-    const queryParams = new URLSearchParams(location.search);
-    const returnTo = location.state?.returnTo || queryParams.get('returnTo');
-
-    console.log('Login checking returnTo:', {
-      state: location.state,
-      search: location.search,
-      returnTo: returnTo,
-      pathname: location.pathname
-    });
-
-    // Do this BEFORE any other navigation
-    if (returnTo) {
-      console.log(`Redirecting to returnTo path: ${returnTo}`);
-      navigate(returnTo);
-      return;
     }
 
     // Check user type and navigate to appropriate dashboard
@@ -397,7 +392,7 @@ export default function Login() {
                   <input
                     type="checkbox"
                     className="form-check-input"
-                    
+
                     checked={rememberMe}
                     onChange={(e) => {
                       const newRememberMe = e.target.checked;

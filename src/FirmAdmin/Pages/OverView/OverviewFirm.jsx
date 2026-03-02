@@ -30,6 +30,9 @@ const getRevenueData = (dashboardData, revenueData) => {
   if (revenueData?.trend?.data) {
     return revenueData.trend.data;
   }
+  if (revenueData?.revenue_profit_trend) {
+    return revenueData.revenue_profit_trend;
+  }
   if (!dashboardData?.revenue_analytics?.trend?.data) {
     return [];
   }
@@ -413,7 +416,7 @@ export default function FirmAdminDashboard() {
 
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text("Revenue Analytics1", 14, yPosition);
+        doc.text(revenuePeriod === 'yearly' ? "Yearly Revenue Analytics" : "Monthly Revenue Analytics", 14, yPosition);
         yPosition += 8;
 
         // Add Revenue Chart Image
@@ -443,7 +446,7 @@ export default function FirmAdminDashboard() {
 
         autoTable(doc, {
           startY: yPosition,
-          head: [["Month/Year", "Revenue", "Target"]],
+          head: [[revenuePeriod === 'yearly' ? "Year" : "Month", "Revenue", "Target"]],
           body: revenueSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
@@ -1080,8 +1083,12 @@ export default function FirmAdminDashboard() {
           <div className="p-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-semibold text-gray-800 font-[BasisGrotesquePro]">Revenue Analytics</h4>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">Your revenue contribution and trends </p>
+                <h4 className="font-semibold text-gray-800 font-[BasisGrotesquePro]">
+                  {revenuePeriod === 'yearly' ? 'Yearly Revenue Analytics' : 'Monthly Revenue Analytics'}
+                </h4>
+                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+                  {revenuePeriod === 'yearly' ? 'Your yearly revenue contribution and trends' : 'Your monthly revenue contribution and trends'}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <select
@@ -1434,8 +1441,12 @@ export default function FirmAdminDashboard() {
             <div className="mb-4">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Revenue Analytics</h3>
-                  <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
+                  <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                    {revenuePeriod === 'yearly' ? 'Yearly Revenue Analytics' : 'Monthly Revenue Analytics'}
+                  </h3>
+                  <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
+                    {revenuePeriod === 'yearly' ? 'Your yearly revenue contribution and trends' : 'Your monthly revenue contribution and trends'}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="relative">

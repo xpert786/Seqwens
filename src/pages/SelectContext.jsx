@@ -24,13 +24,13 @@ const TAXPAYER_ROLES = new Set([
 function getRoleCategory(roleValue) {
     if (!roleValue) return 'other';
     const lower = String(roleValue).toLowerCase().trim();
-    // Firm-level roles
-    if (FIRM_ROLES.has(lower) ||
+    if (
+        FIRM_ROLES.has(lower) ||
         ['firm', 'admin', 'firmadmin', 'firm_admin', 'staff', 'tax_preparer',
-            'team_member', 'teammember', 'accountant', 'bookkeeper', 'assistant', 'preparer'].includes(lower)) {
+            'team_member', 'teammember', 'accountant', 'bookkeeper', 'assistant', 'preparer'].includes(lower)
+    ) {
         return 'firm';
     }
-    // Taxpayer/client roles
     if (TAXPAYER_ROLES.has(lower) || ['client', 'taxpayer'].includes(lower)) {
         return 'taxpayer';
     }
@@ -39,18 +39,13 @@ function getRoleCategory(roleValue) {
 
 /**
  * Filter firm memberships strictly based on login category.
- * - 'firm' category  → only show memberships where role is a firm-level role
- * - 'taxpayer' category → only show memberships where role is a taxpayer role
- * - 'other' → show all
  */
 function filterFirmsForCategory(allFirms, loginCategory) {
     if (!allFirms || allFirms.length === 0) return [];
     if (loginCategory === 'firm') {
-        // Strictly only firm-level memberships — never mix in taxpayer accounts
         return allFirms.filter(f => getRoleCategory(f.role) === 'firm');
     }
     if (loginCategory === 'taxpayer') {
-        // Strictly only taxpayer/client memberships — never mix in firm accounts
         return allFirms.filter(f => getRoleCategory(f.role) === 'taxpayer');
     }
     return allFirms;
@@ -60,29 +55,71 @@ export default function SelectContext() {
     const location = useLocation();
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState('role'); // 'role' or 'firm'
-    const [selectedLoginCategory, setSelectedLoginCategory] = useState(null); // 'firm' or 'taxpayer'
+    const [selectedLoginCategory, setSelectedLoginCategory] = useState(null);
 
+    // Dynamic context — populated from navigation state or fetched fresh after invite acceptance
+    const [fetchedContext, setFetchedContext] = useState(null);
+    const [isFetchingContext, setIsFetchingContext] = useState(false);
+
+    const stateData = location.state || {};
     const {
-        needs_role_selection,
-        needs_firm_selection,
-        all_roles,
-        all_firms,
-        user
-    } = location.state || {};
+        needs_role_selection: stateNeedsRoleSelection,
+        needs_firm_selection: stateNeedsFirmSelection,
+        all_roles: stateAllRoles,
+        all_firms: stateAllFirms,
+        user: stateUser,
+        fromInvitation,
+    } = stateData;
 
+    // Resolve data — prefer fetched (post-invite) over state (post-login)
+    const needs_role_selection = fetchedContext?.needs_role_selection ?? stateNeedsRoleSelection;
+    const needs_firm_selection = fetchedContext?.needs_firm_selection ?? stateNeedsFirmSelection;
+    const all_roles = fetchedContext?.all_roles ?? stateAllRoles;
+    const all_firms = fetchedContext?.all_firms ?? stateAllFirms;
+    const user = fetchedContext?.user ?? stateUser;
+
+    // Step 1: If arriving from an invite acceptance without pre-populated firms,
+    // fetch fresh context data from the API so the newly-linked membership is included.
     useEffect(() => {
-        // If no state data, redirect to login
         if (!location.state) {
             navigate('/login', { replace: true });
             return;
         }
 
-        // Determine initial login category if role selection is skipped
+        if (fromInvitation && !stateAllFirms) {
+            setIsFetchingContext(true);
+            userAPI.getAvailableContexts()
+                .then((response) => {
+                    if (response.success && response.data) {
+                        setFetchedContext({
+                            needs_role_selection: response.data.needs_role_selection,
+                            needs_firm_selection: response.data.needs_firm_selection,
+                            all_roles: response.data.all_roles,
+                            all_firms: response.data.all_firms,
+                            user: stateUser,
+                        });
+                    }
+                })
+                .catch((err) => {
+                    console.error('SelectContext: failed to fetch fresh contexts after invite:', err);
+                })
+                .finally(() => setIsFetchingContext(false));
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Step 2: Once we have resolved data, determine routing / initial step
+    useEffect(() => {
+        if (isFetchingContext) return;
+        if (!location.state) return;
+        // Skip until data is actually available (e.g., after the async fetch above)
+        if (fromInvitation && !stateAllFirms && !fetchedContext) return;
+
         if (!needs_role_selection && needs_firm_selection) {
-            const initialCategory = getRoleCategory(user?.active_role || user?.user_type || user?.role?.[0] || user?.role);
+            const initialCategory = getRoleCategory(
+                user?.active_role || user?.user_type || user?.role?.[0] || user?.role
+            );
             setSelectedLoginCategory(initialCategory);
 
-            // Auto-select if there's only one firm in this category
             const firmsForCat = filterFirmsForCategory(all_firms, initialCategory);
             if (firmsForCat.length === 1) {
                 console.log('Skipping firm selection: only one membership available');
@@ -91,16 +128,14 @@ export default function SelectContext() {
             }
         }
 
-        // Determine which step to show first
         if (needs_role_selection) {
             setCurrentStep('role');
         } else if (needs_firm_selection) {
             setCurrentStep('firm');
         } else {
-            // No selection needed, redirect to dashboard
             redirectToDashboard(user);
         }
-    }, [location.state, navigate, needs_role_selection, needs_firm_selection, user]);
+    }, [needs_role_selection, needs_firm_selection, all_firms, user, isFetchingContext, fetchedContext]);
 
     // Block the browser's back button while on this page.
     useEffect(() => {
@@ -116,7 +151,9 @@ export default function SelectContext() {
         try {
             const data = await userAPI.selectFirm(firmData.membership_id);
             if (data.success) {
-                const rememberMe = localStorage.getItem('rememberMe') === 'true' || sessionStorage.getItem('rememberMe') === 'true';
+                const rememberMe =
+                    localStorage.getItem('rememberMe') === 'true' ||
+                    sessionStorage.getItem('rememberMe') === 'true';
                 setTokens(data.access_token, data.refresh_token, rememberMe);
                 const storage = rememberMe ? localStorage : sessionStorage;
                 storage.setItem('userData', JSON.stringify(data.user));
@@ -125,39 +162,30 @@ export default function SelectContext() {
             }
         } catch (err) {
             console.error('Auto-select firm error:', err);
-            setCurrentStep('firm'); // Show manual selection as fallback
+            setCurrentStep('firm');
         }
     };
 
     const handleRoleSelected = (selectedUser, loginCategory) => {
-        // Track which login category was selected so we can filter firms
         const category = loginCategory || getRoleCategory(
             selectedUser?.active_role || selectedUser?.user_type || selectedUser?.role?.[0] || selectedUser?.role
         );
         setSelectedLoginCategory(category);
 
-        // If firm selection is also needed, check if we can auto-select or skip
         if (needs_firm_selection) {
             const applicableFirms = filterFirmsForCategory(all_firms, category);
-
             if (applicableFirms.length === 0) {
-                // No membership-based firms for this role category.
-                // This happens when the firm role comes from a linked User record (not a Membership).
-                // select-role/ has already resolved the context — just go to dashboard.
                 console.log('No firm memberships for selected category, proceeding to dashboard directly.');
                 redirectToDashboard(selectedUser);
             } else if (applicableFirms.length === 1) {
-                // Only one firm — auto-select without prompting
                 autoSelectFirm(applicableFirms[0]);
             } else {
-                // Multiple firms — show the selection screen
                 setCurrentStep('firm');
             }
         } else {
             redirectToDashboard(selectedUser);
         }
     };
-
 
     const handleFirmSelected = (selectedUser) => {
         redirectToDashboard(selectedUser);
@@ -180,8 +208,27 @@ export default function SelectContext() {
         }
     };
 
-    // Filter firms based on selected login category
     const filteredFirms = filterFirmsForCategory(all_firms, selectedLoginCategory);
+
+    if (isFetchingContext) {
+        return (
+            <FixedLayout>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '60vh',
+                    flexDirection: 'column',
+                    gap: '12px',
+                }}>
+                    <div className="spinner-border" role="status" style={{ color: '#fff' }} />
+                    <p style={{ color: '#fff', fontFamily: 'BasisGrotesquePro', fontSize: '16px', margin: 0 }}>
+                        Loading your account contexts...
+                    </p>
+                </div>
+            </FixedLayout>
+        );
+    }
 
     return (
         <FixedLayout>

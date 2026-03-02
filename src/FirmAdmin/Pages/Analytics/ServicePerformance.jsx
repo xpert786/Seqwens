@@ -87,15 +87,21 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
   // Prepare service adoption heatmap data - transform API response to chart format
   const serviceAdoptionHeatmap = analyticsData?.service_adoption_heatmap || [];
 
-  // Get all unique months from the heatmap data (sorted chronologically)
-  const getMonths = () => {
+  // Get all unique labels (months or years) from the heatmap data
+  const getPeriodLabels = () => {
     if (serviceAdoptionHeatmap.length === 0) return [];
     const firstService = serviceAdoptionHeatmap[0];
     if (firstService?.months) {
+      const labels = Object.keys(firstService.months);
+
+      // If the labels are years (4-digit numbers)
+      if (labels.every(label => /^\d{4}$/.test(label))) {
+        return labels.sort((a, b) => parseInt(a) - parseInt(b));
+      }
+
+      // Otherwise assume they are month abbreviations
       const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const months = Object.keys(firstService.months);
-      // Sort months according to standard order
-      return months.sort((a, b) => {
+      return labels.sort((a, b) => {
         const indexA = monthOrder.indexOf(a);
         const indexB = monthOrder.indexOf(b);
         if (indexA === -1) return 1;
@@ -106,19 +112,19 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
     return [];
   };
 
-  const months = getMonths();
+  const periodLabels = getPeriodLabels();
 
   // Transform heatmap data to row format for display
-  const serviceAdoptionData = months.map(month => {
-    const row = { month };
+  const serviceAdoptionData = periodLabels.map(label => {
+    const row = { label };
     serviceAdoptionHeatmap.forEach(serviceItem => {
-      if (serviceItem.months && serviceItem.months[month] !== undefined) {
+      if (serviceItem.months && serviceItem.months[label] !== undefined) {
         // Use service name as key (with spaces replaced for safe property access)
         const serviceKey = serviceItem.service
           .toLowerCase()
           .replace(/\s+/g, '_')
           .replace(/[^a-z0-9_]/g, '');
-        row[serviceKey] = serviceItem.months[month];
+        row[serviceKey] = serviceItem.months[label];
       }
     });
     return row;
@@ -291,7 +297,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
               <div className="space-y-2 min-w-[800px]">
                 {/* Header */}
                 <div className={`grid gap-4 py-1 px-3 text-sm font-thin text-gray-600`} style={{ gridTemplateColumns: `150px repeat(${serviceNames.length}, 1fr)` }}>
-                  <div>Month</div>
+                  <div>{period === 'yearly' ? 'Year' : 'Month'}</div>
                   {serviceNames.map((service) => (
                     <div key={service}>{service}</div>
                   ))}
@@ -300,7 +306,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                 {/* Rows */}
                 {serviceAdoptionData.map((row, index) => (
                   <div key={index} className={`grid gap-4 py-2 px-3 border border-[#E8F0FF] rounded-md bg-white`} style={{ gridTemplateColumns: `150px repeat(${serviceNames.length}, 1fr)` }}>
-                    <div className="font-medium text-gray-900 flex items-center">{row.month}</div>
+                    <div className="font-medium text-gray-900 flex items-center">{row.label}</div>
                     {serviceNames.map((service) => {
                       const serviceKey = getServiceKey(service);
                       const value = row[serviceKey] || 0;

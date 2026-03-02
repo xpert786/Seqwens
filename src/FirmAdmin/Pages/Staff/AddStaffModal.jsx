@@ -385,6 +385,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
   };
 
   return (
+    <>
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 sm:p-10"
       style={{
@@ -584,8 +585,9 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
           </div>
         </form>
       </div>
+    </div>
 
-      {/* Confirmation Modal for Existing User */}
+      {/* Confirmation Modal - rendered as sibling outside parent overlay to avoid z-index stacking issues */}
       <ConfirmationModal
         isOpen={showConfirmModal}
         onClose={() => {
@@ -617,7 +619,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
         cancelButtonStyle={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
         isLoading={sendingInvite}
       />
-    </div>
+    </>
   );
 }
 

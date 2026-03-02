@@ -216,6 +216,7 @@ export default function AnalyticsMain() {
                 <option value="3m">Last 3 months</option>
                 <option value="6m">Last 6 months</option>
                 <option value="1y">Last year</option>
+                <option value="yearly">Yearly (Last 5 years)</option>
                 <option value="all">All time</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

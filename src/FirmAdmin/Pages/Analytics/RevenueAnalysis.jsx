@@ -156,12 +156,13 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs, period 
 
   // Prepare revenue trend chart data
   const revenueTrendData = analyticsData?.revenue_profit_trend?.map(item => ({
-    month: item.month,
+    month: item.month, // This will be the year if period is 'yearly'
     monthFull: item.month_full,
     paid: item.paid || 0,
     pending: item.pending || 0,
     overdue: item.overdue || 0,
-    total: item.total || 0
+    total: item.total || 0,
+    year: item.year
   })) || [];
 
   // Prepare fees by office chart data
@@ -278,8 +279,12 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs, period 
       {/* Revenue & Profit Trend Chart */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="mb-4 sm:mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Monthly Revenue Trend</h3>
-          <p className="text-sm text-gray-600">Revenue breakdown by invoice status</p>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {period === 'yearly' ? 'Yearly Revenue Trend' : 'Monthly Revenue Trend'}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {period === 'yearly' ? 'Revenue breakdown by year' : 'Revenue breakdown by invoice status'}
+          </p>
         </div>
         <div className="h-80 sm:h-96">
           {revenueTrendData.length > 0 ? (

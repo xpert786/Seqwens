@@ -392,7 +392,6 @@ export default function FirmDashboardLayout() {
           isSidebarOpen={isSidebarOpen}
           sidebarWidth={isMobile ? '0px' : sidebarWidth}
         />
-        <SubscriptionStatusBanner />
 
         {/* Mobile/Tablet Overlay */}
         {isMobile && isSidebarOpen && (
@@ -406,16 +405,23 @@ export default function FirmDashboardLayout() {
         <FirmSidebar
           isSidebarOpen={isSidebarOpen}
           isMobile={isMobile}
+          isImpersonating={isImpersonating}
           onNavItemClick={handleCloseSidebar}
         />
-        <main
-          className="h-[calc(100vh-70px)] overflow-y-auto p-2 transition-all duration-300"
+        <div
+          className="flex flex-col transition-all duration-300"
           style={{
+            marginTop: isImpersonating ? '110px' : '70px',
+            height: isImpersonating ? 'calc(100vh - 110px)' : 'calc(100vh - 70px)',
             marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
             width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
-          }}  >
-          <Outlet />
-        </main>
+          }}
+        >
+          <SubscriptionStatusBanner />
+          <main className="flex-grow overflow-y-auto p-2">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </SubscriptionStatusProvider>
   );
