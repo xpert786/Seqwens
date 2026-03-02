@@ -530,7 +530,7 @@ const FinalizeSubscription = () => {
 
         {/* Plans Grid */}
         {plans.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8 lg:mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8 lg:mb-10">
             {plans.map((plan) => {
               const isSelected = selectedPlan?.id === plan.id;
               // Get price based on billing cycle - prices come as strings from API
@@ -578,18 +578,18 @@ const FinalizeSubscription = () => {
 
                   {/* Plan Header */}
                   <div className="text-center mb-5 sm:mb-6">
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 font-[BasisGrotesquePro]">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 font-[BasisGrotesquePro] truncate" title={planName}>
                       {planName}
                     </h3>
                     <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-4 sm:mb-5 font-[BasisGrotesquePro] min-h-[2.5rem] sm:min-h-[3rem] flex items-center justify-center">
                       {getPlanDescription(plan)}
                     </p>
                     <div className="mb-4 sm:mb-5">
-                      <div className="flex items-baseline justify-center gap-1 sm:gap-2">
-                        <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                      <div className="flex items-baseline justify-center gap-1 sm:gap-2 flex-wrap">
+                        <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 font-[BasisGrotesquePro]">
                           {priceDisplay.split('/')[0]}
                         </span>
-                        <span className="text-base sm:text-lg lg:text-xl text-gray-600 font-[BasisGrotesquePro]">
+                        <span className="text-sm sm:text-base lg:text-lg text-gray-600 font-[BasisGrotesquePro]">
                           /{priceDisplay.split('/')[1]}
                         </span>
                       </div>
@@ -622,7 +622,7 @@ const FinalizeSubscription = () => {
                       <ul className="space-y-2.5 sm:space-y-3 text-left">
                         {features.length > 0 ? (
                           features.map((feature, index) => (
-                            <li key={index} className="flex items-start text-xs sm:text-sm lg:text-base text-gray-600 font-[BasisGrotesquePro]">
+                            <li key={index} className="flex items-start text-xs sm:text-sm lg:text-sm text-gray-600 font-[BasisGrotesquePro]">
                               <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#3AD6F2] mr-2 sm:mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                               </svg>
