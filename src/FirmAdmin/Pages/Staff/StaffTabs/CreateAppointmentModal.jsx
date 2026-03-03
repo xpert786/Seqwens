@@ -17,6 +17,7 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
         meeting_type: 'zoom',
         meeting_location: '',
         phone_number: '', // Added for phone call type
+        timezone: 'America/New_York', // Default to Eastern Time (EST)
     });
 
     const [clients, setClients] = useState([]);
@@ -37,7 +38,8 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                     user_id: appointment.user_id || appointment.client_id || '', // Need to map this correctly from appointment object
                     meeting_type: appointment.meeting_type || 'zoom',
                     meeting_location: appointment.meeting_location || '',
-                    phone_number: appointment.phone_number || ''
+                    phone_number: appointment.phone_number || '',
+                    timezone: appointment.timezone || 'America/New_York'
                 });
             } else {
                 // Create mode
@@ -51,7 +53,8 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                     user_id: '',
                     meeting_type: 'zoom',
                     meeting_location: '',
-                    phone_number: ''
+                    phone_number: '',
+                    timezone: 'America/New_York'
                 });
             }
 
@@ -335,6 +338,26 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                                 />
                             </div>
                         )}
+
+                        {/* Timezone */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">Timezone</label>
+                            <select
+                                name="timezone"
+                                value={formData.timezone}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
+                            >
+                                <option value="America/New_York">Eastern Time (EST/EDT)</option>
+                                <option value="America/Chicago">Central Time (CST/CDT)</option>
+                                <option value="America/Denver">Mountain Time (MST/MDT)</option>
+                                <option value="America/Phoenix">Mountain Time – Arizona (MST)</option>
+                                <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
+                                <option value="America/Anchorage">Alaska Time (AKT)</option>
+                                <option value="America/Honolulu">Hawaii Time (HST)</option>
+                                <option value="UTC">UTC</option>
+                            </select>
+                        </div>
 
                         {/* Description */}
                         <div>

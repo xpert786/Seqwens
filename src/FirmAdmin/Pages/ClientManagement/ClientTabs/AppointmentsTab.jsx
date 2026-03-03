@@ -20,7 +20,8 @@ export default function AppointmentsTab({ client }) {
     appointment_time: '',
     duration: 30,
     description: '',
-    meeting_type: 'zoom'
+    meeting_type: 'zoom',
+    timezone: 'America/New_York'
   });
   const [filters, setFilters] = useState({
     status: 'all',
@@ -188,7 +189,7 @@ export default function AppointmentsTab({ client }) {
         meeting_type: scheduleForm.meeting_type || 'zoom',
         client_id: client.id,
         appointment_with_id: client.id,
-        timezone: 'America/New_York'
+        timezone: scheduleForm.timezone || 'America/New_York'
       };
 
       const response = await firmAdminMeetingsAPI.createMeeting(meetingData);
@@ -206,7 +207,8 @@ export default function AppointmentsTab({ client }) {
           appointment_time: '',
           duration: 30,
           description: '',
-          meeting_type: 'zoom'
+          meeting_type: 'zoom',
+          timezone: 'America/New_York'
         });
         setShowScheduleModal(false);
 
@@ -487,8 +489,8 @@ export default function AppointmentsTab({ client }) {
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${currentPage === page
-                                    ? 'bg-[#F56D2D] text-white'
-                                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                  ? 'bg-[#F56D2D] text-white'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                   }`}
                               >
                                 {page}
@@ -623,6 +625,27 @@ export default function AppointmentsTab({ client }) {
                   <option value="google_meet">Google Meet</option>
                   <option value="in_person">In Person</option>
                   <option value="on_call">Phone Call</option>
+                </select>
+              </div>
+
+              {/* Timezone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Timezone
+                </label>
+                <select
+                  value={scheduleForm.timezone}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, timezone: e.target.value })}
+                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] bg-white"
+                >
+                  <option value="America/New_York">Eastern Time (EST/EDT)</option>
+                  <option value="America/Chicago">Central Time (CST/CDT)</option>
+                  <option value="America/Denver">Mountain Time (MST/MDT)</option>
+                  <option value="America/Phoenix">Mountain Time – Arizona (MST)</option>
+                  <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
+                  <option value="America/Anchorage">Alaska Time (AKT)</option>
+                  <option value="America/Honolulu">Hawaii Time (HST)</option>
+                  <option value="UTC">UTC</option>
                 </select>
               </div>
 
