@@ -15,6 +15,7 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
   const [error, setError] = useState('');
   const [validationResults, setValidationResults] = useState(null);
   const [importResults, setImportResults] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Fetch system fields from API
   const fetchSystemFields = useCallback(async () => {
@@ -268,6 +269,26 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
     }
   };
 
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      const mockEvent = { target: { files: [file] } };
+      handleFileUpload(mockEvent);
+    }
+  };
+
   // Preview import (validate data and show preview)
   const handleContinueToPreview = async () => {
     // Check if required fields are mapped
@@ -291,17 +312,14 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
     const hasFullName = mappedFieldKeys.includes('full_name');
     const hasNameFields = (hasFirstName && hasLastName) || hasFullName;
 
-    // Validate all required fields are mapped
-    if (!hasEmail || !hasPhoneNumber || !hasNameFields) {
+    // Validate only most critical fields are mapped
+    if (!hasEmail || (!hasFirstName && !hasFullName)) {
       const missingFields = [];
       if (!hasEmail) missingFields.push('Email Address');
-      if (!hasPhoneNumber) missingFields.push('Phone Number');
-      if (!hasNameFields) {
-        if (!hasFullName && (!hasFirstName || !hasLastName)) {
-          missingFields.push('Full Name (or both First Name and Last Name)');
-        }
+      if (!hasFirstName && !hasFullName) {
+        missingFields.push('First Name (or Full Name)');
       }
-      setError(`Please map all required fields. Missing: ${missingFields.join(', ')}`);
+      setError(`Please map the required fields. Missing: ${missingFields.join(', ')}`);
       return;
     }
 
@@ -449,8 +467,14 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
           <div>
             <h6 className="taxdashboardr-titler mb-2 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Upload Client Data</h6>
             <div
-              className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center"
-              style={{ borderColor: 'var(--Palette2-Dark-blue-100, #E8F0FF)', backgroundColor: '#F3F7FF' }}
+              className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center transition-colors duration-200 ${isDragging ? 'border-blue-500 bg-blue-50' : ''}`}
+              style={{
+                borderColor: isDragging ? '#3B82F6' : 'var(--Palette2-Dark-blue-100, #E8F0FF)',
+                backgroundColor: isDragging ? '#EFF6FF' : '#F3F7FF'
+              }}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
             >
               <div className="text-blue-500 text-2xl mb-2"><Folder /></div>
               <div className="text-xs mb-3" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)', fontSize: '10px' }}>

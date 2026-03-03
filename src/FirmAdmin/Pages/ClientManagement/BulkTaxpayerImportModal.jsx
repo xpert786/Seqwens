@@ -130,6 +130,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
   const [downloadingReport, setDownloadingReport] = useState(false);
   const [errorSectionExpanded, setErrorSectionExpanded] = useState(true);
   const [warnSectionExpanded, setWarnSectionExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -156,6 +157,26 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     if (file.size > 10 * 1024 * 1024) { setError('File size must be less than 10MB'); return; }
     setCsvFile(file);
     setError('');
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      const mockEvent = { target: { files: [file] } };
+      handleFileUpload(mockEvent);
+    }
   };
 
   const handlePreview = async () => {
@@ -315,8 +336,14 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           Upload File (CSV or PDF)
         </h6>
         <div
-          className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center"
-          style={{ borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+          className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center transition-colors duration-200 ${isDragging ? 'border-blue-500 bg-blue-50' : ''}`}
+          style={{
+            borderColor: isDragging ? '#3B82F6' : '#E8F0FF',
+            backgroundColor: isDragging ? '#EFF6FF' : '#F3F7FF'
+          }}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
         >
           <div className="text-blue-500 text-2xl mb-2"><Folder /></div>
           <div className="text-xs mb-3" style={{ color: '#3B4A66', fontSize: '10px' }}>
