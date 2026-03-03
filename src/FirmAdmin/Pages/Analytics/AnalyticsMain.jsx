@@ -194,12 +194,12 @@ export default function AnalyticsMain() {
   };
 
   return (
-    <div className="min-h-screen p-2 sm:p-4 lg:p-6">
-      <div className="lg:px-4 md:px-2 px-1 py-4 mx-auto">
+    <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
+      <div className="mx-auto">
         {/* Fixed Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 lg:mb-8 space-y-4 lg:space-y-0">
           <div className="flex-1">
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Analytics & Reports</h3>
+            <h3 className="text-2xl sm:text-3xl font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Analytics & Reports</h3>
             <p className="text-gray-600 text-sm">Comprehensive insights into your firm's performance</p>
           </div>
 

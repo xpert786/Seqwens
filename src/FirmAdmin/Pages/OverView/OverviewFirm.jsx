@@ -1156,9 +1156,9 @@ export default function FirmAdminDashboard() {
 
   return (
     <>
-      <CustomizeModal />
-      <ScheduleModal />
-      <RevenueModal />
+      {CustomizeModal()}
+      {ScheduleModal()}
+      {RevenueModal()}
       <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
         {/* Developer Subscription Banner */}
         {isDeveloperSubscription && (
@@ -1742,19 +1742,22 @@ export default function FirmAdminDashboard() {
                     <div className="flex justify-between items-center">
                       <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.status}</div>
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.score}</div>
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${item.badge === 'Low' ? 'bg-blue-100 text-blue-800' :
-                          item.badge === 'Medium' ? 'bg-gray-100 text-gray-800' :
-                            'bg-red-100 text-red-800'
+                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] font-bold">{item.score}</div>
+                        <div className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.badge === 'Low' ? 'bg-green-100 text-green-700' :
+                          item.badge === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                            'bg-rose-100 text-rose-700'
                           }`}>
                           {item.badge}
                         </div>
                       </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                       <div
-                        className="h-4 rounded-full"
-                        style={{ width: `${item.percentage}%`, backgroundColor: '#3AD6F2' }}
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{
+                          width: `${item.percentage}%`,
+                          backgroundColor: item.status === 'Completed' ? '#10B981' : item.status === 'Pending' ? '#F59E0B' : '#3AD6F2'
+                        }}
                       >
                       </div>
                     </div>
@@ -1766,69 +1769,84 @@ export default function FirmAdminDashboard() {
 
               {dashboardData?.compliance_risk?.metrics && (
                 <div className="mt-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-orange-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">KPA Completion Rate</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-xl border border-orange-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+                            <ChecksIcon />
+                          </div>
+                          <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">KPA Completion Rate</div>
+                        </div>
+                        <div className="text-lg font-bold text-[#F56D2D] font-[BasisGrotesquePro]">
                           {dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%
                         </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="w-full bg-gray-100 rounded-full h-2">
                         <div
-                          className="h-3 rounded-full"
+                          className="h-2 rounded-full bg-[#F56D2D]"
                           style={{
                             width: `${dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%`,
-                            backgroundColor: '#3AD6F2'
                           }}
                         ></div>
                       </div>
                     </div>
 
-                    <div className="bg-orange-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Flagged Returns (Active)</div>
-                        <div className="text-2xl font-bold text-red-600 font-[BasisGrotesquePro]">
+                    <div className="bg-white rounded-xl border border-red-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-center h-full">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                            <CrossesIcon />
+                          </div>
+                          <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Flagged Returns (Active)</div>
+                        </div>
+                        <div className="text-3xl font-black text-red-600 font-[BasisGrotesquePro] flex items-baseline gap-1">
                           {dashboardData.compliance_risk.metrics.flagged_returns_active || 0}
+                          <span className="text-xs font-normal text-red-400">items</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-orange-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Overall compliance Score</div>
-                      <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                  <div className="bg-white rounded-xl border border-blue-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                          <WatchesIcon />
+                        </div>
+                        <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Overall Compliance Score</div>
+                      </div>
+                      <div className="text-lg font-bold text-blue-600 font-[BasisGrotesquePro]">
                         {dashboardData.compliance_risk.metrics.overall_compliance_score || 0}%
                       </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="w-full bg-gray-100 rounded-full h-2 mb-6">
                       <div
-                        className="h-3 rounded-full"
+                        className="h-2 rounded-full bg-blue-500 transition-all duration-700 ease-out"
                         style={{
                           width: `${dashboardData?.compliance_risk?.metrics?.overall_compliance_score || 0}%`,
-                          backgroundColor: '#3AD6F2'
                         }}
                       ></div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div>
-                        <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                        <div className="text-lg font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
                           {dashboardData?.key_metrics?.tasks?.breakdown?.tax_prep || 0}
                         </div>
-                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Tax Prep</div>
+                        <div className="text-[10px] uppercase font-bold text-[#6B7280] font-[BasisGrotesquePro] mt-1">Tax Prep</div>
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                      <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                        <div className="text-lg font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
                           {dashboardData?.key_metrics?.tasks?.breakdown?.review || 0}
                         </div>
-                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Review</div>
+                        <div className="text-[10px] uppercase font-bold text-[#6B7280] font-[BasisGrotesquePro] mt-1">Review</div>
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                      <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                        <div className="text-lg font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
                           {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
                         </div>
-                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
+                        <div className="text-[10px] uppercase font-bold text-[#6B7280] font-[BasisGrotesquePro] mt-1">Followups</div>
                       </div>
                     </div>
                   </div>
@@ -1837,18 +1855,25 @@ export default function FirmAdminDashboard() {
 
               {/* Suggestions Section */}
               {dashboardData?.compliance_risk?.suggestions && dashboardData.compliance_risk.suggestions.length > 0 && (
-                <div className="mt-6 border-t pt-4">
-                  <h4 className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-3">Suggestions</h4>
-                  <ul className="space-y-2">
-                    {dashboardData.compliance_risk.suggestions.map((suggestion, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-[#6B7280]">
-                        <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{suggestion}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="mt-8">
+                  <h4 className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro] mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-4 bg-amber-400 rounded-full"></span>
+                    Suggestions
+                  </h4>
+                  <div className="bg-amber-50 rounded-xl border border-amber-100 p-4">
+                    <ul className="space-y-3">
+                      {dashboardData.compliance_risk.suggestions.map((suggestion, index) => (
+                        <li key={index} className="flex items-start gap-3 text-sm text-amber-900 leading-relaxed font-[BasisGrotesquePro]">
+                          <div className="mt-0.5">
+                            <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </div>
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>

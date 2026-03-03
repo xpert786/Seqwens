@@ -524,11 +524,11 @@ export default function DocumentManagement() {
   });
 
   return (
-    <div className="lg:p-6 md:p-4 sm:p-2 px-1 bg-[rgb(243,247,255)] min-h-screen docmanage-main-container">
+    <div className="lg:pt-2 lg:px-6 lg:pb-6 md:pt-2 md:p-4 sm:p-2 px-1 bg-[rgb(243,247,255)] min-h-screen docmanage-main-container">
       {/* Header Section */}
       {!isViewingDocument && (
         <div className="mb-6 docmanage-header">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 docmanage-header-content">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-start gap-4 lg:gap-6 docmanage-header-content">
             {/* Text Section */}
             <div className="flex-1 docmanage-header-text">
               <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800 mb-2 docmanage-header-title" style={{ fontFamily: 'BasisGrotesquePro' }}>

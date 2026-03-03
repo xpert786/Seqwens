@@ -47,6 +47,8 @@ const SchedulingCalendar = () => {
     const [staffMembers, setStaffMembers] = useState([]);
     const [loadingStaff, setLoadingStaff] = useState(false);
     const [assignedStaffId, setAssignedStaffId] = useState('');
+    const [availableSlots, setAvailableSlots] = useState([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
 
     // Helpers to normalize appointment dates without UTC shifts
     const formatDateKey = (dateObj) => {
@@ -527,11 +529,58 @@ const SchedulingCalendar = () => {
         setAppointmentDuration(30);
         setTimezone('America/New_York');
         setAppointmentDate('');
-        setSlots([{ id: 1, time: '09:00', client_id: '' }]);
+        setSlots([{ id: 1, time: '', client_id: '' }]);
         setMeetingType('zoom');
         setDescription('');
         setAssignedStaffId('');
+        setAvailableSlots([]);
     };
+
+    // Fetch available time slots from staff availability when date/staff changes
+    const fetchAvailableSlots = async (staffId, date) => {
+        if (!staffId || !date) {
+            setAvailableSlots([]);
+            return;
+        }
+        try {
+            setLoadingSlots(true);
+            const { getApiBaseUrl } = await import('../../../ClientOnboarding/utils/corsConfig');
+            const { getAccessToken } = await import('../../../ClientOnboarding/utils/userUtils');
+            const API_BASE_URL = getApiBaseUrl();
+            const token = getAccessToken();
+            if (!token) return;
+            const response = await fetch(
+                `${API_BASE_URL}/taxpayer/appointments/staff/${staffId}/slots/?date=${date}`,
+                { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
+            );
+            if (!response.ok) { setAvailableSlots([]); return; }
+            const result = await response.json();
+            if (result.success && result.data && result.data.available_slots) {
+                // Backend already filters past slots using EST — trust it directly
+                const slots = result.data.available_slots;
+                setAvailableSlots(slots);
+                if (slots.length === 0) {
+                    toast.info('No available time slots for this date', { autoClose: 3000 });
+                }
+            } else {
+                setAvailableSlots([]);
+            }
+        } catch (error) {
+            console.error('Error fetching available slots:', error);
+            setAvailableSlots([]);
+        } finally {
+            setLoadingSlots(false);
+        }
+    };
+
+    // Re-fetch slots when date or staff changes
+    useEffect(() => {
+        if (isAddEventModalOpen && appointmentDate && assignedStaffId) {
+            fetchAvailableSlots(assignedStaffId, appointmentDate);
+        } else {
+            setAvailableSlots([]);
+        }
+    }, [isAddEventModalOpen, appointmentDate, assignedStaffId]);
 
     // Handle create meeting - updated to match tax preparer modal structure
     const handleCreateMeeting = async () => {
@@ -847,7 +896,7 @@ const SchedulingCalendar = () => {
         setMeetingType(event.meeting_type || 'zoom');
         setDescription(event.description || '');
         setAppointmentDate(''); // Clear date to force selection of new date
-        
+
         // Open modal
         setIsAddEventModalOpen(true);
         setEventsModal(prev => ({ ...prev, open: false }));
@@ -2017,13 +2066,31 @@ const SchedulingCalendar = () => {
                                     <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
                                         Appointment Date <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="date"
-                                        value={appointmentDate}
-                                        onChange={(e) => setAppointmentDate(e.target.value)}
-                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
-                                        required
-                                    />
+                                    {(() => {
+                                        // Compute today's date string in YYYY-MM-DD format (local timezone)
+                                        const now = new Date();
+                                        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                                        return (
+                                            <input
+                                                type="date"
+                                                value={appointmentDate}
+                                                min={todayStr}
+                                                onChange={(e) => {
+                                                    const chosen = e.target.value;
+                                                    // Guard: never allow past dates (browser min attr may not work on all platforms)
+                                                    if (chosen < todayStr) return;
+                                                    setAppointmentDate(chosen);
+                                                    // When switching to a future date, clear past-time warnings by resetting slots
+                                                    if (chosen > todayStr) {
+                                                        // Keep slot client selections but clear any invalid times
+                                                        setSlots(prev => prev.map(s => s));
+                                                    }
+                                                }}
+                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                required
+                                            />
+                                        );
+                                    })()}
                                 </div>
 
                                 <div className="space-y-4">
@@ -2034,13 +2101,42 @@ const SchedulingCalendar = () => {
                                         {slots.map((slot, index) => (
                                             <div key={slot.id} className="flex gap-3 group/slot items-start animate-in slide-in-from-left duration-200" style={{ animationDelay: `${index * 50}ms` }}>
                                                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                    <input
-                                                        type="time"
-                                                        value={slot.time}
-                                                        onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
-                                                        className="px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
-                                                        required
-                                                    />
+                                                    {/* Time — availability-based dropdown */}
+                                                    <div className="relative">
+                                                        {loadingSlots ? (
+                                                            <div className="w-full px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl flex items-center gap-2 text-sm text-gray-400 font-[BasisGrotesquePro]">
+                                                                <div className="w-3 h-3 border-2 border-[#3AD6F2] border-t-transparent rounded-full animate-spin"></div>
+                                                                Loading slots...
+                                                            </div>
+                                                        ) : (
+                                                            <select
+                                                                value={slot.time}
+                                                                onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
+                                                                className="w-full px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                                required
+                                                                disabled={!appointmentDate || !assignedStaffId || availableSlots.length === 0}
+                                                            >
+                                                                <option value="">
+                                                                    {!appointmentDate || !assignedStaffId
+                                                                        ? 'Select date & staff first'
+                                                                        : availableSlots.length === 0
+                                                                            ? 'No slots available'
+                                                                            : 'Select Time'}
+                                                                </option>
+                                                                {availableSlots.map((availSlot, i) => (
+                                                                    <option key={i} value={availSlot.start_time}>
+                                                                        {availSlot.formatted_time || availSlot.start_time}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        )}
+                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    {/* Client */}
                                                     <div className="relative">
                                                         <select
                                                             value={slot.client_id}
@@ -2079,6 +2175,11 @@ const SchedulingCalendar = () => {
                                             </div>
                                         ))}
                                     </div>
+                                    {appointmentDate && assignedStaffId && !loadingSlots && availableSlots.length === 0 && (
+                                        <p className="text-sm font-bold text-red-500 mt-2 font-[BasisGrotesquePro]">
+                                            No available slots for this date. Select another date or check staff availability settings.
+                                        </p>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={addTimeSlot}
@@ -2189,7 +2290,8 @@ const SchedulingCalendar = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Set Availability Modal */}
             <SetAvailabilityModal
@@ -2200,7 +2302,7 @@ const SchedulingCalendar = () => {
                 }}
                 isTaxpayer={false}
             />
-        </div>
+        </div >
     );
 };
 

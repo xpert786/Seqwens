@@ -202,27 +202,46 @@ const AddOns = () => {
                     </div>
                 </div>
 
-                <div className="mb-3">
-                    <h5 className="text-base font-bold text-gray-900 mb-0.5">{addon.name}</h5>
-                    {addon.capacity_display && (
-                        <div className="text-sm font-semibold text-[#3AD6F2]">{addon.capacity_display}</div>
+                <div className="mb-4">
+                    <h5 className="text-lg font-bold text-gray-900 mb-1">{addon.name}</h5>
+                    {addon.capacity_display ? (
+                        <div className="flex items-center gap-2">
+                            <div className="px-2 py-1 bg-[#3AD6F2]/10 text-[#007EAF] rounded text-xs font-bold border border-[#3AD6F2]/20">
+                                {addon.capacity_display}
+                            </div>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Included</span>
+                        </div>
+                    ) : (
+                        <div className="text-xs text-gray-500 italic">Core feature improvement</div>
                     )}
                 </div>
 
-                <p className="text-xs text-gray-500 leading-relaxed mb-6 flex-grow">{addon.description}</p>
+                <p className="text-xs text-gray-600 leading-relaxed mb-6 flex-grow min-h-[40px]">
+                    {addon.description || `Enhance your firm with the ${addon.name} add-on.`}
+                </p>
 
-                {features.length > 0 && (
-                    <div className="space-y-1.5 mb-6 border-t border-gray-50 pt-4">
-                        {features.map((feature, index) => (
-                            <div key={index} className="flex items-center gap-2 text-[11px] text-gray-500">
-                                <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-2 mb-6 border-t border-gray-50 pt-4">
+                    <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Key Benefits</h6>
+                    <div className="space-y-1.5">
+                        {features.length > 0 ? (
+                            features.map((feature, index) => (
+                                <div key={index} className="flex items-center gap-2 text-[11px] text-gray-500">
+                                    <svg className="w-3 h-3 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {feature}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                                <svg className="w-3 h-3 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                 </svg>
-                                {feature}
+                                Priority {addon.category || 'feature'} support
                             </div>
-                        ))}
+                        )}
                     </div>
-                )}
+                </div>
 
                 <div className="pt-6 border-t border-gray-50 flex flex-col gap-4">
                     <div className="flex flex-col text-left">
@@ -414,9 +433,16 @@ const AddOns = () => {
 
                                     <div className="flex-grow">
                                         <h4 className="font-bold text-gray-900 mb-1 leading-tight">{firmAddon.addon?.name || 'Add-on'}</h4>
-                                        {firmAddon.capacity_display && (
-                                            <div className="text-xs font-semibold text-[#3AD6F2] mb-3">{firmAddon.capacity_display} Included</div>
-                                        )}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            {firmAddon.capacity_display ? (
+                                                <div className="px-2 py-0.5 bg-[#3AD6F2]/10 text-[#007EAF] rounded text-[10px] font-bold border border-[#3AD6F2]/20">
+                                                    {firmAddon.capacity_display}
+                                                </div>
+                                            ) : (
+                                                <div className="text-[10px] text-gray-400 italic">Core enhancement</div>
+                                            )}
+                                            <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Active</span>
+                                        </div>
                                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{firmAddon.addon?.description}</p>
                                     </div>
 

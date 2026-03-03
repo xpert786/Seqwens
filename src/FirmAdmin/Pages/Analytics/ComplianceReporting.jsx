@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Line } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import TabNavigation from '../Integrations/TabNavigation';
 import { firmAdminAnalyticsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
@@ -100,12 +100,14 @@ const ComplianceReporting = ({ activeTab, setActiveTab, tabs, period = '6m' }) =
     { name: 'Missing Documents', count: irsComplianceChecks.missing_documents || 0 }
   ] : [];
 
-  // Prepare Revenue & Profit Trend data (eSigned vs wetSigned)
+  // Prepare Revenue Trend data (Paid vs Pending vs Overdue)
   const revenueProfitTrend = analyticsData?.revenue_profit_trend || [];
   const revenueTrendData = revenueProfitTrend.map(item => ({
-    year: item.year?.toString() || '',
-    eSigned: item.esigned || 0,
-    wetSigned: item.wetsigned || 0
+    name: item.month || item.year?.toString() || '',
+    paid: item.paid || 0,
+    pending: item.pending || 0,
+    overdue: item.overdue || 0,
+    total: item.total || 0
   }));
 
   // Custom Tooltip for Due Diligence
@@ -144,16 +146,19 @@ const ComplianceReporting = ({ activeTab, setActiveTab, tabs, period = '6m' }) =
   // Custom Tooltip for Revenue Trend
   const RevenueTrendTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const eSigned = payload.find(p => p.dataKey === 'eSigned')?.value || 0;
-      const wetSigned = payload.find(p => p.dataKey === 'wetSigned')?.value || 0;
-      const total = eSigned + wetSigned;
+      const paid = payload.find(p => p.dataKey === 'paid')?.value || 0;
+      const pending = payload.find(p => p.dataKey === 'pending')?.value || 0;
+      const overdue = payload.find(p => p.dataKey === 'overdue')?.value || 0;
+      const total = payload[0].payload.total || (paid + pending + overdue);
 
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">Year: {label}</p>
-          <p className="text-sm text-blue-600">eSigned: ${eSigned.toLocaleString()}</p>
-          <p className="text-sm text-red-600">wetSigned: ${wetSigned.toLocaleString()}</p>
-          <p className="text-sm font-medium text-gray-700">Total: ${total.toLocaleString()}</p>
+          <p className="font-medium text-gray-900">Period: {label}</p>
+          <p className="text-sm text-green-600">Paid: ${paid.toLocaleString()}</p>
+          <p className="text-sm text-yellow-600">Pending: ${pending.toLocaleString()}</p>
+          <p className="text-sm text-red-600">Overdue: ${overdue.toLocaleString()}</p>
+          <hr className="my-1" />
+          <p className="text-sm font-bold text-gray-700">Total: ${total.toLocaleString()}</p>
         </div>
       );
     }
@@ -178,8 +183,8 @@ const ComplianceReporting = ({ activeTab, setActiveTab, tabs, period = '6m' }) =
 
   // Calculate max value for revenue trend Y-axis
   const maxRevenueValue = revenueTrendData.length > 0
-    ? Math.max(...revenueTrendData.map(d => (d.eSigned || 0) + (d.wetSigned || 0))) * 1.1
-    : 160000;
+    ? Math.max(...revenueTrendData.map(d => d.total || 0)) * 1.1
+    : 1000;
 
   // Calculate max value for IRS compliance Y-axis
   const maxIRSValue = irsComplianceData.length > 0
@@ -297,18 +302,19 @@ const ComplianceReporting = ({ activeTab, setActiveTab, tabs, period = '6m' }) =
 
       {/* Revenue & Profit Trend */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue & Profit Trend</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Analytics Trend</h3>
         {revenueTrendData.length > 0 ? (
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueTrendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
-                <XAxis dataKey="year" />
-                <YAxis domain={[0, maxRevenueValue]} />
+                <XAxis dataKey="name" />
+                <YAxis domain={[0, maxRevenueValue]} tickFormatter={(value) => `$${value}`} />
                 <Tooltip content={<RevenueTrendTooltip />} />
                 <Legend />
-                <Bar dataKey="eSigned" fill="#3B82F6" name="eSigned" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                <Bar dataKey="wetSigned" fill="#EF4444" name="wetSigned" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                <Bar dataKey="paid" fill="#10B981" name="Paid" stackId="a" radius={[0, 0, 0, 0]} maxBarSize={50} />
+                <Bar dataKey="pending" fill="#F59E0B" name="Pending" stackId="a" radius={[0, 0, 0, 0]} maxBarSize={50} />
+                <Bar dataKey="overdue" fill="#EF4444" name="Overdue" stackId="a" radius={[4, 4, 0, 0]} maxBarSize={50} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -317,6 +323,63 @@ const ComplianceReporting = ({ activeTab, setActiveTab, tabs, period = '6m' }) =
             No revenue trend data available
           </div>
         )}
+      </div>
+
+      {/* Recent E-Signature Requests */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Recent E-Signature Requests</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-[#F8FAFF]">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Document Name</th>
+                <th scope="col" className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Staff Member</th>
+                <th scope="col" className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Client Member</th>
+                <th scope="col" className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                <th scope="col" className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Created Date</th>
+                <th scope="col" className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {analyticsData?.recent_esignatures?.length > 0 ? (
+                analyticsData.recent_esignatures.map((sig) => (
+                  <tr key={sig.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{sig.document_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 font-medium">{sig.preparer_name}</div>
+                      <div className="text-xs text-gray-500">{sig.preparer_email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{sig.client_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wider ${sig.status === 'completed' || sig.status === 'signed'
+                          ? 'bg-green-100 text-green-700'
+                          : sig.status === 'failed' || sig.status === 'cancelled'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                        {sig.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(sig.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`text-[10px] font-bold uppercase tracking-widest text-blue-600`}>
+                        {sig.type}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-10 text-center text-sm text-gray-500">No recent e-signature requests found</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
