@@ -57,6 +57,17 @@ export const ThemeProvider = ({ children }) => {
 
         // Save to localStorage
         localStorage.setItem('superadmin-theme', isDarkMode ? 'dark' : 'light');
+
+        // Cleanup function to remove theme classes and variables when provider unmounts (e.g., on logout)
+        return () => {
+            root.classList.remove('dark-mode', 'dark', 'light-mode');
+            const varsToRemove = [
+                '--sa-bg-primary', '--sa-bg-secondary', '--sa-bg-card',
+                '--sa-bg-sidebar', '--sa-bg-active', '--sa-text-primary',
+                '--sa-text-secondary', '--sa-border-color', '--sa-accent'
+            ];
+            varsToRemove.forEach(v => root.style.removeProperty(v));
+        };
     }, [isDarkMode]);
 
     const toggleTheme = () => {

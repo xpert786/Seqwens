@@ -106,6 +106,7 @@ export const clearUserData = (keepImpersonation = false) => {
   localStorage.removeItem("activeRole");
   localStorage.removeItem("currentRole");
   localStorage.removeItem("userRole");
+  localStorage.removeItem("superadmin-theme"); // Clear SuperAdmin theme preference
 
   // Navigation/routing context
   localStorage.removeItem("lastRoute");

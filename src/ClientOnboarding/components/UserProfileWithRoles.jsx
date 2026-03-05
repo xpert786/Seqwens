@@ -311,9 +311,22 @@ export default function UserProfileWithRoles() {
           storage.setItem('userType', response.user.active_role || response.user.user_type);
         }
 
-        // Short delay before reload to show success message
+        // Determine correct dashboard URL for the new role
+        const newRole = response.user?.active_role || response.user?.user_type || roleValue;
+        let redirectUrl = '/dashboard';
+        if (newRole === 'super_admin' || newRole === 'support_admin' || newRole === 'billing_admin') {
+          redirectUrl = '/superadmin';
+        } else if (newRole === 'firm' || newRole === 'admin') {
+          redirectUrl = '/firmadmin';
+        } else if (newRole === 'tax_preparer' || newRole === 'staff') {
+          redirectUrl = '/taxdashboard';
+        } else if (newRole === 'client' || newRole === 'taxpayer') {
+          redirectUrl = '/dashboard';
+        }
+
+        // Short delay before redirect to show success message
         setTimeout(() => {
-          window.location.href = '/'; // Go to dashboard with new role
+          window.location.href = redirectUrl;
         }, 1500);
       } else {
         throw new Error(response.message || "Failed to switch role");
@@ -328,6 +341,7 @@ export default function UserProfileWithRoles() {
       setSwitchingRole(null);
     }
   };
+
 
   if (loading) {
     return (
