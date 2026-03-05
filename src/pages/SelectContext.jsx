@@ -137,6 +137,13 @@ export default function SelectContext() {
             );
             setSelectedLoginCategory(initialCategory);
 
+            // M-3 fix: Platform admins should never see the firm picker —
+            // their firm memberships (if any) belong to their Taxpayer/Firm context only.
+            if (initialCategory === 'platform_admin') {
+                redirectToDashboard(user);
+                return;
+            }
+
             const firmsForCat = filterFirmsForCategory(all_firms, initialCategory);
             if (firmsForCat.length === 1) {
                 console.log('Skipping firm selection: only one membership available');

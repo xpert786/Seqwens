@@ -56,7 +56,7 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
         const firm = [];
         const taxpayer = [];
         const admin = [];
-        roles.forEach(role => {
+        (roles || []).forEach(role => {
             const cat = getRoleCategory(role.role);
             if (cat === 'firm') firm.push(role);
             else if (cat === 'taxpayer') taxpayer.push(role);
@@ -64,6 +64,9 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
         });
         return { firmRoles: firm, taxpayerRoles: taxpayer, adminRoles: admin };
     }, [roles]);
+
+    // M-2 fix: Guard against empty / missing roles so we never render a blank screen.
+    const hasAnyRoles = firmRoles.length > 0 || taxpayerRoles.length > 0 || adminRoles.length > 0;
 
     // Phase 1: pick login type (firm | taxpayer | platform_admin)
     const [loginType, setLoginType] = useState(null); // null | 'firm' | 'taxpayer' | 'platform_admin'
@@ -142,6 +145,27 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
         ? allFirms.filter(f => getRoleCategory(f.role) === 'taxpayer').length
         : null;
     const adminCount = adminRoles.length;
+
+    // M-2 fix: Show a helpful error if no roles were returned (backend data bug guard)
+    if (!hasAnyRoles) {
+        return (
+            <div className="firm-selection-container min-h-screen w-full flex items-center justify-center bg-gray-50/50 py-4 sm:py-12 px-4 sm:px-6 lg:px-8">
+                <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
+                    <ShieldCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">No roles available</h2>
+                    <p className="text-gray-500 text-sm mb-6">
+                        We couldn&apos;t find any account roles associated with your email. Please contact support.
+                    </p>
+                    <button
+                        onClick={() => window.location.href = '/login'}
+                        className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg text-sm font-medium hover:bg-[#2ab8d4] transition-colors"
+                    >
+                        Back to Login
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="firm-selection-container min-h-screen w-full flex items-center justify-center bg-gray-50/50 py-4 sm:py-12 px-4 sm:px-6 lg:px-8">
