@@ -1190,7 +1190,7 @@ const SchedulingCalendar = () => {
     const currentYear = currentDate.getFullYear();
     const currentDay = currentDate.getDate();
     return (
-        <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6">
+        <div className="w-full bg-[#F3F7FF] p-3 sm:p-4 lg:p-6 no-scrollbar">
             <div className="mx-auto max-w-[1600px]">
                 {/* Header Section */}
                 <div className="mb-6">
@@ -1279,7 +1279,7 @@ const SchedulingCalendar = () => {
                                     key={tab}
                                     onClick={() => setViewMode(tab)}
                                     className={`px-4 sm:px-5 py-2 text-xs font-bold font-[BasisGrotesquePro] transition-all !rounded-lg whitespace-nowrap ${viewMode === tab
-                                        ? 'bg-[#F56D2D] text-white shadow-md shadow-orange-100'
+                                        ? 'bg-[#F56D2D] !text-white shadow-md shadow-orange-100'
                                         : 'bg-white !border border-[#E8F0FF] text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                         }`}
                                 >
@@ -1336,7 +1336,7 @@ const SchedulingCalendar = () => {
                         </div>
 
                         {/* Dynamic Calendar Views */}
-                        <div className="bg-white !rounded-xl !border border-[#E8F0FF] p-1.5 sm:p-2 overflow-x-auto no-scrollbar shadow-sm min-h-[500px]">
+                        <div className="bg-white !rounded-xl !border border-[#E8F0FF] p-1.5 sm:p-2 shadow-sm min-h-[500px]">
                             {viewMode === 'Day' && (
                                 <div className="p-3 sm:p-5">
                                     <div className="text-center mb-6">
@@ -1446,12 +1446,12 @@ const SchedulingCalendar = () => {
                                                         <div className="w-1.5 h-1.5 bg-[#F56D2D] !rounded-full shadow-sm"></div>
                                                     )}
                                                 </div>
-                                                <div className="space-y-1 overflow-y-auto max-h-[100px] no-scrollbar">
+                                                <div className="space-y-1">
                                                     {dayAppointments.slice(0, 3).map((apt, idx) => (
                                                         <div
                                                             key={idx}
                                                             onClick={() => openEventsModal(date, dayAppointments)}
-                                                            className={`p-1 rounded text-[9px] font-bold truncate transition-all cursor-pointer ${getEventChipClasses(apt.appointment_status)} hover:brightness-95`}
+                                                            className={`p-1 rounded text-[9px] font-bold truncate transition-all cursor-pointer ${getEventChipClasses(apt.appointment_status)} !text-white shadow-sm`}
                                                         >
                                                             <span className="opacity-70 mr-1">{formatTime(apt.appointment_time).split(' ')[0]}</span>
                                                             {apt.subject}
@@ -1595,13 +1595,12 @@ const SchedulingCalendar = () => {
                                         {todayEvents.events.map((event, index) => (
                                             <div key={index} className="group p-3 bg-white !rounded-xl !border border-[#E8F0FF] hover:border-[#3AD6F2] hover:shadow-md transition-all cursor-pointer">
                                                 <div className="flex flex-col gap-2">
-                                                    <div className="text-xs font-black text-gray-900 font-[BasisGrotesquePro] leading-tight group-hover:text-[#3AD6F2] transition-colors">
+                                                    <div className="text-xs font-black text-[#002c47] font-[BasisGrotesquePro] leading-tight transition-colors">
                                                         {event.subject || 'Event'}
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-[#3AD6F2]/10 !rounded-lg">
-                                                            <div className="w-1 h-1 bg-[#3AD6F2] !rounded-full"></div>
-                                                            <span className="text-[9px] font-black uppercase tracking-wider">
+                                                        <div className="flex items-center gap-1 px-3 py-1 bg-[#002c47] !rounded-lg shadow-sm">
+                                                            <span className="text-[10px] font-black !text-white uppercase tracking-wider">
                                                                 {formatTime(event.appointment_time)}
                                                             </span>
                                                         </div>
@@ -1644,11 +1643,11 @@ const SchedulingCalendar = () => {
                                                 <div className="flex flex-col gap-2">
                                                     <div className="flex items-center justify-between gap-2">
                                                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{event.appointment_date}</span>
-                                                        <div className="px-2 py-0.5 bg-[#F56D2D]/10 !rounded-lg">
-                                                            <span className="text-[9px] font-black text-[#F56D2D] uppercase tracking-wider">{formatTime(event.appointment_time)}</span>
+                                                        <div className="px-3 py-1 bg-[#F56D2D] !rounded-lg shadow-sm">
+                                                            <span className="text-[10px] font-black !text-white uppercase tracking-wider">{formatTime(event.appointment_time)}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="text-xs font-black text-gray-900 font-[BasisGrotesquePro] leading-tight group-hover:text-[#F56D2D] transition-colors">
+                                                    <div className="text-xs font-black text-[#F56D2D] font-[BasisGrotesquePro] leading-tight transition-colors">
                                                         {event.subject || 'Event'}
                                                     </div>
                                                     {getEventParticipants(event) && (
@@ -1677,7 +1676,7 @@ const SchedulingCalendar = () => {
             {/* Events modal for viewing all meetings on a date - Premium Responsive */}
             {eventsModal.open && (
                 <div
-                    className="fixed inset-0 z-[1100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                    className="fixed inset-0 z-[1100] bg-black/60 flex items-center justify-center p-4"
                     onClick={closeEventsModal}
                 >
                     <div
@@ -1702,7 +1701,7 @@ const SchedulingCalendar = () => {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
+                        <div className="p-5 space-y-4 overflow-y-auto no-scrollbar">
                             {eventsModal.events.length === 0 ? (
                                 <div className="py-12 flex flex-col items-center justify-center text-center">
                                     <div className="w-16 h-16 bg-[#F3F7FF] !rounded-full flex items-center justify-center mb-4">
@@ -1714,33 +1713,33 @@ const SchedulingCalendar = () => {
                                 </div>
                             ) : (
                                 eventsModal.events.map((event, idx) => (
-                                    <div key={`${event.id || idx}-${event.appointment_time || idx}`} className="group relative bg-white !rounded-2xl !border border-[#E8F0FF] p-4 hover:border-[#3AD6F2] hover:shadow-lg transition-all">
+                                    <div key={`${event.id || idx}-${event.appointment_time || idx}`} className="group relative bg-white !rounded-2xl !border border-[#E8F0FF] p-4 transition-all">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className={`w-2 h-2 !rounded-full ${event.appointment_status === 'cancelled' ? 'bg-red-500' : event.appointment_status === 'pending' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className={`w-2 h-2 !rounded-full ${event.appointment_status === 'cancelled' || event.appointment_status === 'no show' ? 'bg-green-500' : event.appointment_status === 'pending' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
                                                     <p className="text-sm font-black text-gray-900 font-[BasisGrotesquePro]">
                                                         {event.subject || 'Untitled Meeting'}
                                                     </p>
                                                 </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <div className="px-2 py-0.5 bg-[#3AD6F2]/10 !rounded-lg text-[10px] font-black text-[#3AD6F2] uppercase tracking-wider">
+                                                <div className="flex flex-wrap gap-2 mb-3">
+                                                    <div className="px-6 py-1.5 bg-[#002c47] !rounded-lg text-[10px] font-black text-white uppercase tracking-wider min-w-[120px] text-center">
                                                         {formatTime(event.appointment_time)}
                                                         {event.end_time ? ` - ${formatTime(event.end_time)}` : event.appointment_duration ? ` (${event.appointment_duration}m)` : ''}
                                                     </div>
                                                 </div>
                                             </div>
                                             <span
-                                                className={`text-[9px] font-black px-2.5 py-1 !rounded-lg uppercase tracking-widest ${event.appointment_status === 'cancelled' || event.appointment_status === 'no_show'
-                                                    ? 'bg-red-50 text-red-600'
-                                                    : event.appointment_status === 'pending' || event.appointment_status === 'scheduled'
+                                                className={`text-[9px] font-black px-2.5 py-1 !rounded-lg uppercase tracking-widest ${event.appointment_status === 'cancelled' || event.appointment_status === 'no show'
+                                                    ? 'bg-green-50 text-green-600'
+                                                    : event.appointment_status === 'pending'
                                                         ? 'bg-yellow-50 text-yellow-600'
                                                         : event.appointment_status === 'completed'
                                                             ? 'bg-indigo-50 text-indigo-600'
                                                             : 'bg-green-50 text-green-600'
                                                     }`}
                                             >
-                                                {event.status_display || event.appointment_status || 'Scheduled'}
+                                                {event.status_display || (event.appointment_status === 'cancelled' ? 'NO SHOW' : event.appointment_status) || 'Scheduled'}
                                             </span>
                                         </div>
 
@@ -1761,7 +1760,7 @@ const SchedulingCalendar = () => {
                                                             e.stopPropagation();
                                                             handleManageAppointment(event.id, 'approve');
                                                         }}
-                                                        className="px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-wider"
+                                                        className="flex-1 px-3 py-2 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.2em]"
                                                     >
                                                         Accept
                                                     </button>
@@ -1770,7 +1769,7 @@ const SchedulingCalendar = () => {
                                                             e.stopPropagation();
                                                             handleManageAppointment(event.id, 'cancel');
                                                         }}
-                                                        className="px-4 py-2.5 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-wider"
+                                                        className="flex-1 px-3 py-2 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-[0.2em]"
                                                     >
                                                         Reject
                                                     </button>
@@ -1782,37 +1781,26 @@ const SchedulingCalendar = () => {
                                                             href={event.google_meet_link || event.zoom_meeting_link}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center gap-2 px-4 py-2.5 text-[10px] font-black text-white bg-[#3AD6F2] hover:bg-[#34c2db] !rounded-xl transition-all shadow-md shadow-blue-100 uppercase tracking-wider"
+                                                            className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black !text-white bg-[#002c47] !rounded-xl transition-all shadow-md uppercase tracking-[0.1em]"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                             </svg>
-                                                            Join
+                                                            JOIN
                                                         </a>
                                                     )}
 
-                                                    {isEventPast(event) && event.appointment_status !== 'cancelled' && event.appointment_status !== 'completed' && event.appointment_status !== 'no_show' && (
-                                                        <>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleUpdateStatus(event.id, 'completed');
-                                                                }}
-                                                                className="px-4 py-2.5 text-[10px] font-black text-green-600 bg-green-50 border border-green-200 hover:bg-green-100 hover:text-green-700 !rounded-xl transition-all shadow-sm uppercase tracking-wider"
-                                                            >
-                                                                Complete
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleUpdateStatus(event.id, 'no_show');
-                                                                }}
-                                                                className="px-4 py-2.5 text-[10px] font-black text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 hover:text-red-700 !rounded-xl transition-all shadow-sm uppercase tracking-wider"
-                                                            >
-                                                                No Show
-                                                            </button>
-                                                        </>
+                                                    {isEventPast(event) && event.appointment_status !== 'cancelled' && event.appointment_status !== 'completed' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleUpdateStatus(event.id, 'completed');
+                                                            }}
+                                                            className="flex-1 min-w-[80px] px-3 py-2 text-[11px] font-black text-gray-700 bg-white !border border-[#E8F0FF] !rounded-xl transition-all shadow-sm"
+                                                        >
+                                                            Complete
+                                                        </button>
                                                     )}
 
                                                     {(isEventPast(event) || event.appointment_status === 'cancelled' || event.appointment_status === 'no_show') && (
@@ -1821,7 +1809,7 @@ const SchedulingCalendar = () => {
                                                                 e.stopPropagation();
                                                                 handleReschedule(event);
                                                             }}
-                                                            className="px-4 py-2.5 text-[10px] font-black text-white bg-orange-500 hover:bg-orange-600 !rounded-xl transition-all shadow-md shadow-orange-100 uppercase tracking-wider"
+                                                            className="flex-1 min-w-[80px] px-3 py-2 text-[11px] font-black !text-white bg-[#F56D2D] !rounded-xl transition-all shadow-md"
                                                         >
                                                             Reschedule
                                                         </button>
@@ -1837,7 +1825,7 @@ const SchedulingCalendar = () => {
                         <div className="p-5 border-t border-[#F8FAFF] flex justify-end">
                             <button
                                 onClick={closeEventsModal}
-                                className="px-8 py-3 text-[10px] font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 text-gray-900 transition-all uppercase tracking-[0.2em]"
+                                className="px-6 py-2 text-[10px] font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 text-gray-900 transition-all uppercase tracking-[0.2em]"
                             >
                                 Close
                             </button>
@@ -1849,7 +1837,7 @@ const SchedulingCalendar = () => {
 
             {/* Overlap Warning Modal - Premium Responsive */}
             {showOverlapModal && (
-                <div className="fixed inset-0 z-[1110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[1110] bg-black/60  flex items-center justify-center p-4">
                     <div className="bg-white !rounded-2xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-5 border-b border-[#F8FAFF]">
@@ -1969,7 +1957,7 @@ const SchedulingCalendar = () => {
             )}
             {/* Add Calendar Event Modal - Premium Responsive */}
             {isAddEventModalOpen && (
-                <div className="fixed inset-0 z-[1120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[1120] bg-black/60 flex items-center justify-center p-4">
                     <div className="bg-white !rounded-3xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-6 border-b border-[#F8FAFF] bg-white">
@@ -1995,7 +1983,7 @@ const SchedulingCalendar = () => {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar bg-white">
+                        <div className="p-8 space-y-8 overflow-y-auto no-scrollbar bg-white">
                             {/* Section: Basic Details */}
                             <div className="space-y-6">
                                 <div className="flex items-center gap-2 mb-2">
@@ -2300,7 +2288,7 @@ const SchedulingCalendar = () => {
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Add notes, agenda items, or specific instructions..."
                                         rows={4}
-                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300 resize-none shadow-inner"
+                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300 resize-none shadow-inner no-scrollbar"
                                     />
                                 </div>
                             </div>
