@@ -9,8 +9,13 @@ import { setTokens } from '../ClientOnboarding/utils/userUtils';
 function getRoleCategory(roleValue) {
     if (!roleValue) return 'other';
     const lower = roleValue.toLowerCase();
+    // Platform-level admin roles — must be checked BEFORE firm roles to avoid
+    // 'admin' being misclassified as a firm administrator.
     if (
-        lower === 'firm' || lower === 'admin' || lower === 'firmadmin' ||
+        lower === 'super_admin' || lower === 'support_admin' || lower === 'billing_admin'
+    ) return 'platform_admin';
+    if (
+        lower === 'firm' || lower === 'firmadmin' ||
         lower === 'staff' || lower === 'tax_preparer' || lower === 'team_member' ||
         lower === 'accountant' || lower === 'bookkeeper' || lower === 'assistant' ||
         lower === 'preparer'
@@ -37,23 +42,31 @@ const TAXPAYER_ROLE_DISPLAY = {
     taxpayer: 'Taxpayer / Client',
 };
 
+const ADMIN_ROLE_DISPLAY = {
+    super_admin: 'Super Admin',
+    support_admin: 'Support Admin',
+    billing_admin: 'Billing Admin',
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose }) {
     // Group roles by category
-    const { firmRoles, taxpayerRoles } = useMemo(() => {
+    const { firmRoles, taxpayerRoles, adminRoles } = useMemo(() => {
         const firm = [];
         const taxpayer = [];
+        const admin = [];
         roles.forEach(role => {
             const cat = getRoleCategory(role.role);
             if (cat === 'firm') firm.push(role);
             else if (cat === 'taxpayer') taxpayer.push(role);
+            else if (cat === 'platform_admin') admin.push(role);
         });
-        return { firmRoles: firm, taxpayerRoles: taxpayer };
+        return { firmRoles: firm, taxpayerRoles: taxpayer, adminRoles: admin };
     }, [roles]);
 
-    // Phase 1: pick login type (firm | taxpayer)
-    const [loginType, setLoginType] = useState(null); // null | 'firm' | 'taxpayer'
+    // Phase 1: pick login type (firm | taxpayer | platform_admin)
+    const [loginType, setLoginType] = useState(null); // null | 'firm' | 'taxpayer' | 'platform_admin'
 
     // Phase 2: pick the specific role within the chosen type
     const [selectedRole, setSelectedRole] = useState(null);
@@ -62,7 +75,10 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
     const [error, setError] = useState(null);
 
     // What roles are shown in the second phase
-    const rolesForType = loginType === 'firm' ? firmRoles : loginType === 'taxpayer' ? taxpayerRoles : [];
+    const rolesForType = loginType === 'firm' ? firmRoles
+        : loginType === 'taxpayer' ? taxpayerRoles
+            : loginType === 'platform_admin' ? adminRoles
+                : [];
 
     const submitRole = async (roleToSubmit, type) => {
         if (!roleToSubmit) {
@@ -101,7 +117,9 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
 
     const handleLoginTypeSelect = (type) => {
         setError(null);
-        const list = type === 'firm' ? firmRoles : taxpayerRoles;
+        const list = type === 'firm' ? firmRoles
+            : type === 'taxpayer' ? taxpayerRoles
+                : adminRoles;
 
         if (list.length === 1) {
             // Auto-submit if there's only one role, bypassing the redundant selection step
@@ -123,6 +141,7 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
     const taxpayerCount = allFirms
         ? allFirms.filter(f => getRoleCategory(f.role) === 'taxpayer').length
         : null;
+    const adminCount = adminRoles.length;
 
     return (
         <div className="firm-selection-container min-h-screen w-full flex items-center justify-center bg-gray-50/50 py-4 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -148,12 +167,16 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                                         Back to login type
                                     </button>
                                     <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                                        {loginType === 'firm' ? 'Select Your Firm Role' : 'Select Your Taxpayer Role'}
+                                        {loginType === 'firm' ? 'Select Your Firm Role'
+                                            : loginType === 'platform_admin' ? 'Select Your Admin Role'
+                                                : 'Select Your Taxpayer Role'}
                                     </h1>
                                     <p className="text-gray-500 font-light text-xs sm:text-sm mt-0.5 sm:mt-1">
                                         {loginType === 'firm'
                                             ? 'Choose the role you want to access.'
-                                            : 'Confirm your taxpayer role to continue.'}
+                                            : loginType === 'platform_admin'
+                                                ? 'Choose the admin role you want to access.'
+                                                : 'Confirm your taxpayer role to continue.'}
                                     </p>
                                 </>
                             ) : (
@@ -184,6 +207,42 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                     {/* ── Phase 1: Pick login type ── */}
                     {!loginType && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                            {/* Platform Admin card — shown first, most prominent */}
+                            {adminRoles.length > 0 && (
+                                <button
+                                    id="login-type-platform-admin"
+                                    onClick={() => handleLoginTypeSelect('platform_admin')}
+                                    className="group relative p-5 rounded-2xl border-2 border-gray-100 bg-white hover:border-purple-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-left w-full"
+                                >
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="p-2.5 bg-purple-50 rounded-xl group-hover:bg-purple-100 transition-colors">
+                                            <ShieldCheck className="text-purple-500 group-hover:text-purple-600 w-6 h-6 transition-colors" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-gray-900 text-base">Platform Admin</div>
+                                            <div className="text-gray-400 text-xs">Super Admin / Support / Billing</div>
+                                        </div>
+                                        <ArrowRight className="ml-auto text-gray-300 group-hover:text-purple-400 w-4 h-4 transition-colors" />
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                        {adminRoles.slice(0, 3).map(r => (
+                                            <span
+                                                key={r.role}
+                                                className="bg-purple-50 text-purple-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-purple-100"
+                                            >
+                                                {ADMIN_ROLE_DISPLAY[r.role.toLowerCase()] || r.display_name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    {adminCount > 0 && (
+                                        <p className="text-[10px] text-gray-400 mt-3">
+                                            {adminCount} admin {adminCount === 1 ? 'role' : 'roles'} available
+                                        </p>
+                                    )}
+                                </button>
+                            )}
+
                             {/* Firm card */}
                             {firmRoles.length > 0 && (
                                 <button
@@ -284,7 +343,9 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                         <div className="grid grid-cols-1 gap-3">
                             {rolesForType.map(role => {
                                 const isSelected = selectedRole === role.role;
-                                const accentColor = loginType === 'firm' ? '#3AD6F2' : '#F56D2D';
+                                const accentColor = loginType === 'firm' ? '#3AD6F2'
+                                    : loginType === 'platform_admin' ? '#9333ea'
+                                        : '#F56D2D';
                                 return (
                                     <div
                                         key={role.role}
@@ -309,14 +370,18 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                                             >
                                                 {loginType === 'firm'
                                                     ? <Briefcase size={18} style={{ color: isSelected ? accentColor : '#9CA3AF' }} />
-                                                    : <Users size={18} style={{ color: isSelected ? accentColor : '#9CA3AF' }} />
+                                                    : loginType === 'platform_admin'
+                                                        ? <ShieldCheck size={18} style={{ color: isSelected ? accentColor : '#9CA3AF' }} />
+                                                        : <Users size={18} style={{ color: isSelected ? accentColor : '#9CA3AF' }} />
                                                 }
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-semibold text-gray-800 text-sm">
                                                     {loginType === 'firm'
                                                         ? (FIRM_ROLE_DISPLAY[role.role.toLowerCase()] || role.display_name)
-                                                        : (TAXPAYER_ROLE_DISPLAY[role.role.toLowerCase()] || role.display_name)
+                                                        : loginType === 'platform_admin'
+                                                            ? (ADMIN_ROLE_DISPLAY[role.role.toLowerCase()] || role.display_name)
+                                                            : (TAXPAYER_ROLE_DISPLAY[role.role.toLowerCase()] || role.display_name)
                                                     }
                                                 </div>
                                                 <div className="flex flex-wrap gap-1.5 mt-1">
@@ -363,7 +428,9 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                                     : loginType === 'firm'
                                         ? 'bg-gradient-to-r from-[#3AD6F2] to-[#2BB1CC] text-white hover:shadow-xl hover:shadow-[#3AD6F2]/30 hover:-translate-y-0.5 border border-[#3AD6F2]/20'
-                                        : 'bg-gradient-to-r from-[#F56D2D] to-[#E05A20] text-white hover:shadow-xl hover:shadow-[#F56D2D]/30 hover:-translate-y-0.5 border border-[#F56D2D]/20'
+                                        : loginType === 'platform_admin'
+                                            ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 border border-purple-400/20'
+                                            : 'bg-gradient-to-r from-[#F56D2D] to-[#E05A20] text-white hover:shadow-xl hover:shadow-[#F56D2D]/30 hover:-translate-y-0.5 border border-[#F56D2D]/20'
                                 }`}
                         >
                             {loading ? (

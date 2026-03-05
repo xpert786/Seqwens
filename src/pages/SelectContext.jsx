@@ -8,7 +8,7 @@ import { setTokens } from '../ClientOnboarding/utils/userUtils';
 
 // Role categories for strict filtering
 const FIRM_ROLES = new Set([
-    'firm', 'admin', 'FirmAdmin', 'firmadmin', 'firm_admin',
+    'firm', 'FirmAdmin', 'firmadmin', 'firm_admin',
     'staff', 'tax_preparer', 'TeamMember', 'team_member', 'teammember',
     'accountant', 'bookkeeper', 'assistant', 'preparer',
 ]);
@@ -17,16 +17,28 @@ const TAXPAYER_ROLES = new Set([
     'client', 'taxpayer', 'Taxpayer', 'Client',
 ]);
 
+const PLATFORM_ADMIN_ROLES = new Set([
+    'super_admin', 'support_admin', 'billing_admin',
+    'SuperAdmin', 'super admin',
+]);
+
 /**
  * Determines which "login category" a role belongs to.
- * Returns: 'firm' | 'taxpayer' | 'other'
+ * Returns: 'firm' | 'taxpayer' | 'platform_admin' | 'other'
  */
 function getRoleCategory(roleValue) {
     if (!roleValue) return 'other';
     const lower = String(roleValue).toLowerCase().trim();
+    // Platform admin must be checked first (before 'firm') so 'admin' doesn't get misclassified.
+    if (
+        PLATFORM_ADMIN_ROLES.has(lower) ||
+        ['super_admin', 'support_admin', 'billing_admin'].includes(lower)
+    ) {
+        return 'platform_admin';
+    }
     if (
         FIRM_ROLES.has(lower) ||
-        ['firm', 'admin', 'firmadmin', 'firm_admin', 'staff', 'tax_preparer',
+        ['firm', 'firmadmin', 'firm_admin', 'staff', 'tax_preparer',
             'team_member', 'teammember', 'accountant', 'bookkeeper', 'assistant', 'preparer'].includes(lower)
     ) {
         return 'firm';
@@ -47,6 +59,11 @@ function filterFirmsForCategory(allFirms, loginCategory) {
     }
     if (loginCategory === 'taxpayer') {
         return allFirms.filter(f => getRoleCategory(f.role) === 'taxpayer');
+    }
+    if (loginCategory === 'platform_admin') {
+        // Platform admins don't have firm memberships — return empty so we skip
+        // the firm selection step and route straight to the superadmin dashboard.
+        return [];
     }
     return allFirms;
 }
@@ -195,7 +212,11 @@ export default function SelectContext() {
         const storage = localStorage.getItem('rememberMe') === 'true' ? localStorage : sessionStorage;
         const userType = storage.getItem('userType') || userData?.user_type || userData?.active_role;
 
-        if (userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') {
+        if (
+            userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin' ||
+            // loginCategory may also be 'platform_admin' when the role-selection modal calls onSelect
+            userType === 'platform_admin'
+        ) {
             navigate('/superadmin', { replace: true });
         } else if (userType === 'admin' || userType === 'firm') {
             navigate('/firmadmin', { replace: true });
