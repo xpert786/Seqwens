@@ -130,7 +130,9 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                 if (onSuccess) onSuccess();
                 onClose();
             } else {
-                throw new Error(result.message || "Failed to delete appointment");
+                const error = new Error(result.message || "Failed to delete appointment");
+                error.response = { data: result };
+                throw error;
             }
         } catch (error) {
             console.error("Error deleting appointment:", error);
@@ -179,7 +181,9 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
                 if (onSuccess) onSuccess();
                 onClose();
             } else {
-                throw new Error(result.message || "Failed to save appointment");
+                const error = new Error(result.message || "Failed to save appointment");
+                error.response = { data: result };
+                throw error;
             }
         } catch (error) {
             console.error("Error saving appointment:", error);

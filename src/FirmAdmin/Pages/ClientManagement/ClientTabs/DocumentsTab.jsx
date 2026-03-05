@@ -4,7 +4,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import { Modal } from 'react-bootstrap';
+import { Modal, Dropdown } from 'react-bootstrap';
 import { FaDownload, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
 import ClientDocumentUploadModal from './ClientDocumentUploadModal';
 import DocumentDetailsModal from './DocumentDetailsModal';
@@ -497,27 +497,29 @@ export default function DocumentsTab({ client }) {
               </svg>
               Upload Documents
             </button>
-            <button
-              onClick={handleViewPDF}
-              disabled={viewingPDF || downloadingPDF}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#3AD6F2] bg-white border border-[#3AD6F2] rounded-lg hover:bg-blue-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ borderRadius: '12px' }}
-            >
-              {viewingPDF ? (
-                <>
-                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-[#3AD6F2]"></div>
-                  Opening...
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                    <path d="M6 6H10M6 8H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  View Signed Form PDF
-                </>
-              )}
-            </button>
+            {client?.isSigned && (
+              <button
+                onClick={handleViewPDF}
+                disabled={viewingPDF || downloadingPDF}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#3AD6F2] bg-white border border-[#3AD6F2] rounded-lg hover:bg-blue-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ borderRadius: '12px' }}
+              >
+                {viewingPDF ? (
+                  <>
+                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-[#3AD6F2]"></div>
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      <path d="M6 6H10M6 8H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    View Signed Form PDF
+                  </>
+                )}
+              </button>
+            )}
             <button
               onClick={handleDownloadPDF}
               disabled={downloadingPDF || viewingPDF}

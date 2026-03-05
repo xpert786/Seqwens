@@ -220,7 +220,10 @@ export default function AppointmentsTab({ client }) {
           autoClose: 5000
         });
       } else {
-        throw new Error(response.message || 'Failed to schedule appointment');
+        const error = new Error(response.message || 'Failed to schedule appointment');
+        // Attach response data so handleAPIError can extract specific field errors
+        error.response = { data: response };
+        throw error;
       }
     } catch (err) {
       console.error('Error scheduling appointment:', err);

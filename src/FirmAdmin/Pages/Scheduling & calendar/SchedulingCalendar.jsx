@@ -721,7 +721,9 @@ const SchedulingCalendar = () => {
                 });
             } else {
                 // Other error
-                toast.error(response.message || handleAPIError(new Error('Failed to create meeting')), {
+                const error = new Error(response.message || 'Failed to create meeting');
+                error.response = { data: response };
+                toast.error(handleAPIError(error), {
                     position: 'top-right',
                     autoClose: 3000
                 });
@@ -1599,7 +1601,7 @@ const SchedulingCalendar = () => {
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex items-center gap-1 px-2 py-0.5 bg-[#3AD6F2]/10 !rounded-lg">
                                                             <div className="w-1 h-1 bg-[#3AD6F2] !rounded-full"></div>
-                                                            <span className="text-[9px] font-black text-[#3AD6F2] uppercase tracking-wider">
+                                                            <span className="text-[9px] font-black uppercase tracking-wider">
                                                                 {formatTime(event.appointment_time)}
                                                             </span>
                                                         </div>
@@ -1729,11 +1731,13 @@ const SchedulingCalendar = () => {
                                                 </div>
                                             </div>
                                             <span
-                                                className={`text-[9px] font-black px-2.5 py-1 !rounded-lg uppercase tracking-widest ${event.appointment_status === 'cancelled'
+                                                className={`text-[9px] font-black px-2.5 py-1 !rounded-lg uppercase tracking-widest ${event.appointment_status === 'cancelled' || event.appointment_status === 'no_show'
                                                     ? 'bg-red-50 text-red-600'
-                                                    : event.appointment_status === 'pending'
+                                                    : event.appointment_status === 'pending' || event.appointment_status === 'scheduled'
                                                         ? 'bg-yellow-50 text-yellow-600'
-                                                        : 'bg-green-50 text-green-600'
+                                                        : event.appointment_status === 'completed'
+                                                            ? 'bg-indigo-50 text-indigo-600'
+                                                            : 'bg-green-50 text-green-600'
                                                     }`}
                                             >
                                                 {event.status_display || event.appointment_status || 'Scheduled'}
@@ -1749,7 +1753,7 @@ const SchedulingCalendar = () => {
                                             )}
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#F8FAFF]">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#F8FAFF]">
                                             {event.appointment_status === 'pending' ? (
                                                 <>
                                                     <button
@@ -1757,7 +1761,7 @@ const SchedulingCalendar = () => {
                                                             e.stopPropagation();
                                                             handleManageAppointment(event.id, 'approve');
                                                         }}
-                                                        className="flex-1 px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.2em]"
+                                                        className="px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-wider"
                                                     >
                                                         Accept
                                                     </button>
@@ -1766,7 +1770,7 @@ const SchedulingCalendar = () => {
                                                             e.stopPropagation();
                                                             handleManageAppointment(event.id, 'cancel');
                                                         }}
-                                                        className="flex-1 px-4 py-2.5 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-[0.2em]"
+                                                        className="px-4 py-2.5 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-md shadow-red-100 uppercase tracking-wider"
                                                     >
                                                         Reject
                                                     </button>
@@ -1778,7 +1782,7 @@ const SchedulingCalendar = () => {
                                                             href={event.google_meet_link || event.zoom_meeting_link}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 py-2.5 text-[10px] font-black text-white bg-[#3AD6F2] hover:bg-[#34c2db] !rounded-xl transition-all shadow-md shadow-blue-100 uppercase tracking-[0.1em]"
+                                                            className="flex items-center justify-center gap-2 px-4 py-2.5 text-[10px] font-black text-white bg-[#3AD6F2] hover:bg-[#34c2db] !rounded-xl transition-all shadow-md shadow-blue-100 uppercase tracking-wider"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1788,25 +1792,36 @@ const SchedulingCalendar = () => {
                                                         </a>
                                                     )}
 
-                                                    {isEventPast(event) && event.appointment_status !== 'cancelled' && event.appointment_status !== 'completed' && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleUpdateStatus(event.id, 'completed');
-                                                            }}
-                                                            className="flex-1 min-w-[100px] px-4 py-2.5 text-[10px] font-black text-white bg-green-500 hover:bg-green-600 !rounded-xl transition-all shadow-md shadow-green-100 uppercase tracking-[0.1em]"
-                                                        >
-                                                            Complete
-                                                        </button>
+                                                    {isEventPast(event) && event.appointment_status !== 'cancelled' && event.appointment_status !== 'completed' && event.appointment_status !== 'no_show' && (
+                                                        <>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleUpdateStatus(event.id, 'completed');
+                                                                }}
+                                                                className="px-4 py-2.5 text-[10px] font-black text-green-600 bg-green-50 border border-green-200 hover:bg-green-100 hover:text-green-700 !rounded-xl transition-all shadow-sm uppercase tracking-wider"
+                                                            >
+                                                                Complete
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleUpdateStatus(event.id, 'no_show');
+                                                                }}
+                                                                className="px-4 py-2.5 text-[10px] font-black text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 hover:text-red-700 !rounded-xl transition-all shadow-sm uppercase tracking-wider"
+                                                            >
+                                                                No Show
+                                                            </button>
+                                                        </>
                                                     )}
 
-                                                    {(isEventPast(event) || event.appointment_status === 'cancelled') && (
+                                                    {(isEventPast(event) || event.appointment_status === 'cancelled' || event.appointment_status === 'no_show') && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleReschedule(event);
                                                             }}
-                                                            className="flex-1 min-w-[100px] px-4 py-2.5 text-[10px] font-black text-white bg-orange-500 hover:bg-orange-600 !rounded-xl transition-all shadow-md shadow-orange-100 uppercase tracking-[0.1em]"
+                                                            className="px-4 py-2.5 text-[10px] font-black text-white bg-orange-500 hover:bg-orange-600 !rounded-xl transition-all shadow-md shadow-orange-100 uppercase tracking-wider"
                                                         >
                                                             Reschedule
                                                         </button>
@@ -2123,11 +2138,35 @@ const SchedulingCalendar = () => {
                                                                             ? 'No slots available'
                                                                             : 'Select Time'}
                                                                 </option>
-                                                                {availableSlots.map((availSlot, i) => (
-                                                                    <option key={i} value={availSlot.start_time}>
-                                                                        {availSlot.formatted_time || availSlot.start_time}
-                                                                    </option>
-                                                                ))}
+                                                                {availableSlots.map((availSlot, i) => {
+                                                                    // Filter out if selected in another slot in this form
+                                                                    const isSelectedElsewhere = slots.some(s => s.id !== slot.id && s.time === availSlot.start_time);
+                                                                    if (isSelectedElsewhere) return null;
+
+                                                                    // Filter out if already in calendar data for this date and staff
+                                                                    const appsByDate = calendarData?.calendar?.appointments_by_date || {};
+                                                                    let dateStr = appointmentDate;
+                                                                    if (appointmentDate && !appointmentDate.includes('T')) {
+                                                                        dateStr = appointmentDate;
+                                                                    }
+                                                                    const scheduledEvents = appsByDate[dateStr] || [];
+
+                                                                    const isBooked = scheduledEvents.some(event => {
+                                                                        const staffMatches =
+                                                                            String(event.staff_id || event.appointment_with_id || (event.appointment_with?.id)) === String(assignedStaffId);
+                                                                        const timeMatches =
+                                                                            (event.time || event.appointment_time || '').startsWith(availSlot.start_time);
+                                                                        return staffMatches && timeMatches;
+                                                                    });
+
+                                                                    if (isBooked) return null;
+
+                                                                    return (
+                                                                        <option key={i} value={availSlot.start_time}>
+                                                                            {availSlot.formatted_time || availSlot.start_time}
+                                                                        </option>
+                                                                    );
+                                                                })}
                                                             </select>
                                                         )}
                                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
@@ -2162,15 +2201,15 @@ const SchedulingCalendar = () => {
                                                     </div>
                                                 </div>
                                                 {slots.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeTimeSlot(slot.id)}
-                                                        className="mt-3 w-10 h-10 flex items-center justify-center !rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover/slot:opacity-100"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
+                                                    <div className="group/slot">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeTimeSlot(slot.id)}
+                                                            className="mt-3 w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50 transition-all "
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         ))}

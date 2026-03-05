@@ -154,17 +154,23 @@ export default function StaffManagement() {
       const result = await response.json();
 
       if (result.success && result.data) {
-        setStaffData(result.data.staff_members || []);
+        const fullStaffList = result.data.staff_members || [];
+        // Filter out the firm itself from the staff list (case-insensitive check)
+        const filteredStaff = fullStaffList.filter(staff => {
+          const rolePrimary = staff.role?.primary?.toLowerCase() || '';
+          return rolePrimary !== 'firm' && rolePrimary !== 'admin';
+        });
+        setStaffData(filteredStaff);
 
         // Only update summary statistics on first load (when activeFilter is 'all' and no filters are applied)
         // This keeps the statistics static when switching tabs
         if (!isSummaryInitializedRef.current && activeFilter === 'all' && !searchTerm && roleFilter === 'all' && performanceFilter === 'all') {
-          // Calculate summary from staff data
-          const activeCount = result.data.staff_members?.filter(
+          // Calculate summary from filtered staff data
+          const activeCount = filteredStaff.filter(
             (staff) => staff.status?.value === 'active'
           ).length || 0;
 
-          const performances = result.data.staff_members
+          const performances = filteredStaff
             ?.map((staff) => staff.performance?.efficiency_percentage || 0)
             .filter((p) => p > 0) || [];
           const avgPerformance = performances.length > 0
@@ -953,11 +959,17 @@ export default function StaffManagement() {
         },
       });
 
-      let allStaff = staffData;
+      let allStaff = (staffData || []).filter(staff => {
+        const rolePrimary = staff.role?.primary?.toLowerCase() || '';
+        return rolePrimary !== 'firm' && rolePrimary !== 'admin';
+      });
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data && result.data.staff_members) {
-          allStaff = result.data.staff_members;
+          allStaff = (result.data.staff_members || []).filter(staff => {
+            const rolePrimary = staff.role?.primary?.toLowerCase() || '';
+            return rolePrimary !== 'firm' && rolePrimary !== 'admin';
+          });
         }
       }
 

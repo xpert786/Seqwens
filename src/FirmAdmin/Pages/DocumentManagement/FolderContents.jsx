@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Dropdown } from "react-bootstrap";
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { FaEye, FaDownload, FaTrash } from "react-icons/fa";
 import { DocumentUpload, DocumentBrowseFolder, DocumentPdfIcon, DocumentTextIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentCriticalIssuesIcon, DocumentDownload } from '../../Components/icons';
@@ -571,7 +570,12 @@ export default function FolderContents() {
                         {displayedDocuments.map((doc, index) => (
                           <tr
                             key={doc.id}
-                            onClick={() => handleViewDetails(doc)}
+                            onClick={(e) => {
+                              // If clicked within actions-menu-container, don't trigger view details
+                              if (!e.target.closest('.actions-menu-container')) {
+                                handleViewDetails(doc);
+                              }
+                            }}
                             className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer`}
                           >
                             <td className="py-4 px-4">
@@ -603,74 +607,47 @@ export default function FolderContents() {
                               <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
                             </td>
                             <td className="py-4 px-4">
-                              <div className="relative actions-menu-container">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    setMenuPosition({
-                                      top: rect.bottom + window.scrollY,
-                                      left: rect.right + window.scrollX - 192, // 192px is w-48
-                                    });
-                                    setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
-                                  }}
-                                  className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
-                                  title="Actions"
-                                >
-                                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
-                                {openActionsMenu === doc.id && createPortal(
-                                  <div
-                                    className="absolute w-40 bg-white rounded-lg border border-gray-200 shadow-xl z-[9999] py-1 foldercontents-actions-menu overflow-hidden"
-                                    style={{
-                                      borderRadius: '8px',
-                                      top: `${menuPosition.top}px`,
-                                      left: `${menuPosition.left}px`,
-                                      position: 'absolute'
-                                    }}
+                              <div className="actions-menu-container">
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    variant="link"
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors d-flex align-items-center justify-content-center border-0 after-d-none caret-off foldercontents-actions-button text-gray-600"
+                                    style={{ color: 'inherit', textDecoration: 'none', boxShadow: 'none' }}
+                                    bsPrefix="p-0"
                                   >
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleViewDetails(doc);
-                                      }}
-                                      className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                      <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                      <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </Dropdown.Toggle>
+                                  <Dropdown.Menu align="end" className="shadow-lg border-gray-200 rounded-lg py-1" style={{ minWidth: '160px', zIndex: 1050 }}>
+                                    <Dropdown.Item
+                                      onClick={() => handleViewDetails(doc)}
+                                      className="d-flex align-items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border-bottom border-gray-50"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
                                       <FaEye className="w-3.5 h-3.5" />
                                       <span>View Details</span>
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDownload(doc);
-                                        setOpenActionsMenu(null);
-                                      }}
-                                      className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                                    </Dropdown.Item>
+                                    <Dropdown.Item
+                                      onClick={() => handleDownload(doc)}
+                                      className="d-flex align-items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border-bottom border-gray-50"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
                                       <FaDownload className="w-3.5 h-3.5" />
                                       <span>Download</span>
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDelete(doc);
-                                        setOpenActionsMenu(null);
-                                      }}
-                                      className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-2.5"
+                                    </Dropdown.Item>
+                                    <Dropdown.Item
+                                      onClick={() => handleDelete(doc)}
+                                      className="d-flex align-items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
                                       style={{ fontFamily: 'BasisGrotesquePro' }}
                                     >
                                       <FaTrash className="w-3.5 h-3.5" />
                                       <span>Delete</span>
-                                    </button>
-                                  </div>,
-                                  document.body
-                                )}
+                                    </Dropdown.Item>
+                                  </Dropdown.Menu>
+                                </Dropdown>
                               </div>
                             </td>
                           </tr>
