@@ -386,30 +386,30 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
 
   return (
     <>
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 sm:p-10"
-      style={{
-        zIndex: 999999,
-        marginTop: 0,
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          handleClose();
-        }
-      }}
-    >
       <div
-        className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-6 relative modal-body-scroll"
+        className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 sm:p-10"
         style={{
-          maxHeight: "75vh",
-          overflowY: "auto",
-          position: 'relative',
-          fontFamily: 'BasisGrotesquePro'
+          zIndex: 999999,
+          marginTop: 0,
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            handleClose();
+          }
+        }}
       >
-        <style>
-          {`
+        <div
+          className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-6 relative modal-body-scroll"
+          style={{
+            maxHeight: "75vh",
+            overflowY: "auto",
+            position: 'relative',
+            fontFamily: 'BasisGrotesquePro'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <style>
+            {`
             .modal-body-scroll::-webkit-scrollbar {
               width: 8px;
             }
@@ -425,167 +425,167 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
               background: #94a3b8;
             }
           `}
-        </style>
-        <button
-          onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
-        >
-          <CrossesIcon className="w-5 h-5" />
-        </button>
-
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4 pb-3 border-b border-gray-100">
-          <div className="pr-10">
-            <h4 className="text-lg sm:text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
-              Invite New Staff Member
-            </h4>
-            <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-1">
-              Send an invitation to add a staff member to your firm
-            </p>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div
-            className="mb-4 p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200"
-            style={{ fontFamily: "BasisGrotesquePro" }}
+          </style>
+          <button
+            onClick={handleClose}
+            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
           >
-            {error}
-          </div>
-        )}
+            <CrossesIcon className="w-5 h-5" />
+          </button>
 
-        {/* Form */}
-        <form className="space-y-3" onSubmit={handleSubmit}>
-          {/* First and Last Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                placeholder="Enter first name"
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                placeholder="Enter last name"
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
-              />
+          {/* Header */}
+          <div className="flex justify-between items-start mb-4 pb-3 border-b border-gray-100">
+            <div className="pr-10">
+              <h4 className="text-lg sm:text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
+                Invite New Staff Member
+              </h4>
+              <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-1">
+                Send an invitation to add a staff member to your firm
+              </p>
             </div>
           </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="abc@gmail.com"
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
-            />
-          </div>
+          {/* Error Message */}
+          {error && (
+            <div
+              className="mb-4 p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200"
+              style={{ fontFamily: "BasisGrotesquePro" }}
+            >
+              {error}
+            </div>
+          )}
 
-          {/* Phone - Optional */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
-              Phone
-            </label>
-
-            <PhoneInput
-              country={phoneCountry}
-              value={formData.phone_number || ''}
-              onChange={(phone) =>
-                setFormData(prev => ({ ...prev, phone_number: phone }))
-              }
-              onCountryChange={(countryCode) =>
-                setPhoneCountry(countryCode.toLowerCase())
-              }
-
-              inputClass="phone-input"
-              containerClass="phone-input-container"
-              buttonClass="phone-flag-button"
-
-              enableSearch
-              countryCodeEditable={false}
-            />
-          </div>
-
-
-          {/* Delivery Methods */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-              Delivery Methods
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { key: "email", label: "Email" },
-                { key: "sms", label: "SMS" },
-                { key: "link", label: "Shareable Link" },
-              ].map(({ key, label }) => (
-                <label
-                  key={key}
-                  className="flex items-center gap-2 text-sm text-gray-700 font-[BasisGrotesquePro]"
-                >
-                  <input
-                    type="checkbox"
-                    checked={deliveryMethods[key]}
-                    onChange={(e) =>
-                      setDeliveryMethods((prev) => ({
-                        ...prev,
-                        [key]: e.target.checked,
-                      }))
-                    }
-                  />
-                  {label}
+          {/* Form */}
+          <form className="space-y-3" onSubmit={handleSubmit}>
+            {/* First and Last Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
+                  First Name <span className="text-red-500">*</span>
                 </label>
-              ))}
+                <input
+                  type="text"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  placeholder="Enter first name"
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
+                  Last Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  placeholder="Enter last name"
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
+                />
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-              If no delivery method is selected, we will send email and SMS (when a phone number is provided).
-            </p>
-          </div>
 
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={loading}
-              className="px-4 py-1.5 !border border-gray-300 !rounded-md text-gray-700 hover:bg-gray-100 transition font-[BasisGrotesquePro] text-sm disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-1.5 bg-[#F56D2D] text-white !rounded-md hover:bg-orange-600 transition font-[BasisGrotesquePro] font-medium text-sm disabled:opacity-50"
-            >
-              {loading ? "Sending Invite..." : "Send Invite"}
-            </button>
-          </div>
-        </form>
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="abc@gmail.com"
+                required
+                className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
+              />
+            </div>
+
+            {/* Phone - Optional */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
+                Phone
+              </label>
+
+              <PhoneInput
+                country={phoneCountry}
+                value={formData.phone_number || ''}
+                onChange={(phone) =>
+                  setFormData(prev => ({ ...prev, phone_number: phone }))
+                }
+                onCountryChange={(countryCode) =>
+                  setPhoneCountry(countryCode.toLowerCase())
+                }
+
+                inputClass="phone-input"
+                containerClass="phone-input-container"
+                buttonClass="phone-flag-button"
+
+                enableSearch
+                countryCodeEditable={false}
+              />
+            </div>
+
+
+            {/* Delivery Methods */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                Delivery Methods
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { key: "email", label: "Email" },
+                  { key: "sms", label: "SMS" },
+                  { key: "link", label: "Shareable Link" },
+                ].map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-2 text-sm text-gray-700 font-[BasisGrotesquePro]"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={deliveryMethods[key]}
+                      onChange={(e) =>
+                        setDeliveryMethods((prev) => ({
+                          ...prev,
+                          [key]: e.target.checked,
+                        }))
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
+                If no delivery method is selected, we will send email and SMS (when a phone number is provided).
+              </p>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={loading}
+                className="px-4 py-1.5 !border border-gray-300 !rounded-md text-gray-700 hover:bg-gray-100 transition font-[BasisGrotesquePro] text-sm disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-1.5 bg-[#F56D2D] text-white !rounded-md hover:bg-orange-600 transition font-[BasisGrotesquePro] font-medium text-sm disabled:opacity-50"
+              >
+                {loading ? "Sending Invite..." : "Send Invite"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
 
       {/* Confirmation Modal - rendered as sibling outside parent overlay to avoid z-index stacking issues */}
       <ConfirmationModal
