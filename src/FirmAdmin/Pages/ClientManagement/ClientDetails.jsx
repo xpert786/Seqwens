@@ -256,7 +256,8 @@ export default function ClientDetails() {
       lastActiveRelative: client.summary_cards?.last_activity_relative || ''
     },
     billingHistory: client.billing_history || [],
-    dateJoined: client.account_details?.join_date_value || ''
+    dateJoined: client.account_details?.join_date_value || '',
+    isSigned: client.personal_information?.is_signed || false
   } : null;
 
   const tabs = [

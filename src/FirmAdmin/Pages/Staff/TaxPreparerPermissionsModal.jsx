@@ -385,16 +385,10 @@ export default function TaxPreparerPermissionsModal({
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(categoryCodes, allSelected)}
-                        className={`w-full sm:w-auto px-4 py-1.5 !rounded-lg font-[BasisGrotesquePro] text-xs sm:text-sm font-medium
-    hover:bg-[inherit] hover:text-[inherit] active:bg-[inherit] active:text-[inherit]
-    !text-white`}
-                        style={{
-                          backgroundColor: allSelected ? '#9CA3AF' : '#3AD6F2', // gray-400 or primary
-                          border: allSelected
-                            ? '1px solid #9CA3AF'
-                            : '1px solid rgba(58,214,242,0.4)',
-                          transition: 'none'
-                        }}
+                        className={`w-full sm:w-auto px-5 py-2 !rounded-xl font-[BasisGrotesquePro] text-xs sm:text-[11px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm border
+                          ${allSelected 
+                            ? 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200' 
+                            : 'bg-[#3AD6F2] text-white border-[#3AD6F2]/30 hover:bg-[#34c2db] hover:shadow-md hover:shadow-blue-100'}`}
                       >
                         {allSelected ? 'Deselect All' : 'Select All'}
                       </button>
@@ -410,40 +404,55 @@ export default function TaxPreparerPermissionsModal({
                           <div
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
-                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
-                              ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
-                              : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
-                              }`}
+                            className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-300 border ${
+                              isAllowed
+                                ? 'bg-[#32B582]/[0.02] border-[#32B582] shadow-[0_4px_12px_rgba(50,181,130,0.08)]'
+                                : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+                            }`}
                           >
-                            {/* Toggle Switch */}
-                            <div className={`relative w-10 sm:w-12 h-5 sm:h-6 rounded-full transition-colors flex-shrink-0 ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
+                            {/* Premium Toggle Switch */}
+                            <div className="relative flex-shrink-0 group">
+                              <div className={`w-12 h-6 rounded-full transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-inner flex items-center ${
+                                isAllowed 
+                                ? 'bg-gradient-to-r from-[#32B582] to-[#28A174]' 
+                                : 'bg-gray-200'
                               }`}>
-                              <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-[20px] sm:translate-x-6' : 'translate-x-0'
-                                }`}></div>
+                                <div className={`absolute left-0.5 w-5 h-5 bg-white rounded-full transition-all duration-400 border border-transparent shadow-md flex items-center justify-center ${
+                                  isAllowed ? 'translate-x-6.5' : 'translate-x-0.5'
+                                }`}>
+                                  {isAllowed ? (
+                                    <FiCheck className="w-2.5 h-2.5 text-[#32B582]" />
+                                  ) : (
+                                    <FiX className="w-2.5 h-2.5 text-gray-400" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
 
                             {/* Permission Label */}
                             <div className="flex-1">
-                              <p className={`text-xs sm:text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
-                                }`}>
+                              <p className={`text-sm font-bold font-[BasisGrotesquePro] transition-colors ${
+                                isAllowed ? 'text-gray-900' : 'text-gray-500'
+                              }`}>
                                 {permissionLabel}
                               </p>
                             </div>
 
                             {/* Status Badge */}
-                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
-                              ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
-                              : 'bg-gray-100 text-gray-600 border-gray-300'
-                              }`}>
+                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg font-[BasisGrotesquePro] text-[9px] font-black uppercase tracking-widest border transition-all duration-300 ${
+                              isAllowed
+                                ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/20'
+                                : 'bg-gray-100 text-gray-400 border-gray-200'
+                            }`}>
                               {isAllowed ? (
                                 <>
-                                  <FiCheck size={14} />
-                                  <span>Allowed</span>
+                                  <div className="w-1.5 h-1.5 bg-[#32B582] rounded-full"></div>
+                                  <span>Enabled</span>
                                 </>
                               ) : (
                                 <>
-                                  <FiX size={14} />
-                                  <span>Disallowed</span>
+                                  <FiX size={10} />
+                                  <span>Disabled</span>
                                 </>
                               )}
                             </div>
@@ -466,20 +475,20 @@ export default function TaxPreparerPermissionsModal({
                 if (uncategorizedPermissions.length === 0) return null;
 
                 return (
-                  <div className="bg-white border border-[#E8F0FF] rounded-lg p-5 hover:border-[#3AD6F2] transition-all shadow-sm">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                  <div className="bg-white border-2 border-[#E8F0FF] rounded-xl p-5 hover:border-[#3AD6F2]/30 transition-all shadow-sm">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
                       <div className="flex items-center gap-3">
                         <FiList className="text-gray-500 w-5 h-5 flex-shrink-0" />
-                        <h5 className="text-base sm:text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0 leading-none">
+                        <h5 className="text-base sm:text-lg font-bold text-gray-900 font-[BasisGrotesquePro] m-0">
                           Other Permissions
                         </h5>
-                        <span className="text-[10px] sm:text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-[BasisGrotesquePro] flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-bold">
                           {uncategorizedPermissions.length} {uncategorizedPermissions.length === 1 ? 'perm' : 'perms'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {uncategorizedPermissions.map((permission) => {
                         const permissionCode = getPermissionCode(permission);
                         const permissionLabel = getPermissionLabel(permission);
@@ -488,35 +497,50 @@ export default function TaxPreparerPermissionsModal({
                           <div
                             key={permissionCode}
                             onClick={() => handlePermissionToggle(permissionCode)}
-                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg cursor-pointer transition-all border ${isAllowed
-                              ? 'bg-[#32B582]/5 border-[#32B582] hover:bg-[#32B582]/10'
-                              : 'bg-gray-50 border-[#E8F0FF] hover:bg-gray-100'
-                              }`}
+                            className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-300 border ${
+                              isAllowed
+                                ? 'bg-[#32B582]/[0.02] border-[#32B582] shadow-[0_4px_12px_rgba(50,181,130,0.08)]'
+                                : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+                            }`}
                           >
-                            <div className={`relative w-10 sm:w-12 h-5 sm:h-6 rounded-full transition-colors flex-shrink-0 ${isAllowed ? 'bg-[#32B582]' : 'bg-gray-300'
+                            <div className="relative flex-shrink-0">
+                              <div className={`w-12 h-6 rounded-full transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-inner flex items-center ${
+                                isAllowed 
+                                ? 'bg-gradient-to-r from-[#32B582] to-[#28A174]' 
+                                : 'bg-gray-200'
                               }`}>
-                              <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isAllowed ? 'translate-x-[20px] sm:translate-x-6' : 'translate-x-0'
-                                }`}></div>
+                                <div className={`absolute left-0.5 w-5 h-5 bg-white rounded-full transition-all duration-400 border border-transparent shadow-md flex items-center justify-center ${
+                                  isAllowed ? 'translate-x-6.5' : 'translate-x-0.5'
+                                }`}>
+                                  {isAllowed ? (
+                                    <FiCheck className="w-2.5 h-2.5 text-[#32B582]" />
+                                  ) : (
+                                    <FiX className="w-2.5 h-2.5 text-gray-400" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
                             <div className="flex-1">
-                              <p className={`text-xs sm:text-sm font-medium font-[BasisGrotesquePro] ${isAllowed ? 'text-gray-900' : 'text-gray-600'
-                                }`}>
+                              <p className={`text-sm font-bold font-[BasisGrotesquePro] transition-colors ${
+                                isAllowed ? 'text-gray-900' : 'text-gray-500'
+                              }`}>
                                 {permissionLabel}
                               </p>
                             </div>
-                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full font-[BasisGrotesquePro] text-xs font-semibold border ${isAllowed
-                              ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/30'
-                              : 'bg-gray-100 text-gray-600 border-gray-300'
-                              }`}>
+                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg font-[BasisGrotesquePro] text-[9px] font-black uppercase tracking-widest border transition-all duration-300 ${
+                              isAllowed
+                                ? 'bg-[#32B582]/10 text-[#32B582] border-[#32B582]/20'
+                                : 'bg-gray-100 text-gray-400 border-gray-200'
+                            }`}>
                               {isAllowed ? (
                                 <>
-                                  <FiCheck size={14} />
-                                  <span>Allowed</span>
+                                  <div className="w-1.5 h-1.5 bg-[#32B582] rounded-full"></div>
+                                  <span>Enabled</span>
                                 </>
                               ) : (
                                 <>
-                                  <FiX size={14} />
-                                  <span>Disallowed</span>
+                                  <FiX size={10} />
+                                  <span>Disabled</span>
                                 </>
                               )}
                             </div>
@@ -527,51 +551,51 @@ export default function TaxPreparerPermissionsModal({
                   </div>
                 );
               })()}
-            </div>
+      </div>
           )}
-        </div>
+    </div>
 
-        {/* Footer */}
-        <div className="bg-white border-t border-[#E8F0FF] px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="px-4 sm:px-6 py-2.5 border border-[#E8F0FF] bg-white text-gray-700 !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <div className="sm:hidden text-xs text-gray-600 font-[BasisGrotesquePro]">
-              <span className="font-semibold text-gray-900">{allowedPermissions}</span>/{totalPermissions}
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-            <div className="hidden sm:block text-sm text-gray-600 font-[BasisGrotesquePro]">
-              <span className="font-semibold text-gray-900">{allowedPermissions}</span> of {totalPermissions} permissions allowed
-            </div>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || loading}
-              className="w-full sm:w-auto px-6 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55D1D] transition-colors font-[BasisGrotesquePro] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {saving ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <FiCheck size={18} />
-                  <span>Save Permissions</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        {/* Footer */ }
+  <div className="bg-white border-t border-[#E8F0FF] px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+      <button
+        type="button"
+        onClick={onClose}
+        disabled={saving}
+        className="px-4 sm:px-6 py-2.5 border border-[#E8F0FF] bg-white text-gray-700 !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Cancel
+      </button>
+      <div className="sm:hidden text-xs text-gray-600 font-[BasisGrotesquePro]">
+        <span className="font-semibold text-gray-900">{allowedPermissions}</span>/{totalPermissions}
       </div>
     </div>
+
+    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+      <div className="hidden sm:block text-sm text-gray-600 font-[BasisGrotesquePro]">
+        <span className="font-semibold text-gray-900">{allowedPermissions}</span> of {totalPermissions} permissions allowed
+      </div>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving || loading}
+        className="w-full sm:w-auto px-6 py-2.5 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55D1D] transition-colors font-[BasisGrotesquePro] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {saving ? (
+          <>
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Saving...</span>
+          </>
+        ) : (
+          <>
+            <FiCheck size={18} />
+            <span>Save Permissions</span>
+          </>
+        )}
+      </button>
+    </div>
+  </div>
+      </div >
+    </div >
   );
 }

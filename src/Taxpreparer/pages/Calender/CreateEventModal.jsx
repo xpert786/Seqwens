@@ -311,7 +311,9 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        error.response = { data: errorData };
+        throw error;
       }
 
       const result = await response.json();
@@ -490,7 +492,10 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
                       disabled={!formData.appointment_date || availableSlots.length === 0}
                     >
                       <option value="">Select Time</option>
-                      {availableSlots.map((availableSlot, index) => (
+                      {availableSlots.filter(availableSlot => {
+                        const isSelectedElsewhere = formData.slots.some(s => s.id !== slot.id && s.time === availableSlot.start_time);
+                        return !isSelectedElsewhere;
+                      }).map((availableSlot, index) => (
                         <option key={index} value={availableSlot.start_time}>
                           {availableSlot.formatted_time}
                         </option>

@@ -244,4 +244,4 @@
     font-size: 0.875rem !important;
     justify-content: center !important;
   }
-}
+}\n.caret-off::after { display: none !important; }

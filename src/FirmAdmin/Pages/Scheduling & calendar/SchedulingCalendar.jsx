@@ -721,7 +721,9 @@ const SchedulingCalendar = () => {
                 });
             } else {
                 // Other error
-                toast.error(response.message || handleAPIError(new Error('Failed to create meeting')), {
+                const error = new Error(response.message || 'Failed to create meeting');
+                error.response = { data: response };
+                toast.error(handleAPIError(error), {
                     position: 'top-right',
                     autoClose: 3000
                 });
@@ -1732,7 +1734,9 @@ const SchedulingCalendar = () => {
                                                     ? 'bg-green-50 text-green-600'
                                                     : event.appointment_status === 'pending'
                                                         ? 'bg-yellow-50 text-yellow-600'
-                                                        : 'bg-green-50 text-green-600'
+                                                        : event.appointment_status === 'completed'
+                                                            ? 'bg-indigo-50 text-indigo-600'
+                                                            : 'bg-green-50 text-green-600'
                                                     }`}
                                             >
                                                 {event.status_display || (event.appointment_status === 'cancelled' ? 'NO SHOW' : event.appointment_status) || 'Scheduled'}
@@ -1748,7 +1752,7 @@ const SchedulingCalendar = () => {
                                             )}
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#F8FAFF]">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#F8FAFF]">
                                             {event.appointment_status === 'pending' ? (
                                                 <>
                                                     <button
@@ -1799,7 +1803,7 @@ const SchedulingCalendar = () => {
                                                         </button>
                                                     )}
 
-                                                    {(isEventPast(event) || event.appointment_status === 'cancelled') && (
+                                                    {(isEventPast(event) || event.appointment_status === 'cancelled' || event.appointment_status === 'no_show') && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -2122,11 +2126,35 @@ const SchedulingCalendar = () => {
                                                                             ? 'No slots available'
                                                                             : 'Select Time'}
                                                                 </option>
-                                                                {availableSlots.map((availSlot, i) => (
-                                                                    <option key={i} value={availSlot.start_time}>
-                                                                        {availSlot.formatted_time || availSlot.start_time}
-                                                                    </option>
-                                                                ))}
+                                                                {availableSlots.map((availSlot, i) => {
+                                                                    // Filter out if selected in another slot in this form
+                                                                    const isSelectedElsewhere = slots.some(s => s.id !== slot.id && s.time === availSlot.start_time);
+                                                                    if (isSelectedElsewhere) return null;
+
+                                                                    // Filter out if already in calendar data for this date and staff
+                                                                    const appsByDate = calendarData?.calendar?.appointments_by_date || {};
+                                                                    let dateStr = appointmentDate;
+                                                                    if (appointmentDate && !appointmentDate.includes('T')) {
+                                                                        dateStr = appointmentDate;
+                                                                    }
+                                                                    const scheduledEvents = appsByDate[dateStr] || [];
+
+                                                                    const isBooked = scheduledEvents.some(event => {
+                                                                        const staffMatches =
+                                                                            String(event.staff_id || event.appointment_with_id || (event.appointment_with?.id)) === String(assignedStaffId);
+                                                                        const timeMatches =
+                                                                            (event.time || event.appointment_time || '').startsWith(availSlot.start_time);
+                                                                        return staffMatches && timeMatches;
+                                                                    });
+
+                                                                    if (isBooked) return null;
+
+                                                                    return (
+                                                                        <option key={i} value={availSlot.start_time}>
+                                                                            {availSlot.formatted_time || availSlot.start_time}
+                                                                        </option>
+                                                                    );
+                                                                })}
                                                             </select>
                                                         )}
                                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
@@ -2161,15 +2189,15 @@ const SchedulingCalendar = () => {
                                                     </div>
                                                 </div>
                                                 {slots.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeTimeSlot(slot.id)}
-                                                        className="mt-3 w-10 h-10 flex items-center justify-center !rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover/slot:opacity-100"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
+                                                    <div className="group/slot">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeTimeSlot(slot.id)}
+                                                            className="mt-3 w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50 transition-all "
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         ))}
