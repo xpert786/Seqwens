@@ -126,7 +126,7 @@ export default function FirmRoutes() {
 
   return (
     <FirmSettingsProvider>
-      <div id="firm-admin-root" className="firm-panel w-full h-full">
+      <div id="firm-admin-root" className="firm-panel w-full h-screen overflow-hidden">
         <Routes>
           {/* Main firm admin dashboard route with layout */}
           <Route path="/" element={

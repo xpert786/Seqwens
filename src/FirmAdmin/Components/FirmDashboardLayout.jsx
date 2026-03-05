@@ -383,7 +383,7 @@ export default function FirmDashboardLayout() {
 
   return (
     <SubscriptionStatusProvider>
-      <div className="firm-dashboard-layout">
+      <div className="firm-dashboard-layout overflow-hidden h-screen bg-[#F3F7FF]">
         <MaintenanceMode />
         <ForcedPasswordChangeModal />
         <ImpersonationBanner />
@@ -409,16 +409,15 @@ export default function FirmDashboardLayout() {
           onNavItemClick={handleCloseSidebar}
         />
         <div
-          className="flex flex-col transition-all duration-300"
+          className="flex flex-col transition-all duration-300 w-full h-screen"
           style={{
-            marginTop: isImpersonating ? '110px' : '70px',
-            height: isImpersonating ? 'calc(100vh - 110px)' : 'calc(100vh - 70px)',
+            paddingTop: isImpersonating ? '110px' : '',
             marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
             width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
           }}
         >
           <SubscriptionStatusBanner />
-          <main className="flex-grow overflow-y-auto p-2">
+          <main className="flex-grow overflow-y-auto p-2 pb-20">
             <Outlet />
           </main>
         </div>
