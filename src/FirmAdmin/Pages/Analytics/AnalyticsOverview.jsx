@@ -159,31 +159,17 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
     retentionRate: item.retention_rate || 0
   })) || [];
 
-  // Prepare client segmentation data
-  const clientSegmentsData = analyticsData?.client_segmentation?.segments?.map(seg => ({
-    name: seg.name,
-    revenue: seg.revenue || 0,
-    revenueFormatted: seg.revenue_formatted || '$0',
-    clientCount: seg.client_count || 0,
-    avgRevenue: seg.avg_revenue || 0,
-    avgRevenueFormatted: seg.avg_revenue_formatted || '$0',
-    percentage: seg.percentage || 0,
-    color: seg.color || '#3b82f6'
-  })) || [];
+  // Prepare client profile breakdown data
+  const profileData = analyticsData?.client_profile_breakdown || {};
+  const categories = profileData.categories || [];
 
-  // Calculate total revenue for percentage calculation if not provided
-  const totalRevenue = clientSegmentsData.reduce((sum, seg) => sum + (seg.revenue || 0), 0) ||
-    analyticsData?.client_segmentation?.total_revenue || 0;
-
-  const chartData = clientSegmentsData.map(seg => {
-    const percentage = seg.percentage || (totalRevenue > 0 ? (seg.revenue / totalRevenue * 100) : 0);
-    return {
-      name: seg.name,
-      value: seg.revenue,
-      percentage: percentage,
-      color: seg.color
-    };
-  }).filter(seg => seg.value > 0); // Filter out segments with zero revenue
+  const chartData = categories.map(cat => ({
+    name: cat.label,
+    value: cat.count,
+    percentage: cat.percentage,
+    color: cat.color,
+    icon: cat.icon
+  })).filter(cat => cat.value > 0);
 
   if (loading) {
     return (
@@ -354,11 +340,24 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
         </div>
       </div>
 
-      {/* Client Segmentation - Full Width */}
+      {/* Client Profile Breakdown - Full Width */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
-        <div className="mb-4 sm:mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
-          <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Client Profile Breakdown</h3>
+            <p className="text-sm text-gray-600">Distribution based on intake form data</p>
+          </div>
+
+          <div className="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+            <div className="text-center px-3 border-r border-gray-200">
+              <p className="text-[10px] text-gray-500 uppercase font-bold">Total Clients</p>
+              <p className="text-lg font-bold text-gray-900">{profileData.total_clients || 0}</p>
+            </div>
+            <div className="text-center px-3">
+              <p className="text-[10px] text-gray-500 uppercase font-bold">Intake Completion</p>
+              <p className="text-lg font-bold text-blue-600">{profileData.intake_completion_rate || 0}%</p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
@@ -394,8 +393,8 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
                           return (
                             <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
                               <p className="font-medium text-gray-900">{data.name}</p>
-                              <p className="text-blue-600 font-semibold">${data.value?.toLocaleString() || 0}</p>
-                              <p className="text-gray-500 text-sm">{data.percentage?.toFixed(1) || 0}%</p>
+                              <p className="text-blue-600 font-semibold">{data.value} Clients</p>
+                              <p className="text-gray-500 text-sm">{data.percentage?.toFixed(1) || 0}% of total</p>
                             </div>
                           );
                         }
@@ -408,32 +407,32 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
             </div>
           </div>
 
-          {/* Segment List */}
+          {/* Category List */}
           <div className="space-y-3">
-            {clientSegmentsData.length === 0 && (
-              <div className="text-sm text-gray-500">No segments available.</div>
+            {categories.length === 0 && (
+              <div className="text-sm text-gray-500">No profile data available.</div>
             )}
 
-            {clientSegmentsData.map((segment, index) => (
+            {categories.map((category, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between px-3 py-2 border border-[#E8F0FF] rounded-lg bg-gray-50/50"
+                className="flex items-center justify-between px-3 py-3 border border-[#E8F0FF] rounded-lg bg-gray-50/50 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: segment.color }}
+                    className="w-1.5 h-10 rounded-full"
+                    style={{ backgroundColor: category.color }}
                   ></div>
 
                   <div>
-                    <h6 className="font-semibold text-sm text-gray-900">{segment.name}</h6>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">{segment.avgRevenueFormatted} AVG</p>
+                    <h6 className="font-semibold text-sm text-gray-900">{category.label}</h6>
+                    <p className="text-[10px] text-gray-500 max-w-[200px] leading-tight">{category.description}</p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="font-bold text-sm text-gray-900">{segment.revenueFormatted}</div>
-                  <div className="text-[10px] text-gray-500">{segment.clientCount} CLIENTS</div>
+                  <div className="font-bold text-base text-gray-900">{category.count}</div>
+                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{category.percentage}%</div>
                 </div>
               </div>
             ))}
