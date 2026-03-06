@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
 
 const IntakeFormTab = ({ onOpenFillModal }) => {
     const { clientId } = useParams();
@@ -241,7 +241,7 @@ const IntakeFormTab = ({ onOpenFillModal }) => {
             if (!clientId) return;
             try {
                 setLoading(true);
-                const response = await firmAdminClientsAPI.getSignedDataEntryForm(clientId);
+                const response = await taxPreparerClientAPI.getSignedDataEntryForm(clientId);
                 if (response.success) {
                     setData(response.data);
                 } else {

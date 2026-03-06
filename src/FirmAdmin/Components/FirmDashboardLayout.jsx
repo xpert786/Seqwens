@@ -417,7 +417,7 @@ export default function FirmDashboardLayout() {
           }}
         >
           <SubscriptionStatusBanner />
-          <main className="flex-grow overflow-y-auto p-2 pb-20">
+          <main className="flex-grow overflow-y-auto p-2 !pb-20">
             <Outlet />
           </main>
         </div>

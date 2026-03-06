@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI, taxPreparerThreadsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import SetAvailabilityModal from './SetAvailabilityModal';
@@ -246,25 +246,46 @@ const SchedulingCalendar = () => {
         }
     }, [isAddEventModalOpen]);
 
-    // Fetch clients list
+    // Fetch clients list — uses the assigned-list endpoint to show only clients
+    // assigned to the logged-in tax preparer/staff member.
+    // Falls back to the full firm clients list if the assigned-list endpoint fails.
     const fetchClients = async () => {
         try {
             setLoadingClients(true);
-            const response = await firmAdminClientsAPI.listClients({ page_size: 100 });
 
-            if (response.success && response.data) {
-                const clientsList = response.data.clients || [];
-                setClients(clientsList);
+            // Primary: use the assigned-clients API so only relevant clients appear
+            const assignedResponse = await taxPreparerThreadsAPI.listAssignedClients();
+
+            // The assigned-list endpoint returns { success, data: [...] } (flat array)
+            if (assignedResponse && assignedResponse.data && Array.isArray(assignedResponse.data)) {
+                setClients(assignedResponse.data);
+                return;
+            }
+
+            // Fallback: firm admin broad client list (e.g. accessed as firm admin)
+            const fallbackResponse = await firmAdminClientsAPI.listClients({ page_size: 100 });
+            if (fallbackResponse.success && fallbackResponse.data) {
+                setClients(fallbackResponse.data.clients || []);
             } else {
                 setClients([]);
             }
         } catch (error) {
-            console.error('Error fetching clients:', error);
-            toast.error(handleAPIError(error) || 'Failed to load clients', {
-                position: 'top-right',
-                autoClose: 3000
-            });
-            setClients([]);
+            // If assigned-list 403s (firm admin has no staff role), fall back silently
+            try {
+                const fallbackResponse = await firmAdminClientsAPI.listClients({ page_size: 100 });
+                if (fallbackResponse.success && fallbackResponse.data) {
+                    setClients(fallbackResponse.data.clients || []);
+                } else {
+                    setClients([]);
+                }
+            } catch (fallbackError) {
+                console.error('Error fetching clients:', fallbackError);
+                toast.error(handleAPIError(fallbackError) || 'Failed to load clients', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+                setClients([]);
+            }
         } finally {
             setLoadingClients(false);
         }
@@ -2172,9 +2193,9 @@ const SchedulingCalendar = () => {
                                                             <option value="">Select Client</option>
                                                             {clients.map((client) => (
                                                                 <option key={client.id} value={client.id}>
-                                                                    {client.first_name && client.last_name
+                                                                    {client.full_name || (client.first_name && client.last_name
                                                                         ? `${client.first_name} ${client.last_name}`
-                                                                        : client.email || `Client #${client.id}`}
+                                                                        : client.email || `Client #${client.id}`)}
                                                                 </option>
                                                             ))}
                                                         </select>

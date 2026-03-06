@@ -234,7 +234,7 @@ export default function ClientDetails() {
       setLoading(true);
       setError(null);
 
-      const result = await firmAdminClientsAPI.getClientDetails(clientId);
+      const result = await taxPreparerClientAPI.getTaxpayerDetails(clientId);
       if (!result.success || !result.data) {
         throw new Error(result.message || 'Failed to fetch client details');
       }

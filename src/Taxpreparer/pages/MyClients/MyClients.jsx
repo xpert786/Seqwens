@@ -412,13 +412,6 @@ export default function MyClients() {
       case "Pending":
         setActiveTab('pending-invites');
         break;
-      case "High Priority":
-        setActiveTab('clients');
-        setPriorityFilter('high');
-        setTimeout(() => {
-          clientListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-        break;
       default:
         break;
     }
@@ -446,7 +439,6 @@ export default function MyClients() {
     { label: "Total Clients", icon: <DoubleUserIcon />, count: overview.total_clients, color: "#00bcd4" },
     { label: "Active", icon: <CompletedIcon />, count: overview.active, color: "#4caf50" },
     { label: "Pending", icon: <AwaitingIcon />, count: invitesPagination.total_count > 0 ? invitesPagination.total_count : pendingInvites.length, color: "#3f51b5" },
-    { label: "High Priority", icon: <FaildIcon />, count: overview.high_priority, color: "#EF4444" },
   ];
 
   // Process client data for display
@@ -1363,7 +1355,7 @@ export default function MyClients() {
       {/* Stats */}
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (
-          <div className="col-md-3 col-sm-12" key={index}>
+          <div className="col-md-4 col-sm-12" key={index}>
             <div
               className="stat-card clickable-card"
               onClick={() => handleStatCardClick(item.label)}
@@ -1520,9 +1512,9 @@ export default function MyClients() {
             >
               <FiltIcon className="me-2 text-muted" style={{ fontSize: "13px" }} />
               <span>Filter</span>
-              {(statusFilter || priorityFilter) && (
+              {statusFilter && (
                 <span className="badge bg-danger text-white ms-2" style={{ fontSize: "10px", color: "#ffffff" }}>
-                  {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0)}
+                  1
                 </span>
               )}
             </button>
@@ -1567,40 +1559,8 @@ export default function MyClients() {
                     </button>
                   </div>
                 </div>
-                <div className="mb-2">
-                  <label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#6B7280", marginLeft: "4px" }}>PRIORITY</label>
-                  <div className="d-flex flex-column gap-1">
-                    <button
-                      className={`btn btn-sm py-1 ${priorityFilter === null ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
-                      style={{ fontSize: "12px", borderRadius: "6px" }}
-                      onClick={() => handlePriorityFilter(null)}
-                    >
-                      All Priority
-                    </button>
-                    <button
-                      className={`btn btn-sm py-1 ${priorityFilter === 'high' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
-                      style={{ fontSize: "12px", borderRadius: "6px" }}
-                      onClick={() => handlePriorityFilter('high')}
-                    >
-                      High
-                    </button>
-                    <button
-                      className={`btn btn-sm py-1 ${priorityFilter === 'medium' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
-                      style={{ fontSize: "12px", borderRadius: "6px" }}
-                      onClick={() => handlePriorityFilter('medium')}
-                    >
-                      Medium
-                    </button>
-                    <button
-                      className={`btn btn-sm py-1 ${priorityFilter === 'low' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
-                      style={{ fontSize: "12px", borderRadius: "6px" }}
-                      onClick={() => handlePriorityFilter('low')}
-                    >
-                      Low
-                    </button>
-                  </div>
-                </div>
-                {(statusFilter || priorityFilter || searchQuery) && (
+
+                {(statusFilter || searchQuery) && (
                   <button
                     className="btn btn-sm btn-outline-danger w-100 mt-1 py-1"
                     onClick={clearFilters}

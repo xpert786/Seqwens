@@ -5310,6 +5310,17 @@ export const taxPreparerClientAPI = {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
+  // Get individual client/taxpayer details (tax preparer scoped)
+  // GET /taxpayer/tax-preparer/clients/{client_id}/
+  getTaxpayerDetails: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/`, 'GET');
+  },
+
+  // Get signed data entry form
+  getSignedDataEntryForm: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/signed-data-entry-form/`, 'GET');
+  },
+
   // Get individual invoice details
   getClientInvoiceDetail: async (clientId, invoiceId) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${invoiceId}/`, 'GET');
