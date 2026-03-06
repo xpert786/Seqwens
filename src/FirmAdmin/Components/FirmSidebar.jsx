@@ -27,7 +27,7 @@ import {
 
 import { UserManage, ClientIcon, DashIcon, MesIcon, AppointmentIcon, DocumentIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon, AnalyticsIcon } from "./icons";
 
-export default function FirmSidebar({ isSidebarOpen = true, onNavItemClick }) {
+export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = false, onNavItemClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -100,10 +100,12 @@ export default function FirmSidebar({ isSidebarOpen = true, onNavItemClick }) {
 
   return (
     <div
-      className="firm-sidebar h-[calc(100vh-70px)] fixed top-[70px] left-0 z-[1000] transition-all duration-300"
+      className="firm-sidebar fixed left-0 z-[1000] transition-all duration-300"
       style={{
         backgroundColor: 'var(--firm-primary-color, #32B582)',
         width: sidebarWidth,
+        top: isImpersonating ? '110px' : '70px',
+        height: isImpersonating ? 'calc(100vh - 110px)' : 'calc(100vh - 70px)',
         transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         visibility: isSidebarOpen ? 'visible' : 'hidden'
       }}
