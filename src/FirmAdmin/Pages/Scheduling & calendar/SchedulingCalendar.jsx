@@ -372,7 +372,7 @@ const SchedulingCalendar = () => {
                 {hasClient && (
                     <button
                         type="button"
-                        className="text-[#F56D2D] hover:underline"
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleNavigateToClient(event);
@@ -381,11 +381,13 @@ const SchedulingCalendar = () => {
                         {event.user_name}
                     </button>
                 )}
+
                 {hasClient && hasStaff && <span> with </span>}
+
                 {hasStaff && (
                     <button
                         type="button"
-                        className="text-[#F56D2D] hover:underline"
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleNavigateToStaff(event);
@@ -611,14 +613,7 @@ const SchedulingCalendar = () => {
             return;
         }
 
-        // Validate staff assignment
-        if (!assignedStaffId) {
-            toast.error('Please assign a staff member', {
-                position: 'top-right',
-                autoClose: 3000
-            });
-            return;
-        }
+        // Staff assignment is optional — if no staff selected, the firm admin will host the meeting
 
         try {
             setCreatingMeeting(true);
@@ -638,7 +633,9 @@ const SchedulingCalendar = () => {
                 description: description || '',
                 meeting_type: meetingType || 'zoom',
                 client_id: firstSlot.client_id,
-                staff_id: parseInt(assignedStaffId), // Required staff assignment
+                // Only include staff_id if a specific staff member is selected
+                // If empty, the firm admin will host the meeting themselves
+                ...(assignedStaffId ? { staff_id: parseInt(assignedStaffId) } : {}),
                 timezone: timezone || 'America/New_York'
             };
 
@@ -2245,17 +2242,17 @@ const SchedulingCalendar = () => {
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
-                                            Assign Staff <span className="text-red-500">*</span>
+                                            Assign Staff
                                         </label>
                                         <div className="relative">
                                             <select
                                                 value={assignedStaffId}
                                                 onChange={(e) => setAssignedStaffId(e.target.value)}
                                                 className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
-                                                required
                                                 disabled={loadingStaff}
                                             >
-                                                <option value="">Select Staff Member</option>
+                                                {/* Always show Self (Firm Admin) as first option */}
+                                                <option value="">Self (Firm Admin)</option>
                                                 {staffMembers.map((staff) => {
                                                     const staffName = staff.staff_member?.name || staff.name || 'Unknown Staff';
                                                     return <option key={staff.id} value={staff.id}>{staffName}</option>;
@@ -2268,6 +2265,9 @@ const SchedulingCalendar = () => {
                                             </div>
                                         </div>
                                         {loadingStaff && <p className="text-[9px] font-bold text-[#3AD6F2] mt-2 uppercase tracking-widest">Loading staff roster...</p>}
+                                        {!loadingStaff && staffMembers.length === 0 && (
+                                            <p className="text-[9px] font-bold text-gray-400 mt-2 uppercase tracking-widest">No staff available — meeting will be hosted by Firm Admin</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2304,7 +2304,7 @@ const SchedulingCalendar = () => {
                             </button>
                             <button
                                 onClick={handleCreateMeeting}
-                                disabled={creatingMeeting || !eventTitle.trim() || !appointmentDate || slots.every(slot => !slot.time || !slot.client_id) || !assignedStaffId}
+                                disabled={creatingMeeting || !eventTitle.trim() || !appointmentDate || slots.every(slot => !slot.time || !slot.client_id)}
                                 className="flex-1 max-w-[240px] px-8 py-4 text-[10px] font-black text-white bg-[#F56D2D] hover:bg-[#E55A1D] !rounded-2xl transition-all shadow-xl shadow-orange-100 hover:shadow-orange-200 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
                             >
                                 {creatingMeeting ? (

@@ -651,7 +651,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
                   <div className="space-y-4 flex flex-row gap-4 edit-plan-inline">
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Users</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Staff Members</label>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"

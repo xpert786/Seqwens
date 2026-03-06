@@ -428,13 +428,10 @@ const EditTaskModal = ({ isOpen, onClose, onTaskUpdated, task }) => {
                                     style={{ fontSize: '14px', borderRadius: '10px', cursor: 'not-allowed' }}
                                 >
                                     <option value="client_onboarding">Client Onboarding</option>
-                                    <option value="amendment_filing">Amendment Filing</option>
                                     <option value="document_collection">Document Collection</option>
-                                    <option value="document_review">Document Review</option>
                                     <option value="document_request">Document Request</option>
+                                    <option value="document_review">Document Review</option>
                                     <option value="signature_request">Signature Request</option>
-                                    <option value="internal_review">Internal Review</option>
-                                    <option value="other">Other</option>
                                 </select>
                             </div>
 
