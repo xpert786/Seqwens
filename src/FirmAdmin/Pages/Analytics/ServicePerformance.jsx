@@ -71,8 +71,8 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
       value: analyticsData.kpis.total_revenue?.formatted || '$0'
     },
     {
-      title: 'Avg Turnaround',
-      value: analyticsData.kpis.avg_turnaround?.formatted || '0 days'
+      title: 'Avg Invoice',
+      value: analyticsData.kpis.avg_invoice?.formatted || '$0.00'
     },
     {
       title: 'Upsell Rate',
@@ -136,10 +136,10 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
     rate: item.upsell_rate || 0
   })) || [];
 
-  // Prepare turnaround time data
-  const turnaroundData = analyticsData?.avg_turnaround_time?.map(item => ({
+  // Prepare revenue by service data
+  const revenueByServiceData = analyticsData?.revenue_by_service?.map(item => ({
     service: item.service,
-    days: item.avg_turnaround_days || 0
+    revenue: item.revenue || 0
   })) || [];
 
   // Prepare conversion funnel data for scatter chart
@@ -165,11 +165,26 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
       return (
         <div className="bg-white p-2 border border-gray-200 rounded shadow-lg text-xs">
           <p className="font-medium">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {entry.value}
-            </p>
-          ))}
+          {payload.map((entry, index) => {
+            let value = entry.value;
+            let unit = '';
+            const entryName = entry.name || '';
+            if (entryName.toLowerCase().includes('rate')) {
+              unit = '%';
+              value = typeof value === 'number' ? value.toFixed(1) : value;
+            } else if (entryName.toLowerCase().includes('revenue')) {
+              unit = '';
+              value = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+            } else if (entryName.toLowerCase().includes('days')) {
+              unit = ' days';
+              value = typeof value === 'number' ? value.toFixed(1) : value;
+            }
+            return (
+              <p key={index} style={{ color: entry.color }}>
+                {entry.name}: {value}{unit}
+              </p>
+            );
+          })}
         </div>
       );
     }
@@ -289,9 +304,9 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
       <div className="mb-8">
         {/* Service Adoption Heatmap */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h4 className="text-xl font-thin text-[#3B4A66] mb-2">Service Performance</h4>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Service Performance</h3>
           <p className="text-sm text-gray-600 mb-6">Revenue and growth by service type</p>
-          <h5 className="text-lg font-thin text-[#3B4A66] mb-4">Service Adoption Heatmap</h5>
+          <h4 className="text-base font-semibold text-[#3B4A66] mb-4">Service Adoption Heatmap</h4>
           {serviceAdoptionData.length > 0 && serviceNames.length > 0 ? (
             <div className="overflow-x-auto">
               <div className="space-y-2 min-w-[800px]">
@@ -340,7 +355,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
         {/* Upsell Performance - Full Width */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Upsell / Add-On Performance</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Add-On Performance</h3>
             {!advancedReportingEnabled && (
               <button className="text-sm text-blue-600 hover:text-blue-800">Export CSV</button>
             )}
@@ -373,13 +388,13 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Turnaround Time */}
+          {/* Revenue by Service */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Avg Turnaround Time (Days)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue by Service ($)</h3>
             <div className="h-64">
-              {turnaroundData.length > 0 ? (
+              {revenueByServiceData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={turnaroundData}>
+                  <BarChart data={revenueByServiceData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
                     <XAxis
                       dataKey="service"
@@ -389,14 +404,17 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                       interval={0}
                       tick={{ fontSize: 12 }}
                     />
-                    <YAxis domain={[0, 'dataMax + 1']} />
+                    <YAxis
+                      tickFormatter={(value) => `$${value}`}
+                      domain={[0, 'dataMax + 100']}
+                    />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="days" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                    <Bar dataKey="revenue" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-sm text-gray-500">
-                  No turnaround time data available
+                  No revenue data available
                 </div>
               )}
             </div>

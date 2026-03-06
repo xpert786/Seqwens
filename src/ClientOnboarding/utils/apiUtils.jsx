@@ -6469,6 +6469,26 @@ export const invoicesAPI = {
       payload.cancel_url = cancelUrl;
     }
     return await apiRequest(`/taxpayer/invoices/${invoiceId}/pay/`, 'POST', Object.keys(payload).length > 0 ? payload : null);
+  },
+  // Download invoice PDF
+  downloadInvoicePDF: async (invoiceId) => {
+    const token = getAccessToken();
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/invoices/${invoiceId}/download/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download PDF');
+    }
+
+    return await response.blob();
+  },
+  // Get comprehensive invoice details
+  getInvoiceDetails: async (invoiceId) => {
+    return await apiRequest(`/taxpayer/invoices/${invoiceId}/details/`, 'GET');
   }
 };
 
