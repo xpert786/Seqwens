@@ -17,6 +17,7 @@ const FinalizeSubscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [processing, setProcessing] = useState(false);
+  const [statusVerified, setStatusVerified] = useState(false);
 
   // Check if user is admin and has active subscription
   useEffect(() => {
@@ -41,12 +42,31 @@ const FinalizeSubscription = () => {
       try {
         const userData = JSON.parse(userDataStr);
 
-        // Check billing status from userData in storage
-        const billingStatus = userData.billing_status;
-        const hasActiveSub = userData.subscription_plan &&
-          !['expired', 'pending_payment', 'inactive', 'suspended'].includes(billingStatus);
+        // Exhaustive plan detection
+        const subPlan = userData.subscription_plan || 
+                         userData.plan_name || 
+                         userData.plan || 
+                         userData.subscription?.plan_name || 
+                         userData.subscription?.name ||
+                         userData.subscription?.plan_type ||
+                         (userData.billing_status === 'active' ? 'active' : null);
 
-        if (hasActiveSub) {
+        const billingStatus = userData.billing_status;
+        const firmStatus = userData.firm_status || 'active';
+
+        // Block strictly only if NO plan name or active marker can be found anywhere
+        const isBlocked = !subPlan;
+
+        console.log('[FINALIZE_SUB] Full Status Check:', {
+          isBlocked,
+          detectedPlan: subPlan,
+          billingStatus,
+          firmStatus,
+          fullUserData: userData // Log full object for debugging
+        });
+
+        if (!isBlocked) {
+          console.log('[FINALIZE_SUB] Plan/Active status confirmed, redirecting...');
           navigate('/firmadmin', { replace: true });
           return;
         }
@@ -67,41 +87,53 @@ const FinalizeSubscription = () => {
             if (statusResponse.ok) {
               const statusResult = await statusResponse.json();
 
-              // Check if subscription is active - use has_active_subscription or status === 'active'
-              const isSubActive = statusResult.subscription && (
-                statusResult.subscription.has_active_subscription === true ||
-                statusResult.subscription.status === 'active'
+              // Check if subscription is active - be very permissive
+              const subInfo = statusResult.subscription || {};
+              const isSubActive = statusResult.success && (
+                subInfo.has_active_subscription === true ||
+                subInfo.status === 'active' ||
+                subInfo.status === 'trial' ||
+                !!subInfo.plan_name ||
+                !!subInfo.plan_type
               );
 
-              if (statusResult.success && isSubActive) {
-                // Update userData with subscription info
-                userData.subscription_plan = statusResult.subscription.plan_name ||
-                  statusResult.subscription.plan_type ||
+              console.log('[FINALIZE_SUB] API Result:', {
+                success: statusResult.success,
+                isSubActive,
+                subStatus: subInfo.status,
+                planName: subInfo.plan_name
+              });
+
+              if (isSubActive) {
+                // Update userData with subscription info from API
+                userData.subscription_plan = subInfo.plan_name ||
+                  subInfo.plan_type ||
                   userData.subscription_plan ||
                   'active';
-                userData.billing_status = statusResult.subscription.status || 'active';
-                userData.firm_status = statusResult.firm_status || 'active';
+                userData.billing_status = subInfo.status || 'active';
+                userData.firm_status = statusResult.firm_status || userData.firm_status || 'active';
 
                 storage.setItem("userData", JSON.stringify(userData));
-                // Sync with sessionStorage too
                 sessionStorage.setItem("userData", JSON.stringify(userData));
 
-                console.log('Active subscription found, redirecting to firmadmin');
-
-                // Redirect to firm admin dashboard
+                console.log('[FINALIZE_SUB] Plan confirmed via API, redirecting...');
                 navigate('/firmadmin', { replace: true });
                 return;
               }
             }
           } catch (apiError) {
-            console.error('Error checking subscription status from API:', apiError);
-            // Continue with the page if API check fails - let user select plan
+            console.error('[FINALIZE_SUB] API Error:', apiError);
           }
         }
       } catch (error) {
-        console.error('Error checking user data:', error);
+        console.error('[FINALIZE_SUB] Root Error:', error);
         navigate('/login', { replace: true });
+        return;
       }
+
+      // ONLY set statusVerified to true if all checks completed and NO redirect happened.
+      // This prevents the plan selection UI from ever rendering during a redirect.
+      setStatusVerified(true);
     };
 
     checkSubscriptionStatus();
@@ -472,7 +504,7 @@ const FinalizeSubscription = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !statusVerified) {
     return (
       <div className="min-h-screen bg-[#F6F7FF] flex items-center justify-center px-4">
         <div className="text-center w-full max-w-md">

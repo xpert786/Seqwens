@@ -224,8 +224,11 @@ export default function Login() {
       // Redirect to admin dashboard
       navigate("/superadmin");
     } else if (userType === 'admin' || userType === 'firm') {
-      if (user.subscription_plan === null || user.subscription_plan === undefined) {
-        // Check if admin/firm user has no subscription plan
+      const subPlan = user.subscription_plan;
+      const isBlocked = !subPlan;
+
+      if (isBlocked) {
+        // Redirect to finalize subscription if no plan assigned
         navigate("/firmadmin/finalize-subscription", { replace: true });
       } else {
         // Redirect to firm admin dashboard
