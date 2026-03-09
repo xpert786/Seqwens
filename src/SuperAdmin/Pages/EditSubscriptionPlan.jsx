@@ -651,7 +651,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
                   <div className="space-y-4 flex flex-row gap-4 edit-plan-inline">
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Users</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Staff Members</label>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"
@@ -837,7 +837,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 <button
                   onClick={() => setShowNewAddonModal(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
-                  style={{ backgroundColor: '#3B4A66' }}
+                  style={{ backgroundColor: '#3B4A66', borderRadius: '10px' }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
@@ -856,6 +856,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       ? 'bg-[#3B4A66] text-white shadow-sm'
                       : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
                       }`}
+                    style={{ borderRadius: "10px" }}
                   >
                     {cat === 'all' ? 'All Types' : cat}
                   </button>

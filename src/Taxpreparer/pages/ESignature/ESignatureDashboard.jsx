@@ -1307,11 +1307,11 @@ export default function ESignatureDashboard() {
                             </span>
                           </div>
                         </div>
-                        {request.description && (
+                        {/* {request.description && (
                           <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '8px' }}>
                             {request.description}
                           </p>
-                        )}
+                        )} */}
                         {request.preparer_must_sign === true && (() => {
                           const userData = getUserData();
                           const userEmail = userData?.email || userData?.user?.email;

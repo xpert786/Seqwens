@@ -525,21 +525,10 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                   style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
                 >
                   <option value="client_onboarding">Client Onboarding</option>
-                  <option value="amendment_filing">Amendment Filing</option>
                   <option value="document_collection">Document Collection</option>
-                  <option value="document_review">Document Review</option>
                   <option value="document_request">Document Request</option>
+                  <option value="document_review">Document Review</option>
                   <option value="signature_request">Signature Request</option>
-                  <option value="internal_review">Internal Review</option>
-                  <option value="general_inquiry">General Inquiry</option>
-                  <option value="compliance_check">Compliance Check</option>
-                  <option value="payment_followup">Payment Follow-up</option>
-                  <option value="meeting_scheduled">Meeting Scheduled</option>
-                  <option value="missing_information">Missing Information</option>
-                  <option value="tax_plan_analysis">Tax Plan Analysis</option>
-                  <option value="final_review">Final Review</option>
-                  <option value="archive_documents">Archive Documents</option>
-                  <option value="other">Other</option>
                 </select>
                 {errors.task_type && <div className="invalid-feedback">{errors.task_type}</div>}
               </div>
@@ -895,24 +884,43 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                   Files (Optional)
                 </label>
                 <div
-                  className="border border-dashed rounded p-3 text-center"
+                  className="border border-dashed rounded p-3 text-center d-flex flex-column align-items-center justify-content-center"
                   style={{ borderColor: '#E8F0FF', cursor: 'pointer' }}
                   onClick={() => document.getElementById('file-input').click()}
                 >
-                  <FaFileUpload size={20} style={{ color: '#3AD6F2', marginBottom: '8px' }} />
-                  <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#3B4A66' }}>Click to upload files</div>
-                  <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '11px', color: '#7B8AB2', marginTop: '4px' }}>
+                  <FaFileUpload
+                    size={20}
+                    style={{ color: '#3AD6F2', marginBottom: '8px' }}
+                  />
+
+                  <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#3B4A66' }}>
+                    Click to upload files
+                  </div>
+
+                  <div
+                    style={{
+                      fontFamily: 'BasisGrotesquePro',
+                      fontSize: '11px',
+                      color: '#7B8AB2',
+                      marginTop: '4px'
+                    }}
+                  >
                     {formData.task_type === 'signature_request'
                       ? 'PDF (Max 10MB each)'
                       : 'PDF, XLSX, XLS, DOCX, JPG, JPEG, PNG (Max 10MB each)'}
                   </div>
+
                   <input
                     id="file-input"
                     type="file"
                     className="d-none"
                     onChange={handleFileChange}
                     multiple
-                    accept={formData.task_type === 'signature_request' ? ".pdf" : ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"}
+                    accept={
+                      formData.task_type === 'signature_request'
+                        ? ".pdf"
+                        : ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"
+                    }
                   />
                 </div>
                 {errors.files && <div className="invalid-feedback d-block">{errors.files}</div>}

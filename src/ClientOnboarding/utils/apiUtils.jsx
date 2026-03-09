@@ -5310,6 +5310,17 @@ export const taxPreparerClientAPI = {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
+  // Get individual client/taxpayer details (tax preparer scoped)
+  // GET /taxpayer/tax-preparer/clients/{client_id}/
+  getTaxpayerDetails: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/`, 'GET');
+  },
+
+  // Get signed data entry form
+  getSignedDataEntryForm: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/signed-data-entry-form/`, 'GET');
+  },
+
   // Get individual invoice details
   getClientInvoiceDetail: async (clientId, invoiceId) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${invoiceId}/`, 'GET');
@@ -6458,6 +6469,26 @@ export const invoicesAPI = {
       payload.cancel_url = cancelUrl;
     }
     return await apiRequest(`/taxpayer/invoices/${invoiceId}/pay/`, 'POST', Object.keys(payload).length > 0 ? payload : null);
+  },
+  // Download invoice PDF
+  downloadInvoicePDF: async (invoiceId) => {
+    const token = getAccessToken();
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/invoices/${invoiceId}/download/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download PDF');
+    }
+
+    return await response.blob();
+  },
+  // Get comprehensive invoice details
+  getInvoiceDetails: async (invoiceId) => {
+    return await apiRequest(`/taxpayer/invoices/${invoiceId}/details/`, 'GET');
   }
 };
 

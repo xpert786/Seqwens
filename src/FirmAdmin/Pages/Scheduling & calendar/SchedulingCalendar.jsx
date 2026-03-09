@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI, taxPreparerThreadsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import SetAvailabilityModal from './SetAvailabilityModal';
@@ -246,25 +246,46 @@ const SchedulingCalendar = () => {
         }
     }, [isAddEventModalOpen]);
 
-    // Fetch clients list
+    // Fetch clients list — uses the assigned-list endpoint to show only clients
+    // assigned to the logged-in tax preparer/staff member.
+    // Falls back to the full firm clients list if the assigned-list endpoint fails.
     const fetchClients = async () => {
         try {
             setLoadingClients(true);
-            const response = await firmAdminClientsAPI.listClients({ page_size: 100 });
 
-            if (response.success && response.data) {
-                const clientsList = response.data.clients || [];
-                setClients(clientsList);
+            // Primary: use the assigned-clients API so only relevant clients appear
+            const assignedResponse = await taxPreparerThreadsAPI.listAssignedClients();
+
+            // The assigned-list endpoint returns { success, data: [...] } (flat array)
+            if (assignedResponse && assignedResponse.data && Array.isArray(assignedResponse.data)) {
+                setClients(assignedResponse.data);
+                return;
+            }
+
+            // Fallback: firm admin broad client list (e.g. accessed as firm admin)
+            const fallbackResponse = await firmAdminClientsAPI.listClients({ page_size: 100 });
+            if (fallbackResponse.success && fallbackResponse.data) {
+                setClients(fallbackResponse.data.clients || []);
             } else {
                 setClients([]);
             }
         } catch (error) {
-            console.error('Error fetching clients:', error);
-            toast.error(handleAPIError(error) || 'Failed to load clients', {
-                position: 'top-right',
-                autoClose: 3000
-            });
-            setClients([]);
+            // If assigned-list 403s (firm admin has no staff role), fall back silently
+            try {
+                const fallbackResponse = await firmAdminClientsAPI.listClients({ page_size: 100 });
+                if (fallbackResponse.success && fallbackResponse.data) {
+                    setClients(fallbackResponse.data.clients || []);
+                } else {
+                    setClients([]);
+                }
+            } catch (fallbackError) {
+                console.error('Error fetching clients:', fallbackError);
+                toast.error(handleAPIError(fallbackError) || 'Failed to load clients', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+                setClients([]);
+            }
         } finally {
             setLoadingClients(false);
         }
@@ -372,7 +393,7 @@ const SchedulingCalendar = () => {
                 {hasClient && (
                     <button
                         type="button"
-                        className="text-[#F56D2D] hover:underline"
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleNavigateToClient(event);
@@ -381,11 +402,13 @@ const SchedulingCalendar = () => {
                         {event.user_name}
                     </button>
                 )}
+
                 {hasClient && hasStaff && <span> with </span>}
+
                 {hasStaff && (
                     <button
                         type="button"
-                        className="text-[#F56D2D] hover:underline"
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleNavigateToStaff(event);
@@ -611,14 +634,7 @@ const SchedulingCalendar = () => {
             return;
         }
 
-        // Validate staff assignment
-        if (!assignedStaffId) {
-            toast.error('Please assign a staff member', {
-                position: 'top-right',
-                autoClose: 3000
-            });
-            return;
-        }
+        // Staff assignment is optional — if no staff selected, the firm admin will host the meeting
 
         try {
             setCreatingMeeting(true);
@@ -638,7 +654,9 @@ const SchedulingCalendar = () => {
                 description: description || '',
                 meeting_type: meetingType || 'zoom',
                 client_id: firstSlot.client_id,
-                staff_id: parseInt(assignedStaffId), // Required staff assignment
+                // Only include staff_id if a specific staff member is selected
+                // If empty, the firm admin will host the meeting themselves
+                ...(assignedStaffId ? { staff_id: parseInt(assignedStaffId) } : {}),
                 timezone: timezone || 'America/New_York'
             };
 
@@ -2175,9 +2193,9 @@ const SchedulingCalendar = () => {
                                                             <option value="">Select Client</option>
                                                             {clients.map((client) => (
                                                                 <option key={client.id} value={client.id}>
-                                                                    {client.first_name && client.last_name
+                                                                    {client.full_name || (client.first_name && client.last_name
                                                                         ? `${client.first_name} ${client.last_name}`
-                                                                        : client.email || `Client #${client.id}`}
+                                                                        : client.email || `Client #${client.id}`)}
                                                                 </option>
                                                             ))}
                                                         </select>
@@ -2245,17 +2263,17 @@ const SchedulingCalendar = () => {
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
-                                            Assign Staff <span className="text-red-500">*</span>
+                                            Assign Staff
                                         </label>
                                         <div className="relative">
                                             <select
                                                 value={assignedStaffId}
                                                 onChange={(e) => setAssignedStaffId(e.target.value)}
                                                 className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
-                                                required
                                                 disabled={loadingStaff}
                                             >
-                                                <option value="">Select Staff Member</option>
+                                                {/* Always show Self (Firm Admin) as first option */}
+                                                <option value="">Self (Firm Admin)</option>
                                                 {staffMembers.map((staff) => {
                                                     const staffName = staff.staff_member?.name || staff.name || 'Unknown Staff';
                                                     return <option key={staff.id} value={staff.id}>{staffName}</option>;
@@ -2268,6 +2286,9 @@ const SchedulingCalendar = () => {
                                             </div>
                                         </div>
                                         {loadingStaff && <p className="text-[9px] font-bold text-[#3AD6F2] mt-2 uppercase tracking-widest">Loading staff roster...</p>}
+                                        {!loadingStaff && staffMembers.length === 0 && (
+                                            <p className="text-[9px] font-bold text-gray-400 mt-2 uppercase tracking-widest">No staff available — meeting will be hosted by Firm Admin</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2304,7 +2325,7 @@ const SchedulingCalendar = () => {
                             </button>
                             <button
                                 onClick={handleCreateMeeting}
-                                disabled={creatingMeeting || !eventTitle.trim() || !appointmentDate || slots.every(slot => !slot.time || !slot.client_id) || !assignedStaffId}
+                                disabled={creatingMeeting || !eventTitle.trim() || !appointmentDate || slots.every(slot => !slot.time || !slot.client_id)}
                                 className="flex-1 max-w-[240px] px-8 py-4 text-[10px] font-black text-white bg-[#F56D2D] hover:bg-[#E55A1D] !rounded-2xl transition-all shadow-xl shadow-orange-100 hover:shadow-orange-200 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
                             >
                                 {creatingMeeting ? (

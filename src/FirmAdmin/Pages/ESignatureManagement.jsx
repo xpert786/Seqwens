@@ -1387,7 +1387,11 @@ export default function ESignatureManagement() {
                             <div className="flex items-center gap-2">
                               {request.document_url && (
                                 <button
-                                  onClick={() => window.open(request.document_url, '_blank')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedEsignRequest(request);
+                                    setShowDetailModal(true);
+                                  }}
                                   className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                                   aria-label="View"
                                 >

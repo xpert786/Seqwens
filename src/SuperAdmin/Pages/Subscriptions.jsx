@@ -864,7 +864,10 @@ export default function Subscriptions() {
                         <div className="flex justify-between items-start">
                           <div className="flex items-start gap-3">
                             <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-xs font-medium`}>
-                              {plan.plan_display || label}
+                              {(() => {
+                                const name = plan.plan_display || label || '';
+                                return name.charAt(0).toUpperCase() + name.slice(1);
+                              })()}
                             </span>
                             <div>
                               <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
