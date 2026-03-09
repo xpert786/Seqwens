@@ -21,7 +21,7 @@ export default function SupportCenter() {
 
     const tabs = [
         { id: "overview", label: "Overview" },
-        { id: "irsFAQs", label: "IRS FAQs" },
+        { id: "generalFAQs", label: "General FAQs" },
         { id: "seqwensTraining", label: "Seqwens Training" },
         { id: "reachOutMessages", label: "Reach Out Messages" }
     ];
@@ -38,7 +38,7 @@ export default function SupportCenter() {
     };
 
     const handleAddNew = () => {
-        if (activeTab === "irsFAQs") {
+        if (activeTab === "generalFAQs") {
             setShowAddFAQModal(true);
         } else if (activeTab === "seqwensTraining") {
             setShowAddTrainingModal(true);
@@ -80,8 +80,8 @@ export default function SupportCenter() {
                         ))}
                     </div>
 
-                    {/* Add New Button - only show for IRS FAQs and Training tabs, and NOT for billing_admin */}
-                    {(activeTab === "irsFAQs" || activeTab === "seqwensTraining") && userType !== 'billing_admin' && (
+                    {/* Add New Button - only show for General FAQs and Training tabs, and NOT for billing_admin */}
+                    {(activeTab === "generalFAQs" || activeTab === "seqwensTraining") && userType !== 'billing_admin' && (
                         <button
                             onClick={handleAddNew}
                             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center transition-colors"
@@ -99,7 +99,7 @@ export default function SupportCenter() {
             {/* Tab Content */}
             <div>
                 {activeTab === "overview" && <Overview showHeader={true} onTicketDetailToggle={handleTicketDetailToggle} userType={userType} />}
-                {activeTab === "irsFAQs" && <IRSFAQs onAddFAQModalToggle={handleAddFAQModalToggle} showAddFAQModal={showAddFAQModal} userType={userType} />}
+                {activeTab === "generalFAQs" && <IRSFAQs onAddFAQModalToggle={handleAddFAQModalToggle} showAddFAQModal={showAddFAQModal} userType={userType} />}
                 {activeTab === "seqwensTraining" && <SeqwensTraining onAddTrainingModalToggle={handleAddTrainingModalToggle} showAddTrainingModal={showAddTrainingModal} userType={userType} />}
                 {activeTab === "reachOutMessages" && <ReachOutMessages userType={userType} />}
             </div>

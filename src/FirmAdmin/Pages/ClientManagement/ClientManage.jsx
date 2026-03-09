@@ -1415,7 +1415,6 @@ export default function ClientManage() {
       });
     }
   };
-
   return (
     <div className="p-4 sm:p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
@@ -1424,7 +1423,6 @@ export default function ClientManage() {
           <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro] clientmanage-header-title">Client Management</h4>
           <p className="text-gray-600 font-[BasisGrotesquePro] text-sm clientmanage-header-subtitle">Manage all firm clients and assignments</p>
         </div>
-
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 clientmanage-buttons-container">
           {/* Top Row - 2-3 buttons */}

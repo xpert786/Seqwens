@@ -283,7 +283,7 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                 <div className="space-y-4 bg-white rounded-lg p-4 h-fit">
                     <div>
                         <h5 className="text-lg font-bold text-[#3B4A66] mb-2">
-                            Tax Resources
+                            Training Resources
                         </h5>
                         <p className="text-gray-500 text-sm">
                             Helpful tax information and guides

@@ -1159,7 +1159,7 @@ export default function FirmAdminDashboard() {
       {CustomizeModal()}
       {ScheduleModal()}
       {RevenueModal()}
-      <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-full">
+      <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-full" >
         {/* Developer Subscription Banner */}
         {isDeveloperSubscription && (
           <div className="mb-6 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
