@@ -357,7 +357,7 @@ const BillingEnhanced = () => {
                                         Shared Resources
                                     </h4>
                                     <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-0.5">
-                                        Split costs for shared resources based on usage
+                                        Split costs for shared resources based on usage11
                                     </p>
                                 </div>
                                 <button

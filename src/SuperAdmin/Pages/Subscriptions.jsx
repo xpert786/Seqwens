@@ -4,14 +4,14 @@ import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaC
 import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
 import AddSubscription from './AddSubscription';
-import AddonsManagement from './Subscriptions/AddonsManagement';
+
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import '../style/Subscriptions.css';
 
 export default function Subscriptions() {
-  const [activeTab, setActiveTab] = useState('Plans'); // 'Plans', 'Addons', or 'Invoices'
+  const [activeTab, setActiveTab] = useState('Plans'); // 'Plans' or 'Invoices'
   const [showPlanDetails, setShowPlanDetails] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
@@ -642,16 +642,7 @@ export default function Subscriptions() {
             >
               Subscription Plans
             </button>
-            <button
-              onClick={() => setActiveTab('Addons')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Addons'
-                ? 'bg-[#3AD6F2] text-white'
-                : 'bg-transparent text-gray-700 hover:bg-gray-50'
-                }`}
-              style={{ borderRadius: '7px' }}
-            >
-              Addons
-            </button>
+
             <button
               onClick={() => setActiveTab('Invoices')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Invoices'
@@ -667,9 +658,7 @@ export default function Subscriptions() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'Addons' ? (
-        <AddonsManagement />
-      ) : activeTab === 'Invoices' ? (
+      {activeTab === 'Invoices' ? (
         <SubscriptionInvoicesTab />
       ) : (
         <>

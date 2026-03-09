@@ -80,7 +80,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   const [newAddonForm, setNewAddonForm] = useState({
     name: '',
     description: '',
-    category: 'other',
+    category: 'staff',
     price: '',
     price_unit: 'per month',
     scope: 'firm',
@@ -427,7 +427,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       price_unit: addon.price_unit || 'per month',
       billing_frequency: addon.billing_frequency || 'monthly',
       scope: addon.scope || 'firm',
-      category: addon.category || 'other',
+      category: addon.category || 'staff',
       unit_quantity: addon.unit_quantity || 1,
       unit_type: addon.unit_type || 'unit',
     });
@@ -516,7 +516,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       setSelectedAddonCategory('all');
       setShowNewAddonModal(false);
       setNewAddonForm({
-        name: '', description: '', category: 'other',
+        name: '', description: '', category: 'staff',
         price: '', price_unit: 'per month',
         scope: 'firm', billing_frequency: 'monthly',
         unit_type: 'unit', unit_quantity: 1,
@@ -954,7 +954,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                   <option value="workflow">Workflow</option>
                                   <option value="office">Office</option>
                                   <option value="staff">Staff</option>
-                                  <option value="other">Other</option>
+                                  <option value="clients">Clients</option>
                                 </select>
                               </div>
                             </div>
@@ -1352,7 +1352,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     <option value="workflow">Workflow</option>
                     <option value="office">Office</option>
                     <option value="staff">Staff</option>
-                    <option value="other">Other</option>
+                    <option value="clients">Clients</option>
                   </select>
                 </div>
                 <div>
