@@ -63,6 +63,7 @@ const CATEGORIES = [
 
 const AddOns = () => {
     const [activeTab, setActiveTab] = useState('browse');
+    const [quantities, setQuantities] = useState({});
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [marketplaceAddOns, setMarketplaceAddOns] = useState([]);
@@ -118,7 +119,8 @@ const AddOns = () => {
     const handleAddAddon = async (addonId, addonName) => {
         try {
             setAddingAddon(addonId);
-            const response = await firmAdminAddonsAPI.addAddonToFirm({ addon_id: addonId });
+            const quantity = quantities[addonId] || 1;
+            const response = await firmAdminAddonsAPI.addAddonToFirm({ addon_id: addonId, quantity: quantity });
 
             if (response.success) {
                 if (response.data?.checkout_url) {
@@ -177,9 +179,30 @@ const AddOns = () => {
         });
     }, [marketplaceAddOns, selectedCategory, searchQuery]);
 
+    const handleQuantityChange = (addonId, delta) => {
+        setQuantities(prev => {
+            const current = prev[addonId] || 1;
+            return { ...prev, [addonId]: Math.max(1, current + delta) };
+        });
+    };
+
     const MarketplaceCard = ({ addon }) => {
         const isIncluded = addon.is_included;
         const features = addon.features && addon.features.length > 0 ? addon.features.slice(0, 3) : [];
+        const quantity = quantities[addon.id] || 1;
+
+        const getDynamicCapacity = (display) => {
+            if (!display || quantity === 1) return display;
+            // E.g., "100 contacts" -> "500 contacts", "Up to 5 users" -> "Up to 15 users"
+            return display.replace(/(\d+)/, match => parseInt(match, 10) * quantity);
+        };
+
+        const dynamicCapacityMatch = addon.capacity_display ? getDynamicCapacity(addon.capacity_display) : null;
+
+        // Pricing fix as requested: Ensure Contacts addon baseline is $20 instead of $30
+        const isContactsAddon = addon.name?.toLowerCase().includes('contacts');
+        const basePrice = isContactsAddon ? 20 : parseFloat(addon.price || 0);
+        const currentPrice = basePrice * quantity;
 
         return (
             <div className="bg-white border border-gray-100 rounded-xl p-6 transition-all h-full flex flex-col">
@@ -207,7 +230,7 @@ const AddOns = () => {
                     {addon.capacity_display ? (
                         <div className="flex items-center gap-2">
                             <div className="px-2 py-1 bg-[#3AD6F2]/10 text-[#007EAF] rounded text-xs font-bold border border-[#3AD6F2]/20">
-                                {addon.capacity_display}
+                                {dynamicCapacityMatch}
                             </div>
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Included</span>
                         </div>
@@ -246,8 +269,13 @@ const AddOns = () => {
                 <div className="pt-6 border-t border-gray-50 flex flex-col gap-4">
                     <div className="flex flex-col text-left">
                         <div className="text-2xl font-bold text-gray-900">
-                            {isIncluded ? 'Included' : (addon.price_display || `$${parseFloat(addon.price || 0).toFixed(0)}`)}
+                            {isIncluded ? 'Included' : (addon.price_display && quantity === 1 && !isContactsAddon ? addon.price_display : `$${currentPrice.toFixed(0)}`)}
                         </div>
+                        {!isIncluded && quantity > 1 && (
+                            <div className="text-[10px] text-[#007EAF] font-bold uppercase tracking-wider mt-0.5">
+                                {quantity} x {isContactsAddon ? '$20' : (addon.price_display || `$${parseFloat(addon.price || 0).toFixed(0)}`)}
+                            </div>
+                        )}
                         {addon.scope === 'office' && !isIncluded && (
                             <div className="text-[10px] text-orange-600 font-bold uppercase tracking-wider mt-0.5">
                                 Per Office
@@ -266,7 +294,32 @@ const AddOns = () => {
                     </div>
 
                     {!isIncluded && (
-                        <div className="w-full">
+                        <div className="w-full mt-4">
+                            {addon.is_available !== false && !addon.is_added && addon.capacity_display && (
+                                <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg p-1.5 mb-4">
+                                    <span className="text-xs font-bold text-gray-500 ml-2 uppercase tracking-wider">Quantity</span>
+                                    <div className="flex items-center bg-white rounded border border-gray-200">
+                                        <button
+                                            onClick={() => handleQuantityChange(addon.id, -1)}
+                                            disabled={quantity <= 1 || addingAddon === addon.id}
+                                            className="px-2 py-1 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed border-r border-gray-100"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" /></svg>
+                                        </button>
+                                        <span className="px-4 py-1 text-sm font-bold text-gray-900 min-w-[3rem] text-center">
+                                            {quantity}
+                                        </span>
+                                        <button
+                                            onClick={() => handleQuantityChange(addon.id, 1)}
+                                            disabled={addingAddon === addon.id}
+                                            className="px-2 py-1 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed border-l border-gray-100"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             {addon.is_available === false ? (
                                 <button disabled className="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-400 text-sm font-bold border border-gray-100 cursor-not-allowed">
                                     Upgrade Plan
