@@ -224,7 +224,14 @@ export default function Login() {
       // Redirect to admin dashboard
       navigate("/superadmin");
     } else if (userType === 'admin' || userType === 'firm') {
-      const subPlan = user.subscription_plan;
+      const subPlan = user.subscription_plan || 
+                       user.plan_name || 
+                       user.plan || 
+                       (user.subscription && (
+                         user.subscription.plan_name || 
+                         user.subscription.name || 
+                         user.subscription.plan_type
+                       ));
       const isBlocked = !subPlan;
 
       if (isBlocked) {

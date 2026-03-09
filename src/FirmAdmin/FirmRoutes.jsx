@@ -90,14 +90,21 @@ function FirmAdminProtectedRoute({ children }) {
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr);
-        const billingStatus = userData.billing_status;
-        const subPlan = userData.subscription_plan;
         const firmStatus = userData.firm_status || userData.status;
 
         // Comprehensive check:
         // 1. If we have an active billing status, they are definitely allowed
         // 2. If billing_status is missing but firmStatus is 'active' and we have a plan, treat as allowed
         // 3. Otherwise, if they belong to any "blocked" states, they must finalize
+
+        const subPlan = userData.subscription_plan || 
+                         userData.plan_name || 
+                         userData.plan || 
+                         (userData.subscription && (
+                           userData.subscription.plan_name || 
+                           userData.subscription.name || 
+                           userData.subscription.plan_type
+                         ));
 
         const isBlocked = !subPlan;
 

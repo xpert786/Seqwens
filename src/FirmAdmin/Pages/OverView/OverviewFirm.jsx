@@ -1411,7 +1411,7 @@ export default function FirmAdminDashboard() {
                   ></div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  {/* <div>
+                  <div>
                     <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
                       {dashboardData?.key_metrics?.tasks?.breakdown?.tax_prep || 0}
                     </div>
@@ -1428,7 +1428,7 @@ export default function FirmAdminDashboard() {
                       {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
                     </div>
                     <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
-                  </div> */}
+                  </div>
                 </div>
               </div>
             </div>
