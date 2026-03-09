@@ -8,7 +8,7 @@ import AllPlans from './AllPlans';
 import AddOns from './AddOns';
 import Billing from './Billing';
 import BillingEnhanced from './BillingEnhanced';
-import AdminControls from './AdminControls';
+
 import Security from './Security';
 import Automation from './Automation';
 import SavedPaymentMethods from '../Billing/SavedPaymentMethods';
@@ -56,7 +56,7 @@ const SubscriptionManagement = () => {
         cvv: ''
     });
 
-    const tabs = ['Overview', 'All Plan', 'Add-ons', 'Billing', 'Admin', 'Security', 'Automation'];
+    const tabs = ['Overview', 'All Plan', 'Add-ons', 'Billing', 'Security', 'Automation'];
 
     // Fetch payment methods from API
     const fetchPaymentMethods = useCallback(async () => {
@@ -690,8 +690,6 @@ const SubscriptionManagement = () => {
                 {/* Billing Tab Content */}
                 {activeTab === 'Billing' && <BillingEnhanced />}
 
-                {/* Admin Tab Content */}
-                {activeTab === 'Admin' && <AdminControls />}
 
                 {/* Security Tab Content */}
                 {activeTab === 'Security' && <Security />}
