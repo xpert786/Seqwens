@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import ReactDOM from "react-dom";
 import { IoMdClose } from "react-icons/io";
 import { Browse, Folder } from "../../../FirmAdmin/Components/icons";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
@@ -130,6 +131,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
   const [downloadingReport, setDownloadingReport] = useState(false);
   const [errorSectionExpanded, setErrorSectionExpanded] = useState(true);
   const [warnSectionExpanded, setWarnSectionExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -149,6 +151,12 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const processFile = (file) => {
     if (!file) return;
     const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel';
     const isPDF = file.name.endsWith('.pdf') || file.type === 'application/pdf';
@@ -156,6 +164,29 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     if (file.size > 10 * 1024 * 1024) { setError('File size must be less than 10MB'); return; }
     setCsvFile(file);
     setError('');
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const handlePreview = async () => {
@@ -315,8 +346,14 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           Upload File (CSV or PDF)
         </h6>
         <div
-          className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center"
-          style={{ borderColor: '#E8F0FF', backgroundColor: '#F3F7FF' }}
+          className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center transition-colors duration-200 ${isDragging ? 'border-blue-500 bg-blue-50 shadow-inner' : ''}`}
+          style={{
+            borderColor: isDragging ? '#3B82F6' : '#E8F0FF',
+            backgroundColor: isDragging ? '#EFF6FF' : '#F3F7FF'
+          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <div className="text-blue-500 text-2xl mb-2"><Folder /></div>
           <div className="text-xs mb-3" style={{ color: '#3B4A66', fontSize: '10px' }}>
@@ -844,15 +881,21 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     );
   };
 
-  return (
+  if (!isOpen) return null;
+
+  const modalContent = (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10"
-      style={{ zIndex: 99999 }}
+      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 sm:p-10 z-[2000000]"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl p-4 sm:p-6 max-w-6xl w-full mx-auto"
-        style={{ maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+        className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-6xl w-full mx-auto animate-in fade-in zoom-in duration-200"
+        style={{
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          position: 'relative',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
@@ -909,4 +952,6 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 }

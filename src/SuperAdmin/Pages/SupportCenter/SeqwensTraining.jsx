@@ -289,7 +289,6 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                             Helpful tax information and guides
                         </p>
                     </div>
-
                     <div className="space-y-3  ">
                         {loading ? (
                             <div className="text-center py-4 text-gray-500 text-sm">Loading resources...</div>

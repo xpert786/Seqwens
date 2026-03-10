@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { handleAPIError, firmAdminAddonsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import { useFirmPortalColors } from '../../Context/FirmPortalColorsContext';
 
 const CATEGORIES = [
     {
@@ -75,6 +76,20 @@ const AddOns = () => {
     const [removingAddon, setRemovingAddon] = useState(null);
     const [showRemoveAddonConfirm, setShowRemoveAddonConfirm] = useState(false);
     const [addonToRemove, setAddonToRemove] = useState(null);
+    const { primaryColor } = useFirmPortalColors();
+
+    // Helper to determine contrast color
+    const getContrastColor = (hexcolor) => {
+        if (!hexcolor) return '#FFFFFF';
+        // If it's a CSS variable, we might not have the hex yet, but context should provide it
+        const r = parseInt(hexcolor.slice(1, 3), 16);
+        const g = parseInt(hexcolor.slice(3, 5), 16);
+        const b = parseInt(hexcolor.slice(5, 7), 16);
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        return (yiq >= 128) ? '#000000' : '#FFFFFF';
+    };
+
+    const contrastTextColor = getContrastColor(primaryColor);
 
     const fetchMarketplaceAddOns = useCallback(async () => {
         try {
@@ -229,7 +244,14 @@ const AddOns = () => {
                     <h5 className="text-lg font-bold text-gray-900 mb-1">{addon.name}</h5>
                     {addon.capacity_display ? (
                         <div className="flex items-center gap-2">
-                            <div className="px-2 py-1 bg-[#3AD6F2]/10 text-[#007EAF] rounded text-xs font-bold border border-[#3AD6F2]/20">
+                            <div
+                                className="px-2 py-1 rounded text-xs font-bold border transition-all"
+                                style={{
+                                    backgroundColor: primaryColor,
+                                    color: contrastTextColor,
+                                    borderColor: primaryColor
+                                }}
+                            >
                                 {dynamicCapacityMatch}
                             </div>
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Included</span>
@@ -249,7 +271,7 @@ const AddOns = () => {
                         {features.length > 0 ? (
                             features.map((feature, index) => (
                                 <div key={index} className="flex items-center gap-2 text-[11px] text-gray-500">
-                                    <svg className="w-3 h-3 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-3 h-3" style={{ color: primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                     </svg>
                                     {feature}
@@ -272,7 +294,7 @@ const AddOns = () => {
                             {isIncluded ? 'Included' : (addon.price_display && quantity === 1 && !isContactsAddon ? addon.price_display : `$${currentPrice.toFixed(0)}`)}
                         </div>
                         {!isIncluded && quantity > 1 && (
-                            <div className="text-[10px] text-[#007EAF] font-bold uppercase tracking-wider mt-0.5">
+                            <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: primaryColor }}>
                                 {quantity} x {isContactsAddon ? '$20' : (addon.price_display || `$${parseFloat(addon.price || 0).toFixed(0)}`)}
                             </div>
                         )}
@@ -330,9 +352,13 @@ const AddOns = () => {
                                     disabled={addon.is_added || addingAddon === addon.id}
                                     className={`w-full px-6 py-3 rounded-lg text-sm font-bold transition-all ${addon.is_added
                                         ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
-                                        : 'bg-[#007EAF] text-white hover:bg-[#006a94] shadow-sm'
+                                        : 'shadow-sm'
                                         }`}
-                                    style={{ borderRadius: "8px" }}
+                                    style={{
+                                        borderRadius: "8px",
+                                        backgroundColor: !addon.is_added ? primaryColor : undefined,
+                                        color: !addon.is_added ? contrastTextColor : undefined
+                                    }}
                                 >
                                     {addingAddon === addon.id ? 'Starting...' : addon.is_added ? 'Activated' : 'Activate'}
                                 </button>
@@ -375,7 +401,7 @@ const AddOns = () => {
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-32">
-                    <div className="w-10 h-10 border-2 border-gray-200 border-t-[#3AD6F2] rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-2 border-gray-200 rounded-full animate-spin" style={{ borderTopColor: primaryColor }}></div>
                     <p className="text-xs text-gray-400 font-bold mt-4 uppercase tracking-widest">Loading marketplace...</p>
                 </div>
             ) : error ? (
@@ -398,11 +424,11 @@ const AddOns = () => {
                                         key={category.id}
                                         onClick={() => setSelectedCategory(category.id)}
                                         className={`w-full flex items-center px-3 py-3 rounded-lg text-[14px] font-bold transition-all text-left justify-start group ${selectedCategory === category.id
-                                            ? 'bg-blue-50 text-[#007EAF]'
+                                            ? 'bg-gray-50'
                                             : 'text-gray-600 hover:bg-gray-50'}`}
-                                        style={{ fontFamily: 'BasisGrotesquePro' }}
+                                        style={{ fontFamily: 'BasisGrotesquePro', color: selectedCategory === category.id ? primaryColor : undefined }}
                                     >
-                                        <div className={`w-8 flex-shrink-0 flex items-center justify-start transition-colors ${selectedCategory === category.id ? 'text-[#007EAF]' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                                        <div className={`w-8 flex-shrink-0 flex items-center justify-start transition-colors`} style={{ color: selectedCategory === category.id ? primaryColor : '#9CA3AF' }}>
                                             {category.icon}
                                         </div>
                                         <span className="whitespace-nowrap">{category.label}</span>
@@ -433,7 +459,7 @@ const AddOns = () => {
                         {filteredAddons.length === 0 ? (
                             <div className="bg-white border border-dashed border-gray-200 rounded-xl py-20 text-center">
                                 <p className="text-sm text-gray-500 font-medium">No results found matching your search.</p>
-                                <button onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }} className="mt-3 text-xs font-bold text-[#3AD6F2]">
+                                <button onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }} className="mt-3 text-xs font-bold" style={{ color: primaryColor }}>
                                     Clear all filters
                                 </button>
                             </div>
@@ -488,7 +514,14 @@ const AddOns = () => {
                                         <h4 className="font-bold text-gray-900 mb-1 leading-tight">{firmAddon.addon?.name || 'Add-on'}</h4>
                                         <div className="flex items-center gap-2 mb-3">
                                             {firmAddon.capacity_display ? (
-                                                <div className="px-2 py-0.5 bg-[#3AD6F2]/10 text-[#007EAF] rounded text-[10px] font-bold border border-[#3AD6F2]/20">
+                                                <div
+                                                    className="px-2 py-0.5 rounded text-[10px] font-bold border transition-all"
+                                                    style={{
+                                                        backgroundColor: primaryColor,
+                                                        color: contrastTextColor,
+                                                        borderColor: primaryColor
+                                                    }}
+                                                >
                                                     {firmAddon.capacity_display}
                                                 </div>
                                             ) : (
@@ -507,8 +540,11 @@ const AddOns = () => {
                                             </div>
                                             <div className="w-full bg-white rounded-full h-1.5 border border-gray-100 p-0.5">
                                                 <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${firmAddon.usage_percentage > 90 ? 'bg-red-500' : firmAddon.usage_percentage > 70 ? 'bg-orange-500' : 'bg-[#3AD6F2]'}`}
-                                                    style={{ width: `${firmAddon.usage_percentage}%` }}
+                                                    className={`h-full rounded-full transition-all duration-1000 ${firmAddon.usage_percentage > 90 ? 'bg-red-500' : firmAddon.usage_percentage > 70 ? 'bg-orange-500' : ''}`}
+                                                    style={{
+                                                        width: `${firmAddon.usage_percentage}%`,
+                                                        backgroundColor: firmAddon.usage_percentage <= 70 ? primaryColor : undefined
+                                                    }}
                                                 ></div>
                                             </div>
                                         </div>
