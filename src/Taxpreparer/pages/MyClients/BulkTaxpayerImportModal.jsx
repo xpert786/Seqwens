@@ -885,7 +885,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
   const modalContent = (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 sm:p-10 z-[2000000]"
+      className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 sm:p-10 z-[2000000]"
       onClick={onClose}
     >
       <div
