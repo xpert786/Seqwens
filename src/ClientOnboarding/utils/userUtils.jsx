@@ -106,7 +106,6 @@ export const clearUserData = (keepImpersonation = false) => {
   localStorage.removeItem("activeRole");
   localStorage.removeItem("currentRole");
   localStorage.removeItem("userRole");
-  localStorage.removeItem("superadmin-theme"); // Clear SuperAdmin theme preference
 
   // Navigation/routing context
   localStorage.removeItem("lastRoute");
@@ -347,9 +346,15 @@ export const performRevertToSuperAdmin = () => {
     clearUserData();
 
     // STEP 2: Restore Super Admin session data
+    // Save theme preference before clearing
+    const savedTheme = localStorage.getItem('superadmin-theme');
+    
     // Clear everything first to ensure clean slate
     localStorage.clear();
     sessionStorage.clear();
+    
+    // Restore theme preference
+    if (savedTheme) localStorage.setItem('superadmin-theme', savedTheme);
 
     // Restore localStorage data
     if (sessionData.accessToken) localStorage.setItem('accessToken', sessionData.accessToken);
