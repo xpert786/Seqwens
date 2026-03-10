@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { profileAPI } from '../../ClientOnboarding/utils/apiUtils';
 
 const ThemeContext = createContext({
     isDarkMode: false,
     toggleTheme: () => { },
+    isThemeLoading: false,
 });
 
 export const useTheme = () => {
@@ -17,9 +19,10 @@ export const ThemeProvider = ({ children }) => {
     // Check localStorage for saved preference, default to dark mode
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('superadmin-theme');
-        // Default to dark mode (true) if no preference saved, or if saved is 'dark'
         return saved === null ? true : saved === 'dark';
     });
+
+    const [isThemeLoading, setIsThemeLoading] = useState(false);
 
     // Apply theme to document
     useEffect(() => {
@@ -70,19 +73,132 @@ export const ThemeProvider = ({ children }) => {
         };
     }, [isDarkMode]);
 
-    const toggleTheme = () => {
-        setIsDarkMode(prev => !prev);
+    const toggleTheme = async () => {
+        setIsThemeLoading(true);
+        
+        // Small delay to let the loader show before the heavy theme re-render
+        setTimeout(async () => {
+            const newMode = !isDarkMode;
+            setIsDarkMode(newMode);
+            
+            // Sync with backend
+            try {
+                await profileAPI.updateUserAccount({
+                    theme_preference: newMode ? 'dark' : 'light'
+                });
+            } catch (error) {
+                console.error('Failed to sync theme with backend:', error);
+            } finally {
+                // Brief delay for smooth experience
+                setTimeout(() => setIsThemeLoading(false), 800);
+            }
+        }, 100);
     };
+    
+    // Listen for storage changes in other tabs
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'superadmin-theme') {
+                setIsDarkMode(e.newValue === 'dark');
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const value = {
         isDarkMode,
         toggleTheme,
+        isThemeLoading,
     };
 
     return (
         <ThemeContext.Provider value={value}>
+            {isThemeLoading && <ThemeLoader isDarkMode={isDarkMode} />}
             {children}
         </ThemeContext.Provider>
+    );
+};
+
+// Internal Loader Component for Theme Switching
+const ThemeLoader = ({ isDarkMode }) => {
+    return (
+        <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: isDarkMode ? '#0f172a' : '#ffffff',
+            backdropFilter: 'blur(5px)',
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}>
+            <div style={{
+                position: 'relative',
+                width: '80px',
+                height: '80px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                {/* Outer pulsing ring */}
+                <div style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    border: '2px solid #f56d2d',
+                    opacity: '0.3',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                }} />
+                
+                {/* Spinning loader */}
+                <div style={{
+                    width: '50px',
+                    height: '50px',
+                    borderRadius: '50%',
+                    border: '3px solid transparent',
+                    borderTopColor: '#f56d2d',
+                    borderRightColor: '#f56d2d',
+                    animation: 'spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite'
+                }} />
+            </div>
+            
+            <h3 style={{
+                marginTop: '24px',
+                color: isDarkMode ? '#f8fafc' : '#1e293b',
+                fontSize: '18px',
+                fontWeight: '600',
+                letterSpacing: '-0.01em',
+                fontFamily: "'BasisGrotesquePro', sans-serif"
+            }}>
+                {isDarkMode ? 'Illuminating...' : 'Embracing Shadows...'}
+            </h3>
+            
+            <p style={{
+                marginTop: '8px',
+                color: isDarkMode ? '#94a3b8' : '#64748b',
+                fontSize: '14px',
+                fontWeight: '400'
+            }}>
+                Setting up your workspace
+            </p>
+
+            <style>
+                {`
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                    @keyframes pulse {
+                        0%, 100% { transform: scale(1); opacity: 0.3; }
+                        50% { transform: scale(1.2); opacity: 0.1; }
+                    }
+                `}
+            </style>
+        </div>
     );
 };
 

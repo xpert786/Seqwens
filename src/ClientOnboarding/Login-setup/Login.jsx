@@ -131,6 +131,12 @@ export default function Login() {
       storage.setItem("firmsData", JSON.stringify(response.firms));
     }
 
+    // Persist superadmin theme from backend
+    const userData = response.user || response.data?.user;
+    if (userData && userData.theme_preference) {
+      localStorage.setItem("superadmin-theme", userData.theme_preference);
+    }
+
     // Store email if rememberMe is checked
     if (rememberMe) {
       localStorage.setItem("rememberedEmail", email);
