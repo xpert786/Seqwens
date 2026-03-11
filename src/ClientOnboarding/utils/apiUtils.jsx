@@ -635,6 +635,11 @@ export const userAPI = {
     }
   },
 
+  // Get user profile picture
+  getProfilePicture: async () => {
+    return await apiRequest('/user/profile-picture/', 'GET');
+  },
+
   // Switch firm context
   switchFirm: async (firmId, role = null) => {
     const payload = {

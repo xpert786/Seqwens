@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import seqwensLogo from "../assets/seqwlogo.png.png";
 import { isLoggedIn, getUserData, getStorage } from "../ClientOnboarding/utils/userUtils";
+import { userAPI } from "../ClientOnboarding/utils/apiUtils";
 import TopbarSwitcher from "./TopbarSwitcher";
 
 export default function Header() {
@@ -151,6 +152,41 @@ export default function Header() {
       window.removeEventListener('storage', checkAndUpdate);
     };
   }, [location.pathname]);
+
+  const [headerProfilePicture, setHeaderProfilePicture] = useState(null);
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (!isUserLoggedIn) {
+        setHeaderProfilePicture(null);
+        return;
+      }
+      try {
+        const response = await userAPI.getProfilePicture();
+        if (response?.success && response?.data?.profile_picture) {
+          setHeaderProfilePicture(response.data.profile_picture);
+        } else {
+          setHeaderProfilePicture(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile picture in Header", error);
+      }
+    };
+
+    fetchProfilePicture();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchProfilePicture();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [location.pathname, isUserLoggedIn]);
 
   // Navigate to user's dashboard based on user type
   const handleUserLogoClick = () => {
@@ -332,10 +368,14 @@ export default function Header() {
                 {/* User Avatar */}
                 <button
                   onClick={handleUserLogoClick}
-                  className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro] hover:bg-[#2BC5E0] transition-colors cursor-pointer"
+                  className={`w-10 h-10 rounded-full ${!headerProfilePicture ? 'bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro]' : 'p-0 overflow-hidden'} hover:bg-[#2BC5E0] transition-colors cursor-pointer`}
                   title="Go to Dashboard"
                 >
-                  {getUserInitials()}
+                  {headerProfilePicture ? (
+                    <img src={headerProfilePicture} alt="Profile" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                  ) : (
+                    getUserInitials()
+                  )}
                 </button>
               </>
             ) : (
@@ -451,9 +491,13 @@ export default function Header() {
                 handleUserLogoClick();
                 setMobileMenuOpen(false);
               }}
-              className="w-10 h-10 rounded-full bg-[#3AD6F2] text-white flex items-center justify-center font-semibold mx-auto"
+              className={`w-10 h-10 rounded-full ${!headerProfilePicture ? 'bg-[#3AD6F2] text-white flex items-center justify-center font-semibold' : 'p-0 overflow-hidden'} mx-auto`}
             >
-              {getUserInitials()}
+              {headerProfilePicture ? (
+                <img src={headerProfilePicture} alt="Profile" className="w-full h-full object-cover" crossOrigin="anonymous" />
+              ) : (
+                getUserInitials()
+              )}
             </button>
           ) : (
             <Link

@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaBell } from "react-icons/fa";
-import { FiChevronDown } from "react-icons/fi";
+import { useNavigate, useLocation, Link, useMatch } from "react-router-dom";
+import { FaBell, FaBars } from "react-icons/fa";
+import { FiChevronDown, FiMoon, FiSun } from "react-icons/fi";
 import logo from "../../assets/logo.png";
 import { LogoIcond, DashIconed, Clients, FileIconed, Task, MesIconed, MonthIconed, SignatureIcon, AccountIcon } from "./icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
-import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerSettingsAPI, firmAdminNotificationAPI, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData, getImpersonationStatus, performRevertToSuperAdmin } from "../../ClientOnboarding/utils/userUtils";
 import { getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
@@ -183,6 +183,18 @@ export default function Topbar({
       }
     } catch (error) {
       console.error("Failed to load tax preparer profile:", error);
+    }
+
+    try {
+        const picResponse = await userAPI.getProfilePicture();
+        if (picResponse?.success && picResponse?.data?.profile_picture) {
+            setProfilePicture(picResponse.data.profile_picture);
+        } else {
+            setProfilePicture(null);
+        }
+    } catch (err) {
+        console.error("Error fetching profile picture:", err);
+        setProfilePicture(null);
     }
   }, [applyProfileData]);
 
@@ -361,8 +373,16 @@ export default function Topbar({
       window.setTaxHeaderProfile = applyProfileData;
     }
 
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            refreshProfileData();
+        }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (typeof window !== "undefined") {
         delete window.refreshTaxHeaderProfile;
         delete window.setTaxHeaderProfile;
