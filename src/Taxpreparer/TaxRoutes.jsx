@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
+import { isLoggedIn, getStorage, getImpersonationStatus } from '../ClientOnboarding/utils/userUtils';
 import { hasPermissionGroup, isFeatureVisible, hasTaxPreparerPermission } from '../ClientOnboarding/utils/privilegeUtils';
 
 // Layouts
@@ -39,17 +39,23 @@ function AdminProtectedRoute({ children }) {
   // Check user type
   const storage = getStorage();
   const userType = storage?.getItem("userType");
+  const { isImpersonating } = getImpersonationStatus();
 
-  console.log('Admin Protected Route - User type:', userType);
+  console.log('Admin Protected Route - User type:', userType, 'Is Impersonating:', isImpersonating);
 
-  // Only allow admin, super_admin, and tax_preparer access
-  if (userType !== 'admin' && userType !== 'super_admin' && userType !== 'tax_preparer') {
-    console.warn('Unauthorized access attempt to Tax Dashboard');
-    // Redirect based on user type
-    if (userType === 'client' || !userType) {
-      return <Navigate to="/dashboard" replace />;
-    } else {
-      return <Navigate to="/login" replace />;
+  // Skip unauthorized check if we are impersonating to prevent being kicked out
+  if (isImpersonating) {
+    console.log('[IMPERSONATION] Allowing access to Tax Dashboard regardless of userType');
+  } else {
+    // Only allow admin, super_admin, and tax_preparer access
+    if (userType !== 'admin' && userType !== 'super_admin' && userType !== 'tax_preparer') {
+      console.warn('Unauthorized access attempt to Tax Dashboard');
+      // Redirect based on user type
+      if (userType === 'client' || !userType) {
+        return <Navigate to="/dashboard" replace />;
+      } else {
+        return <Navigate to="/login" replace />;
+      }
     }
   }
 

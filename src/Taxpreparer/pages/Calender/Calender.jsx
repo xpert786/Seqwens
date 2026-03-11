@@ -910,11 +910,10 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
-
       {/* View Event Modal */}
       {viewEventModalOpen && selectedEvent && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999999] p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900">Event Details</h3>
@@ -922,7 +921,6 @@ export default function CalendarPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-
             {/* Body */}
             <div className="p-6 space-y-4">
               {/* Event Title */}
@@ -1052,13 +1050,11 @@ export default function CalendarPage() {
       <CreateEventModal
         isOpen={isCreateEventModalOpen}
         onClose={handleCloseCreateEventModal}
-        onSubmit={handleCreateEvent}
-      />
-
+        onSubmit={handleCreateEvent} />
       {/* Pending Meetings Modal */}
       {showPendingMeetingsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999999] p-4" style={{ padding: '40px 1rem', overflowY: 'auto' }}>
-          <div className="bg-white rounded-lg shadow-xl  max-h-[80vh] overflow-hidden flex flex-col" style={{ marginTop: '63px', maxWidth: '664px' }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-h-[75vh] overflow-hidden flex flex-col my-auto" style={{ maxWidth: '800px' }}>
             {/* Header */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">

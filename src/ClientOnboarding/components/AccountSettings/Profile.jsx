@@ -184,14 +184,23 @@ export default function Profile() {
             }
             
             if (newProfileImageUrl) {
+                const refreshedUserData = await profileAPI.getUserAccount();
+                let userInfo = refreshedUserData?.data || refreshedUserData?.user || refreshedUserData || {};
+
                 const updatedUserData = {
                     ...userData,
-                    profile_image: newProfileImageUrl
+                    ...userInfo,
+                    profile_image: newProfileImageUrl,
+                    profile_picture: newProfileImageUrl // Ensure both are set
                 };
                 setUserData(updatedUserData);
                 // Persist to storage
                 persistUserData(updatedUserData);
                 console.log('Updated profile image URL:', newProfileImageUrl);
+                
+                // Set custom event to notify other components
+                window.dispatchEvent(new CustomEvent('profilePictureUpdated'));
+                localStorage.setItem('profilePictureUpdated', Date.now().toString());
             } else {
                 // If no URL in response, refetch user data to get updated profile
                 console.log('No profile image URL in response, refetching user data...');
@@ -377,6 +386,12 @@ export default function Profile() {
             
             // Prepare data for API (exclude profile_image for now)
             const { profile_image, ...dataToSave } = userData;
+            
+            // Add 'phone' as alias for 'phone_number' to ensure backend compatibility
+            if (dataToSave.phone_number) {
+                dataToSave.phone = dataToSave.phone_number;
+            }
+            
             const response = await profileAPI.updateUserAccount(dataToSave);
             
             // Update local state with any changes from the API response
@@ -394,12 +409,17 @@ export default function Profile() {
                     middle_name: updatedData.middle_name || userData.middle_name,
                     last_name: updatedData.last_name || userData.last_name,
                     email: updatedData.email || userData.email,
-                    phone_number: updatedData.phone_number || userData.phone_number,
+                    phone_number: updatedData.phone_number || updatedData.phone || userData.phone_number,
                 };
                 
                 setUserData(finalUserData);
                 // Persist to storage
                 persistUserData(finalUserData);
+                
+                // Also update the userData if it had phone instead of phone_number
+                if (updatedData.phone && !updatedData.phone_number) {
+                    console.log('Backend returned "phone" instead of "phone_number", syncing...');
+                }
             }
             
             toast.success('Profile updated successfully!', {

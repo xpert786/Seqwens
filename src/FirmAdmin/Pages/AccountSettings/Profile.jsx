@@ -102,6 +102,7 @@ export default function Profile() {
                 last_name: userData.last_name,
                 email: userData.email,
                 phone_number: userData.phone_number,
+                phone: userData.phone_number, // Alias for backend compatibility
             };
 
             // Add profile picture file if a new one was selected
