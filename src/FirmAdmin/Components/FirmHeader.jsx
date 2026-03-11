@@ -176,14 +176,17 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
 
         try {
             const picResponse = await userAPI.getProfilePicture();
-            if (picResponse?.success && picResponse?.data?.profile_picture) {
-                setProfilePicture(picResponse.data.profile_picture);
-            } else {
-                setProfilePicture(null);
+            const profilePic =
+                picResponse?.data?.profile_picture ||
+                picResponse?.profile_picture ||
+                picResponse?.data?.profile_image ||
+                picResponse?.profile_image ||
+                null;
+            if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
+                setProfilePicture(profilePic);
             }
         } catch (err) {
             console.error("Error fetching profile picture:", err);
-            setProfilePicture(null);
         }
     }, []);
 

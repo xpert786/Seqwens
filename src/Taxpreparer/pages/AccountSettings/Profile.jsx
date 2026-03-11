@@ -212,6 +212,10 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         if (typeof window !== "undefined" && typeof window.refreshTaxHeaderProfile === "function") {
             window.refreshTaxHeaderProfile();
         }
+
+        // Dispatch event so all headers (including TaxHeader) re-fetch profile picture
+        window.dispatchEvent(new Event('profilePictureUpdated'));
+        localStorage.setItem('profilePictureUpdated', Date.now().toString());
         
         if (onUpdate) {
             onUpdate();

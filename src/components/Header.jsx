@@ -163,10 +163,14 @@ export default function Header() {
       }
       try {
         const response = await userAPI.getProfilePicture();
-        if (response?.success && response?.data?.profile_picture) {
-          setHeaderProfilePicture(response.data.profile_picture);
-        } else {
-          setHeaderProfilePicture(null);
+        const profilePic =
+            response?.data?.profile_picture ||
+            response?.profile_picture ||
+            response?.data?.profile_image ||
+            response?.profile_image ||
+            null;
+        if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
+          setHeaderProfilePicture(profilePic);
         }
       } catch (error) {
         console.error("Failed to fetch profile picture in Header", error);
