@@ -154,12 +154,6 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
             const response = await firmAdminDashboardAPI.getAccountSettings();
             const data = response?.data || response;
 
-            if (data?.profile_picture) {
-                setProfilePicture(data.profile_picture);
-            } else {
-                setProfilePicture(null);
-            }
-
             // Extract name
             const extractedName =
                 [data?.first_name, data?.last_name]
@@ -178,7 +172,21 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
             setProfileInitials(initials);
         } catch (err) {
             console.error("Error fetching profile data:", err);
-            setProfilePicture(null);
+        }
+
+        try {
+            const picResponse = await userAPI.getProfilePicture();
+            const profilePic =
+                picResponse?.data?.profile_picture ||
+                picResponse?.profile_picture ||
+                picResponse?.data?.profile_image ||
+                picResponse?.profile_image ||
+                null;
+            if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
+                setProfilePicture(profilePic);
+            }
+        } catch (err) {
+            console.error("Error fetching profile picture:", err);
         }
     }, []);
 
@@ -298,10 +306,18 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
         };
         window.addEventListener('profilePictureUpdated', handleProfileUpdate);
 
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchProfileData();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
         return () => {
             clearInterval(interval);
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
     }, [fetchUnreadCount, fetchProfileData, checkImpersonationStatus]);
 

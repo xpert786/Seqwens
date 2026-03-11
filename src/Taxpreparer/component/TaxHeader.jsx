@@ -1,19 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaBell } from "react-icons/fa";
-import { FiChevronDown } from "react-icons/fi";
+import { useNavigate, useLocation, Link, useMatch } from "react-router-dom";
+import { FaBell, FaBars } from "react-icons/fa";
+import { FiChevronDown, FiMoon, FiSun } from "react-icons/fi";
 import logo from "../../assets/logo.png";
 import { LogoIcond, DashIconed, Clients, FileIconed, Task, MesIconed, MonthIconed, SignatureIcon, AccountIcon } from "./icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
-import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerSettingsAPI, firmAdminNotificationAPI, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData, getImpersonationStatus, performRevertToSuperAdmin } from "../../ClientOnboarding/utils/userUtils";
 import { getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
-import { firmAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/topbar.css";
 
 // Simple Error Boundary for AccountSwitcher
@@ -144,6 +143,8 @@ export default function Topbar({
   const applyProfileData = useCallback((profileData) => {
     if (!profileData) return;
 
+    console.log('[TaxHeader] applyProfileData received:', profileData);
+
     const extractedName =
       profileData.name ||
       [profileData.first_name, profileData.last_name]
@@ -152,12 +153,16 @@ export default function Topbar({
         .trim() ||
       "User";
 
+    // Extract picture from all potential fields
     const picture =
       profileData.profile_picture_url ||
       profileData.profile_picture ||
+      profileData.profile_image ||
       profileData.avatar_url ||
       profileData.avatar ||
       null;
+
+    console.log('[TaxHeader] Extracted picture from profileData:', picture);
 
     const initialsSource =
       profileData.initials ||
@@ -171,7 +176,10 @@ export default function Topbar({
       .slice(0, 2)
       .toUpperCase() || "TP";
 
-    setProfilePicture(picture);
+    // Only update if we have a valid picture or if the current one is null
+    if (picture) {
+      setProfilePicture(picture);
+    }
     setProfileName(extractedName);
     setProfileInitials(initials);
   }, []);
@@ -179,11 +187,35 @@ export default function Topbar({
   const refreshProfileData = useCallback(async () => {
     try {
       const result = await taxPreparerSettingsAPI.getSettings();
-      if (result?.success && result?.data?.profile_information) {
-        applyProfileData(result.data.profile_information);
+      console.log('[TaxHeader] getSettings response:', result);
+      
+      const profileInfo = result?.data?.profile_information || result?.profile_information || result?.data || result;
+      
+      if (profileInfo) {
+        applyProfileData(profileInfo);
       }
     } catch (error) {
       console.error("Failed to load tax preparer profile:", error);
+    }
+
+    try {
+      const picResponse = await userAPI.getProfilePicture();
+      console.log('[TaxHeader] getProfilePicture response:', picResponse);
+      
+      const profilePic =
+          picResponse?.data?.profile_picture ||
+          picResponse?.profile_picture ||
+          picResponse?.data?.profile_image ||
+          picResponse?.profile_image ||
+          null;
+      
+      console.log('[TaxHeader] Extracted profilePic from userAPI:', profilePic);
+      
+      if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
+          setProfilePicture(profilePic);
+      }
+    } catch (err) {
+      console.error("Error fetching profile picture from userAPI:", err);
     }
   }, [applyProfileData]);
 
@@ -363,8 +395,33 @@ export default function Topbar({
       window.setTaxHeaderProfile = applyProfileData;
     }
 
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            refreshProfileData();
+        }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Listen for profile picture updates from localStorage
+    const handleStorageChange = (e) => {
+        if (e.key === 'profilePictureUpdated') {
+            refreshProfileData();
+            localStorage.removeItem('profilePictureUpdated');
+        }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event for same-tab updates
+    const handleProfileUpdate = () => {
+        refreshProfileData();
+    };
+    window.addEventListener('profilePictureUpdated', handleProfileUpdate);
+
     return () => {
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
       if (typeof window !== "undefined") {
         delete window.refreshTaxHeaderProfile;
         delete window.setTaxHeaderProfile;

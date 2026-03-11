@@ -5,7 +5,7 @@ import logo from "../../assets/logo.png";
 import { LogoIcond } from "../../Taxpreparer/component/icons"
 import { UserIconBuild } from "./icons";
 import SuperAdminNotificationPanel from "./SuperAdminNotificationPanel";
-import { superAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
+import { superAdminNotificationAPI, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { useTheme } from "../Context/ThemeContext";
 import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
 import "../style/SuperHeader.css";
@@ -18,6 +18,39 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
   const notificationButtonRef = useRef(null);
   const searchRef = useRef(null);
   const lastActionTimeRef = useRef(0);
+
+  const [headerProfilePicture, setHeaderProfilePicture] = useState(null);
+
+  // Fetch profile picture
+  const fetchProfilePicture = useCallback(async () => {
+    try {
+      const picResponse = await userAPI.getProfilePicture();
+      const profilePic =
+          picResponse?.data?.profile_picture ||
+          picResponse?.profile_picture ||
+          picResponse?.data?.profile_image ||
+          picResponse?.profile_image ||
+          null;
+      if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
+        setHeaderProfilePicture(profilePic);
+      }
+    } catch (err) {
+      console.error("Error fetching profile picture:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfilePicture();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchProfilePicture();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchProfilePicture]);
 
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
@@ -232,7 +265,14 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
                 />
               )}
             </div>
-            <UserIconBuild />
+            
+            <div className="w-[35px] h-[35px] rounded-full flex items-center justify-center overflow-hidden border border-[var(--sa-border-color)]">
+              {headerProfilePicture ? (
+                <img src={headerProfilePicture} alt="Profile" className="w-full h-full object-cover rounded-full" crossOrigin="anonymous" />
+              ) : (
+                <UserIconBuild />
+              )}
+            </div>
           </div>
         </div>
       </nav>
