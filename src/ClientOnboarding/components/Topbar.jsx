@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
         return this.props.children;
     }
 }
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
@@ -105,7 +105,7 @@ export default function Topbar({
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-    const [profilePicture, setProfilePicture] = useState(null);
+    const [profilePicture, setProfilePicture] = useState(() => localStorage.getItem(CLIENT_AVATAR_KEY));
     const [userInfo, setUserInfo] = useState(null);
     const [profileInitials, setProfileInitials] = useState("CL");
     const [loading, setLoading] = useState(true);
@@ -113,12 +113,10 @@ export default function Topbar({
     const [isImpersonating, setIsImpersonating] = useState(false);
     const [impersonationInfo, setImpersonationInfo] = useState(null);
     const [isReverting, setIsReverting] = useState(false);
-    const [imgError, setImgError] = useState(false);
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const lastActionTimeRef = useRef(0);
     const navigate = useNavigate();
-    const location = useLocation();
 
     const setClientAvatar = (value) => {
         if (value) {
@@ -319,47 +317,68 @@ export default function Topbar({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Fetch profile picture and user info on component mount and on every navigation
+    // Fetch profile picture and user info on component mount
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
-                // Reset image error state on navigation
-                setImgError(false);
-                
                 // First, check userData from login response
                 const userData = getUserData();
                 if (userData) {
                     setUserInfo(userData);
                     setProfileInitials(deriveInitials(userData));
-                    
-                    // Priority: Set profile picture from the direct API URL provided by the user
-                    // Adding a timestamp ensures the browser hits the API instead of using cache
-                    const API_BASE_URL = getApiBaseUrl();
-                    const directProfilePicUrl = `${API_BASE_URL}/user/profile-picture/?t=${Date.now()}`;
-                    setProfilePicture(directProfilePicUrl);
+
+                    // Check both profile_picture and profile_image fields
+                    const pictureUrl = userData.profile_picture || userData.profile_image;
+                    if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
+                        // Use profile picture from userData if available
+                        const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+                        console.log('🖼️ Topbar profile picture from user data:', normalizedUrl);
+                        setClientAvatar(normalizedUrl);
+                        setLoading(false);
+                        return;
+                    } else {
+                        console.log('❌ No profile picture in user data, will fetch from API');
+                    }
                 }
 
-                // If no userData, fetch user account info for name display
+                const storedAvatar = localStorage.getItem(CLIENT_AVATAR_KEY);
+                if (storedAvatar) {
+                    const normalizedStored = normalizeProfilePictureUrl(storedAvatar);
+                    setProfilePicture(normalizedStored);
+                }
+
+                const profileResponse = await profileAPI.getProfilePicture();
+
+                if (!storedAvatar && profileResponse.success && profileResponse.data) {
+                    if (profileResponse.data.has_profile_picture && profileResponse.data.profile_picture_url) {
+                        const normalizedUrl = normalizeProfilePictureUrl(profileResponse.data.profile_picture_url);
+                        setClientAvatar(normalizedUrl);
+                    } else {
+                        setClientAvatar(null);
+                    }
+                } else if (!storedAvatar) {
+                    setClientAvatar(null);
+                }
+
+                // Fetch user account info for name display if not already set
                 if (!userData) {
                     const userResponse = await profileAPI.getUserAccount();
+
                     if (userResponse.success && userResponse.data) {
                         setUserInfo(userResponse.data);
                         setProfileInitials(deriveInitials(userResponse.data));
-                        
-                        const API_BASE_URL = getApiBaseUrl();
-                        const directProfilePicUrl = `${API_BASE_URL}/user/profile-picture/?t=${Date.now()}`;
-                        setProfilePicture(directProfilePicUrl);
                     }
                 }
             } catch (err) {
                 console.error('💥 Error fetching topbar profile data:', err);
+                setClientAvatar(null);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchProfileData();
-    }, [location.pathname]);
+    }, []);
 
     // Monitor profile picture state changes
     useEffect(() => {
@@ -645,7 +664,7 @@ export default function Topbar({
                                     e.target.style.outline = "none";
                                 }}
                             >
-                                {profilePicture && !imgError ? (
+                                {profilePicture ? (
                                     <img
                                         src={profilePicture}
                                         alt="User"
@@ -653,16 +672,9 @@ export default function Topbar({
                                         className="rounded-circle"
                                         style={{ width: "32px", height: "32px", objectFit: "cover" }}
                                         onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}
-                                        onError={() => {
-                                            console.log('❌ Topbar profile picture failed to load, falling back to initials');
-                                            setImgError(true);
-                                        }}
+                                        onError={() => console.log('❌ Topbar profile picture failed to load')}
                                     />
-                                ) : (
-                                    <div className="topbar-user-initials">
-                                        {profileInitials}
-                                    </div>
-                                )}
+                                ) : null}
                                 <FiChevronDown
                                     size={18}
                                     className="text-muted"

@@ -913,7 +913,7 @@ export default function CalendarPage() {
       {/* View Event Modal */}
       {viewEventModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900">Event Details</h3>

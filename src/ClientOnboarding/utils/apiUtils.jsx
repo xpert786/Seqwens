@@ -1305,14 +1305,104 @@ export const profileAPI = {
 
   // Update profile picture
   updateProfilePicture: async (profilePictureFile) => {
-    // We must use FormData for file uploads
+    const token = getAccessToken();
+
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
 
-    // Using the centralized apiRequest handles authorization headers, 
-    // token refresh logic, and correct FormData boundary setting automatically.
-    // It also provides consistent error parsing from the backend response.
-    return await apiRequest('/user/account/', 'PATCH', formData);
+    // Log file details for debugging
+    console.log('Uploading profile picture:', {
+      name: profilePictureFile.name,
+      type: profilePictureFile.type,
+      size: profilePictureFile.size,
+      lastModified: profilePictureFile.lastModified
+    });
+
+    // Log FormData contents for debugging
+    console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+      console.log('  Key:', pair[0], 'Value:', pair[1]);
+    }
+
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+
+    console.log('Profile Picture Update URL:', `${API_BASE_URL}/user/account/`);
+    console.log('Request config:', { method: config.method, headers: config.headers });
+
+    let response = await fetchWithCors(`${API_BASE_URL}/user/account/`, config);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      console.log('Received 401, attempting to refresh token...');
+
+      try {
+        await refreshAccessToken();
+
+        // Retry the original request with new token
+        config.headers = {
+          'Authorization': `Bearer ${getAccessToken()}`,
+        };
+        response = await fetchWithCors(`${API_BASE_URL}/user/account/`, config);
+
+        if (response.status === 401) {
+          // Refresh failed, redirect to login
+          console.log('Token refresh failed, clearing user data and redirecting to login');
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        console.error('Profile Picture Update Error Response:', errorData);
+        console.error('Full error data:', JSON.stringify(errorData, null, 2));
+
+        if (errorData.profile_picture) {
+          // Handle Django validation errors
+          const profileErrors = Array.isArray(errorData.profile_picture)
+            ? errorData.profile_picture.join(', ')
+            : errorData.profile_picture;
+          errorMessage = `Profile picture: ${profileErrors}`;
+        } else if (errorData.errors && errorData.errors.profile_picture) {
+          // Handle nested errors structure
+          const errors = errorData.errors.profile_picture;
+          errorMessage = `Profile picture: ${Array.isArray(errors) ? errors.join(', ') : errors}`;
+        } else if (errorData.errors) {
+          console.error('Profile Picture Update Field Validation Errors:', errorData.errors);
+          const fieldErrors = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (parseError) {
+        console.error('Error parsing profile picture update response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
   },
 
   testProfile: async () => {
@@ -2071,11 +2161,29 @@ export const taxPreparerSettingsAPI = {
 
   // Update profile picture
   updateProfilePicture: async (profilePictureFile) => {
+    const token = getAccessToken();
+
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
 
-    // Using apiRequest ensures correct boundary setting for FormData and consistent auth/error handling
-    return await apiRequest('/taxpayer/tax-preparer/settings/', 'PATCH', formData);
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+
+    const API_BASE_URL = getApiBaseUrl();
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/settings/`, config);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || result.detail || 'Failed to update profile picture');
+    }
+
+    return result;
   }
 };
 
