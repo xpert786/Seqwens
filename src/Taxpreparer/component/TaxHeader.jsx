@@ -178,6 +178,7 @@ export default function Topbar({
   const refreshProfileData = useCallback(async () => {
     try {
       const result = await taxPreparerSettingsAPI.getSettings();
+      console.log('[TaxHeader] getSettings response:', JSON.stringify(result?.data?.profile_information, null, 2));
       if (result?.success && result?.data?.profile_information) {
         applyProfileData(result.data.profile_information);
       }
@@ -187,12 +188,14 @@ export default function Topbar({
 
     try {
         const picResponse = await userAPI.getProfilePicture();
+        console.log('[TaxHeader] getProfilePicture response:', JSON.stringify(picResponse, null, 2));
         const profilePic =
             picResponse?.data?.profile_picture ||
             picResponse?.profile_picture ||
             picResponse?.data?.profile_image ||
             picResponse?.profile_image ||
             null;
+        console.log('[TaxHeader] Extracted profilePic:', profilePic);
         if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
             setProfilePicture(profilePic);
         }
