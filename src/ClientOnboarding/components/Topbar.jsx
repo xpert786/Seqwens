@@ -332,11 +332,8 @@ export default function Topbar({
                     setUserInfo(userData);
                     setProfileInitials(deriveInitials(userData));
                     
-                    // Priority: Set profile picture from the direct API URL provided by the user
-                    // Adding a timestamp ensures the browser hits the API instead of using cache
-                    const API_BASE_URL = getApiBaseUrl();
-                    const directProfilePicUrl = `${API_BASE_URL}/user/profile-picture/?t=${Date.now()}`;
-                    setProfilePicture(directProfilePicUrl);
+                    const pictureUrl = userData.profile_picture || userData.profile_image;
+                    setProfilePicture(getMediaUrl(pictureUrl));
                 }
 
                 // If no userData, fetch user account info for name display
@@ -346,9 +343,8 @@ export default function Topbar({
                         setUserInfo(userResponse.data);
                         setProfileInitials(deriveInitials(userResponse.data));
                         
-                        const API_BASE_URL = getApiBaseUrl();
-                        const directProfilePicUrl = `${API_BASE_URL}/user/profile-picture/?t=${Date.now()}`;
-                        setProfilePicture(directProfilePicUrl);
+                        const pictureUrl = userResponse.data.profile_picture || userResponse.data.profile_image;
+                        setProfilePicture(getMediaUrl(pictureUrl));
                     }
                 }
             } catch (err) {

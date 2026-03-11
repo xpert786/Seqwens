@@ -34,7 +34,7 @@ import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData, setTokens, getImpersonationStatus, performRevertToSuperAdmin } from "../../ClientOnboarding/utils/userUtils";
 
-import { navigateToLogin, getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
+import { navigateToLogin, getPathWithPrefix, getMediaUrl } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
 import { useSubscriptionStatus } from "../Context/SubscriptionStatusContext";
@@ -49,6 +49,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [profilePicture, setProfilePicture] = useState(null);
+    const [profileImageError, setProfileImageError] = useState(false);
     const [profileName, setProfileName] = useState("User");
     const [profileInitials, setProfileInitials] = useState("FA");
     const [isImpersonating, setIsImpersonating] = useState(false);
@@ -183,7 +184,8 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                 picResponse?.profile_image ||
                 null;
             if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
-                setProfilePicture(profilePic);
+                setProfilePicture(getMediaUrl(profilePic));
+                setProfileImageError(false);
             }
         } catch (err) {
             console.error("Error fetching profile picture:", err);
@@ -625,18 +627,13 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                 aria-expanded={showProfileMenu}
                                 aria-haspopup="menu"
                             >
-                                {profilePicture ? (
+                                {profilePicture && !profileImageError ? (
                                     <img
                                         src={profilePicture}
-                                        alt={`${profileName} avatar`}
-                                        crossOrigin="anonymous"
+                                        alt="Profile"
                                         className="rounded-circle"
-                                        style={{
-                                            width: "32px",
-                                            height: "32px",
-                                            objectFit: "cover",
-                                            border: "2px solid #E5E7EB"
-                                        }}
+                                        style={{ width: "32px", height: "32px", objectFit: "cover" }}
+                                        onError={() => setProfileImageError(true)}
                                     />
                                 ) : (
                                     <div

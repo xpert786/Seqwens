@@ -8,6 +8,7 @@ import SuperAdminNotificationPanel from "./SuperAdminNotificationPanel";
 import { superAdminNotificationAPI, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { useTheme } from "../Context/ThemeContext";
 import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
+import { getMediaUrl } from "../../ClientOnboarding/utils/urlUtils";
 import "../style/SuperHeader.css";
 
 export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen = true }) {
@@ -20,6 +21,7 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
   const lastActionTimeRef = useRef(0);
 
   const [headerProfilePicture, setHeaderProfilePicture] = useState(null);
+  const [profileImageError, setProfileImageError] = useState(false);
 
   // Fetch profile picture
   const fetchProfilePicture = useCallback(async () => {
@@ -32,7 +34,8 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
           picResponse?.profile_image ||
           null;
       if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
-        setHeaderProfilePicture(profilePic);
+        setHeaderProfilePicture(getMediaUrl(profilePic));
+        setProfileImageError(false);
       }
     } catch (err) {
       console.error("Error fetching profile picture:", err);
@@ -267,8 +270,14 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
             </div>
             
             <div className="w-[35px] h-[35px] rounded-full flex items-center justify-center overflow-hidden border border-[var(--sa-border-color)]">
-              {headerProfilePicture ? (
-                <img src={headerProfilePicture} alt="Profile" className="w-full h-full object-cover rounded-full" crossOrigin="anonymous" />
+              {headerProfilePicture && !profileImageError ? (
+                <img
+                  src={headerProfilePicture}
+                  alt="Profile"
+                  className="rounded-circle"
+                  style={{ width: "32px", height: "32px", objectFit: "cover" }}
+                  onError={() => setProfileImageError(true)}
+                />
               ) : (
                 <UserIconBuild />
               )}

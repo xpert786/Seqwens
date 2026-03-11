@@ -8,7 +8,7 @@ import NotificationPanel from "../../ClientOnboarding/components/Notifications/N
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { taxPreparerSettingsAPI, firmAdminNotificationAPI, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData, getImpersonationStatus, performRevertToSuperAdmin } from "../../ClientOnboarding/utils/userUtils";
-import { getPathWithPrefix } from "../../ClientOnboarding/utils/urlUtils";
+import { getPathWithPrefix, getMediaUrl } from "../../ClientOnboarding/utils/urlUtils";
 import { toast } from "react-toastify";
 
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
@@ -48,7 +48,8 @@ export default function Topbar({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
-  const [profileName, setProfileName] = useState("User");
+  const [profileImageError, setProfileImageError] = useState(false);
+  const [profileName, setProfileName] = useState("");
   const [profileInitials, setProfileInitials] = useState("TP");
   const [menuOpenedViaKeyboard, setMenuOpenedViaKeyboard] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -153,14 +154,16 @@ export default function Topbar({
         .trim() ||
       "User";
 
-    // Extract picture from all potential fields
-    const picture =
+    // Extract picture from all potential fields and format it
+    const pictureSource =
       profileData.profile_picture_url ||
       profileData.profile_picture ||
       profileData.profile_image ||
       profileData.avatar_url ||
       profileData.avatar ||
       null;
+    
+    const picture = getMediaUrl(pictureSource);
 
     console.log('[TaxHeader] Extracted picture from profileData:', picture);
 
@@ -176,10 +179,9 @@ export default function Topbar({
       .slice(0, 2)
       .toUpperCase() || "TP";
 
-    // Only update if we have a valid picture or if the current one is null
-    if (picture) {
-      setProfilePicture(picture);
-    }
+    // Update states
+    setProfilePicture(picture);
+    setProfileImageError(false); // Reset error state when new picture comes in
     setProfileName(extractedName);
     setProfileInitials(initials);
   }, []);
@@ -196,26 +198,6 @@ export default function Topbar({
       }
     } catch (error) {
       console.error("Failed to load tax preparer profile:", error);
-    }
-
-    try {
-      const picResponse = await userAPI.getProfilePicture();
-      console.log('[TaxHeader] getProfilePicture response:', picResponse);
-      
-      const profilePic =
-          picResponse?.data?.profile_picture ||
-          picResponse?.profile_picture ||
-          picResponse?.data?.profile_image ||
-          picResponse?.profile_image ||
-          null;
-      
-      console.log('[TaxHeader] Extracted profilePic from userAPI:', profilePic);
-      
-      if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
-          setProfilePicture(profilePic);
-      }
-    } catch (err) {
-      console.error("Error fetching profile picture from userAPI:", err);
     }
   }, [applyProfileData]);
 
@@ -644,20 +626,19 @@ export default function Topbar({
                     aria-haspopup="menu"
                     aria-controls="tax-header-profile-menu"
                   >
-                    {profilePicture ? (
+                    {profilePicture && !profileImageError ? (
                       <img
                         src={profilePicture}
                         alt={`${profileName} avatar`}
-                        crossOrigin="anonymous"
                         className="topbar-user-avatar"
                         key={profilePicture}
-                        onError={(e) => {
-                          // Fallback to initials if image fails to load
-                          e.target.style.display = 'none';
+                        onError={() => {
+                          console.log('[TaxHeader] Profile image failed to load:', profilePicture);
+                          setProfileImageError(true);
                         }}
                       />
                     ) : (
-                      <div className="topbar-user-initials" aria-hidden="true">
+                      <div className="topbar-user-initials" aria-hidden="true" style={{ backgroundColor: '#00C0C6', color: 'white' }}>
                         {profileInitials}
                       </div>
                     )}
