@@ -805,9 +805,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       {/* Add Client Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10 modal-overlay"
           onClick={onClose}
-          style={{ zIndex: 99999 }}
         >
           <div
             className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-6 relative modal-body-scroll"
@@ -1087,7 +1086,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
       {/* Share Taxpayer Invite Modal */}
       {showInviteActionsModal && activeInviteDetails && (
-        <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+        <div className="modal invite-actions-modal modal-overlay" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
             <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
@@ -1217,8 +1216,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       {/* Delete Invite Confirmation Modal */}
       {showDeleteInviteConfirmModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          style={{ zIndex: 10000 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-overlay"
           onClick={() => {
             if (!deletingInvite) {
               setShowDeleteInviteConfirmModal(false);

@@ -2139,7 +2139,7 @@ export default function TasksPage() {
       )}
       {selectedTask && (
         <div
-          className="fixed inset-0 z-[1050] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[2000] flex items-center justify-center p-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={() => setSelectedTask(null)}
         >
@@ -2585,7 +2585,7 @@ export default function TasksPage() {
       {showAddTaskModal && (
         <div className="modal task-modal-mobile" style={{
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           justifyContent: 'center',
           position: 'fixed',
           top: 0,
@@ -2593,8 +2593,8 @@ export default function TasksPage() {
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1070,
-          padding: '60px 1rem 1rem 1rem',
+          zIndex: 2000,
+          padding: '1rem',
           overflowY: 'auto'
         }}>
           <div style={{
@@ -3441,16 +3441,16 @@ export default function TasksPage() {
       {showDocumentUploadModal && selectedTask && (
         <div className="modal task-modal-mobile" style={{
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: 'rgba(0,0,0,0.5)',
-          zIndex: 1070,
+          zIndex: 2000,
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          padding: '60px 1rem 1rem 1rem',
+          padding: '1rem',
           overflowY: 'auto'
         }}>
           <div className="modal-dialog modal-lg" style={{ width: '100%', maxWidth: '800px', margin: 0 }}>

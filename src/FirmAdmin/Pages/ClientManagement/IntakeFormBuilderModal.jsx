@@ -46,8 +46,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070]"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center modal-overlay"
       onClick={onClose}
     >
       <div

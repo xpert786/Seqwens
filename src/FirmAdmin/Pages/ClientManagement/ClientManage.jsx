@@ -2817,7 +2817,7 @@ export default function ClientManage() {
       {/* Share Taxpayer Invite Modal */}
       {
         showInviteActionsModal && activeInviteDetails && (
-          <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+          <div className="modal invite-actions-modal modal-overlay" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
               <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
                 <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
@@ -2973,8 +2973,7 @@ export default function ClientManage() {
       {
         showReassignStaffModal && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            style={{ zIndex: 9999 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-overlay"
             onClick={() => {
               if (!reassigning) {
                 setShowReassignStaffModal(false);

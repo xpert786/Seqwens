@@ -1082,15 +1082,15 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-overlay"
       onClick={onClose}
+      style={{ zIndex: 99999 }}
     >
       <div
-        className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mx-4"
+        className="bg-white rounded-lg shadow-lg p-6 max-w-3xl w-full mx-4 modal-content-scroller"
         style={{
           borderRadius: '12px',
-          maxHeight: '90vh',
+          maxHeight: '80vh',
           overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
