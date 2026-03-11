@@ -354,8 +354,8 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 999999, padding: '40px 1rem', overflowY: 'auto' }}>
-      <div className="bg-white rounded-lg w-full modal-body-scroll" style={{ maxWidth: '600px', maxHeight: '75vh', overflowY: 'auto', marginTop: '63px' }}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg w-full modal-body-scroll my-auto" style={{ maxWidth: '800px', maxHeight: '75vh', overflowY: 'auto' }}>
         <style>
           {`
             .modal-body-scroll::-webkit-scrollbar {

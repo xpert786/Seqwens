@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
+import { isLoggedIn, getStorage, getImpersonationStatus } from '../ClientOnboarding/utils/userUtils';
 import SuperDashboard from './Pages/SuperDashboard';
 import SuperDashboardContent from './Pages/SuperDashboardContent';
 import UserManagement from './Pages/UserManagement';
@@ -27,19 +27,26 @@ function SuperAdminProtectedRoute({ children }) {
   // Check user type
   const storage = getStorage();
   const userType = storage?.getItem("userType");
+  const { isImpersonating } = getImpersonationStatus();
+  
+  console.log('SuperAdmin Protected Route - User type:', userType, 'Is Impersonating:', isImpersonating);
 
-  console.log('SuperAdmin Protected Route - User type:', userType);
-
-  // Allow super_admin, support_admin, and billing_admin access
-  if (userType !== 'super_admin' && userType !== 'support_admin' && userType !== 'billing_admin') {
-    console.warn('Unauthorized access attempt to Super Admin');
-    // Redirect based on user type
-    if (userType === 'admin') {
-      return <Navigate to="/taxdashboard" replace />;
-    } else if (userType === 'client' || !userType) {
-      return <Navigate to="/dashboard" replace />;
-    } else {
-      return <Navigate to="/login" replace />;
+  // If impersonating, we should generally allow them to stay, 
+  // though typically you wouldn't be in SuperAdmin while impersonating
+  if (isImpersonating) {
+    console.log('[IMPERSONATION] Allowing access to Super Admin route');
+  } else {
+    // Allow super_admin, support_admin, and billing_admin access
+    if (userType !== 'super_admin' && userType !== 'support_admin' && userType !== 'billing_admin') {
+      console.warn('Unauthorized access attempt to Super Admin');
+      // Redirect based on user type
+      if (userType === 'admin') {
+        return <Navigate to="/taxdashboard" replace />;
+      } else if (userType === 'client' || !userType) {
+        return <Navigate to="/dashboard" replace />;
+      } else {
+        return <Navigate to="/login" replace />;
+      }
     }
   }
 

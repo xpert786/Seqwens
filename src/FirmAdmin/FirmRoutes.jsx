@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { isLoggedIn, getStorage, setTokens } from '../ClientOnboarding/utils/userUtils';
+import { isLoggedIn, getStorage, setTokens, getImpersonationStatus } from '../ClientOnboarding/utils/userUtils';
 
 // Layouts
 import FirmDashboardLayout from './Components/FirmDashboardLayout';
@@ -60,24 +60,34 @@ function FirmAdminProtectedRoute({ children }) {
 
   // Check user type
   const storage = getStorage();
-  const userType = storage?.getItem("userType");
+  let userType = storage?.getItem("userType");
+  const { isImpersonating } = getImpersonationStatus();
 
-  console.log('Firm Admin Protected Route - User type:', userType);
+  console.log('Firm Admin Protected Route - User type:', userType, 'Is Impersonating:', isImpersonating);
 
-  // Only allow admin access - if super_admin, redirect back to superadmin
-  if (userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') {
-    console.warn('Super admin detected in firm admin route, redirecting to superadmin');
-    return <Navigate to="/superadmin" replace />;
-  }
+  // Skip super admin check and unauthorized check if we are impersonating
+  // This ensures a Super Admin logging into a firm is never kicked out or redirected to taxpayer
+  if (isImpersonating) {
+    console.log('[IMPERSONATION] Allowing access to Firm Admin regardless of userType');
+    // We allow access when impersonating to prevent the "trap" in taxpayer account
+  } else {
+    // Regular checks for non-impersonation sessions
+    
+    // Only allow admin access - if super_admin, redirect back to superadmin
+    if (userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') {
+      console.warn('Super admin detected in firm admin route, redirecting to superadmin');
+      return <Navigate to="/superadmin" replace />;
+    }
 
-  // Only allow admin or firm access
-  if (userType !== 'admin' && userType !== 'firm') {
-    console.warn('Unauthorized access attempt to Firm Admin Dashboard');
-    // Redirect based on user type
-    if (userType === 'client') {
-      return <Navigate to="/dashboard" replace />;
-    } else {
-      return <Navigate to="/login" replace />;
+    // Only allow admin or firm access
+    if (userType !== 'admin' && userType !== 'firm') {
+      console.warn('Unauthorized access attempt to Firm Admin Dashboard');
+      // Redirect based on user type
+      if (userType === 'client') {
+        return <Navigate to="/dashboard" replace />;
+      } else {
+        return <Navigate to="/login" replace />;
+      }
     }
   }
 

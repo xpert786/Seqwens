@@ -894,16 +894,14 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           maxHeight: '90vh',
           overflowY: 'auto',
           position: 'relative',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         }}
-        onClick={e => e.stopPropagation()}
-      >
+        onClick={e => e.stopPropagation()}>
         {/* Close */}
         <button onClick={onClose}
           className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition z-20">
           <IoMdClose size={24} />
         </button>
-
         {/* Header */}
         <div className="mb-4">
           <div className="flex justify-between items-start pb-3" style={{ borderBottom: '0.5px solid #E8F0FF' }}>

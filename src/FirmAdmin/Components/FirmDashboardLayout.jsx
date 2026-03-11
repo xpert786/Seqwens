@@ -411,7 +411,7 @@ export default function FirmDashboardLayout() {
         <div
           className="flex flex-col transition-all duration-300 w-full h-screen"
           style={{
-            paddingTop: isImpersonating ? '110px' : '',
+            paddingTop: isImpersonating ? '3rem' : '1rem',
             marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
             width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
           }}

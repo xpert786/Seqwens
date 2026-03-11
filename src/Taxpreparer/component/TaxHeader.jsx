@@ -54,6 +54,7 @@ export default function Topbar({
   const [menuOpenedViaKeyboard, setMenuOpenedViaKeyboard] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isImpersonating, setIsImpersonating] = useState(false);
+  const [impersonationInfo, setImpersonationInfo] = useState(null);
   const [isReverting, setIsReverting] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -361,8 +362,9 @@ export default function Topbar({
 
     // Check impersonation status
     const checkStatus = () => {
-      const { isImpersonating: impersonating } = getImpersonationStatus();
+      const { isImpersonating: impersonating, info } = getImpersonationStatus();
       setIsImpersonating(impersonating);
+      setImpersonationInfo(info);
     };
 
     checkStatus();
@@ -454,6 +456,39 @@ export default function Topbar({
 
   return (
     <>
+      {/* Impersonation Banner */}
+      {isImpersonating && (
+        <div
+          className="impersonation-banner bg-danger text-white py-1 px-4 d-flex justify-content-between align-items-center"
+          style={{
+            fontSize: '13px',
+            height: '40px',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1060,
+            fontWeight: '600',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}
+        >
+          <div className="d-flex align-items-center">
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            <span>
+              Impersonating Account: <strong>{impersonationInfo?.name || 'User'}</strong>
+            </span>
+          </div>
+          <button
+            className="btn btn-sm btn-light py-0 px-3 fw-bold"
+            onClick={handleRevertToSuperAdmin}
+            disabled={isReverting}
+            style={{ height: '28px', fontSize: '12px' }}
+          >
+            {isReverting ? 'Reverting...' : 'Revert to Super Admin'}
+          </button>
+        </div>
+      )}
+
       <nav
         className={`navbar bg-white fixed-top border-bottom custom-topbar p-0 ${isImpersonating ? 'impersonating-topbar' : ''}`}
         style={{

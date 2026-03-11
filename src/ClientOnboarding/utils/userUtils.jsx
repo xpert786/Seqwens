@@ -53,11 +53,13 @@ export const getUserData = () => {
 };
 
 /**
- * Set user data in localStorage
+ * Set user data in both localStorage and sessionStorage for consistency
  * @param {Object} userData - User data object to store
  */
 export const setUserData = (userData) => {
-  localStorage.setItem("userData", JSON.stringify(userData));
+  const dataStr = JSON.stringify(userData);
+  localStorage.setItem("userData", dataStr);
+  sessionStorage.setItem("userData", dataStr);
 };
 
 /**

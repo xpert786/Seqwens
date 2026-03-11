@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
         return this.props.children;
     }
 }
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
@@ -31,9 +31,16 @@ import image from "../../assets/image.png";
 import NotificationPanel from "./Notifications/NotificationPanel";
 import AccountSwitcher from "./AccountSwitcher";
 import { profileAPI, userAPI, clientNotificationAPI } from "../utils/apiUtils";
-import { clearUserData, getUserData } from "../utils/userUtils";
+import { 
+    clearUserData, 
+    getUserData, 
+    getImpersonationStatus, 
+    performRevertToSuperAdmin 
+} from "../utils/userUtils";
 import { useNotificationWebSocket } from "../utils/useNotificationWebSocket";
 import { getApiBaseUrl } from "../utils/corsConfig";
+import { getPathWithPrefix } from "../utils/urlUtils";
+import { toast } from "react-toastify";
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 import "../styles/Topbar.css";
 
@@ -98,15 +105,20 @@ export default function Topbar({
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-    const [profilePicture, setProfilePicture] = useState(() => localStorage.getItem(CLIENT_AVATAR_KEY));
+    const [profilePicture, setProfilePicture] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
     const [profileInitials, setProfileInitials] = useState("CL");
     const [loading, setLoading] = useState(true);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isImpersonating, setIsImpersonating] = useState(false);
+    const [impersonationInfo, setImpersonationInfo] = useState(null);
+    const [isReverting, setIsReverting] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const lastActionTimeRef = useRef(0);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const setClientAvatar = (value) => {
         if (value) {
@@ -292,6 +304,11 @@ export default function Topbar({
     // Fetch unread count on mount and every 30 seconds as fallback
     useEffect(() => {
         fetchUnreadCount();
+        
+        // Check impersonation status
+        const { isImpersonating: impersonating, info } = getImpersonationStatus();
+        setIsImpersonating(impersonating);
+        setImpersonationInfo(info);
 
         // Polling interval as fallback (30 seconds)
         const intervalId = setInterval(() => {
@@ -302,68 +319,47 @@ export default function Topbar({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Fetch profile picture and user info on component mount
+    // Fetch profile picture and user info on component mount and on every navigation
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
+                // Reset image error state on navigation
+                setImgError(false);
+                
                 // First, check userData from login response
                 const userData = getUserData();
                 if (userData) {
                     setUserInfo(userData);
                     setProfileInitials(deriveInitials(userData));
-
-                    // Check both profile_picture and profile_image fields
-                    const pictureUrl = userData.profile_picture || userData.profile_image;
-                    if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
-                        // Use profile picture from userData if available
-                        const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
-                        console.log('🖼️ Topbar profile picture from user data:', normalizedUrl);
-                        setClientAvatar(normalizedUrl);
-                        setLoading(false);
-                        return;
-                    } else {
-                        console.log('❌ No profile picture in user data, will fetch from API');
-                    }
+                    
+                    // Priority: Set profile picture from the direct API URL provided by the user
+                    // Adding a timestamp ensures the browser hits the API instead of using cache
+                    const API_BASE_URL = getApiBaseUrl();
+                    const directProfilePicUrl = `${API_BASE_URL}/user/profile-picture/?t=${Date.now()}`;
+                    setProfilePicture(directProfilePicUrl);
                 }
 
-                const storedAvatar = localStorage.getItem(CLIENT_AVATAR_KEY);
-                if (storedAvatar) {
-                    const normalizedStored = normalizeProfilePictureUrl(storedAvatar);
-                    setProfilePicture(normalizedStored);
-                }
-
-                const profileResponse = await profileAPI.getProfilePicture();
-
-                if (!storedAvatar && profileResponse.success && profileResponse.data) {
-                    if (profileResponse.data.has_profile_picture && profileResponse.data.profile_picture_url) {
-                        const normalizedUrl = normalizeProfilePictureUrl(profileResponse.data.profile_picture_url);
-                        setClientAvatar(normalizedUrl);
-                    } else {
-                        setClientAvatar(null);
-                    }
-                } else if (!storedAvatar) {
-                    setClientAvatar(null);
-                }
-
-                // Fetch user account info for name display if not already set
+                // If no userData, fetch user account info for name display
                 if (!userData) {
                     const userResponse = await profileAPI.getUserAccount();
-
                     if (userResponse.success && userResponse.data) {
                         setUserInfo(userResponse.data);
                         setProfileInitials(deriveInitials(userResponse.data));
+                        
+                        const API_BASE_URL = getApiBaseUrl();
+                        const directProfilePicUrl = `${API_BASE_URL}/user/profile-picture/?t=${Date.now()}`;
+                        setProfilePicture(directProfilePicUrl);
                     }
                 }
             } catch (err) {
                 console.error('💥 Error fetching topbar profile data:', err);
-                setClientAvatar(null);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchProfileData();
-    }, []);
+    }, [location.pathname]);
 
     // Monitor profile picture state changes
     useEffect(() => {
@@ -426,6 +422,48 @@ export default function Topbar({
         }
     };
 
+    // Handle revert to Super Admin
+    const handleRevertToSuperAdmin = async () => {
+        if (isReverting) return;
+
+        try {
+            setIsReverting(true);
+            console.log('[TOPBAR] Starting revert to Super Admin');
+
+            const success = performRevertToSuperAdmin();
+
+            if (success) {
+                toast.success("Successfully reverted to Super Admin account", {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
+
+                // Force hard navigation to Super Admin dashboard
+                console.log('[TOPBAR] Forcing navigation to Super Admin dashboard');
+                setTimeout(() => {
+                    const targetUrl = getPathWithPrefix('/superadmin');
+                    console.log('[TOPBAR] Navigating to:', targetUrl);
+                    window.location.href = targetUrl;
+                }, 500);
+            } else {
+                toast.error("Unable to revert: Original session data not found", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                setIsReverting(false);
+            }
+        } catch (error) {
+            console.error("[TOPBAR] Error during revert:", error);
+            toast.error("Failed to revert to Super Admin account. Please refresh the page and try again.", {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            setIsReverting(false);
+        } finally {
+            setShowProfileMenu(false);
+        }
+    };
+
     // Handle profile menu keyboard navigation
     const handleProfileMenuKeyDown = (event, action) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -444,7 +482,46 @@ export default function Topbar({
 
     return (
         <>
-            <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-3">
+            {/* Impersonation Banner */}
+            {isImpersonating && (
+                <div 
+                    className="impersonation-banner bg-danger text-white py-1 px-4 d-flex justify-content-between align-items-center" 
+                    style={{ 
+                        fontSize: '13px', 
+                        height: '40px', 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0, 
+                        zIndex: 1060,
+                        fontWeight: '600',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    <div className="d-flex align-items-center">
+                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span>
+                            Impersonating Account: <strong>{impersonationInfo?.name || 'User'}</strong>
+                        </span>
+                    </div>
+                    <button 
+                        className="btn btn-sm btn-light py-0 px-3 fw-bold" 
+                        onClick={handleRevertToSuperAdmin}
+                        disabled={isReverting}
+                        style={{ height: '28px', fontSize: '12px' }}
+                    >
+                        {isReverting ? 'Reverting...' : 'Revert to Super Admin'}
+                    </button>
+                </div>
+            )}
+
+            <nav 
+                className={`navbar bg-white fixed-top border-bottom custom-topbar px-3 ${isImpersonating ? 'impersonating' : ''}`}
+                style={{
+                    top: isImpersonating ? '40px' : '0',
+                    transition: 'top 0.3s ease'
+                }}
+            >
                 <div className="container-fluid d-flex justify-content-between align-items-center">
 
 
@@ -568,7 +645,7 @@ export default function Topbar({
                                     e.target.style.outline = "none";
                                 }}
                             >
-                                {profilePicture ? (
+                                {profilePicture && !imgError ? (
                                     <img
                                         src={profilePicture}
                                         alt="User"
@@ -576,9 +653,16 @@ export default function Topbar({
                                         className="rounded-circle"
                                         style={{ width: "32px", height: "32px", objectFit: "cover" }}
                                         onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}
-                                        onError={() => console.log('❌ Topbar profile picture failed to load')}
+                                        onError={() => {
+                                            console.log('❌ Topbar profile picture failed to load, falling back to initials');
+                                            setImgError(true);
+                                        }}
                                     />
-                                ) : null}
+                                ) : (
+                                    <div className="topbar-user-initials">
+                                        {profileInitials}
+                                    </div>
+                                )}
                                 <FiChevronDown
                                     size={18}
                                     className="text-muted"
@@ -658,6 +742,30 @@ export default function Topbar({
                                         <i className="bi bi-question-circle me-2"></i>
                                         Help & Support
                                     </Link>
+                                    
+                                    {isImpersonating && (
+                                        <button
+                                            type="button"
+                                            className="d-block w-100 px-3 py-2 text-start text-primary fw-bold border-0 bg-transparent"
+                                            onClick={handleRevertToSuperAdmin}
+                                            disabled={isReverting}
+                                            role="menuitem"
+                                            style={{
+                                                fontFamily: "BasisGrotesquePro",
+                                                fontSize: "14px",
+                                                cursor: isReverting ? "not-allowed" : "pointer",
+                                                transition: "background-color 0.2s ease"
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!isReverting) e.target.style.backgroundColor = "#f0f7ff";
+                                            }}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+                                        >
+                                            <i className="bi bi-arrow-left-circle me-2"></i>
+                                            {isReverting ? "Reverting..." : "Revert to Super Admin"}
+                                        </button>
+                                    )}
+
                                     <div
                                         className="border-top my-1"
                                         style={{ borderColor: "#E8F0FF" }}
