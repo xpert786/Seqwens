@@ -113,6 +113,7 @@ export default function Topbar({
     const [isImpersonating, setIsImpersonating] = useState(false);
     const [impersonationInfo, setImpersonationInfo] = useState(null);
     const [isReverting, setIsReverting] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const lastActionTimeRef = useRef(0);
@@ -321,6 +322,8 @@ export default function Topbar({
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
+                // Reset image error state on mount
+                setImgError(false);
                 // First, check userData from login response
                 const userData = getUserData();
                 if (userData) {
@@ -664,17 +667,23 @@ export default function Topbar({
                                     e.target.style.outline = "none";
                                 }}
                             >
-                                {profilePicture ? (
+                                {profilePicture && !imgError ? (
                                     <img
                                         src={profilePicture}
                                         alt="User"
-                                        crossOrigin="anonymous"
                                         className="rounded-circle"
                                         style={{ width: "32px", height: "32px", objectFit: "cover" }}
                                         onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}
-                                        onError={() => console.log('❌ Topbar profile picture failed to load')}
+                                        onError={() => {
+                                            console.log('❌ Topbar profile picture failed to load, falling back to initials');
+                                            setImgError(true);
+                                        }}
                                     />
-                                ) : null}
+                                ) : (
+                                    <div className="topbar-user-initials">
+                                        {profileInitials}
+                                    </div>
+                                )}
                                 <FiChevronDown
                                     size={18}
                                     className="text-muted"

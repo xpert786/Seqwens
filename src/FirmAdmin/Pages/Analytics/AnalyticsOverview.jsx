@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import TabNavigation from '../Integrations/TabNavigation';
 import { firmAdminAnalyticsAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { getUserData, getStorage } from '../../../ClientOnboarding/utils/userUtils';
 
 export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, period = '6m' }) {
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -13,6 +14,18 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, perio
       try {
         setLoading(true);
         setError(null);
+
+        const userData = getUserData();
+        const storage = getStorage();
+        const userType = storage?.getItem("userType");
+
+        console.log('[DEBUG-ANALYTICS] Loading analytics for:', {
+          period, 
+          userType,
+          userData_role: userData?.user_role,
+          userData_groups: userData?.permission_groups,
+          userData_id: userData?.id
+        });
 
         const response = await firmAdminAnalyticsAPI.getAnalyticsReports(period);
 
