@@ -13,7 +13,6 @@ import { toast } from "react-toastify";
 
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
 import { useNotificationWebSocket } from "../../ClientOnboarding/utils/useNotificationWebSocket";
-import { firmAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/topbar.css";
 
 // Simple Error Boundary for AccountSwitcher
