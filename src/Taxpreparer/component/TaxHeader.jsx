@@ -143,6 +143,8 @@ export default function Topbar({
   const applyProfileData = useCallback((profileData) => {
     if (!profileData) return;
 
+    console.log('[TaxHeader] applyProfileData received:', JSON.stringify(profileData, null, 2));
+
     const extractedName =
       profileData.name ||
       [profileData.first_name, profileData.last_name]
@@ -154,9 +156,12 @@ export default function Topbar({
     const picture =
       profileData.profile_picture_url ||
       profileData.profile_picture ||
+      profileData.profile_image ||
       profileData.avatar_url ||
       profileData.avatar ||
       null;
+
+    console.log('[TaxHeader] Extracted picture from applyProfileData:', picture);
 
     const initialsSource =
       profileData.initials ||
