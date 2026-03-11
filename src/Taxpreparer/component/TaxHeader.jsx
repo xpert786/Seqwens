@@ -143,7 +143,7 @@ export default function Topbar({
   const applyProfileData = useCallback((profileData) => {
     if (!profileData) return;
 
-    console.log('[TaxHeader] applyProfileData received:', JSON.stringify(profileData, null, 2));
+    console.log('[TaxHeader] applyProfileData received:', profileData);
 
     const extractedName =
       profileData.name ||
@@ -153,6 +153,7 @@ export default function Topbar({
         .trim() ||
       "User";
 
+    // Extract picture from all potential fields
     const picture =
       profileData.profile_picture_url ||
       profileData.profile_picture ||
@@ -161,7 +162,7 @@ export default function Topbar({
       profileData.avatar ||
       null;
 
-    console.log('[TaxHeader] Extracted picture from applyProfileData:', picture);
+    console.log('[TaxHeader] Extracted picture from profileData:', picture);
 
     const initialsSource =
       profileData.initials ||
@@ -175,7 +176,10 @@ export default function Topbar({
       .slice(0, 2)
       .toUpperCase() || "TP";
 
-    setProfilePicture(picture);
+    // Only update if we have a valid picture or if the current one is null
+    if (picture) {
+      setProfilePicture(picture);
+    }
     setProfileName(extractedName);
     setProfileInitials(initials);
   }, []);
@@ -183,29 +187,35 @@ export default function Topbar({
   const refreshProfileData = useCallback(async () => {
     try {
       const result = await taxPreparerSettingsAPI.getSettings();
-      console.log('[TaxHeader] getSettings response:', JSON.stringify(result?.data?.profile_information, null, 2));
-      if (result?.success && result?.data?.profile_information) {
-        applyProfileData(result.data.profile_information);
+      console.log('[TaxHeader] getSettings response:', result);
+      
+      const profileInfo = result?.data?.profile_information || result?.profile_information || result?.data || result;
+      
+      if (profileInfo) {
+        applyProfileData(profileInfo);
       }
     } catch (error) {
       console.error("Failed to load tax preparer profile:", error);
     }
 
     try {
-        const picResponse = await userAPI.getProfilePicture();
-        console.log('[TaxHeader] getProfilePicture response:', JSON.stringify(picResponse, null, 2));
-        const profilePic =
-            picResponse?.data?.profile_picture ||
-            picResponse?.profile_picture ||
-            picResponse?.data?.profile_image ||
-            picResponse?.profile_image ||
-            null;
-        console.log('[TaxHeader] Extracted profilePic:', profilePic);
-        if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
-            setProfilePicture(profilePic);
-        }
+      const picResponse = await userAPI.getProfilePicture();
+      console.log('[TaxHeader] getProfilePicture response:', picResponse);
+      
+      const profilePic =
+          picResponse?.data?.profile_picture ||
+          picResponse?.profile_picture ||
+          picResponse?.data?.profile_image ||
+          picResponse?.profile_image ||
+          null;
+      
+      console.log('[TaxHeader] Extracted profilePic from userAPI:', profilePic);
+      
+      if (profilePic && profilePic !== 'null' && profilePic !== 'undefined') {
+          setProfilePicture(profilePic);
+      }
     } catch (err) {
-        console.error("Error fetching profile picture:", err);
+      console.error("Error fetching profile picture from userAPI:", err);
     }
   }, [applyProfileData]);
 
