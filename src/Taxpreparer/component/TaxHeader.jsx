@@ -381,9 +381,26 @@ export default function Topbar({
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
+    // Listen for profile picture updates from localStorage
+    const handleStorageChange = (e) => {
+        if (e.key === 'profilePictureUpdated') {
+            refreshProfileData();
+            localStorage.removeItem('profilePictureUpdated');
+        }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event for same-tab updates
+    const handleProfileUpdate = () => {
+        refreshProfileData();
+    };
+    window.addEventListener('profilePictureUpdated', handleProfileUpdate);
+
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
       if (typeof window !== "undefined") {
         delete window.refreshTaxHeaderProfile;
         delete window.setTaxHeaderProfile;
