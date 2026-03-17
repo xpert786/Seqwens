@@ -50,6 +50,12 @@ const SubscriptionStatusBanner = () => {
                     text: 'text-white',
                     icon: '🎉',
                 };
+            case 'trial_expired':
+                return {
+                    bg: 'bg-gradient-to-r from-red-500 to-rose-600',
+                    text: 'text-white',
+                    icon: '⛔',
+                };
             case 'pending_payment':
                 return {
                     bg: 'bg-gradient-to-r from-yellow-400 to-amber-500',
@@ -121,6 +127,7 @@ const SubscriptionStatusBanner = () => {
                             <span className="fw-semibold me-2" style={{ fontSize: '14px' }}>
                                 {currentPlan && status !== 'inactive' ? `${currentPlan} Plan` : ''}
                                 {status === 'trial' && ` • ${statusDisplay}`}
+                                {status === 'trial_expired' && ` • ${statusDisplay}`}
                                 {status === 'pending_payment' && ` • ${statusDisplay}`}
                                 {status === 'expired' && ` • ${statusDisplay}`}
                                 {status === 'active_cancelling' && ` • ${statusDisplay}`}
