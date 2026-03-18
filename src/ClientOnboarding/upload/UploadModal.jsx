@@ -245,12 +245,13 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
     const processFiles = (rawFiles) => {
         // Allowed file extensions
-        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.heic', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
         const allowedMimeTypes = [
             'application/pdf',
             'image/jpeg',
             'image/jpg',
             'image/png',
+            'image/heic',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel',
@@ -269,7 +270,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         const invalidFiles = rawFiles.filter(f => !isValidFileType(f));
 
         if (invalidFiles.length > 0) {
-            setModalErrors(prev => [...prev, `Ignored ${invalidFiles.length} file(s) with unsupported formats. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`]);
+            setModalErrors(prev => [...prev, `Ignored ${invalidFiles.length} file(s) with unsupported formats. Supported: PDF, JPG, PNG, HEIC, DOC, DOCX, XLS, XLSX, CSV`]);
         }
 
         const startIndex = files.length;
@@ -486,14 +487,14 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                     <UploadsIcon />
                                 </div>
                                 <div className="dropzone-text">Drop files here or click to browse</div>
-                                <div className="dropzone-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</div>
+                                <div className="dropzone-hint">Supported formats: PDF, JPG, PNG, HEIC, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</div>
                                 <input
                                     type="file"
                                     ref={fileInputRef}
                                     onChange={handleFileChange}
                                     multiple
                                     hidden
-                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                                    accept=".pdf,.jpg,.jpeg,.png,.heic,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,image/heic,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                                 />
                             </div>
 

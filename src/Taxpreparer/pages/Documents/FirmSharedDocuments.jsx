@@ -175,13 +175,6 @@ export default function FirmSharedDocuments() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.type !== 'application/pdf') {
-        toast.error('Only PDF files are allowed', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        return;
-      }
       setUploadFile(file);
     }
   };
@@ -241,7 +234,7 @@ export default function FirmSharedDocuments() {
   const getDocumentExtension = (doc) => {
     const name = getDocumentName(doc).toLowerCase();
     const segments = name.split('.');
-    return segments.length > 1 ? segments.pop() : 'pdf';
+    return segments.length > 1 ? segments.pop() : 'file';
   };
 
   const getStatusBadgeClass = (status) => {
@@ -554,12 +547,12 @@ export default function FirmSharedDocuments() {
         </Modal.Header>
         <Modal.Body style={{ fontFamily: 'BasisGrotesquePro' }}>
           <div className="mb-3">
-            <label className="form-label">File (PDF only) <span className="text-danger">*</span></label>
+            <label className="form-label">File <span className="text-danger">*</span></label>
             <input
               ref={fileInputRef}
               type="file"
               className="form-control"
-              accept=".pdf,application/pdf"
+              accept=".pdf,.jpg,.jpeg,.png,.heic,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/heic,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={handleFileSelect}
             />
             {uploadFile && (

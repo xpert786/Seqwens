@@ -11,7 +11,6 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     if (Array.isArray(error)) return error[0];
     return error;
   };
-
   const [formData, setFormData] = useState({
     // 1. About Your Business
     businessType: '', // IRS-recognized business classification
@@ -187,6 +186,37 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     }));
   };
 
+  // Scroll to the first error field
+  const scrollToFirstError = (errors) => {
+    const errorFields = Object.keys(errors);
+    if (errorFields.length === 0) return;
+
+    const firstErrorField = errorFields[0];
+    
+    // In this component, we don't have refs for all fields, so we use selectors
+    let fieldElement = document.querySelector(`[name="${firstErrorField}"]`) || 
+                      document.querySelector(`input[name="${firstErrorField}"]`) ||
+                      document.querySelector(`select[name="${firstErrorField}"]`) ||
+                      document.querySelector(`textarea[name="${firstErrorField}"]`);
+
+    if (fieldElement) {
+      const offset = 100;
+      const elementPosition = fieldElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+
+      setTimeout(() => {
+        if (fieldElement && typeof fieldElement.focus === 'function') {
+          fieldElement.focus();
+        }
+      }, 500);
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
 
@@ -255,7 +285,10 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
       }
     }
 
-    if (!String(formData.totalIncome || '').trim()) newErrors.totalIncome = 'Total income is required';
+    const trimmedIncome = String(formData.totalIncome || '').trim();
+    if (!trimmedIncome || trimmedIncome === '0' || parseFloat(trimmedIncome) === 0) {
+      newErrors.totalIncome = 'Total income is required and must be greater than zero';
+    }
 
     // Conditional validations
     if (formData.issuedRefunds && !String(formData.totalRefunded || '').trim()) {
@@ -297,7 +330,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     });
 
     // Calculate total expenses and compare with income
-    const totalIncome = parseFloat(String(formData.totalIncome || '').replace(/,/g, '')) || 0;
+    const totalIncomeValue = parseFloat(String(formData.totalIncome || '').replace(/,/g, '')) || 0;
 
     let totalExpenses = 0;
     // Sum all expense fields
@@ -321,11 +354,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
     }
 
     // Check if expenses are unusually high compared to income (more than 3x income)
-    if (totalIncome > 0 && totalExpenses > totalIncome * 3) {
+    if (totalIncomeValue > 0 && totalExpenses > totalIncomeValue * 3) {
       newErrors.totalIncome = 'Total expenses appear to be unusually high compared to income. Please verify your amounts.';
     }
 
     setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) {
+      scrollToFirstError(newErrors);
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -386,6 +424,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               Business Type <span style={{ color: "#EF4444" }}>*</span>
             </label>
             <select
+              name="businessType"
               className={`form-control ${errors.businessType ? 'is-invalid' : ''}`}
               value={formData.businessType}
               onChange={(e) => handleChange('businessType', e.target.value)}
@@ -421,6 +460,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               What kind of work do you do?
             </label>
             <BusinessAutocomplete
+              name="workDescription"
               value={formData.workDescription}
               onChange={(value, codeData) => {
                 console.log('ComprehensiveBusinessForm: onChange called with:', value, codeData);
@@ -492,6 +532,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               <div className="mt-3">
                 <input
                   type="text"
+                  name="businessName"
                   className={`form-control ${errors.businessName ? 'is-invalid' : ''}`}
                   placeholder="Enter your business name"
                   value={formData.businessName}
@@ -510,6 +551,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
             </label>
             <input
               type="text"
+              name="ein"
               className={`form-control ${errors.ein ? 'is-invalid' : ''}`}
               placeholder="XX-XXXXXXX"
               value={formData.ein}
@@ -551,6 +593,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                 Date Business Was Formed <span style={{ color: "#EF4444" }}>*</span>
               </label>
               <DateInput
+                name="businessFormationDate"
                 className={`form-control ${errors.businessFormationDate ? 'is-invalid' : ''}`}
                 value={formData.businessFormationDate}
                 onChange={(e) => handleChange('businessFormationDate', e.target.value)}
@@ -572,6 +615,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               </label>
               <input
                 type="text"
+                name="businessAddress"
                 className={`form-control ${getFieldError('businessAddress') ? 'is-invalid' : ''}`}
                 placeholder="Street Address"
                 value={formData.businessAddress}
@@ -590,6 +634,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               </label>
               <input
                 type="text"
+                name="businessCity"
                 className={`form-control ${getFieldError('businessCity') ? 'is-invalid' : ''}`}
                 placeholder="City"
                 value={formData.businessCity}
@@ -603,6 +648,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               </label>
               <input
                 type="text"
+                name="businessState"
                 className={`form-control ${getFieldError('businessState') ? 'is-invalid' : ''}`}
                 placeholder="State"
                 value={formData.businessState}
@@ -616,6 +662,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               </label>
               <input
                 type="text"
+                name="businessZip"
                 className={`form-control ${getFieldError('businessZip') ? 'is-invalid' : ''}`}
                 placeholder="ZIP"
                 value={formData.businessZip}
@@ -639,6 +686,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                 <span className="input-group-text">$</span>
                 <input
                   type="number"
+                  name="totalIncome"
                   className={`form-control ${errors.totalIncome ? 'is-invalid' : ''}`}
                   placeholder="0.00"
                   value={formData.totalIncome}
@@ -1135,7 +1183,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
             <button
               className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
               onClick={handleAddOtherExpense}
-              style={{ 
+              style={{
                 fontFamily: "BasisGrotesquePro",
                 padding: "6px 16px",
                 fontSize: "14px",

@@ -252,6 +252,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
             </label>
             <input
               type="text"
+              name="propertyAddress"
               className={`form-control ${getFieldError('propertyAddress') ? 'is-invalid' : ''}`}
               placeholder="Street Address"
               value={formData.propertyAddress}
@@ -269,6 +270,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
             </label>
             <input
               type="text"
+              name="propertyCity"
               className={`form-control ${getFieldError('propertyCity') ? 'is-invalid' : ''}`}
               placeholder="City"
               value={formData.propertyCity}
@@ -283,6 +285,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
             </label>
             <input
               type="text"
+              name="propertyState"
               className={`form-control ${getFieldError('propertyState') ? 'is-invalid' : ''}`}
               placeholder="State"
               value={formData.propertyState}
@@ -297,6 +300,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
             </label>
             <input
               type="text"
+              name="propertyZip"
               className={`form-control ${getFieldError('propertyZip') ? 'is-invalid' : ''}`}
               placeholder="ZIP"
               value={formData.propertyZip}
@@ -314,6 +318,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               Type of property:
             </label>
             <select
+              name="propertyType"
               className={`form-control ${getFieldError('propertyType') ? 'is-invalid' : ''}`}
               value={formData.propertyType}
               onChange={(e) => handleChange('propertyType', e.target.value)}
@@ -324,6 +329,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               <option value="vacation">Vacation rental (Airbnb, VRBO, etc.)</option>
               <option value="other">Other</option>
             </select>
+            {getFieldError('propertyType') && <div className="invalid-feedback">{getFieldError('propertyType')}</div>}
           </div>
         </div>
 
@@ -333,7 +339,8 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               Do you own this property by yourself?
             </label>
             <select
-              className="form-control"
+              name="ownershipType"
+              className={`form-control ${getFieldError('ownershipType') ? 'is-invalid' : ''}`}
               value={formData.ownershipType}
               onChange={(e) => handleChange('ownershipType', e.target.value)}
               ref={(el) => fieldRefs.current['ownershipType'] = el}
@@ -343,6 +350,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               <option value="share">No, I share ownership</option>
               <option value="no">No</option>
             </select>
+            {getFieldError('ownershipType') && <div className="invalid-feedback">{getFieldError('ownershipType')}</div>}
           </div>
         </div>
       </div>
@@ -369,6 +377,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
                 </label>
                 <input
                   type="number"
+                  name="daysRentedOut"
                   className={`form-control ${errors.daysRentedOut ? 'is-invalid' : ''}`}
                   placeholder="0"
                   value={formData.daysRentedOut}
@@ -399,6 +408,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
                 </label>
                 <input
                   type="number"
+                  name="familyUseDays"
                   className={`form-control ${errors.familyUseDays ? 'is-invalid' : ''}`}
                   placeholder="0"
                   value={formData.familyUseDays}
@@ -425,6 +435,7 @@ export default function RentalPropertyForm({ onSave, onCancel, externalErrors = 
               <span className="input-group-text">$</span>
               <input
                 type="number"
+                name="totalRentReceived"
                 className={`form-control ${errors.totalRentReceived ? 'is-invalid' : ''}`}
                 placeholder="0.00"
                 value={formData.totalRentReceived}

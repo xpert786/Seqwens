@@ -8,6 +8,7 @@ const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
 const BusinessAutocomplete = ({
   value,
   onChange,
+  name = "",
   placeholder = "Start typing your business type...",
   className = "",
   error = false,
@@ -255,6 +256,7 @@ const BusinessAutocomplete = ({
       <input
         ref={inputRef}
         type="text"
+        name={name}
         className={`form-control ${error ? 'is-invalid' : ''} ${className}`}
         placeholder={placeholder}
         value={value || ''}

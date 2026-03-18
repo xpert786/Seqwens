@@ -350,16 +350,15 @@ export default function DataIntakeForm({ targetClientId }) {
     // Store full business data for editing and display
     const businessForDisplay = {
       id: editingBusinessId || Date.now(),
-      businessName: businessData.businessName || "",
-      businessType: businessData.businessType || "Self-Employment",
-      totalIncome: businessData.totalIncome || "0",
+      businessName: (businessData.businessName || "").trim(),
+      businessType: (businessData.businessType || "").trim(),
+      totalIncome: String(businessData.totalIncome || "").trim(),
       totalExpenses: calculateTotalExpenses(businessData),
       address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
       ...businessData, // Spread all fields
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-
     setBusinesses(prev => {
       const existingIndex = prev.findIndex(b => b.id === businessForDisplay.id);
       if (existingIndex >= 0) {
@@ -1245,12 +1244,11 @@ export default function DataIntakeForm({ targetClientId }) {
 
     console.log('Parsed field errors:', errors);
     setFieldErrors(errors);
-    setGeneralErrors(generalErrorMessages);
+    // setGeneralErrors(generalErrorMessages); // Removed as per user request for direct scrolling
 
     // If there are errors in rental properties or businesses, open the dropdowns
     const hasRentalErrors = Object.keys(errors).some(key => key.startsWith('rentalProperties.'));
     const hasBusinessErrors = Object.keys(errors).some(key => key.startsWith('businesses.'));
-
     if (hasRentalErrors || hasBusinessErrors) {
       setOpenDropdowns(prev => ({
         ...prev,
@@ -1294,61 +1292,67 @@ export default function DataIntakeForm({ targetClientId }) {
     }, 100);
   };
 
-  // Scroll to the first error field
-  const scrollToFirstError = (errors) => {
+  // Scroll to the first error field with retry for dynamic content
+  const scrollToFirstError = (errors, retryCount = 0) => {
     const errorFields = Object.keys(errors);
     if (errorFields.length === 0) return;
 
     const firstErrorField = errorFields[0];
-
-    // Try to find the field element
     let fieldElement = null;
 
-    // Check if we have a ref for this field
+    // 1. Try via ref
     if (fieldRefs.current[firstErrorField]) {
       fieldElement = fieldRefs.current[firstErrorField].current || fieldRefs.current[firstErrorField];
     }
 
-    // If not found via ref, try to find by data attribute
+    // 2. Try via data-field attribute
     if (!fieldElement) {
       fieldElement = document.querySelector(`[data-field="${firstErrorField}"]`);
     }
 
-    // If still not found, try to find by field name
+    // 3. Try via name attribute (handle object paths like businesses.0.fieldName -> fieldName)
     if (!fieldElement) {
       const fieldName = firstErrorField.split('.').pop();
-      // Try different selectors
-      fieldElement = document.querySelector(`input[name="${fieldName}"]`) ||
-        document.querySelector(`select[name="${fieldName}"]`) ||
-        document.querySelector(`textarea[name="${fieldName}"]`);
+      fieldElement = document.querySelector(`[name="${fieldName}"]`);
     }
 
     if (fieldElement) {
-      // Scroll to the field with offset for header
-      const offset = 100;
-      const elementPosition = fieldElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      // Basic element found, now scroll
+      const offset = 120; // Slightly more offset for mobile headers
+      const rect = fieldElement.getBoundingClientRect();
+      const elementPosition = rect.top + window.pageYOffset;
+      const offsetPosition = elementPosition - offset;
 
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
       });
 
-      // Focus the field if it's focusable
+      // Focus with slight delay after scroll starts
       setTimeout(() => {
         if (fieldElement && typeof fieldElement.focus === 'function') {
-          try {
-            fieldElement.focus();
-          } catch (e) {
-            console.log('Could not focus element:', e);
-          }
+          fieldElement.focus({ preventScroll: true });
         }
       }, 500);
+    } else if (retryCount < 3) {
+      // retry after a short delay if component is still mounting/expanding
+      setTimeout(() => {
+        scrollToFirstError(errors, retryCount + 1);
+      }, 300);
     } else {
-      // If field not found, scroll to the form section
-      const formSection = document.querySelector('.data-intake-page');
-      if (formSection) {
-        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Final fallback to section or top
+      let section = firstErrorField.split('.')[0];
+      // Map custom keys to sections
+      if (section === 'unsaved_business' || section === 'businesses' || section === 'businesses_required') section = 'businessInfo';
+      if (section === 'unsaved_rental' || section === 'rentalProperties') section = 'rentalProperty';
+      if (section === 'bankInfo') section = 'bankInfo';
+      if (section === 'personalInfo' || section === 'spouseInfo') section = 'personalInfo';
+
+      const sectionHeader = document.querySelector(`[data-section="${section}"]`);
+      if (sectionHeader) {
+        sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   };
@@ -1451,9 +1455,8 @@ export default function DataIntakeForm({ targetClientId }) {
         }
       }
     }
-
     // Dependents - Validate if hasDependents is true
-    if (hasDependents) {
+    if (hasDependents === 'yes') {
       dependents.forEach((dep, index) => {
         if (!dep.firstName || dep.firstName.trim() === '') {
           errors[`dependents.${index}.firstName`] = ['Dependent first name is required'];
@@ -1473,6 +1476,63 @@ export default function DataIntakeForm({ targetClientId }) {
           errors[`dependents.${index}.ssn`] = ['Dependent SSN / ITIN (Tax ID) is required'];
         } else if (!isValidSSN(dep.ssn)) {
           errors[`dependents.${index}.ssn`] = ['Dependent SSN / ITIN (Tax ID) must be 9 digits'];
+        }
+      });
+    }
+    // Business Information - Validate each business in the list
+    const hasBusinessIncome = filingStatus.includes('1099') || filingStatus.includes('business');
+    // Check if user has an open, unsaved business form
+    if (isAddingBusiness) {
+      errors['unsaved_business'] = ['Please save or cancel the open Business Income form before submitting'];
+      if (!openDropdowns.businessInfo) {
+        setOpenDropdowns(prev => ({ ...prev, businessInfo: true }));
+      }
+    }
+    if (hasBusinessIncome && businesses.length === 0 && !isAddingBusiness) {
+      errors['businesses_required'] = ['Please add at least one business entry for your income'];
+      if (!openDropdowns.businessInfo) {
+        setOpenDropdowns(prev => ({ ...prev, businessInfo: true }));
+      }
+    }
+
+    if (businesses && businesses.length > 0) {
+      businesses.forEach((business, index) => {
+        const prefix = `businesses.${index}.`;
+
+        if (!business.businessType || String(business.businessType).trim() === '') {
+          errors[`${prefix}businessType`] = ['Business type is required'];
+        }
+
+        if (!business.workDescription || String(business.workDescription).trim() === '') {
+          errors[`${prefix}workDescription`] = ['Work description is required'];
+        }
+
+        if (business.businessNameType === 'different' && (!business.businessName || String(business.businessName).trim() === '')) {
+          errors[`${prefix}businessName`] = ['Business name is required'];
+        }
+
+        if (!business.startedDuringYear && (!business.businessFormationDate || String(business.businessFormationDate).trim() === '')) {
+          errors[`${prefix}businessFormationDate`] = ['Business formation date is required'];
+        }
+
+        if (!business.totalIncome || String(business.totalIncome).trim() === '' || String(business.totalIncome).trim() === '0' || business.totalIncome === 0) {
+          errors[`${prefix}totalIncome`] = ['Total income is required and must be greater than zero'];
+        }
+
+        // Address validation if home-based or different business name
+        if (business.homeBased || (business.businessNameType === 'different' && business.businessName)) {
+          if (!business.businessAddress || business.businessAddress.trim() === '') {
+            errors[`${prefix}businessAddress`] = ['Business address is required'];
+          }
+          if (!business.businessCity || business.businessCity.trim() === '') {
+            errors[`${prefix}businessCity`] = ['Business city is required'];
+          }
+          if (!business.businessState || business.businessState.trim() === '') {
+            errors[`${prefix}businessState`] = ['Business state is required'];
+          }
+          if (!business.businessZip || business.businessZip.trim() === '') {
+            errors[`${prefix}businessZip`] = ['Business ZIP is required'];
+          }
         }
       });
     }
@@ -1509,6 +1569,13 @@ export default function DataIntakeForm({ targetClientId }) {
         errors['bankInfo.confirmAccountNumber'] = ['Account numbers do not match'];
       }
     }
+    if (isAddingRentalProperty) {
+      errors['unsaved_rental'] = ['Please save or cancel the open Rental Property form before submitting'];
+      if (!openDropdowns.rentalProperty) {
+        setOpenDropdowns(prev => ({ ...prev, rentalProperty: true }));
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       console.log("Validation failed with errors:", errors);
     }
@@ -1525,27 +1592,43 @@ export default function DataIntakeForm({ targetClientId }) {
     const validationErrors = validateRequiredFields();
     if (Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
-      setGeneralErrors(["Please check the form for errors marked in red."]);
+
+      // Auto-open sections with errors
+      const hasBusinessErrors = Object.keys(validationErrors).some(key => key.startsWith('businesses.') || key === 'unsaved_business' || key === 'businesses_required');
+      const hasRentalErrors = Object.keys(validationErrors).some(key => key.startsWith('rentalProperties.') || key === 'unsaved_rental');
+
+      if (hasBusinessErrors || hasRentalErrors) {
+        setOpenDropdowns(prev => ({
+          ...prev,
+          businessInfo: hasBusinessErrors ? true : prev.businessInfo,
+          rentalProperty: hasRentalErrors ? true : prev.rentalProperty
+        }));
+        // If a specific business has an error and no form is open, open it
+        if (hasBusinessErrors && !isAddingBusiness) {
+          const firstErrorKey = Object.keys(validationErrors).find(key => key.startsWith('businesses.'));
+          const match = firstErrorKey.match(/businesses\.(\d+)\./);
+          if (match) {
+            const index = parseInt(match[1]);
+            if (businesses[index]) {
+              handleEditBusiness(businesses[index].id);
+            }
+          }
+        }
+      }
       // Scroll to first error
       setTimeout(() => {
         scrollToFirstError(validationErrors);
-      }, 100);
-      toast.success('Please fill in all required fields', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: true, // Use default success icon (green)
+      }, 1200);
+
+      toast.error('Please fill in all required fields', {
+        position: 'top-right',
+        autoClose: 3000
       });
       setIsSubmitting(false);
       return;
     }
-
     console.log("Submit button clicked - Initializing submission...");
     console.log("Using Consolidated API Endpoint");
-
     try {
       // Reset upload states if file exists
       if (uploadedFile && !uploadedFile.isExistingFile) {
@@ -2135,51 +2218,10 @@ export default function DataIntakeForm({ targetClientId }) {
         </p>
       </div>
 
-      {generalErrors.length > 0 && (
-        <div className="alert alert-danger mb-4" role="alert" style={{
-          borderRadius: "8px",
-          border: "1px solid #EF4444",
-          backgroundColor: "#FEF2F2",
-          padding: "16px",
-          fontFamily: "BasisGrotesquePro"
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "12px"
-          }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ marginTop: "2px", flexShrink: 0 }}>
-              <path d="M10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66667 10 1.66667C5.39763 1.66667 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333Z" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 6.66667V10" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 13.3333H10.0083" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <div style={{ flex: 1 }}>
-              <strong style={{
-                color: "#DC2626",
-                fontSize: "16px",
-                fontWeight: "500",
-                display: "block",
-                marginBottom: "8px"
-              }}>
-                Validation Error
-              </strong>
-              <ul style={{
-                margin: 0,
-                paddingLeft: "20px",
-                color: "#991B1B",
-                fontSize: "14px"
-              }}>
-                {generalErrors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* General Information sections continue below */}
 
       {/* Personal Information */}
-      <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
+      <div className="bg-white p-4 rounded-4 shadow-sm mb-4" data-section="personalInfo">
         <div className="align-items-center mb-3">
           <h5 className="mb-0 me-3" style={{
             color: "#3B4A66",
@@ -2226,7 +2268,7 @@ export default function DataIntakeForm({ targetClientId }) {
               <div className="invalid-feedback d-block" style={{
                 fontSize: "12px",
                 color: "#EF4444",
-                marginTop: "4px"
+                marginTop: "4px",
               }}>
                 {getFieldError('personalInfo.firstName')}
               </div>
@@ -2606,248 +2648,250 @@ export default function DataIntakeForm({ targetClientId }) {
       </div>
 
       {/* Spouse Information */}
-      {['married_joint', 'married_separate', 'widow', 'not_sure'].includes(personalInfo.filingStatus) && (
-        <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
-          <div className="align-items-center mb-3">
-            <h5 className="mb-0 me-3" style={{
-              color: "#3B4A66",
-              fontSize: "20px",
-              fontWeight: "500",
-              fontFamily: "BasisGrotesquePro"
-            }}>
-              Spouse Information
-            </h5>
-            <p className="mb-0" style={{
-              color: "#4B5563",
-              fontSize: "14px",
-              fontWeight: "400",
-              fontFamily: "BasisGrotesquePro"
-            }}>
-              Your spouse's information for joint filing
-            </p>
-          </div>
-          <div className="row g-3">
-            <div className="col-md-5">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
+      {
+        ['married_joint', 'married_separate', 'widow', 'not_sure'].includes(personalInfo.filingStatus) && (
+          <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
+            <div className="align-items-center mb-3">
+              <h5 className="mb-0 me-3" style={{
+                color: "#3B4A66",
+                fontSize: "20px",
+                fontWeight: "500",
+                fontFamily: "BasisGrotesquePro"
               }}>
-                First Name
-              </label>
-              <input
-                type="text"
-                className={`form-control ${getFieldError('spouseInfo.firstName') ? 'is-invalid' : ''}`}
-                placeholder="Sara"
-                value={spouseInfo.firstName}
-                onChange={(e) => handleSpouseInfoChange('firstName', e.target.value)}
-                data-field="spouseInfo.firstName"
-                ref={(el) => {
-                  if (!fieldRefs.current['spouseInfo.firstName']) {
-                    fieldRefs.current['spouseInfo.firstName'] = el;
-                  }
-                }}
-              />
-              {getFieldError('spouseInfo.firstName') && (
-                <div className="invalid-feedback d-block" style={{
-                  fontSize: "12px",
-                  color: "#EF4444",
-                  marginTop: "4px"
+                Spouse Information
+              </h5>
+              <p className="mb-0" style={{
+                color: "#4B5563",
+                fontSize: "14px",
+                fontWeight: "400",
+                fontFamily: "BasisGrotesquePro"
+              }}>
+                Your spouse's information for joint filing
+              </p>
+            </div>
+            <div className="row g-3">
+              <div className="col-md-5">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
                 }}>
-                  {getFieldError('spouseInfo.firstName')}
-                </div>
-              )}
-            </div>
-            <div className="col-md-2">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
-              }}>
-                Middle Initial
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                value={spouseInfo.middleInitial}
-                onChange={(e) => handleSpouseInfoChange('middleInitial', e.target.value)}
-              />
-            </div>
-            <div className="col-md-5">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
-              }}>
-                Last Name
-              </label>
-              <input
-                type="text"
-                className={`form-control ${getFieldError('spouseInfo.lastName') ? 'is-invalid' : ''}`}
-                placeholder="Johnson"
-                value={spouseInfo.lastName}
-                onChange={(e) => handleSpouseInfoChange('lastName', e.target.value)}
-                data-field="spouseInfo.lastName"
-                ref={(el) => {
-                  if (!fieldRefs.current['spouseInfo.lastName']) {
-                    fieldRefs.current['spouseInfo.lastName'] = el;
-                  }
-                }}
-              />
-              {getFieldError('spouseInfo.lastName') && (
-                <div className="invalid-feedback d-block" style={{
-                  fontSize: "12px",
-                  color: "#EF4444",
-                  marginTop: "4px"
-                }}>
-                  {getFieldError('spouseInfo.lastName')}
-                </div>
-              )}
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
-              }}>
-                Date of Birth
-              </label>
-              <DateInput
-                className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
-                value={spouseInfo.dateOfBirth}
-                onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
-                data-field="spouseInfo.dateOfBirth"
-                ref={(el) => {
-                  if (!fieldRefs.current['spouseInfo.dateOfBirth']) {
-                    fieldRefs.current['spouseInfo.dateOfBirth'] = el;
-                  }
-                }}
-              />
-              {getFieldError('spouseInfo.dateOfBirth') && (
-                <div className="invalid-feedback d-block" style={{
-                  fontSize: "12px",
-                  color: "#EF4444",
-                  marginTop: "4px"
-                }}>
-                  {getFieldError('spouseInfo.dateOfBirth')}
-                </div>
-              )}
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
-              }}>
-                SSN / ITIN (Tax ID)
-              </label>
-              <input
-                type="text"
-                className={`form-control ${getFieldError('spouseInfo.ssn') ? 'is-invalid' : ''}`}
-                value={spouseInfo.ssn}
-                onChange={(e) => handleSpouseInfoChange('ssn', e.target.value)}
-                inputMode="numeric"
-                maxLength={11}
-                data-field="spouseInfo.ssn"
-                ref={(el) => {
-                  if (!fieldRefs.current['spouseInfo.ssn']) {
-                    fieldRefs.current['spouseInfo.ssn'] = el;
-                  }
-                }}
-              />
-              {getFieldError('spouseInfo.ssn') && (
-                <div className="invalid-feedback d-block" style={{
-                  fontSize: "12px",
-                  color: "#EF4444",
-                  marginTop: "4px"
-                }}>
-                  {getFieldError('spouseInfo.ssn')}
-                </div>
-              )}
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
-              }}>
-                Email
-              </label>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="sara@example.com"
-                style={{ height: '45px' }}
-                value={spouseInfo.email}
-                onChange={(e) => handleSpouseInfoChange('email', e.target.value)}
-              />
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" style={{
-                fontFamily: "BasisGrotesquePro",
-                fontWeight: 400,
-                fontSize: "16px",
-                color: "#3B4A66"
-              }}>
-                Phone
-              </label>
-              <PhoneInput
-                country={spousePhoneCountry}
-                value={spouseInfo.phone || ''}
-                onChange={(phone) => {
-                  handleSpouseInfoChange('phone', phone);
-                  // Clear error when user starts typing
-                  if (getFieldError('spouseInfo.phone')) {
-                    clearFieldError('spouseInfo.phone');
-                  }
-                }}
-                onCountryChange={(countryCode) => {
-                  setSpousePhoneCountry(countryCode.toLowerCase());
-                }}
-                inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
-                containerClass="w-100 phone-input-container"
-                inputStyle={{
-                  height: '45px',
-                  paddingLeft: '48px',
-                  paddingRight: '12px',
-                  paddingTop: '6px',
-                  paddingBottom: '6px',
-                  width: '100%',
-                  fontSize: '1rem',
-                  border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
-                  borderRadius: '0.375rem',
-                  backgroundColor: '#fff'
-                }}
-                enableSearch={true}
-                countryCodeEditable={false}
-                data-field="spouseInfo.phone"
-                ref={(el) => {
-                  if (el && el.inputElement) {
-                    if (!fieldRefs.current['spouseInfo.phone']) {
-                      fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  className={`form-control ${getFieldError('spouseInfo.firstName') ? 'is-invalid' : ''}`}
+                  placeholder="Sara"
+                  value={spouseInfo.firstName}
+                  onChange={(e) => handleSpouseInfoChange('firstName', e.target.value)}
+                  data-field="spouseInfo.firstName"
+                  ref={(el) => {
+                    if (!fieldRefs.current['spouseInfo.firstName']) {
+                      fieldRefs.current['spouseInfo.firstName'] = el;
                     }
-                  }
-                }}
-              />
-              {getFieldError('spouseInfo.phone') && (
-                <div className="invalid-feedback d-block" style={{
-                  fontSize: "12px",
-                  color: "#EF4444",
-                  marginTop: "4px"
+                  }}
+                />
+                {getFieldError('spouseInfo.firstName') && (
+                  <div className="invalid-feedback d-block" style={{
+                    fontSize: "12px",
+                    color: "#EF4444",
+                    marginTop: "4px"
+                  }}>
+                    {getFieldError('spouseInfo.firstName')}
+                  </div>
+                )}
+              </div>
+              <div className="col-md-2">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
                 }}>
-                  {getFieldError('spouseInfo.phone')}
-                </div>
-              )}
+                  Middle Initial
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={spouseInfo.middleInitial}
+                  onChange={(e) => handleSpouseInfoChange('middleInitial', e.target.value)}
+                />
+              </div>
+              <div className="col-md-5">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
+                }}>
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  className={`form-control ${getFieldError('spouseInfo.lastName') ? 'is-invalid' : ''}`}
+                  placeholder="Johnson"
+                  value={spouseInfo.lastName}
+                  onChange={(e) => handleSpouseInfoChange('lastName', e.target.value)}
+                  data-field="spouseInfo.lastName"
+                  ref={(el) => {
+                    if (!fieldRefs.current['spouseInfo.lastName']) {
+                      fieldRefs.current['spouseInfo.lastName'] = el;
+                    }
+                  }}
+                />
+                {getFieldError('spouseInfo.lastName') && (
+                  <div className="invalid-feedback d-block" style={{
+                    fontSize: "12px",
+                    color: "#EF4444",
+                    marginTop: "4px"
+                  }}>
+                    {getFieldError('spouseInfo.lastName')}
+                  </div>
+                )}
+              </div>
+              <div className="col-md-6">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
+                }}>
+                  Date of Birth
+                </label>
+                <DateInput
+                  className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
+                  value={spouseInfo.dateOfBirth}
+                  onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
+                  data-field="spouseInfo.dateOfBirth"
+                  ref={(el) => {
+                    if (!fieldRefs.current['spouseInfo.dateOfBirth']) {
+                      fieldRefs.current['spouseInfo.dateOfBirth'] = el;
+                    }
+                  }}
+                />
+                {getFieldError('spouseInfo.dateOfBirth') && (
+                  <div className="invalid-feedback d-block" style={{
+                    fontSize: "12px",
+                    color: "#EF4444",
+                    marginTop: "4px"
+                  }}>
+                    {getFieldError('spouseInfo.dateOfBirth')}
+                  </div>
+                )}
+              </div>
+              <div className="col-md-6">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
+                }}>
+                  SSN / ITIN (Tax ID)
+                </label>
+                <input
+                  type="text"
+                  className={`form-control ${getFieldError('spouseInfo.ssn') ? 'is-invalid' : ''}`}
+                  value={spouseInfo.ssn}
+                  onChange={(e) => handleSpouseInfoChange('ssn', e.target.value)}
+                  inputMode="numeric"
+                  maxLength={11}
+                  data-field="spouseInfo.ssn"
+                  ref={(el) => {
+                    if (!fieldRefs.current['spouseInfo.ssn']) {
+                      fieldRefs.current['spouseInfo.ssn'] = el;
+                    }
+                  }}
+                />
+                {getFieldError('spouseInfo.ssn') && (
+                  <div className="invalid-feedback d-block" style={{
+                    fontSize: "12px",
+                    color: "#EF4444",
+                    marginTop: "4px"
+                  }}>
+                    {getFieldError('spouseInfo.ssn')}
+                  </div>
+                )}
+              </div>
+              <div className="col-md-6">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
+                }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="sara@example.com"
+                  style={{ height: '45px' }}
+                  value={spouseInfo.email}
+                  onChange={(e) => handleSpouseInfoChange('email', e.target.value)}
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label" style={{
+                  fontFamily: "BasisGrotesquePro",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "#3B4A66"
+                }}>
+                  Phone
+                </label>
+                <PhoneInput
+                  country={spousePhoneCountry}
+                  value={spouseInfo.phone || ''}
+                  onChange={(phone) => {
+                    handleSpouseInfoChange('phone', phone);
+                    // Clear error when user starts typing
+                    if (getFieldError('spouseInfo.phone')) {
+                      clearFieldError('spouseInfo.phone');
+                    }
+                  }}
+                  onCountryChange={(countryCode) => {
+                    setSpousePhoneCountry(countryCode.toLowerCase());
+                  }}
+                  inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
+                  containerClass="w-100 phone-input-container"
+                  inputStyle={{
+                    height: '45px',
+                    paddingLeft: '48px',
+                    paddingRight: '12px',
+                    paddingTop: '6px',
+                    paddingBottom: '6px',
+                    width: '100%',
+                    fontSize: '1rem',
+                    border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
+                    borderRadius: '0.375rem',
+                    backgroundColor: '#fff'
+                  }}
+                  enableSearch={true}
+                  countryCodeEditable={false}
+                  data-field="spouseInfo.phone"
+                  ref={(el) => {
+                    if (el && el.inputElement) {
+                      if (!fieldRefs.current['spouseInfo.phone']) {
+                        fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                      }
+                    }
+                  }}
+                />
+                {getFieldError('spouseInfo.phone') && (
+                  <div className="invalid-feedback d-block" style={{
+                    fontSize: "12px",
+                    color: "#EF4444",
+                    marginTop: "4px"
+                  }}>
+                    {getFieldError('spouseInfo.phone')}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Dependents Information */}
       <div className="card p-4 mb-4">
@@ -3225,7 +3269,7 @@ export default function DataIntakeForm({ targetClientId }) {
       </div>
 
       {/* Income Information */}
-      <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
+      <div className="bg-white p-4 rounded-4 shadow-sm mb-4" data-section="incomeInfo">
         <div className="align-items-center mb-3">
           <h5 className="mb-0 me-3" style={{
             color: "#3B4A66",
@@ -3502,7 +3546,7 @@ export default function DataIntakeForm({ targetClientId }) {
         </div>
         <div className="list-group">
           {/* Business Information Dropdown */}
-          <div>
+          <div data-section="businessInfo">
             <button
               onClick={() => toggleDropdown('businessInfo')}
               className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
@@ -3537,6 +3581,17 @@ export default function DataIntakeForm({ targetClientId }) {
                 padding: "16px",
                 marginTop: "8px"
               }}>
+                {/* Section Error Messages */}
+                {getFieldError('businesses_required') && (
+                  <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '13px', fontFamily: 'BasisGrotesquePro' }}>
+                    {getFieldError('businesses_required')}
+                  </div>
+                )}
+                {getFieldError('unsaved_business') && (
+                  <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '13px', fontFamily: 'BasisGrotesquePro' }}>
+                    {getFieldError('unsaved_business')}
+                  </div>
+                )}
                 {/* Add Business Button */}
                 {!isAddingBusiness && (
                   <div className="mb-3">
@@ -3831,7 +3886,7 @@ export default function DataIntakeForm({ targetClientId }) {
           </div>
 
           {/* Rental Property Details Dropdown */}
-          <div style={{ marginTop: "12px" }}>
+          <div style={{ marginTop: "12px" }} data-section="rentalProperty">
             <button
               onClick={() => toggleDropdown('rentalProperty')}
               className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
@@ -3868,6 +3923,17 @@ export default function DataIntakeForm({ targetClientId }) {
               }}
                 id="rental-property-form-section"
               >
+                {/* Section Error Messages */}
+                {getFieldError('rentalProperties') && (
+                  <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '13px', fontFamily: 'BasisGrotesquePro' }}>
+                    At least one rental property is required if you have rental income.
+                  </div>
+                )}
+                {getFieldError('unsaved_rental') && (
+                  <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '13px', fontFamily: 'BasisGrotesquePro' }}>
+                    {getFieldError('unsaved_rental')}
+                  </div>
+                )}
                 {/* Add Rental Property Button */}
                 {!isAddingRentalProperty && (
                   <div className="mb-3">
@@ -4033,7 +4099,7 @@ export default function DataIntakeForm({ targetClientId }) {
       </div>
 
       {/* Direct Deposit */}
-      <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
+      <div className="bg-white p-4 rounded-4 shadow-sm mb-4" data-section="bankInfo">
         <div className="align-items-center mb-3">
           <h5 className="mb-0 me-3" style={{
             color: "#3B4A66",
@@ -4480,97 +4546,98 @@ export default function DataIntakeForm({ targetClientId }) {
       </div>
 
       {/* Signature Section - Show after form is submitted */}
-      {hasExistingData && !targetClientId && (
-        <div className=" p-4 rounded-lg border" style={{
-          borderColor: '#E8F0FF',
-          backgroundColor: '#FFFFFF',
-          fontFamily: 'BasisGrotesquePro',
-          marginTop: "12px"
-        }}>
-          <div className="d-flex flex-column align-items-start gap-3">
-            <div>
-              <h6 className="mb-1" style={{
-                color: '#3B4A66',
-                fontSize: '18px',
+      {
+        hasExistingData && !targetClientId && (
+          <div className=" p-4 rounded-lg border" style={{
+            borderColor: '#E8F0FF',
+            backgroundColor: '#FFFFFF',
+            fontFamily: 'BasisGrotesquePro',
+            marginTop: "12px"
+          }}>
+            <div className="d-flex flex-column align-items-start gap-3">
+              <div>
+                <h6 className="mb-1" style={{
+                  color: '#3B4A66',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  fontFamily: 'BasisGrotesquePro'
+                }}>
+                  Sign Your Data Entry Form
+                </h6>
+                <p className="mb-0" style={{
+                  color: '#4B5563',
+                  fontSize: '14px',
+                  fontFamily: 'BasisGrotesquePro'
+                }}>
+                  {isSigned
+                    ? 'Your form has been signed successfully!'
+                    : 'Sign your completed data entry form to create a professionally signed PDF document for your records.'}
+                </p>
+              </div>
 
-                fontWeight: '600',
-                fontFamily: 'BasisGrotesquePro'
-              }}>
-                Sign Your Data Entry Form
-              </h6>
-              <p className="mb-0" style={{
-                color: '#4B5563',
-                fontSize: '14px',
-                fontFamily: 'BasisGrotesquePro'
-              }}>
-                {isSigned
-                  ? 'Your form has been signed successfully!'
-                  : 'Sign your completed data entry form to create a professionally signed PDF document for your records.'}
-              </p>
-            </div>
-
-            {isSigned ? (
-              <div className="d-flex flex-column gap-3">
-                <div className="d-flex align-items-center gap-2">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                    Form Signed Successfully
-                  </span>
-                </div>
-
-                {signedFormUrl && (
-                  <a
-                    href={signedFormUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline-primary d-flex align-items-center gap-2"
-                    style={{
-                      fontFamily: 'BasisGrotesquePro',
-                      fontSize: '14px',
-                      padding: '8px 16px',
-                      maxWidth: 'fit-content'
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8 10V3M8 3L4.66667 6.33333M8 3L11.3333 6.33333M2.66667 13.6667H13.3333" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              {isSigned ? (
+                <div className="d-flex flex-column gap-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    View Signed Form
-                  </a>
-                )}
-              </div>
-            ) : (
-              <div className="w-100 d-flex justify-content-center">
-                <button
-                  className="btn text-white d-flex align-items-center gap-2"
-                  style={{
-                    backgroundColor: '#F56D2D',
-                    borderRadius: '8px',
-                    fontFamily: 'BasisGrotesquePro'
-                  }}
-                  onClick={handleManualSign}
-                  disabled={signatureLoading}
-                >
-                  {signatureLoading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
+                    <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                      Form Signed Successfully
+                    </span>
+                  </div>
+
+                  {signedFormUrl && (
+                    <a
+                      href={signedFormUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline-primary d-flex align-items-center gap-2"
+                      style={{
+                        fontFamily: 'BasisGrotesquePro',
+                        fontSize: '14px',
+                        padding: '8px 16px',
+                        maxWidth: 'fit-content'
+                      }}
+                    >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        <path d="M8 10V3M8 3L4.66667 6.33333M8 3L11.3333 6.33333M2.66667 13.6667H13.3333" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                      Sign Form
-                    </>
+                      View Signed Form
+                    </a>
                   )}
-                </button>
-              </div>
-            )}
+                </div>
+              ) : (
+                <div className="w-100 d-flex justify-content-center">
+                  <button
+                    className="btn text-white d-flex align-items-center gap-2"
+                    style={{
+                      backgroundColor: '#F56D2D',
+                      borderRadius: '8px',
+                      fontFamily: 'BasisGrotesquePro'
+                    }}
+                    onClick={handleManualSign}
+                    disabled={signatureLoading}
+                  >
+                    {signatureLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        </svg>
+                        Sign Form
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Signature Modal */}
       <SignatureModal

@@ -604,6 +604,7 @@ export default function DocumentRequests() {
                     type="file"
                     multiple
                     onChange={handleFileSelect}
+                    accept=".pdf,.jpg,.jpeg,.png,.heic,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/heic,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     style={{
                       position: 'absolute',
                       inset: 0,
@@ -618,7 +619,7 @@ export default function DocumentRequests() {
                 </div>
 
                 <small style={{ display: 'block', marginTop: '8px', color: '#9CA3AF', fontSize: '12px' }}>
-                  Accepted: PDF, JPG, PNG (Max 10MB per file)
+                  Accepted: PDF, JPG, PNG, HEIC, DOCX, XLSX (Max 50MB per file)
                 </small>
 
                 {/* Selected File List */}
