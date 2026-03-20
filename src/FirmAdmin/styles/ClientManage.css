@@ -286,3 +286,41 @@
 .modal-content-scroller::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Custom Modal Styles for Upload and eSign flows - Using ultra-specific names to avoid conflicts */
+.upload-dialog-custom {
+  margin-top: 140px !important;
+  max-width: 650px !important;
+  z-index: 99999 !important;
+}
+
+.esign-builder-dialog {
+  margin-top: 100px !important;
+  max-width: 1000px !important;
+  z-index: 99999 !important;
+}
+
+.upload-content-custom, 
+.esign-builder-content {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 60px rgba(0,0,0,0.4) !important;
+  border: none !important;
+  background-color: white !important;
+}
+
+/* Base modal overrides for these specific flows */
+.upload-modal {
+  z-index: 99998 !important;
+}
+
+.signature-builder-modal {
+  z-index: 99999 !important;
+}
+
+/* Ensure backdrop is above the header but below the modal */
+.modal-backdrop {
+  z-index: 9990 !important;
+}
+.modal-backdrop.show {
+  opacity: 0.5 !important;
+}

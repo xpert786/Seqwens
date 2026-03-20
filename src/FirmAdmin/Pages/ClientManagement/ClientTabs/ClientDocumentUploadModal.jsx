@@ -3,6 +3,7 @@ import { Modal } from 'react-bootstrap';
 import SignatureBuilder from '../../../../components/SignatureBuilder';
 import { UploadsIcon } from '../../../../ClientOnboarding/components/icons';
 import '../../../../ClientOnboarding/styles/Upload.css';
+import '../../../styles/ClientManage.css';
 import { toast } from 'react-toastify';
 import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
@@ -256,24 +257,17 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
   };
 
   return (
-    <Modal show={show} onHide={resetModal} centered backdrop="static" size="lg" className="upload-modal">
-      <style>
-        {`
-          .modal-body-scroll::-webkit-scrollbar {
-            width: 6px;
-          }
-          .modal-body-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1;
-          }
-          .modal-body-scroll::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 10px;
-          }
-        `}
-      </style>
+    <Modal 
+      show={show} 
+      onHide={resetModal} 
+      backdrop="static" 
+      className="upload-modal"
+      dialogClassName="upload-dialog-custom"
+      contentClassName="upload-content-custom"
+    >
       <Modal.Body className="p-4 modal-body-scroll" style={{
         overflowY: 'auto',
-        maxHeight: '85vh',
+        maxHeight: '70vh',
         fontSize: '13px'
       }}>
         <div className="flex items-center justify-between mb-2">
@@ -452,19 +446,21 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             setShowBuilder(false);
             setFileToSign(null);
           }}
-          fullscreen
-          centered
+          backdrop="static"
           className="signature-builder-modal"
-          style={{ zIndex: 1056 }} // Higher than regular modal
+          dialogClassName="esign-builder-dialog"
+          contentClassName="esign-builder-content"
         >
-          <Modal.Body className="p-0 bg-gray-50">
+          <Modal.Header closeButton className="border-b-0 pb-2">
+            <Modal.Title className="text-lg font-bold text-slate-700">Prepare Document for eSign</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-0 bg-white overflow-hidden" style={{ height: '82vh' }}>
             {fileToSign && (
               <SignatureBuilder
                 pdfFile={fileToSign}
                 onSave={(fields) => {
                   setEsignFields(fields);
                   setShowBuilder(false);
-                  // After saving fields, we can proceed to upload
                   setTimeout(() => handleUpload(), 100);
                 }}
                 onCancel={() => {

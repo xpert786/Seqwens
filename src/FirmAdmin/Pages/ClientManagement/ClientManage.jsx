@@ -2195,7 +2195,7 @@ export default function ClientManage() {
                                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                                     <div
                                       className="font-semibold text-gray-900 text-sm cursor-pointer hover:text-blue-600"
-                                      onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
+                                      onClick={() => navigate(`/firmadmin/clients/${client.profile?.id || client.id}`)}
                                     >
                                       {client.name}
                                     </div>

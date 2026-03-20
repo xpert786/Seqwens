@@ -258,9 +258,9 @@ export default function SignatureBuilder({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-screen bg-gray-50 overflow-hidden font-[BasisGrotesquePro]">
+      <div className="flex h-full bg-white overflow-hidden font-[BasisGrotesquePro]">
         {/* Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col p-6 shadow-sm z-30 overflow-y-auto">
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col p-6 pt-10 shadow-sm z-30 overflow-y-auto">
           <div className="mb-8">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Signature Builder</h3>
             <p className="text-sm text-gray-500 mb-6 leading-relaxed">Drag fields onto the document to place signature locations.</p>
@@ -322,7 +322,7 @@ export default function SignatureBuilder({
           {/* Document Display */}
           <div 
             ref={containerRef}
-            className="flex-1 overflow-y-auto p-12 scroll-smooth bg-[#33373e]"
+            className="flex-1 overflow-y-auto p-12 pt-16 scroll-smooth bg-gray-100"
           >
             <div className="max-w-fit mx-auto">
               <Document

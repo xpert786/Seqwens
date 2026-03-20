@@ -543,8 +543,8 @@ export default function ClientDetails() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white !rounded-lg p-3 mb-6 !border border-[#E8F0FF] w-fit">
-        <div className="flex items-center gap-2">
+      <div className="bg-white !rounded-lg p-2.5 mb-6 !border border-[#E8F0FF] w-fit">
+        <div className="flex items-center gap-1">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -554,7 +554,7 @@ export default function ClientDetails() {
                 console.log('Setting activeTab to:', tab);
                 setActiveTab(tab);
               }}
-              className={`px-4 py-2 !rounded-lg text-sm font-medium font-[BasisGrotesquePro] whitespace-nowrap transition-colors flex-shrink-0 ${activeTab === tab
+              className={`px-2.5 py-1.5 !rounded-lg text-sm font-medium font-[BasisGrotesquePro] whitespace-nowrap transition-colors flex-shrink-0 ${activeTab === tab
                 ? 'bg-[#3AD6F2] text-white'
                 : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
