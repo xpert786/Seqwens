@@ -3960,6 +3960,10 @@ export const firmAdminClientsAPI = {
       formData.append('mark_for_esign', 'true');
     }
 
+    if (uploadData.esign_fields && Array.isArray(uploadData.esign_fields)) {
+      formData.append('esign_fields', JSON.stringify(uploadData.esign_fields));
+    }
+
     const url = `${API_BASE_URL}/firm/clients/${clientId}/documents/upload/`;
     const config = {
       method: 'POST',

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
+import SignatureBuilder from '../../../../components/SignatureBuilder';
 import { UploadsIcon } from '../../../../ClientOnboarding/components/icons';
 import '../../../../ClientOnboarding/styles/Upload.css';
 import { toast } from 'react-toastify';
@@ -17,6 +18,9 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
   const [markForEsign, setMarkForEsign] = useState(false);
   const [folders, setFolders] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [esignFields, setEsignFields] = useState([]);
+  const [fileToSign, setFileToSign] = useState(null);
   const API_BASE_URL = getApiBaseUrl();
 
   // Fetch folders for the client
@@ -191,11 +195,25 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
 
       // Prepare upload data
       const fileObjects = files.map(f => f.fileObject);
+      
+      // If marked for eSign, we need to show the builder first if not already done
+      if (markForEsign && !showBuilder && esignFields.length === 0) {
+        // Find the first PDF to sign
+        const pdfFile = fileObjects.find(f => f.type === 'application/pdf');
+        if (pdfFile) {
+          setFileToSign(pdfFile);
+          setShowBuilder(true);
+          return;
+        } else {
+          toast.warning('Mark for eSign is enabled but no PDF file was found. Proceeding with regular upload.');
+        }
+      }
 
       const uploadData = {
         files: fileObjects,
         folder_id: selectedFolderId || null,
-        mark_for_esign: markForEsign
+        mark_for_esign: markForEsign,
+        esign_fields: esignFields.length > 0 ? esignFields : null
       };
 
       const response = await firmAdminClientsAPI.uploadClientDocuments(clientId, uploadData);
@@ -231,6 +249,9 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
     setSelectedFolderId(currentFolderId || null);
     setMarkForEsign(false);
     setIsDragging(false);
+    setShowBuilder(false);
+    setEsignFields([]);
+    setFileToSign(null);
     handleClose();
   };
 
@@ -419,10 +440,41 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                 <span>Processing...</span>
               </div>
             ) : (
-              <span>Upload {files.length > 0 ? files.length : ''} Document{files.length !== 1 ? 's' : ''}</span>
+              <span>{markForEsign ? 'Prepare & Upload' : `Upload ${files.length > 0 ? files.length : ''} Document${files.length !== 1 ? 's' : ''}`}</span>
             )}
           </button>
         </div>
+
+        {/* Signature Builder Modal */}
+        <Modal 
+          show={showBuilder && !!fileToSign} 
+          onHide={() => {
+            setShowBuilder(false);
+            setFileToSign(null);
+          }}
+          fullscreen
+          centered
+          className="signature-builder-modal"
+          style={{ zIndex: 1056 }} // Higher than regular modal
+        >
+          <Modal.Body className="p-0 bg-gray-50">
+            {fileToSign && (
+              <SignatureBuilder
+                pdfFile={fileToSign}
+                onSave={(fields) => {
+                  setEsignFields(fields);
+                  setShowBuilder(false);
+                  // After saving fields, we can proceed to upload
+                  setTimeout(() => handleUpload(), 100);
+                }}
+                onCancel={() => {
+                  setShowBuilder(false);
+                  setFileToSign(null);
+                }}
+              />
+            )}
+          </Modal.Body>
+        </Modal>
       </Modal.Body>
     </Modal>
   );

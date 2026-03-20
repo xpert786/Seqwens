@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import SimplePDFViewer from '../../components/SimplePDFViewer';
+import SignatureBuilder from '../../components/SignatureBuilder';
+import { Modal } from 'react-bootstrap';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
 import { firmAdminClientsAPI, firmAdminStaffAPI, firmAdminDocumentsAPI, taxPreparerClientAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
@@ -48,6 +49,7 @@ export default function ESignatureManagement() {
   const [loadingClients, setLoadingClients] = useState(false);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientDropdownRef = useRef(null);
+  const [esignFields, setEsignFields] = useState([]);
   const [folderTree, setFolderTree] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
   const [showFolderDropdown, setShowFolderDropdown] = useState(false);
@@ -841,6 +843,11 @@ export default function ESignatureManagement() {
           // If documents_metadata is not provided, create an array of empty objects matching the number of files
           const defaultMetadata = requestData.files.map(() => ({}));
           formData.append('documents_metadata', JSON.stringify(defaultMetadata));
+        }
+
+        // Add signature fields metadata
+        if (esignFields && esignFields.length > 0) {
+          formData.append('esign_fields', JSON.stringify(esignFields));
         }
 
         const config = {
@@ -2132,337 +2139,40 @@ export default function ESignatureManagement() {
       }
 
       {/* Document Preview Modal */}
-      {
-        showPreviewModal && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-[9999] p-3 sm:p-4"
-            style={{
-              top: '0',
-              left: '0',
-              right: '0',
-              bottom: '0',
-              paddingTop: '80px',
-              paddingBottom: '20px'
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
+      <Modal 
+        show={showPreviewModal && !!uploadedFile} 
+        onHide={() => {
+          setShowPreviewModal(false);
+          resetAllState();
+        }}
+        fullscreen
+        centered
+        className="signature-builder-modal"
+        style={{ zIndex: 1056 }}
+      >
+        <Modal.Body className="p-0 bg-gray-50">
+          {uploadedFile && (
+            <SignatureBuilder
+              pdfFile={uploadedFile}
+              availableRoles={
+                spouseAlso 
+                  ? ['Taxpayer', 'Spouse', 'Preparer'] 
+                  : ['Taxpayer', 'Preparer']
+              }
+              onSave={(fields) => {
+                setEsignFields(fields);
+                setShowPreviewModal(false);
+                setShowFinalSignatureModal(true);
+              }}
+              onCancel={() => {
                 setShowPreviewModal(false);
                 resetAllState();
-              }
-            }}
-          >
-            <div
-              className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[calc(100vh-100px)] sm:max-h-[90vh] overflow-hidden relative flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="flex justify-between items-start p-4 sm:p-6 sticky top-0 bg-white z-10 rounded-t-lg">
-                <div className="flex-1 pr-4">
-                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Create Signature Request
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Send a document for electronic signature
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowPreviewModal(false);
-                    resetAllState();
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 p-1 -mt-1 -mr-1"
-                  aria-label="Close modal"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-6 sm:h-6">
-                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
+              }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
 
-              {/* Modal Body - Two Column Layout */}
-              <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-                {/* Left Side - Document Preview */}
-                <div className="flex-1 flex flex-col bg-gray-50 min-w-0 overflow-hidden">
-                  <div className="p-4 bg-white border-b border-gray-200">
-                    <h5 className="text-base font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Document Preview
-                    </h5>
-                  </div>
-
-                  <div className="flex flex-1 overflow-hidden">
-                    {/* Page Thumbnails Sidebar */}
-                    {uploadedFile && uploadedFile.type === 'application/pdf' && (
-                      <div
-                        id="thumbnails"
-                        className="w-20 bg-[#EEEEEE] border-r border-gray-200 overflow-y-auto p-2 flex-shrink-0"
-                      >
-                        {Array.from({ length: numPages || totalPages }, (_, index) => (
-                          <div
-                            key={index}
-                            onClick={() => {
-                              setSelectedPage(index);
-                              setPageNumber(index + 1);
-                            }}
-                            className="mb-2 cursor-pointer"
-                          >
-                            <div
-                              className={`aspect-[3/4] bg-white rounded flex items-center justify-center ${selectedPage === index
-                                ? 'border-2 border-[#3AD6F2]'
-                                : 'border border-gray-200'
-                                }`}
-                              style={{
-                                boxShadow: selectedPage === index ? '0 1px 3px rgba(58, 214, 242, 0.2)' : 'none'
-                              }}
-                            >
-                              <span className="text-[10px] text-gray-400">{index + 1}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Main Document View */}
-                    <div className="flex-1 bg-white overflow-y-auto min-w-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#CBD5E0 #F3F4F6' }}>
-                      <div ref={pdfContainerRef} className="p-6 w-full">
-                        <div className="bg-[#EEEEEE] shadow-sm rounded border border-gray-200 p-8 w-full pb-12">
-                          {uploadedFile && uploadedFile.type === 'application/pdf' ? (
-                            pdfFileData || uploadedFile ? (
-                              <SimplePDFViewer
-                                pdfFile={pdfFileData || uploadedFile}
-                                height="600px"
-                                onLoadError={(error) => {
-                                  console.error('Error loading PDF in preview:', error);
-                                  onDocumentLoadError(error);
-                                }}
-                                className="w-full"
-                              />
-                            ) : pdfLoading ? (
-                              <div className="flex items-center justify-center p-8">
-                                <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                  Preparing PDF file...
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center p-8">
-                                <p className="text-sm text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                  Error: Could not load PDF file
-                                </p>
-                              </div>
-                            )
-                          ) : uploadedFile && uploadedFile.type !== 'application/pdf' ? (
-                            /* Simulated Document Content */
-                            <div className="space-y-4 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                              <h3 className="text-2xl font-bold mb-4">Project Overview: MVP Beta - Movement Feedback Module</h3>
-
-                              <div>
-                                <h3 className="text-lg font-semibold mb-2">Objective</h3>
-                                <p className="text-sm leading-relaxed">
-                                  The MVP Beta focuses on creating a streamlined feedback module that allows users to provide movement-related feedback efficiently.
-                                </p>
-                              </div>
-
-                              <div>
-                                <h3 className="text-lg font-semibold mb-2">Target User Experience (Beta)</h3>
-                                <p className="text-sm leading-relaxed">
-                                  Users should be able to quickly submit feedback about movements with minimal friction.
-                                </p>
-                              </div>
-
-                              <div>
-                                <h3 className="text-lg font-semibold mb-2">User Features (Front-End)</h3>
-                                <ul className="text-sm leading-relaxed list-disc list-inside space-y-1">
-                                  <li>Feedback submission form</li>
-                                  <li>Movement tracking interface</li>
-                                  <li>Real-time status updates</li>
-                                </ul>
-                              </div>
-
-                              {/* Signature Placeholder */}
-                              <div className="mt-8 pt-8 w-fit">
-                                <div className="inline-flex items-center gap-2 px-4 py-3 bg-[#FF383C] rounded-lg">
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M2 12L6 8M6 8L10 12M6 8V2" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                  <span className="text-grey-700 font-semibold italic" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                    Signature
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center p-8">
-                              <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                No document uploaded
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Side - Add Sign */}
-                <div className="lg:w-80 xl:w-96 flex flex-col bg-white flex-shrink-0 border-l border-gray-200">
-                  <div className="p-4  bg-white">
-                    <h5 className="text-base font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Add Sign
-                    </h5>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                    {/* Choose Signer */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        Choose signer
-                      </label>
-                      <div className="relative">
-                        <div className="flex items-center gap-2 px-4 py-2.5  rounded-lg bg-white min-h-[42px]">
-                          {selectedSigner && (
-                            <div className="flex items-center gap-1.5 bg-[#E8F0FF] text-grey-700 px-3 py-1 rounded-full text-sm">
-                              <span style={{ fontFamily: 'BasisGrotesquePro' }}>{selectedSigner}</span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedSigner('');
-                                }}
-                                className="text-grey-700 hover:text-grey-900 ml-1"
-                              >
-                                <svg width="15" height="15" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <rect width="15" height="15" rx="4" fill="white" />
-                                  <path d="M2.58594 5.4146L5.4146 2.58594M5.4146 5.4146L2.58594 2.58594" stroke="#EF4444" stroke-width="0.6" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-
-                              </button>
-                            </div>
-                          )}
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Signature Type Buttons */}
-                    <div>
-                      <div className="flex flex-col gap-2">
-                        {/* Signature Button */}
-                        <button
-                          onClick={() => setSelectedSignatureType('Signature')}
-                          className={`w-[150px] flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${selectedSignatureType === 'Signature'
-                            ? 'bg-pink-100 text-grey-700'
-                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6.56543 8.50977C6.85541 8.33897 7.23164 8.18854 7.62695 8.32031L7.72559 8.3584C8.07002 8.51125 8.24487 8.80716 8.36621 9.12891L8.4834 9.48438V9.48535C8.50968 9.57876 8.55561 9.66607 8.61816 9.74023C8.64485 9.77031 8.66631 9.78492 8.67969 9.79199C8.69259 9.79877 8.6995 9.79883 8.7002 9.79883C8.78363 9.79872 8.92496 9.75145 9.12695 9.63184L9.30273 9.52148C9.36039 9.48379 9.41748 9.4452 9.47363 9.40527L9.47461 9.4043C9.54207 9.35704 9.61102 9.31008 9.68164 9.26367L9.9209 9.12109C10.0022 9.07683 10.0852 9.03568 10.1699 8.99805H10.1709C10.2319 8.97121 10.283 8.94993 10.3232 8.93652L10.3652 8.92285L10.3848 8.91113H10.4082C10.5042 8.88837 10.6054 8.90065 10.6924 8.94824C10.7853 8.99911 10.8539 9.08491 10.8838 9.18652C10.9136 9.28828 10.9024 9.39817 10.8516 9.49121C10.8011 9.58343 10.7158 9.65139 10.6152 9.68164L10.6123 9.68359L10.6113 9.68262L10.5898 9.69141C10.5704 9.6981 10.5379 9.7098 10.4922 9.72949C10.4035 9.76842 10.2729 9.83403 10.1172 9.93457L9.96094 10.041C9.8374 10.1254 9.68093 10.2337 9.53418 10.3203L9.5332 10.3213C9.31412 10.4502 9.01297 10.5995 8.7002 10.5996C8.39879 10.5996 8.16946 10.4396 8.02051 10.2725C7.87237 10.1055 7.77234 9.901 7.7168 9.71484L7.61133 9.39746C7.57983 9.3155 7.55097 9.25456 7.52344 9.20898C7.47296 9.12556 7.42933 9.09753 7.37402 9.0791C7.31829 9.06064 7.20601 9.06083 6.97168 9.19922C6.76001 9.32418 6.52723 9.512 6.24707 9.74023L6.17676 9.79785C5.87836 10.0405 5.53658 10.3126 5.16699 10.5234C4.79563 10.7346 4.36959 10.8993 3.90039 10.8994C3.04036 10.8994 2.35917 10.5555 1.90234 10.2236L1.90137 10.2227L1.87012 10.1992L1.70117 10.0732L1.90625 10.0225L2.71484 9.82031L2.75098 9.81152L2.78418 9.82812C3.09576 9.9845 3.47113 10.0996 3.90039 10.0996C4.18088 10.0995 4.46728 10.0007 4.77051 9.82812C5.07565 9.65392 5.37128 9.42126 5.67285 9.17676L5.75098 9.11328C6.01622 8.89751 6.29668 8.66855 6.56543 8.50977ZM8.25586 1.11133C8.46426 1.1092 8.67129 1.14879 8.86426 1.22754C9.05717 1.30633 9.23253 1.42296 9.37988 1.57031C9.52724 1.71772 9.6439 1.89295 9.72266 2.08594C9.80143 2.27899 9.84104 2.48585 9.83887 2.69434C9.83669 2.90273 9.79268 3.10852 9.70996 3.2998C9.62744 3.49053 9.50719 3.6626 9.35742 3.80664L8.66406 4.5C8.7761 4.61667 8.86674 4.75276 8.92871 4.90234C8.99393 5.05992 9.02732 5.22887 9.02734 5.39941C9.02734 5.57018 8.99408 5.7397 8.92871 5.89746C8.86335 6.05517 8.76723 6.19864 8.64648 6.31934L7.78223 7.18262L7.78125 7.18359C7.70585 7.25642 7.60482 7.29676 7.5 7.2959C7.39517 7.29499 7.29486 7.2528 7.2207 7.17871C7.14655 7.10456 7.10444 7.00427 7.10352 6.89941C7.1026 6.79454 7.14296 6.6936 7.21582 6.61816L8.08105 5.75293C8.17473 5.6592 8.2275 5.53192 8.22754 5.39941C8.22754 5.27573 8.17991 5.15794 8.09766 5.06641L4.18262 8.98242C4.13115 9.0336 4.06657 9.06857 3.99609 9.08594L3.99707 9.08691L1.59668 9.6875C1.52723 9.70475 1.45431 9.70308 1.38574 9.68262C1.31714 9.66212 1.25566 9.62286 1.20703 9.57031C1.15847 9.51782 1.12452 9.45368 1.10938 9.38379C1.09425 9.3138 1.0985 9.24079 1.12109 9.17285L1.87109 6.92285L1.90918 6.83984C1.92535 6.81348 1.94484 6.78868 1.9668 6.7666L7.14062 1.59277C7.28487 1.44241 7.4582 1.32302 7.64941 1.24023C7.8408 1.15743 8.04734 1.1135 8.25586 1.11133ZM8.25 1.93262C8.04677 1.93267 7.85178 2.01358 7.70801 2.15723L2.59961 7.26465L2.10938 8.7334L3.69531 8.33789L8.79199 3.24219C8.93575 3.09836 9.0166 2.90257 9.0166 2.69922C9.01651 2.496 8.93566 2.30097 8.79199 2.15723C8.64819 2.01366 8.45321 1.93262 8.25 1.93262Z" fill="#3B4A66" stroke="#3B4A66" stroke-width="0.2" />
-                          </svg>
-
-                          <span className="font-medium text-sm">Signature</span>
-                        </button>
-
-                        {/* Date Button */}
-                        <button
-                          onClick={() => setSelectedSignatureType('Date')}
-                          className={`w-[150px] flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${selectedSignatureType === 'Date'
-                            ? 'bg-pink-100 text-grey-700'
-                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g clip-path="url(#clip0_5150_31011)">
-                              <path d="M3.5 2V1.25M8.5 2V1.25M1.25 4.5H10.75M1 6C1 4.1145 1 3.1715 1.586 2.586C2.172 2.0005 3.1145 2 5 2H7C8.8855 2 9.8285 2 10.414 2.586C10.9995 3.172 11 4.1145 11 6V7C11 8.8855 11 9.8285 10.414 10.414C9.828 10.9995 8.8855 11 7 11H5C3.1145 11 2.1715 11 1.586 10.414C1.0005 9.828 1 8.8855 1 7V6Z" stroke="#3B4A66" stroke-linecap="round" />
-                              <path d="M9 8.5C9 8.63261 8.94732 8.75979 8.85355 8.85355C8.75979 8.94732 8.63261 9 8.5 9C8.36739 9 8.24021 8.94732 8.14645 8.85355C8.05268 8.75979 8 8.63261 8 8.5C8 8.36739 8.05268 8.24021 8.14645 8.14645C8.24021 8.05268 8.36739 8 8.5 8C8.63261 8 8.75979 8.05268 8.85355 8.14645C8.94732 8.24021 9 8.36739 9 8.5ZM9 6.5C9 6.63261 8.94732 6.75979 8.85355 6.85355C8.75979 6.94732 8.63261 7 8.5 7C8.36739 7 8.24021 6.94732 8.14645 6.85355C8.05268 6.75979 8 6.63261 8 6.5C8 6.36739 8.05268 6.24021 8.14645 6.14645C8.24021 6.05268 8.36739 6 8.5 6C8.63261 6 8.75979 6.05268 8.85355 6.14645C8.94732 6.24021 9 6.36739 9 6.5ZM6.5 8.5C6.5 8.63261 6.44732 8.75979 6.35355 8.85355C6.25979 8.94732 6.13261 9 6 9C5.86739 9 5.74021 8.94732 5.64645 8.85355C5.55268 8.75979 5.5 8.63261 5.5 8.5C5.5 8.36739 5.55268 8.24021 5.64645 8.14645C5.74021 8.05268 5.86739 8 6 8C6.13261 8 6.25979 8.05268 6.35355 8.14645C6.44732 8.24021 6.5 8.36739 6.5 8.5ZM6.5 6.5C6.5 6.63261 6.44732 6.75979 6.35355 6.85355C6.25979 6.94732 6.13261 7 6 7C5.86739 7 5.74021 6.94732 5.64645 6.85355C5.55268 6.75979 5.5 6.63261 5.5 6.5C5.5 6.36739 5.55268 6.24021 5.64645 6.14645C5.74021 6.05268 5.86739 6 6 6C6.13261 6 6.25979 6.05268 6.35355 6.14645C6.44732 6.24021 6.5 6.36739 6.5 6.5ZM4 8.5C4 8.63261 3.94732 8.75979 3.85355 8.85355C3.75979 8.94732 3.63261 9 3.5 9C3.36739 9 3.24021 8.94732 3.14645 8.85355C3.05268 8.75979 3 8.63261 3 8.5C3 8.36739 3.05268 8.24021 3.14645 8.14645C3.24021 8.05268 3.36739 8 3.5 8C3.63261 8 3.75979 8.05268 3.85355 8.14645C3.94732 8.24021 4 8.36739 4 8.5ZM4 6.5C4 6.63261 3.94732 6.75979 3.85355 6.85355C3.75979 6.94732 3.63261 7 3.5 7C3.36739 7 3.24021 6.94732 3.14645 6.85355C3.05268 6.75979 3 6.63261 3 6.5C3 6.36739 3.05268 6.24021 3.14645 6.14645C3.24021 6.05268 3.36739 6 3.5 6C3.63261 6 3.75979 6.05268 3.85355 6.14645C3.94732 6.24021 4 6.36739 4 6.5Z" fill="#3B4A66" />
-                            </g>
-                            <defs>
-                              <clipPath id="clip0_5150_31011">
-                                <rect width="12" height="12" fill="white" />
-                              </clipPath>
-                            </defs>
-                          </svg>
-
-                          <span className="font-medium text-sm">Date</span>
-                        </button>
-
-                        {/* Initials Button */}
-                        <button
-                          onClick={() => setSelectedSignatureType('Initials')}
-                          className={`w-[150px] flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${selectedSignatureType === 'Initials'
-                            ? 'bg-pink-100 text-grey-700'
-                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g clip-path="url(#clip0_5150_31017)">
-                              <path d="M9 6.5L8.3125 3.063C8.2938 2.96949 8.24875 2.88328 8.18266 2.81453C8.11657 2.74579 8.0322 2.69737 7.9395 2.675L1.6175 1.014C1.53422 0.993866 1.44715 0.995471 1.36467 1.01866C1.28218 1.04186 1.20704 1.08586 1.14645 1.14645C1.08586 1.20704 1.04186 1.28218 1.01866 1.36467C0.995471 1.44715 0.993866 1.53422 1.014 1.6175L2.675 7.9395C2.69737 8.0322 2.74579 8.11657 2.81453 8.18266C2.88328 8.24875 2.96949 8.2938 3.063 8.3125L6.5 9M1.15 1.15L4.793 4.793M7.8535 10.6465C7.75974 10.7402 7.63259 10.7929 7.5 10.7929C7.36742 10.7929 7.24027 10.7402 7.1465 10.6465L6.3535 9.8535C6.25977 9.75974 6.20711 9.63259 6.20711 9.5C6.20711 9.36742 6.25977 9.24027 6.3535 9.1465L9.1465 6.3535C9.24027 6.25977 9.36742 6.20711 9.5 6.20711C9.63259 6.20711 9.75974 6.25977 9.8535 6.3535L10.6465 7.1465C10.7402 7.24027 10.7929 7.36742 10.7929 7.5C10.7929 7.63259 10.7402 7.75974 10.6465 7.8535L7.8535 10.6465ZM6.5 5.5C6.5 6.05229 6.05229 6.5 5.5 6.5C4.94772 6.5 4.5 6.05229 4.5 5.5C4.5 4.94772 4.94772 4.5 5.5 4.5C6.05229 4.5 6.5 4.94772 6.5 5.5Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                            </g>
-                            <defs>
-                              <clipPath id="clip0_5150_31017">
-                                <rect width="12" height="12" fill="white" />
-                              </clipPath>
-                            </defs>
-                          </svg>
-
-                          <span className="font-medium text-sm">Initials</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-center gap-2 pt-4">
-                      <button
-                        className="flex-1 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors"
-                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                      >
-                        Clear
-                      </button>
-                      <button
-                        className="flex-1  py-2.5 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors"
-                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                      >
-                        Apply Signature
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex flex-col sm:flex-row justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 sticky bottom-0 bg-white z-10 rounded-b-lg">
-                <button
-                  onClick={() => {
-                    setShowPreviewModal(false);
-                    resetAllState();
-                  }}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPreviewModal(false);
-                    if (uploadedFile && uploadedFile.type === 'application/pdf') {
-                      const url = URL.createObjectURL(uploadedFile);
-                      setPdfFileUrl(url);
-                    }
-                    setShowFinalSignatureModal(true);
-                  }}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium text-white  bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors"
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
 
       {/* Final Signature Modal - Draft View with Comments using react-pdf */}
       {
