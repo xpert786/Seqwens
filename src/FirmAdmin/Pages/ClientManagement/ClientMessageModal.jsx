@@ -33,14 +33,7 @@ export default function ClientMessageModal({ isOpen, onClose, clientId, clientNa
                 toast.success('Message sent successfully');
                 setMessage('');
                 onClose();
-
-                // Redirect to messages page with threadId
-                const chatId = response.data?.id || response.data?.chat_id || response.data?.thread_id;
-                if (chatId) {
-                    navigate(`/firmadmin/messages?threadId=${chatId}`);
-                } else {
-                    navigate(`/firmadmin/messages`);
-                }
+                // Redirection removed as per UX feedback to avoid workflow disruption
             } else {
                 throw new Error(response.message || 'Failed to send message');
             }

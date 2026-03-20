@@ -415,6 +415,8 @@ export default function ClientDetails() {
                       containerClass="phone-input-container"
                       enableSearch={true}
                       countryCodeEditable={false}
+                      preferredCountries={['us']}
+                      disableCountryGuess={true}
                     />
                   </div>
                 ) : (

@@ -208,7 +208,17 @@ export const chatService = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
+      
+      // If there are specific field errors, extract and append them
+      if (errorData.errors) {
+        const fieldErrors = Object.entries(errorData.errors)
+          .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+          .join('; ');
+        errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     return await response.json();
@@ -455,6 +465,14 @@ export const chatService = {
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        
+        // If there are specific field errors, extract and append them
+        if (errorData.errors) {
+          const fieldErrors = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+        }
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
       }

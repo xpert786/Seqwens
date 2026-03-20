@@ -17,7 +17,24 @@ const PersonalInfo = () => {
   const [userData, setUserData] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [hasTyped, setHasTyped] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
   const navigate = useNavigate();
+
+  // Handle automatic redirection for existing account
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    
+    if (redirectCountdown <= 0) {
+      window.location.href = getLoginUrl();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setRedirectCountdown(prev => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [redirectCountdown]);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -107,9 +124,24 @@ const PersonalInfo = () => {
       }
     } catch (error) {
       console.error('Registration completion error:', error);
+      const errorMessage = handleAPIError(error);
       setErrors({
-        general: handleAPIError(error)
+        general: errorMessage
       });
+
+      // Check if this is an "email already exists" error to trigger redirection
+      const rawErrorMessage = error.message || "";
+      const isAlreadyExists = 
+        rawErrorMessage.toLowerCase().includes("already has an active") || 
+        rawErrorMessage.toLowerCase().includes("already registered") ||
+        rawErrorMessage.toLowerCase().includes("already exists") ||
+        errorMessage.toLowerCase().includes("already has an active") ||
+        errorMessage.toLowerCase().includes("already registered") ||
+        errorMessage.toLowerCase().includes("already exists");
+
+      if (isAlreadyExists) {
+        setRedirectCountdown(5);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -183,6 +215,26 @@ const PersonalInfo = () => {
           {errors.general && (
             <div className="alert alert-danger" role="alert">
               {errors.general}
+            </div>
+          )}
+
+          {redirectCountdown !== null && (
+            <div className="alert alert-info d-flex flex-column align-items-center text-center gap-3 p-4 mb-4" role="alert" style={{ borderRadius: '12px', border: '1px solid #e8f0ff', backgroundColor: '#f8fbff', color: '#1a56db' }}>
+              <div className="d-flex align-items-center gap-2">
+                <div className="spinner-border spinner-border-sm text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span style={{ fontWeight: '500' }}>
+                  It looks like you already have an account. Redirecting you to login in {redirectCountdown}s...
+                </span>
+              </div>
+              <button 
+                onClick={() => window.location.href = getLoginUrl()}
+                className="btn btn-primary btn-sm"
+                style={{ borderRadius: '8px', padding: '8px 20px', fontWeight: '600', backgroundColor: '#F49C2D', borderColor: '#F49C2D' }}
+              >
+                Go to Login Now
+              </button>
             </div>
           )}
 

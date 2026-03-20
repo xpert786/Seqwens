@@ -150,6 +150,8 @@ export default function OverviewTab({ client, isEditMode, editFormData, onEditFo
                   inputStyle={{ width: '100%' }}
                   enableSearch={true}
                   countryCodeEditable={false}
+                  preferredCountries={['us']}
+                  disableCountryGuess={true}
                 />
               ) : (
                 <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro] break-words">{client.phone}</div>

@@ -1008,30 +1008,32 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
                     Phone
                   </label>
-                  <PhoneInput
-                    country={phoneCountry}
-                    value={formData.phone_number || ''}
-                    onChange={(phone) => handleInputChange('phone_number', phone)}
-                    onCountryChange={(countryCode) => {
-                      setPhoneCountry(countryCode.toLowerCase());
-                    }}
-                    inputClass="form-control"
-                    containerClass="w-100 phone-input-container"
-                    inputStyle={{
-                      height: '45px',
-                      paddingLeft: '48px',
-                      paddingRight: '12px',
-                      paddingTop: '6px',
-                      paddingBottom: '6px',
-                      width: '100%',
-                      fontSize: '1rem',
-                      border: '1px solid #ced4da',
-                      borderRadius: '0.375rem',
-                      backgroundColor: '#fff'
-                    }}
-                    enableSearch={true}
-                    countryCodeEditable={false}
-                  />
+                    <PhoneInput
+                      country={phoneCountry}
+                      value={formData.phone_number || ''}
+                      onChange={(phone) => handleInputChange('phone_number', phone)}
+                      onCountryChange={(countryCode) => {
+                        setPhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="form-control"
+                      containerClass="w-100 phone-input-container"
+                      inputStyle={{
+                        height: '45px',
+                        paddingLeft: '48px',
+                        paddingRight: '12px',
+                        paddingTop: '6px',
+                        paddingBottom: '6px',
+                        width: '100%',
+                        fontSize: '1rem',
+                        border: '1px solid #ced4da',
+                        borderRadius: '0.375rem',
+                        backgroundColor: '#fff'
+                      }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
+                      preferredCountries={['us']}
+                      disableCountryGuess={true}
+                    />
                 </div>
 
                 {/* Send Invite Checkbox */}
@@ -1174,6 +1176,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                       dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
                       enableSearch={true}
                       countryCodeEditable={false}
+                      preferredCountries={['us']}
+                      disableCountryGuess={true}
                     />
                     <button
                       type="button"

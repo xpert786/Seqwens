@@ -580,12 +580,14 @@ export default function PendingInviteDetails() {
                   value={editFormData.phone_number}
                   onChange={(phone) => setEditFormData(prev => ({ ...prev, phone_number: phone }))}
                   onCountryChange={(countryCode) => setPhoneCountry(countryCode.toLowerCase())}
-                  disableDropdown={true}
+                  disableDropdown={false}
                   countryCodeEditable={false}
                   inputClass="form-control"
                   containerClass="phone-input-container"
                   inputStyle={{ width: '100%', borderRadius: '7px', border: '1px solid #E8F0FF' }}
                   dropdownStyle={{ zIndex: 1000 }}
+                  preferredCountries={['us']}
+                  disableCountryGuess={true}
                 />
               ) : (
                 <p className="text-gray-900 font-[BasisGrotesquePro]">{invite.phone_number || 'N/A'}</p>
@@ -722,25 +724,27 @@ export default function PendingInviteDetails() {
               </label>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
                 <div className="md:col-span-9 relative">
-                  <PhoneInput
-                    country={smsPhoneCountry}
-                    value={smsPhoneOverride}
-                    onChange={(phone, data) => {
-                      setSmsPhoneOverride(phone);
-                      if (data && data.dialCode) {
-                        setSmsPhoneDialCode(data.dialCode);
-                      }
-                    }}
-                    onCountryChange={(countryCode) => setSmsPhoneCountry(countryCode.toLowerCase())}
-                    enableSearch={true}
-                    disableDropdown={false}
-                    inputClass="!w-full !h-[44px] !text-base !font-[BasisGrotesquePro] !border-[#E8F0FF] !rounded-lg focus:!ring-2 focus:!ring-[#00C0C6] focus:!border-transparent"
-                    containerClass="!w-full"
-                    buttonClass="!border-[#E8F0FF] !bg-white !rounded-l-lg hover:!bg-gray-50"
-                    dropdownClass="!font-[BasisGrotesquePro] !text-sm"
-                    inputStyle={{ width: '100%' }}
-                    dropdownStyle={{ zIndex: 9999, width: 'max-content', minWidth: '300px' }}
-                  />
+                    <PhoneInput
+                      country={smsPhoneCountry}
+                      value={smsPhoneOverride}
+                      onChange={(phone, data) => {
+                        setSmsPhoneOverride(phone);
+                        if (data && data.dialCode) {
+                          setSmsPhoneDialCode(data.dialCode);
+                        }
+                      }}
+                      onCountryChange={(countryCode) => setSmsPhoneCountry(countryCode.toLowerCase())}
+                      enableSearch={true}
+                      disableDropdown={false}
+                      inputClass="!w-full !h-[44px] !text-base !font-[BasisGrotesquePro] !border-[#E8F0FF] !rounded-lg focus:!ring-2 focus:!ring-[#00C0C6] focus:!border-transparent"
+                      containerClass="!w-full"
+                      buttonClass="!border-[#E8F0FF] !bg-white !rounded-l-lg hover:!bg-gray-50"
+                      dropdownClass="!font-[BasisGrotesquePro] !text-sm"
+                      inputStyle={{ width: '100%' }}
+                      dropdownStyle={{ zIndex: 9999, width: 'max-content', minWidth: '300px' }}
+                      preferredCountries={['us']}
+                      disableCountryGuess={true}
+                    />
                 </div>
                 <div className="md:col-span-3">
                   <button

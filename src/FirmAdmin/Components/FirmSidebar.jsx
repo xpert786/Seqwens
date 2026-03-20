@@ -87,8 +87,9 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
 
   const linkClass = (path) => {
     const active = isActive(path);
+    const isExactMatch = location.pathname === path || location.pathname === path + "/";
     return `flex items-center px-3 py-2 text-[10px] font-medium whitespace-nowrap text-left no-underline group ${active
-      ? "bg-white/20 text-white rounded-lg font-medium pointer-events-none"
+      ? `bg-white/20 text-white rounded-lg font-medium ${isExactMatch ? "pointer-events-none" : ""}`
       : "text-white rounded-lg transition-all duration-200"
       }`;
   };
