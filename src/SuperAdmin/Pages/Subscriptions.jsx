@@ -1576,6 +1576,29 @@ export default function Subscriptions() {
         loading={modalLoading}
         subscribers={modalSubscribers}
       />
+
+      {/* Subscription Detail Modal */}
+      <SubscriptionDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        loading={detailsLoading}
+        error={detailsError}
+        details={firmDetails}
+        subscription={selectedFirmSubscription}
+      />
+
+      {/* Manage Plans Modal */}
+      <ManagePlansModal
+        isOpen={showManagePlansModal}
+        onClose={() => setShowManagePlansModal(false)}
+        firm={selectedFirmForPlan}
+        onUpdate={() => {
+          fetchSubscriptions();
+          if (selectedFirmSubscription && selectedFirmSubscription.firm_id === selectedFirmForPlan?.id) {
+            fetchFirmDetails(selectedFirmForPlan.id);
+          }
+        }}
+      />
     </div>
   );
 };
@@ -2011,29 +2034,6 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
             </div>
           </div>
         )}
-
-        {showDetailModal && (
-          <SubscriptionDetailModal
-            isOpen={showDetailModal}
-            onClose={() => setShowDetailModal(false)}
-            loading={detailsLoading}
-            error={detailsError}
-            details={firmDetails}
-            subscription={selectedFirmSubscription}
-          />
-        )}
-
-        <ManagePlansModal
-          isOpen={showManagePlansModal}
-          onClose={() => setShowManagePlansModal(false)}
-          firm={selectedFirmForPlan}
-          onUpdate={() => {
-            fetchSubscriptions(); // Refresh the list
-            if (selectedFirmSubscription && selectedFirmSubscription.firm_id === selectedFirmForPlan?.id) {
-               fetchFirmDetails(selectedFirmForPlan.id); // Refresh detail modal if open
-            }
-          }}
-        />
       </div>
     </div>
   );
