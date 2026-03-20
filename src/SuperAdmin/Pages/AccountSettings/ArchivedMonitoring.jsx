@@ -18,6 +18,8 @@ export default function ArchivedMonitoring() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [exporting, setExporting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         fetchArchiveMonitoring();
@@ -216,7 +218,10 @@ export default function ArchivedMonitoring() {
                         <input
                             type="text"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="w-[300px] pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 font-[BasisGrotesquePro]"
                             placeholder="Search firms..."
                         />
@@ -245,40 +250,118 @@ export default function ArchivedMonitoring() {
                         </div>
                     ) : (
                         /* Firms Data Table */
-                        <div className="space-y-3">
-                            {/* Header Row */}
-                            <div className="grid grid-cols-6 gap-4 py-3 px-4 rounded-lg bg-gray-50">
-                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
-                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Offices</div>
-                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Archived Docs</div>
-                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Storage Used</div>
-                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Retention</div>
-                                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Last Audit</div>
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                {/* Header Row */}
+                                <div className="grid grid-cols-6 gap-4 py-3 px-4 rounded-lg bg-gray-50">
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Offices</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Archived Docs</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Storage Used</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Retention</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Last Audit</div>
+                                </div>
+
+                                {/* Data Rows */}
+                                {filteredFirmsData.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((firm, index) => (
+                                    <div key={firm.id || firm.firm_id || index} className="grid grid-cols-6 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                                        <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                                            {firm.firm || firm.name || firm.firm_name || 'N/A'}
+                                        </div>
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                            {firm.offices || firm.offices_count || '0'}
+                                        </div>
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                            {firm.archivedDocs || firm.archived_docs || firm.archived_documents || '0'}
+                                        </div>
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                            {firm.storageUsed || firm.storage_used || '0'}
+                                        </div>
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                            {firm.retention || firm.retention_period || 'N/A'}
+                                        </div>
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                            {firm.lastAudit || firm.last_audit || firm.last_audit_date || 'N/A'}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
 
-                            {/* Data Rows */}
-                            {filteredFirmsData.map((firm, index) => (
-                                <div key={firm.id || firm.firm_id || index} className="grid grid-cols-6 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 transition-colors">
-                                    <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                                        {firm.firm || firm.name || firm.firm_name || 'N/A'}
+                            {/* Pagination Controls */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100 bg-white rounded-b-lg">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-medium text-gray-500 font-[BasisGrotesquePro]">Rows per page:</span>
+                                        <select
+                                            value={pageSize}
+                                            onChange={(e) => {
+                                                setPageSize(parseInt(e.target.value));
+                                                setCurrentPage(1);
+                                            }}
+                                            className="text-xs border border-gray-200 bg-white text-gray-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orange-500 font-[BasisGrotesquePro]"
+                                        >
+                                            {[5, 10, 25, 50].map((size) => (
+                                                <option key={size} value={size}>
+                                                    {size}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                        {firm.offices || firm.offices_count || '0'}
-                                    </div>
-                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                        {firm.archivedDocs || firm.archived_docs || firm.archived_documents || '0'}
-                                    </div>
-                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                        {firm.storageUsed || firm.storage_used || '0'}
-                                    </div>
-                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                        {firm.retention || firm.retention_period || 'N/A'}
-                                    </div>
-                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                        {firm.lastAudit || firm.last_audit || firm.last_audit_date || 'N/A'}
-                                    </div>
+                                    <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                                        Showing <span className="font-semibold text-gray-900">{Math.min((currentPage - 1) * pageSize + 1, filteredFirmsData.length)}</span> to <span className="font-semibold text-gray-900">{Math.min(currentPage * pageSize, filteredFirmsData.length)}</span> of <span className="font-semibold text-gray-900">{filteredFirmsData.length}</span> entries
+                                    </span>
                                 </div>
-                            ))}
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg font-[BasisGrotesquePro]"
+                                    >
+                                        Previous
+                                    </button>
+
+                                    <div className="flex items-center gap-1">
+                                        {[...Array(Math.ceil(filteredFirmsData.length / pageSize))].map((_, i) => {
+                                            const pageNum = i + 1;
+                                            // Show first page, last page, current page, and pages around current page
+                                            if (
+                                                pageNum === 1 ||
+                                                pageNum === Math.ceil(filteredFirmsData.length / pageSize) ||
+                                                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                            ) {
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() => setCurrentPage(pageNum)}
+                                                        className={`w-8 h-8 flex items-center justify-center text-xs font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
+                                                            currentPage === pageNum
+                                                                ? 'bg-orange-500 text-white shadow-sm'
+                                                                : 'text-gray-700 hover:bg-gray-100 border border-transparent'
+                                                        }`}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                );
+                                            } else if (
+                                                (pageNum === currentPage - 2 && pageNum > 1) ||
+                                                (pageNum === currentPage + 2 && pageNum < Math.ceil(filteredFirmsData.length / pageSize))
+                                            ) {
+                                                return <span key={pageNum} className="text-gray-400">...</span>;
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredFirmsData.length / pageSize)))}
+                                        disabled={currentPage === Math.ceil(filteredFirmsData.length / pageSize)}
+                                        className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg font-[BasisGrotesquePro]"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
