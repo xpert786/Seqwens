@@ -73,6 +73,8 @@ export default function Subscriptions() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
   const [planUpdating, setPlanUpdating] = useState({});
+  const [showManagePlansModal, setShowManagePlansModal] = useState(false);
+  const [selectedFirmForPlan, setSelectedFirmForPlan] = useState(null);
 
   const handlePlanToggle = async (planType, field, currentValue) => {
     const planKey = planType.toLowerCase();
@@ -552,6 +554,11 @@ export default function Subscriptions() {
     setFirmDetails(null); // Clear previous details
     setShowDetailModal(true);
     fetchFirmDetails(subscription.firm_id);
+  };
+
+  const handleManagePlan = (firm) => {
+    setSelectedFirmForPlan(firm);
+    setShowManagePlansModal(true);
   };
 
 
@@ -1850,10 +1857,12 @@ const SubscriptionInvoicesTab = () => {
             onChange={(e) => handleTypeFilter(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">All Types</option>
-            <option value="subscription_purchase">Purchase</option>
-            <option value="subscription_renewal">Renewal</option>
-            <option value="subscription_upgrade">Upgrade</option>
+            <option value="">All Plans</option>
+            {(plansData?.plans || []).map(plan => (
+              <option key={plan.id} value={plan.subscription_type}>
+                {plan.display_name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -2002,6 +2011,29 @@ const SubscriptionInvoicesTab = () => {
             </div>
           </div>
         )}
+
+        {showDetailModal && (
+          <SubscriptionDetailModal
+            isOpen={showDetailModal}
+            onClose={() => setShowDetailModal(false)}
+            loading={detailsLoading}
+            error={detailsError}
+            details={firmDetails}
+            subscription={selectedFirmSubscription}
+          />
+        )}
+
+        <ManagePlansModal
+          isOpen={showManagePlansModal}
+          onClose={() => setShowManagePlansModal(false)}
+          firm={selectedFirmForPlan}
+          onUpdate={() => {
+            fetchSubscriptions(); // Refresh the list
+            if (selectedFirmSubscription && selectedFirmSubscription.firm_id === selectedFirmForPlan?.id) {
+               fetchFirmDetails(selectedFirmForPlan.id); // Refresh detail modal if open
+            }
+          }}
+        />
       </div>
     </div>
   );
@@ -2090,19 +2122,32 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
                   <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Current Subscription</h4>
                     <div className="space-y-3">
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Plan</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.subscription_plan || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Amount</span><span className="text-sm font-bold text-[#3B4A66]">{formatCurrency(details.profile?.current_billing_amount)} / {details.profile?.billing_frequency || 'month'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Member Since</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.member_since_full || formatDate(details.profile?.created_at)}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Next Billing</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.profile?.next_billing_date)}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Plan</span><span className="text-sm font-bold text-[#3B4A66]">{details.subscription_plan_name || details.subscription_plan || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Amount</span><span className="text-sm font-bold text-[#3B4A66]">{formatCurrency(details.monthly_fee)} / month</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Start Date</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.subscription_start_date)}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Next Billing</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.subscription_end_date)}</span></div>
+                      {details.trial_end_date && (
+                         <div className="flex justify-between"><span className="text-sm text-gray-600">Trial Ends</span><span className="text-sm font-bold text-orange-500">{formatDate(details.trial_end_date)}</span></div>
+                      )}
                     </div>
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Account Information</h4>
+                    <div className="flex justify-between items-start mb-4">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account Information</h4>
+                      <button 
+                        onClick={() => handleManagePlan(details)}
+                        className="px-3 py-1 text-[10px] font-bold text-white bg-[#F56D2D] rounded-lg hover:bg-[#e05d20] transition-colors uppercase tracking-wider"
+                        style={{ borderRadius: '6px' }}
+                      >
+                        Manage Plan
+                      </button>
+                    </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Owner</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.name || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Email</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.email || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Phone</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.phone || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Status</span><span className="text-sm font-bold text-[#3B4A66] capitalize">{details.profile?.status || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Firm Name</span><span className="text-sm font-bold text-[#3B4A66]">{details.name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Owner</span><span className="text-sm font-bold text-[#3B4A66]">{details.admin_user_name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Email</span><span className="text-sm font-bold text-[#3B4A66]">{details.admin_user_email || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Phone</span><span className="text-sm font-bold text-[#3B4A66]">{details.phone_number || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Status</span><span className="text-sm font-bold text-[#3B4A66] capitalize">{details.status || '—'}</span></div>
                     </div>
                   </div>
                 </div>
@@ -2113,25 +2158,28 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Date</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Period Start</th>
                         <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
                         <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Type</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Invoice</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {(details.billing_history || []).map((bill, i) => (
+                      {(details.billing_records || []).map((bill, i) => (
                         <tr key={i}>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(bill.created_at)}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(bill.amount)}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(bill.billing_period_start)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(bill.total_amount)}</td>
                           <td className="px-4 py-3 text-sm">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${bill.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>
                               {bill.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-500 capitalize">{bill.invoice_type?.replace(/_/g, ' ')}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{bill.invoice_number || '—'}</td>
                         </tr>
                       ))}
+                      {(!details.billing_records || details.billing_records.length === 0) && (
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No billing records found.</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -2142,21 +2190,24 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Date</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Period</th>
                         <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Plan</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
                         <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Notes</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {(details.subscription_history || []).map((hist, i) => (
                         <tr key={i}>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(hist.date)}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{hist.plan}</td>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{hist.status}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{hist.notes || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(hist.period_start)} - {formatDate(hist.period_end)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{hist.subscription_plan__display_name || '—'}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(hist.amount)}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66] capitalize">{hist.payment_status}</td>
                         </tr>
                       ))}
+                      {(!details.subscription_history || details.subscription_history.length === 0) && (
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No subscription history found.</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -2169,27 +2220,22 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
                       <tr>
                         <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Timestamp</th>
                         <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Action</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Performed By</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Changes</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Admin</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Description</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {(details.audit_logs || []).map((log, i) => (
+                      {(details.plan_change_history || []).map((log, i) => (
                         <tr key={i}>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66] ">{new Date(log.timestamp).toLocaleString()}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{log.action_type || 'Update'}</td>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{log.performed_by_name || log.performed_by_email}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500">
-                            <ul className="list-disc list-inside">
-                              {log.changes && Object.entries(log.changes || {}).map(([field, values]) => (
-                                <li key={field} className="text-[11px]">
-                                  <span className="font-semibold">{field}</span>: {values.old} → {values.new}
-                                </li>
-                              ))}
-                            </ul>
-                          </td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66] ">{new Date(log.created_at).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{log.action_title || 'Update'}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{log.admin_user__email || 'System'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{log.action_description}</td>
                         </tr>
                       ))}
+                      {(!details.plan_change_history || details.plan_change_history.length === 0) && (
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No audit logs found.</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -2202,6 +2248,123 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
         <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex justify-end">
           <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors shadow-sm">
             Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(firm?.subscription_plan || '');
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPlans();
+      setSelectedPlan(firm?.subscription_plan || '');
+    }
+  }, [isOpen, firm]);
+
+  const fetchPlans = async () => {
+    setLoading(true);
+    try {
+      const response = await superAdminAPI.getSubscriptionPlans();
+      // Filter only active plans or plans already assigned to the firm
+      const availablePlans = (response.data || []).filter(p => p.is_active || p.subscription_type === firm?.subscription_plan);
+      setPlans(availablePlans);
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+      toast.error('Failed to load available plans');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedPlan) return;
+    setUpdating(true);
+    try {
+      await superAdminAPI.updateFirm(firm.id, { subscription_plan: selectedPlan });
+      toast.success('Firm plan updated successfully');
+      if (onUpdate) onUpdate();
+      onClose();
+    } catch (err) {
+      console.error('Error updating firm plan:', err);
+      toast.error(`Failed to update plan: ${handleAPIError(err)}`);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white">
+          <h3 className="text-xl font-bold text-[#3B4A66]">Manage Firm Plan</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Firm Name</label>
+            <p className="text-sm font-bold text-[#3B4A66]">{firm?.name}</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Select New Plan</label>
+            {loading ? (
+              <div className="py-4 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3AD6F2]"></div></div>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {plans.map((plan) => (
+                  <label 
+                    key={plan.id} 
+                    className={`flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer ${selectedPlan === plan.subscription_type ? 'border-[#3AD6F2] bg-[#F0FDFF]' : 'border-[#E8F0FF] hover:border-[#3AD6F2]/30 bg-white'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="plan"
+                      className="hidden"
+                      value={plan.subscription_type}
+                      checked={selectedPlan === plan.subscription_type}
+                      onChange={(e) => setSelectedPlan(e.target.value)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-[#3B4A66]">{plan.display_name}</p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">{plan.subscription_type}</p>
+                    </div>
+                    {selectedPlan === plan.subscription_type && (
+                      <div className="w-5 h-5 bg-[#3AD6F2] rounded-full flex items-center justify-center">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                    )}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex gap-3">
+          <button 
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleUpdate}
+            disabled={updating || !selectedPlan || selectedPlan === firm?.subscription_plan}
+            className="flex-1 px-4 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updating ? 'Updating...' : 'Save Changes'}
           </button>
         </div>
       </div>
