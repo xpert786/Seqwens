@@ -6,6 +6,7 @@ import SystemHealth from "./SystemHealth";
 import PlatformControl from "./PlatformControl";
 import LogsAndBackups from "./LogsAndBackups";
 import ArchivedMonitoring from "./ArchivedMonitoring";
+import NotificationTemplates from "./NotificationTemplates";
 import "../../style/AccountSetting.css"
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
@@ -17,6 +18,7 @@ export default function AccountSettings() {
         { id: "platformControl", label: "Platform Control" },
         { id: "logsAndBackups", label: "Logs and Backups" },
         { id: "archiveMonitoring", label: "Archived Monitoring" },
+        { id: "notificationTemplates", label: "Notification Templates" },
     ];
 
     return (
@@ -95,6 +97,7 @@ export default function AccountSettings() {
                 {activeTab === "platformControl" && <PlatformControl />}
                 {activeTab === "logsAndBackups" && <LogsAndBackups />}
                 {activeTab === "archiveMonitoring" && <ArchivedMonitoring />}
+                {activeTab === "notificationTemplates" && <NotificationTemplates />}
             </div>
         </div>
     );
