@@ -207,6 +207,27 @@ export const superAdminAPI = {
     return await apiRequest(endpoint, 'DELETE');
   },
 
+  // --- Subscriptions & Billing ---
+  getSubscriptions: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return await apiRequest(`/accounts/superadmin/subscriptions/?${query}`, 'GET');
+  },
+  getSubscriptionPlans: async () => {
+    return await apiRequest('/accounts/superadmin/subscriptions/plans/', 'GET');
+  },
+  getSubscriptionMetrics: async () => {
+    return await apiRequest('/accounts/superadmin/subscriptions/metrics/', 'GET');
+  },
+  getSuperadminFirmDetail: async (firmId) => {
+    return await apiRequest(`/accounts/superadmin/firms/${firmId}/`, 'GET');
+  },
+  updateSubscriptionPlan: async (firmId, data) => {
+    return await apiRequest(`/accounts/superadmin/firms/${firmId}/update-plan/`, 'PATCH', data);
+  },
+  sendSubscriptionInvoiceReminder: async (invoiceId) => {
+    return await apiRequest(`/accounts/superadmin/subscriptions/invoices/${invoiceId}/send-reminder/`, 'POST');
+  },
+
   // Get admin dashboard data
   // Optional params: revenue_month, revenue_year, distribution_month, distribution_year
   getAdminDashboard: async (params = {}) => {
@@ -317,6 +338,16 @@ export const superAdminAPI = {
   // Get subscription plans analytics 
   getSubscriptionPlans: async () => {
     return await apiRequest('/user/subscriptions/plans/', 'GET');
+  },
+
+  // Get subscription plan details by type
+  getSubscriptionPlanDetails: async (planType) => {
+    return await apiRequest(`/user/subscription-plans/${planType.toLowerCase()}/`, 'GET');
+  },
+
+  // Update subscription plan
+  updateSubscriptionPlan: async (planType, data) => {
+    return await apiRequest(`/user/subscription-plans/${planType.toLowerCase()}/`, 'PATCH', data);
   },
 
   // Get subscription charts data

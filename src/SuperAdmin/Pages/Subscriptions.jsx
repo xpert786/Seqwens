@@ -66,6 +66,56 @@ export default function Subscriptions() {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalSubscribers, setModalSubscribers] = useState([]);
 
+  // Detail Modal States
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedFirmSubscription, setSelectedFirmSubscription] = useState(null);
+  const [firmDetails, setFirmDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState(null);
+  const [planUpdating, setPlanUpdating] = useState({});
+  const [showManagePlansModal, setShowManagePlansModal] = useState(false);
+  const [selectedFirmForPlan, setSelectedFirmForPlan] = useState(null);
+
+  // Edit Plan Definition Modal States
+  const [showEditPlanModal, setShowEditPlanModal] = useState(false);
+  const [selectedPlanForEdit, setSelectedPlanForEdit] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleEditPlan = async (planType) => {
+    setEditLoading(true);
+    try {
+      const response = await superAdminAPI.getSubscriptionPlanDetails(planType);
+      if (response.success) {
+        setSelectedPlanForEdit(response.data);
+        setShowEditPlanModal(true);
+      } else {
+        toast.error(response.message || 'Failed to fetch plan details');
+      }
+    } catch (err) {
+      console.error('Error fetching plan details:', err);
+      toast.error(handleAPIError(err));
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handlePlanToggle = async (planType, field, currentValue) => {
+    const planKey = planType.toLowerCase();
+    setPlanUpdating(prev => ({ ...prev, [planKey]: true }));
+    try {
+      await superAdminAPI.updateSubscriptionPlan(planType, { [field]: !currentValue });
+      toast.success(`Plan updated successfully`);
+      // Assuming fetchPlans is a function that refreshes the plan data
+      // If not, you might need to pass it as a prop or define it here
+      // fetchPlans(); 
+    } catch (err) {
+      console.error(`Error updating plan ${field}:`, err);
+      toast.error(`Failed to update plan: ${handleAPIError(err)}`);
+    } finally {
+      setPlanUpdating(prev => ({ ...prev, [planKey]: false }));
+    }
+  };
+
   const PLAN_CONFIG = [
     { key: 'starter', label: 'Starter' },
     { key: 'growth', label: 'Growth' },
@@ -362,6 +412,13 @@ export default function Subscriptions() {
         ]);
 
         setPlansData(plansResponse.data);
+        if (plansResponse.data && Array.isArray(plansResponse.data.plans)) {
+          const options = plansResponse.data.plans.map(p => ({
+            label: p.display_name,
+            value: p.subscription_type
+          }));
+          setPlanOptions(options);
+        }
         setChartData(chartsResponse.data);
         setPlanPerformance(planPerformanceResponse.data || null);
         setRevenueInsights(revenueInsightsResponse.data || null);
@@ -505,6 +562,33 @@ export default function Subscriptions() {
     } finally {
       setModalLoading(false);
     }
+  };
+
+  const fetchFirmDetails = async (firmId) => {
+    setDetailsLoading(true);
+    setDetailsError(null);
+    try {
+      const response = await superAdminAPI.getSuperadminFirmDetail(firmId);
+      setFirmDetails(response.data || null);
+    } catch (err) {
+      console.error('Error fetching firm details:', err);
+      setDetailsError(handleAPIError(err));
+      toast.error('Failed to load subscription details');
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleRowClick = (subscription) => {
+    setSelectedFirmSubscription(subscription);
+    setFirmDetails(null); // Clear previous details
+    setShowDetailModal(true);
+    fetchFirmDetails(subscription.firm_id);
+  };
+
+  const handleManagePlan = (firm) => {
+    setSelectedFirmForPlan(firm);
+    setShowManagePlansModal(true);
   };
 
 
@@ -659,7 +743,7 @@ export default function Subscriptions() {
 
       {/* Tab Content */}
       {activeTab === 'Invoices' ? (
-        <SubscriptionInvoicesTab />
+        <SubscriptionInvoicesTab plansData={plansData} />
       ) : (
         <>
           {/* Metric Cards and main subscriptions content */}
@@ -858,6 +942,16 @@ export default function Subscriptions() {
                                 return name.charAt(0).toUpperCase() + name.slice(1);
                               })()}
                             </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditPlan(plan.plan_type || label);
+                              }}
+                              className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                              title="Edit Plan Definition"
+                            >
+                              <FaEdit size={14} />
+                            </button>
                             <div>
                               <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
                                 {plan.total_subscribers} subscribers
@@ -891,13 +985,41 @@ export default function Subscriptions() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-xs font-bold mb-1" style={{ color: '#3B4A66' }}>
-                              {plan.formatted_price}/month
-                            </p>
-                            <p className="text-xs" style={{ color: '#3B4A66' }}>
-                              {plan.is_active ? 'Active' : 'Inactive'}
-                            </p>
+                          <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Active</span>
+                              <button
+                                type="button"
+                                onClick={() => handlePlanToggle(plan.plan_type || label, 'is_active', plan.is_active)}
+                                disabled={planUpdating[normalizedKey]}
+                                className="relative inline-flex h-5 w-9 items-center transition-colors disabled:opacity-60"
+                                style={{
+                                  borderRadius: '20px',
+                                  backgroundColor: plan.is_active ? '#F56D2D' : '#D1D5DB'
+                                }}
+                              >
+                                <span
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${plan.is_active ? 'translate-x-5' : 'translate-x-1'}`}
+                                />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Show on Website</span>
+                              <button
+                                type="button"
+                                onClick={() => handlePlanToggle(plan.plan_type || label, 'show_on_website', plan.show_on_website)}
+                                disabled={planUpdating[normalizedKey]}
+                                className="relative inline-flex h-5 w-9 items-center transition-colors disabled:opacity-60"
+                                style={{
+                                  borderRadius: '20px',
+                                  backgroundColor: plan.show_on_website ? '#F56D2D' : '#D1D5DB'
+                                }}
+                              >
+                                <span
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${plan.show_on_website ? 'translate-x-5' : 'translate-x-1'}`}
+                                />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1387,7 +1509,12 @@ export default function Subscriptions() {
                       const planStyles = getPlanBadgeStyles(subscription.plan);
                       const statusClasses = getStatusBadgeClasses(subscription.status);
                       return (
-                        <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+                        <div 
+                          key={`${subscription.firm_id}-${subscription.plan}`} 
+                          className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors cursor-pointer" 
+                          style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                          onClick={() => handleRowClick(subscription)}
+                        >
                           <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 items-center subscriptions-table-row-grid">
                             <div className="min-w-0">
                               <p className="text-sm font-semibold truncate" style={{ color: '#3B4A66' }}>
@@ -1472,12 +1599,60 @@ export default function Subscriptions() {
         </>
       )}
 
+      {/* Subscription Detail Modal */}
+      <SubscriptionDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        loading={detailsLoading}
+        error={detailsError}
+        details={firmDetails}
+        subscription={selectedFirmSubscription}
+      />
+
       {/* Subscribers List Modal */}
       <SubscribersListModal
         isOpen={showSubscribersModal}
         onClose={() => setShowSubscribersModal(false)}
         loading={modalLoading}
         subscribers={modalSubscribers}
+      />
+
+      {/* Subscription Detail Modal */}
+      <SubscriptionDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        loading={detailsLoading}
+        error={detailsError}
+        details={firmDetails}
+        subscription={selectedFirmSubscription}
+      />
+
+      {/* Manage Plans Modal */}
+      <ManagePlansModal
+        isOpen={showManagePlansModal}
+        onClose={() => setShowManagePlansModal(false)}
+        firm={selectedFirmForPlan}
+        onUpdate={() => {
+          fetchSubscriptions();
+          if (selectedFirmSubscription && selectedFirmSubscription.firm_id === selectedFirmForPlan?.id) {
+            fetchFirmDetails(selectedFirmForPlan.id);
+          }
+        }}
+      />
+
+      {/* Edit Plan Definition Modal */}
+      <EditPlanModal
+        isOpen={showEditPlanModal}
+        onClose={() => setShowEditPlanModal(false)}
+        plan={selectedPlanForEdit}
+        onUpdate={() => {
+          // Refresh plan data
+          if (typeof fetchPlansData === 'function') {
+            fetchPlansData();
+          } else {
+            window.location.reload(); // Fallback if refresh function not easily accessible
+          }
+        }}
       />
     </div>
   );
@@ -1570,7 +1745,7 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
 };
 
 // Subscription Invoices Tab Component
-const SubscriptionInvoicesTab = () => {
+const SubscriptionInvoicesTab = ({ plansData }) => {
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
@@ -1760,10 +1935,12 @@ const SubscriptionInvoicesTab = () => {
             onChange={(e) => handleTypeFilter(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">All Types</option>
-            <option value="subscription_purchase">Purchase</option>
-            <option value="subscription_renewal">Renewal</option>
-            <option value="subscription_upgrade">Upgrade</option>
+            <option value="">All Plans</option>
+            {(plansData?.plans || []).map(plan => (
+              <option key={plan.id} value={plan.subscription_type}>
+                {plan.display_name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -1912,6 +2089,576 @@ const SubscriptionInvoicesTab = () => {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, subscription }) => {
+  const [activeTab, setActiveTab] = React.useState('Overview');
+
+  if (!isOpen) return null;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
+
+  const getStatusBadge = (status) => {
+    const normalized = status?.toLowerCase();
+    switch (normalized) {
+      case 'active': return 'bg-green-100 text-green-700';
+      case 'past_due': return 'bg-yellow-100 text-yellow-700';
+      case 'canceled': return 'bg-red-100 text-red-700';
+      case 'trialing': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[#E8F0FF]">
+        {/* Modal Header */}
+        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-start">
+          <div>
+            <h3 className="text-xl font-bold text-[#3B4A66]">{subscription?.firm_name || 'Subscription Details'}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(subscription?.status)}`}>
+                {subscription?.status_label || subscription?.status || 'Active'}
+              </span>
+              <span className="text-sm text-gray-500">• Firm ID: {subscription?.firm_id}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        </div>
+
+        {/* Tabs Navigation */}
+        <div className="flex border-b border-[#E8F0FF] px-6">
+          {['Overview', 'Billing History', 'Subscription History', 'Audit Logs'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === tab ? 'border-[#3AD6F2] text-[#3AD6F2]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2] mb-4"></div>
+              <p className="text-gray-500">Loading firm details...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500">{error}</div>
+          ) : !details ? (
+            <div className="text-center py-20 text-gray-500">No data available.</div>
+          ) : (
+            <div className="space-y-6">
+              {activeTab === 'Overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Current Subscription</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Plan</span><span className="text-sm font-bold text-[#3B4A66]">{details.subscription_plan_name || details.subscription_plan || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Amount</span><span className="text-sm font-bold text-[#3B4A66]">{formatCurrency(details.monthly_fee)} / month</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Start Date</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.subscription_start_date)}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Next Billing</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.subscription_end_date)}</span></div>
+                      {details.trial_end_date && (
+                         <div className="flex justify-between"><span className="text-sm text-gray-600">Trial Ends</span><span className="text-sm font-bold text-orange-500">{formatDate(details.trial_end_date)}</span></div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account Information</h4>
+                      <button 
+                        onClick={() => handleManagePlan(details)}
+                        className="px-3 py-1 text-[10px] font-bold text-white bg-[#F56D2D] rounded-lg hover:bg-[#e05d20] transition-colors uppercase tracking-wider"
+                        style={{ borderRadius: '6px' }}
+                      >
+                        Manage Plan
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Firm Name</span><span className="text-sm font-bold text-[#3B4A66]">{details.name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Owner</span><span className="text-sm font-bold text-[#3B4A66]">{details.admin_user_name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Email</span><span className="text-sm font-bold text-[#3B4A66]">{details.admin_user_email || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Phone</span><span className="text-sm font-bold text-[#3B4A66]">{details.phone_number || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Status</span><span className="text-sm font-bold text-[#3B4A66] capitalize">{details.status || '—'}</span></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'Billing History' && (
+                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Period Start</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Invoice</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(details.billing_records || []).map((bill, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(bill.billing_period_start)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(bill.total_amount)}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${bill.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>
+                              {bill.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{bill.invoice_number || '—'}</td>
+                        </tr>
+                      ))}
+                      {(!details.billing_records || details.billing_records.length === 0) && (
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No billing records found.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {activeTab === 'Subscription History' && (
+                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Period</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Plan</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(details.subscription_history || []).map((hist, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(hist.period_start)} - {formatDate(hist.period_end)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{hist.subscription_plan__display_name || '—'}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(hist.amount)}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66] capitalize">{hist.payment_status}</td>
+                        </tr>
+                      ))}
+                      {(!details.subscription_history || details.subscription_history.length === 0) && (
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No subscription history found.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {activeTab === 'Audit Logs' && (
+                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Timestamp</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Action</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Admin</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(details.plan_change_history || []).map((log, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66] ">{new Date(log.created_at).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{log.action_title || 'Update'}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{log.admin_user__email || 'System'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{log.action_description}</td>
+                        </tr>
+                      ))}
+                      {(!details.plan_change_history || details.plan_change_history.length === 0) && (
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No audit logs found.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex justify-end">
+          <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors shadow-sm">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(firm?.subscription_plan || '');
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPlans();
+      setSelectedPlan(firm?.subscription_plan || '');
+    }
+  }, [isOpen, firm]);
+
+  const fetchPlans = async () => {
+    setLoading(true);
+    try {
+      const response = await superAdminAPI.getSubscriptionPlans();
+      // Filter only active plans or plans already assigned to the firm
+      const availablePlans = (response.data || []).filter(p => p.is_active || p.subscription_type === firm?.subscription_plan);
+      setPlans(availablePlans);
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+      toast.error('Failed to load available plans');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedPlan) return;
+    setUpdating(true);
+    try {
+      await superAdminAPI.updateFirm(firm.id, { subscription_plan: selectedPlan });
+      toast.success('Firm plan updated successfully');
+      if (onUpdate) onUpdate();
+      onClose();
+    } catch (err) {
+      console.error('Error updating firm plan:', err);
+      toast.error(`Failed to update plan: ${handleAPIError(err)}`);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white">
+          <h3 className="text-xl font-bold text-[#3B4A66]">Manage Firm Plan</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Firm Name</label>
+            <p className="text-sm font-bold text-[#3B4A66]">{firm?.name}</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Select New Plan</label>
+            {loading ? (
+              <div className="py-4 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3AD6F2]"></div></div>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {plans.map((plan) => (
+                  <label 
+                    key={plan.id} 
+                    className={`flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer ${selectedPlan === plan.subscription_type ? 'border-[#3AD6F2] bg-[#F0FDFF]' : 'border-[#E8F0FF] hover:border-[#3AD6F2]/30 bg-white'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="plan"
+                      className="hidden"
+                      value={plan.subscription_type}
+                      checked={selectedPlan === plan.subscription_type}
+                      onChange={(e) => setSelectedPlan(e.target.value)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-[#3B4A66]">{plan.display_name}</p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">{plan.subscription_type}</p>
+                    </div>
+                    {selectedPlan === plan.subscription_type && (
+                      <div className="w-5 h-5 bg-[#3AD6F2] rounded-full flex items-center justify-center">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                    )}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex gap-3">
+          <button 
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleUpdate}
+            disabled={updating || !selectedPlan || selectedPlan === firm?.subscription_plan}
+            className="flex-1 px-4 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updating ? 'Updating...' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
+  const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (plan) {
+      setFormData({
+        display_name: plan.display_name || '',
+        description: plan.description || '',
+        monthly_price: plan.monthly_price || 0,
+        yearly_price: plan.yearly_price || 0,
+        max_users: plan.max_users || 0,
+        max_firms: plan.max_firms || 0,
+        storage_limit_gb: plan.storage_limit_gb || 0,
+        badge_text: plan.badge_text || '',
+        badge_color: plan.badge_color || '',
+        is_fully_configurable: plan.is_fully_configurable || false,
+        public_features: Array.isArray(plan.public_features) ? plan.public_features.join(', ') : (plan.public_features || ''),
+        hidden_features: Array.isArray(plan.hidden_features) ? plan.hidden_features.join(', ') : (plan.hidden_features || ''),
+      });
+    }
+  }, [plan]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      // Convert comma-separated strings back to arrays
+      const payload = {
+        ...formData,
+        public_features: typeof formData.public_features === 'string' ? formData.public_features.split(',').map(s => s.trim()).filter(Boolean) : formData.public_features,
+        hidden_features: typeof formData.hidden_features === 'string' ? formData.hidden_features.split(',').map(s => s.trim()).filter(Boolean) : formData.hidden_features,
+      };
+
+      const response = await superAdminAPI.updateSubscriptionPlan(plan.subscription_type, payload);
+      if (response.success) {
+        toast.success('Plan updated successfully');
+        if (onUpdate) onUpdate();
+        onClose();
+      } else {
+        toast.error(response.message || 'Failed to update plan');
+      }
+    } catch (err) {
+      console.error('Error updating plan:', err);
+      toast.error(`Error: ${handleAPIError(err)}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen || !plan) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white">
+          <div>
+            <h3 className="text-xl font-bold text-[#3B4A66]">Edit Plan: {plan.display_name}</h3>
+            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">{plan.subscription_type}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Info */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Basic Information</h4>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Display Name</label>
+                <input
+                  type="text"
+                  name="display_name"
+                  value={formData.display_name}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monthly Price</label>
+                  <input
+                    type="number"
+                    name="monthly_price"
+                    value={formData.monthly_price}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Yearly Price</label>
+                  <input
+                    type="number"
+                    name="yearly_price"
+                    value={formData.yearly_price}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Limits & Config */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Limits & Configuration</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Max Users</label>
+                  <input
+                    type="number"
+                    name="max_users"
+                    value={formData.max_users}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Storage (GB)</label>
+                  <input
+                    type="number"
+                    name="storage_limit_gb"
+                    value={formData.storage_limit_gb}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Badge Text</label>
+                  <input
+                    type="text"
+                    name="badge_text"
+                    value={formData.badge_text}
+                    onChange={handleChange}
+                    placeholder="e.g. Popular"
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Badge Color</label>
+                  <input
+                    type="text"
+                    name="badge_color"
+                    value={formData.badge_color}
+                    onChange={handleChange}
+                    placeholder="e.g. #F56D2D"
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 pt-4">
+                <input
+                  type="checkbox"
+                  id="is_fully_configurable"
+                  name="is_fully_configurable"
+                  checked={formData.is_fully_configurable}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#3AD6F2] rounded focus:ring-[#3AD6F2]"
+                />
+                <label htmlFor="is_fully_configurable" className="text-sm font-medium text-[#3B4A66]">Fully Configurable</label>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4">
+            <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Features</h4>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Public Features (Comma separated)</label>
+              <textarea
+                name="public_features"
+                value={formData.public_features}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
+                placeholder="Feature 1, Feature 2, Feature 3..."
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Hidden Features (Comma separated)</label>
+              <textarea
+                name="hidden_features"
+                value={formData.hidden_features}
+                onChange={handleChange}
+                rows="2"
+                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
+                placeholder="Hidden Feature 1, Hidden Feature 2..."
+              />
+            </div>
+          </div>
+        </form>
+
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-6 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={saving}
+            className="flex-1 px-6 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50"
+          >
+            {saving ? 'Saving Changes...' : 'Save Plan Settings'}
+          </button>
+        </div>
       </div>
     </div>
   );
