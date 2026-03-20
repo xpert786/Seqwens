@@ -713,7 +713,7 @@ export default function Subscriptions() {
 
       {/* Tab Content */}
       {activeTab === 'Invoices' ? (
-        <SubscriptionInvoicesTab />
+        <SubscriptionInvoicesTab plansData={plansData} />
       ) : (
         <>
           {/* Metric Cards and main subscriptions content */}
@@ -1667,7 +1667,7 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
 };
 
 // Subscription Invoices Tab Component
-const SubscriptionInvoicesTab = () => {
+const SubscriptionInvoicesTab = ({ plansData }) => {
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
