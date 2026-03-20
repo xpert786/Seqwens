@@ -3928,6 +3928,7 @@ export const firmAdminClientsAPI = {
 
     // Create FormData for file upload
     const formData = new FormData();
+    formData.append('role', 'taxpayer');
 
     // Append files - files should be an array of File objects
     if (Array.isArray(files)) {

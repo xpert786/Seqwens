@@ -605,7 +605,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       console.log('Client created successfully:', result);
 
       if (result.success && result.data) {
-        const clientId = result.data.id || result.data.client_id;
+        const clientId = result.data.profile?.id || result.data.id || result.data.client_id;
 
         // Reset loading state
         setLoading(false);

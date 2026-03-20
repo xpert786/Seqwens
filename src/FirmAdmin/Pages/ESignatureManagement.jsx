@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import SignatureBuilder from '../../components/SignatureBuilder';
 import { Modal } from 'react-bootstrap';
+import '../styles/ClientManage.css';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
 import { firmAdminClientsAPI, firmAdminStaffAPI, firmAdminDocumentsAPI, taxPreparerClientAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
@@ -817,6 +818,7 @@ export default function ESignatureManagement() {
         formData.append('type', requestData.type); // "signature_request" or "document_request"
         formData.append('task_title', requestData.task_title);
         formData.append('client_id', requestData.client_id.toString());
+        formData.append('role', 'taxpayer');
 
         // spouse_sign and preparer_sign fields - always send, default to false if not provided
         formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
@@ -1510,13 +1512,13 @@ export default function ESignatureManagement() {
       {/* Create Signature Request Modal */}
       {showCreateModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-[9999] p-3 sm:p-4 md:p-6"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-[100001] p-3 sm:p-4 md:p-6"
           style={{
             top: '0',
             left: '0',
             right: '0',
             bottom: '0',
-            paddingTop: '80px',
+            paddingTop: '100px',
             paddingBottom: '20px'
           }}
           onClick={(e) => {
@@ -1668,7 +1670,7 @@ export default function ESignatureManagement() {
                         <div className="p-4 text-center text-sm text-gray-500">No clients available</div>
                       ) : (
                         clients.map((client) => {
-                          const clientId = client.id || client.profile?.id;
+                          const clientId = client.profile?.id || client.id;
                           const clientName = client.profile?.name ||
                             client.name ||
                             `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
@@ -2139,24 +2141,27 @@ export default function ESignatureManagement() {
       }
 
       {/* Document Preview Modal */}
-      <Modal 
-        show={showPreviewModal && !!uploadedFile} 
+      <Modal
+        show={showPreviewModal && !!uploadedFile}
         onHide={() => {
           setShowPreviewModal(false);
           resetAllState();
         }}
-        fullscreen
-        centered
+        backdrop="static"
         className="signature-builder-modal"
-        style={{ zIndex: 1056 }}
+        dialogClassName="esign-builder-dialog"
+        contentClassName="esign-builder-content"
       >
-        <Modal.Body className="p-0 bg-gray-50">
+        <Modal.Header closeButton className="border-b-0 pb-2">
+          <Modal.Title className="text-lg font-bold text-slate-700">Prepare Document for eSign</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-white overflow-hidden" style={{ height: '82vh' }}>
           {uploadedFile && (
             <SignatureBuilder
               pdfFile={uploadedFile}
               availableRoles={
-                spouseAlso 
-                  ? ['Taxpayer', 'Spouse', 'Preparer'] 
+                spouseAlso
+                  ? ['Taxpayer', 'Spouse', 'Preparer']
                   : ['Taxpayer', 'Preparer']
               }
               onSave={(fields) => {
