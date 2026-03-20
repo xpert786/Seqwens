@@ -3,7 +3,7 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { FaEnvelope, FaSms, FaLink, FaCopy, FaTrash, FaExclamationTriangle, FaListOl } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { getToastOptions } from '../../../utils/toastConfig';
@@ -208,8 +208,10 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     // If we have client_id but no invite, create one
     if (activeInviteDetails?.client_id) {
       try {
+        const userData = getUserData();
         const invitePayload = {
-          client_id: activeInviteDetails.client_id
+          client_id: activeInviteDetails.client_id,
+          assigned_preparer_id: userData?.id || null
         };
 
         // Add phone_number if available
@@ -551,11 +553,13 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setError('');
       setSuccess('');
 
+      const userData = getUserData();
       const payload = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim(),
-        send_invitation: sendInvite
+        send_invitation: sendInvite,
+        assigned_preparer_id: userData?.id || null
       };
 
       // Add phone_number only if provided
@@ -688,12 +692,14 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setLoading(true);
       setError('');
 
+      const userData = getUserData();
       const payload = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim(),
         send_invitation: sendInvite,
-        force_link: true // Force link the identity
+        force_link: true, // Force link the identity
+        assigned_preparer_id: userData?.id || null
       };
 
       // Add phone_number only if provided

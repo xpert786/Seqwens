@@ -7,6 +7,7 @@ import 'aos/dist/aos.css';
 // import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
 import ESignatureModal from './ClientOnboarding/components/ESignatureModal';
+const PublicESignature = lazy(() => import('./ClientOnboarding/Pages/PublicESignature'));
 import NotificationPanel from './ClientOnboarding/components/Notifications/NotificationPanel';
 import { FirmPortalColorsProvider } from './FirmAdmin/Context/FirmPortalColorsContext';
 import Dashboard from "./ClientOnboarding/pages/Dashboard";
@@ -256,7 +257,8 @@ export default function App() {
           <Route path="/set-new-password" element={<SetNewPassword />} />
           <Route path="/two-auth" element={<TwoFactorAuth />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/verify-phone" element={<VerifyPhone />} />
+          <Route path="/accounts/verify-phone" element={<VerifyPhone />} />
+          <Route path="/esign/public/:token" element={<PublicESignature />} />
           <Route path="/invite" element={<AcceptInvite />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/select-role" element={<RoleSelectionScreen />} />

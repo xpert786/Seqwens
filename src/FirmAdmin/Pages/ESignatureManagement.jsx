@@ -1410,6 +1410,24 @@ export default function ESignatureManagement() {
                                   </svg>
                                 </button>
                               )}
+                              {request.status === 'pending' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const token = request.public_token || request.token || request.id;
+                                    const publicUrl = `${window.location.origin}/esign/public/${token}`;
+                                    navigator.clipboard.writeText(publicUrl);
+                                    toast.success('Public sign link copied to clipboard!');
+                                  }}
+                                  className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
+                                  title="Copy Public Signing Link"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                  </svg>
+                                </button>
+                              )}
                               {request.document_url && (
                                 <button
                                   onClick={(e) => {
@@ -2903,6 +2921,23 @@ export default function ESignatureManagement() {
                     </svg>
                     Download
                   </button>
+                  {selectedEsignRequest.status === 'pending' && (
+                    <button
+                      onClick={() => {
+                        const token = selectedEsignRequest.public_token || selectedEsignRequest.token || selectedEsignRequest.id;
+                        const publicUrl = `${window.location.origin}/esign/public/${token}`;
+                        navigator.clipboard.writeText(publicUrl);
+                        toast.success('Public sign link copied to clipboard!');
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                      </svg>
+                      Copy Public Link
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex gap-3">

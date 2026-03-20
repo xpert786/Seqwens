@@ -80,6 +80,18 @@ export const publicApiRequest = async (endpoint, method = 'GET', data = null) =>
       try {
         errorData = await response.json();
 
+        // Replace specific taxpayer not found error with actionable message
+        if (errorData.message && (errorData.message.toLowerCase().includes('taxpayer not found') ||
+          errorData.message.toLowerCase().includes('taxpayer does not belong to your firm'))) {
+          errorMessage = 'This client is not properly assigned. Please assign the client to your firm or refresh the record.';
+        } else if (errorData.detail && (errorData.detail.toLowerCase().includes('taxpayer not found') ||
+          errorData.detail.toLowerCase().includes('taxpayer does not belong to your firm'))) {
+          errorMessage = 'This client is not properly assigned. Please assign the client to your firm or refresh the record.';
+        } else if (errorData.error && (errorData.error.toLowerCase().includes('taxpayer not found') ||
+          errorData.error.toLowerCase().includes('taxpayer does not belong to your firm'))) {
+          errorMessage = 'This client is not properly assigned. Please assign the client to your firm or refresh the record.';
+        }
+
         // If there are specific field errors, show them
         if (errorData.errors) {
           const fieldErrors = Object.entries(errorData.errors)
@@ -817,6 +829,12 @@ export const validatePassword = (password) => {
 
 // Error handling utilities
 export const handleAPIError = (error) => {
+  const errorMessageStr = error.message || '';
+  if (errorMessageStr.toLowerCase().includes('taxpayer not found') || 
+      errorMessageStr.toLowerCase().includes('taxpayer does not belong to your firm')) {
+    return 'This client is not properly assigned. Please assign the client to your firm or refresh the record.';
+  }
+
   // Handle CORS errors
   if (error.message.includes('CORS')) {
     return 'Network error: Please check your internet connection and try again.';
@@ -6656,6 +6674,16 @@ export const signatureRequestsAPI = {
     }
 
     return await apiRequest('/taxpayer/signatures/requests/submit/', 'POST', requestBody);
+  },
+
+  // Get individual signature request (public version - no auth)
+  getSignatureRequestPublic: async (token) => {
+    return await publicApiRequest(`/taxpayer/esign/public/${token}/`, 'GET');
+  },
+
+  // Submit signature request (public version - no auth)
+  submitSignatureRequestPublic: async (token, signatureData) => {
+    return await publicApiRequest(`/taxpayer/esign/public/${token}/submit/`, 'POST', signatureData);
   },
 };
 
