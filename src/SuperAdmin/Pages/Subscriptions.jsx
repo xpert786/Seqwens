@@ -66,6 +66,31 @@ export default function Subscriptions() {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalSubscribers, setModalSubscribers] = useState([]);
 
+  // Detail Modal States
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedFirmSubscription, setSelectedFirmSubscription] = useState(null);
+  const [firmDetails, setFirmDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState(null);
+  const [planUpdating, setPlanUpdating] = useState({});
+
+  const handlePlanToggle = async (planType, field, currentValue) => {
+    const planKey = planType.toLowerCase();
+    setPlanUpdating(prev => ({ ...prev, [planKey]: true }));
+    try {
+      await superAdminAPI.updateSubscriptionPlan(planType, { [field]: !currentValue });
+      toast.success(`Plan updated successfully`);
+      // Assuming fetchPlans is a function that refreshes the plan data
+      // If not, you might need to pass it as a prop or define it here
+      // fetchPlans(); 
+    } catch (err) {
+      console.error(`Error updating plan ${field}:`, err);
+      toast.error(`Failed to update plan: ${handleAPIError(err)}`);
+    } finally {
+      setPlanUpdating(prev => ({ ...prev, [planKey]: false }));
+    }
+  };
+
   const PLAN_CONFIG = [
     { key: 'starter', label: 'Starter' },
     { key: 'growth', label: 'Growth' },
@@ -507,6 +532,28 @@ export default function Subscriptions() {
     }
   };
 
+  const fetchFirmDetails = async (firmId) => {
+    setDetailsLoading(true);
+    setDetailsError(null);
+    try {
+      const response = await superAdminAPI.getSuperadminFirmDetail(firmId);
+      setFirmDetails(response.data || null);
+    } catch (err) {
+      console.error('Error fetching firm details:', err);
+      setDetailsError(handleAPIError(err));
+      toast.error('Failed to load subscription details');
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleRowClick = (subscription) => {
+    setSelectedFirmSubscription(subscription);
+    setFirmDetails(null); // Clear previous details
+    setShowDetailModal(true);
+    fetchFirmDetails(subscription.firm_id);
+  };
+
 
 
   // Loading state
@@ -891,13 +938,41 @@ export default function Subscriptions() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-xs font-bold mb-1" style={{ color: '#3B4A66' }}>
-                              {plan.formatted_price}/month
-                            </p>
-                            <p className="text-xs" style={{ color: '#3B4A66' }}>
-                              {plan.is_active ? 'Active' : 'Inactive'}
-                            </p>
+                          <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Active</span>
+                              <button
+                                type="button"
+                                onClick={() => handlePlanToggle(plan.plan_type || label, 'is_active', plan.is_active)}
+                                disabled={planUpdating[normalizedKey]}
+                                className="relative inline-flex h-5 w-9 items-center transition-colors disabled:opacity-60"
+                                style={{
+                                  borderRadius: '20px',
+                                  backgroundColor: plan.is_active ? '#F56D2D' : '#D1D5DB'
+                                }}
+                              >
+                                <span
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${plan.is_active ? 'translate-x-5' : 'translate-x-1'}`}
+                                />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Show on Website</span>
+                              <button
+                                type="button"
+                                onClick={() => handlePlanToggle(plan.plan_type || label, 'show_on_website', plan.show_on_website)}
+                                disabled={planUpdating[normalizedKey]}
+                                className="relative inline-flex h-5 w-9 items-center transition-colors disabled:opacity-60"
+                                style={{
+                                  borderRadius: '20px',
+                                  backgroundColor: plan.show_on_website ? '#F56D2D' : '#D1D5DB'
+                                }}
+                              >
+                                <span
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${plan.show_on_website ? 'translate-x-5' : 'translate-x-1'}`}
+                                />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1387,7 +1462,12 @@ export default function Subscriptions() {
                       const planStyles = getPlanBadgeStyles(subscription.plan);
                       const statusClasses = getStatusBadgeClasses(subscription.status);
                       return (
-                        <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+                        <div 
+                          key={`${subscription.firm_id}-${subscription.plan}`} 
+                          className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors cursor-pointer" 
+                          style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                          onClick={() => handleRowClick(subscription)}
+                        >
                           <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 items-center subscriptions-table-row-grid">
                             <div className="min-w-0">
                               <p className="text-sm font-semibold truncate" style={{ color: '#3B4A66' }}>
@@ -1471,6 +1551,16 @@ export default function Subscriptions() {
           </div>
         </>
       )}
+
+      {/* Subscription Detail Modal */}
+      <SubscriptionDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        loading={detailsLoading}
+        error={detailsError}
+        details={firmDetails}
+        subscription={selectedFirmSubscription}
+      />
 
       {/* Subscribers List Modal */}
       <SubscribersListModal
@@ -1912,6 +2002,208 @@ const SubscriptionInvoicesTab = () => {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, subscription }) => {
+  const [activeTab, setActiveTab] = React.useState('Overview');
+
+  if (!isOpen) return null;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
+
+  const getStatusBadge = (status) => {
+    const normalized = status?.toLowerCase();
+    switch (normalized) {
+      case 'active': return 'bg-green-100 text-green-700';
+      case 'past_due': return 'bg-yellow-100 text-yellow-700';
+      case 'canceled': return 'bg-red-100 text-red-700';
+      case 'trialing': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[#E8F0FF]">
+        {/* Modal Header */}
+        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-start">
+          <div>
+            <h3 className="text-xl font-bold text-[#3B4A66]">{subscription?.firm_name || 'Subscription Details'}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(subscription?.status)}`}>
+                {subscription?.status_label || subscription?.status || 'Active'}
+              </span>
+              <span className="text-sm text-gray-500">• Firm ID: {subscription?.firm_id}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        </div>
+
+        {/* Tabs Navigation */}
+        <div className="flex border-b border-[#E8F0FF] px-6">
+          {['Overview', 'Billing History', 'Subscription History', 'Audit Logs'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === tab ? 'border-[#3AD6F2] text-[#3AD6F2]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2] mb-4"></div>
+              <p className="text-gray-500">Loading firm details...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500">{error}</div>
+          ) : !details ? (
+            <div className="text-center py-20 text-gray-500">No data available.</div>
+          ) : (
+            <div className="space-y-6">
+              {activeTab === 'Overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Current Subscription</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Plan</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.subscription_plan || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Amount</span><span className="text-sm font-bold text-[#3B4A66]">{formatCurrency(details.profile?.current_billing_amount)} / {details.profile?.billing_frequency || 'month'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Member Since</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.member_since_full || formatDate(details.profile?.created_at)}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Next Billing</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.profile?.next_billing_date)}</span></div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Account Information</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Owner</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Email</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.email || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Phone</span><span className="text-sm font-bold text-[#3B4A66]">{details.profile?.phone || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-gray-600">Status</span><span className="text-sm font-bold text-[#3B4A66] capitalize">{details.profile?.status || '—'}</span></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'Billing History' && (
+                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Date</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Type</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(details.billing_history || []).map((bill, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(bill.created_at)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(bill.amount)}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${bill.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>
+                              {bill.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500 capitalize">{bill.invoice_type?.replace(/_/g, ' ')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {activeTab === 'Subscription History' && (
+                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Date</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Plan</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(details.subscription_history || []).map((hist, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(hist.date)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{hist.plan}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{hist.status}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{hist.notes || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {activeTab === 'Audit Logs' && (
+                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Timestamp</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Action</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Performed By</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Changes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(details.audit_logs || []).map((log, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66] ">{new Date(log.timestamp).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{log.action_type || 'Update'}</td>
+                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{log.performed_by_name || log.performed_by_email}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            <ul className="list-disc list-inside">
+                              {log.changes && Object.entries(log.changes || {}).map(([field, values]) => (
+                                <li key={field} className="text-[11px]">
+                                  <span className="font-semibold">{field}</span>: {values.old} → {values.new}
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex justify-end">
+          <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors shadow-sm">
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
