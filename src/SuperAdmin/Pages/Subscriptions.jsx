@@ -76,6 +76,29 @@ export default function Subscriptions() {
   const [showManagePlansModal, setShowManagePlansModal] = useState(false);
   const [selectedFirmForPlan, setSelectedFirmForPlan] = useState(null);
 
+  // Edit Plan Definition Modal States
+  const [showEditPlanModal, setShowEditPlanModal] = useState(false);
+  const [selectedPlanForEdit, setSelectedPlanForEdit] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleEditPlan = async (planType) => {
+    setEditLoading(true);
+    try {
+      const response = await superAdminAPI.getSubscriptionPlanDetails(planType);
+      if (response.success) {
+        setSelectedPlanForEdit(response.data);
+        setShowEditPlanModal(true);
+      } else {
+        toast.error(response.message || 'Failed to fetch plan details');
+      }
+    } catch (err) {
+      console.error('Error fetching plan details:', err);
+      toast.error(handleAPIError(err));
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const handlePlanToggle = async (planType, field, currentValue) => {
     const planKey = planType.toLowerCase();
     setPlanUpdating(prev => ({ ...prev, [planKey]: true }));
@@ -389,6 +412,13 @@ export default function Subscriptions() {
         ]);
 
         setPlansData(plansResponse.data);
+        if (plansResponse.data && Array.isArray(plansResponse.data.plans)) {
+          const options = plansResponse.data.plans.map(p => ({
+            label: p.display_name,
+            value: p.subscription_type
+          }));
+          setPlanOptions(options);
+        }
         setChartData(chartsResponse.data);
         setPlanPerformance(planPerformanceResponse.data || null);
         setRevenueInsights(revenueInsightsResponse.data || null);
@@ -912,6 +942,16 @@ export default function Subscriptions() {
                                 return name.charAt(0).toUpperCase() + name.slice(1);
                               })()}
                             </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditPlan(plan.plan_type || label);
+                              }}
+                              className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                              title="Edit Plan Definition"
+                            >
+                              <FaEdit size={14} />
+                            </button>
                             <div>
                               <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
                                 {plan.total_subscribers} subscribers
@@ -1596,6 +1636,21 @@ export default function Subscriptions() {
           fetchSubscriptions();
           if (selectedFirmSubscription && selectedFirmSubscription.firm_id === selectedFirmForPlan?.id) {
             fetchFirmDetails(selectedFirmForPlan.id);
+          }
+        }}
+      />
+
+      {/* Edit Plan Definition Modal */}
+      <EditPlanModal
+        isOpen={showEditPlanModal}
+        onClose={() => setShowEditPlanModal(false)}
+        plan={selectedPlanForEdit}
+        onUpdate={() => {
+          // Refresh plan data
+          if (typeof fetchPlansData === 'function') {
+            fetchPlansData();
+          } else {
+            window.location.reload(); // Fallback if refresh function not easily accessible
           }
         }}
       />
@@ -2365,6 +2420,243 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
             className="flex-1 px-4 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updating ? 'Updating...' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
+  const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (plan) {
+      setFormData({
+        display_name: plan.display_name || '',
+        description: plan.description || '',
+        monthly_price: plan.monthly_price || 0,
+        yearly_price: plan.yearly_price || 0,
+        max_users: plan.max_users || 0,
+        max_firms: plan.max_firms || 0,
+        storage_limit_gb: plan.storage_limit_gb || 0,
+        badge_text: plan.badge_text || '',
+        badge_color: plan.badge_color || '',
+        is_fully_configurable: plan.is_fully_configurable || false,
+        public_features: Array.isArray(plan.public_features) ? plan.public_features.join(', ') : (plan.public_features || ''),
+        hidden_features: Array.isArray(plan.hidden_features) ? plan.hidden_features.join(', ') : (plan.hidden_features || ''),
+      });
+    }
+  }, [plan]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      // Convert comma-separated strings back to arrays
+      const payload = {
+        ...formData,
+        public_features: typeof formData.public_features === 'string' ? formData.public_features.split(',').map(s => s.trim()).filter(Boolean) : formData.public_features,
+        hidden_features: typeof formData.hidden_features === 'string' ? formData.hidden_features.split(',').map(s => s.trim()).filter(Boolean) : formData.hidden_features,
+      };
+
+      const response = await superAdminAPI.updateSubscriptionPlan(plan.subscription_type, payload);
+      if (response.success) {
+        toast.success('Plan updated successfully');
+        if (onUpdate) onUpdate();
+        onClose();
+      } else {
+        toast.error(response.message || 'Failed to update plan');
+      }
+    } catch (err) {
+      console.error('Error updating plan:', err);
+      toast.error(`Error: ${handleAPIError(err)}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen || !plan) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white">
+          <div>
+            <h3 className="text-xl font-bold text-[#3B4A66]">Edit Plan: {plan.display_name}</h3>
+            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">{plan.subscription_type}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Info */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Basic Information</h4>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Display Name</label>
+                <input
+                  type="text"
+                  name="display_name"
+                  value={formData.display_name}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monthly Price</label>
+                  <input
+                    type="number"
+                    name="monthly_price"
+                    value={formData.monthly_price}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Yearly Price</label>
+                  <input
+                    type="number"
+                    name="yearly_price"
+                    value={formData.yearly_price}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Limits & Config */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Limits & Configuration</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Max Users</label>
+                  <input
+                    type="number"
+                    name="max_users"
+                    value={formData.max_users}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Storage (GB)</label>
+                  <input
+                    type="number"
+                    name="storage_limit_gb"
+                    value={formData.storage_limit_gb}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Badge Text</label>
+                  <input
+                    type="text"
+                    name="badge_text"
+                    value={formData.badge_text}
+                    onChange={handleChange}
+                    placeholder="e.g. Popular"
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Badge Color</label>
+                  <input
+                    type="text"
+                    name="badge_color"
+                    value={formData.badge_color}
+                    onChange={handleChange}
+                    placeholder="e.g. #F56D2D"
+                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 pt-4">
+                <input
+                  type="checkbox"
+                  id="is_fully_configurable"
+                  name="is_fully_configurable"
+                  checked={formData.is_fully_configurable}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#3AD6F2] rounded focus:ring-[#3AD6F2]"
+                />
+                <label htmlFor="is_fully_configurable" className="text-sm font-medium text-[#3B4A66]">Fully Configurable</label>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4">
+            <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Features</h4>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Public Features (Comma separated)</label>
+              <textarea
+                name="public_features"
+                value={formData.public_features}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
+                placeholder="Feature 1, Feature 2, Feature 3..."
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Hidden Features (Comma separated)</label>
+              <textarea
+                name="hidden_features"
+                value={formData.hidden_features}
+                onChange={handleChange}
+                rows="2"
+                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
+                placeholder="Hidden Feature 1, Hidden Feature 2..."
+              />
+            </div>
+          </div>
+        </form>
+
+        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-6 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={saving}
+            className="flex-1 px-6 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50"
+          >
+            {saving ? 'Saving Changes...' : 'Save Plan Settings'}
           </button>
         </div>
       </div>

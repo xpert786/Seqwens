@@ -340,6 +340,11 @@ export const superAdminAPI = {
     return await apiRequest('/user/subscriptions/plans/', 'GET');
   },
 
+  // Get subscription plan details by type
+  getSubscriptionPlanDetails: async (planType) => {
+    return await apiRequest(`/user/subscription-plans/${planType.toLowerCase()}/`, 'GET');
+  },
+
   // Update subscription plan
   updateSubscriptionPlan: async (planType, data) => {
     return await apiRequest(`/user/subscription-plans/${planType.toLowerCase()}/`, 'PATCH', data);
