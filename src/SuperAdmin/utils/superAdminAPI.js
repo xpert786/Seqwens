@@ -1468,6 +1468,34 @@ export const superAdminAPI = {
 
   updateApiKey: async (keyId, payload) => {
     return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'PATCH', payload);
+  },
+
+  // System Default Templates (Super Admin)
+  getSystemTemplates: async (search = '') => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    const query = params.toString();
+    return await apiRequest(`/user/super-admin/system-templates/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  getSystemTemplate: async (templateId) => {
+    return await apiRequest(`/user/super-admin/system-templates/${templateId}/`, 'GET');
+  },
+
+  createSystemTemplate: async (data) => {
+    return await apiRequest('/user/super-admin/system-templates/', 'POST', data);
+  },
+
+  updateSystemTemplate: async (templateId, data) => {
+    return await apiRequest(`/user/super-admin/system-templates/${templateId}/`, 'PATCH', data);
+  },
+
+  deleteSystemTemplate: async (templateId) => {
+    return await apiRequest(`/user/super-admin/system-templates/${templateId}/`, 'DELETE');
+  },
+
+  previewSystemTemplate: async (data) => {
+    return await apiRequest('/user/super-admin/system-templates/preview/', 'POST', data);
   }
 };
 
