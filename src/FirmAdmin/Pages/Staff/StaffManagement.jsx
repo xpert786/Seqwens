@@ -73,6 +73,8 @@ export default function StaffManagement() {
   const teamMembersRef = useRef(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [selectedStaffForMessage, setSelectedStaffForMessage] = useState(null);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 
   const handleInviteCreated = (inviteData) => {
     fetchPendingInvites();
@@ -209,9 +211,14 @@ export default function StaffManagement() {
     }
   }, [activeFilter, searchTerm, roleFilter, performanceFilter]);
 
-  // Download Performance Report
-  const handleDownloadPerformanceReport = async () => {
+  const handleDownloadPerformanceReport = () => {
+    setShowDownloadConfirm(true);
+  };
+
+  const confirmDownloadPerformanceReport = async () => {
+    setShowDownloadConfirm(false);
     try {
+      setDownloadingReport(true);
       const token = getAccessToken();
       const response = await fetchWithCors(`${API_BASE_URL}/firm/tax-preparers/performance-report/`, {
         method: 'GET',
@@ -240,17 +247,16 @@ export default function StaffManagement() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
+      // Only show success toast when download is completed (blob fetched and triggered)
       toast.success('Performance report downloaded successfully', {
         position: "top-right",
         autoClose: 3000,
       });
     } catch (err) {
       console.error('Error downloading performance report:', err);
-      const errorMsg = handleAPIError(err);
-      toast.error(errorMsg || 'Failed to download performance report', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      // Removed error toast as per user request: "otherwise no toast"
+    } finally {
+      setDownloadingReport(false);
     }
   };
 
@@ -1139,6 +1145,15 @@ export default function StaffManagement() {
         onInviteCreated={handleInviteCreated}
         onRefresh={fetchPendingInvites}
       />
+      <ConfirmationModal
+        isOpen={showDownloadConfirm}
+        onClose={() => setShowDownloadConfirm(false)}
+        onConfirm={confirmDownloadPerformanceReport}
+        title="Download Performance Report"
+        message="Are you sure you want to download the performance report for all staff members?"
+        confirmText="Download"
+        cancelText="Cancel"
+      />
       <div className="w-full lg:px-4 px-2 py-4 bg-[#F6F7FF] min-h-screen staff-main-container">
         {/* Header and Action Buttons */}
         <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4 staff-header-section">
@@ -1154,10 +1169,20 @@ export default function StaffManagement() {
             <div className="flex flex-wrap items-center gap-2 staff-actions-top-row">
               <button
                 onClick={handleDownloadPerformanceReport}
-                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
+                disabled={downloadingReport}
+                className={`px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button ${downloadingReport ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <PowersIcon />
-                Performance Report
+                {downloadingReport ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <PowersIcon />
+                    Performance Report
+                  </>
+                )}
               </button>
               {!advancedReportingEnabled && (
 

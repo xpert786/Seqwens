@@ -1402,7 +1402,9 @@ export default function ClientManage() {
 
       // Open PDF in new window for preview/download
       const fileName = `Clients_List_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.output('dataurlnewwindow', { filename: fileName });
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
       toast.success("PDF opened in new window. You can download it from there.", {
         position: "top-right",
         autoClose: 3000,
