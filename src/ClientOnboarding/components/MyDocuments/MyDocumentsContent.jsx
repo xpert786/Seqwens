@@ -1168,7 +1168,7 @@ export default function MyDocumentsContent() {
                                 const fileUrl = doc.file_url || doc.tax_documents || '';
 
                                 return (
-                                    <div className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-3" : "col-12"} key={doc.id || doc.document_id || index}>
+                                    <div className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-4" : "col-12"} key={doc.id || doc.document_id || index}>
                                         <div
                                             className="p-3 border rounded-4"
                                             style={{

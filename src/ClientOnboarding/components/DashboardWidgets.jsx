@@ -2,12 +2,14 @@ import { AiOutlineCalendar } from "react-icons/ai";
 import { FileIcon, BalanceIcon, MessageIcon, UpIcon, Message2Icon } from "../components/icons";
 import { useState } from "react";
 import UploadModal from "../upload/UploadModal";
+import ScheduleAppointmentModal from "./ScheduleAppointmentModal";
 import { useNavigate } from "react-router-dom";
 import "../styles/Dashboard.css";
 
 
 export default function TaxDashboardWidegts({ dashboardData, loading }) {
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const navigate = useNavigate();
 
   // Get user name from dashboard data - use first name and last name
@@ -27,9 +29,11 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       label: "Pending Documents",
       button: dashboardData?.summary_cards?.pending_documents?.action || "Upload Now",
       onClick: () => {
-        // Navigate to My Documents
-        navigate("/dashboard/documents");
+        // Open the Upload Modal
+        setShowUploadModal(true);
       },
+      className: "btn dashboard-card-btn",
+      style: {}
     },
     {
       icon: <BalanceIcon size={26} style={{ color: "#00C0C6" }} />,
@@ -51,9 +55,11 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       label: "Next Appointment",
       button: dashboardData?.summary_cards?.next_appointment ? "Reschedule" : "Schedule",
       onClick: () => {
-        // Navigate to Appointments
-        navigate("/dashboard/appointments");
+        // Open the Appointment Modal
+        setShowAppointmentModal(true);
       },
+      className: "btn dashboard-card-btn",
+      style: {}
     },
     {
       icon: <MessageIcon size={26} style={{ color: "#00C0C6" }} />,
@@ -94,8 +100,18 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
             </button> */}
 
             <button
-              className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+              className="btn text-white fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm transition-all"
               onClick={() => setShowUploadModal(true)}
+              style={{
+                backgroundColor: "#F56D2D",
+                borderRadius: "12px",
+                padding: "12px 24px",
+                minHeight: "48px",
+                width: "auto",
+                border: "none",
+                boxShadow: "0 4px 14px 0 rgba(245, 109, 45, 0.39)",
+                fontSize: "15px"
+              }}
             >
               <UpIcon />
               Upload Documents
@@ -121,8 +137,9 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
               <div>
                 <div className="dashboard-card-label" style={{ textAlign: "center" }}>{card.label}</div>
                 <button
-                  className="btn dashboard-card-btn"
+                  className={card.className || "btn dashboard-card-btn"}
                   onClick={card.onClick}
+                  style={{ ...card.style, minHeight: '44px' }}
                 >
                   {card.button}
                 </button>
@@ -134,6 +151,15 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
 
       {/* Upload Modal */}
       <UploadModal show={showUploadModal} handleClose={() => setShowUploadModal(false)} />
+
+      {/* Appointment Modal */}
+      <ScheduleAppointmentModal 
+        show={showAppointmentModal} 
+        handleClose={() => setShowAppointmentModal(false)}
+        onSuccess={() => {
+            // Optional: Fetch dashboard data again to refresh stats
+        }}
+      />
     </div>
   );
 }

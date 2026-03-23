@@ -440,11 +440,12 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
             centered
             backdrop="static"
             size={step === 1 ? "lg" : "xl"}
-            className="upload-modal"
+            className="premium-v5-modal-container"
+            contentClassName="rounded-v5 premium-shadow"
         >
-            <Modal.Body className="p-0">
+            <Modal.Body className="p-0 d-flex flex-column h-100">
                 {/* Header Section */}
-                <div className="p-4 bg-white border-bottom">
+                <div className="p-4 bg-white border-bottom flex-shrink-0">
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 className="upload-heading">Upload Documents</h5>
@@ -456,7 +457,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                     </div>
                 </div>
 
-                <div className="p-4">
+                <div className="p-4 flex-grow-1 overflow-auto custom-scrollbar">
                     {/* Select Client Field */}
 
 
@@ -604,10 +605,16 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                                                 ))}
                                             </Form.Group>
 
-                                            <div className="bg-light p-3 rounded">
-                                                <div className="small fw-bold text-main mb-1">File Details</div>
-                                                <div className="small text-muted">Name: {currentFile?.name}</div>
-                                                <div className="small text-muted">Estimated Size: {currentFile?.size}</div>
+                                            <div className="file-details-box">
+                                                <div className="details-header">File Details</div>
+                                                <div className="details-row">
+                                                    <span className="label">Name:</span>
+                                                    <span className="value">{currentFile?.name}</span>
+                                                </div>
+                                                <div className="details-row">
+                                                    <span className="label">Estimated Size:</span>
+                                                    <span className="value">{currentFile?.size}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
@@ -782,7 +789,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="modal-footer-premium">
+                <div className="modal-footer-premium flex-shrink-0">
                     <Button
                         className="btn-premium-secondary"
                         onClick={step === 2 ? () => setStep(1) : handleClose}

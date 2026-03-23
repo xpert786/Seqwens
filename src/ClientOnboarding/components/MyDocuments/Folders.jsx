@@ -758,7 +758,7 @@ export default function Folders({ onFolderSelect }) {
                                 {folders.map((folder) => (
                                     <div
                                         key={folder.id}
-                                        className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-3" : "col-12 mb-2"}
+                                        className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-4" : "col-12 mb-2"}
                                         onClick={() => handleFolderClick(folder, folders.indexOf(folder))}
                                         style={{ cursor: "pointer" }}
                                     >
@@ -1328,7 +1328,7 @@ export default function Folders({ onFolderSelect }) {
                                 // Trashed folders grid view
                                 <div className="row g-4">
                                     {trashedFolders.map((folder, idx) => (
-                                        <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={folder.id || idx}>
+                                        <div className="col-12 col-sm-6 col-md-4 col-lg-4" key={folder.id || idx}>
                                             <div
                                                 className="folder-card border rounded-3"
                                                 style={{
@@ -1440,7 +1440,7 @@ export default function Folders({ onFolderSelect }) {
                             ) : (
                                 <div className="row g-4">
                                     {folders.map((folder, idx) => (
-                                        <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={folder.id || idx}>
+                                        <div className="col-12 col-sm-6 col-md-4 col-lg-4" key={folder.id || idx}>
                                             <div
                                                 className={`folder-card border rounded-3 ${selectedIndex === idx ? "active" : ""}`}
                                                 onClick={() => handleFolderClick(folder, idx)}
