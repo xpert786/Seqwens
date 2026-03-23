@@ -1640,29 +1640,30 @@ export default function ClientManage() {
               </div>
             ) : (
               <>
-                <div className="row g-3">
+                <div className="row g-4">
                   {unlinkedTaxpayers.map((taxpayer) => (
-                    <div key={taxpayer.id} className="col-md-4 col-12">
+                    <div key={taxpayer.id} className="col-xxl-4 col-xl-4 col-lg-6 col-md-6 col-sm-12 col-12">
                       <div
-                        className="card client-card h-100"
+                        className="card client-card h-100 overflow-hidden"
                         style={{
                           border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                          padding: '6px',
-                          borderRadius: '10px',
-                          transition: 'all 0.2s ease'
+                          padding: '12px',
+                          borderRadius: '12px',
+                          transition: 'all 0.2s ease',
+                          backgroundColor: '#fff'
                         }}
                       >
-                        <div className="d-flex justify-content-between align-items-start" style={{ gap: '12px' }}>
+                        <div className="d-flex flex-col sm:flex-row justify-content-between align-items-start gap-3">
                           <div
-                            className="d-flex gap-3 flex-grow-1"
+                            className="d-flex gap-3 flex-grow-1 min-w-0"
                             onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
                             style={{ cursor: "pointer" }}
                           >
                             <div
-                              className="client-initials"
+                              className="client-initials flex-shrink-0"
                               style={{
-                                width: "48px",
-                                height: "48px",
+                                width: "45px",
+                                height: "45px",
                                 borderRadius: "50%",
                                 display: "flex",
                                 alignItems: "center",
@@ -1670,47 +1671,46 @@ export default function ClientManage() {
                                 backgroundColor: "#00C0C6",
                                 color: "white",
                                 fontWeight: "600",
-                                fontSize: "16px",
-                                flexShrink: 0
+                                fontSize: "15px"
                               }}
                             >
                               {taxpayer.first_name?.[0]?.toUpperCase() || ''}{taxpayer.last_name?.[0]?.toUpperCase() || ''}
                             </div>
-                            <div className="flex-grow-1">
-                              <div className="fw-semibold mb-1" style={{ color: '#131323' }}>
+                            <div className="flex-grow-1 min-w-0">
+                              <div className="fw-semibold mb-1 text-truncate" style={{ color: '#131323', fontSize: '14px' }} title={taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}>
                                 {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
                               </div>
                               {taxpayer.email && (
-                                <div className="text-muted small mb-2 d-flex align-items-center gap-1">
-                                  <FaEnvelope className="text-info" size={12} />
-                                  {taxpayer.email}
+                                <div className="text-muted small mb-1 d-flex align-items-center gap-2 text-truncate" title={taxpayer.email}>
+                                  <FaEnvelope className="text-info flex-shrink-0" size={12} />
+                                  <span className="text-truncate">{taxpayer.email}</span>
                                 </div>
                               )}
                               {taxpayer.phone_number && (
-                                <div className="text-muted small mb-2 d-flex align-items-center gap-1">
-                                  <FaPhone className="text-info" size={12} />
-                                  {taxpayer.phone_number}
+                                <div className="text-muted small mb-2 d-flex align-items-center gap-2 text-truncate">
+                                  <FaPhone className="text-info flex-shrink-0" size={12} />
+                                  <span className="text-truncate">{taxpayer.phone_number}</span>
                                 </div>
                               )}
-                              <div className="d-flex flex-wrap gap-2 mt-2">
+                              <div className="d-flex flex-wrap gap-1 mt-2">
                                 {taxpayer.is_active ? (
-                                  <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: '10px' }}>
+                                  <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: '9px', padding: '2px 6px' }}>
                                     Active
                                   </span>
                                 ) : (
-                                  <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style={{ fontSize: '10px' }}>
+                                  <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style={{ fontSize: '9px', padding: '2px 6px' }}>
                                     Inactive
                                   </span>
                                 )}
                                 {taxpayer.is_email_verified && (
-                                  <span className="badge bg-info-subtle text-info border border-info-subtle" style={{ fontSize: '10px' }}>
+                                  <span className="badge bg-info-subtle text-info border border-info-subtle" style={{ fontSize: '9px', padding: '2px 6px' }}>
                                     Email Verified
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
+                          <div className="d-flex flex-row sm:flex-column gap-2 flex-shrink-0">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1718,17 +1718,15 @@ export default function ClientManage() {
                                 setIsAssignMode(true);
                                 setShowReassignStaffModal(true);
                               }}
+                              className="btn btn-sm"
                               style={{
                                 backgroundColor: '#F56D2D',
                                 color: 'white',
-                                border: 'none',
-                                fontSize: '12px',
+                                fontSize: '11px',
                                 fontWeight: '600',
-                                padding: '6px 14px',
+                                padding: '5px 12px',
                                 borderRadius: '6px',
-                                whiteSpace: 'nowrap',
-                                transition: 'none',
-                                cursor: 'pointer'
+                                whiteSpace: 'nowrap'
                               }}
                             >
                               Assign
@@ -1739,17 +1737,15 @@ export default function ClientManage() {
                                 setSelectedClientForDelete(taxpayer.id);
                                 setShowDeleteConfirmModal(true);
                               }}
+                              className="btn btn-sm"
                               style={{
                                 backgroundColor: '#EF4444',
                                 color: 'white',
-                                border: 'none',
-                                fontSize: '12px',
+                                fontSize: '11px',
                                 fontWeight: '600',
-                                padding: '6px 14px',
+                                padding: '5px 12px',
                                 borderRadius: '6px',
-                                whiteSpace: 'nowrap',
-                                transition: 'none',
-                                cursor: 'pointer'
+                                whiteSpace: 'nowrap'
                               }}
                             >
                               Reject

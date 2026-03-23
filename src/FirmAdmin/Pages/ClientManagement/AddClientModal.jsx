@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { FaEnvelope, FaSms, FaLink, FaCopy, FaTrash, FaExclamationTriangle, FaListOl } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -1093,82 +1095,106 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       )}
 
       {/* Share Taxpayer Invite Modal */}
-      {showInviteActionsModal && activeInviteDetails && (
-        <div className="modal invite-actions-modal modal-overlay" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
-              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
-                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
-                <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
+      {showInviteActionsModal && activeInviteDetails && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Darkened backdrop with minimal blur as requested */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-300" 
+            onClick={closeInviteActionsModal}
+          />
+          
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <h5 className="text-lg font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Share Taxpayer Invite</h5>
+              <button 
+                onClick={closeInviteActionsModal}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+              >
+                <IoMdClose size={22} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
+              {/* User Info Card */}
+              <div className="p-4 mb-6 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
+                <p className="text-base font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                  {activeInviteDetails.first_name} {activeInviteDetails.last_name}
+                </p>
+                <p className="text-sm text-slate-500 font-medium">{activeInviteDetails.email}</p>
+                {activeInviteDetails.phone_number && (
+                  <p className="text-sm text-slate-500 font-medium">{activeInviteDetails.phone_number}</p>
+                )}
+                {inviteExpiresOn && (
+                  <div className="pt-2">
+                    <span className="text-[11px] px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-bold uppercase tracking-wider">
+                      Expires {inviteExpiresOn}
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
-                <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
-                  <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
-                    {activeInviteDetails.first_name} {activeInviteDetails.last_name}
-                  </p>
-                  <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.email}</p>
-                  {activeInviteDetails.phone_number && (
-                    <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.phone_number}</p>
-                  )}
-                  {inviteExpiresOn && (
-                    <small className="text-muted">Expires {inviteExpiresOn}</small>
-                  )}
-                </div>
 
-                <div className="mb-4">
-                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaListOl size={14} /> Next Steps
-                  </label>
-                  <div className="p-3 bg-light rounded text-muted" style={{ fontSize: '14px', backgroundColor: '#F9FAFB', border: '1px solid #E8F0FF' }}>
-                    <ol className="mb-0 ps-3">
-                      <li className="mb-2">Send an invitation using the <strong>Email</strong> or <strong>SMS</strong> options below.</li>
-                      <li className="mb-2">The client will receive a secure link to verify their identity and set a password.</li>
-                      <li>Once verified, they will gain access to their client portal to upload documents.</li>
-                    </ol>
+              {/* Next Steps Section */}
+              <div className="mb-6">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                  <FaListOl size={12} /> Next Steps
+                </label>
+                <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-xl text-sm text-slate-600 leading-relaxed font-medium">
+                  <ol className="space-y-3 list-decimal pl-4">
+                    <li>Send an invitation using the <strong className="text-[#3B4A66]">Email</strong> or <strong className="text-[#3B4A66]">SMS</strong> options below.</li>
+                    <li>The client will receive a secure link to verify their identity and set a password.</li>
+                    <li>Once verified, they will gain access to their client portal to upload documents.</li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Email Invite Section */}
+              <div className="mb-6 group">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 group-focus-within:text-[#00C0C6] transition-colors">
+                  <FaEnvelope size={12} /> Send Email Invite
+                </label>
+                <p className="text-sm text-slate-500 mb-3 font-medium">
+                  We'll email a secure link to the address below.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    className="flex-grow px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00C0C6]/20 focus:border-[#00C0C6] transition-all"
+                    value={editedInviteEmail}
+                    onChange={(e) => setEditedInviteEmail(e.target.value)}
+                    placeholder={activeInviteDetails.email || 'Enter email'}
+                  />
+                  <button
+                    type="button"
+                    className="px-6 py-2.5 bg-[#00C0C6] hover:bg-[#00A8AE] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#00C0C6]/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-50"
+                    onClick={handleSendEmailInviteNow}
+                    disabled={inviteActionLoading}
+                  >
+                    {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
+                  </button>
+                </div>
+                {activeInviteDetails.delivery_summary && (
+                  <div className="mt-2 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${activeInviteDetails.delivery_summary.email_sent ? 'bg-green-500' : 'bg-slate-300'}`} />
+                    EMAIL SENT: {activeInviteDetails.delivery_summary.email_sent ? "YES" : "NO"}
                   </div>
-                </div>
+                )}
+              </div>
 
-                <div className="mb-4">
-                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaEnvelope size={14} /> Send Email Invite
-                  </label>
-                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll email a secure link to the address below.
-                  </p>
-                  <div className="d-flex gap-2">
-                    <input
-                      type="email"
-                      className="form-control"
-                      value={editedInviteEmail}
-                      onChange={(e) => setEditedInviteEmail(e.target.value)}
-                      placeholder={activeInviteDetails.email || 'Enter email'}
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={handleSendEmailInviteNow}
-                      disabled={inviteActionLoading}
-                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
-                    >
-                      {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
-                    </button>
-                  </div>
-                  {activeInviteDetails.delivery_summary && (
-                    <div className="mt-2 text-muted small">
-                      Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mb-1">
-                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                    <FaSms size={14} /> Send SMS Invite
-                  </label>
-                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll text the invite link to the phone number you provide.
-                  </p>
-                  <div className="d-flex gap-2 mb-2">
+              {/* SMS Invite Section */}
+              <div className="group">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 group-focus-within:text-[#00C0C6] transition-colors">
+                  <FaSms size={12} /> Send SMS Invite
+                </label>
+                <p className="text-sm text-slate-500 mb-3 font-medium">
+                  We'll text the invite link to the phone number below.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-grow">
                     <PhoneInput
                       country={smsPhoneCountry}
                       value={smsPhoneOverride || ''}
@@ -1176,90 +1202,112 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                       onCountryChange={(countryCode) => {
                         setSmsPhoneCountry(countryCode.toLowerCase());
                       }}
-                      inputClass="form-control"
-                      containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
-                      inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                      dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
+                      inputClass="!w-full !px-4 !py-2.5 !h-[45px] !bg-white !border !border-slate-200 !rounded-xl !text-sm focus:!ring-2 focus:!ring-[#00C0C6]/20 focus:!border-[#00C0C6] !transition-all"
+                      containerClass="!w-full"
+                      buttonClass="!bg-white !border-r !border-slate-200 !rounded-l-xl"
                       enableSearch={true}
                       countryCodeEditable={false}
                       preferredCountries={['us']}
                       disableCountryGuess={true}
                     />
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={handleSendSmsInviteNow}
-                      disabled={inviteActionLoading}
-                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
-                    >
-                      {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
-                    </button>
                   </div>
-                  {activeInviteDetails.delivery_summary && (
-                    <div className="text-muted small">
-                      SMS sent: {activeInviteDetails.delivery_summary.sms_sent ? "Yes" : "No"}
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    className="px-6 py-2.5 bg-[#00C0C6] hover:bg-[#00A8AE] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#00C0C6]/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-50"
+                    onClick={handleSendSmsInviteNow}
+                    disabled={inviteActionLoading}
+                  >
+                    {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
+                  </button>
                 </div>
+                {activeInviteDetails.delivery_summary && (
+                  <div className="mt-2 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${activeInviteDetails.delivery_summary.sms_sent ? 'bg-green-500' : 'bg-slate-300'}`} />
+                    SMS SENT: {activeInviteDetails.delivery_summary.sms_sent ? "YES" : "NO"}
+                  </div>
+                )}
               </div>
-              <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
+              <div className="w-full sm:w-auto order-2 sm:order-1">
                 {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
                   <button
-                    className="btn btn-outline-danger d-flex align-items-center"
-                    style={{ borderRadius: '8px' }}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50"
                     onClick={handleDeleteInvite}
                     disabled={deletingInvite}
                   >
-                    <FaTrash size={12} className="me-1" />
+                    <FaTrash size={12} />
                     {deletingInvite ? 'Deleting...' : 'Delete Invite'}
                   </button>
                 )}
-                <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
+              </div>
+              <div className="w-full sm:w-auto flex items-center gap-3 order-1 sm:order-2">
+                <button 
+                  className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-all font-[BasisGrotesquePro]" 
+                  onClick={closeInviteActionsModal}
+                >
                   Invite Later
                 </button>
               </div>
             </div>
           </div>
-        </div>
+
+          <style>
+            {`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 5px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #E2E8F0;
+                border-radius: 10px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #CBD5E1;
+              }
+            `}
+          </style>
+        </div>,
+        document.body
       )}
 
       {/* Delete Invite Confirmation Modal */}
-      {showDeleteInviteConfirmModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-overlay"
-          onClick={() => {
-            if (!deletingInvite) {
-              setShowDeleteInviteConfirmModal(false);
-            }
-          }}
-        >
-          <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
-            style={{
-              borderRadius: '12px',
+      {showDeleteInviteConfirmModal && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-300"
+            onClick={() => {
+              if (!deletingInvite) {
+                setShowDeleteInviteConfirmModal(false);
+              }
             }}
+          />
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h3>
+              <h3 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Delete Invitation</h3>
               <button
                 onClick={() => {
                   if (!deletingInvite) {
                     setShowDeleteInviteConfirmModal(false);
                   }
                 }}
-                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                 disabled={deletingInvite}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <IoMdClose size={20} />
               </button>
             </div>
 
-            <div className="mb-6">
-              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                Are you sure you want to delete this invitation? This action cannot be undone.
+            <div className="mb-8">
+              <p className="text-sm text-slate-500 font-medium font-[BasisGrotesquePro] leading-relaxed">
+                Are you sure you want to delete this invitation? This action cannot be undone and the secure link will immediately become invalid.
               </p>
             </div>
 
@@ -1268,22 +1316,22 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                 onClick={() => {
                   setShowDeleteInviteConfirmModal(false);
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                className="px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all font-[BasisGrotesquePro]"
                 disabled={deletingInvite}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeleteInvite}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                style={{ background: 'var(--color-red-500, #EF4444)' }}
+                className="px-6 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-95 disabled:opacity-50 font-[BasisGrotesquePro]"
                 disabled={deletingInvite}
               >
-                {deletingInvite ? 'Deleting...' : 'Delete'}
+                {deletingInvite ? 'Deleting...' : 'Delete Forever'}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

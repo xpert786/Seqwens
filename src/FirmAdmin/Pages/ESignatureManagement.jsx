@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import SignatureBuilder from '../../components/SignatureBuilder';
+import SimplePDFViewer from '../../components/SimplePDFViewer';
 import { Modal } from 'react-bootstrap';
 import '../styles/ClientManage.css';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
@@ -7,6 +8,7 @@ import { firmAdminClientsAPI, firmAdminStaffAPI, firmAdminDocumentsAPI, taxPrepa
 import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken, getUserData } from '../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
+import { FaEye } from 'react-icons/fa';
 
 export default function ESignatureManagement() {
   const [activeTab, setActiveTab] = useState('Requests');
@@ -1404,10 +1406,7 @@ export default function ESignatureManagement() {
                                   className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                                   aria-label="View"
                                 >
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
+                                  <FaEye size={16} className="icon-eye" />
                                 </button>
                               )}
                               {request.status === 'pending' && (
@@ -1419,7 +1418,7 @@ export default function ESignatureManagement() {
                                     navigator.clipboard.writeText(publicUrl);
                                     toast.success('Public sign link copied to clipboard!');
                                   }}
-                                  className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
+                                  className="p-1.5 hover:bg-gray-100 text-blue-600 rounded transition-colors"
                                   title="Copy Public Signing Link"
                                 >
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1448,7 +1447,7 @@ export default function ESignatureManagement() {
                               {request.status === 'signed' && (
                                 <button
                                   onClick={(e) => handleCompleteRequest(request.id, e)}
-                                  className="p-1.5 hover:bg-green-50 text-green-600 rounded transition-colors"
+                                  className="p-1.5 hover:bg-gray-100 text-green-600 rounded transition-colors"
                                   title="Mark as Completed"
                                 >
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
