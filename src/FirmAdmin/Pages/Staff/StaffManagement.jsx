@@ -46,7 +46,7 @@ export default function StaffManagement() {
     page_size: 20
   });
   const [processingInviteId, setProcessingInviteId] = useState(null);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ bottom: 0, right: 0 });
   const [showCancelInviteConfirm, setShowCancelInviteConfirm] = useState(false);
   const [inviteToCancel, setInviteToCancel] = useState(null);
   const [summary, setSummary] = useState({
@@ -904,7 +904,7 @@ export default function StaffManagement() {
       if (button) {
         const rect = button.getBoundingClientRect();
         setDropdownPosition({
-          top: rect.bottom + window.scrollY + 4,
+          bottom: window.innerHeight - rect.top + 4,
           right: window.innerWidth - rect.right
         });
       }
@@ -1404,7 +1404,7 @@ export default function StaffManagement() {
                               </svg>
                             </button>
                             {showDropdown === `invite-${invite.id}` && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 staff-dropdown-menu" style={{ zIndex: 9999 }}>
+                              <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 staff-dropdown-menu" style={{ zIndex: 9999 }}>
                                 <div className="py-1">
                                   <button
                                     onClick={() => handleResendInvite(invite)}
@@ -1754,7 +1754,7 @@ export default function StaffManagement() {
             data-dropdown-menu
             style={{
               zIndex: 9999,
-              top: `${dropdownPosition.top}px`,
+              bottom: `${dropdownPosition.bottom}px`,
               right: `${dropdownPosition.right}px`
             }}
           >
