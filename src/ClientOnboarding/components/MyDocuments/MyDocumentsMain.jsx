@@ -23,12 +23,12 @@ export default function MyDocumentsMain() {
 
   return (
     <div
-      className="container-fluid px-2 px-md-4 py-3"
+      className="container-fluid py-3"
       style={{
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "#F8FAFC"
+        // backgroundColor: "#F8FAFC"
       }}
     >
       {/* Header Section */}
