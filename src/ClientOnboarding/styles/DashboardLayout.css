@@ -9,7 +9,7 @@
   height: calc(100vh - 70px);
   overflow-y: auto;
   background-color: rgb(243, 247, 255);
-  padding: 20px;
+  /* padding: 20px; */
   width: calc(100% - var(--client-sidebar-width));
   transition: margin-left 0.3s ease, width 0.3s ease;
 }

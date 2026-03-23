@@ -79,6 +79,10 @@
   text-align: center !important;
   color: #3B4A66 !important;
   line-height: 1.2 !important;
+
+  word-break: break-word;
+  white-space: normal;
+  max-width: 100%;
 }
 
 /* Label */
@@ -320,4 +324,42 @@
   .dashboard-header-responsive .btn {
     white-space: nowrap;
   }
+}
+
+/* Large tablets */
+@media (max-width: 1024px) {
+  .dashboarder-card-value {
+    font-size: 26px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .dashboarder-card-value {
+    font-size: 22px !important;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .dashboarder-card-value {
+    font-size: 20px !important;
+  }
+}
+
+.card.dashboard-card {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Mobile height adjustment */
+@media (max-width: 768px) {
+  .card.dashboard-card {
+    min-height: 180px;
+  }
+}
+.text-value-small {
+  font-size: 18px !important;
 }

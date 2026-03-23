@@ -370,7 +370,7 @@ export default function ArchivedDocuments() {
                             </div>
 
 
-
+{/* 
                             <select
                                 className="form-select"
                                 value={selectedStatus}
@@ -386,7 +386,7 @@ export default function ArchivedDocuments() {
                                 <option>All Status</option>
                                 <option>Active</option>
                                 <option>Archived</option>
-                            </select>
+                            </select> */}
                         </div>
 
 

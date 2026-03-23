@@ -124,13 +124,19 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       {/* Dashboard Cards */}
       <div className="row g-3">
         {summaryCards.map((card, index) => (
-          <div className="col-sm-6 col-md-3 lg:px-4 md:px-2 px-1" key={index}>
+          <div className="col-12 col-sm-6 col-md-6 col-lg-3 lg:px-4 md:px-2 px-1" key={index}>
             <div className="card dashboard-card">
               <div className="d-flex justify-content-start align-items-start mb-3">
                 {card.icon}
               </div>
               <div className="d-flex justify-content-center align-items-center mb-3">
-                <p className="dashboarder-card-value">
+                <p
+                  className={`dashboarder-card-value ${typeof card.value === "string" &&
+                      card.value.length > 5
+                      ? "text-value-small"
+                      : ""
+                    }`}
+                >
                   {card.value}
                 </p>
               </div>
@@ -153,11 +159,11 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       <UploadModal show={showUploadModal} handleClose={() => setShowUploadModal(false)} />
 
       {/* Appointment Modal */}
-      <ScheduleAppointmentModal 
-        show={showAppointmentModal} 
+      <ScheduleAppointmentModal
+        show={showAppointmentModal}
         handleClose={() => setShowAppointmentModal(false)}
         onSuccess={() => {
-            // Optional: Fetch dashboard data again to refresh stats
+          // Optional: Fetch dashboard data again to refresh stats
         }}
       />
     </div>

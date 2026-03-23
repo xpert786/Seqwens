@@ -1037,7 +1037,10 @@ export default function MyDocumentsContent() {
             <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 mydocs-filter-container">
 
                 <div className="mydocs-search-wrapper">
-                    <i className="bi bi-search mydocs-search-icon"></i>
+                    <span className="mydocs-search-icon">   
+                        <i className="bi bi-search"></i>
+                    </span>
+
                     <input
                         type="text"
                         className="form-control mydocs-search-input"
@@ -1678,7 +1681,7 @@ export default function MyDocumentsContent() {
                                                 minHeight: '300px',
                                                 border: 'none',
                                             }}
-                                        ></iframe>  
+                                        ></iframe>
                                     );
                                 } else if (isImage) {
                                     return (
