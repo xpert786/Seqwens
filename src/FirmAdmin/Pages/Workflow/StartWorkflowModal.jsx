@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FaChevronDown } from 'react-icons/fa';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
@@ -237,9 +238,9 @@ const StartWorkflowModal = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-24 pt-20 modal-overlay" style={{ marginTop: "100px" }}>
-      <div className="bg-white !rounded-xl max-w-2xl w-full max-h-[77vh] overflow-hidden shadow-2xl flex flex-col" style={{ marginTop: "100px" }}>
+  return createPortal(
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 !z-[9999] workflow-portal-overlay">
+      <div className="bg-white !rounded-xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#E8F0FF] flex-shrink-0">
           <div>
@@ -464,7 +465,8 @@ const StartWorkflowModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

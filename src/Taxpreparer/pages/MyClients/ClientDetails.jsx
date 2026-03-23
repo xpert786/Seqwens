@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { useLocation, useParams, useNavigate, Outlet } from "react-router-dom";
@@ -2117,62 +2118,22 @@ export default function ClientDetails() {
       )}
 
       {/* Add Task Modal */}
-      {showAddTaskModal && (
-        <div className="modal" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1050,
-          padding: '24px'
-        }}>
-          <div style={{
-            width: '100%',
-            margin: '0 auto',
-            maxWidth: '500px',
-            background: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-            position: 'relative',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
+      {showAddTaskModal && createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-[9999] p-6 lg:p-8 animate-in fade-in duration-200">
+          <div className="w-full max-w-[550px] bg-white rounded-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
             {/* Header */}
-            <div style={{
-              padding: '20px 24px',
-              borderBottom: '1px solid #E8F0FF',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              position: 'sticky',
-              top: 0,
-              backgroundColor: 'white',
-              zIndex: 10,
-              borderTopLeftRadius: '16px',
-              borderTopRightRadius: '16px'
-            }}>
-              <div>
-                <h5 style={{
-                  margin: 0,
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#3B4A66',
-                  lineHeight: '24px'
-                }}>Create New Task</h5>
-                <p style={{
-                  margin: '4px 0 0',
-                  fontSize: '12px',
-                  color: '#6B7280',
-                  lineHeight: '16px'
-                }}>Add a new task to your workflow</p>
+            <div className="border-b border-[#E8F0FF] flex justify-between items-center bg-white z-20">
+              <div className="py-3 px-3 flex flex-col justify-center">
+                <h5 className="text-lg font-bold text-[#3B4A66] leading-tight" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Create New Task
+                </h5>
+                <span className="text-xs text-gray-500 leading-tight" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Add a new task to your workflow
+                </span>
               </div>
               <button
                 type="button"
+                className="py-1 px-2.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
                 onClick={() => {
                   setShowAddTaskModal(false);
                   setFormData({
@@ -2191,120 +2152,52 @@ export default function ClientDetails() {
                   setNewFolderName('');
                   setParentFolderForNewFolder(null);
                 }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#6B7280',
-                  fontSize: '20px',
-                  padding: '4px'
-                }}
               >
                 <Cut />
               </button>
             </div>
 
-            {/* Form */}
-            <div style={{ padding: '24px' }}>
-              <form onSubmit={createTask}>
+            {/* Form Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+              <form onSubmit={createTask} className="space-y-5">
                 {/* Task Type */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
-                    Task Type <span style={{ color: 'red' }}>*</span>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Task Type <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={formData.task_type}
-                    onChange={(e) => handleInputChange('task_type', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#111827',
-                      backgroundColor: 'white',
-                      appearance: 'none',
-                      backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239CA3AF\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 12px center',
-                      paddingRight: '36px',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                  >
-                    <option value="signature_request">Signature Request</option>
-                    <option value="review_request">Review Request</option>
-                    <option value="document_request">Document Request</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={formData.task_type}
+                      onChange={(e) => handleInputChange('task_type', e.target.value)}
+                      className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                      style={{ fontFamily: 'BasisGrotesquePro' }}
+                    >
+                      <option value="signature_request">Signature Request</option>
+                      <option value="review_request">Review Request</option>
+                      <option value="document_request">Document Request</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <FaChevronDown size={14} />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Spouse Signature Required Toggle */}
                 {formData.task_type === 'signature_request' && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
-                      <div style={{ position: 'relative', display: 'inline-block' }}>
-                        <input
-                          type="checkbox"
-                          checked={formData.spouse_signature_required || false}
-                          onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
-                          style={{
-                            width: '44px',
-                            height: '24px',
-                            appearance: 'none',
-                            backgroundColor: formData.spouse_signature_required ? '#00C0C6' : '#D1D5DB',
-                            borderRadius: '12px',
-                            position: 'relative',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s',
-                            outline: 'none'
-                          }}
-                        />
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: '2px',
-                            left: formData.spouse_signature_required ? '22px' : '2px',
-                            width: '20px',
-                            height: '20px',
-                            backgroundColor: 'white',
-                            borderRadius: '50%',
-                            transition: 'left 0.2s',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                          }}
-                        />
-                      </div>
-                      <span>Spouse's signature required</span>
-                    </label>
+                  <div className="flex items-center gap-3 py-1 cursor-pointer select-none" onClick={() => handleSpouseSignatureToggle(!formData.spouse_signature_required)}>
+                    <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${formData.spouse_signature_required ? 'bg-[#00C0C6]' : 'bg-gray-200'}`}>
+                      <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${formData.spouse_signature_required ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      Spouse's signature required
+                    </span>
                   </div>
                 )}
 
                 {/* Task Title */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
-                    Task Title <span style={{ color: 'red' }}>*</span>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Task Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -2312,97 +2205,43 @@ export default function ClientDetails() {
                     onChange={(e) => handleInputChange('task_title', e.target.value)}
                     placeholder="Enter task title"
                     required
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
+                    style={{ fontFamily: 'BasisGrotesquePro' }}
                   />
                 </div>
 
                 {/* Description */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Enter Description"
+                    placeholder="Enter task description"
                     rows="4"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#111827',
-                      resize: 'vertical',
-                      minHeight: '100px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                      fontFamily: 'inherit',
-                      lineHeight: '1.5'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                  ></textarea>
+                    className="w-full p-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none min-h-[100px] leading-relaxed"
+                    style={{ fontFamily: 'BasisGrotesquePro' }}
+                  />
                 </div>
 
-                {/* Client - Disabled and Pre-filled */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
-                    Client <span style={{ color: 'red' }}>*</span>
+                {/* Client - Disabled */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Client <span className="text-red-500">*</span>
                   </label>
-                  <div style={{
-                    width: '100%',
-                    minHeight: '44px',
-                    padding: '8px 12px',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    backgroundColor: '#F3F4F6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'not-allowed',
-                    opacity: 0.7
-                  }}>
-                    <span style={{ color: '#6B7280', fontSize: '14px' }}>
-                      {client ? client.name : 'Loading...'}
-                    </span>
+                  <div className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm bg-gray-50 flex items-center text-gray-500 italic">
+                    {client ? client.name : 'Loading...'}
                   </div>
-                  <small style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  <p className="text-[11px] text-gray-400 pl-1">
                     Client is pre-filled and cannot be changed
-                  </small>
+                  </p>
                 </div>
 
                 {/* Folder Selection */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Folder (Optional)
                     </label>
                     {!creatingFolder ? (
@@ -2413,184 +2252,77 @@ export default function ClientDetails() {
                           setCreatingFolder(true);
                           setParentFolderForNewFolder(formData.folder_id || null);
                         }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#3B82F6',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          padding: '4px 8px',
-                          textDecoration: 'underline'
-                        }}
+                        className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                        style={{ fontFamily: 'BasisGrotesquePro' }}
                       >
-                        Create New Folder
+                        + Create New Folder
                       </button>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="flex items-center gap-2">
                         <input
                           type="text"
-                          placeholder="Enter folder name"
+                          placeholder="Name..."
                           value={newFolderName}
                           onChange={(e) => setNewFolderName(e.target.value)}
                           disabled={creatingFolderLoading}
                           autoFocus
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && newFolderName.trim() && !creatingFolderLoading) {
-                              handleCreateFolder();
-                            }
-                            if (e.key === 'Escape') {
-                              setCreatingFolder(false);
-                              setNewFolderName('');
-                              setParentFolderForNewFolder(null);
-                            }
+                            if (e.key === 'Enter' && newFolderName.trim() && !creatingFolderLoading) handleCreateFolder();
+                            if (e.key === 'Escape') { setCreatingFolder(false); setNewFolderName(''); }
                           }}
-                          style={{
-                            padding: '4px 8px',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            width: '120px',
-                            outline: 'none'
-                          }}
+                          className="h-8 px-3 border border-gray-200 rounded-lg text-xs w-32 focus:outline-none focus:border-blue-400"
                         />
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCreateFolder();
-                          }}
+                          onClick={handleCreateFolder}
                           disabled={creatingFolderLoading || !newFolderName.trim()}
-                          style={{
-                            padding: '4px 12px',
-                            backgroundColor: creatingFolderLoading || !newFolderName.trim() ? '#9CA3AF' : '#3B82F6',
-                            border: 'none',
-                            borderRadius: '6px',
-                            color: 'white',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            cursor: creatingFolderLoading || !newFolderName.trim() ? 'not-allowed' : 'pointer'
-                          }}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-lg text-[11px] font-bold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          {creatingFolderLoading ? 'Creating...' : 'Add'}
+                          {creatingFolderLoading ? '...' : 'Add'}
                         </button>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCreatingFolder(false);
-                            setNewFolderName("");
-                            setParentFolderForNewFolder(null);
-                          }}
-                          disabled={creatingFolderLoading}
-                          style={{
-                            padding: '4px 12px',
-                            backgroundColor: 'white',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '6px',
-                            color: '#4B5563',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}
+                          onClick={() => setCreatingFolder(false)}
+                          className="p-1 text-gray-400 hover:text-red-500"
                         >
-                          Cancel
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                       </div>
                     )}
                   </div>
-                  <div ref={folderDropdownRef} style={{ position: 'relative' }}>
+
+                  <div className="relative" ref={folderDropdownRef}>
                     <div
-                      style={{
-                        width: '100%',
-                        minHeight: '44px',
-                        padding: '10px 12px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        backgroundColor: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.2s',
-                      }}
                       onClick={() => setShowFolderDropdown(!showFolderDropdown)}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
+                      className={`w-full h-11 px-4 border rounded-xl text-sm flex items-center justify-between cursor-pointer transition-all ${showFolderDropdown ? 'border-blue-500 ring-2 ring-blue-500/10' : 'border-gray-200 hover:border-gray-300'}`}
                     >
-                      <span style={{ color: selectedFolderPath ? '#111827' : '#9CA3AF', fontSize: '14px' }}>
+                      <span className={`truncate ${selectedFolderPath ? 'text-gray-800' : 'text-gray-400'}`}>
                         {selectedFolderPath || 'Select a folder (optional)'}
                       </span>
-                      {selectedFolderPath && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedFolderPath('');
-                            handleInputChange('folder_id', '');
-                          }}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#6B7280',
-                            cursor: 'pointer',
-                            padding: '4px',
-                            fontSize: '16px',
-                            marginLeft: '8px'
-                          }}
-                        >
-                          ×
-                        </button>
-                      )}
-                      <FaChevronDown
-                        size={12}
-                        style={{
-                          color: '#9CA3AF',
-                          marginLeft: '8px',
-                          transform: showFolderDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.2s'
-                        }}
-                      />
+                      <div className="flex items-center gap-2 pr-1">
+                        {selectedFolderPath && (
+                          <div
+                            onClick={(e) => { e.stopPropagation(); setSelectedFolderPath(''); handleInputChange('folder_id', ''); }}
+                            className="p-1 hover:bg-gray-100 rounded text-gray-400"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </div>
+                        )}
+                        <FaChevronDown size={12} className={`text-gray-400 transition-transform ${showFolderDropdown ? 'rotate-180' : ''}`} />
+                      </div>
                     </div>
 
-                    {/* Folder dropdown menu */}
                     {showFolderDropdown && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        marginTop: '4px',
-                        backgroundColor: 'white',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                        maxHeight: '300px',
-                        overflowY: 'auto',
-                        zIndex: 1000,
-                        padding: '8px'
-                      }}>
-                        <div style={{
-                          fontSize: '12px',
-                          color: '#6B7280',
-                          marginBottom: '8px',
-                          fontWeight: '500',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-64 overflow-y-auto z-[1001] p-2 animate-in fade-in zoom-in-95 duration-150 origin-top">
+                        <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                           Folders
                         </div>
                         {loadingFolders ? (
-                          <div style={{ padding: '12px', color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
-                            Loading folders...
-                          </div>
+                          <div className="p-4 text-center text-xs text-gray-500 italic">Loading folders...</div>
                         ) : folderTree.length === 0 ? (
-                          <div style={{ padding: '12px', color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
-                            No folders available
-                          </div>
+                          <div className="p-4 text-center text-xs text-gray-500 italic">No folders available</div>
                         ) : (
-                          renderFolderTree(folderTree)
+                          <div className="mt-1">{renderFolderTree(folderTree)}</div>
                         )}
                       </div>
                     )}
@@ -2598,112 +2330,66 @@ export default function ClientDetails() {
                 </div>
 
                 {/* Priority and Due Date */}
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                  {/* Priority */}
-                  <div style={{ flex: 1 }}>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Priority
                     </label>
-                    <select
-                      value={formData.priority}
-                      onChange={(e) => handleInputChange('priority', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        color: '#111827',
-                        backgroundColor: 'white',
-                        appearance: 'none',
-                        backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239CA3AF\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 12px center',
-                        paddingRight: '36px',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.2s',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                    >
-                      <option value="">Select Priority</option>
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={formData.priority}
+                        onChange={(e) => handleInputChange('priority', e.target.value)}
+                        className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white appearance-none focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                        style={{ fontFamily: 'BasisGrotesquePro' }}
+                      >
+                        <option value="">Select Priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <FaChevronDown size={14} />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Due Date */}
-                  <div style={{ flex: 1 }}>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Due Date
                     </label>
                     <input
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => handleInputChange('due_date', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        color: '#111827',
-                        backgroundColor: 'white',
-                        outline: 'none',
-                        transition: 'border-color 0.2s',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                      className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                      style={{ fontFamily: 'BasisGrotesquePro' }}
                     />
                   </div>
                 </div>
 
-                {/* File Upload - Hidden for document_request */}
+                {/* File Upload */}
                 {formData.task_type !== 'document_request' && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
-                      Files {formData.task_type !== 'document_request' && <span style={{ color: 'red' }}>*</span>}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      Files <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={(e) => handleInputChange('files', e.target.files)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s',
-                        cursor: 'pointer',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                    />
+                    <div className="relative group">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={(e) => handleInputChange('files', e.target.files)}
+                        className="w-full h-11 px-4 border-2 border-dashed border-gray-200 rounded-xl text-sm flex items-center cursor-pointer hover:border-blue-400 transition-colors file:hidden pt-2 pl-4"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-400 text-xs">
+                        Select files to upload
+                      </div>
+                    </div>
                     {formData.files.length > 0 && (
-                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>
-                        {formData.files.length} file(s) selected
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[11px] font-medium border border-blue-100 flex items-center gap-1.5">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                          {formData.files.length} file(s) selected
+                        </span>
                       </div>
                     )}
                   </div>
@@ -2712,18 +2398,7 @@ export default function ClientDetails() {
             </div>
 
             {/* Footer */}
-            <div style={{
-              padding: '16px 24px',
-              borderTop: '1px solid #E8F0FF',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px',
-              position: 'sticky',
-              bottom: 0,
-              backgroundColor: 'white',
-              borderBottomLeftRadius: '16px',
-              borderBottomRightRadius: '16px'
-            }}>
+            <div className="py-3 px-6 border-t border-[#E8F0FF] flex justify-end gap-3 bg-gray-50/50 sticky bottom-0 z-20">
               <button
                 type="button"
                 onClick={() => {
@@ -2744,42 +2419,24 @@ export default function ClientDetails() {
                   setNewFolderName('');
                   setParentFolderForNewFolder(null);
                 }}
-                style={{
-                  padding: '10px 16px',
-                  backgroundColor: 'white',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
-                  color: '#4B5563',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
-                }}
+                className="px-6 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 hover:text-gray-800 transition-all shadow-sm"
+                style={{ fontFamily: 'BasisGrotesquePro' }}
               >
                 Cancel
               </button>
               <button
-                type="submit"
+                type="button"
                 onClick={createTask}
                 disabled={loadingTask}
-                style={{
-                  padding: '10px 16px',
-                  backgroundColor: loadingTask ? '#9CA3AF' : '#FF7A2F',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: loadingTask ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s, transform 0.1s',
-                  opacity: loadingTask ? 0.7 : 1,
-                }}
+                className={`px-8 py-2 text-sm font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${loadingTask ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#F56D2D] hover:bg-[#ff7a2f] shadow-[#F56D2D]/20 hover:shadow-[#F56D2D]/30'}`}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
               >
                 {loadingTask ? 'Creating...' : 'Create Task'}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Fill Intake Form Modal */}
