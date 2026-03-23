@@ -681,7 +681,7 @@ span.info-item {
   border: none;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   overflow: visible;
-  max-height: 85vh;
+  max-height: 75vh;
   display: flex;
   flex-direction: column;
 }

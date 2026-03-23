@@ -923,16 +923,16 @@ export default function ESignature() {
 `}</style>
       {/* PDF Preview Modal */}
       <Modal
-       show={showPreviewModal}
-  onHide={() => {
-    setShowPreviewModal(false);
-    setSelectedIndex(null);
-  }}
-  size="lg"
-  centered
-  scrollable
-  className="pdf-preview-modal"  
-  style={{ fontFamily: 'BasisGrotesquePro' }}
+        show={showPreviewModal}
+        onHide={() => {
+          setShowPreviewModal(false);
+          setSelectedIndex(null);
+        }}
+        size="lg"
+        centered
+        scrollable
+        className="pdf-preview-modal"
+        style={{ fontFamily: 'BasisGrotesquePro' }}
       >
 
         <Modal.Header closeButton>

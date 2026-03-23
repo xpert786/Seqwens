@@ -1173,7 +1173,7 @@ export default function MessagePage() {
         {/* Left Column - Conversations */}
         <div className="p-3 me-4 d-flex flex-column conversations-panel bg-white shadow-sm" style={{ border: "1px solid #E2E8F0", borderRadius: "20px" }}>
           <div className="mb-4">
-            <h5 className="mb-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
+            <h5 className="mb-3 pt-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
             <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
               <FaSearch
@@ -1361,7 +1361,7 @@ export default function MessagePage() {
             return activeConversation ? (
               <>
                 {/* Desktop Header - Matches Client Panel */}
-                <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
+                <div className="border-bottom pb-2 mb-3 pt-4 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
                   <ConverIcon className="text-primary" size={20} />
                   <div>
                     <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
