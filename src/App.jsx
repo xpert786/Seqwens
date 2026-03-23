@@ -7,7 +7,7 @@ import 'aos/dist/aos.css';
 // import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
 import ESignatureModal from './ClientOnboarding/components/ESignatureModal';
-const PublicESignature = lazy(() => import('./ClientOnboarding/Pages/PublicESignature'));
+const PublicESignature = lazy(() => import('./ClientOnboarding/pages/PublicESignature'));
 import NotificationPanel from './ClientOnboarding/components/Notifications/NotificationPanel';
 import { FirmPortalColorsProvider } from './FirmAdmin/Context/FirmPortalColorsContext';
 import Dashboard from "./ClientOnboarding/pages/Dashboard";
