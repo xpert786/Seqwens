@@ -16,6 +16,7 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
     const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
     const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
+    const [selectedPlanId, setSelectedPlanId] = useState(null);
     const [processing, setProcessing] = useState(false);
 
     // Fetch subscription plans from API
@@ -666,14 +667,30 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                 {/* Action Button - Do not show for current plan */}
                                 {!isCurrent && (
                                     <button
-                                        onClick={() => !isCustomPricing && handleUpgradeClick(plan)}
-                                        className={`w-full px-3 sm:px-4 py-2 !rounded-lg transition-colors font-[BasisGrotesquePro] text-xs sm:text-sm font-medium ${isMostPopular
-                                            ? 'bg-[#F56D2D] text-white hover:bg-[#EA580C]'
-                                            : 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (selectedPlanId === plan.id) {
+                                                !isCustomPricing && handleUpgradeClick(plan);
+                                            } else {
+                                                setSelectedPlanId(plan.id);
+                                            }
+                                        }}
+                                        className={`w-full px-3 sm:px-4 py-2.5 !rounded-lg transition-all duration-200 font-[BasisGrotesquePro] text-xs sm:text-sm font-bold shadow-sm flex items-center justify-center gap-2 ${selectedPlanId === plan.id
+                                            ? 'bg-[#F56D2D] text-white hover:bg-orange-600 shadow-orange-100'
+                                            : 'bg-white border-2 border-[#3AD6F2] text-[#3AD6F2] hover:bg-[#F0FDFF]'
                                             }`}
                                         disabled={isCustomPricing}
                                     >
-                                        {isCustomPricing ? 'Contact Sales' : isMostPopular ? 'Upgrade' : 'Upgrade'}
+                                        {isCustomPricing ? 'Contact Sales' : selectedPlanId === plan.id ? (
+                                            <>
+                                                Continue
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </>
+                                        ) : (
+                                            'Select Plan'
+                                        )}
                                     </button>
                                 )}
                             </div>

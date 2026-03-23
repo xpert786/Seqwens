@@ -547,7 +547,7 @@ export default function FirmManagement() {
         } else if (action === 'Login as Firm') {
             // Navigate to firm details page and trigger login
             navigate(`/superadmin/firms/${firmId}?action=login`);
-        } else if (action === 'Edit User') {
+        } else if (action === 'Edit User' || action === 'Edit Firm') {
             navigate(`/superadmin/firms/${firmId}?tab=Settings`);
         } else if (action === 'Send Message') {
             // TODO: Implement message functionality
