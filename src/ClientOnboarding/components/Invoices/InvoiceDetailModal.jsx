@@ -125,10 +125,10 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header Section */}
-                <div className="relative p-8 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">
+                <div className="relative p-8 pr-16 md:pr-20 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600"
+                        className="absolute top-6 right-4 p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600"
                     >
                         <FiX size={20} />
                     </button>

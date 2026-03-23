@@ -623,29 +623,29 @@ export default function ESignature() {
                           const bothSigned = request.taxpayer_signed === true && request.spouse_signed === true;
 
                           // If both have signed or status is completed, submitted, or under_review, show Preview Annotated PDF button (if annotated_pdf_url exists)
-                          if ((bothSigned || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url) {
-                            return (
-                              <button
-                                className="btn d-flex align-items-center gap-2 rounded"
-                                style={{
-                                  backgroundColor: "#10B981",
-                                  color: "#fff",
-                                  border: "none",
-                                  fontSize: "12px",
-                                  fontWeight: "500"
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedIndex(originalIndex);
-                                  setShowPreviewModal(true);
-                                }}
-                                title="Preview Annotated PDF"
-                              >
-                                <FaEye size={14} />
-                                Preview Annotated PDF
-                              </button>
-                            );
-                          }
+                          // if ((bothSigned || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url) {
+                          //   return (
+                          //     <button
+                          //       className="btn d-flex align-items-center gap-2 rounded"
+                          //       style={{
+                          //         backgroundColor: "#10B981",
+                          //         color: "#fff",
+                          //         border: "none",
+                          //         fontSize: "12px",
+                          //         fontWeight: "500"
+                          //       }}
+                          //       onClick={(e) => {
+                          //         e.stopPropagation();
+                          //         setSelectedIndex(originalIndex);
+                          //         setShowPreviewModal(true);
+                          //       }}
+                          //       title="Preview Annotated PDF"
+                          //     >
+                          //       <FaEye size={14} />
+                          //       Preview Annotated PDF
+                          //     </button>
+                          //   );
+                          // }
 
                           // If both haven't signed and status is not processing, submitted, completed, or under_review, show Annotate PDF button
                           if (!bothSigned && request.status !== 'processing' && request.status !== 'submitted' && request.status !== 'completed' && request.status !== 'under_review') {
@@ -909,7 +909,7 @@ export default function ESignature() {
   }
   body.modal-open .pdf-preview-modal .modal-content {
     width: 100% !important;
-    max-height: 88vh !important;
+    max-height: 71vh !important;
     overflow: hidden !important;
     border-radius: 12px !important;
     display: flex !important;
