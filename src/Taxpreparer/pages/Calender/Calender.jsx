@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AddTask, AwaitingIcon, CompletedIcon, Contacted, DoubleuserIcon, DoubleUserIcon, FaildIcon, Task1, ZoomIcon } from "../../component/icons";
+import { AddTask, AwaitingIcon, Clocking, CompletedIcon, Contacted, DoubleuserIcon, DoubleUserIcon, FaildIcon, MiniContact, Task1, MonthIconed, ZoomIcon } from "../../component/icons";
 import CreateEventModal from "./CreateEventModal";
 import SetAvailabilityModal from "../../../FirmAdmin/Pages/Scheduling & calendar/SetAvailabilityModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
@@ -8,6 +8,7 @@ import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import "../../styles/Calendar.css";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function CalendarPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("Monthly");
@@ -46,7 +47,7 @@ export default function CalendarPage() {
   // Fetch calendar data from API
   const fetchCalendarData = async () => {
     try {
-      setLoading(true);
+      if (!calendarData) setLoading(true);
       const API_BASE_URL = getApiBaseUrl();
       const token = getAccessToken();
 
@@ -290,6 +291,35 @@ export default function CalendarPage() {
   };
 
   const calendarDays = generateCalendarDays();
+
+  // Get dynamic cell height based on period
+  const getCellHeight = () => {
+    switch (selectedPeriod) {
+      case "Day":
+        return "min-h-[500px]";
+      case "Week":
+        return "min-h-[450px]";
+      case "Years":
+        return "min-h-[180px]";
+      default: // Monthly
+        return "min-h-[120px]";
+    }
+  };
+
+  // Get dynamic events container max-height based on period
+  const getEventsContainerMaxHeight = () => {
+    switch (selectedPeriod) {
+      case "Day":
+        return "450px";
+      case "Week":
+        return "400px";
+      case "Years":
+        return "110px";
+      default: // Monthly
+        return "90px";
+    }
+  };
+
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -540,7 +570,7 @@ export default function CalendarPage() {
     setIsCreateEventModalOpen(false);
   };
 
-  if (loading) {
+  if (loading && !calendarData) {
     return (
       <div className="p-6 min-h-screen bg-[#F3F7FF] flex items-center justify-center">
         <p className="text-gray-600">Loading calendar...</p>
@@ -632,71 +662,71 @@ export default function CalendarPage() {
       </div>
 
 
-      <div className="flex flex-col lg:flex-row gap-6 w-full calendar-main-layout">
+      <div className="flex flex-col xl:flex-row gap-6 w-full calendar-main-layout animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Calendar Navigation and Grid Container */}
-        <div id="calendar-view-container" className="border border-[#E8F0FF] rounded-lg pt-2 bg-[#F3F7FF] w-full lg:w-[75%] calendar-content-area">
+        <div id="calendar-view-container" className="border border-[#E8F0FF] rounded-2xl pt-4 bg-white w-full xl:w-[75%] calendar-content-area shadow-sm">
           {/* Calendar Navigation */}
-          <div className="flex justify-between items-center mb-2 calendar-nav-controls">
-            <div className="flex items-center gap-3 w-full justify-start pl-2 calendar-date-title">
-
-              <h4 className="text-lg font-semibold text-gray-900 mb-0">
+          <div className="flex justify-between items-center mb-4 calendar-nav-controls">
+            <div className="flex items-center gap-3 w-full justify-start pl-4 calendar-date-title">
+              <h4 className="text-xl font-bold text-[#1E293B] mb-0 tracking-tight">
                 {selectedPeriod === "Monthly" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
                 {selectedPeriod === "Week" && `Week of ${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
                 {selectedPeriod === "Day" && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
                 {selectedPeriod === "Years" && `${currentDate.getFullYear()}`}
               </h4>
-
             </div>
-            <div className="flex items-center gap-2 justify-end w-full md:w-auto pr-2 calendar-nav-buttons">
-              <button
-                className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors border-[#E8F0FF] bg-white"
-                style={{ borderRadius: '10px' }}
-                onClick={() => navigateCalendar(-1)}
-              >
-                &lt;
-              </button>
-              <button
-                className="px-4 py-2  text-black  transition-colors text-sm border border-[#E8F0FF] bg-white"
-                style={{ borderRadius: '7px' }}
-                onClick={goToToday}
-              >
-                Today
-              </button>
-              <button
-                className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors bg-white"
-                style={{ borderRadius: '10px' }}
-                onClick={() => navigateCalendar(1)}
-              >
-                &gt;
-              </button>
+            <div className="flex items-center gap-2 justify-end w-full md:w-auto pr-4 calendar-nav-buttons">
+              <div className="flex items-center bg-white rounded-xl border border-[#E8F0FF] p-1 shadow-sm">
+                <button
+                  className="p-2 hover:bg-gray-50 text-gray-600 transition-all rounded-lg"
+                  onClick={() => navigateCalendar(-1)}
+                  title="Previous"
+                >
+                  <FaChevronLeft size={14} />
+                </button>
+                <div className="w-[1px] h-4 bg-[#E8F0FF] mx-1"></div>
+                <button
+                  className="px-4 py-1.5 hover:bg-gray-50 text-[#3B4A66] font-medium transition-all text-sm rounded-lg"
+                  onClick={goToToday}
+                >
+                  Today
+                </button>
+                <div className="w-[1px] h-4 bg-[#E8F0FF] mx-1"></div>
+                <button
+                  className="p-2 hover:bg-gray-50 text-gray-600 transition-all rounded-lg"
+                  onClick={() => navigateCalendar(1)}
+                  title="Next"
+                >
+                  <FaChevronRight size={14} />
+                </button>
+              </div>
             </div>
-            <div></div>
           </div>
 
           {/* Calendar Grid */}
-          <div className="flex gap-6">
+          <div className="flex gap-6 px-4 pb-4">
             <div className="flex-1">
-              <div className="bg-white rounded-lg  border border-gray-200 overflow-hidden">
+              <div className="bg-white !rounded-2xl border border-[#E8F0FF] overflow-hidden shadow-sm">
                 {/* Day Headers */}
                 {selectedPeriod !== "Day" && selectedPeriod !== "Years" && (
-                  <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                  <div className="grid grid-cols-7 bg-[#F8FAFC] border-b border-[#E8F0FF]">
                     {dayNames.map(day => (
-                      <div key={day} className="calendar-day-header-item p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0">
-                        <span className="day-header-full">{day.toUpperCase()}</span>
-                        <span className="day-header-short">{day[0].toUpperCase()}</span>
+                      <div key={day} className="calendar-day-header-item p-3.5 text-center text-[11px] font-black uppercase tracking-widest text-slate-500 border-r border-[#E8F0FF] last:border-r-0">
+                        <span className="day-header-full">{day}</span>
+                        <span className="day-header-short">{day[0]}</span>
                       </div>
                     ))}
                   </div>
                 )}
                 {selectedPeriod === "Years" && (
-                  <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
-                    <div className="p-3 text-center text-sm font-semibold text-gray-600 col-span-4">Months</div>
+                  <div className="grid grid-cols-3 bg-[#F8FAFC] border-b border-[#E8F0FF]">
+                    <div className="p-3.5 text-center text-[11px] font-black uppercase tracking-widest text-slate-500 col-span-3">Strategic Annual Overview</div>
                   </div>
                 )}
 
                 {/* Calendar Days */}
                 <div className={`grid ${selectedPeriod === "Day" ? "grid-cols-1" :
-                  selectedPeriod === "Years" ? "grid-cols-4" : "grid-cols-7"
+                  selectedPeriod === "Years" ? "grid-cols-3" : "grid-cols-7"
                   }`}>
                   {calendarDays.map((day, index) => {
                     const dayEvents = getAppointmentsForDate(day);
@@ -710,10 +740,9 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={index}
-                        className={`calendar-cell min-h-[120px] p-2 cursor-pointer transition-colors hover:bg-[#F5F5F5] ${selectedPeriod === "Monthly" && !isCurrentMonthInMonthly ? 'bg-gray-50 text-gray-400' : 'bg-white'
-                          } ${isToday ? 'bg-[#F5F5F5]' : ''} ${isSelected ? 'bg-orange-50 border-orange-200' : ''
-                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index % 7 !== 6) || (selectedPeriod === "Years" && index % 4 !== 3) ? 'border-r border-[#E8F0FF]' : ''
-                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index < (selectedPeriod === "Monthly" ? 35 : 0)) || (selectedPeriod === "Years" && index < 8) ? 'border-b border-[#E8F0FF]' : ''
+                        className={`calendar-cell ${getCellHeight()} p-2 cursor-pointer transition-all duration-200 ${selectedPeriod === "Monthly" && !isCurrentMonthInMonthly ? 'bg-slate-50/50 text-slate-300' : 'bg-white'
+                          } ${isToday ? 'bg-blue-50/30' : ''} ${isSelected ? 'ring-2 ring-inset ring-orange-500 bg-orange-50/30' : 'hover:bg-slate-50'} ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index % 7 !== 6) || (selectedPeriod === "Years" && index % 3 !== 2) ? 'border-r border-[#E8F0FF]' : ''
+                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index < (selectedPeriod === "Monthly" ? 35 : 0)) || (selectedPeriod === "Years" && index < 9) ? 'border-b border-[#E8F0FF]' : ''
                           }`}
                         onClick={() => {
                           setSelectedDate(day);
@@ -723,28 +752,29 @@ export default function CalendarPage() {
                           }
                         }}
                       >
-                        <div className="d-flex justify-content-between align-items-start mb-1">
-                          <div className={`calendar-day-number-wrapper text-sm font-medium ${isToday ? 'bg-blue-500 text-white rounded-full px-2 py-1 flex items-center justify-center' : ''
+                        <div className="flex justify-between items-start mb-2">
+                          <div className={`calendar-day-number-wrapper flex items-center justify-center font-bold transition-all ${selectedPeriod === "Years" ? 'px-4 py-1.5 rounded-xl text-xs uppercase tracking-widest' : 'w-8 h-8 text-sm rounded-xl'} ${isToday ? 'bg-[#F56D2D] text-white shadow-lg shadow-orange-500/30' : 'text-slate-600 bg-slate-50'
                             }`}>
                             {displayValue}
                           </div>
-
                         </div>
-                        <div className="calendar-tasks-container d-flex flex-column gap-1 overflow-auto" style={{ flex: 1, maxHeight: '90px' }}>
+                        <div className="calendar-tasks-container d-flex flex-column gap-1 overflow-auto custom-scrollbar" style={{ flex: 1, maxHeight: getEventsContainerMaxHeight() }}>
                           {dayEvents.map(event => (
                             <div
                               key={event.id}
-                              className="calendar-task-item bg-orange-500 text-white p-1 rounded text-xs mb-1 shadow-sm cursor-pointer hover:bg-orange-600"
+                              className="calendar-task-item flex flex-col gap-0.5 p-1.5 rounded-lg text-xs mb-1 shadow-sm cursor-pointer transition-all"
+                              style={{
+                                backgroundColor: '#FFF7ED',
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleViewEvent(event);
                               }}
                             >
-                              <div className="flex items-center gap-1">
-                                <div className="w-1 h-1 bg-white rounded-full"></div>
-                                <span className="truncate">{event.title}</span>
+                              <div className="flex items-center gap-1.5 font-semibold">
+                                <span className="truncate capitalize">{event.title}</span>
                               </div>
-                              <div className="opacity-90 calendar-task-time" style={{ fontSize: '9px', lineHeight: '1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.time}</div>
+                              <div className="opacity-80 text-[10px] font-medium">{event.time}</div>
                             </div>
                           ))}
                         </div>
@@ -758,32 +788,45 @@ export default function CalendarPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="w-full lg:w-80 space-y-4 calendar-sidebar-area">
+        <div className="w-full xl:w-96 space-y-5 calendar-sidebar-area">
           {/* Today's Events */}
-          <div className="bg-white rounded-lg  border border-[#E8F0FF] p-4">
-            <h6 className="font-semibold text-gray-900 mb-2">Today's Events</h6>
-            <p className="text-sm text-gray-500 mb-3">
-              {new Date().toLocaleDateString()}
+          <div className=" max-h-[380px] overflow-y-auto custom-scrollbar bg-white rounded-2xl border border-[#E8F0FF] p-3 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#F56D2D] animate-pulse shadow-sm shadow-[#F56D2D]/50"></div>
+              <h6 className="font-black text-slate-800 m-0 text-sm uppercase tracking-wider">Today's Schedule</h6>
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-[0.15em]">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </p>
             {getTodayEvents().length === 0 ? (
-              <p className="text-gray-500 text-sm">No events scheduled for today</p>
+              <div className="py-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-slate-400 text-xs font-medium mb-0 italic">No events today</p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {getTodayEvents().map(event => (
-                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="capitalize font-medium text-sm text-gray-900">{event.title}</div>
-                      <div className="text-xs text-gray-500">{event.time}</div>
+                  <div key={event.id} className="group relative flex items-start gap-3 p-3 rounded-2xl bg-slate-50/30 hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden" onClick={() => handleViewEvent(event)}>
+                    <div className="absolute left-0 top-0 w-1 h-full bg-[#F56D2D] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="flex flex-col items-center shrink-0 pt-1">
+                      <div className="w-1.5 h-1.5 bg-[#F56D2D] rounded-full mb-1"></div>
+                      <div className="w-[1px] h-full bg-slate-100 group-last:hidden"></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="capitalize font-black text-[13px] text-slate-800 truncate mb-1">{event.title}</div>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                        <Clocking size={12} className="text-slate-400" /> {event.time}
+                      </div>
                       {event.user && (
-                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
+                        <div className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1.5 font-medium">
+                          <MiniContact size={10} className="text-slate-300" /> <span className="truncate italic">With {event.user}</span>
+                        </div>
                       )}
                       {event.appointment?.meeting_link && (
                         <button
                           onClick={() => handleLaunchMeeting(event.appointment)}
-                          className="mt-1 !text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          className="mt-3 w-full py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors rounded-lg !text-[11px] font-bold flex items-center justify-center gap-1.5"
                         >
-                          <ZoomIcon size={16} /> Launch Meeting
+                          <ZoomIcon size={14} /> Launch Meeting
                         </button>
                       )}
                     </div>
@@ -795,50 +838,50 @@ export default function CalendarPage() {
 
           {/* Pending Meetings */}
           {getPendingMeetings().length > 0 && (
-            <div className="bg-white rounded-lg border border-[#E8F0FF] p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h6 className="font-semibold text-gray-900">Pending Meetings</h6>
+            <div className="bg-white rounded-2xl border border-[#E8F0FF] p-5 shadow-sm">
+              <div className="flex justify-between items-baseline mb-4">
+                <h6 className="font-bold text-[#1E293B] m-0">Pending Meetings</h6>
                 <button
                   onClick={() => setShowPendingMeetingsModal(true)}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-[11px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider"
                 >
                   View All ({getPendingMeetings().length})
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mb-3">Meetings awaiting approval</p>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {getPendingMeetings().slice(0, 3).map(event => (
-                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900">{event.title}</div>
-                      <div className="text-xs text-gray-500">{event.time}</div>
-                      <div className="text-xs text-gray-400">{event.date.toLocaleDateString()}</div>
-                      {event.user && (
-                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApproveAppointment(event);
-                          }}
-                          disabled={updatingStatus[event.id]}
-                          className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updatingStatus[event.id] ? 'Processing...' : 'Approve'}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCancelAppointment(event);
-                          }}
-                          disabled={updatingStatus[event.id]}
-                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updatingStatus[event.id] ? 'Processing...' : 'Cancel'}
-                        </button>
+                  <div key={event.id} className="p-3 rounded-xl bg-yellow-50/50 border border-yellow-100/50 group">
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm text-[#1E293B] truncate">{event.title}</div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5 font-medium">
+                          <Clocking size={12} /> {event.time}
+                        </div>
+                        <div className="text-[11px] text-gray-400 mt-0.5">{event.date.toLocaleDateString()}</div>
                       </div>
+                    </div>
+                    <div className="flex gap-2 mt-3 pl-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApproveAppointment(event);
+                        }}
+                        disabled={updatingStatus[event.id]}
+                        className="flex-1 py-1.5 text-[11px] font-bold bg-[#32B582] text-white rounded-lg hover:bg-[#2da375] transition-colors disabled:opacity-50"
+                      >
+                        {updatingStatus[event.id] ? '...' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCancelAppointment(event);
+                        }}
+                        disabled={updatingStatus[event.id]}
+                        className="flex-1 py-1.5 text-[11px] font-bold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        {updatingStatus[event.id] ? '...' : 'Cancel'}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -847,22 +890,34 @@ export default function CalendarPage() {
           )}
 
           {/* Upcoming Events */}
-          <div className="bg-white rounded-lg  border border-[#E8F0FF] p-4">
-            <h6 className="font-semibold text-gray-900 mb-2">Upcoming Events</h6>
-            <p className="text-sm text-gray-500 mb-3">Next 5 Scheduled Events</p>
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar bg-white rounded-2xl border border-[#E8F0FF] p-3 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300">
+            <h6 className="font-black text-slate-800 mb-1 text-sm uppercase tracking-wider">Future Agenda</h6>
+            <p className="text-[10px] text-slate-400 mb-4 font-bold uppercase tracking-[0.15em]">Next 5 Scheduled Events</p>
             {getUpcomingEvents().length === 0 ? (
-              <p className="text-gray-500 text-sm">No upcoming events</p>
+              <div className="py-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-slate-400 text-xs font-medium mb-0 italic">Clear schedule</p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3 ">
                 {getUpcomingEvents().map(event => (
-                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900">{event.title}</div>
-                      <div className="text-xs text-gray-500">{event.time}</div>
-                      <div className="text-xs text-gray-400">{event.date.toLocaleDateString()}</div>
+                  <div key={event.id} className="group relative flex items-start gap-3 p-3 rounded-2xl bg-slate-50/30 hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden" onClick={() => handleViewEvent(event)}>
+                    <div className="absolute left-0 top-0 w-1 h-full bg-[#1e293b] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="flex flex-col items-center shrink-0 pt-1">
+                      <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mb-1 group-hover:bg-[#F56D2D] transition-colors"></div>
+                      <div className="w-[1px] h-full bg-slate-100 group-last:hidden"></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-black text-[13px] text-slate-800 truncate mb-1">{event.title}</div>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                        <Clocking size={12} className="text-slate-400" /> {event.time}
+                      </div>
+                      <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-1.5 font-bold uppercase">
+                        <MonthIconed size={12} className="text-slate-300" /> {event.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
                       {event.user && (
-                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
+                        <div className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1.5 font-medium italic">
+                          <span className="text-slate-300">With {event.user}</span>
+                        </div>
                       )}
                       {event.statusDisplay && (
                         <div className="text-xs mt-1">
@@ -898,9 +953,9 @@ export default function CalendarPage() {
                       {event.appointment?.meeting_link && event.status === 'confirmed' && (
                         <button
                           onClick={() => handleLaunchMeeting(event.appointment)}
-                          className="mt-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          className="mt-3 w-full py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors rounded-lg !text-[11px] font-bold flex items-center justify-center gap-1.5"
                         >
-                          <ZoomIcon /> Launch Meeting
+                          <ZoomIcon size={14} /> Launch Meeting
                         </button>
                       )}
                     </div>
@@ -911,9 +966,10 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
       {/* View Event Modal */}
       {viewEventModalOpen && selectedEvent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999999990] p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">

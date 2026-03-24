@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useSearchParams } from "react-router-dom";
 import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendinge, Progressingg, Completeded, Overduer, MiniContact, Dot, AddTask, Cut, Msg } from "../../component/icons";
 import { FaChevronDown, FaChevronRight, FaChevronLeft, FaFolder, FaSearch, FaUpload, FaTimes, FaCheckCircle, FaEye, FaCheck, FaRedo, FaFilePdf } from "react-icons/fa";
@@ -2149,15 +2150,21 @@ export default function TasksPage() {
           />
         </div>
       )}
-      {selectedTask && (
+      {selectedTask && createPortal(
         <div
-          className="fixed inset-0 z-[2000] flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          className="fixed inset-0 flex flex-col items-center justify-start p-4 md:p-10"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            overflowY: 'auto',
+            zIndex: 999999990,
+            paddingTop: '85px',
+            paddingBottom: '40px'
+          }}
           onClick={() => setSelectedTask(null)}
         >
           <div
             className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col"
-            style={{ maxHeight: '90vh' }}
+            style={{ maxHeight: '100%', margin: 'auto' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -2590,15 +2597,17 @@ export default function TasksPage() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Add Task Modal */}
-      {showAddTaskModal && (
-        <div className="modal task-modal-mobile" style={{
+      {showAddTaskModal && createPortal(
+        <div className="task-modal-mobile" style={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'start',
           position: 'fixed',
           top: 0,
           left: 0,
@@ -2606,7 +2615,7 @@ export default function TasksPage() {
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           zIndex: 2000,
-          padding: '1rem',
+          padding: '35px 20px 35px',
           overflowY: 'auto'
         }}>
           <div style={{
@@ -2616,9 +2625,9 @@ export default function TasksPage() {
             borderRadius: '16px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
             position: 'relative',
-            maxHeight: '83vh',
+            margin: 'auto',
+            maxHeight: '100%',
             overflowY: 'auto',
-            marginTop: "30px",
           }} className="custom-scrollbar">
             {/* Header */}
             <div style={{
@@ -3446,27 +3455,23 @@ export default function TasksPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Document Upload Modal for Document Request Tasks */}
-      {showDocumentUploadModal && selectedTask && (
-        <div className="modal task-modal-mobile" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          zIndex: 2000,
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          padding: '1rem',
-          overflowY: 'auto'
-        }}>
-          <div className="modal-dialog modal-lg" style={{ width: '100%', maxWidth: '800px', margin: 0 }}>
-            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: 'none', display: 'flex', flexDirection: 'column' }}>
+      {showDocumentUploadModal && selectedTask && createPortal(
+        <div
+          className="fixed inset-0 flex flex-col items-center justify-start bg-black/70 p-4 lg:p-8 animate-in fade-in duration-200"
+          style={{
+            zIndex: 999999992,
+            paddingTop: '85px',
+            paddingBottom: '40px',
+            overflowY: 'auto'
+          }}
+        >
+          <div className="modal-dialog modal-lg" style={{ width: '100%', maxWidth: '800px', margin: 'auto', maxHeight: '100%' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '100%', display: 'flex', flexDirection: 'column' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E5E7EB' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
                   Upload Documents for {selectedTask.title}
@@ -3614,23 +3619,28 @@ export default function TasksPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Preview Modal */}
-      {showPreviewModal && previewFile && (
+      {showPreviewModal && previewFile && createPortal(
         <div
           className="modal"
           style={{
-            display: 'block',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'start',
             backgroundColor: 'rgba(0,0,0,0.7)',
-            zIndex: 1060,
+            zIndex: 999999993,
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            overflow: 'auto'
+            overflowY: 'auto',
+            padding: '85px 20px 40px'
           }}
           onClick={() => {
             setShowPreviewModal(false);
@@ -3642,8 +3652,8 @@ export default function TasksPage() {
             style={{
               maxWidth: '95vw',
               width: '100%',
-              margin: '1rem auto',
-              height: 'calc(100vh - 2rem)',
+              margin: 'auto',
+              height: 'calc(100vh - 125px)',
               display: 'flex',
               flexDirection: 'column'
             }}
@@ -3656,7 +3666,8 @@ export default function TasksPage() {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                maxHeight: '100%'
+                maxHeight: '100%',
+                backgroundColor: 'white'
               }}
             >
               <div
@@ -3756,26 +3767,28 @@ export default function TasksPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Approve Modal */}
-      {showApproveModal && selectedTask && (
+      {showApproveModal && selectedTask && createPortal(
         <div
           className="modal task-modal-mobile"
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'start',
             backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 1070,
+            zIndex: 999999994,
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
             overflowY: 'auto',
-            padding: '100px 1rem 1rem 1rem'
+            padding: '85px 20px 40px'
           }}
           onClick={() => setShowApproveModal(false)}
         >
@@ -3784,7 +3797,7 @@ export default function TasksPage() {
             style={{
               maxWidth: '500px',
               width: '100%',
-              margin: 0
+              margin: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -3859,24 +3872,28 @@ export default function TasksPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Re-request Modal */}
-      {showReRequestModal && selectedTask && (
+      {showReRequestModal && selectedTask && createPortal(
         <div
           className="modal"
           style={{
-            display: 'block',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'start',
             backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 1060,
+            zIndex: 999999995,
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            overflow: 'auto',
-            padding: '1rem'
+            overflowY: 'auto',
+            padding: '85px 20px 40px'
           }}
           onClick={() => {
             setShowReRequestModal(false);
@@ -3888,7 +3905,7 @@ export default function TasksPage() {
             style={{
               maxWidth: '500px',
               width: '100%',
-              margin: '0 auto'
+              margin: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -3985,7 +4002,8 @@ export default function TasksPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
