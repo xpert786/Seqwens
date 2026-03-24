@@ -1167,13 +1167,9 @@ export default function MessagePage() {
       <div className="flex flex-1 overflow-hidden gap-6 mb-6">
 
         {/* Left Column - Conversations */}
-        <div
-          className={`flex-col bg-white shadow-sm border border-gray-200 rounded-3xl transition-all duration-300
-            ${isMobile && showChatOnMobile ? 'hidden' : 'flex'} 
-            ${isMobile ? 'w-full' : 'w-[380px]'} h-full overflow-hidden`}
-        >
-          <div className="p-4 space-y-4 flex-shrink-0">
-            <h5 className="text-lg font-bold text-gray-800">Conversations</h5>
+        <div className={`p-3 p-lg-3 d-flex flex-column conversations-panel bg-white shadow-sm ${isMobile && showChatOnMobile ? 'mobile-hidden' : ''}`} style={{ border: "1px solid #E2E8F0", borderRadius: isMobile ? "0" : "20px", marginRight: isMobile ? "0" : "1.5rem" }}>
+          <div className="mb-4">
+            <h5 className="mb-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
             <div className="relative group">
               <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#F56D2D] transition-colors" size={14} />

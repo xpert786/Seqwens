@@ -315,10 +315,12 @@ export default function ArchivedDocuments() {
 
                     {/* Search and Filter Bar */}
                     <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between mb-4 gap-3">
-                        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2">
+                       <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 flex-grow-1">
                             <div className="position-relative" style={{
                                 width: "100%",
-                                maxWidth: "400px",
+                                // maxWidth: "600px",
+                                flex: 1,
+maxWidth: "400px", // optional limit
                                 border: "1px solid #E5E7EB",
                                 borderRadius: "6px",
                                 backgroundColor: "#F3F7FF",

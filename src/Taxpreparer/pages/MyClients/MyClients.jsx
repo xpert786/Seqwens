@@ -2526,7 +2526,13 @@ export default function MyClients() {
                 </form>
               </div>
               {!isPhoneDropdownOpen && (
-                <div className="modal-footer" style={{ borderTop: '1px solid #E5E7EB', padding: '20px 24px' }}>
+                <div
+                  className="modal-footer"
+                  style={{
+                    borderTop: '1px solid #E5E7EB',
+                    padding: '20px 24px 12px 24px'
+                  }}
+                >
                   <button
                     type="button"
                     className="btn btn-light"

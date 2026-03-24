@@ -220,8 +220,8 @@ p.card-contented {
 .quick-action-container {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 40px;
+  /* flex-wrap: wrap; */
+  gap: 11px;
   margin-top: 12px;
 }
 
