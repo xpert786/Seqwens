@@ -549,74 +549,67 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="calendar-page-container min-h-screen px-4 font-basis">
-      {/* Unified Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
-              <Task1 size={32} color="white" />
-            </div>
-            <div>
-              <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
-                Calendar
-              </h3>
-              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your professional schedule and client meetings.</span>
-            </div>
-          </div>
+    <div className="calendar-page-container lg:p-6 md:p-4 p-2 min-h-screen bg-[#F3F7FF]">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 calendar-header-section">
+        <div>
+          <h4 className="text-2xl font-bold text-gray-900" style={{ color: '#1E293B' }}>Calendar</h4>
+          <p className="text-gray-600 text-sm">Manage your appointments and schedule</p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <button
             onClick={() => setIsSetAvailabilityModalOpen(true)}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white !rounded-xl text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all rounded-[20px] shadow-sm border border-gray-200 active:scale-95 group"
+            className="btn dashboard-btn d-flex align-items-center gap-2"
+            style={{
+              background: "white",
+              border: "1px solid #E8F0FF",
+              color: "#3B4A66",
+              borderRadius: "12px"
+            }}
           >
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-[#F56D2D] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
-            <span>Set Availability</span>
+            Set Availability
           </button>
 
           <button
             onClick={handleOpenCreateEventModal}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs   md uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all rounded-[20px] shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
           >
-            <AddTask />
-            <span>Create new Event</span>
+            <AddTask />Create New Event
           </button>
         </div>
       </div>
 
-      {/* Stats Dashboard */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+      {/* Stats - First 4 Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 calendar-stats-grid">
         {cardData.map((item, index) => (
           <div
             key={index}
-            className="group relative bg-white rounded-3xl border border-gray-100 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+            className="bg-white rounded-xl border border-[#E8F0FF] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => handleStatClick(item.type)}
           >
-            <div className="flex items-start justify-between relative z-10">
-              <div className="space-y-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform shadow-sm`} style={{ backgroundColor: `${item.color}15`, color: item.color }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{item.label}</p>
-                  <h3 className="text-2xl font-black text-gray-900 leading-tight">{item.count}</h3>
-                </div>
+            <div className="flex justify-between items-center mb-3">
+              <div className="p-2 rounded-lg" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
+                {item.icon}
               </div>
-              <div className="pt-1">
-                <div className="w-6 h-6 rounded-full border border-gray-100 hover:border-[#F56D2D] flex items-center justify-center transition-colors">
-                  <svg className="w-3 h-3 text-gray-300 group-hover:text-[#F56D2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-                </div>
-              </div>
+              <div className="text-2xl font-bold text-gray-900" style={{ color: '#1E293B' }}>{item.count}</div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-500 text-uppercase tracking-wider m-0">{item.label}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Time Period Selector */}
-      <div className="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-2xl border border-gray-100 w-fit">
+      <div className="flex gap-2 mb-6 period-buttons-container">
         {timePeriods.map((period) => (
           <button
             key={period}
@@ -628,221 +621,296 @@ export default function CalendarPage() {
                 setSelectedDate(today);
               }
             }}
-            className={`px-6 py-2 !rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedPeriod === period
-              ? 'bg-[#F56D2D] text-white shadow-md shadow-[#F56D2D]/20'
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedPeriod === period
+              ? 'bg-orange-500 text-white'
+              : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+              }`} style={{ borderRadius: '7px' }}
           >
             {period}
           </button>
         ))}
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-8 w-full">
-        {/* Main Content Area */}
-        <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
-            {/* Unified Navigation Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-4 lg:p-5 border-b border-gray-100 bg-gray-50/30">
-              <div className="order-1 md:order-2">
-                <h4 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">
-                  {selectedPeriod === "Monthly" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
-                  {selectedPeriod === "Week" && `Week of ${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`}
-                  {selectedPeriod === "Day" && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`}
-                  {selectedPeriod === "Years" && `${currentDate.getFullYear()}`}
-                </h4>
-                <span className="text-[10px] font-black text-[#F56D2D] uppercase tracking-[0.2em] opacity-80">{selectedPeriod} Overview</span>
-              </div>
 
-              <div className="flex items-center gap-2 order-2">
-                <button
-                  className="w-10 h-10 flex items-center justify-center !rounded-xl bg-white border border-gray-100 text-gray-500 hover:text-[#F56D2D] hover:border-[#F56D2D]/30 transition-all rounded-xl shadow-sm active:scale-90"
-                  onClick={() => navigateCalendar(-1)}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                </button>
+      <div className="flex flex-col lg:flex-row gap-6 w-full calendar-main-layout">
+        {/* Calendar Navigation and Grid Container */}
+        <div id="calendar-view-container" className="border border-[#E8F0FF] rounded-lg pt-2 bg-[#F3F7FF] w-full lg:w-[75%] calendar-content-area">
+          {/* Calendar Navigation */}
+          <div className="flex justify-between items-center mb-2 calendar-nav-controls">
+            <div className="flex items-center gap-3 w-full justify-start pl-2 calendar-date-title">
 
-                <button
-                  className="px-6 py-2.5 bg-white border border-gray-100 !rounded-xl text-gray-700 font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
-                  onClick={goToToday}
-                >
-                  Today
-                </button>
-                <button
-                  className="w-10 h-10 flex items-center justify-center !rounded-xl bg-white border border-gray-100 text-gray-500 hover:text-[#F56D2D] hover:border-[#F56D2D]/30 transition-all rounded-xl shadow-sm active:scale-90"
-                  onClick={() => navigateCalendar(1)}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                </button>
-              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-0">
+                {selectedPeriod === "Monthly" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+                {selectedPeriod === "Week" && `Week of ${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
+                {selectedPeriod === "Day" && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
+                {selectedPeriod === "Years" && `${currentDate.getFullYear()}`}
+              </h4>
+
             </div>
+            <div className="flex items-center gap-2 justify-end w-full md:w-auto pr-2 calendar-nav-buttons">
+              <button
+                className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors border-[#E8F0FF] bg-white"
+                style={{ borderRadius: '10px' }}
+                onClick={() => navigateCalendar(-1)}
+              >
+                &lt;
+              </button>
+              <button
+                className="px-4 py-2  text-black  transition-colors text-sm border border-[#E8F0FF] bg-white"
+                style={{ borderRadius: '7px' }}
+                onClick={goToToday}
+              >
+                Today
+              </button>
+              <button
+                className="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors bg-white"
+                style={{ borderRadius: '10px' }}
+                onClick={() => navigateCalendar(1)}
+              >
+                &gt;
+              </button>
+            </div>
+            <div></div>
+          </div>
 
-            <div className="p-4 space-y-4">
-              {/* Day Headers */}
-              {selectedPeriod !== "Day" && selectedPeriod !== "Years" && (
-                <div className="grid grid-cols-7 bg-white rounded-xl border border-gray-100 divide-x divide-gray-100 overflow-hidden">
-                  {dayNames.map(day => (
-                    <div key={day} className="p-4 text-center">
-                      <span className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase block lg:hidden">{day[0]}</span>
-                      <span className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase hidden lg:block">{day}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Calendar Grid */}
+          <div className="flex gap-6">
+            <div className="flex-1">
+              <div className="bg-white rounded-lg  border border-gray-200 overflow-hidden">
+                {/* Day Headers */}
+                {selectedPeriod !== "Day" && selectedPeriod !== "Years" && (
+                  <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                    {dayNames.map(day => (
+                      <div key={day} className="calendar-day-header-item p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0">
+                        <span className="day-header-full">{day.toUpperCase()}</span>
+                        <span className="day-header-short">{day[0].toUpperCase()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedPeriod === "Years" && (
+                  <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
+                    <div className="p-3 text-center text-sm font-semibold text-gray-600 col-span-4">Months</div>
+                  </div>
+                )}
 
-              {/* Calendar Body Grid */}
-              <div className={`grid ${selectedPeriod === "Day" ? "grid-cols-1" :
-                selectedPeriod === "Years" ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-7"
-                } border border-gray-100 rounded-xl divide-x divide-y divide-gray-100 overflow-hidden text-center`}>
-                {calendarDays.map((day, index) => {
-                  const dayEvents = getAppointmentsForDate(day);
-                  const isDayToday = day.toDateString() === new Date().toDateString();
-                  const isDaySelected = day.toDateString() === selectedDate.toDateString();
-                  const isOtherMonth = selectedPeriod === "Monthly" && day.getMonth() !== currentDate.getMonth();
+                {/* Calendar Days */}
+                <div className={`grid ${selectedPeriod === "Day" ? "grid-cols-1" :
+                  selectedPeriod === "Years" ? "grid-cols-4" : "grid-cols-7"
+                  }`}>
+                  {calendarDays.map((day, index) => {
+                    const dayEvents = getAppointmentsForDate(day);
+                    const isToday = day.toDateString() === new Date().toDateString();
+                    const isSelected = day.toDateString() === selectedDate.toDateString();
 
-                  return (
-                    <div
-                      key={index}
-                      className={`group relative min-h-[160px] p-3 transition-all duration-300 cursor-pointer overflow-hidden rounded-xl
-                      ${isOtherMonth ? 'bg-gray-50/50 opacity-40' : 'bg-white hover:bg-gray-50/50'}
-                      ${isDaySelected ? 'ring-2 ring-inset ring-[#F56D2D] bg-[#F56D2D]/[0.02]' : ''}
-                    `}
-                      onClick={() => {
-                        setSelectedDate(day);
-                        if (selectedPeriod === "Years") {
-                          setCurrentDate(day);
-                          setSelectedPeriod("Monthly");
-                        }
-                      }}
-                    >
-                      {/* Day Number Header */}
-                      <div className="flex justify-between items-start mb-4">
-                        <div className={`w-9 h-9 rounded-2xl flex items-center justify-center text-[15px] font-black transition-all
-                        ${isDayToday
-                            ? 'bg-[#F56D2D] text-white shadow-lg shadow-[#F56D2D]/30 -translate-y-1'
-                            : isDaySelected ? 'text-[#F56D2D] bg-[#F56D2D]/10' : 'text-gray-400 group-hover:text-gray-900'}
-                      `}>
-                          {selectedPeriod === "Years" ? monthNames[day.getMonth()].substring(0, 3) : day.getDate()}
+                    // For Years view, show month name instead of date
+                    const displayValue = selectedPeriod === "Years" ? monthNames[day.getMonth()] : day.getDate();
+                    const isCurrentMonthInMonthly = selectedPeriod === "Monthly" && day.getMonth() === currentDate.getMonth();
+
+                    return (
+                      <div
+                        key={index}
+                        className={`calendar-cell min-h-[120px] p-2 cursor-pointer transition-colors hover:bg-[#F5F5F5] ${selectedPeriod === "Monthly" && !isCurrentMonthInMonthly ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                          } ${isToday ? 'bg-[#F5F5F5]' : ''} ${isSelected ? 'bg-orange-50 border-orange-200' : ''
+                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index % 7 !== 6) || (selectedPeriod === "Years" && index % 4 !== 3) ? 'border-r border-[#E8F0FF]' : ''
+                          } ${((selectedPeriod === "Monthly" || selectedPeriod === "Week") && index < (selectedPeriod === "Monthly" ? 35 : 0)) || (selectedPeriod === "Years" && index < 8) ? 'border-b border-[#E8F0FF]' : ''
+                          }`}
+                        onClick={() => {
+                          setSelectedDate(day);
+                          if (selectedPeriod === "Years") {
+                            setCurrentDate(day);
+                            setSelectedPeriod("Monthly");
+                          }
+                        }}
+                      >
+                        <div className="d-flex justify-content-between align-items-start mb-1">
+                          <div className={`calendar-day-number-wrapper text-sm font-medium ${isToday ? 'bg-blue-500 text-white rounded-full px-2 py-1 flex items-center justify-center' : ''
+                            }`}>
+                            {displayValue}
+                          </div>
+
                         </div>
-
-                        {dayEvents.length > 0 && (
-                          <div className="flex -space-x-1.5 overflow-hidden pt-1">
-                            {[...Array(Math.min(dayEvents.length, 3))].map((_, i) => (
-                              <div key={i} className="w-2 h-2 rounded-full border border-white bg-[#F56D2D]"></div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Events List in cell */}
-                      <div className="space-y-1.5 overflow-y-auto max-h-[100px] custom-scrollbar pr-0.5">
-                        {dayEvents.map(event => (
-                          <div
-                            key={event.id}
-                            className="flex flex-col p-2.5 rounded-xl bg-[#F56D2D] border border-gray-100 hover:border-[#F56D2D]/30 transition-all shadow-sm active:scale-95"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewEvent(event);
-                            }}
-                          >
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#F56D2D]"></div>
-                              <span className="text-[10px] font-black text-white truncate leading-none uppercase tracking-tight">{event.title}</span>
+                        <div className="calendar-tasks-container d-flex flex-column gap-1 overflow-auto" style={{ flex: 1, maxHeight: '90px' }}>
+                          {dayEvents.map(event => (
+                            <div
+                              key={event.id}
+                              className="calendar-task-item bg-orange-500 text-white p-1 rounded text-xs mb-1 shadow-sm cursor-pointer hover:bg-orange-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewEvent(event);
+                              }}
+                            >
+                              <div className="flex items-center gap-1">
+                                <div className="w-1 h-1 bg-white rounded-full"></div>
+                                <span className="truncate">{event.title}</span>
+                              </div>
+                              <div className="opacity-90 calendar-task-time" style={{ fontSize: '9px', lineHeight: '1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.time}</div>
                             </div>
-                            <div className="text-left text-[8px] font-bold text-gray-100 ml-3 uppercase !tracking-tighter">{event.time}</div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar Section */}
-        <div className="py-6 lg:py-2 w-full xl:w-96 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
-            {/* Actionable Sidebar Card Template */}
-            {[
-              { title: "Today's Agenda", data: getTodayEvents(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), color: 'orange' },
-              { title: "Upcoming", data: getUpcomingEvents(), subtitle: "Next 5 events", color: 'blue' }
-            ].map((section, idx) => (
-              <div key={idx} className="bg-white rounded-[40px] border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all h-full">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h6 className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1">{section.title}</h6>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{section.date || section.subtitle}</p>
-                  </div>
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${section.color === 'orange' ? 'bg-[#F56D2D]/10 text-[#F56D2D]' : 'bg-blue-50 text-blue-500'}`}>
-                    {section.color === 'orange' ? <CompletedIcon size={24} /> : <DoubleuserIcon size={24} />}
-                  </div>
-                </div>
-
-                {section.data.length === 0 ? (
-                  <div className="py-10 flex flex-col items-center text-center opacity-40">
-                    <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-200 mb-3 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        {/* Sidebar */}
+        <div className="w-full lg:w-80 space-y-4 calendar-sidebar-area">
+          {/* Today's Events */}
+          <div className="bg-white rounded-lg  border border-[#E8F0FF] p-4">
+            <h6 className="font-semibold text-gray-900 mb-2">Today's Events</h6>
+            <p className="text-sm text-gray-500 mb-3">
+              {new Date().toLocaleDateString()}
+            </p>
+            {getTodayEvents().length === 0 ? (
+              <p className="text-gray-500 text-sm">No events scheduled for today</p>
+            ) : (
+              <div className="space-y-2">
+                {getTodayEvents().map(event => (
+                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="capitalize font-medium text-sm text-gray-900">{event.title}</div>
+                      <div className="text-xs text-gray-500">{event.time}</div>
+                      {event.user && (
+                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
+                      )}
+                      {event.appointment?.meeting_link && (
+                        <button
+                          onClick={() => handleLaunchMeeting(event.appointment)}
+                          className="mt-1 !text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        >
+                          <ZoomIcon size={16} /> Launch Meeting
+                        </button>
+                      )}
                     </div>
-                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Clear Schedule</p>
                   </div>
-                ) : (
-                  <div className="space-y-5">
-                    {section.data.slice(0, section.subtitle ? 5 : 99).map(event => (
-                      <div key={event.id} className="group relative pl-5 border-l-2 border-gray-100 hover:border-[#F56D2D]/30 transition-all cursor-pointer" onClick={() => handleViewEvent(event)}>
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex justify-between items-start">
-                            <span className="text-[10px] font-black text-[#F56D2D] uppercase tracking-tighter bg-[#F56D2D]/5 px-2.5 py-1 rounded-lg mb-1">{event.time}</span>
-                            {event.status === 'pending' && <span className="text-[9px] font-black bg-yellow-400 text-white px-2 py-0.5 rounded uppercase leading-none border border-yellow-500/10">Pending</span>}
-                          </div>
-                          <h6 className="text-[13px] font-black text-gray-800 line-clamp-1 group-hover:text-[#F56D2D] transition-colors">{event.title}</h6>
-                          {event.user && <p className="text-[11px] font-bold text-gray-400 truncate tracking-tight">With {event.user}</p>}
-
-                          {(event.appointment?.meeting_link || (section.color === 'orange' && event.status === 'confirmed')) && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleLaunchMeeting(event.appointment);
-                              }}
-                              className="mt-2 w-full py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] text-[#F56D2D] hover:bg-[#F56D2D] hover:text-white hover:border-[#F56D2D] transition-all flex items-center justify-center gap-2 group/btn active:scale-90"
-                            >
-                              <ZoomIcon className="w-4 h-4" />
-                              Join Meeting
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
+          </div>
 
-            {/* Pending Meetings Quick Action - Spans full width on md but only 1 col on xl */}
-            {getPendingMeetings().length > 0 && (
-              <div className="md:col-span-2 xl:col-span-1 bg-gradient-to-br from-[#F56D2D] to-[#e55a1a] rounded-[40px] p-7 shadow-xl shadow-[#F56D2D]/20 relative overflow-hidden group">
-                <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16 transition-transform group-hover:scale-110 duration-500"></div>
-
-                <div className="relative z-10">
-                  <div className="flex justify-between items-center mb-5">
-                    <h6 className="text-white text-xl font-black tracking-tight leading-none">Meeting Requests</h6>
-                    <div className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-[9px] font-black uppercase tracking-[0.2em]">New</div>
+          {/* Pending Meetings */}
+          {getPendingMeetings().length > 0 && (
+            <div className="bg-white rounded-lg border border-[#E8F0FF] p-4">
+              <div className="flex justify-between items-center mb-2">
+                <h6 className="font-semibold text-gray-900">Pending Meetings</h6>
+                <button
+                  onClick={() => setShowPendingMeetingsModal(true)}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View All ({getPendingMeetings().length})
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">Meetings awaiting approval</p>
+              <div className="space-y-2">
+                {getPendingMeetings().slice(0, 3).map(event => (
+                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-gray-900">{event.title}</div>
+                      <div className="text-xs text-gray-500">{event.time}</div>
+                      <div className="text-xs text-gray-400">{event.date.toLocaleDateString()}</div>
+                      {event.user && (
+                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApproveAppointment(event);
+                          }}
+                          disabled={updatingStatus[event.id]}
+                          className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {updatingStatus[event.id] ? 'Processing...' : 'Approve'}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelAppointment(event);
+                          }}
+                          disabled={updatingStatus[event.id]}
+                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {updatingStatus[event.id] ? 'Processing...' : 'Cancel'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-white/80 text-[13px] font-medium mb-8 leading-relaxed">You have <span className="text-white font-black underline underline-offset-4">{getPendingMeetings().length} appointments</span> awaiting your review. Quick approval ensures a better client experience.</p>
-                  <button
-                    onClick={() => setShowPendingMeetingsModal(true)}
-                    className="w-full py-4 bg-white text-[#F56D2D] font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-black/10 hover:shadow-2xl hover:bg-gray-50 hover:-translate-y-0.5 transition-all active:scale-95"
-                  >
-                    Manage Requests
-                  </button>
-                </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Events */}
+          <div className="bg-white rounded-lg  border border-[#E8F0FF] p-4">
+            <h6 className="font-semibold text-gray-900 mb-2">Upcoming Events</h6>
+            <p className="text-sm text-gray-500 mb-3">Next 5 Scheduled Events</p>
+            {getUpcomingEvents().length === 0 ? (
+              <p className="text-gray-500 text-sm">No upcoming events</p>
+            ) : (
+              <div className="space-y-2">
+                {getUpcomingEvents().map(event => (
+                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-gray-900">{event.title}</div>
+                      <div className="text-xs text-gray-500">{event.time}</div>
+                      <div className="text-xs text-gray-400">{event.date.toLocaleDateString()}</div>
+                      {event.user && (
+                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
+                      )}
+                      {event.statusDisplay && (
+                        <div className="text-xs mt-1">
+                          <span className={`px-2 py-0.5 rounded ${event.status === 'confirmed' ? 'bg-green-100 text-green-700' : event.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
+                            {event.statusDisplay}
+                          </span>
+                        </div>
+                      )}
+                      {event.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApproveAppointment(event);
+                            }}
+                            disabled={updatingStatus[event.id]}
+                            className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {updatingStatus[event.id] ? 'Processing...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelAppointment(event);
+                            }}
+                            disabled={updatingStatus[event.id]}
+                            className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {updatingStatus[event.id] ? 'Processing...' : 'Cancel'}
+                          </button>
+                        </div>
+                      )}
+                      {event.appointment?.meeting_link && event.status === 'confirmed' && (
+                        <button
+                          onClick={() => handleLaunchMeeting(event.appointment)}
+                          className="mt-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        >
+                          <ZoomIcon /> Launch Meeting
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
-
       {/* View Event Modal */}
       {viewEventModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
@@ -918,7 +986,7 @@ export default function CalendarPage() {
               {(selectedEvent.appointment?.meeting_link || selectedEvent.appointment?.zoom_meeting_link || selectedEvent.appointment?.google_meet_link) && selectedEvent.status !== 'cancelled' && (
                 <button
                   onClick={() => handleLaunchMeeting(selectedEvent.appointment)}
-                  className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold !rounded-xl transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2"
                 >
                   <ZoomIcon className="w-5 h-5" /> Join Meeting
                 </button>
@@ -991,21 +1059,39 @@ export default function CalendarPage() {
           <div className="bg-white rounded-lg shadow-xl w-full max-h-[75vh] overflow-hidden flex flex-col my-auto" style={{ maxWidth: '800px' }}>
             {/* Header */}
             <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Pending Meetings</h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getPendingMeetings().length} meeting(s) awaiting approval
-                  </p>
+              <div className="flex items-center gap-3">
+                <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+                  <Task1 size={32} color="white" />
                 </div>
+                <div>
+                  <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
+                    Calendar
+                  </h3>
+                  <span className="text-gray-400 text-sm  font-medium tracking-tight">Manage your professional schedule and client meetings.</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <button
-                  onClick={() => setShowPendingMeetingsModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                  onClick={() => setIsSetAvailabilityModalOpen(true)}
+                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white !rounded-xl text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all rounded-[20px] shadow-sm border border-gray-200 active:scale-95 group"
                 >
-                  ×
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-[#F56D2D] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Set Availability</span>
+                </button>
+
+                <button
+                  onClick={handleOpenCreateEventModal}
+                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs   md uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all rounded-[20px] shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+                >
+                  <AddTask />
+                  <span>Create new Event</span>
                 </button>
               </div>
             </div>
+
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
@@ -1088,7 +1174,8 @@ export default function CalendarPage() {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Approve Event Confirmation Modal */}
       <ConfirmationModal
@@ -1103,7 +1190,7 @@ export default function CalendarPage() {
         confirmText="Approve"
         cancelText="Cancel"
       />
-    </div>
+    </div >
   );
 }
 

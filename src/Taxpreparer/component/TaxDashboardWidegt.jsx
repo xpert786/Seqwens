@@ -104,7 +104,7 @@ export default function Dashboard() {
               <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 Dashboard
               </h3>
-              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">
+              <span className="text-gray-400 text-sm font-medium tracking-tight">
                 Welcome back, {taxPreparerInfo
                   ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim()
                   : loading

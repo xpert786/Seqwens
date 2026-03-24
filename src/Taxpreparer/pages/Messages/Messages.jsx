@@ -1170,7 +1170,7 @@ export default function MessagePage() {
         <div
           className={`flex-col bg-white shadow-sm border border-gray-200 rounded-3xl transition-all duration-300
             ${isMobile && showChatOnMobile ? 'hidden' : 'flex'} 
-            ${isMobile ? 'w-full' : 'w-[450px]'} h-full overflow-hidden`}
+            ${isMobile ? 'w-full' : 'w-[380px]'} h-full overflow-hidden`}
         >
           <div className="p-4 space-y-4 flex-shrink-0">
             <h5 className="text-lg font-bold text-gray-800">Conversations</h5>

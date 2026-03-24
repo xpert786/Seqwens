@@ -1722,7 +1722,7 @@ export default function TasksPage() {
               <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 My Tasks
               </h3>
-              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your assigned tasks and daily workflow.</span>
+              <span className="text-gray-400 text-sm font-medium tracking-tight">Manage your assigned tasks and daily workflow.</span>
             </div>
           </div>
         </div>
