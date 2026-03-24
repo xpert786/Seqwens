@@ -12,6 +12,7 @@
 .messages-page .conversations-panel {
   width: 400px;
   flex-shrink: 0;
+  max-height: calc(100vh - 220px);
 }
 
 @media (max-width: 1024px) {
@@ -23,6 +24,7 @@
 .messages-page .chat-wrapper {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
 /* MOBILE: 320px to 991px (Updated breakpoint to match JS isMobile check) */
@@ -81,8 +83,7 @@
 
   .messages-page .chat-interface {
     width: 100% !important;
-    height: auto !important;
-    min-height: 400px !important;
+    height: calc(100vh - 220px) !important;
     border-radius: 12px !important;
   }
 
@@ -101,7 +102,8 @@
   }
 
   .messages-page .conversations-scroll {
-    max-height: 350px !important;
+    flex-grow: 1 !important;
+    min-height: 0 !important;
     overflow-y: auto !important;
   }
 
@@ -159,4 +161,8 @@
     animation: slideUp 0.4s ease-out;
     height: calc(100vh - 100px) !important;
   }
+}
+
+.messages-scroll {
+  max-height: calc(100vh - 380px);
 }

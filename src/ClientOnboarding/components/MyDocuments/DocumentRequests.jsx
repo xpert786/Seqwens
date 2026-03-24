@@ -341,7 +341,7 @@ export default function DocumentRequests() {
   }
 
   return (
-    <div className="px-2 px-md-3 py-3">
+    <div className="py-3">
       {/* Title Section */}
       <div className="mb-4">
         <h5 style={{ fontSize: "22px", fontWeight: "600", color: "#3B4A66", fontFamily: "BasisGrotesquePro", marginBottom: '4px' }}>

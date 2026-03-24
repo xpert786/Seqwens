@@ -23,16 +23,16 @@ export default function MyDocumentsMain() {
 
   return (
     <div
-      className="container-fluid px-2 px-md-4 py-3"
+      className="lg:px-4 md:px-2 px-1 my-documents-main pb-3"
       style={{
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "#F8FAFC"
+
       }}
     >
       {/* Header Section */}
-      <div className="container-fluid px-3 px-md-4 py-2 py-md-3">
+      <div className="py-2 py-md-3">
         {/* Header Container: Switches to vertical stack on mobile, horizontal on desktop */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 px-1">
 

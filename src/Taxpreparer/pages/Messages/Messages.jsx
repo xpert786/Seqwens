@@ -1171,7 +1171,7 @@ export default function MessagePage() {
       <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
 
         {/* Left Column - Conversations */}
-        <div className="p-3 me-4 d-flex flex-column conversations-panel bg-white shadow-sm" style={{ border: "1px solid #E2E8F0", borderRadius: "20px" }}>
+        <div className="pt-3 px-3 pb-3 me-4 d-flex flex-column conversations-panel bg-white shadow-sm" style={{ border: "1px solid #E2E8F0", borderRadius: "20px" }}>
           <div className="mb-4">
             <h5 className="mb-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
@@ -1235,9 +1235,11 @@ export default function MessagePage() {
           <div
             className="flex-grow-1 overflow-auto conversations-scroll"
             style={{
-              maxHeight: "calc(100vh - 350px)",
-              scrollbarWidth: "thin",
-              scrollbarColor: "#CBD5E0 #F7FAFC"
+                flexGrow: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                scrollbarWidth: "thin",
+                scrollbarColor: "#CBD5E0 #F7FAFC"
             }}
           >
             {(() => {
@@ -1353,8 +1355,8 @@ export default function MessagePage() {
 
         {/* Right Column - Chat Interface */}
         <div
-          className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-interface overflow-hidden"
-          style={{ border: "1px solid #E2E8F0" }}
+          className="flex-grow-1 bg-white rounded shadow-sm pt-3 px-3 pb-3 d-flex flex-column chat-interface overflow-hidden"
+          style={{ border: "1px solid #E2E8F0", height: "calc(100vh - 220px)" }}
         >
           {(() => {
             const activeConversation = conversations.find(c => c.id === activeConversationId);
@@ -1377,34 +1379,9 @@ export default function MessagePage() {
                   style={{
                     overflowY: "auto",
                     overflowX: "hidden",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
                     minHeight: "200px",
-                    maxHeight: "calc(100vh - 250px)",
                   }}
                 >
-                  <style>
-                    {`
-                          .messages-scroll::-webkit-scrollbar {
-                            display: none;
-                            width: 0;
-                            height: 0;
-                          }
-                          .messages-scroll {
-                            -ms-overflow-style: none;
-                            scrollbar-width: none;
-                          }
-                          .conversations-scroll::-webkit-scrollbar {
-                            display: none;
-                            width: 0;
-                            height: 0;
-                          }
-                          .conversations-scroll {
-                            -ms-overflow-style: none;
-                            scrollbar-width: none;
-                          }
-                        `}
-                  </style>
                   {loadingMessages ? (
                     <div className="text-center py-5">
                       <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
@@ -1563,21 +1540,21 @@ export default function MessagePage() {
                 </div>
 
                 <div className="border-top pt-2 chat-input-area" style={{ flexShrink: 0 }}>
-                  <div className="d-flex align-items-center">
+                  <div className="d-flex" style={{ gap: "8px", height: "42px", alignItems: "stretch" }}>
                     {/* WebSocket connection indicator */}
                     {wsConnected && (
-                      <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
+                      <div style={{ fontSize: "10px", color: "#10B981", alignSelf: "center" }} title="Connected">
                         <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
                       </div>
                     )}
                     {!wsConnected && wsError && (
-                      <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
+                      <div style={{ fontSize: "10px", color: "#EF4444", alignSelf: "center" }} title="Disconnected">
                         <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
                       </div>
                     )}
                     {/* Typing indicator */}
                     {typingUsers.length > 0 && (
-                      <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
+                      <div style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic", alignSelf: "center" }}>
                         {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                       </div>
                     )}
@@ -1589,35 +1566,40 @@ export default function MessagePage() {
                     />
                     <button
                       type="button"
-                      className="btn me-2"
+                      className="btn d-flex align-items-center justify-content-center"
                       onClick={() => messageFileInputRef.current?.click()}
                       style={{
                         background: "transparent",
                         border: "1px solid #E8F0FF",
-                        color: "#3B4A66"
+                        color: "#3B4A66",
+                        height: "100%",
+                        width: "55px",
+                        padding: "0",
+                        margin: "0"
                       }}
                       title="Attach file"
                     >
-                      <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <svg width="16" height="16" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2" />
                       </svg>
 
                     </button>
                     {messageAttachment && (
-                      <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
+                      <span className="text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0" }} title={messageAttachment.name}>
                         {messageAttachment.name}
                       </span>
                     )}
                     {messageAttachment && (
                       <button
                         type="button"
-                        className="btn me-2"
+                        className="btn"
                         onClick={() => setMessageAttachment(null)}
                         style={{
                           background: "transparent",
                           border: "none",
                           color: "#EF4444",
-                          padding: "0 5px"
+                          padding: "0 5px",
+                          margin: "0"
                         }}
                         title="Remove attachment"
                       >
@@ -1626,7 +1608,7 @@ export default function MessagePage() {
                     )}
                     <input
                       type="text"
-                      className="form-control me-2"
+                      className="form-control"
                       placeholder="Write a message..."
                       value={newMessage}
                       onChange={handleTyping}
@@ -1636,21 +1618,25 @@ export default function MessagePage() {
                           handleSend();
                         }
                       }}
-                      style={{ fontFamily: "BasisGrotesquePro" }}
+                      style={{ fontFamily: "BasisGrotesquePro", height: "100%", margin: "0" }}
                     />
                     <button
                       type="button"
-                      className="btn"
+                      className="btn d-flex align-items-center justify-content-center"
                       style={{
                         background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
                         color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
-                        cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
+                        cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed",
+                        height: "100%",
+                        width: "55px",
+                        padding: "0",
+                        margin: "0"
                       }}
                       onClick={handleSend}
                       disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
                       aria-label="Send message"
                     >
-                      <FaPaperPlane />
+                      <FaPaperPlane size={16} />
                     </button>
                   </div>
                 </div>

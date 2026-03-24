@@ -1280,15 +1280,11 @@ export default function Appointments() {
               );
             })()}
           </div>
-
         </div>
       )}
-
-      {/* ---------- Custom Modal Popup ---------- */}
       {showModal && (
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, padding: '10px' }}
+          className="custom-popup-overlay"
           onClick={(e) => {
             // Close modal if clicking on overlay (outside the container)
             if (e.target === e.currentTarget) {
@@ -1297,41 +1293,26 @@ export default function Appointments() {
             }
           }}
         >
-          <div 
-            className="rounded-4 overflow-hidden d-flex flex-column"
-            style={{ 
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: 'calc(100vh - 20px)',
-              backgroundColor: '#fff'
-            }} 
+          <div
+            className="custom-popup-container"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-3 border-bottom" style={{ flexShrink: 0 }}>
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0" style={{ color: '#3B4A66', fontSize: '18px', fontWeight: '500', fontFamily: 'BasisGrotesquePro' }}>Schedule New Appointment</h5>
+            <div className="popup-header">
+              <div className="popup-header-top">
+                <h5 className="popup-title">Schedule New Appointment</h5>
                 <button onClick={() => {
                   resetAppointmentForm();
                   setShowModal(false);
-                }} className="btn p-1" style={{ background: 'none', border: 'none' }}>
+                }} className="popup-close-btn">
                   <CrossIcon />
                 </button>
               </div>
-              <p
-                className="mb-0 mt-1"
-                style={{
-                  color: '#4B5563',
-                  fontSize: '13px',
-                  fontFamily: 'BasisGrotesquePro'
-                }}
-              >
-                Schedule a meeting with your tax professional
-              </p>
+              <p className="popup-subtitle">Schedule a meeting with your tax professional</p>
             </div>
 
-            {/* Scrollable Body */}
-            <div className="p-3 overflow-auto" style={{ flex: 1 }}>
+            {/* Modal Body */}
+            <div className="popup-body">
               {/* Staff Error Message - Show prominently if staff couldn't be loaded */}
               {staffError && staffError.includes('associated with a firm') && (
                 <div className="alert alert-warning mb-3" role="alert" style={{

@@ -15,6 +15,7 @@ import "../styles/Dashfirst.css";
 import { dashboardAPI, handleAPIError } from "../utils/apiUtils";
 import { toast } from "react-toastify";
 import { setUserStatus, getUserData, setUserData } from "../utils/userUtils";
+import { navigateToUrl } from "../utils/urlUtils";
 
 export default function DashboardFirst() {
   const navigate = useNavigate();
@@ -335,7 +336,7 @@ export default function DashboardFirst() {
 
                   // Final navigation
                   setTimeout(() => {
-                    window.location.href = '/dashboard'; // Using direct href for a clean context reload
+                    navigateToUrl('/dashboard'); // Using utility to handle base path correctly
                   }, 800);
 
                 } catch (err) {
