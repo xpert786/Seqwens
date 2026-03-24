@@ -1061,20 +1061,20 @@ export default function ESignatureDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 animate-in fade-in duration-500 font-basis">
+    <div className="min-h-screen px-4 font-basis">
       <style>{previewStyles}</style>
 
       {/* Unified Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
               <FiPenTool size={32} />
             </div>
             <div>
-              <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+              <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 E-Signatures
-              </h1>
+              </h3>
               <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your digital signature requests and document execution.</span>
             </div>
           </div>
@@ -1083,14 +1083,14 @@ export default function ESignatureDashboard() {
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
             onClick={handleRefresh}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 h-14 bg-white text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all !rounded-xl shadow-sm border border-gray-200 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all !rounded-xl shadow-sm border border-gray-200 active:scale-95"
           >
             <FiRefreshCw size={18} className={loading ? "animate-spin" : ""} />
             <span>Refresh</span>
           </button>
           <button
             onClick={handleOpenCreateModal}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
           >
             <FiPlus size={18} />
             <span>Create Request</span>

@@ -18,7 +18,7 @@ export default function TaxDashboardLayout() {
   // Check if screen is mobile/tablet size
   useEffect(() => {
     const checkScreenSize = () => {
-      const mobile = window.innerWidth <= 1280;
+      const mobile = window.innerWidth <= 991;
       setIsMobile(mobile);
       // On mobile, sidebar should be closed by default
       if (mobile) {

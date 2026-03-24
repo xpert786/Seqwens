@@ -774,7 +774,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             {hasErrors
-              ? <div className="w-14 h-14 rounded-full bg-yellow-100 flex items-center justify-center text-2xl">⚠️</div>
+              ? <div className="w-14 py-2 rounded-full bg-yellow-100 flex items-center justify-center text-2xl">⚠️</div>
               : <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M32.0827 16.1602V17.5018C32.0809 20.6466 31.0626 23.7066 29.1796 26.2253C27.2967 28.7441 24.65 30.5867 21.6342 31.4784C18.6185 32.37 15.3954 32.2629 12.4455 31.1731C9.49555 30.0833 6.97697 28.0691 5.26533 25.4309C3.5537 22.7927 2.74071 19.6719 2.94763 16.534C3.15454 13.396 4.37028 10.409 6.41351 8.0184C8.45674 5.62782 11.218 3.96177 14.2855 3.26872C17.3529 2.57566 20.5622 2.89274 23.4348 4.17267M13.1244 16.0435L17.4994 20.4185L32.0827 5.83517" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>}

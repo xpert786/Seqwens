@@ -331,7 +331,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 font-basis">
+    <div className="min-h-screen px-4 font-basis">
       <TaxDashboardWidget />
 
       <div className="row mt-3 g-3 dashboard-sections-wrapper">

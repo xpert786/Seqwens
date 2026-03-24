@@ -20,7 +20,7 @@
 }
 
 /* Mobile and Tablet Responsive */
-@media (max-width: 1280px) {
+@media (max-width: 991px) {
   .tsb-container {
     z-index: 1050 !important;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
@@ -209,7 +209,7 @@
   opacity: 1;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 991px) {
   .tsb-overlay.show {
     display: block;
   }

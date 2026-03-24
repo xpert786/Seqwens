@@ -321,7 +321,7 @@ export default function Staff() {
           {staffMembers.map((staff) => (
             <div key={staff.id} className="bg-white rounded-lg p-3 sm:p-4 !border border-[#E8F0FF] min-w-0 overflow-hidden">
               <div className="flex flex-col items-center text-center mb-3 sm:mb-4">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#F56D2D] flex items-center justify-center mb-2 sm:mb-3 flex-shrink-0">
+                <div className="w-14 py-2 sm:w-16 sm:h-16 rounded-full bg-[#F56D2D] flex items-center justify-center mb-2 sm:mb-3 flex-shrink-0">
                   <span className="text-white text-base sm:text-lg font-semibold font-[BasisGrotesquePro]">
                     {staff.initials}
                   </span>

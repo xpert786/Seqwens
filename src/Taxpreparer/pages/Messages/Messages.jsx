@@ -1117,7 +1117,7 @@ export default function MessagePage() {
       </div>
 
       <button
-        className="flex items-center gap-2 px-4 h-14 !rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md hover:bg-[#e55a1a] !text-xs transition-all transform hover:-translate-y-0.5 uppercase"
+        className="flex items-center gap-2 px-4 py-2 !rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md hover:bg-[#e55a1a] !text-xs transition-all transform hover:-translate-y-0.5 uppercase"
         onClick={handleOpenComposeModal}
       >
         <PLusIcon />
