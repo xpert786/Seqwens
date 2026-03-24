@@ -557,13 +557,13 @@ export default function FolderContents() {
                     <table className={`w-full foldercontents-table ${loading ? 'opacity-50' : ''} transition-opacity`}>
                       <thead>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
+                          <th className="text-end py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -578,35 +578,35 @@ export default function FolderContents() {
                             }}
                             className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer`}
                           >
-                            <td className="py-4 px-4">
+                            <td className="py-3 px-4 align-middle">
                               <div className="flex items-center gap-3 foldercontents-document-name">
                                 <div className="flex-shrink-0 foldercontents-document-icon">
                                   <FileIcon />
                                 </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
-                                  <p className="text-xs text-gray-500 foldercontents-document-type" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text m-0 truncate" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
+                                  <p className="text-[10px] text-gray-500 foldercontents-document-type m-0 uppercase font-bold tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 px-4">
-                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.clientName}</p>
+                            <td className="py-3 px-4 align-middle">
+                              <p className="text-sm text-gray-700 m-0 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.clientName}</p>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-3 px-4 align-middle">
                               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 foldercontents-category-badge" style={{ fontFamily: 'BasisGrotesquePro' }}>
                                 {doc.category}
                               </span>
                             </td>
-                            <td className="py-4 px-4">
-                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
+                            <td className="py-3 px-4 align-middle">
+                              <p className="text-sm text-gray-700 m-0 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
                             </td>
-                            <td className="py-4 px-4">
-                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
+                            <td className="py-3 px-4 align-middle">
+                              <p className="text-sm text-gray-700 m-0 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
                             </td>
-                            <td className="py-4 px-4">
-                              <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
+                            <td className="py-3 px-4 align-middle">
+                              <p className="text-sm text-gray-700 m-0 whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-3 px-4 align-middle text-end">
                               <div className="actions-menu-container">
                                 <Dropdown>
                                   <Dropdown.Toggle

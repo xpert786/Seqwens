@@ -576,9 +576,9 @@ const Appointments = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-full lg:w-64 space-y-4">
+                    <div className="w-full lg:w-64 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col gap-4">
                         {/* Today's Events */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
+                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
                             <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Today's Events</h6>
                             <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">7/28/2025</p>
                             <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No events scheduled for today</p>

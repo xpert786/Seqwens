@@ -482,506 +482,392 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
   if (!isOpen) return null;
 
   const modalContent = (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
       <div
-        className="bg-white rounded-xl shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
-        style={{ width: '90%', maxWidth: '800px' }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-300"
+        onClick={onClose}
+      />
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl max-h-[90vh] w-full max-w-[650px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 shadow-[#3AD6F2]/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="d-flex justify-content-between align-items-center p-3 border-bottom" style={{ borderColor: '#E8F0FF' }}>
-          <h4 className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, fontSize: '20px', color: '#3B4A66' }}>Create New Task</h4>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 flex-shrink-0 bg-white">
+          <div className="flex items-center gap-3">
+            <h4 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">Create New Task</h4>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200"
+            style={{ borderRadius: "50%" }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-              <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 6L6 18M6 6L18 18" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
-          <form onSubmit={handleSubmit}>
-            <div className="bg-white rounded-lg border p-4" style={{ borderColor: '#E8F0FF' }}>
-              {/* Task Type */}
-              <div className="mb-3">
-                <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Task Type <span className="text-danger">*</span>
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto flex-grow custom-scrollbar">
+          <form id="create-task-form" onSubmit={handleSubmit} className="space-y-5">
+            {/* Task Type */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                Task Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.task_type ? 'border-red-500' : 'border-gray-300'}`}
+                value={formData.task_type}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, task_type: e.target.value }));
+                  setErrors(prev => ({ ...prev, task_type: null }));
+                }}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              >
+                <option value="client_onboarding">Client Onboarding</option>
+                <option value="document_collection">Document Collection</option>
+                <option value="document_request">Document Request</option>
+                <option value="document_review">Document Review</option>
+                <option value="signature_request">Signature Request</option>
+              </select>
+              {errors.task_type && <p className="text-[10px] text-red-500 mt-1">{errors.task_type}</p>}
+            </div>
+
+            {/* Title */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                Task Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.task_title ? 'border-red-500' : 'border-gray-300'}`}
+                value={formData.task_title}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, task_title: e.target.value }));
+                  if (errors.task_title) {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.task_title;
+                      return newErrors;
+                    });
+                  }
+                }}
+                placeholder="Enter task title"
+                maxLength={255}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              />
+              {errors.task_title && <p className="text-[10px] text-red-500 mt-1">{errors.task_title}</p>}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                Description
+              </label>
+              <textarea
+                className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all min-h-[80px] resize-none ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
+                value={formData.description}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, description: e.target.value }));
+                  if (errors.description) {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.description;
+                      return newErrors;
+                    });
+                  }
+                }}
+                placeholder="Describe the task details..."
+                rows={3}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              />
+              {errors.description && <p className="text-[10px] text-red-500 mt-1">{errors.description}</p>}
+            </div>
+
+            {/* Tax Preparer and Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1" ref={taxPreparerDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                  Tax Preparer <span className="text-[10px] font-normal text-gray-500">(optional)</span>
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 text-left flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.tax_preparer_id ? 'border-red-500' : 'border-gray-300'}`}
+                    onClick={() => setShowTaxPreparerDropdown(!showTaxPreparerDropdown)}
+                  >
+                    <span className="truncate">{loadingTaxPreparers ? 'Loading...' : (formData.tax_preparer_id ? selectedTaxPreparerName : 'Assign to Self')}</span>
+                    <FaChevronDown size={10} className={`text-gray-400 transition-transform duration-200 ${showTaxPreparerDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showTaxPreparerDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[200px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+                      <div
+                        className="p-3 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
+                          setShowTaxPreparerDropdown(false);
+                        }}
+                      >
+                        <p className="text-xs font-black text-gray-900 font-[BasisGrotesquePro]">Assign to Self (Admin)</p>
+                      </div>
+                      {taxPreparers.map((tp) => {
+                        const displayName = tp.staff_member?.name || `${tp.first_name || ''} ${tp.last_name || ''}`.trim() || tp.email;
+                        return (
+                          <div
+                            key={tp.id}
+                            className="p-3 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, tax_preparer_id: tp.id.toString() }));
+                              setShowTaxPreparerDropdown(false);
+                            }}
+                          >
+                            <p className="text-xs font-bold text-gray-700 font-[BasisGrotesquePro]">{displayName}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                  Priority
                 </label>
                 <select
-                  className={`form-select form-select-sm ${errors.task_type ? 'is-invalid' : ''}`}
-                  value={formData.task_type}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, task_type: e.target.value }));
-                    setErrors(prev => ({ ...prev, task_type: null }));
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all"
+                  value={formData.priority}
+                  onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
                 >
-                  <option value="client_onboarding">Client Onboarding</option>
-                  <option value="document_collection">Document Collection</option>
-                  <option value="document_request">Document Request</option>
-                  <option value="document_review">Document Review</option>
-                  <option value="signature_request">Signature Request</option>
+                  <option value="low">Low Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="high">High Priority</option>
                 </select>
-                {errors.task_type && <div className="invalid-feedback">{errors.task_type}</div>}
               </div>
+            </div>
 
-              {/* Title */}
-              <div className="mb-3">
-                <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Task Title <span className="text-danger">*</span>
+            {/* Clients Selection */}
+            {formData.task_type !== 'signature_request' && (
+              <div className="space-y-1" ref={clientDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                  Assign Client(s) <span className="text-[10px] font-normal text-gray-500">(optional)</span>
                 </label>
-                <input
-                  type="text"
-                  className={`form-control form-control-sm ${errors.task_title ? 'is-invalid' : ''}`}
-                  value={formData.task_title}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, task_title: e.target.value }));
-                    if (errors.task_title) {
-                      setErrors(prev => {
-                        const newErrors = { ...prev };
-                        delete newErrors.task_title;
-                        return newErrors;
-                      });
-                    }
-                  }}
-                  placeholder="Enter task title"
-                  maxLength={255}
-                  style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-                />
-                {errors.task_title && <div className="invalid-feedback">{errors.task_title}</div>}
-              </div>
-
-              {/* Description */}
-              <div className="mb-3">
-                <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Description
-                </label>
-                <textarea
-                  className={`form-control form-control-sm ${errors.description ? 'is-invalid' : ''}`}
-                  value={formData.description}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, description: e.target.value }));
-                    if (errors.description) {
-                      setErrors(prev => {
-                        const newErrors = { ...prev };
-                        delete newErrors.description;
-                        return newErrors;
-                      });
-                    }
-                  }}
-                  placeholder="Enter task description"
-                  rows={3}
-                  style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-                />
-                {errors.description && <div className="invalid-feedback">{errors.description}</div>}
-              </div>
-
-              {/* Tax Preparer and Priority - Same Row */}
-              <div className="row g-2 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Tax Preparer <span className="text-muted" style={{ fontWeight: 400 }}>(Optional)</span>
-                  </label>
-                  <div className="position-relative" ref={taxPreparerDropdownRef}>
-                    <div className="d-flex align-items-center gap-2">
-                      <button
-                        type="button"
-                        className={`form-select form-select-sm text-start ${errors.tax_preparer_id ? 'is-invalid' : ''}`}
-                        onClick={() => setShowTaxPreparerDropdown(!showTaxPreparerDropdown)}
-                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
-                      >
-                        {loadingTaxPreparers ? 'Loading...' : (formData.tax_preparer_id ? selectedTaxPreparerName : 'Self (Firm Admin)')}
-                      </button>
-                      {formData.tax_preparer_id && (
-                        <button
-                          type="button"
-                          className="btn  btn-light border"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
-                            setShowTaxPreparerDropdown(false);
-                          }}
-                          title="Assign to Self"
-                        >
-                          <FaTimes size={10} color="#EF4444" />
-                        </button>
-                      )}
-                    </div>
-                    {showTaxPreparerDropdown && (
-                      <div
-                        className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
-                        style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
-                      >
-                        <div
-                          className="p-2 cursor-pointer border-bottom bg-slate-50 fw-medium"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
-                            setShowTaxPreparerDropdown(false);
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
-                          style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
-                        >
-                          Assign to Self (Firm Admin)
-                        </div>
-                        {taxPreparers.length > 0 ? (
-                          taxPreparers.map((tp) => {
-                            const displayName = tp.staff_member?.name ||
-                              `${tp.first_name || ''} ${tp.last_name || ''}`.trim() ||
-                              tp.contact?.email ||
-                              tp.email ||
-                              `Staff #${tp.first_name} ${tp.last_name}`;
-                            return (
-                              <div
-                                key={tp.id}
-                                className="p-2 cursor-pointer hover-bg-light"
-                                onClick={() => {
-                                  setFormData(prev => ({ ...prev, tax_preparer_id: tp.id.toString() }));
-                                  setShowTaxPreparerDropdown(false);
-                                  if (errors.tax_preparer_id) {
-                                    setErrors(prev => {
-                                      const newErrors = { ...prev };
-                                      delete newErrors.tax_preparer_id;
-                                      return newErrors;
-                                    });
-                                  }
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
-                              >
-                                {displayName}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="p-2 text-muted" style={{ fontSize: '12px' }}>No staff available</div>
-                        )}
-                      </div>
-                    )}
-                    {errors.tax_preparer_id && <div className="invalid-feedback d-block">{errors.tax_preparer_id}</div>}
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Priority
-                  </label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={formData.priority}
-                    onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                    style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 text-left flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all"
+                    onClick={() => setShowClientDropdown(!showClientDropdown)}
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Client */}
-              {formData.task_type !== 'signature_request' && (
-                <div className="mb-3">
-                  <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Client(s) <span className="text-muted" style={{ fontWeight: 400 }}>(Optional)</span>
-                  </label>
-                  <div className="position-relative" ref={clientDropdownRef}>
-                    <div className="d-flex align-items-center gap-2">
-                      <button
-                        type="button"
-                        className={`form-select form-select-sm text-start ${errors.client_ids ? 'is-invalid' : ''}`}
-                        onClick={() => setShowClientDropdown(!showClientDropdown)}
-                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
-                      >
-                        {loadingClients ? 'Loading...' : (formData.client_ids.length > 0 ? `${formData.client_ids.length} Client(s) Selected` : 'Internal Only (No Client)')}
-                      </button>
-                      {formData.client_ids.length > 0 && (
-                        <button
-                          type="button"
-                          className="btn  btn-light border"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, client_ids: [] }));
-                            setShowClientDropdown(false);
-                          }}
-                          title="Clear Clients"
-                        >
-                          <FaTimes size={10} color="#EF4444" />
-                        </button>
-                      )}
-                    </div>
-                    {showClientDropdown && (
+                    <span className="truncate">
+                      {loadingClients ? 'Loading...' : (formData.client_ids.length > 0 ? `${formData.client_ids.length} Client(s) Selected` : 'Internal / No Client')}
+                    </span>
+                    <FaChevronDown size={10} className={`transition-transform duration-200 ${showClientDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showClientDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[250px] overflow-y-auto custom-scrollbar overflow-x-hidden">
                       <div
-                        className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
-                        style={{ maxHeight: '250px', overflowY: 'auto', zIndex: 1000 }}
+                        className="p-3 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, client_ids: [] }));
+                          setShowClientDropdown(false);
+                        }}
                       >
-                        <div
-                          className="p-2 cursor-pointer border-bottom bg-slate-50 fw-medium"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, client_ids: [] }));
-                            setShowClientDropdown(false);
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
-                          style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
-                        >
-                          Internal (No Client Assigned)
-                        </div>
-                        {clients.map((client) => {
-                          const isSelected = formData.client_ids.includes(client.id.toString());
-                          return (
-                            <div
-                              key={client.id}
-                              className="p-2 cursor-pointer d-flex align-items-center gap-2"
-                              onClick={() => {
-                                const newClientIds = isSelected
-                                  ? formData.client_ids.filter(id => id !== client.id.toString())
-                                  : [...formData.client_ids, client.id.toString()];
-                                setFormData(prev => ({ ...prev, client_ids: newClientIds }));
-                                if (errors.client_ids) {
-                                  setErrors(prev => {
-                                    const newErrors = { ...prev };
-                                    delete newErrors.client_ids;
-                                    return newErrors;
-                                  });
-                                }
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
-                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                              style={{ fontFamily: 'BasisGrotesquePro', fontSize: '13px' }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                readOnly
-                                style={{ cursor: 'pointer' }}
-                              />
-                              {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
+                        <p className="text-xs font-black text-gray-900 font-[BasisGrotesquePro]">No Client Assigned</p>
+                      </div>
+                      {clients.map((client) => {
+                        const isSelected = formData.client_ids.includes(client.id.toString());
+                        return (
+                          <div
+                            key={client.id}
+                            className="p-3 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0 flex items-center gap-3"
+                            onClick={() => {
+                              const newClientIds = isSelected
+                                ? formData.client_ids.filter(id => id !== client.id.toString())
+                                : [...formData.client_ids, client.id.toString()];
+                              setFormData(prev => ({ ...prev, client_ids: newClientIds }));
+                            }}
+                          >
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-200 bg-white'}`}>
+                              {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {errors.client_ids && <div className="invalid-feedback d-block">{errors.client_ids}</div>}
-                    {formData.client_ids.length > 0 && (
-                      <div className="d-flex flex-wrap gap-2 mt-2">
-                        {formData.client_ids.map(id => {
-                          const client = clients.find(c => c.id.toString() === id);
-                          if (!client) return null;
-                          const displayName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email;
-                          return (
-                            <span
-                              key={id}
-                              className="badge d-flex align-items-center gap-2"
-                              style={{
-                                backgroundColor: '#FFFFFF',
-                                color: '#3B4A66',
-                                border: '1px solid #E8F0FF',
-                                fontSize: '11px',
-                                padding: '4px 10px',
-                                fontFamily: 'BasisGrotesquePro'
-                              }}
-                            >
-                              {displayName}
-                              <FaTimes
-                                size={8}
-                                className="cursor-pointer"
-                                onClick={() => {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    client_ids: prev.client_ids.filter(cid => cid !== id)
-                                  }));
-                                }}
-                              />
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Folder and Due Date - Same Row */}
-              <div className="row g-2 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Folder {['document_collection', 'document_review', 'document_request', 'signature_request'].includes(formData.task_type) && <span className="text-danger">*</span>}
-                  </label>
-                  <div className="position-relative" ref={folderDropdownRef}>
-                    <div className="d-flex align-items-center gap-2">
-                      <button
-                        type="button"
-                        className={`form-select form-select-sm text-start ${errors.folder_id ? 'is-invalid' : ''}`}
-                        onClick={() => setShowFolderDropdown(!showFolderDropdown)}
-                        style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', cursor: 'pointer', flex: 1 }}
-                      >
-                        {loadingFolders ? 'Loading...' : selectedFolderName}
-                      </button>
-                      {formData.folder_id && (
-                        <button
-                          type="button"
-                          className="btn  btn-light border"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, folder_id: '' }));
-                            setShowFolderDropdown(false);
-                          }}
-                          title="Clear Folder"
-                        >
-                          <FaTimes size={10} color="#EF4444" />
-                        </button>
-                      )}
+                            <p className="text-xs font-bold text-gray-700 font-[BasisGrotesquePro]">
+                              {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
-                    {showFolderDropdown && (
-                      <div
-                        className="position-absolute w-100 bg-white border rounded mt-1 shadow-lg"
-                        style={{ maxHeight: '300px', overflowY: 'auto', zIndex: 1000 }}
-                      >
-                        {folderTree.length > 0 ? (
-                          renderFolderTree(folderTree)
-                        ) : (
-                          <div className="p-3 text-muted">No folders available</div>
-                        )}
-                      </div>
-                    )}
-                    {errors.folder_id && <div className="invalid-feedback d-block">{errors.folder_id}</div>}
-                  </div>
+                  )}
                 </div>
-                <div className="col-md-6">
-                  <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                    Due Date <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className={`form-control form-control-sm ${errors.due_date ? 'is-invalid' : ''}`}
-                    value={formData.due_date}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, due_date: e.target.value }));
-                      if (errors.due_date) {
-                        setErrors(prev => {
-                          const newErrors = { ...prev };
-                          delete newErrors.due_date;
-                          return newErrors;
-                        });
-                      }
-                    }}
-                    min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
-                    style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-                  />
-                  {errors.due_date && <div className="invalid-feedback">{errors.due_date}</div>}
-                </div>
-              </div>
-
-              {/* Files/Attachments */}
-              <div className="mb-3">
-                <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Files (Optional)
-                </label>
-                <div
-                  className="border border-dashed rounded p-3 text-center d-flex flex-column align-items-center justify-content-center"
-                  style={{ borderColor: '#E8F0FF', cursor: 'pointer' }}
-                  onClick={() => document.getElementById('file-input').click()}
-                >
-                  <FaFileUpload
-                    size={20}
-                    style={{ color: '#3AD6F2', marginBottom: '8px' }}
-                  />
-
-                  <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#3B4A66' }}>
-                    Click to upload files
-                  </div>
-
-                  <div
-                    style={{
-                      fontFamily: 'BasisGrotesquePro',
-                      fontSize: '11px',
-                      color: '#7B8AB2',
-                      marginTop: '4px'
-                    }}
-                  >
-                    {formData.task_type === 'signature_request'
-                      ? 'PDF (Max 10MB each)'
-                      : 'PDF, XLSX, XLS, DOCX, JPG, JPEG, PNG (Max 10MB each)'}
-                  </div>
-
-                  <input
-                    id="file-input"
-                    type="file"
-                    className="d-none"
-                    onChange={handleFileChange}
-                    multiple
-                    accept={
-                      formData.task_type === 'signature_request'
-                        ? ".pdf"
-                        : ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"
-                    }
-                  />
-                </div>
-                {errors.files && <div className="invalid-feedback d-block">{errors.files}</div>}
-                {selectedFiles.length > 0 && (
-                  <div className="mt-2">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="d-flex align-items-center justify-content-between p-2 bg-light rounded mb-1">
-                        <span style={{ fontSize: '12px', fontFamily: 'BasisGrotesquePro' }}>
-                          {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                        </span>
-                        <button
-                          type="button"
-                          className="btn  btn-link text-danger p-0"
-                          onClick={() => removeFile(index)}
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-                    ))}
+                {formData.client_ids.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {formData.client_ids.map(id => {
+                      const client = clients.find(c => c.id.toString() === id);
+                      if (!client) return null;
+                      return (
+                        <div key={id} className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 !rounded-lg border border-blue-100 group animate-in slide-in-from-left-2 duration-200">
+                          <span className="text-[10px] font-black text-blue-600 font-[BasisGrotesquePro]">
+                            {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, client_ids: prev.client_ids.filter(cid => cid !== id) }))}
+                            className="text-blue-300 hover:text-blue-500 transition-colors"
+                          >
+                            <FaTimes size={8} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
+            )}
 
+            {/* Folder and Due Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1" ref={folderDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                  Target Folder {['document_collection', 'document_review', 'document_request', 'signature_request'].includes(formData.task_type) && <span className="text-red-500">*</span>}
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 text-left flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.folder_id ? 'border-red-500' : 'border-gray-300'}`}
+                    onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                  >
+                    <span className="truncate">{loadingFolders ? 'Loading...' : selectedFolderName}</span>
+                    <FaChevronDown size={10} className={`transition-transform duration-200 ${showFolderDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showFolderDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[250px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+                      {folderTree.length > 0 ? renderFolderTree(folderTree) : <div className="p-4 text-center text-xs text-gray-400">No folders found</div>}
+                    </div>
+                  )}
+                </div>
+                {errors.folder_id && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.folder_id}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                  Due Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.due_date ? 'border-red-500' : 'border-gray-300'}`}
+                  value={formData.due_date}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, due_date: e.target.value }));
+                    if (errors.due_date) {
+                      setErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors.due_date;
+                        return newErrors;
+                      });
+                    }
+                  }}
+                  min={new Date().toISOString().split('T')[0]}
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                />
+                {errors.due_date && <p className="text-[10px] text-red-500 mt-1">{errors.due_date}</p>}
+              </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="d-flex justify-content-end align-items-center gap-2 p-3 border-top mt-3" style={{ borderColor: '#E8F0FF' }}>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="btn "
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  color: '#3B4A66',
-                  border: '1px solid #E8F0FF',
-                  fontFamily: 'BasisGrotesquePro',
-                  fontSize: '14px',
-                  padding: '8px 16px'
-                }}
+            {/* File Upload */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                Attachments <span className="text-[10px] font-normal text-gray-500">(optional)</span>
+              </label>
+              <div
+                className="border-2 border-dashed border-[#E8F0FF] hover:border-[#3AD6F2] !rounded-2xl p-6 transition-all cursor-pointer bg-gray-50/50 group"
+                onClick={() => document.getElementById('file-input').click()}
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn "
-                style={{
-                  backgroundColor: '#F56D2D',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontFamily: 'BasisGrotesquePro',
-                  fontSize: '14px',
-                  padding: '8px 16px'
-                }}
-              >
-                {loading ? 'Creating...' : 'Create Task'}
-              </button>
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 bg-white !rounded-full shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <FaFileUpload className="text-[#3AD6F2] w-6 h-6" />
+                  </div>
+                  <p className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] mb-1">Upload Files</p>
+                  <p className="text-[10px] font-bold text-gray-400 font-[BasisGrotesquePro]">
+                    {formData.task_type === 'signature_request' ? 'Limited to PDF format' : 'PDF, Word, Excel or Images (Max 10MB)'}
+                  </p>
+                  <input
+                    id="file-input"
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileChange}
+                    multiple
+                    accept={formData.task_type === 'signature_request' ? ".pdf" : ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"}
+                  />
+                </div>
+              </div>
+              {selectedFiles.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2.5 bg-white border border-[#E8F0FF] !rounded-xl group hover:border-[#3AD6F2] transition-all">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FaFolder className="text-amber-400 flex-shrink-0" />
+                        <span className="text-[11px] font-bold text-gray-700 truncate font-[BasisGrotesquePro]">{file.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeFile(index); }}
+                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </form>
         </div>
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 bg-white border-t border-gray-100 flex items-center justify-end gap-3 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium font-[BasisGrotesquePro] text-sm transition-all"
+            style={{ borderRadius: "10px" }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="create-task-form"
+            disabled={loading}
+            className="px-8 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 font-medium font-[BasisGrotesquePro] text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ borderRadius: "10px" }}
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Creating...</span>
+              </>
+            ) : (
+              'Create Task'
+            )}
+          </button>
+        </div>
+        <style>
+          {`
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 5px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: #F8FAFF;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #E2E8F0;
+              border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #CBD5E1;
+            }
+          `}
+        </style>
       </div>
     </div>
   );
