@@ -1072,7 +1072,7 @@ export default function ESignatureDashboard() {
               <FiPenTool size={32} />
             </div>
             <div>
-              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-none mb-0">
+              <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
                 E-Signatures
               </h1>
               <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your digital signature requests and document execution.</span>

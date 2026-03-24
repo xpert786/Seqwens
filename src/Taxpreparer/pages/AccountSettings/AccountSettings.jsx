@@ -72,7 +72,7 @@ export default function AccountSettings() {
                             </svg>
                         </div>
                         <div>
-                            <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                            <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
                                 Settings
                             </h1>
                             <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your profile and preferences.</span>
