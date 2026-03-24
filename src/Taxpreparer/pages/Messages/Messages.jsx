@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { AddTask, Cliented, Clocking, Completed, Message3Icon, Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
-import { FaSearch, FaPaperPlane } from "react-icons/fa";
+import { FaSearch, FaPaperPlane, FaLink } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, PLusIcon } from "../../../ClientOnboarding/components/icons";
 import taxheaderlogo from "../../../assets/logo.png";
 import { taxPreparerThreadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
@@ -70,13 +70,13 @@ export default function MessagePage() {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1280);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 992);
-      if (window.innerWidth >= 992) {
+      setIsMobile(window.innerWidth < 1280);
+      if (window.innerWidth >= 1280) {
         setShowChatOnMobile(false);
       }
     };
@@ -1105,6 +1105,26 @@ export default function MessagePage() {
       fetchAssignedClients();
     }
   }, [showComposeModal, clientsLoading, fetchAssignedClients]);
+  const renderHeader = () => (
+    <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex-shrink-0 min-h-[80px]">
+      <div className="sm:text-left">
+        <h5 className="text-2xl font-bold text-gray-900 font-basis-grotesque">
+          Messages
+        </h5>
+        <span className="text-sm text-gray-500 font-basis-grotesque">
+          Communicate with clients and team members
+        </span>
+      </div>
+
+      <button
+        className="flex items-center gap-2 px-4 h-14 !rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md hover:bg-[#e55a1a] !text-xs transition-all transform hover:-translate-y-0.5 uppercase"
+        onClick={handleOpenComposeModal}
+      >
+        <PLusIcon />
+        <span>New Message</span>
+      </button>
+    </div>
+  );
 
   // Handle click outside dropdown
   useEffect(() => {
@@ -1121,127 +1141,69 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="messages-page messages-page-container d-flex flex-column" style={{ padding: isMobile ? "0" : "0 24px 24px 24px" }}>
+    <div className="flex flex-col h-full bg-[#F8FAFC] overflow-hidden lg:px-6">
       <style>
         {`
           @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
+            from { transform: translateY(10px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
           }
-          .messages-page-container {
-            animation: slideUp 0.4s ease-out;
-            height: 100% !important;
+          .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
           }
-          .active-thread {
-            border-color: #F56D2D !important;
-            box-shadow: 0 4px 12px rgba(245, 109, 45, 0.1);
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 0;
+            display: none;
+          }
+          .custom-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
           }
         `}
       </style>
 
-      {/* Header */}
-      <div className="message-header mb-4 px-3 py-2 bg-white rounded-4 shadow-sm" style={{ flexShrink: 0, minHeight: "80px" }}>
-        <div>
-          <h5 className="mb-0" style={{ color: "#1A202C", fontSize: "24px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>
-            Messages
-          </h5>
-          <p className="mb-0 text-muted" style={{ fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
-            Communicate with clients and team members
-          </p>
-        </div>
+      {renderHeader()}
 
-        <button
-          className="btn d-flex align-items-center px-4 py-2 rounded-3 transition-all new-message-btn"
-          style={{
-            backgroundColor: "#F56D2D",
-            color: "#FFFFFF",
-            fontFamily: "BasisGrotesquePro",
-            fontWeight: "600",
-            border: "none",
-            boxShadow: "0 4px 12px rgba(245, 109, 45, 0.2)"
-          }}
-          onClick={handleOpenComposeModal}
-        >
-          <span className="me-2 text-white"><PLusIcon /></span>
-          New Message
-        </button>
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden gap-6 mb-6">
 
         {/* Left Column - Conversations */}
-        <div className={`p-3 p-lg-3 d-flex flex-column conversations-panel bg-white shadow-sm ${isMobile && showChatOnMobile ? 'mobile-hidden' : ''}`} style={{ border: "1px solid #E2E8F0", borderRadius: isMobile ? "0" : "20px", marginRight: isMobile ? "0" : "1.5rem" }}>
-          <div className="mb-4">
-            <h5 className="mb-3 pt-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
+        <div className={`w-full xl:w-[450px] flex flex-col bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden flex-shrink-0 ${isMobile && showChatOnMobile ? 'hidden' : 'flex'}`}>
+          <div className="p-6 border-b border-gray-100 bg-gray-50/30">
+            <h5 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-6">Conversations</h5>
 
-            <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
-              <FaSearch
-                style={{
-                  position: "absolute",
-                  left: "15px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#A0AEC0",
-                  fontSize: "14px"
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Search conversations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-control"
-                style={{
-                  paddingLeft: "40px",
-                  borderRadius: "12px",
-                  border: "1px solid #E2E8F0",
-                  backgroundColor: "#F7FAFC",
-                  height: "45px",
-                  fontSize: "14px",
-                  boxShadow: "none"
-                }}
-              />
+            <div className="space-y-4">
+              <div className="relative group">
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#F56D2D] transition-colors" size={14} />
+                <input
+                  type="text"
+                  placeholder="Search conversations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-100 bg-white focus:ring-2 focus:ring-[#F56D2D]/20 focus:border-[#F56D2D] outline-none transition-all text-sm font-bold text-gray-700 shadow-sm"
+                />
+              </div>
+
+              <div className="relative">
+                <select
+                  className="w-full pl-4 pr-10 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-500 cursor-pointer appearance-none transition-all focus:ring-2 focus:ring-[#F56D2D]/10 hover:border-gray-200 shadow-sm"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 15px center"
+                  }}
+                >
+                  <option value="all">All Conversations</option>
+                  <option value="unread">Unread Messages</option>
+                  <option value="active">Active Threads</option>
+                  <option value="closed">Closed Threads</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Filter Dropdown */}
-          <div className="mb-3">
-            <div className="custom-select-wrapper" style={{ position: 'relative' }}>
-              <select
-                className="form-select border-0 bg-light"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                style={{
-                  borderRadius: "8px",
-                  padding: "10px 15px",
-                  fontSize: "14px",
-                  color: "#4A5568",
-                  cursor: "pointer",
-                  appearance: "none",
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%234A5568' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 15px center"
-                }}
-              >
-                <option value="all">All</option>
-                <option value="unread">Unread</option>
-                <option value="active">Active</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-          </div>
-
-          <div
-            className="flex-grow-1 overflow-auto conversations-scroll"
-            style={{
-              flexGrow: 1,
-              minHeight: 0,
-              overflowY: "auto",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none"
-            }}
-          >
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
             {(() => {
               const filteredConversations = conversations.filter(conv => {
                 const term = searchTerm.toLowerCase();
@@ -1259,22 +1221,31 @@ export default function MessagePage() {
 
               if (loadingThreads && conversations.length === 0) {
                 return (
-                  <div className="text-center py-5">
-                    <div className="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-                    <p className="text-muted small">Loading conversations...</p>
+                  <div className="flex flex-col items-center justify-center h-48 space-y-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-2xl border-2 border-gray-100 border-t-[#F56D2D] animate-spin"></div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-[#F56D2D] animate-pulse"></div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Syncing inbox...</p>
                   </div>
                 );
               }
 
               if (threadsError && conversations.length === 0) {
                 return (
-                  <div className="text-center py-5">
-                    <p className="text-danger small mb-2">Failed to load conversations</p>
+                  <div className="p-8 rounded-[30px] bg-rose-50/50 border border-rose-100 flex flex-col items-center text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-rose-500 mb-6 border border-rose-100">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    </div>
+                    <h4 className="text-gray-900 font-black tracking-tight mb-2">Connection failed</h4>
+                    <p className="text-gray-500 text-[13px] font-medium mb-6 max-w-[200px]">We couldn't reach the server to load your messages.</p>
                     <button
                       onClick={() => fetchThreads()}
-                      className="btn btn-sm btn-outline-primary"
+                      className="w-full py-4 bg-white border border-rose-100 text-rose-600 text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-rose-50 transition-all active:scale-95 shadow-sm"
                     >
-                      Retry
+                      Retry Connection
                     </button>
                   </div>
                 );
@@ -1282,388 +1253,305 @@ export default function MessagePage() {
 
               if (conversations.length === 0) {
                 return (
-                  <div className="text-center py-5">
-                    <p className="text-muted small">No conversations yet</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center py-20 opacity-40">
+                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-200 mb-4 flex items-center justify-center">
+                      <Message3Icon size={32} className="text-gray-300" />
+                    </div>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">No conversations found</p>
                   </div>
                 );
               }
 
               return filteredConversations.length > 0 ? (
-                <div className="d-flex flex-column gap-2">
+                <div className="flex flex-col gap-3">
                   {filteredConversations.map((conv) => (
                     <div
                       key={conv.id}
-                      className={`p-3 rounded-3 cursor-pointer transition-all ${activeConversationId === conv.id ? "bg-white border-primary shadow-sm" : "bg-light border-transparent hover-bg-white"
+                      className={`group p-5 rounded-[28px] cursor-pointer transition-all duration-300 border 
+                        ${activeConversationId === conv.id
+                          ? "bg-white border-[#F56D2D]/20 shadow-xl shadow-[#F56D2D]/5 -translate-y-0.5"
+                          : "border-transparent hover:bg-gray-50/80"
                         }`}
-                      style={{
-                        border: activeConversationId === conv.id ? "1.5px solid #F56D2D" : "1px solid transparent",
-                        transition: "all 0.2s ease"
-                      }}
                       onClick={() => {
                         setActiveConversationId(conv.id);
                         if (isMobile) setShowChatOnMobile(true);
                       }}
                     >
-                      <div className="top-row d-flex justify-content-between align-items-center mb-1">
-                        <div className="d-flex align-items-center">
-                          <ConverIcon className="me-2" color={conv.id === activeConversationId ? "#F56D2D" : "#718096"} />
-                          <div className="d-flex align-items-center gap-2">
-                            <div className="name-text" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
-                            {conv.unreadCount > 0 && (
-                              <span className="badge bg-danger text-white rounded-pill" style={{ fontSize: "10px", padding: "4px 8px" }}>
-                                {conv.unreadCount}
-                              </span>
-                            )}
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 relative">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-white shadow-sm transition-all duration-300 border ${activeConversationId === conv.id ? 'border-[#F56D2D]/30 shadow-lg shadow-[#F56D2D]/10' : 'border-gray-100 group-hover:border-gray-200'}`}>
+                            <ConverIcon color={conv.id === activeConversationId ? "#F56D2D" : "#64748B"} size={26} />
                           </div>
+                          {conv.unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex items-center justify-center bg-rose-500 text-white text-[10px] h-6 w-6 rounded-xl font-black border-2 border-white shadow-lg">
+                              {conv.unreadCount}
+                            </span>
+                          )}
                         </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <small className="time-text" style={{ color: "#A0AEC0", fontSize: "12px", fontWeight: "400" }}>{conv.time}</small>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteThread(conv.id, e);
-                            }}
-                            className="btn btn-link p-0 text-danger opacity-75 hover-opacity-100"
-                            style={{ border: "none" }}
-                            title="Delete thread"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
+
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex flex-col min-w-0 pr-2">
+                              <h6 className={`text-[15px] font-black truncate transition-colors leading-none mb-1 ${activeConversationId === conv.id ? 'text-[#F56D2D]' : 'text-gray-900 group-hover:text-[#F56D2D]'}`}>
+                                {conv.name}
+                              </h6>
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{conv.time}</span>
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteThread(conv.id, e);
+                              }}
+                              className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex-shrink-0 border border-transparent hover:border-rose-100"
+                              title="Delete conversation"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 6h18M19 6V20a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                              </svg>
+                            </button>
+                          </div>
+
+                          <p className={`text-[13px] line-clamp-1 leading-snug tracking-tight ${conv.unreadCount > 0 ? 'text-gray-900 font-black' : 'text-gray-500 font-medium'} mb-2`}>
+                            {conv.lastMessage || 'No recent messages'}
+                          </p>
+
+                          {conv.subject && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-100/50 w-fit group-hover:bg-white transition-colors">
+                              <span className="text-[9px] font-black text-[#F56D2D] uppercase tracking-[0.2em] opacity-80">Subject</span>
+                              <span className="text-[11px] text-gray-500 font-black truncate max-w-[150px]">{conv.subject}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <small className="last-message text-truncate d-block" style={{ marginLeft: "35px", color: "#718096", fontSize: "12px" }}>
-                        {conv.lastMessage || 'No message'}
-                      </small>
-                      {conv.subject && (
-                        <div className="subject-row mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
-                          <span style={{ color: "#F56D2D", fontSize: "10px", fontWeight: "600" }}>SUBJECT:</span>
-                          <span className="text-truncate" style={{ color: "#4A5568", fontSize: "11px" }}>{conv.subject}</span>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
               ) : !loadingThreads && !threadsError && conversations.length > 0 && filteredConversations.length === 0 ? (
-                <div className="text-center py-5">
-                  <p className="text-muted small">No matches found for "{searchTerm}"</p>
+                <div className="flex flex-col items-center justify-center h-full p-4 space-y-2 opacity-50">
+                  <p className="text-gray-400 text-[11px] font-black uppercase tracking-widest text-center">No matches for<br/>"{searchTerm}"</p>
                 </div>
               ) : null;
             })()}
           </div>
         </div>
 
-        {/* Right Column - Chat Interface */}
-        <div
-          className={`flex-grow-1 bg-white rounded shadow-sm d-flex flex-column chat-interface overflow-hidden ${isMobile && !showChatOnMobile ? 'mobile-hidden' : ''}`}
-          style={{ border: isMobile ? "none" : "1px solid #E2E8F0", borderRadius: isMobile ? "0" : "8px" }}
-        >
-          {(() => {
-            const activeConversation = conversations.find(c => c.id === activeConversationId);
-            return activeConversation ? (
-              <>
-                {/* Desktop Header - Matches Client Panel */}
-                <div className="border-bottom p-3 d-flex align-items-center gap-2" style={{ flexShrink: 0, backgroundColor: isMobile ? "#F9FAFB" : "transparent" }}>
-                  {isMobile && (
-                    <button 
-                      className="btn btn-link p-0 me-2 text-primary" 
-                      onClick={() => setShowChatOnMobile(false)}
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  )}
-                  <ConverIcon className="text-primary" size={20} />
-                  <div>
-                    <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
-                    <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                      {activeConversation.status === 'active' ? 'Active' : 'Closed'}
-                    </small>
-                  </div>
-                </div>
+        {/* Right Column - Chat Interface Wrapper */}
+        <div className={`flex-1 flex flex-col min-w-0 ${isMobile && !showChatOnMobile ? 'hidden' : 'flex'}`}>
 
-                <div
-                  ref={messagesContainerRef}
-                  className="flex-grow-1 p-3 messages-scroll"
-                  style={{
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    minHeight: "200px",
-                  }}
-                >
-                  {loadingMessages ? (
-                    <div className="text-center py-5">
-                      <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-                      <p className="text-muted mt-2 small">Loading messages...</p>
+          <div className="flex-1 bg-white shadow-sm border border-gray-100 rounded-[40px] flex flex-col overflow-hidden">
+            {(() => {
+              const activeConversation = conversations.find(c => c.id === activeConversationId);
+              return activeConversation ? (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                    <div className="flex items-center gap-3">
+                      {isMobile && (
+                        <button
+                          className="p-2 -ml-2 text-gray-500 hover:text-[#F56D2D] transition-colors"
+                          onClick={() => setShowChatOnMobile(false)}
+                        >
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      )}
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white ">
+                        <ConverIcon size={20} />
+                      </div>
+                      <div>
+                        <h6 className="text-base font-bold text-gray-900 leading-none">{activeConversation.name}</h6>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${activeConversation.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                          <span className="text-[11px] font-medium text-gray-500 uppercase tracking-widest">
+                            {activeConversation.status === 'active' ? 'Online' : 'Closed'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  ) : activeChatMessages.length > 0 ? (
-                    <>
-                      {activeChatMessages.map((msg) => {
-                        // Client messages (received) appear on LEFT
-                        if (msg.type === "admin") {
+                  </div>
+
+                  <div
+                    ref={messagesContainerRef}
+                    className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar animate-slide-up"
+                  >
+                    {loadingMessages ? (
+                      <div className="flex flex-col items-center justify-center h-full space-y-4 py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F56D2D] border-t-transparent"></div>
+                        <p className="text-xs font-medium text-gray-500">Decrypting messages...</p>
+                      </div>
+                    ) : activeChatMessages.length > 0 ? (
+                      <>
+                        {activeChatMessages.map((msg) => {
+                          const isSentByMe = msg.type === "user";
                           return (
-                            <React.Fragment key={msg.id}>
-                              {msg.text && (
-                                <div className={`d-flex w-100 ${msg.hasAttachment ? 'mb-1' : 'mb-3'}`} style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
-                                  <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
-                                    <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
-                                      {msg.sender}
-                                    </div>
-                                    <div>{msg.text}</div>
-                                    <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
-                                      {new Date(msg.date).toLocaleString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true
-                                      })}
-                                      {msg.isEdited && (
-                                        <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              {msg.hasAttachment && (
-                                <div className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
-                                  <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
-                                    {!msg.text && (
-                                      <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
-                                        {msg.sender}
+                            <div key={msg.id} className={`flex w-full ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[75%] space-y-1`}>
+                                {!isSentByMe && (
+                                  <span className="text-[10px] font-bold text-gray-400 ml-2 uppercase tracking-widest">{msg.sender}</span>
+                                )}
+
+                                <div className={`px-4 py-3 rounded-2xl shadow-sm text-sm ${isSentByMe
+                                  ? 'bg-[#F56D2D] text-white rounded-tr-none'
+                                  : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                                  }`}>
+                                  {msg.text && <span className="mb-2 leading-relaxed">{msg.text}</span>}
+
+                                  {msg.hasAttachment && (
+                                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${isSentByMe ? 'bg-white/10 border-white/20' : 'bg-white border-gray-200'
+                                      }`}>
+                                      <div className={`p-2 rounded-lg ${isSentByMe ? 'bg-white/20' : 'bg-[#F56D2D]/10'}`}>
+                                        <FileIcon className={isSentByMe ? 'text-white' : 'text-[#F56D2D]'} size={18} />
                                       </div>
-                                    )}
-                                    <div className={msg.text ? "" : "mt-2"}>
-                                      <FileIcon className="me-2 text-primary" />
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
+                                      <div className="flex flex-col overflow-hidden">
+                                        <a
+                                          href={msg.attachment || msg.attachmentObj?.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className={`font-bold text-xs truncate underline ${isSentByMe ? 'text-white' : 'text-[#F56D2D]'}`}
+                                        >
+                                          {msg.attachmentName || "Attachment"}
+                                        </a>
+                                        {msg.attachmentSize && (
+                                          <span className={`text-[10px] ${isSentByMe ? 'text-white/70' : 'text-gray-400'}`}>
+                                            {msg.attachmentSize}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
-                                    <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
-                                      {new Date(msg.date).toLocaleString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true
-                                      })}
-                                      {msg.isEdited && (
-                                        <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                      )}
-                                    </div>
+                                  )}
+
+                                  <div className={`flex items-center gap-2 mt-2 text-[10px] ${isSentByMe ? 'text-white/60' : 'text-gray-400'}`}>
+                                    <span>{new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {msg.isEdited && <span className="italic">(edited)</span>}
                                   </div>
                                 </div>
-                              )}
-                            </React.Fragment>
+                              </div>
+                            </div>
                           );
-                        }
-                        // Tax preparer messages (sent by current user) appear on RIGHT
-                        else if (msg.type === "user") {
-                          return (
-                            <React.Fragment key={msg.id}>
-                              {msg.text && (
-                                <div className={`d-flex w-100 justify-content-end ${msg.hasAttachment ? 'mb-1' : 'mb-3'}`}>
-                                  <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
-                                    <div style={{ color: "#1F2937" }}>{msg.text}</div>
-                                    <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
-                                      {new Date(msg.date).toLocaleString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true
-                                      })}
-                                      {msg.isEdited && (
-                                        <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              {msg.hasAttachment && (
-                                <div className="d-flex mb-3 w-100 justify-content-end">
-                                  <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
-                                    <div className={msg.text ? "" : "mt-2"}>
-                                      <FileIcon className="me-2 text-primary" />
-                                      <a
-                                        href={msg.attachment || msg.attachmentObj?.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#3B82F6",
-                                          textDecoration: "underline",
-                                          cursor: "pointer"
-                                        }}
-                                      >
-                                        {msg.attachmentName || "Attachment"}
-                                      </a>
-                                      {msg.attachmentSize && (
-                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                          ({msg.attachmentSize})
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
-                                      {new Date(msg.date).toLocaleString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true
-                                      })}
-                                      {msg.isEdited && (
-                                        <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </React.Fragment>
-                          );
-                        }
-                        return null;
-                      })}
-                      <div ref={messagesEndRef} />
-                    </>
-                  ) : (
-                    <div className="text-center py-5">
-                      <p className="text-muted">No messages yet. Start the conversation!</p>
+                        })}
+                        <div ref={messagesEndRef} />
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-center space-y-2 py-12">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                          <Message3Icon size={32} className="text-gray-200" />
+                        </div>
+                        <h4 className="text-gray-400 font-bold">New Connection</h4>
+                        <p className="text-xs text-gray-400">Be the first to say something!</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 bg-white border-t border-gray-50 flex-shrink-0">
+                    <div className="flex flex-col gap-3">
+                      {/* Connection & Typing indicators */}
+                      <div className="flex items-center gap-3 px-1 h-4">
+                        <div className="flex gap-1.5 items-center">
+                          {wsConnected ? (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" title="Connected"></span>
+                          ) : (
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" title="Disconnected"></span>
+                          )}
+                          <span className={`text-[10px] font-black uppercase tracking-tighter ${wsConnected ? 'text-emerald-600/70' : 'text-rose-600/70'}`}>
+                            {wsConnected ? 'Live' : 'Offline'}
+                          </span>
+                        </div>
+
+                        {typingUsers.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5">
+                              <span className="w-1 h-1 rounded-full bg-gray-300 animate-[bounce_1s_infinite_0s]"></span>
+                              <span className="w-1 h-1 rounded-full bg-gray-300 animate-[bounce_1s_infinite_0.2s]"></span>
+                              <span className="w-1 h-1 rounded-full bg-gray-300 animate-[bounce_1s_infinite_0.4s]"></span>
+                            </div>
+                            <span className="text-[11px] text-gray-400 font-medium italic">
+                              {typingUsers.map(u => u.name).join(', ')} typing...
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="relative flex items-center gap-3 bg-gray-50/50 p-2 rounded-2xl border border-gray-100/80 transition-all focus-within:bg-white focus-within:border-[#F56D2D]/20 focus-within:shadow-[0_10px_40px_-15px_rgba(245,109,45,0.1)]">
+                        <input
+                          ref={messageFileInputRef}
+                          type="file"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          className="flex-shrink-0 w-10 h-10 !rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center hover:bg-[#F56D2D]/5 hover:text-[#F56D2D] hover:border-[#F56D2D]/20 transition-all shadow-sm active:scale-95 group"
+                          onClick={() => messageFileInputRef.current?.click()}
+                          title="Attach file"
+                        >
+                          <FaLink />
+                        </button>
+
+                        <div className="flex-1 min-w-0">
+                          <input
+                            type="text"
+                            className="w-full bg-transparent border-none py-2.5 px-1 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-0 outline-none font-medium"
+                            placeholder="Type a message..."
+                            value={newMessage}
+                            onChange={handleTyping}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !sendingMessage) {
+                                e.preventDefault();
+                                handleSend();
+                              }
+                            }}
+                          />
+                        </div>
+
+                        {messageAttachment && (
+                          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-gray-100 animate-slide-up max-w-[140px]">
+                            <div className="w-5 h-5 rounded-md bg-[#F56D2D]/10 flex items-center justify-center">
+                              <FileIcon size={12} className="text-[#F56D2D]" />
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-700 truncate">{messageAttachment.name}</span>
+                            <button
+                              onClick={() => setMessageAttachment(null)}
+                              className="w-4 h-4 rounded-full flex items-center justify-center text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+                            >
+                              <Crossing size={10} />
+                            </button>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          className={`flex-shrink-0 w-10 h-10 !rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${(newMessage.trim() || messageAttachment) && !sendingMessage
+                            ? "bg-[#F56D2D] text-white shadow-[#F56D2D]/30 hover:shadow-[#F56D2D]/40 hover:-translate-y-0.5"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                            }`}
+                          onClick={handleSend}
+                          disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
+                        >
+                          <FaPaperPlane className={`text-sm ${sendingMessage ? 'animate-pulse' : ''}`} />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-
-                <div className="border-top pt-2 chat-input-area" style={{ flexShrink: 0 }}>
-                  <div className="d-flex" style={{ gap: "8px", height: "42px", alignItems: "stretch" }}>
-                    {/* WebSocket connection indicator */}
-                    {wsConnected && (
-                      <div style={{ fontSize: "10px", color: "#10B981", alignSelf: "center" }} title="Connected">
-                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
-                      </div>
-                    )}
-                    {!wsConnected && wsError && (
-                      <div style={{ fontSize: "10px", color: "#EF4444", alignSelf: "center" }} title="Disconnected">
-                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
-                      </div>
-                    )}
-                    {/* Typing indicator */}
-                    {typingUsers.length > 0 && (
-                      <div style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic", alignSelf: "center" }}>
-                        {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-                      </div>
-                    )}
-                    <input
-                      ref={messageFileInputRef}
-                      type="file"
-                      onChange={handleFileSelect}
-                      className="d-none"
-                    />
-                    <button
-                      type="button"
-                      className="btn d-flex align-items-center justify-content-center"
-                      onClick={() => messageFileInputRef.current?.click()}
-                      style={{
-                        background: "transparent",
-                        border: "1px solid #E8F0FF",
-                        color: "#3B4A66",
-                        height: "100%",
-                        width: "55px",
-                        padding: "0",
-                        margin: "0"
-                      }}
-                      title="Attach file"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2" />
-                      </svg>
-
-                    </button>
-                    {messageAttachment && (
-                      <span className="text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0" }} title={messageAttachment.name}>
-                        {messageAttachment.name}
-                      </span>
-                    )}
-                    {messageAttachment && (
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => setMessageAttachment(null)}
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          color: "#EF4444",
-                          padding: "0 5px",
-                          margin: "0"
-                        }}
-                        title="Remove attachment"
-                      >
-                        ×
-                      </button>
-                    )}
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Write a message..."
-                      value={newMessage}
-                      onChange={handleTyping}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !sendingMessage) {
-                          e.preventDefault();
-                          handleSend();
-                        }
-                      }}
-                      style={{ fontFamily: "BasisGrotesquePro", height: "100%", margin: "0" }}
-                    />
-                    <button
-                      type="button"
-                      className="btn d-flex align-items-center justify-content-center"
-                      style={{
-                        background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
-                        color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
-                        cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed",
-                        height: "100%",
-                        width: "55px",
-                        padding: "0",
-                        margin: "0"
-                      }}
-                      onClick={handleSend}
-                      disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
-                      aria-label="Send message"
-                    >
-                      <FaPaperPlane size={16} />
-                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full bg-gray-50/50 space-y-4">
+                  <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-gray-200/50 flex items-center justify-center animate-bounce">
+                    <Message3Icon size={40} className="text-[#F56D2D]" />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <h3 className="text-lg font-black text-gray-800">Your Inbox</h3>
+                    <p className="text-sm text-gray-400 max-w-xs">Select a conversation from the sidebar to start collaborating with your clients.</p>
                   </div>
                 </div>
-              </>
-            ) : (
-              <div className="d-flex align-items-center justify-content-center h-100">
-                <div className="text-center">
-                  <p className="text-muted mb-0">Select a conversation to view messages</p>
-                </div>
-              </div>
-            );
-          })()}
-        </div >
-      </div >
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+
+
 
       {/* Compose Message Modal */}
       {
@@ -2046,45 +1934,184 @@ export default function MessagePage() {
         )
       }
 
-      {/* Delete Confirmation Modal */}
-      {
-        showDeleteConfirm && (
-          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-            style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
-            <div className="bg-white p-4" style={{ width: "400px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
-              <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Delete Thread</h5>
-              <p className="mb-4" style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
-                Are you sure you want to delete this conversation? This action cannot be undone.
-              </p>
-              <div className="d-flex justify-content-end gap-2">
-                <button
-                  className="btn btn-outline-secondary"
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setThreadToDelete(null);
-                  }}
-                  disabled={deleting}
-                  style={{ fontFamily: "BasisGrotesquePro" }}
+      {/* New Message (Compose) Modal */}
+      {showComposeModal && (
+        <div className="fixed inset-0 z-[1000001] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            onClick={handleCloseComposeModal}
+          />
+          <div className="relative w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
+            <div className="p-10 pb-0 shrink-0">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-2">New Message</h2>
+                  <p className="text-gray-500 text-sm font-medium">Start a new conversation with a client or staff member.</p>
+                </div>
+                <button 
+                  onClick={handleCloseComposeModal}
+                  className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all active:scale-90"
                 >
-                  Cancel
+                  <Crossing size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Client Selection */}
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Recipient</label>
+                  <div className="relative">
+                    <select
+                      className="w-full pl-6 pr-10 py-4.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 transition-all focus:bg-white focus:ring-2 focus:ring-[#F56D2D]/10 focus:border-[#F56D2D] appearance-none"
+                      value={composeForm.clientId}
+                      onChange={(e) => setComposeForm({...composeForm, clientId: e.target.value})}
+                    >
+                      <option value="">Select a client...</option>
+                      {availableClients.map(client => (
+                        <option key={client.id} value={client.id}>{client.full_name || client.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Subject */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Subject</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Tax return follow up"
+                      value={composeForm.subject}
+                      onChange={(e) => setComposeForm({...composeForm, subject: e.target.value})}
+                      className="w-full px-6 py-4.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 transition-all focus:bg-white focus:ring-2 focus:ring-[#F56D2D]/10 focus:border-[#F56D2D] outline-none"
+                    />
+                  </div>
+
+                  {/* Priority */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Priority</label>
+                    <div className="relative">
+                      <select
+                        className="w-full pl-6 pr-10 py-4.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 transition-all focus:bg-white focus:ring-2 focus:ring-[#F56D2D]/10 focus:border-[#F56D2D] appearance-none"
+                        value={composeForm.priority}
+                        onChange={(e) => setComposeForm({...composeForm, priority: e.target.value})}
+                      >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </select>
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-10 pt-6 overflow-y-auto custom-scrollbar flex-1">
+              {/* Message */}
+              <div className="space-y-2 h-full flex flex-col">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 shrink-0">Opening Message</label>
+                <textarea
+                  placeholder="How can we help you today?"
+                  value={composeForm.message}
+                  onChange={(e) => setComposeForm({...composeForm, message: e.target.value})}
+                  className="w-full flex-1 min-h-[160px] p-6 bg-gray-50 border border-gray-100 rounded-3xl text-sm font-medium text-gray-800 transition-all focus:bg-white focus:ring-2 focus:ring-[#F56D2D]/10 focus:border-[#F56D2D] outline-none resize-none leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="p-10 pt-0 shrink-0">
+              <div className="flex gap-4">
+                <button
+                  onClick={handleCloseComposeModal}
+                  className="flex-1 py-5 rounded-2xl bg-gray-50 text-gray-500 text-xs font-black uppercase tracking-[0.2em] border border-gray-100 hover:bg-gray-100 transition-all active:scale-95"
+                >
+                  Discard
                 </button>
                 <button
-                  className="btn"
-                  onClick={confirmDeleteThread}
-                  disabled={deleting}
-                  style={{
-                    backgroundColor: "#EF4444",
-                    color: "#FFFFFF",
-                    fontFamily: "BasisGrotesquePro"
+                  onClick={async () => {
+                    try {
+                      if (!composeForm.clientId) {
+                        toast.error('Please select a client');
+                        return;
+                      }
+
+                      const clientIdNumber = parseInt(composeForm.clientId, 10);
+                      if (Number.isNaN(clientIdNumber)) {
+                        toast.error('Invalid client selected');
+                        return;
+                      }
+
+                      const response = await chatService.createTaxPreparerChat(clientIdNumber, {
+                        subject: composeForm.subject,
+                        category: composeForm.category,
+                        priority: composeForm.priority,
+                        opening_message: composeForm.message.trim()
+                      });
+
+                      const chatData = response.success ? response.data : response;
+                      if (!chatData) throw new Error('Invalid response');
+
+                      const chatId = chatData.thread_id || chatData.id || chatData.chat_id;
+                      if (!chatId) throw new Error('Chat ID not found');
+
+                      setActiveConversationId(chatId);
+                      await fetchThreads(true);
+                      toast.success('Conversation started!');
+                      handleCloseComposeModal();
+                    } catch (err) {
+                      toast.error('Failed to start conversation: ' + (err.message || 'Unknown error'));
+                    }
                   }}
+                  className="flex-[2] py-5 rounded-2xl bg-[#F56D2D] text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-[#F56D2D]/20 hover:bg-[#E55A1A] hover:scale-[1.02] transition-all active:scale-95"
                 >
-                  {deleting ? 'Deleting...' : 'Delete'}
+                  Send First Message
                 </button>
               </div>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[1000001] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
+          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl p-8 overflow-hidden animate-slide-up">
+            <h5 className="text-xl font-black text-gray-900 tracking-tight mb-4">Delete Conversation</h5>
+            <p className="text-gray-500 text-sm font-medium leading-relaxed mb-8">
+              Are you sure you want to delete this conversation? This action cannot be undone and all message history will be lost.
+            </p>
+            <div className="flex gap-3">
+              <button
+                className="flex-1 py-3.5 rounded-xl bg-gray-50 text-gray-500 text-[11px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all active:scale-95"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setThreadToDelete(null);
+                }}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className={`flex-1 py-3.5 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 ${deleting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-rose-500 shadow-lg shadow-rose-200 hover:bg-rose-600'}`}
+                onClick={confirmDeleteThread}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 }

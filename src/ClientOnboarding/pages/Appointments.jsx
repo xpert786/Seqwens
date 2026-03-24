@@ -977,7 +977,7 @@ export default function Appointments() {
 
       {/* Appointment Lists - Only show when not loading */}
       {!loading && (
-        <div className="d-flex gap-4 flex-wrap align-items-stretch appointments-lists">
+        <div className="d-flex gap-4 flex-wrap align-items-start appointments-lists">
 
           <div className="bg-white rounded shadow-sm p-3 flex-grow-1 upcoming-appointments-box" style={{ minWidth: "350px" }}>
 
@@ -1006,163 +1006,134 @@ export default function Appointments() {
               </p>
             </div>
 
-            {(() => {
-              const totalPages = Math.ceil(appointments.upcoming.length / itemsPerPage);
-              const startIndex = (upcomingCurrentPage - 1) * itemsPerPage;
-              const endIndex = startIndex + itemsPerPage;
-              const paginatedUpcoming = appointments.upcoming.slice(startIndex, endIndex);
-
-              return (
-                <>
-                  {paginatedUpcoming.length > 0 ? paginatedUpcoming.map((appt) => (
-                    <div
-                      key={appt.id}
-                      className="border rounded p-3 mb-3 mt-3"
-                      onClick={() => setSelectedAppointmentId(appt.id)}
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor: selectedAppointmentId === appt.id ? "#FFF4E6" : "white",
-                      }}
-                    >
-
-
-                      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2 w-100">
-                        <div className="d-flex align-items-center gap-2 flex-wrap" style={{ fontFamily: "BasisGrotesquePro", flexGrow: 1 }}>
-                          <strong>{appt.title}</strong>
-
-
-                          <span
-                            className="px-1 py-1 fw-semibold"
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 500,
-                              fontFamily: "BasisGrotesquePro",
-                              backgroundColor:
-                                appt.status === "Confirmed"
-                                  ? "#DCFCE7"
-                                  : appt.status === "Pending"
-                                    ? "#FEF9C3"
-                                    : "#E0E7FF",
-                              borderRadius: "30px",
-                              color:
-                                appt.status === "Confirmed"
-                                  ? "#166534"
-                                  : appt.status === "Pending"
-                                    ? "#92400E"
-                                    : "#3730A3",
-                            }}
-                          >
-                            {appt.status}
-                          </span>
-
-                        </div>
-
-                        {/* Edit & Delete buttons - right aligned */}
-                        <div className="d-flex align-items-center gap-2 ms-auto mt-2 mt-md-0">
-                          {appt.status !== "Cancelled" && (
-                            <>
-                              <button
-                                className="btn "
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openEditModal(appt);
-                                }}
-                              >
-                                <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
-                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
-                                  <path d="M13 8.50011H9.5C9.23478 8.50011 8.98043 8.60547 8.79289 8.79301C8.60536 8.98054 8.5 9.2349 8.5 9.50011V16.5001C8.5 16.7653 8.60536 17.0197 8.79289 17.2072C8.98043 17.3948 9.23478 17.5001 9.5 17.5001H16.5C16.7652 17.5001 17.0196 17.3948 17.2071 17.2072C17.3946 17.0197 17.5 16.7653 17.5 16.5001V13.0001M16.1875 8.31261C16.3864 8.1137 16.6562 8.00195 16.9375 8.00195C17.2188 8.00195 17.4886 8.1137 17.6875 8.31261C17.8864 8.51153 17.9982 8.78131 17.9982 9.06261C17.9982 9.34392 17.8864 9.6137 17.6875 9.81261L13 14.5001L11 15.0001L11.5 13.0001L16.1875 8.31261Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                              </button>
-
-                              <button
-                                className="btn  ms-2"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  cancelAppointment(appt.id);
-                                }}
-                              >
-                                <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
-                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
-                                  <path d="M8.5 10H17.5M16.5 10V17C16.5 17.5 16 18 15.5 18H10.5C10 18 9.5 17.5 9.5 17V10M11 10V9C11 8.5 11.5 8 12 8H14C14.5 8 15 8.5 15 9V10M12 12.5V15.5M14 12.5V15.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                              </button>
-                            </>
-                          )}
-                        </div>
+            <div
+              className="upcoming-appointments-list custom-scrollbar px-1"
+              style={{
+                maxHeight: "580px",
+                overflowY: "auto",
+                overflowX: "hidden"
+              }}
+            >
+              {appointments.upcoming.length > 0 ? (
+                appointments.upcoming.map((appt) => (
+                  <div
+                    key={appt.id}
+                    className="border rounded p-3 mb-3 mt-1"
+                    onClick={() => setSelectedAppointmentId(appt.id)}
+                    style={{
+                      cursor: "pointer",
+                      backgroundColor: selectedAppointmentId === appt.id ? "#FFF4E6" : "white",
+                    }}
+                  >
+                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2 w-100">
+                      <div className="d-flex align-items-center gap-2 flex-wrap" style={{ fontFamily: "BasisGrotesquePro", flexGrow: 1 }}>
+                        <strong>{appt.title}</strong>
+                        <span
+                          className="px-1 py-1 fw-semibold"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            fontFamily: "BasisGrotesquePro",
+                            backgroundColor:
+                              appt.status === "Confirmed"
+                                ? "#DCFCE7"
+                                : appt.status === "Pending"
+                                  ? "#FEF9C3"
+                                  : "#E0E7FF",
+                            borderRadius: "30px",
+                            color:
+                              appt.status === "Confirmed"
+                                ? "#166534"
+                                : appt.status === "Pending"
+                                  ? "#92400E"
+                                  : "#3730A3",
+                          }}
+                        >
+                          {appt.status}
+                        </span>
                       </div>
 
+                      <div className="d-flex align-items-center gap-2 ms-auto mt-2 mt-md-0">
+                        {appt.status !== "Cancelled" && (
+                          <>
+                            <button
+                              className="btn "
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditModal(appt);
+                              }}
+                            >
+                              <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
+                                <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
+                                <path d="M13 8.50011H9.5C9.23478 8.50011 8.98043 8.60547 8.79289 8.79301C8.60536 8.98054 8.5 9.2349 8.5 9.50011V16.5001C8.5 16.7653 8.60536 17.0197 8.79289 17.2072C8.98043 17.3948 9.23478 17.5001 9.5 17.5001H16.5C16.7652 17.5001 17.0196 17.3948 17.2071 17.2072C17.3946 17.0197 17.5 16.7653 17.5 16.5001V13.0001M16.1875 8.31261C16.3864 8.1137 16.6562 8.00195 16.9375 8.00195C17.2188 8.00195 17.4886 8.1137 17.6875 8.31261C17.8864 8.51153 17.9982 8.78131 17.9982 9.06261C17.9982 9.34392 17.8864 9.6137 17.6875 9.81261L13 14.5001L11 15.0001L11.5 13.0001L16.1875 8.31261Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            </button>
 
-                      {/* Date, Time, Type - stack on mobile */}
-                      <div className="small text-muted d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2" style={{ gap: "8px", fontFamily: "BasisGrotesquePro" }}>
-                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
-                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
-                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
+                            <button
+                              className="btn  ms-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cancelAppointment(appt.id);
+                              }}
+                            >
+                              <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
+                                <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
+                                <path d="M8.5 10H17.5M16.5 10V17C16.5 17.5 16 18 15.5 18H10.5C10 18 9.5 17.5 9.5 17V10M11 10V9C11 8.5 11.5 8 12 8H14C14.5 8 15 8.5 15 9V10M12 12.5V15.5M14 12.5V15.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
                       </div>
-
-
-                      <div className="small text-muted d-flex flex-column flex-md-row align-items-start align-items-md-center" style={{ gap: "8px", fontFamily: "BasisGrotesquePro" }}>
-                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
-                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
-                      </div>
-
-                      {/* Join button for upcoming meetings with meeting link */}
-                      {canJoinAppointment(appt) && (
-                        <div className="d-flex justify-content-center mt-2">
-                          <button
-                            className="btn d-inline-flex align-items-center justify-content-center"
-                            style={{
-                              background: "#F56D2D",
-                              color: "#fff",
-                              padding: "6px 12px",
-                              fontSize: "13px",
-                              fontFamily: "BasisGrotesquePro",
-                              fontWeight: "500",
-                              borderRadius: "6px",
-                              border: "none"
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (appt.meeting_link) {
-                                window.open(appt.meeting_link, '_blank');
-                              } else {
-                                toast.error('Meeting link not available', {
-                                  position: "top-right",
-                                  autoClose: 3000,
-                                  className: "custom-toast-success",
-                                  bodyClassName: "custom-toast-body",
-                                  icon: false,
-                                });
-                              }
-                            }}
-                          >
-                            <BsCameraVideo style={{ fontSize: "14px", marginRight: "6px" }} /> Join Meeting
-                          </button>
-                        </div>
-                      )}
                     </div>
-                  )) : (
-                    <div className="text-center py-4">
-                      <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>
-                        No upcoming appointments scheduled
-                      </p>
+
+                    <div className="small text-muted d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2" style={{ gap: "8px", fontFamily: "BasisGrotesquePro" }}>
+                      <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
+                      <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
+                      <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
                     </div>
-                  )}
-                  {appointments.upcoming.length > itemsPerPage && (
-                    <Pagination
-                      currentPage={upcomingCurrentPage}
-                      totalPages={totalPages}
-                      onPageChange={setUpcomingCurrentPage}
-                      totalItems={appointments.upcoming.length}
-                      itemsPerPage={itemsPerPage}
-                      startIndex={startIndex}
-                      endIndex={Math.min(endIndex, appointments.upcoming.length)}
-                    />
-                  )}
-                </>
-              );
-            })()}
+
+                    <div className="small text-muted d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2" style={{ gap: "8px", fontFamily: "BasisGrotesquePro" }}>
+                      <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
+                      <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
+                    </div>
+
+                    {canJoinAppointment(appt) && appt.status === "Confirmed" && (
+                      <div className="mt-3">
+                        <button
+                          className="btn btn-primary d-flex align-items-center justify-content-center w-100 py-2"
+                          style={{
+                            backgroundColor: "#F56D2D",
+                            borderColor: "#F56D2D",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            borderRadius: "8px",
+                            fontFamily: "BasisGrotesquePro",
+                          }}
+                          onClick={() => {
+                            const meetingUrl = appt.meeting_link || appt.zoom_link;
+                            if (meetingUrl) {
+                              window.open(meetingUrl, "_blank");
+                            } else {
+                              toast.info("Meeting link not available yet.");
+                            }
+                          }}
+                        >
+                          <BsCameraVideo style={{ fontSize: "14px", marginRight: "6px" }} /> Join Meeting
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4">
+                  <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>
+                    No upcoming appointments scheduled
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation, Outlet, useParams } from "react-router-dom";
 import { File, UpIcon, Doc, FaildIcon, FiltIcon, CompletedIcon, AwaitingIcon, Received, Uploaded, FileIcon } from "../../component/icons";
-import { FaFolder } from "react-icons/fa";
+import { FaFolder, FaUpload } from "react-icons/fa";
 import TaxUploadModal from "../../upload/TaxUploadModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -784,7 +784,7 @@ export default function DocumentsPage() {
   const wrapperClass = isNestedUnderClient ? "mt-6" : "lg:p-4 md:p-2 px-1 documents-page-wrapper";
 
   return (
-    <div className={wrapperClass}>
+    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 animate-in fade-in duration-500 font-basis">
       {/* Upload Modal */}
       <TaxUploadModal
         show={showUpload}
@@ -794,17 +794,27 @@ export default function DocumentsPage() {
       />
       {/* Header (hide when nested under client) */}
       {!isNestedUnderClient && (
-        <div className="header d-flex justify-content-between align-items-center mb-4 documents-header">
-          <div className="documents-header-title">
-            <h3 className="fw-semibold">Documents</h3>
-            <small className="text-muted">Manage client documents and files</small>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+                <Doc size={32} color="white" />
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                  Documents
+                </h1>
+                <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage client documents and shared files.</span>
+              </div>
+            </div>
           </div>
-          <div className="d-flex gap-2 documents-header-buttons">
+
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <button
-              className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
               onClick={() => setShowUpload(true)}
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-black hover:scale-[1.02] transition-all  shadow-2xl shadow-gray-900/10 active:scale-95"
             >
-              <UpIcon />
+              <FaUpload size={16} />
               <span className="btn-text">Upload Documents</span>
             </button>
           </div>

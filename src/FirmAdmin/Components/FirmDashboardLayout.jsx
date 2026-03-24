@@ -38,16 +38,21 @@ export default function FirmDashboardLayout() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, [isSidebarOpen, isMobile]);
 
-  // Lock body scroll when sidebar is open on mobile
+  // Lock body scroll by default in firm portal to prevent overall window scrolling
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
+  // Additional lock for mobile sidebar
   useEffect(() => {
     if (isMobile && isSidebarOpen) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isMobile, isSidebarOpen]);
 
   useEffect(() => {
@@ -409,9 +414,9 @@ export default function FirmDashboardLayout() {
           onNavItemClick={handleCloseSidebar}
         />
         <div
-          className="flex flex-col transition-all duration-300 w-full h-screen"
+          className="flex flex-col w-full h-screen"
           style={{
-            paddingTop: isImpersonating ? '3rem' : '1rem',
+            paddingTop: isImpersonating ? '110px' : '70px',
             marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
             width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
           }}

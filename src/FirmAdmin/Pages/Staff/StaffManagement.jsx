@@ -216,7 +216,6 @@ export default function StaffManagement() {
   };
 
   const confirmDownloadPerformanceReport = async () => {
-    setShowDownloadConfirm(false);
     try {
       setDownloadingReport(true);
       const token = getAccessToken();
@@ -247,14 +246,24 @@ export default function StaffManagement() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      // Only show success toast when download is completed (blob fetched and triggered)
-      toast.success('Performance report downloaded successfully', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      // Close the confirmation modal ONLY after browser download is triggered
+      setShowDownloadConfirm(false);
+
+      // Only show success toast after a short delay so browser download starts first
+      setTimeout(() => {
+        toast.success('Performance report downloaded successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }, 1500);
     } catch (err) {
       console.error('Error downloading performance report:', err);
-      // Removed error toast as per user request: "otherwise no toast"
+      setShowDownloadConfirm(false); // Close modal on error too
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to download report. Please try again.', {
+        position: "top-right",
+        autoClose: 5000,
+      });
     } finally {
       setDownloadingReport(false);
     }
@@ -1149,6 +1158,7 @@ export default function StaffManagement() {
         isOpen={showDownloadConfirm}
         onClose={() => setShowDownloadConfirm(false)}
         onConfirm={confirmDownloadPerformanceReport}
+        isLoading={downloadingReport}
         title="Download Performance Report"
         message="Are you sure you want to download the performance report for all staff members?"
         confirmText="Download"

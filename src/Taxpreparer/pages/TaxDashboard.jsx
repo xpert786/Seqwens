@@ -331,7 +331,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-main-container">
+    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 font-basis">
       <TaxDashboardWidget />
 
       <div className="row mt-3 g-3 dashboard-sections-wrapper">
@@ -341,7 +341,7 @@ export default function Dashboard() {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h4 className="section-title mb-1">My Tasks</h4>
-                <p className="section-subtitle m-0">Tasks assigned to you</p>
+                <span className="section-subtitle m-0">Tasks assigned to you</span>
               </div>
               <button
                 className="view-all-btn"

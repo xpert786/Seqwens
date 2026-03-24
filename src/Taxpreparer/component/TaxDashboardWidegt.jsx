@@ -1,5 +1,5 @@
 import { AiOutlineCalendar } from "react-icons/ai";
-import { FileIcon, BalanceIcon, MessageIcon, UpIcon, Message2Icon, Client, Clock, Check, Msg, Calender, Uploading } from "./icons";
+import { FileIcon, BalanceIcon, MessageIcon, UpIcon, Message2Icon, Client, Clock, Check, Msg, Calender, Uploading, Analytics } from "./icons";
 import { useState, useEffect } from "react";
 import { dashboardAPI, handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
@@ -93,44 +93,44 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div>
-
-      <div className="taxdashboard-header">
-        <div className="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center">
-          <div className="text-center text-md-start">
-            <h4 className="taxdashboard-title mb-1">Dashboard</h4>
-            <h5 className="taxdashboard-subtitle">
-              Welcome back, {taxPreparerInfo
-                ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim()
-                : loading
-                  ? 'Loading...'
-                  : 'Tax Preparer'}
-            </h5>
+    <div className="bg-[#F8FAFC] p-4 lg:p-10  font-basis">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+              <Analytics size={32} color="white" />
+            </div>
+            <div>
+              <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                Dashboard
+              </h1>
+              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">
+                Welcome back, {taxPreparerInfo
+                  ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim()
+                  : loading
+                    ? 'Loading...'
+                    : 'Tax Preparer'}
+              </span>
+            </div>
           </div>
+        </div>
 
-          <div className="d-flex flex-nowrap gap-2 gap-md-3 mt-2 mt-md-0 justify-content-center">
-            <button
-              className="btn taxdashboard-btn btn-contacted d-flex flex-row align-items-center gap-2 text-nowrap"
-              onClick={() => navigate('/taxdashboard/calendar')}
-            >
-              <Calender />
-              <span>View Calendar</span>
-            </button>
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <button
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 h-14 bg-white border border-gray-100 text-gray-700 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all !rounded-xl shadow-lg shadow-black/5 active:scale-95"
+            onClick={() => navigate('/taxdashboard/calendar')}
+          >
+            <AiOutlineCalendar size={20} className="text-[#3AD6F2]" />
+            <span>View Calendar</span>
+          </button>
 
-            {/* <button className="btn dashboard-btn btn-scan d-flex align-items-center gap-2">
-              <UpIcon />
-              Scan Document
-            </button> */}
-
-            <button
-              className="btn taxdashboard-btn btn-uploaded d-flex flex-row align-items-center gap-2 text-nowrap"
-              onClick={() => setShowUploadModal(true)}
-            >
-              <Uploading />
-              <span>Upload Documents</span>
-            </button>
-
-          </div>
+          <button
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 h-14 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            onClick={() => setShowUploadModal(true)}
+          >
+            <Uploading size={20} />
+            <span>Upload Documents</span>
+          </button>
         </div>
       </div>
 

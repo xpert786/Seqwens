@@ -1710,24 +1710,36 @@ export default function TasksPage() {
   const bgForCol = (key) => "#fff";
 
   return (
-    <div className="lg:p-4 md:px-2 px-1">
-      {/* Header */}
-      <div className="tasks-header d-flex justify-content-between align-items-center mb-4 tasks-header-wrapper">
-        <div>
-          <h4 className="fw-semibold" style={{ marginBottom: 4 }}>My Tasks</h4>
-          <small className="text-muted">Manage your assigned tasks and workflow</small>
+    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 animate-in fade-in duration-500 font-basis">
+      {/* Unified Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+              <Task1 size={32} color="white" />
+            </div>
+            <div>
+              <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                My Tasks
+              </h1>
+              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your assigned tasks and daily workflow.</span>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() => {
-            setIsEditMode(false);
-            setEditingTaskId(null);
-            setShowAddTaskModal(true);
-          }}
-          className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
-        >
-          <AddTask />
-          Create New Task
-        </button>
+
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <button
+            onClick={() => {
+              setIsEditMode(false);
+              setEditingTaskId(null);
+              setShowAddTaskModal(true);
+            }}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+          >
+            <AddTask size={18} />
+            <span>Create New Task</span>
+          </button>
+        </div>
       </div>
 
       {/* Stat cards row (Bootstrap grid) */}
