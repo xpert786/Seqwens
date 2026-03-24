@@ -1099,125 +1099,107 @@ export default function ESignatureDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3 col-sm-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        {[
+          {
+            id: 'pending',
+            label: 'Pending / In Progress',
+            val: (statistics.pending || 0) + (statistics.inprogress || 0),
+            icon: <FiClock size={24} />,
+            theme: 'orange',
+            active: statusFilter === 'pending' || statusFilter === 'inprogress'
+          },
+          {
+            id: 'completed',
+            label: 'Completed',
+            val: statistics.completed || 0,
+            icon: <FiCheckCircle size={24} />,
+            theme: 'emerald',
+            active: statusFilter === 'completed'
+          },
+          {
+            id: 'declined',
+            label: 'Declined / Cancelled',
+            val: statistics.declined || 0,
+            icon: <FiXCircle size={24} />,
+            theme: 'rose',
+            active: statusFilter === 'declined'
+          },
+          {
+            id: 'expired',
+            label: 'Expired',
+            val: statistics.expired || 0,
+            icon: <FiFileText size={24} />,
+            theme: 'gray',
+            active: statusFilter === 'expired'
+          }
+        ].map((stat) => (
           <div
-            className={`stat-card stat-card-pending ${statusFilter === 'pending' || statusFilter === 'inprogress' ? 'active' : ''}`}
+            key={stat.id}
             onClick={() => {
-              if (statusFilter === 'pending' || statusFilter === 'inprogress') {
-                setStatusFilter('all');
+              if (stat.id === 'pending') {
+                setStatusFilter(statusFilter === 'pending' || statusFilter === 'inprogress' ? 'all' : 'pending');
               } else {
-                setStatusFilter('pending');
+                setStatusFilter(statusFilter === stat.id ? 'all' : stat.id);
               }
             }}
-            style={{ cursor: 'pointer' }}
+            className={`group relative p-8 rounded-[35px] border transition-all duration-300 cursor-pointer overflow-hidden
+              ${stat.active
+                ? `bg-white border-${stat.theme}-500 shadow-xl shadow-${stat.theme}-500/10 scale-[1.02] -translate-y-1`
+                : 'bg-white border-gray-100 hover:border-gray-200 shadow-sm hover:shadow-md'
+              }`}
           >
-            <div className="d-flex align-items-center justify-content-between">
+            <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full blur-3xl opacity-20 transition-all duration-500 group-hover:scale-150
+              ${stat.theme === 'orange' ? 'bg-orange-400' :
+                stat.theme === 'emerald' ? 'bg-emerald-400' :
+                  stat.theme === 'rose' ? 'bg-rose-400' : 'bg-gray-400'}
+            `}></div>
+
+            <div className="relative flex justify-between items-start">
               <div>
-                <p className="stat-label">Pending / In Progress</p>
-                <h3 className="stat-value">{statistics.pending + statistics.inprogress}</h3>
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">{stat.label}</p>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tight leading-none">{stat.val}</h3>
               </div>
-              <div className="stat-icon">
-                <FiClock size={32} />
+              <div className={`p-4 rounded-2xl transition-all duration-300
+                ${stat.active
+                  ? `bg-${stat.theme}-500 text-white shadow-lg shadow-${stat.theme}-500/20`
+                  : `bg-${stat.theme}-50 text-${stat.theme}-500 group-hover:bg-${stat.theme}-100`
+                }`}
+              >
+                {stat.icon}
+              </div>
+            </div>
+
+            <div className="relative mt-8 flex items-center gap-2">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${stat.active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+                Currently Viewing
+              </span>
+              <div className={`h-1 flex-1 rounded-full overflow-hidden bg-gray-100 ${stat.active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+                <div className={`h-full bg-${stat.theme}-500 w-full`}></div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="col-md-3 col-sm-6">
-          <div
-            className={`stat-card stat-card-completed ${statusFilter === 'completed' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <div>
-                <p className="stat-label">Completed</p>
-                <h3 className="stat-value">{statistics.completed}</h3>
-              </div>
-              <div className="stat-icon">
-                <FiCheckCircle size={32} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3 col-sm-6">
-          <div
-            className={`stat-card stat-card-declined ${statusFilter === 'declined' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'declined' ? 'all' : 'declined')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <div>
-                <p className="stat-label">Declined / Cancelled</p>
-                <h3 className="stat-value">{statistics.declined}</h3>
-              </div>
-              <div className="stat-icon">
-                <FiXCircle size={32} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3 col-sm-6">
-          <div
-            className={`stat-card stat-card-expired ${statusFilter === 'expired' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'expired' ? 'all' : 'expired')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <div>
-                <p className="stat-label">Expired</p>
-                <h3 className="stat-value">{statistics.expired}</h3>
-              </div>
-              <div className="stat-icon">
-                <FiFileText size={32} />
-              </div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Filters and Search */}
-      <div className="d-flex justify-content-between align-items-center gap-3 mb-4 mt-2 esign-filters-section">
-        <div className="position-relative esign-search-container" style={{ minWidth: '300px', maxWidth: '400px', width: '100%' }}>
-          <div style={{
-            position: 'absolute',
-            left: '12px',
-            top: -11,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            pointerEvents: 'none',
-            zIndex: 1
-          }}>
-            <FiSearch size={18} color="#6B7280" />
-          </div>
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 mt-2 p-3 bg-white rounded-[32px] border border-gray-100 shadow-sm">
+        <div className="relative flex-1 w-full group">
+          <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#F56D2D] transition-colors" size={20} />
           <input
             type="text"
-            className="form-control"
+            className="w-full pl-14 pr-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-[15px] font-medium text-gray-700 focus:bg-white focus:ring-4 focus:ring-[#F56D2D]/5 focus:border-[#F56D2D] outline-none transition-all placeholder:text-gray-400"
             placeholder="Search by client name, document, or title..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              paddingLeft: '40px',
-              fontFamily: 'BasisGrotesquePro',
-              borderColor: '#E5E7EB',
-              height: '44px',
-              borderRadius: '8px'
-            }}
           />
         </div>
-        <div className="esign-status-filter">
+
+        <div className="w-full md:w-auto min-w-[200px] relative">
           <select
-            className="form-select"
+            className="w-full pl-6 pr-12 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-[13px] font-black uppercase tracking-[0.2em] text-gray-500 cursor-pointer appearance-none transition-all focus:bg-white focus:ring-4 focus:ring-[#F56D2D]/5 hover:border-[#F56D2D]/30"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              fontFamily: 'BasisGrotesquePro',
-              borderColor: '#E5E7EB',
-              minWidth: '150px',
-              height: '44px',
-              borderRadius: '8px'
-            }}
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -1226,6 +1208,9 @@ export default function ESignatureDashboard() {
             <option value="declined">Declined</option>
             <option value="expired">Expired</option>
           </select>
+          <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
         </div>
       </div>
 
