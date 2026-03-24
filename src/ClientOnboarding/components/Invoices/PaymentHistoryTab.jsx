@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { ViewIcon, DownloadIcon, PrintIcon, CrossIcon } from "../icons";
+import { FiDownload, FiEye } from "react-icons/fi";
 import { taxpayerFirmAPI, paymentsAPI, invoicesAPI, handleAPIError } from "../../utils/apiUtils";
 import { toast } from "react-toastify";
 import "../../styles/Login.css";
@@ -188,17 +189,33 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                 <div className="d-flex align-items-end flex-column">
                   <div className="d-flex mt-auto">
                     <button
-                      className="btn  me-2"
+                      className="btn  me-2 d-flex align-items-center justify-content-center"
+                      style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '4px',
+                        border: '1px solid #e0e0e0',
+                        width: '32px',
+                        height: '32px',
+                        padding: '0'
+                      }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedIndex(originalIndex);
                         setShowPopup(true);
                       }}
                     >
-                      <ViewIcon />
+                      <FiEye size={18} />
                     </button>
                     <button
-                      className="btn"
+                      className="btn d-flex align-items-center justify-content-center"
+                      style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '4px',
+                        border: '1px solid #e0e0e0',
+                        width: '32px',
+                        height: '32px',
+                        padding: '0'
+                      }}
                       disabled={loading}
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -214,7 +231,6 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                             return;
                           }
 
-                          toast.info('Downloading PDF...');
                           const response = await invoicesAPI.downloadInvoicePDF(invoiceId);
 
                           const url = window.URL.createObjectURL(new Blob([response]));
@@ -225,7 +241,9 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                           link.click();
                           link.remove();
                           window.URL.revokeObjectURL(url);
-                          toast.success('PDF downloaded successfully');
+                          setTimeout(() => {
+                            toast.success('PDF downloaded successfully');
+                          }, 2000);
                         } catch (error) {
                           console.error('PDF Download error:', error);
                           toast.error('Failed to download PDF. Please try again.');
@@ -239,7 +257,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                           <span className="visually-hidden">Loading...</span>
                         </div>
                       ) : (
-                        <DownloadIcon />
+                        <FiDownload size={18} />
                       )}
                     </button>
                   </div>

@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from "react";
-import { Modal, Button, Form, Spinner } from "react-bootstrap";
+import { createPortal } from "react-dom";
 import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaTable } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../component/icons";
 import "./TaxUploadModal.css";
@@ -407,40 +407,41 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
     const currentFile = files[selectedIndex];
 
-    return (
-        <Modal
-            show={show}
-            onHide={handleClose}
-            centered
-            backdrop="static"
-            size={step === 1 ? "lg" : "xl"}
-            className="upload-modal"
-        >
-            <Modal.Body className="p-0">
+    if (!show) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-[9999] p-4 lg:p-8 animate-in fade-in duration-200">
+            <div className={`w-full ${step === 1 ? 'max-w-3xl' : 'max-w-6xl'} bg-white rounded-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300`}>
                 {/* Header Section */}
-                <div className="px-6 py-3 bg-white d-flex justify-content-between align-items-center rounded-t-xl">
+                <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white z-20 shrink-0">
                     <div>
-                        <h5 className="upload-heading mb-1" style={{ fontSize: '22px', border: 'none' }}>Upload Documents</h5>
-                        <p className="upload-subheading mb-0" style={{ fontSize: '14px', border: 'none' }}>Upload your tax documents securely to Seqwens</p>
+                        <h5 className="m-0 text-xl font-bold text-[#3B4A66] leading-tight" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            Upload Documents
+                        </h5>
+                        <p className="mt-1 text-sm text-gray-500 leading-tight" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            Upload tax documents securely for the client.
+                        </p>
                     </div>
                     <button
+                        type="button"
                         onClick={handleClose}
-                        className="text-gray-400 hover:text-red-500 transition-colors bg-transparent border-0 p-1"
-                        aria-label="Close"
+                        className="p-1 px-2.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                        <IoMdClose size={28} />
+                        <IoMdClose size={24} />
                     </button>
                 </div>
 
-                <div className={step === 1 ? "p-0" : "p-4"}>
+                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin bg-white">
                     {/* Error Summary Panel */}
                     {modalErrors.length > 0 && (
-                        <div className="error-summary-banner">
-                            <FaExclamationCircle size={20} className="mt-1" />
-                            <div className="error-summary-content">
-                                <strong>Important: Please fix the following</strong>
-                                <ul className="error-summary-list">
-                                    {modalErrors.map((err, i) => <li key={i}>{err}</li>)}
+                        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-4">
+                            <FaExclamationCircle size={20} className="text-red-500 mt-1 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <strong className="block text-sm font-bold text-red-800 mb-1 leading-tight">Important: Please fix the following</strong>
+                                <ul className="list-disc list-inside space-y-1">
+                                    {modalErrors.map((err, i) => (
+                                        <li key={i} className="text-xs text-red-700 leading-normal">{err}</li>
+                                    ))}
                                 </ul>
                             </div>
                         </div>
@@ -448,19 +449,23 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
                     {step === 1 ? (
                         /* Step 1: Selection Dropzone */
-                        <div className="step-selection">
+                        <div className="py-2">
                             <div
-                                className={`premium-dropzone ${isDragging ? 'active' : ''}`}
+                                className={`premium-dropzone border-2 border-dashed rounded-2xl p-12 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 ${isDragging ? 'border-primary bg-primary/5 ring-8 ring-primary/5' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                                 onDragLeave={() => setIsDragging(false)}
                                 onDrop={handleDrop}
                                 onClick={() => fileInputRef.current.click()}
                             >
-                                <div className="dropzone-icon-container">
+                                <div className="p-4 bg-primary/10 rounded-full text-primary shrink-0 transition-transform group-hover:scale-110">
                                     <UploadsIcon />
                                 </div>
-                                <div className="dropzone-text">Drop files here or click to browse</div>
-                                <div className="dropzone-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file</div>
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>Drop files here or click to browse</div>
+                                    <div className="mt-2 text-sm text-gray-500 max-w-sm mx-auto" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                        Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV • Max 50MB per file
+                                    </div>
+                                </div>
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -472,119 +477,142 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                             </div>
 
                             {files.length > 0 && (
-                                <div className="mt-4 p-3 border rounded bg-light">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <span className="small fw-semibold">{files.length} file(s) selected</span>
-                                        <Button variant="link" size="sm" onClick={() => setFiles([])}>Clear All</Button>
-                                    </div>
+                                <div className="mt-6 p-4 border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-between">
+                                    <span className="text-sm font-semibold text-gray-700">{files.length} file(s) selected</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFiles([])}
+                                        className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors"
+                                    >
+                                        Clear All
+                                    </button>
                                 </div>
                             )}
                         </div>
                     ) : (
                         /* Step 2: Configuration View */
-                        <div className="config-layout">
+                        <div className="flex h-full gap-8 min-h-[500px]">
                             {/* Left Sidebar: File List */}
-                            <div className="file-sidebar">
-                                <div className="file-list-header">
-                                    <h6 className="mb-0 fw-bold">Selected Documents ({files.length})</h6>
+                            <div className="w-72 shrink-0 flex flex-col border border-gray-100 rounded-2xl bg-gray-50/50 overflow-hidden">
+                                <div className="p-4 border-b border-gray-100 bg-white">
+                                    <h6 className="m-0 text-sm font-bold text-gray-800">Files ({files.length})</h6>
                                 </div>
-                                <div className="file-items-container custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin">
                                     {files.map((f, idx) => (
                                         <div
                                             key={idx}
-                                            className={`file-item-premium ${selectedIndex === idx ? 'active' : ''} ${f.errors.length > 0 ? 'has-error' : ''}`}
+                                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 relative group ${selectedIndex === idx ? 'bg-white border-primary shadow-sm ring-2 ring-primary/5' : 'bg-transparent border-transparent hover:bg-white hover:border-gray-200'} ${f.errors.length > 0 ? 'border-red-200' : ''}`}
                                             onClick={() => setSelectedIndex(idx)}
                                         >
-                                            <div className="file-icon-square">
+                                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors shrink-0">
                                                 <FaRegFileAlt size={18} />
                                             </div>
-                                            <div className="file-info-mini">
-                                                <div className="file-name-txt">{f.name}</div>
-                                                <div className="file-meta-txt">{f.size} • {STATUS_LABELS[f.status]}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-xs font-bold text-gray-800 truncate leading-snug">{f.name}</div>
+                                                <div className="text-[10px] text-gray-500 truncate leading-snug uppercase tracking-wider mt-0.5">{f.size} • {STATUS_LABELS[f.status]}</div>
                                             </div>
-                                            {f.errors.length > 0 && <FaExclamationCircle className="error-indicator" />}
-                                            <span
-                                                className="ms-2 text-muted"
+                                            {f.errors.length > 0 && (
+                                                <div className="text-red-500 shrink-0">
+                                                    <FaExclamationCircle size={14} />
+                                                </div>
+                                            )}
+                                            <button
+                                                type="button"
                                                 onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-all shrink-0"
                                             >
                                                 <IoMdClose size={18} />
-                                            </span>
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Right Area: Config & Preview */}
-                            <div className="main-config-area">
-                                <div className="config-tabs">
-                                    <button
-                                        className={`tab-btn ${!previewMode ? 'active' : ''}`}
-                                        onClick={() => setPreviewMode(false)}
-                                    >
-                                        Configure
-                                    </button>
-                                    <button
-                                        className={`tab-btn ${previewMode ? 'active' : ''}`}
-                                        onClick={() => setPreviewMode(true)}
-                                    >
-                                        Preview
-                                    </button>
+                            <div className="flex-1 flex flex-col border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm">
+                                <div className="flex border-b border-gray-100">
+                                    {['Configure', 'Preview'].map((tab) => (
+                                        <button
+                                            key={tab}
+                                            className={`flex-1 py-3 text-sm font-bold transition-all relative ${(!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview') ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
+                                            onClick={() => setPreviewMode(tab === 'Preview')}
+                                        >
+                                            {tab}
+                                            {((!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview')) && (
+                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full mx-8" />
+                                            )}
+                                        </button>
+                                    ))}
                                 </div>
 
-                                <div className="config-content-wrapper custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto scrollbar-thin p-8">
                                     {!previewMode ? (
-                                        <div className="form-content">
-                                            <h6 className="fw-bold mb-3">Configure Document Settings</h6>
-                                            <Form.Group className="mb-4">
-                                                <Form.Label className="small fw-600 text-muted uppercase">Target Folder</Form.Label>
-                                                <div className="position-relative">
+                                        <div className="space-y-8 max-w-xl mx-auto">
+                                            <div className="space-y-2">
+                                                <h6 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-4">Target Folder</h6>
+                                                <div className="relative" ref={folderDropdownRef}>
                                                     <div
-                                                        className={`premium-folder-select ${currentFile?.errors.some(e => e.includes('folder')) ? 'border-danger' : ''}`}
+                                                        className={`w-full h-12 px-4 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${folderDropdownOpen ? 'border-primary ring-4 ring-primary/5 shadow-sm' : 'border-gray-200 hover:border-gray-300'} ${currentFile?.errors.some(e => e.includes('folder')) ? 'border-red-300 bg-red-50/10' : ''}`}
                                                         onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
                                                     >
-                                                        <div className="folder-path-display">
-                                                            <FaFolder className="text-warning" />
-                                                            <span>{currentFile?.folderPath || 'Select a destination folder...'}</span>
+                                                        <div className="flex items-center gap-3 truncate">
+                                                            <FaFolder className="text-amber-400 shrink-0" size={18} />
+                                                            <span className={`text-sm font-medium truncate ${currentFile?.folderPath ? 'text-gray-800' : 'text-gray-400 italic'}`}>
+                                                                {currentFile?.folderPath || 'Select a destination folder...'}
+                                                            </span>
                                                         </div>
-                                                        <FaChevronDown size={12} className="text-muted" />
+                                                        <FaChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${folderDropdownOpen ? 'rotate-180' : ''}`} />
                                                     </div>
 
                                                     {folderDropdownOpen && (
-                                                        <div className="folder-dropdown-premium" ref={folderDropdownRef}>
+                                                        <div className="absolute mt-2 top-full left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-2xl z-[100] p-3 max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
                                                             {loadingFolders ? (
-                                                                <div className="text-center p-3"><Spinner size="sm" /></div>
+                                                                <div className="p-8 flex flex-col items-center justify-center gap-3 text-gray-400 italic text-sm">
+                                                                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                                                    Loading folders...
+                                                                </div>
                                                             ) : folderTree.length === 0 ? (
-                                                                <div className="text-center p-3 small text-muted">No folders found</div>
+                                                                <div className="p-8 text-center text-sm text-gray-400 italic">No folders found</div>
                                                             ) : (
-                                                                folderTree.map(f => (
-                                                                    <FolderNode
-                                                                        key={f.id}
-                                                                        folder={f}
-                                                                        onSelect={selectFolder}
-                                                                        selectedId={currentFile?.folderId}
-                                                                        expandedFolders={expandedFolders}
-                                                                        onToggleExpand={toggleFolderExpand}
-                                                                    />
-                                                                ))
+                                                                <div className="space-y-1">
+                                                                    {folderTree.map(f => (
+                                                                        <FolderNode
+                                                                            key={f.id}
+                                                                            folder={f}
+                                                                            onSelect={selectFolder}
+                                                                            selectedId={currentFile?.folderId}
+                                                                            expandedFolders={expandedFolders}
+                                                                            onToggleExpand={toggleFolderExpand}
+                                                                        />
+                                                                    ))}
+                                                                </div>
                                                             )}
                                                         </div>
                                                     )}
                                                 </div>
                                                 {currentFile?.errors.map((err, i) => (
-                                                    <div key={i} className="text-danger small mt-1 d-flex align-items-center gap-1">
+                                                    <div key={i} className="flex items-center gap-1.5 text-xs font-bold text-red-500 pl-1 mt-2">
                                                         <FaExclamationCircle size={10} /> {err}
                                                     </div>
                                                 ))}
-                                            </Form.Group>
+                                            </div>
 
-                                            <div className="bg-light p-3 rounded">
-                                                <div className="small fw-bold text-main mb-1">File Details</div>
-                                                <div className="small text-muted">Name: {currentFile?.name}</div>
-                                                <div className="small text-muted">Estimated Size: {currentFile?.size}</div>
+                                            <div className="p-6 border border-gray-100 rounded-2xl bg-gray-50/50 space-y-4">
+                                                <h6 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">File Details</h6>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Name</span>
+                                                        <span className="text-sm font-bold text-gray-800 break-all leading-tight max-w-[200px] truncate">{currentFile?.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estimated Size</span>
+                                                        <span className="text-sm font-bold text-gray-800 leading-tight">{currentFile?.size}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="preview-container h-100 d-flex align-items-center justify-content-center bg-light border rounded overflow-hidden">
+                                        <div className="h-full flex flex-col items-center justify-center bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed relative overflow-hidden group min-h-[400px]">
                                             {currentFile ? (
                                                 (() => {
                                                     const fileType = currentFile.fileObject.type;
@@ -595,18 +623,18 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                                             <iframe
                                                                 src={currentFile.previewUrl}
                                                                 title="Preview"
-                                                                width="100%"
-                                                                height="100%"
-                                                                className="border-0"
+                                                                className="w-full h-full border-0 rounded-2xl animate-in fade-in duration-500"
                                                             />
                                                         );
                                                     } else if (fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(fileName)) {
                                                         return (
-                                                            <img
-                                                                src={currentFile.previewUrl}
-                                                                alt="Preview"
-                                                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                                            />
+                                                            <div className="p-8 flex items-center justify-center h-full animate-in zoom-in-95 duration-500">
+                                                                <img
+                                                                    src={currentFile.previewUrl}
+                                                                    alt="Preview"
+                                                                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                                                />
+                                                            </div>
                                                         );
                                                     } else {
                                                         const isExcel = /\.(xlsx?|csv)$/.test(fileName);
@@ -614,50 +642,25 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
 
                                                         if (isExcel && excelData && excelData.data && excelData.data.length > 0) {
                                                             return (
-                                                                <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
-                                                                    <div style={{
-                                                                        padding: '12px 16px',
-                                                                        backgroundColor: '#22C55E',
-                                                                        color: 'white',
-                                                                        borderRadius: '8px 8px 0 0',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'space-between'
-                                                                    }}>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            <FaTable size={18} />
-                                                                            <span style={{ fontWeight: '600', fontSize: '14px' }}>{currentFile.name}</span>
+                                                                <div className="w-full h-full flex flex-col p-4 animate-in fade-in duration-300 shrink-0">
+                                                                    <div className="p-4 bg-emerald-500 text-white rounded-t-2xl flex items-center justify-between shadow-lg z-10 shrink-0">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="p-2 bg-white/20 rounded-lg">
+                                                                                <FaTable size={16} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <div className="text-sm font-bold leading-tight truncate max-w-[250px]">{currentFile.name}</div>
+                                                                                <div className="text-[10px] opacity-90 font-medium leading-tight mt-0.5 uppercase tracking-wider">Sheet: {excelData.sheetName} • {excelData.totalRows} rows</div>
+                                                                            </div>
                                                                         </div>
-                                                                        <span style={{ fontSize: '12px', opacity: 0.9 }}>
-                                                                            Sheet: {excelData.sheetName} • {excelData.totalRows} rows
-                                                                        </span>
                                                                     </div>
-                                                                    <div style={{
-                                                                        maxHeight: '350px',
-                                                                        overflow: 'auto',
-                                                                        border: '1px solid #E5E7EB',
-                                                                        borderTop: 'none',
-                                                                        borderRadius: '0 0 8px 8px'
-                                                                    }}>
-                                                                        <table style={{
-                                                                            width: '100%',
-                                                                            borderCollapse: 'collapse',
-                                                                            fontSize: '13px'
-                                                                        }}>
-                                                                            <tbody>
+                                                                    <div className="flex-1 overflow-auto border border-gray-100 border-t-0 bg-white rounded-b-2xl shadow-inner custom-scrollbar shrink-0">
+                                                                        <table className="w-full border-collapse text-[13px] leading-relaxed ">
+                                                                            <tbody className="divide-y divide-gray-100">
                                                                                 {excelData.data.map((row, rowIdx) => (
-                                                                                    <tr key={rowIdx} style={{
-                                                                                        backgroundColor: rowIdx === 0 ? '#F3F4F6' : (rowIdx % 2 === 0 ? '#FAFAFA' : 'white')
-                                                                                    }}>
+                                                                                    <tr key={rowIdx} className={`transition-colors ${rowIdx === 0 ? 'bg-gray-50/80 sticky top-0 shadow-sm z-[5]' : 'hover:bg-gray-50/30'}`}>
                                                                                         {row.map((cell, cellIdx) => (
-                                                                                            <td key={cellIdx} style={{
-                                                                                                padding: '8px 12px',
-                                                                                                borderBottom: '1px solid #E5E7EB',
-                                                                                                borderRight: '1px solid #E5E7EB',
-                                                                                                whiteSpace: 'nowrap',
-                                                                                                fontWeight: rowIdx === 0 ? '600' : 'normal',
-                                                                                                color: rowIdx === 0 ? '#374151' : '#6B7280'
-                                                                                            }}>
+                                                                                            <td key={cellIdx} className={`py-3 px-4 border-r border-gray-50 last:border-r-0 whitespace-nowrap ${rowIdx === 0 ? 'font-bold text-gray-700' : 'text-gray-500'}`}>
                                                                                                 {cell !== null && cell !== undefined ? String(cell) : ''}
                                                                                             </td>
                                                                                         ))}
@@ -671,19 +674,26 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                                         }
 
                                                         return (
-                                                            <div className="text-center p-4">
-                                                                <FaRegFileAlt size={48} className="text-muted mb-3" />
-                                                                <h6>{currentFile.name}</h6>
-                                                                <p className="text-muted small">Preview not available for this file type.</p>
-                                                                <Button variant="outline-primary" size="sm" as="a" href={currentFile.previewUrl} download={currentFile.name}>
+                                                            <div className="text-center p-12 animate-in slide-in-from-bottom-2 duration-500 flex flex-col items-center max-w-sm">
+                                                                <div className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white shadow-2xl mb-8 group-hover:scale-110 transition-transform bg-gray-500 shadow-gray-500/20`}>
+                                                                    <FaRegFileAlt size={48} />
+                                                                </div>
+                                                                <h6 className="text-lg font-bold text-gray-800 mb-2 truncate w-full" style={{ fontFamily: 'BasisGrotesquePro' }}>{currentFile.name}</h6>
+                                                                <p className="text-xs text-gray-400 italic mb-10 leading-relaxed" style={{ fontFamily: 'BasisGrotesquePro' }}>Preview not available for this file type.</p>
+                                                                <a
+                                                                    href={currentFile.previewUrl}
+                                                                    download={currentFile.name}
+                                                                    className="px-10 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold shadow-xl shadow-gray-900/10 hover:shadow-gray-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all no-underline inline-block whitespace-nowrap"
+                                                                    style={{ fontFamily: 'BasisGrotesquePro' }}
+                                                                >
                                                                     Download to View
-                                                                </Button>
+                                                                </a>
                                                             </div>
                                                         );
                                                     }
                                                 })()
                                             ) : (
-                                                <div className="text-muted">No file selected</div>
+                                                <div className="text-sm font-bold text-gray-300 italic uppercase tracking-widest leading-none">No file selected</div>
                                             )}
                                         </div>
                                     )}
@@ -693,30 +703,36 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                     )}
                 </div>
 
-                <div className="modal-footer-premium">
-                    <Button
-                        variant="secondary"
-                        className="btn-premium-secondary"
+                <div className="p-6 px-8 border-t border-[#E8F0FF] flex justify-between items-center bg-gray-50/50 shrink-0">
+                    <button
+                        type="button"
+                        className="px-8 py-3 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all active:scale-95"
                         onClick={handleClose}
+                        style={{ fontFamily: 'BasisGrotesquePro' }}
                     >
                         Cancel
-                    </Button>
+                    </button>
                     {step === 2 && (
-                        <Button
-                            variant="primary"
-                            className="btn-premium-primary"
+                        <button
+                            type="button"
+                            className={`px-10 py-3 text-sm font-bold text-white rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap ${uploading ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#F56D2D] hover:bg-[#ff7a2f] shadow-[#F56D2D]/20 hover:shadow-[#F56D2D]/30'}`}
                             onClick={performUpload}
                             disabled={uploading}
+                            style={{ fontFamily: 'BasisGrotesquePro' }}
                         >
                             {uploading ? (
-                                <><Spinner size="sm" className="me-2" /> Uploading...</>
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                                    <span>Uploading...</span>
+                                </>
                             ) : (
                                 'Complete Upload'
                             )}
-                        </Button>
+                        </button>
                     )}
                 </div>
-            </Modal.Body>
-        </Modal>
+            </div>
+        </div>,
+        document.body
     );
 }

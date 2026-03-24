@@ -977,7 +977,7 @@ export default function Appointments() {
 
       {/* Appointment Lists - Only show when not loading */}
       {!loading && (
-        <div className="d-flex gap-4 flex-wrap align-items-start appointments-lists">
+        <div className="d-flex gap-4 flex-wrap align-items-stretch appointments-lists">
 
           <div className="bg-white rounded shadow-sm p-3 flex-grow-1 upcoming-appointments-box" style={{ minWidth: "350px" }}>
 
@@ -1026,8 +1026,8 @@ export default function Appointments() {
                     >
 
 
-                      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
-                        <div className="d-flex align-items-center gap-2 flex-wrap" style={{ fontFamily: "BasisGrotesquePro" }}>
+                      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2 w-100">
+                        <div className="d-flex align-items-center gap-2 flex-wrap" style={{ fontFamily: "BasisGrotesquePro", flexGrow: 1 }}>
                           <strong>{appt.title}</strong>
 
 
@@ -1059,41 +1059,37 @@ export default function Appointments() {
 
                         {/* Edit & Delete buttons - right aligned */}
                         <div className="d-flex align-items-center gap-2 ms-auto mt-2 mt-md-0">
-                          <button
-                            className="btn "
-                            style={{
+                          {appt.status !== "Cancelled" && (
+                            <>
+                              <button
+                                className="btn "
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(appt);
+                                }}
+                              >
+                                <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
+                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
+                                  <path d="M13 8.50011H9.5C9.23478 8.50011 8.98043 8.60547 8.79289 8.79301C8.60536 8.98054 8.5 9.2349 8.5 9.50011V16.5001C8.5 16.7653 8.60536 17.0197 8.79289 17.2072C8.98043 17.3948 9.23478 17.5001 9.5 17.5001H16.5C16.7652 17.5001 17.0196 17.3948 17.2071 17.2072C17.3946 17.0197 17.5 16.7653 17.5 16.5001V13.0001M16.1875 8.31261C16.3864 8.1137 16.6562 8.00195 16.9375 8.00195C17.2188 8.00195 17.4886 8.1137 17.6875 8.31261C17.8864 8.51153 17.9982 8.78131 17.9982 9.06261C17.9982 9.34392 17.8864 9.6137 17.6875 9.81261L13 14.5001L11 15.0001L11.5 13.0001L16.1875 8.31261Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                              </button>
 
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditModal(appt);
-                            }}
-                          >
-                            <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
-                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
-                              <path d="M13 8.50011H9.5C9.23478 8.50011 8.98043 8.60547 8.79289 8.79301C8.60536 8.98054 8.5 9.2349 8.5 9.50011V16.5001C8.5 16.7653 8.60536 17.0197 8.79289 17.2072C8.98043 17.3948 9.23478 17.5001 9.5 17.5001H16.5C16.7652 17.5001 17.0196 17.3948 17.2071 17.2072C17.3946 17.0197 17.5 16.7653 17.5 16.5001V13.0001M16.1875 8.31261C16.3864 8.1137 16.6562 8.00195 16.9375 8.00195C17.2188 8.00195 17.4886 8.1137 17.6875 8.31261C17.8864 8.51153 17.9982 8.78131 17.9982 9.06261C17.9982 9.34392 17.8864 9.6137 17.6875 9.81261L13 14.5001L11 15.0001L11.5 13.0001L16.1875 8.31261Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                          </button>
-
-                          <button
-                            className="btn  ms-2"
-                            style={{
-
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              cancelAppointment(appt.id);
-                            }}
-                          >
-                            <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
-                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
-                              <path d="M8.5 10H17.5M16.5 10V17C16.5 17.5 16 18 15.5 18H10.5C10 18 9.5 17.5 9.5 17V10M11 10V9C11 8.5 11.5 8 12 8H14C14.5 8 15 8.5 15 9V10M12 12.5V15.5M14 12.5V15.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-
-                          </button>
-
+                              <button
+                                className="btn  ms-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cancelAppointment(appt.id);
+                                }}
+                              >
+                                <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
+                                  <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
+                                  <path d="M8.5 10H17.5M16.5 10V17C16.5 17.5 16 18 15.5 18H10.5C10 18 9.5 17.5 9.5 17V10M11 10V9C11 8.5 11.5 8 12 8H14C14.5 8 15 8.5 15 9V10M12 12.5V15.5M14 12.5V15.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -1171,7 +1167,7 @@ export default function Appointments() {
 
 
           {/* Past */}
-          <div className="bg-white rounded shadow-sm p-3 past-appointments-box" style={{ minWidth: "350px", alignSelf: "flex-start" }}>
+          <div className="bg-white rounded shadow-sm p-3 past-appointments-box" style={{ minWidth: "350px" }}>
 
             <div className="align-items-center mb-3 ">
               <h5
@@ -1280,11 +1276,15 @@ export default function Appointments() {
               );
             })()}
           </div>
+
         </div>
       )}
+
+      {/* ---------- Custom Modal Popup ---------- */}
       {showModal && (
         <div
-          className="custom-popup-overlay"
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, padding: '10px' }}
           onClick={(e) => {
             // Close modal if clicking on overlay (outside the container)
             if (e.target === e.currentTarget) {
@@ -1294,25 +1294,40 @@ export default function Appointments() {
           }}
         >
           <div
-            className="custom-popup-container"
+            className="rounded-4 overflow-hidden d-flex flex-column"
+            style={{
+              width: '100%',
+              maxWidth: '600px',
+              maxHeight: 'calc(100vh - 20px)',
+              backgroundColor: '#fff'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="popup-header">
-              <div className="popup-header-top">
-                <h5 className="popup-title">Schedule New Appointment</h5>
+            <div className="p-3 border-bottom" style={{ flexShrink: 0 }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0" style={{ color: '#3B4A66', fontSize: '18px', fontWeight: '500', fontFamily: 'BasisGrotesquePro' }}>Schedule New Appointment</h5>
                 <button onClick={() => {
                   resetAppointmentForm();
                   setShowModal(false);
-                }} className="popup-close-btn">
+                }} className="btn p-1" style={{ background: 'none', border: 'none' }}>
                   <CrossIcon />
                 </button>
               </div>
-              <p className="popup-subtitle">Schedule a meeting with your tax professional</p>
+              <p
+                className="mb-0 mt-1"
+                style={{
+                  color: '#4B5563',
+                  fontSize: '13px',
+                  fontFamily: 'BasisGrotesquePro'
+                }}
+              >
+                Schedule a meeting with your tax professional
+              </p>
             </div>
 
-            {/* Modal Body */}
-            <div className="popup-body">
+            {/* Scrollable Body */}
+            <div className="p-3 overflow-auto" style={{ flex: 1 }}>
               {/* Staff Error Message - Show prominently if staff couldn't be loaded */}
               {staffError && staffError.includes('associated with a firm') && (
                 <div className="alert alert-warning mb-3" role="alert" style={{

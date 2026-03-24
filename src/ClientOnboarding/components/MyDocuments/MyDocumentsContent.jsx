@@ -1037,7 +1037,10 @@ export default function MyDocumentsContent() {
             <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 mydocs-filter-container">
 
                 <div className="mydocs-search-wrapper">
-                    <i className="bi bi-search mydocs-search-icon"></i>
+                    <span className="mydocs-search-icon">   
+                        <i className="bi bi-search"></i>
+                    </span>
+
                     <input
                         type="text"
                         className="form-control mydocs-search-input"
@@ -1168,7 +1171,7 @@ export default function MyDocumentsContent() {
                                 const fileUrl = doc.file_url || doc.tax_documents || '';
 
                                 return (
-                                    <div className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-3" : "col-12"} key={doc.id || doc.document_id || index}>
+                                    <div className={view === "grid" ? "col-12 col-sm-6 col-md-4 col-lg-4" : "col-12"} key={doc.id || doc.document_id || index}>
                                         <div
                                             className="p-3 border rounded-4"
                                             style={{
@@ -1678,7 +1681,7 @@ export default function MyDocumentsContent() {
                                                 minHeight: '300px',
                                                 border: 'none',
                                             }}
-                                        ></iframe>  
+                                        ></iframe>
                                     );
                                 } else if (isImage) {
                                     return (

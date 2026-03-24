@@ -623,29 +623,29 @@ export default function ESignature() {
                           const bothSigned = request.taxpayer_signed === true && request.spouse_signed === true;
 
                           // If both have signed or status is completed, submitted, or under_review, show Preview Annotated PDF button (if annotated_pdf_url exists)
-                          if ((bothSigned || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url) {
-                            return (
-                              <button
-                                className="btn d-flex align-items-center gap-2 rounded"
-                                style={{
-                                  backgroundColor: "#10B981",
-                                  color: "#fff",
-                                  border: "none",
-                                  fontSize: "12px",
-                                  fontWeight: "500"
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedIndex(originalIndex);
-                                  setShowPreviewModal(true);
-                                }}
-                                title="Preview Annotated PDF"
-                              >
-                                <FaEye size={14} />
-                                Preview Annotated PDF
-                              </button>
-                            );
-                          }
+                          // if ((bothSigned || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url) {
+                          //   return (
+                          //     <button
+                          //       className="btn d-flex align-items-center gap-2 rounded"
+                          //       style={{
+                          //         backgroundColor: "#10B981",
+                          //         color: "#fff",
+                          //         border: "none",
+                          //         fontSize: "12px",
+                          //         fontWeight: "500"
+                          //       }}
+                          //       onClick={(e) => {
+                          //         e.stopPropagation();
+                          //         setSelectedIndex(originalIndex);
+                          //         setShowPreviewModal(true);
+                          //       }}
+                          //       title="Preview Annotated PDF"
+                          //     >
+                          //       <FaEye size={14} />
+                          //       Preview Annotated PDF
+                          //     </button>
+                          //   );
+                          // }
 
                           // If both haven't signed and status is not processing, submitted, completed, or under_review, show Annotate PDF button
                           if (!bothSigned && request.status !== 'processing' && request.status !== 'submitted' && request.status !== 'completed' && request.status !== 'under_review') {
@@ -893,18 +893,34 @@ export default function ESignature() {
       )}
 
       <style>{`
-        .pdf-preview-modal .modal-dialog {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          margin: 0 auto !important;
-          max-width: 600px !important;
-        }
-        .pdf-preview-modal .modal-content {
-          max-height: 90vh !important;
-          overflow: hidden !important;
-        }
-      `}</style>
+  body.modal-open .pdf-preview-modal.modal {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+  body.modal-open .pdf-preview-modal .modal-dialog {
+    margin: 0 auto !important;
+    max-width: 700px !important;
+    width: 95vw !important;
+    position: relative !important;
+    top: 0 !important;
+    transform: none !important;
+  }
+  body.modal-open .pdf-preview-modal .modal-content {
+    width: 100% !important;
+    max-height: 71vh !important;
+    overflow: hidden !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  body.modal-open .pdf-preview-modal .modal-body {
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    max-height: 70vh !important;
+  }
+`}</style>
       {/* PDF Preview Modal */}
       <Modal
         show={showPreviewModal}
@@ -915,20 +931,22 @@ export default function ESignature() {
         size="lg"
         centered
         scrollable
-        dialogClassName="pdf-preview-modal"
+        className="pdf-preview-modal"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
 
         <Modal.Header closeButton>
-          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', fontSize: '16px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '500px' }}>
             {selectedIndex !== null && signatureRequests[selectedIndex] ? (
               (() => {
                 const request = signatureRequests[selectedIndex];
                 const isAnnotated = (request.taxpayer_signed === true && request.spouse_signed === true || request.status === 'completed' || request.status === 'submitted' || request.status === 'under_review') && request.annotated_pdf_url;
-                const docName = request.document_name || request.title || 'Document';
-                return `E-Signature – ${isAnnotated ? 'Annotated ' : ''}${docName}`;
+                // Extract just the clean document name, strip file paths
+                const rawName = request.document_name || request.title || 'Document';
+                const cleanName = rawName.includes('/') ? rawName.split('/').pop() : rawName;
+                return `E-Signature – ${isAnnotated ? 'Annotated · ' : ''}${cleanName}`;
               })()
-            ) : 'E-Signature – Document Preview'}
+            ) : 'Document Preview'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>

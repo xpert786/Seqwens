@@ -28,7 +28,6 @@ export default function MyDocumentsMain() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-
       }}
     >
       {/* Header Section */}

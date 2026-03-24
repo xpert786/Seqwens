@@ -12,119 +12,104 @@
 .messages-page .conversations-panel {
   width: 400px;
   flex-shrink: 0;
+  min-height: 0;
   max-height: calc(100vh - 220px);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .messages-page .conversations-panel {
-    width: 320px;
+    width: 300px;
   }
 }
 
 .messages-page .chat-wrapper {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  min-height: 0;
+  flex: 1;
 }
 
-/* MOBILE: 320px to 991px (Updated breakpoint to match JS isMobile check) */
+/* Base style for the container */
+@media (min-width: 992px) {
+  .messages-page-container {
+    animation: slideUp 0.4s ease-out;
+    height: 100% !important;
+    overflow: hidden;
+  }
+}
+
+/* MOBILE: up to 991px */
 @media (max-width: 991px) {
   .messages-page-container {
     padding: 12px !important;
-    height: auto !important;
-    min-height: calc(100vh - 80px) !important;
+    height: calc(100vh - 70px) !important;
+    overflow: hidden !important;
   }
 
   .messages-page .message-header {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    text-align: center !important;
-    gap: 12px !important;
-    padding: 12px !important;
+    margin-bottom: 12px !important;
+    padding: 15px !important;
     min-height: auto !important;
-  }
-
-  .messages-page .message-header>div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 
   .messages-page .message-header h5 {
     font-size: 18px !important;
+    margin-bottom: 2px !important;
   }
 
   .messages-page .message-header p {
-    font-size: 12px !important;
+    font-size: 11px !important;
+    margin-bottom: 0 !important;
   }
 
   .messages-page .new-message-btn {
-    width: 100% !important;
-    justify-content: center !important;
-    padding: 10px !important;
-    font-size: 14px !important;
-    margin-top: 0;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
   }
 
   .messages-page .chat-wrapper {
-    flex-direction: column !important;
-    gap: 16px !important;
-    overflow: visible !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    width: 100% !important;
   }
 
   .messages-page .conversations-panel {
     width: 100% !important;
     margin-right: 0 !important;
-    margin-bottom: 0 !important;
-    height: auto !important;
-    min-height: 300px !important;
+    height: 100% !important;
     border-radius: 12px !important;
+    display: flex !important;
+  }
+
+  .messages-page .conversations-panel.mobile-hidden {
+    display: none !important;
   }
 
   .messages-page .chat-interface {
     width: 100% !important;
-    height: calc(100vh - 220px) !important;
+    height: 100% !important;
     border-radius: 12px !important;
+    display: flex !important;
   }
 
-  .messages-page .chat-messages-area {
-    max-height: 300px !important;
+  .messages-page .chat-interface.mobile-hidden {
+    display: none !important;
   }
 
-  .messages-page .message-bubble {
-    max-width: 85% !important;
-    font-size: 13px !important;
-    padding: 10px 14px !important;
+  .messages-page .conversations-scroll {
+    max-height: none !important;
+    flex: 1;
   }
 
   .messages-page .chat-input-area {
     padding: 8px !important;
   }
 
-  .messages-page .conversations-scroll {
-    flex-grow: 1 !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-  }
-
-  .messages-page .chat-input-area .d-flex {
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-  }
-
   .messages-page .chat-input-area input {
-    height: 44px !important;
+    height: 40px !important;
     font-size: 14px !important;
-  }
-
-  .messages-page .compose-modal-box {
-    width: 95% !important;
-    padding: 20px !important;
-    border-radius: 12px !important;
-  }
-
-  .messages-page .compose-modal-title {
-    font-size: 20px !important;
   }
 }
 
@@ -133,10 +118,6 @@
   .messages-page .message-header h5 {
     font-size: 16px !important;
   }
-
-  .messages-page .conversations-panel {
-    padding: 10px !important;
-  }
 }
 
 /* Modal and Transitions */
@@ -144,25 +125,17 @@
   transition: all 0.3s ease;
 }
 
+.messages-scroll {
+  max-height: calc(100vh - 380px);
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(20px);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-@media (min-width: 992px) {
-  .messages-page-container {
-    animation: slideUp 0.4s ease-out;
-    height: calc(100vh - 100px) !important;
-  }
-}
-
-.messages-scroll {
-  max-height: calc(100vh - 380px);
 }

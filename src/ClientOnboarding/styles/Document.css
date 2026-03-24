@@ -5,30 +5,37 @@
 }
 
 .mydocs-search-icon {
-    position: absolute !important;
-    left: 12px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    color: #6B7280 !important;
-    font-size: 14px !important;
-    pointer-events: none !important;
-    display: flex;
-    align-items: center;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+
+    /* CHANGE THIS */
+    transform: translateY(-50%);
+
+    color: #6B7280;
+    font-size: 16px; /* slightly larger looks better */
+
+    pointer-events: none;
+
+    /* ADD THIS */
+    line-height: 1;
 }
 
 .mydocs-search-input {
-    padding-left: 36px !important;
-    font-size: 14px !important;
-    height: 38px !important;
-    border: 1px solid #E8F0FF !important;
-    border-radius: 8px !important;
-    width: 100%;
+    padding-left: 40px !important; /* little more spacing */
+    height: 40px !important;
+    display: flex;
+    align-items: center;
+    line-height: 1;
 }
 
 .mydocs-search-input:focus {
     border-color: #00C0C6 !important;
     box-shadow: 0 0 0 2px rgba(0, 192, 198, 0.1) !important;
     outline: none;
+}
+.mydocs-search-icon {
+    top: 41%;
 }
 
 .bg-darkblue {

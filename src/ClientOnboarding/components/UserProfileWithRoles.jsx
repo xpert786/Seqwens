@@ -384,7 +384,7 @@ export default function UserProfileWithRoles() {
   const isFirmAdmin = primaryRole === 'firm' || primaryRole === 'admin' || allUserRoles.includes('firm') || allUserRoles.includes('admin');
 
   return (
-    <div style={{ fontFamily: "BasisGrotesquePro" }} className="pb-5">
+    <div style={{ fontFamily: "BasisGrotesquePro" }} className="">
       {/* Profile Header Section */}
       <div className="bg-white border border-[#E8F0FF] rounded-4 p-3 p-md-4 mb-4 shadow-sm">
         <div className="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3 gap-md-4">

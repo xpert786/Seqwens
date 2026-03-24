@@ -12,17 +12,42 @@
     --success-text: #16A34A;
 }
 
-.upload-modal .modal-content {
-    border: none;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+/* Modal Container & Dialog Sizing/Positioning */
+.premium-v5-modal-container {
+    z-index: 1080 !important;
+}
+
+.premium-v5-modal-container .modal-dialog {
+    margin-top: 40px !important;
+    max-width: 1100px !important;
+    height: 76vh !important; /* Enforcing 76vh as requested */
+}
+
+/* Modal Content Override - Bypassing index.css !important rule */
+.premium-v5-modal-container .modal-content.rounded-v5 {
+    border: none !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 48px rgba(0, 0, 0, 0.15) !important;
+    height: 76vh !important; /* Sticky 76vh height */
+    max-height: 76vh !important;
+    background: white !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.premium-v5-modal-container .modal-body {
+    flex: 1 !important;
+    overflow-y: hidden !important; /* The inner div handles scrolling */
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
 }
 
 .upload-heading {
     font-size: 22px;
     font-weight: 700;
-    color: var(--text-main);
+    color: var(--primary-orange) !important;
     margin-bottom: 2px !important;
     font-family: 'BasisGrotesquePro', sans-serif;
 }
@@ -33,8 +58,58 @@
     margin-bottom: 0px !important;
 }
 
+/* File Details Box Styling - RESTORED PREMIUM LOOK */
+.file-details-box {
+    background-color: #F9FAFB !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    border: 1px solid #F3F4F6 !important;
+    margin-top: 15px !important;
+}
+
+.details-header {
+    color: #374151 !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    margin-bottom: 12px !important;
+}
+
+.details-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 8px !important;
+    font-size: 13px !important;
+}
+
+.details-row:last-child {
+    margin-bottom: 0 !important;
+}
+
+.details-row .label {
+    color: #6B7280 !important;
+    font-weight: 400 !important;
+}
+
+.details-row .value {
+    color: #374151 !important;
+    font-weight: 600 !important;
+    text-align: right !important;
+    max-width: 60% !important; /* Prevent text overlap */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Label Styling */
+.uppercase {
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
+
 /* Error Summary Banner */
-.error-summary-banner {
+.premium-v5-modal-container .error-summary-banner {
     background-color: var(--error-bg);
     border-left: 4px solid var(--error-text);
     padding: 12px 16px;
@@ -74,7 +149,7 @@
     border: none;
     background-color: var(--bg-light);
     border-radius: 0;
-    padding: 100px 40px;
+    padding: 80px 40px !important;
     width: 100%;
     margin: 0;
     border-left: none;
@@ -121,8 +196,10 @@
     display: grid;
     grid-template-columns: 320px 1fr;
     gap: 24px;
-    height: 550px;
+    height: 100% !important; /* Allow it to grow in flex container */
+    min-height: 450px !important;
     margin-top: 5px;
+    overflow: hidden;
 }
 
 .file-sidebar {
@@ -362,11 +439,11 @@
 /* Modal Buttons */
 .modal-footer-premium {
     padding: 16px 24px;
-    border-top: none;
+    border-top: 1px solid #E5E7EB !important;
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    background: var(--bg-light);
+    background: white !important;
 }
 
 .btn-premium-primary {
@@ -417,127 +494,130 @@
 
 /* Mobile responsive styles */
 @media (max-width: 767px) {
-    .upload-modal .modal-dialog {
+    .premium-v5-modal-container .modal-dialog {
         margin: 10px;
         max-width: calc(100% - 20px);
+        margin-top: 10px !important;
+        height: 90vh !important;
     }
-    
-    .upload-modal .modal-content {
+
+    .premium-v5-modal-container .modal-content {
         border-radius: 12px;
-        max-height: calc(100vh - 20px);
+        height: 90vh !important;
+        max-height: 90vh !important;
     }
-    
-    .upload-modal .modal-body {
-        max-height: calc(100vh - 120px);
+
+    .premium-v5-modal-container .modal-body {
+        max-height: calc(90vh - 120px);
         overflow-y: auto;
     }
-    
+
     .upload-heading {
         font-size: 18px;
     }
-    
+
     .upload-subheading {
         font-size: 12px;
     }
-    
+
     .premium-dropzone {
-        padding: 40px 20px;
+        padding: 40px 20px !important;
     }
-    
+
     .dropzone-icon-container {
         font-size: 36px;
     }
-    
+
     .dropzone-text {
         font-size: 16px;
     }
-    
+
     .dropzone-hint {
         font-size: 11px;
     }
-    
+
     .config-layout {
         grid-template-columns: 1fr;
         height: auto;
         gap: 16px;
     }
-    
+
     .file-sidebar {
         height: 200px;
         border-radius: 8px;
     }
-    
+
     .file-list-header {
         padding: 12px;
     }
-    
+
     .file-items-container {
         padding: 8px;
     }
-    
+
     .file-item-premium {
         padding: 8px;
         margin-bottom: 6px;
     }
-    
+
     .file-icon-square {
         width: 32px;
         height: 32px;
     }
-    
+
     .file-name-txt {
         font-size: 12px;
     }
-    
+
     .main-config-area {
         gap: 12px;
     }
-    
+
     .config-tabs {
         width: 100%;
     }
-    
+
     .tab-btn {
         padding: 6px 16px;
         font-size: 13px;
         flex: 1;
     }
-    
+
     .config-content-wrapper {
         padding: 16px;
         border-radius: 8px;
     }
-    
+
     .premium-folder-select {
         padding: 10px;
     }
-    
+
     .folder-path-display {
         font-size: 13px;
     }
-    
+
     .folder-dropdown-premium {
         max-height: 200px;
     }
-    
+
     .modal-footer-premium {
         padding: 12px 16px;
         flex-direction: column;
         gap: 8px;
     }
-    
+
     .btn-premium-primary,
     .btn-premium-secondary {
         width: 100%;
         padding: 10px 16px;
         font-size: 14px;
     }
-    
+
     .error-summary-banner {
         padding: 10px 12px;
     }
-    
+
     .error-summary-content {
         font-size: 12px;
     }
-}
+}

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from 'react-bootstrap';
+import { createPortal } from 'react-dom';
 import { firmAdminDocumentsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import { FiSearch, FiX, FiCheck, FiFile } from 'react-icons/fi';
+import { FiSearch, FiX, FiCheck, FiFile, FiFolder, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { IoMdClose } from 'react-icons/io';
 
+/**
+ * DocumentSelectionModal
+ * A premium document selector refactored to use React Portals and Tailwind CSS.
+ */
 export default function DocumentSelectionModal({ show, onClose, onSelectDocuments, multiple = true }) {
   const [documents, setDocuments] = useState([]);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
@@ -13,7 +18,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
   const [folderId, setFolderId] = useState(null);
   const [folders, setFolders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 6; // Balance between viewable items and scrolling
 
   useEffect(() => {
     if (show) {
@@ -23,7 +28,16 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
       setSearchQuery('');
       setFolderId(null);
       setCurrentPage(1);
+      
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [show]);
 
   useEffect(() => {
@@ -56,14 +70,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
       if (response.success && response.data) {
         const docs = response.data.documents || [];
         setDocuments(docs);
-        // If search is done server-side, use the results directly
-        // Otherwise, apply client-side filtering
-        if (searchQuery.trim()) {
-          // Server already filtered, but we can do additional client-side filtering if needed
-          setFilteredDocuments(docs);
-        } else {
-          setFilteredDocuments(docs);
-        }
+        setFilteredDocuments(docs);
       } else {
         setDocuments([]);
         setFilteredDocuments([]);
@@ -127,73 +134,60 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
 
   if (!show) return null;
 
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10"
-      style={{ zIndex: 99999 }}
-      onClick={onClose}
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDocs = filteredDocuments.slice(startIndex, startIndex + itemsPerPage);
+
+  const modalContent = (
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6"
+      style={{ fontFamily: 'BasisGrotesquePro' }}
     >
-      <div
-        className="bg-white rounded-xl shadow-lg w-full modal-600w relative modal-body-scroll"
-        style={{
-          maxHeight: '75vh',
-          overflowY: 'auto',
-          position: 'relative',
-          fontFamily: 'BasisGrotesquePro'
-        }}
+      {/* Backdrop with premium blur */}
+      <div 
+        className="absolute inset-0 bg-[#0F172A]/40 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={onClose}
+      />
+
+      {/* Modal Container */}
+      <div 
+        className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <style>
-          {`
-            .modal-600w {
-              max-width: 500px;
-            }
-            @media (max-width: 576px) {
-              .modal-600w {
-                max-width: 95%;
-              }
-            }
-            .modal-body-scroll::-webkit-scrollbar {
-              width: 8px;
-            }
-            .modal-body-scroll::-webkit-scrollbar-track {
-              background: #f8fafc;
-            }
-            .modal-body-scroll::-webkit-scrollbar-thumb {
-              background: #cbd5e1;
-              border-radius: 10px;
-              border: 2px solid #f8fafc;
-            }
-            .modal-body-scroll::-webkit-scrollbar-thumb:hover {
-              background: #94a3b8;
-            }
-          `}
-        </style>
-
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
-        >
-          <FiX size={20} />
-        </button>
-
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-gray-100">
-          <h4 className="text-xl font-bold text-[#3B4A66] leading-tight">
-            Select Documents to Share
-          </h4>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-[#1E293B]">Select Documents</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Choose files to share or attach</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+          >
+            <IoMdClose size={24} />
+          </button>
         </div>
 
-        {/* Body */}
-        <div className="p-5 sm:p-6">
-          {/* Folder Filter */}
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex-grow">
-              <label className="block text-[11px] uppercase tracking-wider font-bold mb-1" style={{ color: '#94A3B8' }}>
-                Filter by Folder
-              </label>
+        {/* Filters & Search - Glass Effect */}
+        <div className="p-6 pb-2 space-y-4 flex-shrink-0 bg-slate-50/30">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Search */}
+            <div className="relative group">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00C0C6] transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Search documents..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00C0C6]/20 focus:border-[#00C0C6] transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Folder Select */}
+            <div className="relative">
+              <FiFolder className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <select
-                className="w-full max-w-[220px] border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#00C0C6]/20 bg-white cursor-pointer hover:border-[#00C0C6]/50 transition-colors"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00C0C6]/20 focus:border-[#00C0C6] appearance-none cursor-pointer transition-all"
                 value={folderId || ''}
                 onChange={(e) => setFolderId(e.target.value ? parseInt(e.target.value) : null)}
               >
@@ -207,174 +201,160 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
             </div>
           </div>
 
-          {/* Search */}
-          <div className="mb-4">
-            <div className="relative">
-              <FiSearch
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                type="text"
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00C0C6]/20"
-                placeholder="Search documents..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Documents List */}
-          {loading ? (
-            <div className="text-center py-6">
-              <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-[#00C0C6]"></div>
-              <p className="mt-2 text-sm text-gray-500">Loading documents...</p>
-            </div>
-          ) : filteredDocuments.length === 0 ? (
-            <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-              <p className="text-sm text-gray-500 mb-0">
-                {searchQuery || folderId ? 'No matching documents found' : 'No documents available'}
-              </p>
-            </div>
-          ) : (
-            <>
-              {multiple && (
-                <div className="flex justify-between items-center mb-2 px-1">
-                  <p className="text-xs text-gray-500 mb-0">
-                    {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} found
-                  </p>
-                  <button
-                    type="button"
-                    className="text-[11px] font-semibold text-[#3B4A66] bg-white border border-gray-200 px-3 py-1 rounded-md hover:bg-gray-50 transition-colors"
-                    style={{ borderRadius: "10px" }}
-                    onClick={handleSelectAll}
-                  >
-                    {selectedDocumentIds.length === filteredDocuments.length ? 'Deselect All' : 'Select All'}
-                  </button>
-                </div>
-              )}
-              <div
-                className="border border-gray-100 rounded-lg p-2 bg-gray-50/30"
-                style={{
-                  maxHeight: '220px',
-                  overflowY: 'auto'
-                }}
-              >
-                {(() => {
-                  const startIndex = (currentPage - 1) * itemsPerPage;
-                  const paginatedDocs = filteredDocuments.slice(startIndex, startIndex + itemsPerPage);
-                  return paginatedDocs.map((doc) => {
-                    const isSelected = selectedDocumentIds.includes(doc.id);
-
-                    return (
-                      <div
-                        key={doc.id}
-                        onClick={() => toggleDocument(doc.id)}
-                        className={`flex items-center justify-between p-3 mb-2 rounded-lg cursor-pointer transition-all duration-200 ${isSelected
-                          ? 'bg-[#E0F2FE] border-[#0369A1]'
-                          : 'bg-white border-gray-100 hover:border-[#00C0C6]/50'
-                          }`}
-                        style={{ border: '1px solid' }}
-                      >
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <div
-                            className={`flex-shrink-0 w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${isSelected
-                              ? 'bg-[#0369A1] border-[#0369A1]'
-                              : 'bg-white border-gray-300'
-                              }`}
-                          >
-                            {isSelected && <FiCheck size={14} color="white" />}
-                          </div>
-                          <FiFile size={18} className="text-[#00C0C6] flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-[#3B4A66] truncate mb-0.5" style={{ maxWidth: '140px' }}>
-                              {getDocumentName(doc)}
-                            </p>
-                            <div className="flex flex-wrap gap-x-3 text-[10px] text-gray-400 font-medium">
-                              {doc.category?.name && (
-                                <span>Cat: <span className="text-gray-600">{doc.category.name}</span></span>
-                              )}
-                              {doc.folder?.title && (
-                                <span>Fol: <span className="text-gray-600">{doc.folder.title}</span></span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-
-              {/* Pagination Controls */}
-              {filteredDocuments.length > itemsPerPage && (
-                <div className="flex justify-between items-center mt-4 px-1">
-                  <button
-                    type="button"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-
-                    style={{ borderRadius: "10px" }}
-                    className="px-4 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-[#3B4A66] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Prev
-                  </button>
-                  <span className="text-xs font-medium text-gray-500">
-                    Page {currentPage} of {Math.ceil(filteredDocuments.length / itemsPerPage)}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={currentPage === Math.ceil(filteredDocuments.length / itemsPerPage)}
-                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredDocuments.length / itemsPerPage), prev + 1))}
-
-                    style={{ borderRadius: "10px" }}
-                    className="px-4 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-[#3B4A66] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Selected Count */}
-          {selectedDocumentIds.length > 0 && (
-            <div className="mt-4 p-3 bg-[#E0F2FE] border border-[#BAE6FD] rounded-lg flex items-center justify-between">
-              <p className="text-sm font-semibold text-[#0369A1] mb-0">
-                {selectedDocumentIds.length} document{selectedDocumentIds.length !== 1 ? 's' : ''} selected
-              </p>
+          {multiple && filteredDocuments.length > 0 && (
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                {filteredDocuments.length} Documents Found
+              </span>
               <button
-                onClick={handleConfirm}
-                className="bg-[#00C0C6] text-white px-5 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#00A8AE] transition-all transform active:scale-95"
+                onClick={handleSelectAll}
+                className="text-xs font-semibold text-[#00C0C6] hover:underline"
               >
-                Continue
+                {selectedDocumentIds.length === filteredDocuments.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-5 sm:p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50 rounded-b-xl">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={selectedDocumentIds.length === 0}
-            className={`px-6 py-2 rounded-lg text-sm font-bold text-white shadow-sm transition-all ${selectedDocumentIds.length === 0
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-[#00C0C6] hover:bg-[#00A8AE] active:scale-95'
-              }`}
-          >
-            Select {selectedDocumentIds.length > 0 ? `(${selectedDocumentIds.length})` : ''}
-          </button>
+        {/* Scrollable Document List */}
+        <div className="flex-grow overflow-y-auto px-6 py-4 custom-scrollbar">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-10 h-10 border-4 border-slate-100 border-t-[#00C0C6] rounded-full animate-spin"></div>
+              <p className="mt-4 text-sm text-slate-500 font-medium font-basis tracking-wide">Fetching documents...</p>
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50 text-center">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                <FiFile size={28} className="text-slate-200" />
+              </div>
+              <p className="text-slate-600 font-bold mb-1">No Documents Found</p>
+              <p className="text-slate-400 text-sm">Try using different keywords or folder filters</p>
+            </div>
+          ) : (
+            <div className="space-y-2.5 pb-2">
+              {paginatedDocs.map((doc) => {
+                const isSelected = selectedDocumentIds.includes(doc.id);
+                return (
+                  <div
+                    key={doc.id}
+                    onClick={() => toggleDocument(doc.id)}
+                    className={`group relative flex items-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                      isSelected 
+                        ? 'bg-[#00C0C6]/5 border-[#00C0C6] shadow-[0_0_15px_rgba(0,192,198,0.1)]' 
+                        : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                    }`}
+                  >
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'bg-[#00C0C6] border-[#00C0C6]' 
+                        : 'bg-white border-slate-200 group-hover:border-[#00C0C6]'
+                    }`}>
+                      {isSelected && <FiCheck className="text-white" size={14} strokeWidth={3} />}
+                    </div>
+
+                    <div className="ml-4 flex-grow min-w-0">
+                      <div className="flex items-center gap-2">
+                        <FiFile className={isSelected ? 'text-[#00C0C6]' : 'text-slate-400'} size={18} />
+                        <span className={`text-sm font-bold truncate ${isSelected ? 'text-[#1E293B]' : 'text-slate-600'}`}>
+                          {getDocumentName(doc)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-[11px] font-medium text-slate-400 overflow-hidden">
+                        {doc.folder?.title && (
+                          <span className="flex items-center gap-1 truncate">
+                            <FiFolder size={12} /> {doc.folder.title}
+                          </span>
+                        )}
+                        {doc.category?.name && (
+                          <span className="px-2 py-0.5 bg-slate-50 rounded border border-slate-100 text-slate-500 truncate">
+                            {doc.category.name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+
+        {/* Footer with Pagination and Actions */}
+        <div className="px-6 py-5 border-t border-slate-100 bg-white flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Pagination Controls */}
+            {totalPages > 1 ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-[#00C0C6] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <FiChevronLeft size={20} />
+                </button>
+                <div className="flex items-center px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100">
+                  <span className="text-xs font-bold text-slate-900">{currentPage}</span>
+                  <span className="mx-1.5 text-[10px] text-slate-300 font-bold">/</span>
+                  <span className="text-xs font-bold text-slate-500">{totalPages}</span>
+                </div>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-[#00C0C6] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <FiChevronRight size={20} />
+                </button>
+              </div>
+            ) : (
+              <div className="hidden sm:block"></div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={onClose}
+                className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={selectedDocumentIds.length === 0}
+                className={`flex-1 sm:flex-none px-8 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg shadow-[#00C0C6]/20 transition-all transform active:scale-95 ${
+                  selectedDocumentIds.length === 0
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                    : 'bg-gradient-to-r from-[#00C0C6] to-[#01AFB5] hover:brightness-105 select-none'
+                }`}
+              >
+                Continue {selectedDocumentIds.length > 0 ? `(${selectedDocumentIds.length})` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <style>
+          {`
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 5px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #F1F5F9;
+              border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #E2E8F0;
+            }
+          `}
+        </style>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
-
-

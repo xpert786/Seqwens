@@ -1121,7 +1121,7 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="messages-page messages-page-container h-100 d-flex flex-column" style={{ padding: "0 24px 24px 24px" }}>
+    <div className="messages-page messages-page-container d-flex flex-column" style={{ padding: isMobile ? "0" : "0 24px 24px 24px" }}>
       <style>
         {`
           @keyframes slideUp {
@@ -1130,7 +1130,7 @@ export default function MessagePage() {
           }
           .messages-page-container {
             animation: slideUp 0.4s ease-out;
-            height: calc(100vh - 100px) !important;
+            height: 100% !important;
           }
           .active-thread {
             border-color: #F56D2D !important;
@@ -1171,9 +1171,9 @@ export default function MessagePage() {
       <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
 
         {/* Left Column - Conversations */}
-        <div className="pt-3 px-3 pb-3 me-4 d-flex flex-column conversations-panel bg-white shadow-sm" style={{ border: "1px solid #E2E8F0", borderRadius: "20px" }}>
+        <div className={`p-3 p-lg-3 d-flex flex-column conversations-panel bg-white shadow-sm ${isMobile && showChatOnMobile ? 'mobile-hidden' : ''}`} style={{ border: "1px solid #E2E8F0", borderRadius: isMobile ? "0" : "20px", marginRight: isMobile ? "0" : "1.5rem" }}>
           <div className="mb-4">
-            <h5 className="mb-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
+            <h5 className="mb-3 pt-3" style={{ color: "#2D3748", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
             <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
               <FaSearch
@@ -1235,11 +1235,11 @@ export default function MessagePage() {
           <div
             className="flex-grow-1 overflow-auto conversations-scroll"
             style={{
-                flexGrow: 1,
-                minHeight: 0,
-                overflowY: "auto",
-                scrollbarWidth: "thin",
-                scrollbarColor: "#CBD5E0 #F7FAFC"
+              flexGrow: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none"
             }}
           >
             {(() => {
@@ -1301,6 +1301,7 @@ export default function MessagePage() {
                       }}
                       onClick={() => {
                         setActiveConversationId(conv.id);
+                        if (isMobile) setShowChatOnMobile(true);
                       }}
                     >
                       <div className="top-row d-flex justify-content-between align-items-center mb-1">
@@ -1355,15 +1356,25 @@ export default function MessagePage() {
 
         {/* Right Column - Chat Interface */}
         <div
-          className="flex-grow-1 bg-white rounded shadow-sm pt-3 px-3 pb-3 d-flex flex-column chat-interface overflow-hidden"
-          style={{ border: "1px solid #E2E8F0", height: "calc(100vh - 220px)" }}
+          className={`flex-grow-1 bg-white rounded shadow-sm d-flex flex-column chat-interface overflow-hidden ${isMobile && !showChatOnMobile ? 'mobile-hidden' : ''}`}
+          style={{ border: isMobile ? "none" : "1px solid #E2E8F0", borderRadius: isMobile ? "0" : "8px" }}
         >
           {(() => {
             const activeConversation = conversations.find(c => c.id === activeConversationId);
             return activeConversation ? (
               <>
                 {/* Desktop Header - Matches Client Panel */}
-                <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
+                <div className="border-bottom p-3 d-flex align-items-center gap-2" style={{ flexShrink: 0, backgroundColor: isMobile ? "#F9FAFB" : "transparent" }}>
+                  {isMobile && (
+                    <button 
+                      className="btn btn-link p-0 me-2 text-primary" 
+                      onClick={() => setShowChatOnMobile(false)}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  )}
                   <ConverIcon className="text-primary" size={20} />
                   <div>
                     <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
@@ -1375,10 +1386,12 @@ export default function MessagePage() {
 
                 <div
                   ref={messagesContainerRef}
-                  className="flex-grow-1 mb-3 messages-scroll"
+                  className="flex-grow-1 p-3 messages-scroll"
                   style={{
                     overflowY: "auto",
                     overflowX: "hidden",
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
                     minHeight: "200px",
                   }}
                 >

@@ -83,7 +83,6 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
         // Remove trailing price information like ": $123.45" or " - $123.45" or " $123.45"
         return desc.replace(/[:\-—~]?\s*\$\d+([,.]\d{2})?\s*$/, '').trim();
     };
-
     const getStatusConfig = () => {
         const s = statusDisplay.toLowerCase();
         if (s.includes('paid')) return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: <FiCheckCircle /> };
@@ -97,7 +96,6 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
     const handleDownloadPDF = async () => {
         try {
             setLoading(true);
-            toast.info('Generating high-quality PDF...');
             // Use the correct invoice ID
             const id = displayData.invoice || displayData.invoice_id || displayData.id;
             const response = await invoicesAPI.downloadInvoicePDF(id);
@@ -110,7 +108,9 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
             document.body.appendChild(link);
             link.click();
             link.remove();
-            toast.success('PDF downloaded successfully');
+            setTimeout(() => {
+                toast.success('PDF downloaded successfully');
+            }, 2000);
         } catch (error) {
             console.error('PDF Download error:', error);
             toast.error('Failed to download PDF. Please try again.');
@@ -126,10 +126,10 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header Section */}
-                <div className="relative p-8 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">
+                <div className="relative p-8 pr-16 md:pr-20 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600"
+                        className="absolute top-6 right-4 p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600"
                         style={{ borderRadius: "50%" }}
                     >
                         <FiX size={20} />

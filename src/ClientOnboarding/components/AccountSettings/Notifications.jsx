@@ -134,7 +134,7 @@ const Notifications = () => {
 
   return (
    <div 
-  className="container-fluid px-3 py-4" 
+  className="container-fluid" 
   style={{ 
     minHeight: "100vh", 
     display: "flex", 
@@ -231,7 +231,7 @@ const Notifications = () => {
 
   {/* Save Button Container */}
   {/* pb-5 is critical here to ensure the button is visible above mobile browser bars */}
-  <div className="mt-2 pb-5 mb-5">
+  <div className="mt-2 mb-5">
     <button
       className="btn w-100 d-flex align-items-center justify-content-center gap-2"
       onClick={handleSave}
