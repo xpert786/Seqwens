@@ -554,12 +554,16 @@ export default function CalendarPage() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#F56D2D]/10 flex items-center justify-center text-[#F56D2D]">
-              <Task1 size={24} />
+            <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#F56D2D] flex items-center justify-center text-white">
+              <Task1 size={30} color="white" />
             </div>
-            <h4 className="text-3xl font-black text-gray-900 tracking-tight">Calendar</h4>
+            <div className="">
+              <h3 className="text-5xl mb-0 font-black text-gray-900 tracking-tight leading-none">
+                Calendar
+              </h3>
+              <span className="text-gray-400 text-sm font-medium">Manage your professional schedule and client meetings.</span>
+            </div>
           </div>
-          <p className="text-gray-500 text-sm font-medium ml-1">Manage your professional schedule and client meetings.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
@@ -591,12 +595,9 @@ export default function CalendarPage() {
             className="group relative bg-white rounded-3xl border border-gray-100 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             onClick={() => handleStatClick(item.type)}
           >
-            {/* Abstract background shape */}
-            <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-[0.03] transition-transform group-hover:scale-150 duration-700" style={{ backgroundColor: item.color }}></div>
-
             <div className="flex items-start justify-between relative z-10">
               <div className="space-y-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 shadow-sm`} style={{ backgroundColor: `${item.color}15`, color: item.color }}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform shadow-sm`} style={{ backgroundColor: `${item.color}15`, color: item.color }}>
                   {item.icon}
                 </div>
                 <div>
@@ -605,7 +606,7 @@ export default function CalendarPage() {
                 </div>
               </div>
               <div className="pt-1">
-                <div className="w-6 h-6 rounded-full border border-gray-100 flex items-center justify-center group-hover:border-[#F56D2D]/30 transition-colors">
+                <div className="w-6 h-6 rounded-full border border-gray-100 hover:border-[#F56D2D] flex items-center justify-center transition-colors">
                   <svg className="w-3 h-3 text-gray-300 group-hover:text-[#F56D2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
                 </div>
               </div>
@@ -643,38 +644,36 @@ export default function CalendarPage() {
         <div className="flex-1 min-w-0">
           <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
             {/* Unified Navigation Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-5 lg:p-7 border-b border-gray-100 bg-gray-50/30">
-              <div className="flex items-center gap-4 order-2 md:order-1">
-                <button
-                  className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 text-gray-500 hover:text-[#F56D2D] hover:border-[#F56D2D]/30 transition-all rounded-xl shadow-sm active:scale-90"
-                  onClick={() => navigateCalendar(-1)}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <button
-                  className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 text-gray-500 hover:text-[#F56D2D] hover:border-[#F56D2D]/30 transition-all rounded-xl shadow-sm active:scale-90"
-                  onClick={() => navigateCalendar(1)}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                </button>
-              </div>
-
-              <div className="text-center order-1 md:order-2">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-4 lg:p-5 border-b border-gray-100 bg-gray-50/30">
+              <div className="order-1 md:order-2">
                 <h4 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">
                   {selectedPeriod === "Monthly" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
                   {selectedPeriod === "Week" && `Week of ${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`}
                   {selectedPeriod === "Day" && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`}
                   {selectedPeriod === "Years" && `${currentDate.getFullYear()}`}
                 </h4>
-                <p className="text-[10px] font-black text-[#F56D2D] uppercase tracking-[0.2em] opacity-80">{selectedPeriod} Overview</p>
+                <span className="text-[10px] font-black text-[#F56D2D] uppercase tracking-[0.2em] opacity-80">{selectedPeriod} Overview</span>
               </div>
 
-              <div className="order-3 hidden md:block">
+              <div className="flex items-center gap-2 order-2">
                 <button
-                  className="px-6 py-2.5 bg-white border border-gray-100 text-gray-700 font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
+                  className="w-10 h-10 flex items-center justify-center !rounded-xl bg-white border border-gray-100 text-gray-500 hover:text-[#F56D2D] hover:border-[#F56D2D]/30 transition-all rounded-xl shadow-sm active:scale-90"
+                  onClick={() => navigateCalendar(-1)}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+
+                <button
+                  className="px-6 py-2.5 bg-white border border-gray-100 !rounded-xl text-gray-700 font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
                   onClick={goToToday}
                 >
                   Today
+                </button>
+                <button
+                  className="w-10 h-10 flex items-center justify-center !rounded-xl bg-white border border-gray-100 text-gray-500 hover:text-[#F56D2D] hover:border-[#F56D2D]/30 transition-all rounded-xl shadow-sm active:scale-90"
+                  onClick={() => navigateCalendar(1)}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
                 </button>
               </div>
             </div>
