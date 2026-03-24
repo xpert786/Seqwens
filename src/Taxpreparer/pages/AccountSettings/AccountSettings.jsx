@@ -75,7 +75,7 @@ export default function AccountSettings() {
                             <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                                 Settings
                             </h3>
-                            <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your profile and preferences.</span>
+                            <span className="text-gray-400 text-sm font-medium tracking-tight">Manage your profile and preferences.</span>
                         </div>
                     </div>
                 </div>

@@ -247,7 +247,7 @@ export default function TaxPreparerBilling() {
               <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 Billing
               </h3>
-              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">
+              <span className="text-gray-400 text-sm font-medium tracking-tight">
                 {activeTab === 'clients' ? 'Manage invoices and track payments' : 'View and pay for platform usage.'}
               </span  >
             </div>
@@ -258,7 +258,7 @@ export default function TaxPreparerBilling() {
           {canCreateInvoices && activeTab === 'clients' && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
             >
               <svg className="w-5 h-5 font-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
@@ -502,18 +502,19 @@ export default function TaxPreparerBilling() {
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Split Billing Estimate</h3>
                     <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Period: {platformBilling.billing_summary.period_start} to {platformBilling.billing_summary.period_end}</p>
                   </div>
-                  <div className="w-full sm:w-auto p-3 sm:p-0 bg-orange-50 sm:bg-transparent rounded-lg sm:text-right border border-orange-100 sm:border-0 shadow-sm sm:shadow-none">
-                    <p className="text-xs text-orange-600 sm:text-gray-500 font-bold sm:font-normal uppercase sm:capitalize tracking-wider sm:tracking-normal">Estimated Total</p>
-                    <p className="text-2xl sm:text-3xl font-black text-[#F97316] font-[BasisGrotesquePro] leading-tight">${platformBilling.billing_summary.estimated_monthly_total.toFixed(2)}</p>
+                  <div className="flex items-center gap-2 w-full sm:w-auto px-4 py-2 sm:p-0 bg-orange-50 sm:bg-transparent rounded-lg sm:text-right border border-orange-100 sm:border-0 shadow-sm sm:shadow-none">
+                    <span className="text-xs text-orange-600 sm:text-gray-500 font-bold sm:font-normal uppercase sm:capitalize tracking-wider sm:tracking-normal">Estimated Total</span>
+                    <span className="text-xl sm:text-3xl font-black text-[#F97316] font-[BasisGrotesquePro] leading-tight">${platformBilling.billing_summary.estimated_monthly_total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {platformBilling.sections.map((section) => (
                     <div key={section.id} className="border border-[#E8F0FF] rounded-xl p-4 sm:p-5 bg-gradient-to-br from-white to-gray-50 shadow-sm">
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-bold text-gray-900 text-sm sm:text-base font-[BasisGrotesquePro]">{section.title}</h4>
-                        <span className={`text-[9px] sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-sm ${section.is_covered ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                      <div className="flex justify-between items-start mb-3 gap-2">
+                        <h4 className="font-bold text-gray-900 
+                        !text-sm font-[BasisGrotesquePro]">{section.title}</h4>
+                        <span className={`!text-[9px] !sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-sm ${section.is_covered ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                           {section.status}
                         </span>
                       </div>

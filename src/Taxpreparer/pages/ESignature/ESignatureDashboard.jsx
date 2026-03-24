@@ -1075,7 +1075,7 @@ export default function ESignatureDashboard() {
               <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 E-Signatures
               </h3>
-              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your digital signature requests and document execution.</span>
+              <span className="text-gray-400 text-sm font-medium tracking-tight">Manage your digital signature requests and document execution.</span>
             </div>
           </div>
         </div>

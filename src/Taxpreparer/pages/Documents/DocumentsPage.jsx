@@ -801,10 +801,10 @@ export default function DocumentsPage() {
                 <Doc size={32} color="white" />
               </div>
               <div>
-                <h3 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                <h3 className=" font-black text-gray-900 tracking-tight leading-none mb-0">
                   Documents
                 </h3>
-                <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage client documents and shared files.</span>
+                <span className="text-gray-400 text-sm font-medium tracking-tight">Manage client documents and shared files.</span>
               </div>
             </div>
           </div>
@@ -812,7 +812,7 @@ export default function DocumentsPage() {
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <button
               onClick={() => setShowUpload(true)}
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-black hover:scale-[1.02] transition-all  shadow-2xl shadow-gray-900/10 active:scale-95"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-black hover:scale-[1.02] transition-all  shadow-2xl shadow-gray-900/10 active:scale-95"
             >
               <FaUpload size={16} />
               <span className="btn-text">Upload Documents</span>

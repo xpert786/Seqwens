@@ -1323,7 +1323,7 @@ export default function MyClients() {
               <h3 className=" font-black text-gray-900 tracking-tight leading-none mb-0">
                 My Clients
               </h3>
-              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your assigned clients and taxpayer profiles.</span>
+              <span className="text-gray-400 text-xs lg:text-lg font-medium tracking-tight">Manage your assigned clients and taxpayer profiles.</span>
             </div>
           </div>
         </div>
