@@ -953,7 +953,9 @@ export default function ClientManage() {
   const inviteExpiresOn = activeInviteDetails?.expires_at
     ? new Date(activeInviteDetails.expires_at).toLocaleDateString()
     : null;
-
+  const invitedAtFormatted = activeInviteDetails?.invited_at
+    ? new Date(activeInviteDetails.invited_at).toLocaleDateString()
+    : null;
   // Helper function to refresh clients list
   const refreshClientsList = async () => {
     try {
@@ -2873,13 +2875,26 @@ export default function ClientManage() {
                   {activeInviteDetails.phone_number && (
                     <p className="text-sm text-slate-500 font-medium">{activeInviteDetails.phone_number}</p>
                   )}
-                  {inviteExpiresOn && (
-                    <div className="pt-2">
+                  <div className="pt-2 flex flex-wrap gap-2 items-center">
+                    {invitedAtFormatted && (
+                      <span className="text-[11px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-bold uppercase tracking-wider">
+                        Invited {invitedAtFormatted}
+                      </span>
+                    )}
+                    {inviteExpiresOn && (
                       <span className="text-[11px] px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-bold uppercase tracking-wider">
                         Expires {inviteExpiresOn}
                       </span>
-                    </div>
-                  )}
+                    )}
+                    {activeInviteDetails.status && (
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${activeInviteDetails.status.toLowerCase() === 'pending' ? 'bg-yellow-50 text-yellow-600' :
+                        activeInviteDetails.status.toLowerCase() === 'active' ? 'bg-green-50 text-green-600' :
+                          'bg-gray-50 text-gray-600'
+                        }`}>
+                        Status: {activeInviteDetails.status}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-6">
