@@ -549,18 +549,18 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="calendar-page-container min-h-screen bg-[#F8FAFC] p-4 lg:p-8 animate-in fade-in duration-500">
+    <div className="calendar-page-container min-h-screen px-4 font-basis">
       {/* Unified Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
               <Task1 size={32} color="white" />
             </div>
             <div>
-              <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+              <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 Calendar
-              </h1>
+              </h3>
               <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your professional schedule and client meetings.</span>
             </div>
           </div>
@@ -569,7 +569,7 @@ export default function CalendarPage() {
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
             onClick={() => setIsSetAvailabilityModalOpen(true)}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-white !rounded-xl text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all rounded-[20px] shadow-sm border border-gray-200 active:scale-95 group"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white !rounded-xl text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all rounded-[20px] shadow-sm border border-gray-200 active:scale-95 group"
           >
             <svg className="w-5 h-5 text-gray-400 group-hover:text-[#F56D2D] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -579,7 +579,7 @@ export default function CalendarPage() {
 
           <button
             onClick={handleOpenCreateEventModal}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs   md uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all rounded-[20px] shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs   md uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all rounded-[20px] shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
           >
             <AddTask />
             <span>Create new Event</span>

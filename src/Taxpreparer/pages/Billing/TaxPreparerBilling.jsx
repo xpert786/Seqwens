@@ -235,18 +235,18 @@ export default function TaxPreparerBilling() {
     fetchInvoices();
   };
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 animate-in fade-in duration-500 font-basis">
+    <div className="min-h-screen px-4 font-basis">
       {/* Unified Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
               <FiDollarSign size={32} />
             </div>
             <div>
-              <h1 className="text-3xl lg:text-4xl mb-0 font-black text-gray-900 tracking-tight leading-none">
+              <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 Billing
-              </h1>
+              </h3>
               <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">
                 {activeTab === 'clients' ? 'Manage invoices and track payments' : 'View and pay for platform usage.'}
               </span  >
@@ -258,7 +258,7 @@ export default function TaxPreparerBilling() {
           {canCreateInvoices && activeTab === 'clients' && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
             >
               <svg className="w-5 h-5 font-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
@@ -294,7 +294,7 @@ export default function TaxPreparerBilling() {
       {activeTab === 'clients' ? (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
             {[
               { id: 'total', label: 'Total Invoices', val: summary.total_invoices || 0, icon: <FiFileText size={18} />, bg: 'bg-blue-50', text: 'text-blue-500' },
               { id: 'outstanding', label: 'Outstanding', val: formatCurrency(summary.outstanding_balance || 0), icon: <FiAlertCircle size={18} />, bg: 'bg-orange-50', text: 'text-orange-500' },

@@ -148,7 +148,7 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
         {/* Loading State */}
         {loading ? (
           <div className="p-16 text-center flex flex-col items-center gap-4">
-            <div className="relative w-14 h-14">
+            <div className="relative w-14 py-2">
               <div className="absolute inset-0 rounded-full border-4 border-[#E8F0FF]"></div>
               <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#3AD6F2] animate-spin"></div>
             </div>

@@ -220,18 +220,18 @@ const TaxPreparerWorkflows = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 font-basis">
+    <div className="min-h-screen px-4 font-basis">
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
               <Activity size={32} />
             </div>
             <div>
-              <h1 className="text-3xl lg:text-3xl font-black text-gray-900 tracking-tight leading-none mb-0">
+              <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
                 My Workflows
-              </h1>
+              </h3>
               <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Monitor progress and manage client requests in real-time.</span>
             </div>
           </div>
@@ -252,7 +252,7 @@ const TaxPreparerWorkflows = () => {
         ].map((item, i) => (
           <div key={i} className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-default">
             <div className="flex items-center lg:items-start gap-5">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 shadow-sm" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
+              <div className="w-14 py-2 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 shadow-sm" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
                 {item.icon}
               </div>
               <div className="flex-1 min-w-0">
@@ -273,7 +273,7 @@ const TaxPreparerWorkflows = () => {
           </div>
           <input
             type="text"
-            className="w-full h-14 pl-14 pr-6 bg-gray-50/50 border border-transparent rounded-[20px] text-base font-medium focus:ring-4 focus:ring-[#3AD6F2]/10 focus:bg-white focus:border-[#3AD6F2]/30 transition-all outline-none text-gray-700 placeholder:text-gray-400"
+            className="w-full py-2 pl-14 pr-6 bg-gray-50/50 border border-transparent rounded-[20px] text-base font-medium focus:ring-4 focus:ring-[#3AD6F2]/10 focus:bg-white focus:border-[#3AD6F2]/30 transition-all outline-none text-gray-700 placeholder:text-gray-400"
             placeholder="Search client account or workflow template..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -338,7 +338,7 @@ const TaxPreparerWorkflows = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                         <div className="flex items-center gap-5 bg-gray-50/50 p-6 rounded-[32px] border border-gray-50 hover:bg-white hover:shadow-md transition-all group/meta">
-                          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-gray-400 shadow-sm transition-transform group-hover/meta:rotate-6">
+                          <div className="w-14 py-2 bg-white rounded-2xl flex items-center justify-center text-gray-400 shadow-sm transition-transform group-hover/meta:rotate-6">
                             <LayoutGrid size={24} />
                           </div>
                           <div>
@@ -348,7 +348,7 @@ const TaxPreparerWorkflows = () => {
                         </div>
 
                         <div className="flex items-center gap-5 bg-gray-50/50 p-6 rounded-[32px] border border-gray-50 hover:bg-white hover:shadow-md transition-all group/stage cursor-default">
-                          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#3AD6F2] shadow-sm transition-transform group-hover/stage:rotate-6">
+                          <div className="w-14 py-2 bg-white rounded-2xl flex items-center justify-center text-[#3AD6F2] shadow-sm transition-transform group-hover/stage:rotate-6">
                             <Activity size={24} />
                           </div>
                           <div className="relative flex-1 min-w-0">
@@ -527,7 +527,7 @@ const TaxPreparerWorkflows = () => {
                   setSelectedRequest(null);
                   setRequestDocuments([]);
                 }}
-                className="w-14 h-14 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-2xl shadow-xl shadow-black/5 border border-gray-100 active:scale-90 group"
+                className="w-14 py-2 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-2xl shadow-xl shadow-black/5 border border-gray-100 active:scale-90 group"
               >
                 <Plus size={32} className="rotate-45 group-hover:rotate-[135deg] transition-transform duration-500" />
               </button>
