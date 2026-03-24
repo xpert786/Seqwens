@@ -12,26 +12,28 @@
 .messages-layout {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
 .conversations-panel {
   width: 500px;
-  height: 55vh;
-  min-height: 400px;
+  max-height: calc(100vh - 220px);
   margin-right: 1.5rem;
 }
 
 .chat-panel {
-  height: 55vh;
-  min-height: 400px;
+  height: calc(100vh - 220px);
 }
 
 .conversations-scroll {
-  max-height: calc(55vh - 150px);
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .messages-scroll {
-  max-height: calc(71vh - 200px);
+  max-height: calc(100vh -380px);
+  overflow-y: auto;
 }
 
 /* MOBILE: 320px to 767px */
@@ -93,7 +95,6 @@
 
   .chat-panel input.form-control {
     flex: 1 !important;
-    height: 44px !important;
   }
 
   .create-chat-modal,

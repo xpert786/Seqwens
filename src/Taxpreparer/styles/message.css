@@ -1,4 +1,4 @@
-/* Base Layout & Desktop Styles (min-width: 992px) */
+/* Base Layout & Desktop Styles (min-width: 768px) */
 .messages-page-container {
   padding: 0 24px 24px 24px;
 }
@@ -10,9 +10,10 @@
 }
 
 .messages-page .conversations-panel {
-  width: 380px;
+  width: 400px;
   flex-shrink: 0;
-  min-height: 0; /* Important for nested flex scroll */
+  min-height: 0;
+  max-height: calc(100vh - 220px);
 }
 
 @media (max-width: 1200px) {
@@ -28,12 +29,11 @@
   flex: 1;
 }
 
-/* Base style for the container to fill space without hardcoded vh */
+/* Base style for the container */
 @media (min-width: 992px) {
   .messages-page-container {
     animation: slideUp 0.4s ease-out;
-    /* Use flex approach if possible, but keeping a stable height for message list scroll */
-    height: 100% !important; 
+    height: 100% !important;
     overflow: hidden;
   }
 }
@@ -68,7 +68,7 @@
   }
 
   .messages-page .chat-wrapper {
-    flex-direction: row !important; /* Keep horizontal flex but show only one */
+    flex-direction: row !important;
     gap: 0 !important;
     height: 100% !important;
     overflow: hidden !important;
@@ -99,7 +99,7 @@
   }
 
   .messages-page .conversations-scroll {
-    max-height: none !important; /* Let flex handle it */
+    max-height: none !important;
     flex: 1;
   }
 
@@ -125,6 +125,10 @@
   transition: all 0.3s ease;
 }
 
+.messages-scroll {
+  max-height: calc(100vh - 380px);
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(20px);
@@ -134,4 +138,4 @@
     transform: translateY(0);
     opacity: 1;
   }
-}
+}

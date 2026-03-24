@@ -364,7 +364,7 @@ export default function ESignature() {
   ];
 
   return (
-    <div style={{ backgroundColor: "#F5F9FF", minHeight: "100vh" }}>
+    <div>
       {/* Cards Row */}
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (

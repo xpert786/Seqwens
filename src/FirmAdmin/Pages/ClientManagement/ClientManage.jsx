@@ -148,7 +148,7 @@ export default function ClientManage() {
   const [pendingInvitesError, setPendingInvitesError] = useState(null);
   const [pendingInvitesPagination, setPendingInvitesPagination] = useState({
     page: 1,
-    page_size: 20,
+    page_size: 6,
     total_count: 0,
     total_pages: 1,
     has_next: false,
@@ -173,7 +173,7 @@ export default function ClientManage() {
   const [unlinkedTaxpayersError, setUnlinkedTaxpayersError] = useState(null);
   const [unlinkedTaxpayersPagination, setUnlinkedTaxpayersPagination] = useState({
     page: 1,
-    page_size: 20,
+    page_size: 6,
     total_count: 0,
     total_pages: 1,
     has_next: false,
@@ -588,14 +588,14 @@ export default function ClientManage() {
   }, [activeTab, debouncedSearchTerm, fetchUnlinkedTaxpayers]);
 
   // Fetch pending invites
-  const fetchPendingInvites = useCallback(async (page = 1) => {
+  const fetchPendingInvites = useCallback(async (page = 1, pageSize = pendingInvitesPagination.page_size) => {
     try {
       setPendingInvitesLoading(true);
       setPendingInvitesError(null);
 
       const response = await firmAdminClientsAPI.getPendingInvites({
         page,
-        page_size: pendingInvitesPagination.page_size,
+        page_size: pageSize,
         search: debouncedSearchTerm.trim() || undefined
       });
 
@@ -1615,9 +1615,22 @@ export default function ClientManage() {
                 <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Unlinked Taxpayers</h6>
                 <p className="text-muted small mb-0">Users not yet assigned to a specific tax preparer</p>
               </div>
-              <span className="badge bg-warning px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
-                {unlinkedTaxpayersPagination.total_count} Unlinked
-              </span>
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  onClick={() => {
+                    const newSize = unlinkedTaxpayersPagination.page_size === 6 ? 100 : 6;
+                    setUnlinkedTaxpayersPagination(prev => ({ ...prev, page_size: newSize }));
+                    fetchUnlinkedTaxpayers(1, newSize);
+                  }}
+                  className="btn btn-link p-0 text-decoration-none fw-bold"
+                  style={{ color: '#00C0C6', fontSize: '12px' }}
+                >
+                  {unlinkedTaxpayersPagination.page_size === 6 ? 'View All' : 'View Less'}
+                </button>
+                <span className="badge bg-warning text-dark px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
+                  {unlinkedTaxpayersPagination.total_count} Unlinked
+                </span>
+              </div>
             </div>
 
             {unlinkedTaxpayersLoading ? (
@@ -1640,9 +1653,9 @@ export default function ClientManage() {
               </div>
             ) : (
               <>
-                <div className="row g-4">
+                <div className="row g-3">
                   {unlinkedTaxpayers.map((taxpayer) => (
-                    <div key={taxpayer.id} className="col-xxl-4 col-xl-4 col-lg-6 col-md-6 col-sm-12 col-12">
+                    <div key={taxpayer.id} className="col-md-6 col-12">
                       <div
                         className="card client-card h-100 overflow-hidden"
                         style={{
@@ -1710,7 +1723,7 @@ export default function ClientManage() {
                               </div>
                             </div>
                           </div>
-                          <div className="d-flex flex-row sm:flex-column gap-2 flex-shrink-0">
+                          <div className="d-flex flex-column gap-2 flex-shrink-0" style={{ minWidth: '85px' }}>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1718,13 +1731,13 @@ export default function ClientManage() {
                                 setIsAssignMode(true);
                                 setShowReassignStaffModal(true);
                               }}
-                              className="btn btn-sm"
+                              className="btn btn-sm w-100"
                               style={{
                                 backgroundColor: '#F56D2D',
                                 color: 'white',
                                 fontSize: '11px',
                                 fontWeight: '600',
-                                padding: '5px 12px',
+                                padding: '6px 0',
                                 borderRadius: '6px',
                                 whiteSpace: 'nowrap'
                               }}
@@ -1737,13 +1750,13 @@ export default function ClientManage() {
                                 setSelectedClientForDelete(taxpayer.id);
                                 setShowDeleteConfirmModal(true);
                               }}
-                              className="btn btn-sm"
+                              className="btn btn-sm w-100"
                               style={{
                                 backgroundColor: '#EF4444',
                                 color: 'white',
                                 fontSize: '11px',
                                 fontWeight: '600',
-                                padding: '5px 12px',
+                                padding: '6px 0',
                                 borderRadius: '6px',
                                 whiteSpace: 'nowrap'
                               }}
@@ -1798,9 +1811,22 @@ export default function ClientManage() {
                 <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Pending Invites</h6>
                 <p className="text-muted small mb-0">Client invites awaiting acceptance</p>
               </div>
-              <span className="badge bg-danger text-white px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
-                {pendingInvitesPagination.total_count} Pending
-              </span>
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  onClick={() => {
+                    const newSize = pendingInvitesPagination.page_size === 6 ? 100 : 6;
+                    setPendingInvitesPagination(prev => ({ ...prev, page_size: newSize }));
+                    fetchPendingInvites(1, newSize);
+                  }}
+                  className="btn btn-link p-0 text-decoration-none fw-bold"
+                  style={{ color: '#00C0C6', fontSize: '12px' }}
+                >
+                  {pendingInvitesPagination.page_size === 6 ? 'View All' : 'View Less'}
+                </button>
+                <span className="badge bg-danger text-white px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
+                  {pendingInvitesPagination.total_count} Pending
+                </span>
+              </div>
             </div>
 
             {pendingInvitesLoading ? (
@@ -1825,7 +1851,7 @@ export default function ClientManage() {
               <>
                 <div className="row g-3">
                   {pendingInvites.map((invite) => (
-                    <div key={invite.id} className="col-md-4 col-12">
+                    <div key={invite.id} className="col-md-6 col-12">
                       <div
                         className="card client-card h-100"
                         onClick={() => navigate(`/firmadmin/pending-invites/${invite.id || invite.invite_id || invite.client_id}`)}
@@ -1869,9 +1895,9 @@ export default function ClientManage() {
                               </div>
                             </div>
                           </div>
-                          <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
+                          <div className="d-flex flex-column gap-2 flex-shrink-0" style={{ marginLeft: '12px', minWidth: '85px' }}>
                             <button
-                              className="btn "
+                              className="btn w-100"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const clientId = invite.client_id || invite.taxpayer_id || invite.id;
@@ -1887,14 +1913,14 @@ export default function ClientManage() {
                                 border: 'none',
                                 fontSize: '11px',
                                 fontWeight: '600',
-                                padding: '4px 10px',
-                                borderRadius: '5px'
+                                padding: '6px 0',
+                                borderRadius: '6px'
                               }}
                             >
                               Assign
                             </button>
                             <button
-                              className="btn  d-flex align-items-center justify-content-center gap-1"
+                              className="btn w-100 d-flex align-items-center justify-content-center gap-1"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openInviteActionsModal(invite);
@@ -1903,8 +1929,8 @@ export default function ClientManage() {
                                 backgroundColor: '#00C0C6',
                                 color: 'white',
                                 border: 'none',
-                                borderRadius: '5px',
-                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                padding: '6px 0',
                                 fontSize: '11px',
                                 fontWeight: '600'
                               }}
@@ -1913,7 +1939,7 @@ export default function ClientManage() {
                               <span>Invite</span>
                             </button>
                             <button
-                              className="btn d-flex align-items-center justify-content-center gap-1"
+                              className="btn w-100 d-flex align-items-center justify-content-center gap-1"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveInviteDetails(invite);
@@ -1923,8 +1949,8 @@ export default function ClientManage() {
                                 backgroundColor: '#EF4444',
                                 color: 'white',
                                 border: 'none',
-                                borderRadius: '5px',
-                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                padding: '6px 0',
                                 fontSize: '11px',
                                 fontWeight: '600'
                               }}
@@ -2017,7 +2043,7 @@ export default function ClientManage() {
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="position-absolute right-3 top-50 translate-middle-y text-gray-400 hover:text-gray-600 border-0 bg-transparent"
+                    className="position-absolute right-3 top-50 translate-middle-y text-gray-400  border-0 bg-transparent"
                     style={{ right: '12px' }}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '20px' }}>
@@ -2815,105 +2841,135 @@ export default function ClientManage() {
       {/* Share Taxpayer Invite Modal */}
       {
         showInviteActionsModal && activeInviteDetails && (
-          <div className="modal invite-actions-modal modal-overlay" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
-              <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
-                <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
-                  <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
-                  <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
-                </div>
-                <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
-                  <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
-                    <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
-                      {activeInviteDetails.first_name} {activeInviteDetails.last_name}
-                    </p>
-                    <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.email}</p>
-                    {activeInviteDetails.phone_number && (
-                      <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.phone_number}</p>
-                    )}
-                    {inviteExpiresOn && (
-                      <small className="text-muted">Expires {inviteExpiresOn}</small>
-                    )}
-                  </div>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/60 "
+              onClick={closeInviteActionsModal}
+            />
 
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                      <FaLink size={14} /> Shareable Link
-                    </label>
-                    <div className="d-flex gap-2">
+            <div
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[600px] overflow-hidden flex flex-col max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+              style={{ fontFamily: 'BasisGrotesquePro' }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+                <h5 className="text-xl font-bold text-[#3B4A66]">Share Taxpayer Invite</h5>
+                <button
+                  onClick={closeInviteActionsModal}
+                  className="p-2 text-gray-400 rounded-full transition-all"
+                >
+                  <IoMdClose size={22} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 overflow-y-auto custom-modal-scrollbar flex-grow">
+                <div className="p-4 mb-6 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
+                  <p className="text-base font-bold text-[#3B4A66]">
+                    {activeInviteDetails.first_name} {activeInviteDetails.last_name}
+                  </p>
+                  <p className="text-sm text-slate-500 font-medium">{activeInviteDetails.email}</p>
+                  {activeInviteDetails.phone_number && (
+                    <p className="text-sm text-slate-500 font-medium">{activeInviteDetails.phone_number}</p>
+                  )}
+                  {inviteExpiresOn && (
+                    <div className="pt-2">
+                      <span className="text-[11px] px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-bold uppercase tracking-wider">
+                        Expires {inviteExpiresOn}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <div className="d-flex flex-row align-items-center gap-2 text-sm font-bold text-[#3B4A66] mb-3">
+                    <FaLink size={14} /> <span>Shareable Link</span>
+                  </div>
+                  <div className="d-flex gap-2 align-items-center m-0">
+                    <div className="flex-grow-1 position-relative">
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control m-0"
                         value={activeInviteDetails.invite_link || ""}
                         readOnly
-                        style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                        style={{ borderRadius: '10px', border: '1px solid #E5E7EB', padding: '10px 15px', height: '45px' }}
                       />
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={handleCopyInviteLink}
-                        disabled={!activeInviteDetails.invite_link}
-                        style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
-                      >
-                        <FaCopy size={12} className="me-1" />
-                        Copy
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary"
-                        onClick={handleRefreshInviteLink}
-                        disabled={inviteLinkRefreshing}
-                        style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
-                      >
-                        {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
-                      </button>
                     </div>
-                    <small className="text-muted d-block mt-1">
-                      Share this link with the taxpayer. They can use it anytime before it expires.
-                    </small>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary d-flex flex-row align-items-center justify-content-center gap-2 flex-shrink-0 m-0"
+                      onClick={handleCopyInviteLink}
+                      disabled={!activeInviteDetails.invite_link}
+                      style={{ borderRadius: '10px', whiteSpace: 'nowrap', padding: '0 12px', height: '45px' }}
+                    >
+                      <FaCopy size={13} />
+                      <span>Copy</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn bg-[#00C0C6] text-white d-flex flex-row align-items-center justify-content-center gap-2 flex-shrink-0 m-0"
+                      onClick={handleRefreshInviteLink}
+                      disabled={inviteLinkRefreshing}
+                      style={{ borderRadius: '10px', whiteSpace: 'nowrap', padding: '0 12px', height: '45px' }}
+                    >
+                      <svg className={`w-4 h-4 ${inviteLinkRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '14px' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>{inviteLinkRefreshing ? 'Ref...' : 'Refresh'}</span>
+                    </button>
                   </div>
+                  <small className="text-muted d-block mt-2 font-medium">
+                    Share this link with the taxpayer. They can use it anytime before it expires.
+                  </small>
+                </div>
 
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                      <FaEnvelope size={14} /> Send Email Invite
-                    </label>
-                    <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                      We'll email a secure link to the address below.
-                    </p>
-                    <div className="d-flex gap-2">
+                <div className="mb-6 group">
+                  <div className="d-flex flex-row align-items-center gap-2 text-sm font-bold text-[#3B4A66] mb-3 transition-colors">
+                    <FaEnvelope size={14} /> <span>Send Email Invite</span>
+                  </div>
+                  <p className="text-muted mb-3 font-medium" style={{ fontSize: '14px' }}>
+                    We'll email a secure link to the address below.
+                  </p>
+                  <div className="d-flex gap-2 align-items-center m-0">
+                    <div className="flex-grow-1">
                       <input
                         type="email"
-                        className="form-control"
+                        className="form-control m-0"
                         value={editedInviteEmail}
                         onChange={(e) => setEditedInviteEmail(e.target.value)}
                         placeholder={activeInviteDetails.email || 'Enter email'}
-                        style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                        style={{ borderRadius: '10px', border: '1px solid #E5E7EB', padding: '10px 15px', height: '45px' }}
                       />
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={handleSendEmailInviteNow}
-                        disabled={inviteActionLoading}
-                        style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
-                      >
-                        {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
-                      </button>
                     </div>
-                    {activeInviteDetails.delivery_summary && (
-                      <div className="mt-2 text-muted small">
-                        Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      className="btn text-white font-bold d-flex flex-row align-items-center justify-content-center gap-2 flex-shrink-0 m-0"
+                      onClick={handleSendEmailInviteNow}
+                      disabled={inviteActionLoading}
+                      style={{ borderRadius: '10px', backgroundColor: '#00C0C6', whiteSpace: 'nowrap', padding: '0 15px', height: '45px' }}
+                    >
+                      <FaEnvelope size={13} />
+                      <span>{inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}</span>
+                    </button>
                   </div>
+                  {activeInviteDetails.delivery_summary && (
+                    <div className="mt-2 text-muted small font-bold d-flex align-items-center gap-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${activeInviteDetails.delivery_summary.email_sent ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      EMAIL SENT: {activeInviteDetails.delivery_summary.email_sent ? "YES" : "NO"}
+                    </div>
+                  )}
+                </div>
 
-                  <div className="mb-1">
-                    <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
-                      <FaSms size={14} /> Send SMS Invite
-                    </label>
-                    <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                      We'll text the invite link to the phone number you provide3333.
-                    </p>
-                    <div className="d-flex gap-2 mb-2">
+                <div className="mb-2">
+                  <div className="d-flex flex-row align-items-center gap-2 text-sm font-bold text-[#3B4A66] mb-3">
+                    <FaSms size={15} /> <span>Send SMS Invite</span>
+                  </div>
+                  <p className="text-muted mb-3 font-medium" style={{ fontSize: '14px' }}>
+                    We'll text the invite link to the phone number below.
+                  </p>
+                  <div className="d-flex flex-row gap-2 mb-2 align-items-center m-0">
+                    <div className="flex-grow-1 w-100">
                       <PhoneInput
                         country={smsPhoneCountry}
                         value={smsPhoneOverride || ''}
@@ -2921,47 +2977,77 @@ export default function ClientManage() {
                         onCountryChange={(countryCode) => {
                           setSmsPhoneCountry(countryCode.toLowerCase());
                         }}
-                        inputClass="form-control"
-                        containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
-                        inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                        dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
+                        inputClass="form-control m-0"
+                        containerClass="w-100 phone-input-container !w-full"
+                        inputStyle={{ width: '100%', borderRadius: '10px', border: '1px solid #E5E7EB', height: '45px' }}
+                        dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto' }}
                         enableSearch={true}
                         countryCodeEditable={false}
                       />
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={handleSendSmsInviteNow}
-                        disabled={inviteActionLoading}
-                        style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
-                      >
-                        {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
-                      </button>
                     </div>
-                    {activeInviteDetails.delivery_summary && (
-                      <div className="text-muted small">
-                        SMS sent: {activeInviteDetails.delivery_summary.sms_sent ? "Yes" : "No"}
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      className="btn text-white font-bold d-flex flex-row align-items-center justify-content-center gap-2 flex-shrink-0 m-0"
+                      onClick={handleSendSmsInviteNow}
+                      disabled={inviteActionLoading}
+                      style={{ borderRadius: '10px', backgroundColor: '#00C0C6', whiteSpace: 'nowrap', padding: '0 15px', height: '45px' }}
+                    >
+                      <FaSms size={15} />
+                      <span>{inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}</span>
+                    </button>
                   </div>
+                  {activeInviteDetails.delivery_summary && (
+                    <div className="text-muted small font-bold d-flex align-items-center gap-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${activeInviteDetails.delivery_summary.sms_sent ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      SMS SENT: {activeInviteDetails.delivery_summary.sms_sent ? "YES" : "NO"}
+                    </div>
+                  )}
                 </div>
-                <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
+                <div className="w-full sm:w-auto">
                   {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
                     <button
-                      className="btn btn-outline-danger d-flex align-items-center"
-                      style={{ borderRadius: '8px' }}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-red-500 rounded-xl transition-all border border-red-200"
+                      style={{ borderRadius: '10px' }}
                       onClick={handleDeleteInvite}
                       disabled={deletingInvite}
                     >
-                      <FaTrash size={12} className="me-1" />
+                      <FaTrash size={12} />
                       {deletingInvite ? 'Deleting...' : 'Delete Invite'}
                     </button>
                   )}
-                  <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
+                </div>
+                <div className="w-full sm:w-auto flex items-center gap-3">
+                  <button
+                    className="w-full sm:w-auto px-8 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-all font-[BasisGrotesquePro]"
+                    style={{ borderRadius: '10px' }}
+                    onClick={closeInviteActionsModal}
+                  >
                     Invite Later
                   </button>
                 </div>
               </div>
+
+              <style>
+                {`
+                    .custom-modal-scrollbar::-webkit-scrollbar {
+                      width: 5px;
+                    }
+                    .custom-modal-scrollbar::-webkit-scrollbar-track {
+                      background: transparent;
+                    }
+                    .custom-modal-scrollbar::-webkit-scrollbar-thumb {
+                      background: #E2E8F0;
+                      border-radius: 10px;
+                    }
+                    .custom-modal-scrollbar::-webkit-scrollbar-thumb:hover {
+                      background: #CBD5E1;
+                    }
+                  `}
+              </style>
             </div>
           </div>
         )
@@ -3151,7 +3237,7 @@ export default function ClientManage() {
             style={{
               zIndex: 10000,
               backgroundColor: "rgba(19, 19, 35, 0.4)",
-              backdropFilter: "blur(4px)",
+
               animation: "fadeIn 0.2s ease-out"
             }}
             onClick={() => !deletingInvite && setShowDeleteInviteConfirmModal(false)}
@@ -3220,7 +3306,7 @@ export default function ClientManage() {
             style={{
               zIndex: 10000,
               backgroundColor: "rgba(19, 19, 35, 0.4)",
-              backdropFilter: "blur(4px)",
+
               animation: "fadeIn 0.2s ease-out"
             }}
             onClick={() => !deleting && setShowDeleteConfirmModal(false)}

@@ -798,19 +798,16 @@ export default function AcceptInvite() {
                                     You have been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
                                     <strong>{invitationData?.role_display || invitationData?.role || "Staff"}</strong> on the Seqwens platform.
                                 </p>
-
                                 {invitationData?.expires_at_formatted && (
                                     <p className="expiration-text">
                                         This invitation will expire on <strong>{invitationData.expires_at_formatted}</strong>.
                                     </p>
                                 )}
-
                                 {invitationData?.invited_by_name && (
-                                    <p className="invitation-text" style={{ fontSize: "14px", opacity: 0.9 }}>
+                                    <p className="invitation-text" style={{ fontSize: "14px" }}>
                                         Invited by: <strong>{invitationData.invited_by_name}</strong>
                                     </p>
                                 )}
-
                                 {!invitationData?.user_exists && (
                                     <p className="invitation-instruction">
                                         Please create your account password to accept this invitation:
@@ -822,7 +819,6 @@ export default function AcceptInvite() {
                                     </p>
                                 )}
                             </div>
-
                             <form onSubmit={handleAcceptInvitation}>
                                 {/* Only show form if invitation is valid OR we forced it to be valid for logged-in users */}
                                 {invitationData && (invitationData.is_valid !== false || invitationData.is_valid === true) && !errors.token ? (
@@ -879,7 +875,7 @@ export default function AcceptInvite() {
                                                             {errors.password}
                                                         </div>
                                                     )}
-                                                    <div style={{ color: "#ffffff", fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
+                                                    <div style={{ color: "#ffffff", fontSize: "12px", marginTop: "4px" }}>
                                                         Must contain: 8+ characters, uppercase, lowercase, number, special character
                                                     </div>
                                                 </div>
@@ -996,7 +992,7 @@ export default function AcceptInvite() {
                                                 )}
                                                 <p style={{
                                                     fontSize: "12px",
-                                                    color: "rgba(255, 255, 255, 0.7)",
+                                                    color: "rgba(255, 255, 255, 0.9)",
                                                     marginTop: "6px",
                                                     fontStyle: "italic"
                                                 }}>

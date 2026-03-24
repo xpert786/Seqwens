@@ -28,7 +28,7 @@
 }
 
 .btn-cancel-custom:hover {
-  background-color: #f8faff !important;
+  background-color: white !important;
 }
 
 .btn-upload-custom {
@@ -38,7 +38,7 @@
 }
 
 .btn-upload-custom:hover {
-  background-color: #e65c1d !important;
+  background-color: #F56D2D !important;
 }
 
 
@@ -170,10 +170,19 @@
   margin-bottom: 0.5rem;
   cursor: pointer;
   background-color: #FFFFFF;
+  transition: none !important;
 }
 
 .doc-item.active {
   border: none;
+  background-color: #F3F7FF;
+}
+
+.doc-item:hover {
+  background-color: #FFFFFF;
+}
+
+.doc-item.active:hover {
   background-color: #F3F7FF;
 }
 
@@ -230,8 +239,8 @@
 
 .replace-btn:hover,
 .keep-btn:hover {
-  background-color: #ffeaea !important;
-  border-color: #c82333 !important;
+  background-color: #fff !important;
+  border-color: #dc3545 !important;
   color: #3B4A66 !important;
 }
 
@@ -276,7 +285,7 @@
 }
 
 .folder-dropdown-toggle:hover {
-  background-color: #f5f5f5;
+  background-color: transparent;
 }
 
 
@@ -296,7 +305,7 @@
 }
 
 .folder-tree-item:hover {
-  background-color: #f1f3f5;
+  background-color: transparent;
 }
 
 
@@ -306,6 +315,7 @@
   border: 1px solid #ccc !important;
   box-shadow: none !important;
   font-family: 'BasisGrotesquePro';
+  transition: none !important;
 }
 
 .toggle-btn:hover,
@@ -316,13 +326,21 @@
   border: 1px solid #ccc !important;
   box-shadow: none !important;
   outline: none !important;
+  opacity: 1 !important;
 }
 
-.toggle-btn.active {
+.toggle-btn.active,
+.toggle-btn.active:hover,
+.toggle-btn.active:focus,
+.toggle-btn.active:active {
   background-color: #00C0C6 !important;
-  color: white !important;
+  color: black !important;
   border-color: #00C0C6 !important;
   font-family: 'BasisGrotesquePro';
+  box-shadow: none !important;
+  outline: none !important;
+  opacity: 1 !important;
+  transition: none !important;
 }
 
 
@@ -515,7 +533,7 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #cbd5e1;
 }
 
 /* Glassmorphism effect for active elements if needed */
@@ -524,4 +542,95 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Custom Category Dropdown */
+.category-dropdown-menu {
+  padding: 0;
+  border-radius: 8px !important;
+  border: 1px solid #E8F0FF !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  overflow-y: auto !important;
+  max-height: 200px !important;
+}
+
+.category-dropdown-menu .dropdown-item {
+  padding: 10px 15px !important;
+  font-size: 14px !important;
+  color: #3B4A66 !important;
+  font-family: 'BasisGrotesquePro' !important;
+  width: 100% !important;
+  text-align: left !important;
+  border: none !important;
+  background: none !important;
+}
+
+.category-dropdown-menu .dropdown-item:hover {
+  background-color: transparent !important;
+  color: #3B4A66 !important;
+}
+
+.custom-category-dropdown .btn {
+  box-shadow: none !important;
+  text-align: left !important;
+  border: 1px solid #dee2e6 !important;
+  background-color: white !important;
+}
+
+.custom-category-dropdown .btn:after {
+  display: none !important;
+}
+
+/* Global Hover/Interaction Reset for Upload Modal */
+.upload-modal *:hover,
+.upload-modal *:focus,
+.upload-modal *:active,
+.upload-modal .btn,
+.upload-modal .btn:hover,
+.upload-modal .btn:focus,
+.upload-modal .btn:active,
+.upload-modal .dropdown-item,
+.upload-modal .dropdown-item:hover,
+.upload-modal .dropdown-item:focus {
+  text-decoration: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: none !important;
+  opacity: 1 !important;
+}
+
+/* Specific overrides to lock current colors and prevent ANY hover change */
+.upload-modal .btn-upload-custom:hover {
+  background-color: #F56D2D !important;
+  color: white !important;
+}
+
+.upload-modal .btn-cancel-custom:hover {
+  background-color: white !important;
+  color: black !important;
+}
+
+.upload-modal .toggle-btn:hover {
+  background-color: white !important;
+  color: black !important;
+}
+
+.upload-modal .toggle-btn.active:hover {
+  background-color: #00C0C6 !important;
+  color: black !important;
+}
+
+.upload-modal .save-btn:hover {
+  background-color: #F56D2D !important;
+  color: white !important;
+}
+
+.upload-modal .create-folder-btn:hover {
+  color: #F56D2D !important;
+  background-color: transparent !important;
+}
+
+.upload-modal .dropdown-item:hover {
+  background-color: transparent !important;
+  color: #3B4A66 !important;
 }

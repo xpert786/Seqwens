@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiX, FiPrinter, FiDownload, FiCheckCircle, FiAlertTriangle, FiClock, FiFileText } from 'react-icons/fi';
 import { taxpayerFirmAPI, invoicesAPI, handleAPIError } from '../../utils/apiUtils';
+import logo from '../../../assets/logo.png';
 import { toast } from 'react-toastify';
 
 const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => {
@@ -82,7 +83,6 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
         // Remove trailing price information like ": $123.45" or " - $123.45" or " $123.45"
         return desc.replace(/[:\-—~]?\s*\$\d+([,.]\d{2})?\s*$/, '').trim();
     };
-
     const getStatusConfig = () => {
         const s = statusDisplay.toLowerCase();
         if (s.includes('paid')) return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: <FiCheckCircle /> };
@@ -96,7 +96,6 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
     const handleDownloadPDF = async () => {
         try {
             setLoading(true);
-            toast.info('Generating high-quality PDF...');
             // Use the correct invoice ID
             const id = displayData.invoice || displayData.invoice_id || displayData.id;
             const response = await invoicesAPI.downloadInvoicePDF(id);
@@ -109,7 +108,9 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
             document.body.appendChild(link);
             link.click();
             link.remove();
-            toast.success('PDF downloaded successfully');
+            setTimeout(() => {
+                toast.success('PDF downloaded successfully');
+            }, 2000);
         } catch (error) {
             console.error('PDF Download error:', error);
             toast.error('Failed to download PDF. Please try again.');
@@ -119,7 +120,7 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-300" onClick={onClose}>
             <div
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col scale-in-center"
                 onClick={(e) => e.stopPropagation()}
@@ -129,6 +130,7 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                     <button
                         onClick={onClose}
                         className="absolute top-6 right-4 p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600"
+                        style={{ borderRadius: "50%" }}
                     >
                         <FiX size={20} />
                     </button>
@@ -139,7 +141,7 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                                 {firmInfo.logo ? (
                                     <img src={firmInfo.logo} alt={firmInfo.name} className="max-w-full max-h-full object-contain" />
                                 ) : (
-                                    <span className="text-xl font-bold text-orange-500">{firmInfo.name[0]}</span>
+                                    <img src={logo} alt="Seqwens" className="max-w-[70%] max-h-[70%] object-contain opacity-80" />
                                 )}
                             </div>
                             <div>
@@ -265,7 +267,8 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                 <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-end items-center">
                     <button
                         onClick={() => window.print()}
-                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
+                        className="w-full sm:w-auto px-6 py-3 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
+                        style={{ borderRadius: "12px" }}
                     >
                         <FiPrinter size={16} />
                         Print
@@ -273,7 +276,8 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                     <button
                         onClick={handleDownloadPDF}
                         disabled={loading}
-                        className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-800 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-900 transition-all active:scale-95 shadow-xl shadow-slate-200 disabled:opacity-50"
+                        className="w-full sm:w-auto px-8 py-3 rounded-lg bg-slate-800 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-900 transition-all active:scale-95 shadow-xl shadow-slate-200 disabled:opacity-50"
+                        style={{ borderRadius: "12px" }}
                     >
                         {loading ? (
                             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>

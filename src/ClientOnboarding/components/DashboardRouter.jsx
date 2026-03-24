@@ -12,10 +12,19 @@ export default function DashboardRouter() {
       try {
         const { dashboardAPI } = await import('../utils/apiUtils');
         const response = await dashboardAPI.getOnboardingStatus();
-        setIsNew(!response.onboarding_completed);
+        const apiData = response.data || response;
+        const onboardingCompleted = apiData.onboarding_completed;
+        
+        // If API says not completed, double check local storage as a fallback
+        // This handles race conditions where backend hasn't updated yet
+        if (!onboardingCompleted) {
+          setIsNew(isNewUser());
+        } else {
+          setIsNew(false);
+        }
       } catch (error) {
         console.error("Error fetching onboarding status:", error);
-        // Fallback to local storage if API fails
+        // Fallback to local storage if API fails completely
         setIsNew(isNewUser());
       }
     };

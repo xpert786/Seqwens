@@ -830,8 +830,8 @@ export const validatePassword = (password) => {
 // Error handling utilities
 export const handleAPIError = (error) => {
   const errorMessageStr = error.message || '';
-  if (errorMessageStr.toLowerCase().includes('taxpayer not found') || 
-      errorMessageStr.toLowerCase().includes('taxpayer does not belong to your firm')) {
+  if (errorMessageStr.toLowerCase().includes('taxpayer not found') ||
+    errorMessageStr.toLowerCase().includes('taxpayer does not belong to your firm')) {
     return 'This client is not properly assigned. Please assign the client to your firm or refresh the record.';
   }
 

@@ -154,3 +154,35 @@
 .firm-dashboard-layout button:not([class*="bg-"]):hover:not(.active):not([aria-current="page"]) {
   color: var(--firm-primary-color, #3AD6F2) !important;
 }
+
+/* Ensure the portal is strictly contained to the viewport */
+html,
+body,
+#firm-admin-root {
+  overflow: hidden !important;
+  height: 100vh !important;
+  margin: 0;
+  padding: 0;
+}
+
+.firm-dashboard-layout {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.firm-dashboard-layout main {
+  scrollbar-width: thin;
+  scrollbar-color: #f56d2d transparent;
+  overscroll-behavior-y: contain;
+}
+
+.custom-topbar {
+  position: fixed !important;
+  top: 0 !important;
+  width: 100vw !important;
+  z-index: 9999 !important;
+}
+
+.impersonating-topbar {
+  top: 40px !important;
+}

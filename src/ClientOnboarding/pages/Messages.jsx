@@ -1270,7 +1270,7 @@ export default function Messages() {
 
       <div className="d-flex flex-grow-1 overflow-hidden messages-layout">
 
-        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px" }}>
+        <div className="pt-3 px-3 pb-3 me-3 d-flex flex-column conversations-panel" style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px" }}>
           <div className="mb-2">
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
@@ -1299,15 +1299,13 @@ export default function Messages() {
             </div>
 
           </div>
-          <div
-            className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll"
-            style={{
-              gap: "12px",
-              overflowY: "auto",
-              overflowX: "hidden",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none"
-            }}>
+            <div
+              className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll"
+              style={{
+                gap: "12px",
+                overflowY: "auto",
+                overflowX: "hidden"
+              }}>
             {/* Loading State */}
             {loading && (
               <div className="text-center py-5">
@@ -1436,7 +1434,7 @@ export default function Messages() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-panel">
+        <div className="flex-grow-1 bg-white rounded shadow-sm pt-3 px-3 pb-3 d-flex flex-column chat-panel">
           {activeConversation ? (
             <>
               <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
@@ -1451,36 +1449,12 @@ export default function Messages() {
 
               <div
                 ref={messagesContainerRef}
-                className="flex-grow-1 mb-3 messages-scroll"
+                className="flex-grow-1 mb-0 messages-scroll"
                 style={{
                   overflowY: "auto",
-                  overflowX: "hidden",
-                  scrollbarWidth: "none",
-                  msOverflowStyle: "none"
+                  overflowX: "hidden"
                 }}
               >
-                <style>
-                  {`
-                    .messages-scroll::-webkit-scrollbar {
-                      display: none;
-                      width: 0;
-                      height: 0;
-                    }
-                    .messages-scroll {
-                      -ms-overflow-style: none;
-                      scrollbar-width: none;
-                    }
-                    .conversations-scroll::-webkit-scrollbar {
-                      display: none;
-                      width: 0;
-                      height: 0;
-                    }
-                    .conversations-scroll {
-                      -ms-overflow-style: none;
-                      scrollbar-width: none;
-                    }
-                  `}
-                </style>
                 {console.log('Rendering messages, count:', activeChatMessages.length, 'messages:', activeChatMessages, 'loading:', loadingMessages)}
                 {loadingMessages ? (
                   <div className="text-center py-5">
@@ -1649,21 +1623,21 @@ export default function Messages() {
               </div>
 
               <div className="border-top pt-2" style={{ flexShrink: 0 }}>
-                <div className="d-flex align-items-center">
+                <div className="d-flex" style={{ gap: "8px", height: "42px", alignItems: "stretch" }}>
                   {/* WebSocket connection indicator */}
                   {wsConnected && (
-                    <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
+                    <div style={{ fontSize: "10px", color: "#10B981", alignSelf: "center" }} title="Connected">
                       <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
                     </div>
                   )}
                   {!wsConnected && wsError && (
-                    <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
+                    <div style={{ fontSize: "10px", color: "#EF4444", alignSelf: "center" }} title="Disconnected">
                       <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
                     </div>
                   )}
                   {/* Typing indicator */}
                   {typingUsers.length > 0 && (
-                    <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
+                    <div style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic", alignSelf: "center" }}>
                       {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                     </div>
                   )}
@@ -1675,32 +1649,37 @@ export default function Messages() {
                   />
                   <button
                     type="button"
-                    className="btn me-2"
+                    className="btn d-flex align-items-center justify-content-center"
                     onClick={() => messageFileInputRef.current?.click()}
                     style={{
                       background: "transparent",
                       border: "1px solid #E8F0FF",
-                      color: "#3B4A66"
+                      color: "#3B4A66",
+                      height: "100%",
+                      width: "55px",
+                      padding: "0",
+                      margin: "0"
                     }}
                     title="Attach file"
                   >
-                    <FileIcon />
+                    <FileIcon size={16} />
                   </button>
                   {messageAttachment && (
-                    <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
+                    <span className="text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0" }} title={messageAttachment.name}>
                       {messageAttachment.name}
                     </span>
                   )}
                   {messageAttachment && (
                     <button
                       type="button"
-                      className="btn me-2"
+                      className="btn"
                       onClick={() => setMessageAttachment(null)}
                       style={{
                         background: "transparent",
                         border: "none",
                         color: "#EF4444",
-                        padding: "0 5px"
+                        padding: "0 5px",
+                        margin: "0"
                       }}
                       title="Remove attachment"
                     >
@@ -1709,7 +1688,7 @@ export default function Messages() {
                   )}
                   <input
                     type="text"
-                    className="form-control me-2"
+                    className="form-control"
                     placeholder="Write a message..."
                     value={newMessage}
                     onChange={handleTyping}
@@ -1719,21 +1698,26 @@ export default function Messages() {
                         handleSend();
                       }
                     }}
-                    style={{ fontFamily: "BasisGrotesquePro" }}
+                    style={{ fontFamily: "BasisGrotesquePro", height: "100%", margin: "0" }}
                   />
                   <button
                     type="button"
-                    className="btn"
+                    className="btn d-flex align-items-center justify-content-center"
                     style={{
                       background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
                       color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
-                      cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
+                      cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed",
+                      height: "100%",
+                      width: "55px",
+                      padding: "0",
+                      margin: "0"
                     }}
                     onClick={handleSend}
                     disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
                     aria-label="Send message"
                   >
                     <FaPaperPlane
+                      size={16}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
