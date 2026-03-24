@@ -1331,14 +1331,14 @@ export default function MyClients() {
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
             onClick={() => setShowInviteTaxpayerModal(true)}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-100 text-[#3AD6F2] font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all !rounded-xl  shadow-lg shadow-[#3AD6F2]/5 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-100 text-[#3AD6F2] font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all !rounded-xl  shadow-lg shadow-[#3AD6F2]/5 active:scale-95"
           >
             <FaUserPlus size={18} />
             <span>Create Taxpayer</span>
           </button>
           <button
             onClick={() => setShowBulkTaxpayerImportModal(true)}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all  shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all  shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
           >
             <FaPlus size={16} />
             <span>Bulk Import Taxpayers</span>

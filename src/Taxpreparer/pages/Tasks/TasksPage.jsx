@@ -1735,7 +1735,7 @@ export default function TasksPage() {
               setEditingTaskId(null);
               setShowAddTaskModal(true);
             }}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
           >
             <AddTask size={18} />
             <span>Create New Task</span>
