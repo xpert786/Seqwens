@@ -1141,7 +1141,7 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC] lg:px-6">
+    <div className="flex flex-col h-full">
       <style>
         {`
           @keyframes slideUp {
@@ -1164,13 +1164,13 @@ export default function MessagePage() {
 
       {isMobile && renderHeader()}
 
-      <div className="flex flex-1 gap-6 mb-6 min-h-[700px]">
+      <div className="flex flex-1 overflow-hidden gap-6">
 
         {/* Left Column - Conversations */}
         <div
           className={`flex-col bg-white shadow-sm border border-gray-200 rounded-3xl transition-all duration-300
             ${isMobile && showChatOnMobile ? 'hidden' : 'flex'} 
-            ${isMobile ? 'w-full' : 'w-[380px]'} h-full overflow-hidden`}
+            ${isMobile ? 'w-full' : 'w-[450px]'} h-full overflow-hidden`}
         >
           <div className="p-4 space-y-4 flex-shrink-0">
             <h5 className="text-lg font-bold text-gray-800">Conversations</h5>
@@ -1263,11 +1263,11 @@ export default function MessagePage() {
               }
 
               return filteredConversations.length > 0 ? (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                   {filteredConversations.map((conv) => (
                     <div
                       key={conv.id}
-                      className={`group p-4 rounded-2xl cursor-pointer transition-all duration-200 border 
+                      className={`pl-4 py-4 rounded-2xl cursor-pointer transition-all duration-200 border 
                         ${activeConversationId === conv.id
                           ? "!border-l-4 !border-l-[#F56D2D] shadow-sm shadow-[#F56D2D]/10"
                           : "border-l hover:bg-gray-50"
@@ -1277,9 +1277,9 @@ export default function MessagePage() {
                         if (isMobile) setShowChatOnMobile(true);
                       }}
                     >
-                      <div className="flex gap-4">
+                      <div className="flex items-center gap-3 w-full">
                         {/* 1. Avatar Column */}
-                        <div className="flex-shrink-0 relative">
+                        <div className="flex-shrink-0 relative items-center">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-sm transition-all duration-300 border ${activeConversationId === conv.id ? 'border-[#F56D2D]/30 scale-105 shadow-md' : 'border-gray-100 group-hover:border-gray-200'}`}>
                             <ConverIcon color={conv.id === activeConversationId ? "#F56D2D" : "#64748B"} size={22} />
                           </div>
@@ -1291,14 +1291,14 @@ export default function MessagePage() {
                         </div>
 
                         {/* 2. Content Column */}
-                        <div className="flex-1 min-w-0 flex flex-col">
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
                           {/* Header Row: Name & Time & Delete */}
-                          <div className="flex justify-between items-start mb-0.5">
-                            <div className="flex flex-col min-w-0 pr-2">
-                              <h6 className={`text-sm font-black truncate transition-colors leading-tight ${activeConversationId === conv.id ? 'text-[#F56D2D]' : 'text-gray-900 group-hover:text-[#F56D2D]'}`}>
+                          <div className="flex justify-between items-start ">
+                            <div className="flex flex-1 justify-between min-w-0">
+                              <h6 className={`mb-0 text-sm font-black truncate transition-colors leading-tight ${activeConversationId === conv.id ? 'text-[#F56D2D]' : 'text-gray-900 group-hover:text-[#F56D2D]'}`}>
                                 {conv.name}
                               </h6>
-                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{conv.time}</span>
+                              <span className="!text-[10px] text-gray-400 font-bold uppercase tracking-tight">{conv.time}</span>
                             </div>
 
                             <button
@@ -1306,7 +1306,7 @@ export default function MessagePage() {
                                 e.stopPropagation();
                                 handleDeleteThread(conv.id, e);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex-shrink-0"
+                              className="text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex-shrink-0"
                               title="Delete conversation"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1316,7 +1316,7 @@ export default function MessagePage() {
                           </div>
 
                           {/* Message Preview */}
-                          <p className={`text-[13px] line-clamp-1 leading-snug ${conv.unreadCount > 0 ? 'text-gray-900 font-bold' : 'text-gray-500'} mb-1`}>
+                          <p className={`text-[13px] line-clamp-1 ${conv.unreadCount > 0 ? 'text-gray-900 font-bold' : 'text-gray-500'} mb-1`}>
                             {conv.lastMessage || 'No recent messages'}
                           </p>
 

@@ -294,7 +294,7 @@ export default function TaxPreparerBilling() {
       {activeTab === 'clients' ? (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
             {[
               { id: 'total', label: 'Total Invoices', val: summary.total_invoices || 0, icon: <FiFileText size={18} />, bg: 'bg-blue-50', text: 'text-blue-500' },
               { id: 'outstanding', label: 'Outstanding', val: formatCurrency(summary.outstanding_balance || 0), icon: <FiAlertCircle size={18} />, bg: 'bg-orange-50', text: 'text-orange-500' },
