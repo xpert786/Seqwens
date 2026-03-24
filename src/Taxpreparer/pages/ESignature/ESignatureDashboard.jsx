@@ -1061,45 +1061,39 @@ export default function ESignatureDashboard() {
   }
 
   return (
-    <div className="esignature-dashboard-container" style={{ fontFamily: 'BasisGrotesquePro' }}>
+    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 animate-in fade-in duration-500 font-basis">
       <style>{previewStyles}</style>
-      {/* Header */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '8px', wordWrap: 'break-word' }}>
-            E-Signature Dashboard
-          </h3>
-          <p style={{ color: '#6B7280', fontSize: '14px', margin: 0, wordWrap: 'break-word' }}>
-            Track and manage all e-signature requests across your clients
-          </p>
+
+      {/* Unified Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+              <FiPenTool size={32} />
+            </div>
+            <div>
+              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                E-Signatures
+              </h1>
+              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your digital signature requests and document execution.</span>
+            </div>
+          </div>
         </div>
-        <div className="d-flex gap-2 flex-wrap" style={{ flexShrink: 0 }}>
-          <button
-            onClick={handleOpenCreateModal}
-            className="btn d-flex align-items-center gap-2"
-            style={{
-              backgroundColor: '#00C0C6',
-              border: 'none',
-              color: 'white',
-              fontFamily: 'BasisGrotesquePro',
-              fontWeight: '500'
-            }}
-          >
-            <FiPlus size={16} />
-            Create E-Signature Request
-          </button>
+
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
             onClick={handleRefresh}
-            className="btn d-flex align-items-center gap-2"
-            style={{
-              backgroundColor: '#F9FAFB',
-              border: '1px solid #E5E7EB',
-              color: '#3B4A66',
-              fontFamily: 'BasisGrotesquePro'
-            }}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 h-14 bg-white text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all !rounded-xl shadow-sm border border-gray-200 active:scale-95"
           >
-            <FiRefreshCw size={16} />
-            Refresh
+            <FiRefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={handleOpenCreateModal}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+          >
+            <FiPlus size={18} />
+            <span>Create Request</span>
           </button>
         </div>
       </div>

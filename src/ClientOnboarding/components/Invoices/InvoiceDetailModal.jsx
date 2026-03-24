@@ -134,7 +134,7 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                     </button>
 
                     <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-center gap-3">
                             <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-2">
                                 {firmInfo.logo ? (
                                     <img src={firmInfo.logo} alt={firmInfo.name} className="max-w-full max-h-full object-contain" />

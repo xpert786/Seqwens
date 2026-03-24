@@ -1311,43 +1311,37 @@ export default function MyClients() {
   }
 
   return (
-    <div className="myclients-container">
-      {/* Header */}
-      <div className="header d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h4 className="fw-semibold">My Clients</h4>
-          <small className="text-muted">Manage your assigned clients</small>
+    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-10 font-basis">
+      {/* Unified Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+              <DoubleUserIcon size={32} color="white" />
+            </div>
+            <div>
+              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-none mb-0">
+                My Clients
+              </h1>
+              <span className="text-gray-400 text-sm lg:text-lg font-medium tracking-tight">Manage your assigned clients and taxpayer profiles.</span>
+            </div>
+          </div>
         </div>
-        <div className="d-flex align-items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
-            className="btn btn-primary d-flex align-items-center gap-2"
             onClick={() => setShowInviteTaxpayerModal(true)}
-            style={{
-              backgroundColor: "#00C0C6",
-              borderColor: "#00C0C6",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              fontSize: "14px",
-              fontWeight: "600"
-            }}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-white border border-gray-100 text-[#3AD6F2] font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all !rounded-xl  shadow-lg shadow-[#3AD6F2]/5 active:scale-95"
           >
-            <FaUserPlus size={14} />
-            Create Taxpayer
+            <FaUserPlus size={18} />
+            <span>Create Taxpayer</span>
           </button>
           <button
-            className="btn btn-primary d-flex align-items-center gap-2"
             onClick={() => setShowBulkTaxpayerImportModal(true)}
-            style={{
-              backgroundColor: "#F56D2D",
-              borderColor: "#F56D2D",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              fontSize: "14px",
-              fontWeight: "600"
-            }}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 h-14 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all  shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
           >
-            <FaPlus size={14} />
-            Bulk Import Taxpayers
+            <FaPlus size={16} />
+            <span>Bulk Import Taxpayers</span>
           </button>
         </div>
       </div>

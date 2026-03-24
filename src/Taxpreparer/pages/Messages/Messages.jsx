@@ -1111,13 +1111,13 @@ export default function MessagePage() {
         <h5 className="text-2xl font-bold text-gray-900 font-basis-grotesque">
           Messages
         </h5>
-        <p className="text-sm text-gray-500 font-basis-grotesque">
+        <span className="text-sm text-gray-500 font-basis-grotesque">
           Communicate with clients and team members
-        </p>
+        </span>
       </div>
 
       <button
-        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md hover:bg-[#e55a1a] transition-all transform hover:-translate-y-0.5"
+        className="flex items-center gap-2 px-4 h-14 !rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md hover:bg-[#e55a1a] !text-xs transition-all transform hover:-translate-y-0.5 uppercase"
         onClick={handleOpenComposeModal}
       >
         <PLusIcon />
@@ -1205,7 +1205,7 @@ export default function MessagePage() {
             </div>
           </div>
 
-          <div className="px-4  pb-4 flex-1 overflow-y-auto custom-scrollbar">
+          <div className="px-4 p flex-1 overflow-y-auto custom-scrollbar">
             {(() => {
               const filteredConversations = conversations.filter(conv => {
                 const term = searchTerm.toLowerCase();
@@ -1316,19 +1316,9 @@ export default function MessagePage() {
                           </div>
 
                           {/* Message Preview */}
-                          <div className="flex items-center gap-2 mb-2 min-w-0">
-                            {conv.unreadCount > 0 && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#F56D2D] flex-shrink-0 shadow-[0_0_8px_rgba(245,109,45,0.6)]" />
-                            )}
-                            <p className={`text-[13px] p-2 line-clamp-1 leading-relaxed truncate flex-1 bg-gray-50 rounded-xl
-                              ${conv.unreadCount > 0
-                                ? 'text-gray-900 font-bold'
-                                : 'text-gray-500/80 group-hover:text-gray-700'
-                              } transition-colors`
-                            }>
-                              {conv.lastMessage || 'Tap to start collaborating...'}
-                            </p>
-                          </div>
+                          <p className={`text-[13px] line-clamp-1 leading-snug ${conv.unreadCount > 0 ? 'text-gray-900 font-bold' : 'text-gray-500'} mb-1`}>
+                            {conv.lastMessage || 'No recent messages'}
+                          </p>
 
                           {/* Subject Tag */}
                           {conv.subject && (
@@ -1417,8 +1407,8 @@ export default function MessagePage() {
                                   {msg.hasAttachment && (
                                     <div className={`flex items-center gap-3 p-3 rounded-xl border ${isSentByMe ? 'bg-white/10 border-white/20' : 'bg-white border-gray-200'
                                       }`}>
-                                      <div className={`p-2 rounded-lg ${isSentByMe ? 'bg-white' : 'bg-[#F56D2D]/10'}`}>
-                                        <FileIcon className={isSentByMe ? '!text-white' : 'text-[#F56D2D]'} size={16} />
+                                      <div className={`p-2 rounded-lg ${isSentByMe ? 'bg-white/20' : 'bg-[#F56D2D]/10'}`}>
+                                        <FileIcon className={isSentByMe ? 'text-white' : 'text-[#F56D2D]'} size={18} />
                                       </div>
                                       <div className="flex flex-col overflow-hidden">
                                         <a
