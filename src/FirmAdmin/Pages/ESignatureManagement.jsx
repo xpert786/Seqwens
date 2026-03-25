@@ -1433,7 +1433,8 @@ export default function ESignatureManagement() {
                                     e.stopPropagation();
                                     const link = document.createElement('a');
                                     link.href = request.document_url;
-                                    link.download = request.document_name || 'document.pdf';
+                                    link.target = '_blank';
+                                    link.rel = 'noopener noreferrer';
                                     link.click();
                                   }}
                                   className="p-1.5 hover:bg-gray-100 rounded transition-colors"
