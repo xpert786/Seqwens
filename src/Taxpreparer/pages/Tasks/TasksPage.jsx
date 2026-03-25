@@ -2156,7 +2156,7 @@ export default function TasksPage() {
           style={{
             backgroundColor: 'rgba(0,0,0,0.5)',
             overflowY: 'auto',
-            zIndex: 999999990,
+            zIndex: 999999,
             paddingTop: '85px',
             paddingBottom: '40px'
           }}
@@ -3464,7 +3464,7 @@ export default function TasksPage() {
         <div
           className="fixed inset-0 flex flex-col items-center justify-start bg-black/70 p-4 lg:p-8 animate-in fade-in duration-200"
           style={{
-            zIndex: 999999992,
+            zIndex: 1000000,
             paddingTop: '85px',
             paddingBottom: '40px',
             overflowY: 'auto'
@@ -3633,7 +3633,7 @@ export default function TasksPage() {
             alignItems: 'center',
             justifyContent: 'start',
             backgroundColor: 'rgba(0,0,0,0.7)',
-            zIndex: 999999993,
+            zIndex: 1000001,
             position: 'fixed',
             top: 0,
             left: 0,
@@ -3781,7 +3781,7 @@ export default function TasksPage() {
             alignItems: 'center',
             justifyContent: 'start',
             backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 999999994,
+            zIndex: 1000002,
             position: 'fixed',
             top: 0,
             left: 0,
@@ -3886,7 +3886,7 @@ export default function TasksPage() {
             alignItems: 'center',
             justifyContent: 'start',
             backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 999999995,
+            zIndex: 1000003,
             position: 'fixed',
             top: 0,
             left: 0,
