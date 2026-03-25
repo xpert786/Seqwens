@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, handleActionClick, openDropdown, handleActionSelect }) => {
   const navigate = useNavigate();
 
+  taskData = []
   return (
     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
       <div className="mb-6">
@@ -12,22 +13,24 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '1200px' }}>
-          <thead className="">
-            <tr>
-              <th className="px-10 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Task</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Assigned To</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Client</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Priority</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Progress</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Due Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Actions</th>
-            </tr>
-          </thead>
+        <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: taskData.length > 0 ? '1200px' : '100%' }}>
+          {taskData.length > 0 && (
+            <thead className="">
+              <tr>
+                <th className="px-10 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Task</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Assigned To</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Client</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Priority</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Progress</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Due Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#4B5563] uppercase tracking-wider font-[BasisGrotesquePro]">Actions</th>
+              </tr>
+            </thead>
+          )}
           <tbody className="bg-white">
             {taskData.length === 0 ? (
-              <tr>
+              <tr className="w-full">
                 <td colSpan="8" className="p-8 text-center">
                   <p className="text-gray-500 font-[BasisGrotesquePro]">No tasks found</p>
                 </td>
@@ -135,7 +138,7 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
           </tbody>
         </table>
       </div>
-    </div>
+    </div >
   );
 };
 
