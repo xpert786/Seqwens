@@ -47,7 +47,7 @@ export default function ClientMessageModal({ isOpen, onClose, clientId, clientNa
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-6 modal-overlay">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 p-4 z-[10001]">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-[85vh]">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-4 border-b border-[#E8F0FF] flex-shrink-0">

@@ -813,14 +813,14 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       {/* Add Client Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10 modal-overlay"
+          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10001]"
           onClick={onClose}
         >
           <div
-            className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-6 relative modal-body-scroll"
+            className="bg-white w-full max-w-[600px] rounded-xl shadow-lg p-5 sm:p-8 relative modal-body-scroll mt-10 mb-10"
             onClick={(e) => e.stopPropagation()}
             style={{
-              maxHeight: '75vh',
+              maxHeight: 'calc(100vh - 80px)', // Safe height for 560px screen
               overflowY: 'auto',
               fontFamily: 'BasisGrotesquePro'
             }}

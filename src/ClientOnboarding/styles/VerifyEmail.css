@@ -1,9 +1,9 @@
 .verify-container {
-  padding: 60px 40px;
+  padding: 40px 20px 100px 20px;
   display: flex;
   justify-content: center;
-  align-items: center;
-
+  align-items: flex-start;
+  min-height: calc(100vh - 120px);
 }
 
 .otp-box {

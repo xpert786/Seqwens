@@ -15,7 +15,7 @@ const FixedLayout = ({ children }) => {
         <img src={logoSrc} alt="Seqwens Logo" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.3s ease' }} />
       </div>
 
-      <div className=".content-rap">
+      <div className="content-rap">
         {children}
       </div>
     </div>

@@ -507,7 +507,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
             </svg>
           </button>
         </div>
-
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-grow custom-scrollbar">
           <form id="create-task-form" onSubmit={handleSubmit} className="space-y-5">
