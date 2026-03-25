@@ -7264,7 +7264,6 @@ export const invitationAPI = {
     console.log('Full URL will be:', `${API_BASE_URL}${endpoint}`);
     return await publicApiRequest(endpoint, 'GET');
   },
-
   // Accept invitation with password and phone number (public endpoint, no auth required)
   acceptInvitation: async (token, password, passwordConfirm, phoneNumber = null) => {
     const payload = {

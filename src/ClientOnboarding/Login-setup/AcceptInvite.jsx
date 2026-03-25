@@ -1146,7 +1146,6 @@ export default function AcceptInvite() {
                     loading={isAccepting}
                 />
             )}
-
             {/* Accept Invitation Confirmation Modal */}
             {showAcceptConfirmModal && (
                 <div

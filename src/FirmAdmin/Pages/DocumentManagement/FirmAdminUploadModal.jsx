@@ -621,6 +621,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         type="button"
                         onClick={resetModal}
                         className="p-1 px-2.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                        style={{ borderRadius: "50%" }}
                     >
                         <IoMdClose size={24} />
                     </button>
@@ -958,9 +959,23 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                 <div className="p-6 px-8 border-t border-[#E8F0FF] flex justify-between items-center bg-gray-50/50 shrink-0">
                     <button
                         type="button"
-                        className="px-8 py-3 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all active:scale-95"
+                        className="px-8 py-3 text-sm font-bold rounded-xl transition-all active:scale-95"
                         onClick={resetModal}
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
+                        style={{
+                            fontFamily: 'BasisGrotesquePro',
+                            borderRadius: "10px",
+                            backgroundColor: "#EEF2FF",
+                            color: "#4F46E5",
+                            border: "1px solid #C7D2FE",
+                            boxShadow: "0 2px 6px rgba(79, 70, 229, 0.15)",
+                            cursor: "pointer"
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = "#E0E7FF";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = "#EEF2FF";
+                        }}
                     >
                         Cancel
                     </button>
@@ -969,7 +984,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         className={`px-10 py-3 text-sm font-bold text-white rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap ${uploading || (step === 1 && files.length === 0) ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#F56D2D] hover:bg-[#ff7a2f] shadow-[#F56D2D]/20 hover:shadow-[#F56D2D]/30'}`}
                         onClick={step === 1 ? proceedToConfigure : handleFinalUpload}
                         disabled={uploading || (step === 1 && files.length === 0)}
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
+                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: "10px" }}
                     >
                         {uploading ? (
                             <>
