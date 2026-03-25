@@ -141,8 +141,8 @@
 /* Sidebar hover effects disabled via exclusions above */
 
 /* Ensure buttons with primary background keep white text on hover */
-.firm-panel button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):hover,
-.firm-dashboard-layout button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):hover,
+.firm-panel button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover,
+.firm-dashboard-layout button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover,
 .firm-panel button[style*="background-color"]:hover,
 .btn-primary:hover {
   color: white !important;

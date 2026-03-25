@@ -99,7 +99,6 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
           }`}
       >
         <div className="px-4 py-4 space-y-6">
-
           {/* Dashboard Section */}
           <div>
             <div
@@ -321,17 +320,19 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
                 <span className="w-6 h-6 text-blue-600">
                   <Settings />
                 </span>
-                <span className="leading-none text-blue-500">Account Settings</span>
+                <span className="leading-none text-blue-500 hover:!text-blue-500/70">Account Settings</span>
               </Link>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex items-center gap-2 !text-sm font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer text-[#EF4444] bg-transparent hover:bg-transparent"
+                className="flex items-center gap-2 !text-sm font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer text-[#EF4444] bg-transparent hover:text-[#EF4444]/70"
               >
                 <span className="w-6 h-6 text-[#EF4444]">
                   <Out />
                 </span>
-                {isLoggingOut ? 'Logging out...' : 'Log Out'}
+                <span>
+                  {isLoggingOut ? 'Logging out...' : 'Log Out'}
+                </span>
               </button>
             </div>
           </div>
