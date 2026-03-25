@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import DataSharingModal from "../components/DataSharingModal";
 import { getPathWithPrefix, getLoginUrl } from "../utils/urlUtils";
 import { useFirmPortalColors } from "../../FirmAdmin/Context/FirmPortalColorsContext";
+import { CheckCircle, X, LogIn, ShieldAlert, ArrowRight, UserPlus } from "lucide-react";
 
 export default function AcceptInvite() {
     const navigate = useNavigate();
@@ -553,14 +554,16 @@ export default function AcceptInvite() {
                 <div className="accept-invite-page">
                     <div className="accept-invite-card">
                         <div className="accept-invite-header">
+                            <CheckCircle size={60} style={{ color: "#00c0c6", marginBottom: "20px" }} />
                             <h5 className="accept-invite-title">Invitation Accepted!</h5>
-                            <p className="accept-invite-subtitle">Your account has been created successfully. Please log in to continue.</p>
+                            <p className="accept-invite-subtitle">Your account has been created successfully. You can now access your account.</p>
                             <div className="invitation-actions">
                                 <button
                                     className="accept-invite-btn accept-btn"
                                     onClick={() => window.location.href = getLoginUrl()}
                                 >
-                                    Log In
+                                    <LogIn size={20} className="me-2" />
+                                    Log In to Seqwens
                                 </button>
                             </div>
                         </div>
@@ -604,26 +607,31 @@ export default function AcceptInvite() {
                 <div className="accept-invite-page">
                     <div className="accept-invite-card">
                         <div className="accept-invite-header">
-                            <h5 className="accept-invite-title">Invitation from {invitationData?.firm_name || "Firm"}</h5>
+                            <div className="mb-4 d-inline-block p-3 rounded-circle" style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)' }}>
+                                <ShieldAlert size={48} color="#FFC107" />
+                            </div>
+                            <h5 className="accept-invite-title">Action Required</h5>
                             <p className="accept-invite-subtitle">
-                                You've been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
-                                <strong>{invitationData?.role_display || invitationData?.role || "Member"}</strong>
+                                You have an existing account for this email address.
                             </p>
                         </div>
+                        
                         <div className="alert alert-warning" role="alert" style={{
-                            margin: '1.5rem 0',
-                            padding: '1rem',
-                            backgroundColor: '#FFF3CD',
-                            border: '1px solid #FFC107',
-                            borderRadius: '8px',
-                            color: '#856404'
+                            margin: '0 0 2rem 0',
+                            padding: '1.25rem',
+                            backgroundColor: 'rgba(255, 243, 205, 0.5)',
+                            border: '1px dashed #FFC107',
+                            borderRadius: '12px',
+                            color: '#856404',
+                            textAlign: 'center'
                         }}>
-                            <strong>⚠️ {errors.general || "An account already exists for this email."}</strong>
-                            <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                                Please sign in to accept the invite.
+                            <strong>{errors.general || "Account exists!"}</strong>
+                            <p style={{ margin: '0.5rem 0 0 0', fontSize: '15px', color: '#664d03' }}>
+                                To connect <strong>{invitationData?.firm_name || "this firm"}</strong> to your profile, please sign in first.
                             </p>
                         </div>
-                        <div className="invitation-actions" style={{ marginTop: '1.5rem' }}>
+
+                        <div className="invitation-actions">
                             <button
                                 className="accept-invite-btn accept-btn"
                                 onClick={() => {
@@ -636,8 +644,10 @@ export default function AcceptInvite() {
                                     });
                                 }}
                             >
-                                Sign In
+                                <LogIn size={20} className="me-2" />
+                                Sign In & Accept
                             </button>
+                            
                             <button
                                 className="accept-invite-btn deny-btn"
                                 onClick={() => navigate("/login", {
@@ -646,7 +656,6 @@ export default function AcceptInvite() {
                                         email: invitationData?.email
                                     }
                                 })}
-                                style={{ marginTop: '0.5rem' }}
                             >
                                 Forgot Password?
                             </button>
@@ -666,9 +675,10 @@ export default function AcceptInvite() {
                             <h5 className="accept-invite-title">Invalid Invitation</h5>
                             <p className="accept-invite-subtitle">{errors.general}</p>
                             <button
-                                className="accept-invite-btn"
+                                className="accept-invite-btn accept-btn"
                                 onClick={() => navigate("/login")}
                             >
+                                <LogIn size={20} className="me-2" />
                                 Go to Login
                             </button>
                         </div>
@@ -698,14 +708,16 @@ export default function AcceptInvite() {
                     <div className="accept-invite-page">
                         <div className="accept-invite-card">
                             <div className="accept-invite-header">
+                                <CheckCircle size={60} style={{ color: "#00c0c6", marginBottom: "20px" }} />
                                 <h5 className="accept-invite-title">Invitation Accepted!</h5>
-                                <p className="accept-invite-subtitle">Your account has been created successfully. Please log in to continue.</p>
+                                <p className="accept-invite-subtitle">Your account has been created successfully. You can now access your account.</p>
                                 <div className="invitation-actions">
                                     <button
                                         className="accept-invite-btn accept-btn"
                                         onClick={() => window.location.href = getLoginUrl()}
                                     >
-                                        Log In
+                                        <LogIn size={20} className="me-2" />
+                                        Log In to Seqwens
                                     </button>
                                 </div>
                             </div>
@@ -731,9 +743,10 @@ export default function AcceptInvite() {
                                 <h5 className="accept-invite-title">Invalid Invitation</h5>
                                 <p className="accept-invite-subtitle">{errors.general}</p>
                                 <button
-                                    className="accept-invite-btn"
+                                    className="accept-invite-btn accept-btn"
                                     onClick={() => navigate("/login")}
                                 >
+                                    <LogIn size={20} className="me-2" />
                                     Go to Login
                                 </button>
                             </div>
@@ -1002,13 +1015,23 @@ export default function AcceptInvite() {
                                         )}
 
 
-                                        <div className="d-grid gap-2">
+                                        <div className="invitation-actions">
                                             <button
                                                 type="submit"
-                                                className="accept-invite-btn"
+                                                className="accept-invite-btn accept-btn"
                                                 disabled={isAccepting}
                                             >
-                                                {isAccepting ? "Processing..." : (invitationData.user_exists ? "Accept & Connect" : "Accept Invitation")}
+                                                {isAccepting ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                        Processing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle size={20} className="me-2" />
+                                                        {invitationData.user_exists ? "Accept & Connect" : "Accept Invitation"}
+                                                    </>
+                                                )}
                                             </button>
 
                                             <button
@@ -1017,7 +1040,12 @@ export default function AcceptInvite() {
                                                 onClick={handleDenyInvitation}
                                                 disabled={isDenying || isAccepting}
                                             >
-                                                {isDenying ? "Declining..." : "Decline Invitation"}
+                                                {isDenying ? "Declining..." : (
+                                                    <>
+                                                        <X size={18} className="me-2" />
+                                                        Decline Invitation
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </>
@@ -1027,6 +1055,7 @@ export default function AcceptInvite() {
                                             className="accept-invite-btn accept-btn"
                                             onClick={() => navigate("/login")}
                                         >
+                                            <LogIn size={20} className="me-2" />
                                             Go to Login
                                         </button>
                                     </div>

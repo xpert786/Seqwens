@@ -7,53 +7,69 @@
 }
 
 .accept-invite-card {
-  background-color: #3b4a66;
-  width: 600px;
-  border-radius: 25px;
+  background: rgba(59, 74, 102, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  width: 650px;
+  border-radius: 32px;
   min-height: 500px;
-  padding: 70px 70px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 80px 70px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.accept-invite-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #00c0c6, #00d5db);
 }
 
 .accept-invite-header {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
+  text-align: center;
 }
 
 .accept-invite-title {
   color: #ffffff;
-  font-size: 35px;
-  font-weight: 500;
+  font-size: 38px;
+  font-weight: 700;
   font-family: BasisGrotesquePro;
   margin-bottom: 15px;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .accept-invite-subtitle {
-  color: #ffffff;
-  font-size: 18px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 19px;
   font-weight: 400;
   font-family: BasisGrotesquePro;
   margin: 0;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .invitation-details {
-  margin: 30px 0;
+  margin: 35px 0;
   color: #ffffff;
 }
 
 .invitation-text {
   font-family: BasisGrotesquePro;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 400;
   color: #ffffff;
-  line-height: 1.6;
-  margin-bottom: 20px;
+  line-height: 1.7;
+  margin-bottom: 25px;
 }
 
 .invitation-text strong {
   font-weight: 600;
-  color: #f56d2d;
+  color: #00c0c6;
 }
 
 .expiration-text {
@@ -62,11 +78,11 @@
   font-weight: 400;
   color: #ffffff;
   line-height: 1.6;
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: rgba(245, 109, 45, 0.1);
-  border-left: 3px solid #f56d2d;
-  border-radius: 5px;
+  margin-bottom: 25px;
+  padding: 16px 20px;
+  background-color: rgba(245, 109, 45, 0.08);
+  border-left: 4px solid #f56d2d;
+  border-radius: 8px;
 }
 
 .expiration-text strong {
@@ -76,73 +92,88 @@
 
 .invitation-instruction {
   font-family: BasisGrotesquePro;
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 17px;
+  font-weight: 500;
   color: #ffffff;
   line-height: 1.6;
-  margin-bottom: 30px;
+  margin-bottom: 35px;
 }
 
 .invitation-actions {
-  margin: 30px 0;
+  margin: 40px 0;
   display: flex;
-  gap: 15px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
 }
 
 .accept-invite-btn {
-  flex: 1;
-  font-weight: 500;
-  padding: 12px 24px;
+  width: 100%;
+  font-weight: 600;
+  padding: 16px 32px;
   font-family: BasisGrotesquePro;
-  font-size: 16px;
+  font-size: 17px;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .accept-btn {
-  background-color: #00c0c6;
+  background: linear-gradient(135deg, #00c0c6 0%, #00d5db 100%);
   color: white;
+  box-shadow: 0 10px 20px rgba(0, 192, 198, 0.3);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .accept-btn:hover:not(:disabled) {
-  background-color: #00a8ad;
+  transform: translateY(-3px);
+  box-shadow: 0 15px 25px rgba(0, 192, 198, 0.4);
+  background: linear-gradient(135deg, #00d5db 0%, #00e9ef 100%);
 }
 
 .deny-btn {
-  background-color: transparent;
-  color: #ffffff;
-  border: 2px solid #ffffff;
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  margin-top: 10px;
+  box-shadow: none !important;
 }
 
 .deny-btn:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: none !important;
 }
 
 .accept-invite-btn:disabled {
-  background-color: #9ca3af;
-  border-color: #9ca3af;
+  background: #4b5563 !important;
+  border-color: #4b5563 !important;
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.6;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .invitation-footer {
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 50px;
+  padding-top: 35px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
 }
 
 .invitation-footer-text {
   font-family: BasisGrotesquePro;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.6;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .invitation-footer-signature {
