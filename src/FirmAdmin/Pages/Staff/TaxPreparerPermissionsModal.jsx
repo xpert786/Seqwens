@@ -256,7 +256,7 @@ export default function TaxPreparerPermissionsModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-start justify-center z-[1100] p-4 sm:pt-24 pt-20 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[10001] p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -264,7 +264,8 @@ export default function TaxPreparerPermissionsModal({
       }}
     >
       <div
-        className="bg-white w-full max-w-2xl rounded-xl shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
+        className="bg-white w-full max-w-2xl rounded-xl shadow-2xl relative flex flex-col overflow-hidden m-auto"
+        style={{ maxHeight: 'calc(100vh - 80px)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -551,9 +552,9 @@ export default function TaxPreparerPermissionsModal({
                   </div>
                 );
               })()}
-      </div>
+            </div>
           )}
-    </div>
+        </div>
 
         {/* Footer */ }
   <div className="bg-white border-t border-[#E8F0FF] px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">

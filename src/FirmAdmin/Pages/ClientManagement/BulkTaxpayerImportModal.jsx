@@ -872,13 +872,15 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
   };
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-10 modal-overlay"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10001]"
       onClick={onClose}
-      style={{ zIndex: 99999 }}
     >
       <div
-        className="bg-white rounded-xl shadow-xl p-4 sm:p-6 max-w-4xl w-full mx-auto modal-content-scroller"
-        style={{ maxHeight: '60vh', overflowY: 'auto', position: 'relative' }}
+        className="bg-white rounded-xl shadow-xl p-4 sm:p-8 max-w-5xl w-full mx-auto modal-content-scroller relative"
+        style={{ 
+          maxHeight: 'calc(100vh - 60px)', 
+          overflowY: 'auto' 
+        }}
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
