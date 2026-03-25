@@ -388,7 +388,7 @@ export default function FirmDashboardLayout() {
 
   return (
     <SubscriptionStatusProvider>
-      <div className="firm-dashboard-layout overflow-hidden h-screen bg-[#F3F7FF]">
+      <div className="firm-dashboard-layout overflow-hidden h-screen bg-white">
         <MaintenanceMode />
         <ForcedPasswordChangeModal />
         <ImpersonationBanner />
@@ -422,7 +422,7 @@ export default function FirmDashboardLayout() {
           }}
         >
           <SubscriptionStatusBanner />
-          <main className="flex-grow overflow-y-auto !pb-20">
+          <main className="flex-grow overflow-y-auto">
             <Outlet />
           </main>
         </div>

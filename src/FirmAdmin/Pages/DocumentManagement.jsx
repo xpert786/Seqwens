@@ -524,7 +524,7 @@ export default function DocumentManagement() {
   });
 
   return (
-    <div className="px-4 py-6 bg-[rgb(243,247,255)] min-h-screen docmanage-main-container">
+    <div className="px-4 py-6 min-h-screen docmanage-main-container">
       {/* Header Section */}
       {!isViewingDocument && (
         <div className="mb-6 docmanage-header">
