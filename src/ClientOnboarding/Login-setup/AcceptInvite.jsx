@@ -140,17 +140,17 @@ export default function AcceptInvite() {
                     // Check for existing grant (client invites only)
                     if (isClient && response.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.existing_grant);
-                        // Force choice by NOT defaulting
-                        setDataSharingDecision(null);
+                        // Default to Option 1 (Share All)
+                        setDataSharingDecision({ scope: 'all', selectedCategories: null });
                     }
 
                     // Also check for existing grant from staff/general invites
                     if (response.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.existing_grant);
-                        setDataSharingDecision(null);
+                        setDataSharingDecision({ scope: 'all', selectedCategories: null });
                     } else if (response.data.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.data.existing_grant);
-                        setDataSharingDecision(null);
+                        setDataSharingDecision({ scope: 'all', selectedCategories: null });
                     }
                 } else {
                     console.log('Invitation validation failed or has issues');
@@ -390,24 +390,14 @@ export default function AcceptInvite() {
         } catch (error) {
             console.error('Error accepting invitation:', error);
 
-            const parsedErrorMessage = error.message || handleAPIError(error);
-
-            // CRITICAL FIX: Intercept technical data sharing errors and translate them to user-friendly text
-            if (parsedErrorMessage.toLowerCase().includes('data_sharing_scope') || 
-                parsedErrorMessage.toLowerCase().includes('data sharing')) {
-                setErrors({ general: "Please choose how you’d like to share your information before continuing." });
-                // Provide actionable path by re-showing the choice modal
-                setShowDataSharingModal(true);
-                return;
-            }
-
             // Check for duplicate invite in error message
-            const isDuplicateInvite = parsedErrorMessage.toLowerCase().includes('already has access') ||
-                parsedErrorMessage.toLowerCase().includes('already exists');
+            const errorMessage = handleAPIError(error);
+            const isDuplicateInvite = errorMessage.toLowerCase().includes('already has access') ||
+                errorMessage.toLowerCase().includes('already exists');
 
             if (isDuplicateInvite) {
                 setErrors({
-                    general: parsedErrorMessage,
+                    general: errorMessage,
                     duplicateInvite: true
                 });
             } else {
@@ -632,7 +622,7 @@ export default function AcceptInvite() {
                                 You have an existing account for this email address.
                             </p>
                         </div>
-                        
+
                         <div className="alert alert-warning" role="alert" style={{
                             margin: '0 0 2rem 0',
                             padding: '1.25rem',
@@ -664,7 +654,7 @@ export default function AcceptInvite() {
                                 <LogIn size={20} className="me-2" />
                                 Sign In & Accept
                             </button>
-                            
+
                             <button
                                 className="accept-invite-btn deny-btn"
                                 onClick={() => navigate("/login", {
@@ -963,16 +953,16 @@ export default function AcceptInvite() {
                                                 <h6 className="data-sharing-title">
                                                     How would you like to share your information with this tax office?
                                                 </h6>
-                                                
+
                                                 <div className="data-sharing-options-list">
                                                     {/* Option 1: Share All */}
-                                                    <div 
+                                                    <div
                                                         className={`data-sharing-option-item ${dataSharingDecision?.scope === 'all' ? 'selected' : ''}`}
                                                         onClick={() => setDataSharingDecision({ scope: 'all', selectedCategories: null })}
                                                     >
-                                                        <input 
-                                                            type="radio" 
-                                                            name="data_sharing_scope" 
+                                                        <input
+                                                            type="radio"
+                                                            name="data_sharing_scope"
                                                             checked={dataSharingDecision?.scope === 'all'}
                                                             onChange={() => setDataSharingDecision({ scope: 'all', selectedCategories: null })}
                                                             className="data-sharing-radio"
@@ -989,13 +979,13 @@ export default function AcceptInvite() {
                                                     </div>
 
                                                     {/* Option 2: Share Future Only (None mapping) */}
-                                                    <div 
+                                                    <div
                                                         className={`data-sharing-option-item ${dataSharingDecision?.scope === 'none' ? 'selected' : ''}`}
                                                         onClick={() => setDataSharingDecision({ scope: 'none', selectedCategories: null })}
                                                     >
-                                                        <input 
-                                                            type="radio" 
-                                                            name="data_sharing_scope" 
+                                                        <input
+                                                            type="radio"
+                                                            name="data_sharing_scope"
                                                             checked={dataSharingDecision?.scope === 'none'}
                                                             onChange={() => setDataSharingDecision({ scope: 'none', selectedCategories: null })}
                                                             className="data-sharing-radio"
@@ -1207,8 +1197,7 @@ export default function AcceptInvite() {
 
                             {existingGrant?.has_existing_grant && (
                                 <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-3" style={{ lineHeight: '1.6' }}>
-                                    Your previous tax office will still have access to documents you already shared with them, but they will not see any new documents going forward. 
-                                    By continuing, you agree to this data sharing arrangement.
+                                    Your previous tax office will still have access to documents you already shared with them, but they will not see any new documents going forward.
                                 </p>
                             )}
 
