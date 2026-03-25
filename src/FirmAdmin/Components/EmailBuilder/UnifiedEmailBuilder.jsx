@@ -141,8 +141,8 @@ const UnifiedEmailBuilder = ({
             {showModeWarning && (
                 <div className="mode-warning-modal-overlay">
                     <div className="mode-warning-modal">
-                        <div className="modal-header">
-                            <h3>⚠️ Switch to Advanced HTML Editor?</h3>
+                        <div className="border-b border-gray-200 p-4">
+                            <h4 className='mb-0 '>⚠️ Switch to Advanced HTML Editor?</h4>
                         </div>
                         <div className="modal-content">
                             <p className="warning-text">

@@ -11,19 +11,13 @@ export default function AccountSettings() {
     ];
 
     return (
-        <div className="container-fluid px-4">
+        <div className="container-fluid px-4 py-6">
             <div className="align-items-center mb-4">
-                <h5
+                <h4
                     className="mb-0 me-3"
-                    style={{
-                        color: "#3B4A66",
-                        fontSize: "28px",
-                        fontWeight: "500",
-                        fontFamily: "BasisGrotesquePro",
-                    }}
                 >
                     Account Settings
-                </h5>
+                </h4>
                 <p
                     className="mb-0"
                     style={{

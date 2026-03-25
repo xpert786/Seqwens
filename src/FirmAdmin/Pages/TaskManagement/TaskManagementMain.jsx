@@ -521,7 +521,7 @@ const TaskManagementMain = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F7FF] p-6 taskmanage-main-container">
+    <div className="min-h-screen bg-[#F6F7FF] px-4 py-6 taskmanage-main-container">
       <div className=" mx-auto">
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-8 space-y-4 lg:space-y-0 taskmanage-header">

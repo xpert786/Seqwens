@@ -1420,7 +1420,7 @@ export default function ClientManage() {
     }
   };
   return (
-    <div className="p-4 sm:p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
+    <div className="px-4 py-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
       <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4 clientmanage-header">
         <div className="flex-1 clientmanage-header-content">
@@ -2171,8 +2171,6 @@ export default function ClientManage() {
             </div>
           </div>
 
-
-
           {/* Client Table */}
           <div className="overflow-x-auto px-4 sm:px-6">
             <table className="min-w-full">
@@ -2207,7 +2205,7 @@ export default function ClientManage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredClients.map((client) => (
+                  filteredClients.map((client, index) => (
                     <tr key={client.id}>
                       <td colSpan="6" className="p-0">
                         <div
@@ -2280,6 +2278,7 @@ export default function ClientManage() {
                               </div>
                             </div>
 
+                            {/* Client Status Column */}
                             <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
                               <span
                                 className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-white`}
@@ -2360,13 +2359,16 @@ export default function ClientManage() {
                               </button>
                               {showDropdown === client.id && (
                                 <div
-                                  className="absolute mt-2 w-48 bg-white shadow-lg z-10"
+                                  className="absolute w-48 bg-white shadow-lg z-10"
                                   style={{
                                     border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
                                     borderRadius: '8px',
-                                    marginTop: '8px',
                                     right: '8px',
                                     width: '200px',
+                                    ...(index >= filteredClients.length - 2 && filteredClients.length > 2
+                                      ? { bottom: '100%', marginBottom: '8px' }
+                                      : { top: '100%', marginTop: '8px' }
+                                    )
                                   }}
                                 >
                                   <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>

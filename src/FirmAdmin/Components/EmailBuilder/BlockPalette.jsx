@@ -1,13 +1,6 @@
 import React from 'react';
-import './BlockPalette.css';
 
 const BLOCK_TYPES = [
-    // {
-    //     type: 'columns',
-    //     icon: '▥',
-    //     label: 'COLUMNS',
-    //     description: '2 or 3 column layout',
-    // },
     {
         type: 'signature',
         icon: '✍',
@@ -84,27 +77,34 @@ const BLOCK_TYPES = [
 
 const BlockPalette = ({ onAddBlock }) => {
     return (
-        <div className="block-palette">
-            <div className="palette-header">
-                <h3>Content Blocks</h3>
-                <p className="palette-subtitle">Drag or click to add</p>
+        <div className="w-full lg:w-[200px] h-full bg-white border-b lg:border-b-0 lg:border-r border-[#e8f0ff] flex flex-col overflow-y-auto lg:max-h-none max-h-[400px] custom-scrollbar">
+            <div className="p-3 border-b border-[#e8f0ff]">
+                <h4 className="m-0 mb-[4px] !text-[16px] font-bold text-[#1f2a55]">Content Blocks</h4>
+                <p className="m-0 text-[12px] text-[#6e7dae]">Drag or click to add</p>
             </div>
-            <div className="palette-blocks">
+
+            <div className="flex-1 p-3 grid lg:grid-cols-1 grid-cols-4 gap-2 overflow-y-auto lg:overflow-x-visible overflow-x-hidden custom-scrollbar">
                 {BLOCK_TYPES.map((blockType) => (
                     <button
                         key={blockType.type}
-                        className="palette-block-btn"
+                        className="flex lg:flex-row flex-col items-center gap-3 p-3 bg-white border-2 border-[#e8f0ff] !rounded-[12px] cursor-pointer transition-all duration-200 text-left w-full hover:bg-[#f3f6fd] hover:border-[#3ad6f2] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(58,214,242,0.2)] active:translate-y-0"
                         onClick={() => onAddBlock(blockType.type)}
                         title={blockType.description}
                     >
-                        <span className="block-icon">{blockType.icon}</span>
-                        <span className="block-label">{blockType.label}</span>
+                        <span className="text-[20px] w-7 h-7 flex items-center justify-center bg-[#f3f6fd] rounded-[8px] flex-shrink-0">
+                            {blockType.icon}
+                        </span>
+                        <span className="flex-1 text-[11px] font-bold tracking-[0.5px] text-[#1f2a55]">
+                            {blockType.label}
+                        </span>
                     </button>
                 ))}
             </div>
-            <div className="palette-footer">
-                <div className="palette-tip">
-                    <strong>💡 Tip:</strong> Click a block to add it to your email template
+
+
+            <div className="p-4 border-t border-[#e8f0ff] bg-[#f9fbff]">
+                <div className="text-[11px] text-[#6e7dae] leading-[1.5]">
+                    <strong className="block mb-1 text-[#1f2a55]">💡 Tip:</strong> Click a block to add it to your email template
                 </div>
             </div>
         </div>
@@ -112,3 +112,4 @@ const BlockPalette = ({ onAddBlock }) => {
 };
 
 export default BlockPalette;
+

@@ -465,7 +465,7 @@ body.is-impersonating .Toastify__toast-container--top-right,
 body.is-impersonating .Toastify__toast-container--top-center,
 body.is-impersonating .Toastify__toast-container--top-left {
   top: 55px;
-  z-index: 10001;
+  z-index: 10000001;
 }
 
 
@@ -703,10 +703,6 @@ div[style*="z-index"][style*="fixed"] {
   filter: brightness(0.95);
 }
 
-.firm-panel .group:hover .group-hover\:text-firm-primary {
-  color: var(--firm-primary-color);
-}
-
 /* Secondary & Accent utilities */
 .firm-panel .bg-firm-secondary {
   background-color: var(--firm-secondary-color);
@@ -840,10 +836,6 @@ div[style*="z-index"][style*="fixed"] {
   background-color: var(--firm-primary-color);
 }
 
-.firm-panel .hover\:text-\[\#3AD6F2\]:hover {
-  color: var(--firm-primary-color);
-}
-
 /* Background with opacity */
 .firm-panel .bg-\[\#3AD6F2\]\/10 {
   background-color: color-mix(in srgb, var(--firm-primary-color), transparent 90%);
@@ -928,14 +920,4 @@ div[style*="z-index"][style*="fixed"] {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
-}
-
-/* Global utility to disable hover effects on logout buttons */
-.no-hover-logout:hover {
-  color: #EF4444;
-  background-color: transparent;
-  filter: none;
-  transition: none;
-  box-shadow: none;
-  transform: none;
 }

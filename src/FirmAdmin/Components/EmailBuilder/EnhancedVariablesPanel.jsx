@@ -1,5 +1,4 @@
 import React from 'react';
-import './EnhancedVariablesPanel.css';
 
 const VARIABLE_GROUPS = {
     client: {
@@ -110,63 +109,70 @@ const EnhancedVariablesPanel = ({ onInsertVariable, onClose }) => {
     }, [searchQuery]);
 
     return (
-        <div className="enhanced-variables-panel">
-            <div className="variables-panel-header">
-                <h3>Available Variables</h3>
-                <button className="panel-close-btn" onClick={onClose}>×</button>
+        <div className="w-full h-full bg-white flex flex-col overflow-hidden">
+            <div className="p-[20px] border-b border-[#e8f0ff] flex justify-between items-center bg-[#f9fbff]">
+                <h4 className="m-0 text-[16px] font-bold text-[#1f2a55]">Available Variables</h4>
+                <button
+                    className="text-[24px] cursor-pointer text-[#6e7dae] bg-transparent border-none p-0 leading-none"
+                    onClick={onClose}
+                >
+                    ×
+                </button>
             </div>
 
-            <div className="variables-search">
+            <div className="p-[16px] border-b border-[#e8f0ff]">
                 <input
                     type="text"
                     placeholder="Search variables..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="variables-search-input"
+                    className="w-full p-[10px_12px] border-2 border-[#e8f0ff] rounded-[6px] text-[14px] text-[#1f2a55] transition-all duration-200 focus:outline-none focus:border-[#3ad6f2] focus:shadow-[0_0_0_3px_rgba(58,214,242,0.1)]"
                 />
             </div>
 
-            <div className="variables-help-text">
-                <p>💡 Click any variable to insert it into your content. It will be replaced with actual data when the email is sent.</p>
+            <div className="p-[12px_16px] bg-[#ebfcff] border-b border-[#e8f0ff]">
+                <p className="m-0 text-[12px] text-[#1f2a55] leading-[1.5]">💡 Click any variable to insert it into your content. It will be replaced with actual data when the email is sent.</p>
             </div>
 
-            <div className="variables-groups">
+            <div className="flex-1 overflow-y-auto p-[8px] custom-scrollbar">
                 {Object.entries(filteredGroups).map(([groupKey, group]) => (
-                    <div key={groupKey} className="variable-group">
+                    <div key={groupKey} className="mb-[8px] border border-[#e8f0ff] rounded-[8px] overflow-hidden bg-white">
                         <button
-                            className="variable-group-header"
+                            className="w-full p-[12px_16px] bg-[#f9fbff] border-none flex items-center gap-[8px] cursor-pointer transition-all duration-200 text-left hover:bg-[#f3f6fd]"
                             onClick={() => toggleGroup(groupKey)}
                         >
-                            <span className="group-icon">{group.icon}</span>
-                            <span className="group-label">{group.label}</span>
-                            <span className="group-count">({group.variables.length})</span>
-                            <span className={`group-toggle ${expandedGroups.includes(groupKey) ? 'expanded' : ''}`}>
+                            <span className="text-[18px]">{group.icon}</span>
+                            <span className="flex-1 text-[13px] font-bold text-[#1f2a55]">{group.label}</span>
+                            <span className="text-[11px] text-[#6e7dae] font-semibold">({group.variables.length})</span>
+                            <span className={`text-[10px] text-[#6e7dae] transition-transform duration-200 ${expandedGroups.includes(groupKey) ? 'rotate-180' : ''}`}>
                                 ▼
                             </span>
                         </button>
 
                         {expandedGroups.includes(groupKey) && (
-                            <div className="variable-group-content">
+                            <div className="border-t border-[#e8f0ff]">
                                 {group.variables.map((variable) => (
                                     <div
                                         key={variable.key}
-                                        className="variable-item"
-                                        onClick={() => onInsertVariable(`[${variable.key}]`)}
+                                        className="p-[12px_16px] border-b border-[#f3f6fd] last:border-b-0 cursor-pointer transition-all duration-200 hover:bg-[#ebfcff]"
+                                        onClick={() => onInsertVariable && onInsertVariable(`[${variable.key}]`)}
                                     >
-                                        <div className="variable-info">
-                                            <div className="variable-label">{variable.label}</div>
-                                            <div className="variable-placeholder">[{variable.key}]</div>
-                                            <div className="variable-description">{variable.description}</div>
+                                        <div className="mb-[8px]">
+                                            <div className="text-[13px] font-semibold text-[#1f2a55] mb-[4px]">{variable.label}</div>
+                                            <div className="text-[11px] font-mono text-[#3ad6f2] bg-[#f3f6fd] p-[2px_6px] rounded-[3px] inline-block mb-[4px]">[{variable.key}]</div>
+                                            <div className="text-[11px] text-[#6e7dae] leading-[1.4]">{variable.description}</div>
                                         </div>
-                                        <div className="variable-preview">
+                                        <div className="mt-[8px]">
                                             {variable.isColor ? (
-                                                <div className="color-preview" style={{ backgroundColor: variable.example }}>
+                                                <div className="text-[11px] text-white p-[6px_10px] rounded-[4px] text-center font-mono font-bold shadow-[0_2px_4px_rgba(0,0,0,0.1)]" style={{ backgroundColor: variable.example }}>
                                                     {variable.example}
                                                 </div>
                                             ) : variable.isImage ? (
-                                                <div className="image-preview">🖼️ Image URL</div>
+                                                <div className="text-[12px] text-[#6e7dae] p-[6px_10px] bg-[#f9fbff] rounded-[4px] text-center border border-[#e8f0ff]">🖼️ Image URL</div>
                                             ) : (
-                                                <div className="text-preview">→ "{variable.example}"</div>
+                                                <div className="text-[12px] text-[#6e7dae] italic p-[6px_10px] bg-[#f9fbff] rounded-[4px] border-l-[3px] border-[#3ad6f2]">
+                                                    → "{variable.example}"
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -178,8 +184,8 @@ const EnhancedVariablesPanel = ({ onInsertVariable, onClose }) => {
             </div>
 
             {Object.keys(filteredGroups).length === 0 && (
-                <div className="no-results">
-                    <p>No variables found matching "{searchQuery}"</p>
+                <div className="p-[40px_20px] text-center">
+                    <p className="m-0 text-[14px] text-[#6e7dae]">No variables found matching "{searchQuery}"</p>
                 </div>
             )}
         </div>
@@ -187,3 +193,4 @@ const EnhancedVariablesPanel = ({ onInsertVariable, onClose }) => {
 };
 
 export default EnhancedVariablesPanel;
+

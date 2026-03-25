@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import EnhancedVariablesPanel from './EnhancedVariablesPanel';
-import './HTMLEditorMode.css';
+import ProtectedHTMLTextArea from './ProtectedHTMLTextArea';
 
 const HTMLEditorMode = ({
     headerHTML = '',
@@ -17,6 +17,10 @@ const HTMLEditorMode = ({
     const [showVariables, setShowVariables] = useState(true);
     const [activeField, setActiveField] = useState('body');
     const [showPreview, setShowPreview] = useState(false);
+    const headerRef = React.useRef(null);
+    const bodyRef = React.useRef(null);
+    const footerRef = React.useRef(null);
+
 
     const handleChange = (field, value) => {
         const newHtml = { ...html, [field]: value };
@@ -27,23 +31,13 @@ const HTMLEditorMode = ({
     };
 
     const insertVariable = (placeholder) => {
-        const textarea = document.getElementById(`html-${activeField}`);
-        if (!textarea) return;
-
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = html[activeField] || '';
-        const before = text.substring(0, start);
-        const after = text.substring(end, text.length);
-
-        handleChange(activeField, before + placeholder + after);
-
-        // Reset cursor position
-        setTimeout(() => {
-            textarea.focus();
-            textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
-        }, 0);
+        const refs = { header: headerRef, body: bodyRef, footer: footerRef };
+        const ref = refs[activeField];
+        if (ref && ref.current) {
+            ref.current.insertVariable(placeholder);
+        }
     };
+
 
     const getPreviewHTML = () => {
         return `
@@ -66,122 +60,150 @@ const HTMLEditorMode = ({
     };
 
     return (
-        <div className="html-editor-mode">
-            <div className="html-editor-header">
-                <div className="mode-warning">
-                    <span className="warning-icon">⚠️</span>
+        <div className="flex flex-col bg-[#f3f6fd]">
+            <div className="sticky top-0 z-10 bg-white border-b border-[#e8f0ff] p-[16px_24px] flex-shrink-0">
+                <div className="flex gap-[12px] p-[12px_16px] bg-[#fff3cd] border-l-4 border-[#f56d2d] rounded-[12px] mb-[16px]">
+                    <span className="text-[24px]">⚠️</span>
                     <div className="warning-content">
-                        <strong>Advanced Mode</strong>
-                        <p>This mode is intended for experienced users with HTML knowledge. Incorrect HTML can break email layouts.</p>
+                        <strong className="block text-[#856404] text-[14px] mb-[4px] font-bold">Advanced Mode</strong>
+                        <p className="m-0 text-[12px] text-[#856404] leading-[1.5]">This mode is intended for experienced users with HTML knowledge. Incorrect HTML can break email layouts.</p>
                     </div>
                 </div>
-                <div className="editor-actions">
+                <div className="flex gap-[12px] justify-end">
                     <button
-                        className="toggle-variables-btn"
+                        className="p-[10px_20px] !rounded-[10px] font-semibold text-[14px] transition-all duration-200 cursor-pointer bg-white text-[#1f2a55] border-2 border-[#e8f0ff] hover:bg-[#f3f6fd] hover:border-[#3ad6f2]"
                         onClick={() => setShowVariables(!showVariables)}
                     >
                         {showVariables ? 'Hide' : 'Show'} Variables
                     </button>
                     <button
-                        className="toggle-preview-btn"
+                        className="p-[10px_20px] !rounded-[10px] font-semibold text-[14px] transition-all duration-200 cursor-pointer bg-white text-[#1f2a55] border-2 border-[#e8f0ff] hover:bg-[#f3f6fd] hover:border-[#3ad6f2]"
                         onClick={() => setShowPreview(!showPreview)}
                     >
                         {showPreview ? 'Hide' : 'Show'} Preview
                     </button>
                     {onSave && (
-                        <button className="save-html-btn" onClick={() => onSave(html)}>
+                        <button
+                            className="p-[10px_20px] !rounded-[10px] font-semibold text-[14px] transition-all duration-200 cursor-pointer bg-[#3ad6f2] text-white hover:bg-[#2bc5e0]"
+                            onClick={() => onSave(html)}
+                        >
                             Save Template
                         </button>
                     )}
                 </div>
             </div>
 
-            <div className="html-editor-main">
-                <div className="html-editors-container">
-                    <div className="html-editor-section">
-                        <label htmlFor="html-header">
-                            <strong>Header HTML</strong>
-                            <span className="optional-label">(Optional - appears at top of email)</span>
-                        </label>
-                        <textarea
-                            id="html-header"
-                            className="html-textarea"
-                            value={html.header}
-                            onChange={(e) => handleChange('header', e.target.value)}
-                            onFocus={() => setActiveField('header')}
-                            placeholder="Enter header HTML (e.g., logo, navigation)..."
-                            spellCheck={false}
-                        />
-                    </div>
+            <div className="flex flex-row items-stretch min-h-[calc(100vh-150px)] bg-white">
+                {/* Editor Panel */}
+                {!showPreview ? (
+                    <div className="flex-1 p-[24px]">
+                        <div className="max-w-[800px] mx-auto">
+                            <div className="mb-[24px]">
+                                <label htmlFor="html-header" className="flex items-center gap-[8px] mb-[8px] text-[14px] text-[#1f2a55]">
+                                    <strong className="font-bold">Header HTML</strong>
+                                    <span className="text-[11px] text-[#6e7dae] font-medium">(Optional)</span>
+                                </label>
+                                <ProtectedHTMLTextArea
+                                    ref={headerRef}
+                                    id="html-header"
+                                    className="w-full min-h-[100px]"
+                                    value={html.header}
+                                    onChange={(value) => handleChange('header', value)}
+                                    onFocus={() => setActiveField('header')}
+                                    placeholder="Enter header HTML..."
+                                />
+                            </div>
 
-                    <div className="html-editor-section">
-                        <label htmlFor="html-body">
-                            <strong>Body HTML</strong>
-                            <span className="required-label">(Required - main email content)</span>
-                        </label>
-                        <textarea
-                            id="html-body"
-                            className="html-textarea body"
-                            value={html.body}
-                            onChange={(e) => handleChange('body', e.target.value)}
-                            onFocus={() => setActiveField('body')}
-                            placeholder="Enter body HTML (main email content)..."
-                            spellCheck={false}
-                        />
-                    </div>
+                            <div className="mb-[24px]">
+                                <label htmlFor="html-body" className="flex items-center gap-[8px] mb-[8px] text-[14px] text-[#1f2a55]">
+                                    <strong className="font-bold">Body HTML</strong>
+                                    <span className="text-[11px] text-[#f56d2d] font-semibold">(Required)</span>
+                                </label>
+                                <ProtectedHTMLTextArea
+                                    ref={bodyRef}
+                                    id="html-body"
+                                    className="w-full min-h-[300px]"
+                                    value={html.body}
+                                    onChange={(value) => handleChange('body', value)}
+                                    onFocus={() => setActiveField('body')}
+                                    placeholder="Enter body HTML..."
+                                />
+                            </div>
 
-                    <div className="html-editor-section">
-                        <label htmlFor="html-footer">
-                            <strong>Footer HTML</strong>
-                            <span className="optional-label">(Optional - appears at bottom of email)</span>
-                        </label>
-                        <textarea
-                            id="html-footer"
-                            className="html-textarea"
-                            value={html.footer}
-                            onChange={(e) => handleChange('footer', e.target.value)}
-                            onFocus={() => setActiveField('footer')}
-                            placeholder="Enter footer HTML (e.g., contact info, unsubscribe)..."
-                            spellCheck={false}
-                        />
-                    </div>
+                            <div className="mb-[24px]">
+                                <label htmlFor="html-footer" className="flex items-center gap-[8px] mb-[8px] text-[14px] text-[#1f2a55]">
+                                    <strong className="font-bold">Footer HTML</strong>
+                                    <span className="text-[11px] text-[#6e7dae] font-medium">(Optional)</span>
+                                </label>
+                                <ProtectedHTMLTextArea
+                                    ref={footerRef}
+                                    id="html-footer"
+                                    className="w-full min-h-[100px]"
+                                    value={html.footer}
+                                    onChange={(value) => handleChange('footer', value)}
+                                    onFocus={() => setActiveField('footer')}
+                                    placeholder="Enter footer HTML..."
+                                />
+                            </div>
 
-                    <div className="html-tips">
-                        <h4>💡 HTML Tips</h4>
-                        <ul>
-                            <li>Use inline CSS styles for best email compatibility</li>
-                            <li>Use table layouts instead of divs for complex layouts</li>
-                            <li>Test in multiple email clients before sending</li>
-                            <li>Insert variables using the panel on the right →</li>
-                        </ul>
-                    </div>
-                </div>
-
-                {showPreview && (
-                    <div className="html-preview-panel">
-                        <div className="preview-header">
-                            <h3>Email Preview</h3>
+                            <div className="p-[16px] bg-[#ebfcff] border-l-4 border-[#3ad6f2] rounded-[12px] mt-[24px]">
+                                <h4 className="m-[0_0_12px_0] text-[14px] text-[#1f2a55] font-bold">💡 HTML Tips</h4>
+                                <ul className="m-0 pl-[20px]">
+                                    <li className="text-[12px] text-[#1f2a55] mb-[6px] leading-[1.5]">Use inline CSS styles for best email compatibility</li>
+                                    <li className="text-[12px] text-[#1f2a55] mb-[6px] leading-[1.5]">Use table layouts instead of divs</li>
+                                    <li className="text-[12px] text-[#1f2a55] mb-[6px] leading-[1.5]">Insert variables using the panel on the right →</li>
+                                </ul>
+                            </div>
                         </div>
-                        <div className="preview-content">
-                            <iframe
-                                srcDoc={getPreviewHTML()}
-                                title="Email Preview"
-                                className="preview-iframe"
-                                sandbox="allow-same-origin"
+                    </div>
+                ) : (
+                    <div className="flex-1 bg-white flex flex-col min-h-0">
+                        <div className="p-[20px] border-b border-[#e8f0ff] bg-[#f9fbff] flex-shrink-0 flex items-center justify-between">
+                            <h3 className="m-0 text-[16px] font-bold text-[#1f2a55]">Full Email Preview</h3>
+                            <button
+                                className="text-[12px] text-[#3ad6f2] font-semibold hover:underline"
+                                onClick={() => setShowPreview(false)}
+                            >
+                                Back to Editor
+                            </button>
+                        </div>
+                        <div className="flex-1 p-[24px] bg-[#f3f6fd] flex justify-center">
+                            <div className="w-full max-w-[600px] bg-white shadow-lg rounded-[12px] border border-[#e8f0ff] min-h-[600px] mb-[40px]">
+                                <iframe
+                                    srcDoc={getPreviewHTML()}
+                                    title="Email Preview"
+                                    className="w-full border-none min-h-[500px]"
+                                    sandbox="allow-same-origin"
+                                    onLoad={(e) => {
+                                        const iframe = e.target;
+                                        if (iframe.contentWindow) {
+                                            iframe.style.height = '0px'; // Reset height
+                                            iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                    </div>
+                )}
+
+                {/* Variables Panel */}
+                {showVariables && (
+                    <div className="w-[300px] border-l border-[#e8f0ff] flex-shrink-0 flex-col flex bg-white relative">
+                        <div className="sticky top-[80px] h-[calc(100vh-100px)]">
+                            <EnhancedVariablesPanel
+                                onInsertVariable={!showPreview ? insertVariable : null}
+                                onClose={() => setShowVariables(false)}
                             />
                         </div>
                     </div>
                 )}
-
-                {showVariables && (
-                    <EnhancedVariablesPanel
-                        onInsertVariable={insertVariable}
-                        onClose={() => setShowVariables(false)}
-                    />
-                )}
             </div>
         </div>
     );
+
 };
 
 export default HTMLEditorMode;
+

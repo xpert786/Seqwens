@@ -194,7 +194,7 @@ export default function AnalyticsMain() {
   };
 
   return (
-    <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
+    <div className="w-full px-4 py-6 bg-[#F6F7FF] min-h-screen">
       <div className="mx-auto">
         {/* Fixed Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 lg:mb-8 space-y-4 lg:space-y-0">
@@ -205,7 +205,7 @@ export default function AnalyticsMain() {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             {/* Date Range Dropdown */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-45">
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
