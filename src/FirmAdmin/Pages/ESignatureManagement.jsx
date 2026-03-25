@@ -1187,7 +1187,7 @@ export default function ESignatureManagement() {
   };
 
   return (
-    <div className="px-4 py-6 min-h-screen">
+    <div className="p-2 sm:p-4 md:p-6 pt-0 sm:pt-2 min-h-screen">
       {/* Header Section */}
       <div className="mb-2 md:mb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">

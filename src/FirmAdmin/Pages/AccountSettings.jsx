@@ -69,7 +69,6 @@ export default function AccountSettings() {
                     ))}
                 </ul>
             </div>
-
             {/* Content Section */}
             <div>
                 {activeTab === "profile" && <Profile />}
