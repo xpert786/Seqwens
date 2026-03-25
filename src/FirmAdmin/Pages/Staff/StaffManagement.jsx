@@ -1164,7 +1164,7 @@ export default function StaffManagement() {
         confirmText="Download"
         cancelText="Cancel"
       />
-      <div className="w-full lg:px-4 px-2 py-4 bg-[#F6F7FF] min-h-screen staff-main-container">
+      <div className="w-full px-4 py-6 bg-[#F6F7FF] min-h-screen staff-main-container">
         {/* Header and Action Buttons */}
         <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4 staff-header-section">
           {/* Header */}

@@ -1108,7 +1108,7 @@ const Messages = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F7FF] p-6">
+    <div className="min-h-screen px-4 py-6 bg-[#F3F7FF]">
       <style>
         {`
           .hide-scrollbar::-webkit-scrollbar {

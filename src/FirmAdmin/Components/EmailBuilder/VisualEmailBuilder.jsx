@@ -5,7 +5,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import BlockPalette from './BlockPalette';
 import BuilderCanvas from './BuilderCanvas';
 import PropertiesPanel from './PropertiesPanel';
-import './VisualEmailBuilder.css';
+
 
 const VisualEmailBuilder = ({
     initialBlocks = [],
@@ -103,66 +103,83 @@ const VisualEmailBuilder = ({
     };
 
     return (
-        <div className="visual-email-builder">
-            <div className="builder-header">
-                <div className="builder-actions">
+        <div className="flex flex-col h-full bg-[#f3f6fd]">
+            <div className="p-3 bg-white border-b border-[#e8f0ff] flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    {previewMode && (
+                        <span className="bg-[#ebfcff] text-[#3ad6f2] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#3ad6f2]/20">
+                            Preview
+                        </span>
+                    )}
+                </div>
+                <div className="flex gap-[12px]">
                     <button
-                        className="preview-toggle-btn"
+                        className="px-4 py-2.5 !rounded-[10px] font-semibold text-sm cursor-pointer transition-all duration-200 border-2 bg-white text-[#1f2a55] border-[#e8f0ff] hover:bg-[#f3f6fd] hover:border-[#3ad6f2]"
                         onClick={() => setPreviewMode(!previewMode)}
                     >
                         {previewMode ? 'Edit Mode' : 'Preview Mode'}
                     </button>
                     {onSave && (
-                        <button className="save-template-btn" onClick={() => onSave(blocks)}>
+                        <button
+                            className="px-4 py-2.5 !rounded-[10px] font-semibold text-sm cursor-pointer transition-all duration-200 bg-[#3ad6f2] text-white hover:bg-[#2bc5e0]"
+                            onClick={() => onSave(blocks)}
+                        >
                             Save Template
                         </button>
                     )}
                 </div>
             </div>
 
-            <div className="builder-main">
+            <div className="flex flex-1 overflow-hidden gap-0 lg:flex-row flex-col">
                 {!previewMode && (
-                    <BlockPalette onAddBlock={addBlock} />
+                    <div className="w-full lg:w-auto h-auto lg:h-full lg:border-r border-[#e8f0ff]">
+                        <BlockPalette onAddBlock={addBlock} />
+                    </div>
                 )}
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                    modifiers={[restrictToVerticalAxis]}
-                >
-                    <SortableContext
-                        items={blocks.map(b => b.id)}
-                        strategy={verticalListSortingStrategy}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[#f3f6fd]">
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                        modifiers={[restrictToVerticalAxis]}
                     >
-                        <BuilderCanvas
-                            blocks={blocks}
-                            selectedBlockId={selectedBlockId}
-                            onSelectBlock={setSelectedBlockId}
-                            onUpdateBlock={updateBlock}
-                            onDeleteBlock={deleteBlock}
-                            onDuplicateBlock={duplicateBlock}
-                            onMoveUp={moveBlockUp}
-                            onMoveDown={moveBlockDown}
-                            previewMode={previewMode}
-                            firmData={firmData}
-                            brandingData={brandingData}
-                        />
-                    </SortableContext>
-                </DndContext>
+                        <SortableContext
+                            items={blocks.map(b => b.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            <BuilderCanvas
+                                blocks={blocks}
+                                selectedBlockId={selectedBlockId}
+                                onSelectBlock={setSelectedBlockId}
+                                onUpdateBlock={updateBlock}
+                                onDeleteBlock={deleteBlock}
+                                onDuplicateBlock={duplicateBlock}
+                                onMoveUp={moveBlockUp}
+                                onMoveDown={moveBlockDown}
+                                previewMode={previewMode}
+                                firmData={firmData}
+                                brandingData={brandingData}
+                            />
+                        </SortableContext>
+                    </DndContext>
+                </div>
 
                 {!previewMode && selectedBlock && (
-                    <PropertiesPanel
-                        block={selectedBlock}
-                        firmData={firmData}
-                        brandingData={brandingData}
-                        onUpdate={(newData) => updateBlock(selectedBlock.id, newData)}
-                        onClose={() => setSelectedBlockId(null)}
-                    />
+                    <div className="w-full lg:w-[350px] lg:border-l border-[#e8f0ff] bg-white">
+                        <PropertiesPanel
+                            block={selectedBlock}
+                            firmData={firmData}
+                            brandingData={brandingData}
+                            onUpdate={(newData) => updateBlock(selectedBlock.id, newData)}
+                            onClose={() => setSelectedBlockId(null)}
+                        />
+                    </div>
                 )}
             </div>
         </div>
     );
+
 };
 
 // Helper function to get default data for each block type

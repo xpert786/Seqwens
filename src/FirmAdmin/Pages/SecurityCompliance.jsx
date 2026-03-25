@@ -3045,7 +3045,7 @@ export default function SecurityCompliance() {
     };
 
     return (
-        <div className="bg-[rgb(243,247,255)] px-4 pt-0 pb-6 md:px-6">
+        <div className="bg-[rgb(243,247,255)] px-4 py-6">
             <div className="mx-auto flex w-full flex-col gap-6">
                 <div className="rounded-xl">
                     <div className="flex flex-wrap items-center justify-between gap-4">

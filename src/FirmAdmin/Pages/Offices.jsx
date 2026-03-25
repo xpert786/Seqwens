@@ -182,11 +182,11 @@ export default function Offices() {
     };
 
     return (
-        <div className="p-6 bg-[rgb(243,247,255)] min-h-full">
+        <div className="px-4 py-6 bg-[rgb(243,247,255)] min-h-full">
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                 <div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Office Locations</h3>
+                    <h4 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Office Locations</h4>
                     <p className="text-sm text-gray-600">Manage multiple office locations and their performance</p>
                 </div>
                 <button

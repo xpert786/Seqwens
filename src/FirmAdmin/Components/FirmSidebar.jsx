@@ -10,22 +10,13 @@ import {
   StaffManagementIcon,
   TaskManagementIcon,
   DocumentManage,
-  Esign,
   Msg,
   Schedule,
   Billing,
-  Workflow,
-  Subscription,
   Offices,
-  Email,
-  Integrations,
-  Security,
-  Firm,
   Settings,
   Out
 } from "./icons";
-
-import { UserManage, ClientIcon, DashIcon, MesIcon, AppointmentIcon, DocumentIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon, AnalyticsIcon } from "./icons";
 
 export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = false, onNavItemClick }) {
   const location = useLocation();
@@ -88,7 +79,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
   const linkClass = (path) => {
     const active = isActive(path);
     const isExactMatch = location.pathname === path || location.pathname === path + "/";
-    return `flex items-center px-3 py-2 text-[10px] font-medium whitespace-nowrap text-left no-underline group ${active
+    return `flex items-center px-3 py-2 text-[12px] font-medium whitespace-nowrap text-left no-underline group ${active
       ? `bg-white/20 text-white rounded-lg font-medium ${isExactMatch ? "pointer-events-none" : ""}`
       : "text-white rounded-lg transition-all duration-200"
       }`;
@@ -97,38 +88,22 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
   const iconWrapperClass = (path) =>
     `inline-flex items-center justify-center mr-3`;
 
-
-
   return (
     <div
-      className="firm-sidebar fixed left-0 z-[1000] transition-all duration-300"
-      style={{
-        backgroundColor: 'var(--firm-primary-color, #32B582)',
-        width: sidebarWidth,
-        top: isImpersonating ? '110px' : '70px',
-        height: isImpersonating ? 'calc(100vh - 110px)' : 'calc(100vh - 70px)',
-        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-        visibility: isSidebarOpen ? 'visible' : 'hidden'
-      }}
+      className={`firm-sidebar fixed left-0 z-[1000] transition-all duration-300 bg-[var(--firm-primary-color,#32B582)] ${isSidebarOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
+        } ${isImpersonating ? 'top-[110px] h-[calc(100vh-110px)]' : 'top-[70px] h-[calc(100vh-70px)]'} ${sidebarWidth === '280px' ? 'w-[280px]' : 'w-[240px]'
+        }`}
     >
       <div
-        className="h-full overflow-y-auto"
-        style={{
-          width: sidebarWidth,
-          scrollbarWidth: 'thin',
-          scrollbarColor: `#ffffff var(--firm-primary-color, #32B582)`,
-          marginRight: '0',
-          paddingRight: '0',
-          position: 'relative',
-          boxSizing: 'border-box'
-        }}
+        className={`h-full overflow-y-auto relative box-border [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.5)_transparent] ${sidebarWidth === '280px' ? 'w-[280px]' : 'w-[240px]'
+          }`}
       >
         <div className="px-4 py-4 space-y-6">
 
           {/* Dashboard Section */}
           <div>
             <div
-              className="flex justify-between items-center px-1 py-2 text-xs font-semibold text-white tracking-wider mb-3 cursor-pointer"
+              className="flex justify-between items-center px-1 py-2 text-sm font-semibold text-white tracking-wider cursor-pointer"
               onClick={() => toggleSection('dashboard')}
             >
               <span>Dashboard</span>
@@ -137,7 +112,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
               </svg>
             </div>
             {expandedSections.dashboard && (
-              <div className="space-y-1" style={{ borderBottom: '0.6px solid #FFFFFF80', paddingBottom: '16px' }}>
+              <div className="space-y-1 border-b-[0.6px] border-white/50 pb-4">
                 <Link to="/firmadmin" className={linkClass("/firmadmin")} onClick={onNavItemClick}>
                   <span className={iconWrapperClass("/firmadmin")}>
                     <DashIconed />
@@ -152,32 +127,12 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
                 </Link>
               </div>
             )}
-            {/* {expandedSections.dashboard && (
-              <ul className="flex flex-col space-y-1">
-                <li>
-                  <Link to="/firmadmin/overview" className={linkClass("/firmadmin/overview")}>
-                    <span className={iconWrapperClass("/firmadmin/overview")}>
-                      <DashIcon />
-                    </span>
-                    Overview
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/firmadmin/analytics" className={linkClass("/firmadmin/analytics")}>
-                    <span className={iconWrapperClass("/firmadmin/analytics")}>
-                      <AnalyticsIcon />
-                    </span>
-                    Analytics & Reports
-                  </Link>
-                </li>
-              </ul>
-            )} */}
           </div>
 
           {/* Client & Staff Management Section */}
           <div>
             <div
-              className="flex justify-between items-center px-1 py-2 text-xs font-semibold text-white tracking-wider mb-3 cursor-pointer"
+              className="flex justify-between items-center px-1 py-2 text-sm font-semibold text-white tracking-wider cursor-pointer"
               onClick={() => toggleSection('clientStaff')}
             >
               <span>Client & Staff Management</span>
@@ -186,7 +141,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
               </svg>
             </div>
             {expandedSections.clientStaff && (
-              <div className="space-y-1" style={{ borderBottom: '0.6px solid #FFFFFF80', paddingBottom: '16px' }}>
+              <div className="space-y-1 border-b-[0.6px] border-white/50 pb-4">
                 <Link to="/firmadmin/clients" className={linkClass("/firmadmin/clients")} onClick={onNavItemClick}>
                   <span className={iconWrapperClass("/firmadmin/clients")}>
                     <ClientManagae />
@@ -212,7 +167,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
           {/* Operations Section */}
           <div>
             <div
-              className="flex justify-between items-center px-1 py-2 text-xs font-semibold text-white tracking-wider mb-3 cursor-pointer"
+              className="flex justify-between items-center px-1 py-2 text-sm font-semibold text-white tracking-wider cursor-pointer"
               onClick={() => toggleSection('operations')}
             >
               <span>Operations</span>
@@ -221,7 +176,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
               </svg>
             </div>
             {expandedSections.operations && (
-              <div className="space-y-1" style={{ borderBottom: '0.6px solid #FFFFFF80', paddingBottom: '16px' }}>
+              <div className="space-y-1 border-b-[0.6px] border-white/50 pb-4">
                 <Link to="/firmadmin/documents" className={linkClass("/firmadmin/documents")} onClick={onNavItemClick}>
                   <span className={iconWrapperClass("/firmadmin/documents")}>
                     <DocumentManage />
@@ -256,7 +211,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
           {/* Business Operations Section */}
           <div>
             <div
-              className="flex justify-between items-center px-1 py-2 text-xs font-semibold text-white tracking-wider mb-3 cursor-pointer"
+              className="flex justify-between items-center px-1 py-2 text-sm font-semibold text-white tracking-wider cursor-pointer"
               onClick={() => toggleSection('businessOperations')}
             >
               <span>Business Operations</span>
@@ -265,7 +220,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
               </svg>
             </div>
             {expandedSections.businessOperations && (
-              <div className="space-y-1" style={{ borderBottom: '0.6px solid #FFFFFF80', paddingBottom: '16px' }}>
+              <div className="space-y-1 border-b-[0.6px] border-white/50 pb-4">
                 <Link to="/firmadmin/billing" className={linkClass("/firmadmin/billing")} onClick={onNavItemClick}>
                   <span className={iconWrapperClass("/firmadmin/billing")}>
                     <Billing />
@@ -297,7 +252,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
           {/* System & Security Section */}
           <div>
             <div
-              className="flex justify-between items-center px-1 py-2 text-xs font-semibold text-white tracking-wider mb-3 cursor-pointer"
+              className="flex justify-between items-center px-1 py-2 text-sm font-semibold text-white tracking-wider cursor-pointer"
               onClick={() => toggleSection('systemSecurity')}
             >
               <span>System & Security</span>
@@ -306,7 +261,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
               </svg>
             </div>
             {expandedSections.systemSecurity && (
-              <div className="space-y-1" style={{ borderBottom: '0.6px solid #FFFFFF80', paddingBottom: '16px' }}>
+              <div className="space-y-1 border-b-[0.6px] border-white/50 pb-4">
                 <Link to="/firmadmin/offices" className={linkClass("/firmadmin/offices")} onClick={onNavItemClick}>
                   <span className={iconWrapperClass("/firmadmin/offices")}>
                     <Offices />
@@ -360,21 +315,20 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
           </div>
 
           {/* Bottom Section - Account Settings & Log Out */}
-          <div className="bg-white mx-2 mb-4 rounded-lg" style={{ width: 'calc(100% - 16px)' }}>
-            <div className="px-4 py-4 space-y-2">
-              <Link to="/firmadmin/account-settings" className="flex items-center px-2 py-1 text-[11px] font-medium text-gray-900 rounded transition-all duration-200 whitespace-nowrap" onClick={onNavItemClick}>
-                <span className="w-5 h-5 mr-3 text-gray-600">
+          <div className="bg-white rounded-lg">
+            <div className="flex flex-col gap-3 p-4">
+              <Link to="/firmadmin/account-settings" className="flex items-center gap-2 !text-sm font-medium text-gray-900 rounded transition-all duration-200 whitespace-nowrap decoration-0" onClick={onNavItemClick}>
+                <span className="w-6 h-6 text-blue-600">
                   <Settings />
                 </span>
-                Account Settings
+                <span className="leading-none text-blue-500">Account Settings</span>
               </Link>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex items-center px-2 py-1 text-[10px] font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer no-hover-logout"
-                style={{ color: '#EF4444', backgroundColor: 'transparent' }}
+                className="flex items-center gap-2 !text-sm font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer text-[#EF4444] bg-transparent hover:bg-transparent"
               >
-                <span className="w-5 h-5 mr-3" style={{ color: '#EF4444' }}>
+                <span className="w-6 h-6 text-[#EF4444]">
                   <Out />
                 </span>
                 {isLoggingOut ? 'Logging out...' : 'Log Out'}

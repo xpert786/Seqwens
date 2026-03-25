@@ -268,7 +268,7 @@ const WorkflowManagement = () => {
 
   // Main dashboard view
   return (
-    <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6 w-full">
+    <div className="min-h-screen px-4 py-6 bg-[#F3F7FF] w-full">
       <div className="w-full mx-auto space-y-4 sm:space-y-6">
 
         {/* Header Section */}

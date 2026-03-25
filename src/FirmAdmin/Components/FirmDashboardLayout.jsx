@@ -42,7 +42,7 @@ export default function FirmDashboardLayout() {
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
-    
+
     return () => {
       document.body.style.overflow = originalStyle;
     };
@@ -422,7 +422,7 @@ export default function FirmDashboardLayout() {
           }}
         >
           <SubscriptionStatusBanner />
-          <main className="flex-grow overflow-y-auto p-2 !pb-20">
+          <main className="flex-grow overflow-y-auto !pb-20">
             <Outlet />
           </main>
         </div>

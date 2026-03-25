@@ -194,7 +194,7 @@ export default function AnalyticsMain() {
   };
 
   return (
-    <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
+    <div className="w-full px-4 py-6 bg-[#F6F7FF] min-h-screen">
       <div className="mx-auto">
         {/* Fixed Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 lg:mb-8 space-y-4 lg:space-y-0">

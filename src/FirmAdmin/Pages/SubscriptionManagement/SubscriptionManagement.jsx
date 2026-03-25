@@ -614,7 +614,7 @@ const SubscriptionManagement = () => {
 
 
     return (
-        <div className="min-h-screen bg-[#F3F7FF] lg:p-4 sm:p-2">
+        <div className="min-h-screen bg-[#F3F7FF] px-4 py-6">
             <div className="mx-auto">
                 {/* Developer Subscription Banner */}
                 {isDeveloperSubscription && (

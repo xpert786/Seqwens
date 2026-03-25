@@ -199,13 +199,13 @@ export default function CustomRolesManagement() {
     );
   }
   return (
-    <div className="p-4 sm:p-6 bg-[#F6F7FF] min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
+    <div className="px-4 py-6 bg-[#F6F7FF] min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1 sm:mb-2 text-center sm:text-left">
+        <h4 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1 sm:mb-2">
           Tax Preparer Permissions Management
-        </h1>
-        <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] text-center sm:text-left">
+        </h4>
+        <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] ">
           Manage individual permissions for each tax preparer in your firm. Each preparer can have their own unique set of permissions.
         </p>
       </div>

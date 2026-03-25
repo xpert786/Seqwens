@@ -524,21 +524,21 @@ export default function DocumentManagement() {
   });
 
   return (
-    <div className="lg:pt-2 lg:px-6 lg:pb-6 md:pt-2 md:p-4 sm:p-2 px-1 bg-[rgb(243,247,255)] min-h-screen docmanage-main-container">
+    <div className="px-4 py-6 bg-[rgb(243,247,255)] min-h-screen docmanage-main-container">
       {/* Header Section */}
       {!isViewingDocument && (
         <div className="mb-6 docmanage-header">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-start gap-4 lg:gap-6 docmanage-header-content">
             {/* Text Section */}
             <div className="flex-1 docmanage-header-text">
-              <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800 mb-2 docmanage-header-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              <h4 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800 mb-2 docmanage-header-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
                 Document {isNestedRoute ? 'Management' : 'Center'}
-              </h3>
-              <p className="text-sm sm:text-base md:text-lg text-gray-600 docmanage-header-subtitle" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              </h4>
+              <span className="text-sm sm:text-base md:text-sm text-gray-600 docmanage-header-subtitle" style={{ fontFamily: 'BasisGrotesquePro' }}>
                 {isNestedRoute
                   ? 'Manage all firm documents and client files'
                   : 'Comprehensive document management with OCR, auto-tagging, AI-powered search, and compliance tracking'}
-              </p>
+              </span>
             </div>
 
             {/* Buttons Section */}

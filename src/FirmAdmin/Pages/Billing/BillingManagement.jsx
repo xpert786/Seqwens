@@ -444,7 +444,7 @@ export default function BillingManagement() {
   };
 
   return (
-    <div className="p-6 !bg-[#F3F7FF]" style={{ minHeight: '100vh' }}>
+    <div className="px-4 py-6 !bg-[#F3F7FF]" style={{ minHeight: '100vh' }}>
       {/* Header */}
       <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>

@@ -1420,7 +1420,7 @@ export default function ClientManage() {
     }
   };
   return (
-    <div className="p-4 sm:p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
+    <div className="px-4 py-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
       <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4 clientmanage-header">
         <div className="flex-1 clientmanage-header-content">

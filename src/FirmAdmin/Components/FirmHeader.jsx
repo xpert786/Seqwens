@@ -418,7 +418,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                         <div
                             className="d-none d-lg-flex align-items-center border-end h-full"
                             style={{
-                                width: isSidebarOpen ? "281px" : "80px",
+                                width: isSidebarOpen ? "272px" : "80px",
                                 transition: 'width 0.3s ease'
                             }}
                         >
