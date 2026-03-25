@@ -198,6 +198,88 @@
   color: #ffffff;
 }
 
+.alert-warning {
+  background-color: rgba(255, 193, 7, 0.2);
+  border: 1px solid #ffc107;
+  color: #ffffff;
+}
+
+/* Data Sharing Options */
+.data-sharing-container {
+  margin: 30px 0;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-sharing-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.data-sharing-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.data-sharing-option-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+}
+
+.data-sharing-option-item:hover {
+  border-color: rgba(0, 192, 198, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.data-sharing-option-item.selected {
+  border-color: #00c0c6;
+  background: rgba(0, 192, 198, 0.1);
+  box-shadow: 0 0 15px rgba(0, 192, 198, 0.1);
+}
+
+.data-sharing-radio {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: #00c0c6;
+  cursor: pointer;
+}
+
+.data-sharing-option-content {
+  flex: 1;
+}
+
+.data-sharing-option-label {
+  display: block;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.data-sharing-option-desc {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
 @media (max-width: 1100px) {
   .accept-invite-card {
     width: 100%;

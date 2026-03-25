@@ -140,13 +140,17 @@ export default function AcceptInvite() {
                     // Check for existing grant (client invites only)
                     if (isClient && response.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.existing_grant);
+                        // Default to Option 1 (Share All)
+                        setDataSharingDecision({ scope: 'all', selectedCategories: null });
                     }
 
                     // Also check for existing grant from staff/general invites
                     if (response.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.existing_grant);
+                        setDataSharingDecision({ scope: 'all', selectedCategories: null });
                     } else if (response.data.existing_grant?.has_existing_grant) {
                         setExistingGrant(response.data.existing_grant);
+                        setDataSharingDecision({ scope: 'all', selectedCategories: null });
                     }
                 } else {
                     console.log('Invitation validation failed or has issues');
@@ -428,6 +432,9 @@ export default function AcceptInvite() {
                                 fieldErrors.phoneNumber = errorText;
                             } else if (fieldName === 'token') {
                                 fieldErrors.general = errorText;
+                            } else if (fieldName === 'data_sharing_scope') {
+                                // User-friendly replacement for technical data_sharing_scope error
+                                fieldErrors.general = `By accepting this invitation, your account will be connected to ${newFirmName || 'the new firm'}. Please choose how you'd like to share your information before continuing.`;
                             } else {
                                 // Keep as general error if field not recognized
                                 if (!generalMessage) {
@@ -799,13 +806,6 @@ export default function AcceptInvite() {
                                 </div>
                             )}
 
-                            {/* Show existing grant warning if present */}
-                            {existingGrant?.has_existing_grant && !showDataSharingModal && (
-                                <div className="alert alert-warning" role="alert" style={{ marginBottom: '1rem' }}>
-                                    <strong>Note:</strong> {existingGrant.warning_message || 'Accepting this invite will affect your current tax office access.'}
-                                </div>
-                            )}
-
                             <div className="invitation-details">
                                 <p className="invitation-text">
                                     You have been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
@@ -945,6 +945,63 @@ export default function AcceptInvite() {
                                                     )}
                                                 </div>
                                             </>
+                                        )}
+
+                                        {/* Data Sharing Selection - Show BEFORE Accept */}
+                                        {existingGrant?.has_existing_grant && (
+                                            <div className="data-sharing-container">
+                                                <h6 className="data-sharing-title">
+                                                    How would you like to share your information with this tax office?
+                                                </h6>
+                                                
+                                                <div className="data-sharing-options-list">
+                                                    {/* Option 1: Share All */}
+                                                    <div 
+                                                        className={`data-sharing-option-item ${dataSharingDecision?.scope === 'all' ? 'selected' : ''}`}
+                                                        onClick={() => setDataSharingDecision({ scope: 'all', selectedCategories: null })}
+                                                    >
+                                                        <input 
+                                                            type="radio" 
+                                                            name="data_sharing_scope" 
+                                                            checked={dataSharingDecision?.scope === 'all'}
+                                                            onChange={() => setDataSharingDecision({ scope: 'all', selectedCategories: null })}
+                                                            className="data-sharing-radio"
+                                                            style={{ marginTop: '0' }}
+                                                        />
+                                                        <div className="data-sharing-option-content" style={{ marginTop: '-4px' }}>
+                                                            <label className="data-sharing-option-label" style={{ marginBottom: '4px' }}>
+                                                                Share my existing documents with the new tax office <strong>(Recommended)</strong>
+                                                            </label>
+                                                            <span className="data-sharing-option-desc">
+                                                                Your current tax office will still have access to documents you've already shared with them. The new tax office will be able to view your existing documents and any new documents you upload moving forward.
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Option 2: Share Future Only (None mapping) */}
+                                                    <div 
+                                                        className={`data-sharing-option-item ${dataSharingDecision?.scope === 'none' ? 'selected' : ''}`}
+                                                        onClick={() => setDataSharingDecision({ scope: 'none', selectedCategories: null })}
+                                                    >
+                                                        <input 
+                                                            type="radio" 
+                                                            name="data_sharing_scope" 
+                                                            checked={dataSharingDecision?.scope === 'none'}
+                                                            onChange={() => setDataSharingDecision({ scope: 'none', selectedCategories: null })}
+                                                            className="data-sharing-radio"
+                                                            style={{ marginTop: '0' }}
+                                                        />
+                                                        <div className="data-sharing-option-content" style={{ marginTop: '-4px' }}>
+                                                            <label className="data-sharing-option-label" style={{ marginBottom: '4px' }}>
+                                                                Share only future documents with the new tax office
+                                                            </label>
+                                                            <span className="data-sharing-option-desc">
+                                                                Your current tax office will keep access to previously shared documents. The new tax office will only have access to documents you upload after connecting.
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
 
                                         {/* Password field for existing users who are logged in */}
@@ -1129,22 +1186,24 @@ export default function AcceptInvite() {
                             <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-3">
                                 {invitationData?.user_exists ? (
                                     <>
-                                        You are about to link your existing account to <strong>{invitationData?.firm_name || "this firm"}</strong> as a <strong>{invitationData?.role_display || invitationData?.role || "member"}</strong>.
+                                        You are about to connect your account to <strong>{invitationData?.firm_name || "Alpha"}</strong>.
                                     </>
                                 ) : (
                                     <>
-                                        You are about to accept the invitation to join <strong>{invitationData?.firm_name || "this firm"}</strong> as a <strong>{invitationData?.role_display || invitationData?.role || "member"}</strong>.
+                                        You are about to accept the invitation to join <strong>{invitationData?.firm_name || "Alpha"}</strong>.
                                     </>
                                 )}
                             </p>
 
-
-
-                            {!invitationData?.user_exists && (
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-2">
-                                    Do you want to proceed?
+                            {existingGrant?.has_existing_grant && (
+                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-3" style={{ lineHeight: '1.6' }}>
+                                    Your previous tax office will still have access to documents you already shared with them, but they will not see any new documents going forward.
                                 </p>
                             )}
+
+                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-2">
+                                Do you want to proceed?
+                            </p>
                         </div>
 
                         <div className="flex justify-end gap-3">
@@ -1170,7 +1229,7 @@ export default function AcceptInvite() {
                                         Processing...
                                     </>
                                 ) : (
-                                    invitationData?.user_exists ? 'Yes, Link Account' : 'Yes, Accept'
+                                    'Confirm & Continue'
                                 )}
                             </button>
                         </div>

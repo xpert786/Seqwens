@@ -14,9 +14,9 @@
   flex: 1 !important;
   display: flex !important;
   justify-content: center !important;
-  align-items: center !important;
-  padding: 20px !important;
-  overflow: hidden !important; 
+  align-items: flex-start !important; /* Changed to start to allow top-down scrolling */
+  padding: 40px 20px !important; /* Increased vertical padding */
+  overflow-y: auto !important; /* Re-enabled scrolling */
 }
 
 @media screen and (max-height: 750px) {
