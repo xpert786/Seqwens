@@ -1,8 +1,10 @@
 .abc {
   background: linear-gradient(180deg, #ffffff 0%, #fff4e6 100%) !important;
-  min-height: 100vh !important;        
+  height: 100vh !important; /* Fixed viewport height */
   display: flex !important;
   flex-direction: column !important;
+  overflow-y: auto !important; /* Enable internal scrolling */
+  overflow-x: hidden !important;
 }
 
 .top img {
@@ -11,20 +13,14 @@
 }
 
 .content-rap {
-  flex: 1 !important;
+  flex: 0 0 auto !important; /* Don't stretch flex items if they should scroll naturally */
   display: flex !important;
   justify-content: center !important;
-  align-items: flex-start !important; /* Changed to start to allow top-down scrolling */
-  padding: 40px 20px !important; /* Increased vertical padding */
-  overflow-y: auto !important; /* Re-enabled scrolling */
+  align-items: flex-start !important; /* Keep start to prevent top/bottom cutoff */
+  padding: 40px 20px 80px 20px !important; /* Added more bottom padding for better scroll room */
+  overflow: visible !important; /* Let the parent .abc scroll */
 }
 
-@media screen and (max-height: 750px) {
-  .content-rap {
-    align-items: flex-start !important;
-    overflow-y: auto !important;  
-  }
-}
 
 /* Tablet styles */
 @media (max-width: 768px) {

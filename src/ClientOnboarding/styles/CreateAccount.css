@@ -1,16 +1,16 @@
 .create-account-wrapper {
+  padding: 40px 20px 100px 20px !important;
   display: flex !important;
+  align-items: flex-start !important;
   justify-content: center !important;
-  align-items: center !important;
-  padding: 40px 10px !important;
- 
+  min-height: calc(100vh - 120px) !important;
 }
 
 .create-account-container {
-  width: 80% !important;
-  max-width: 600px !important;
+  width: 600px !important;
+  max-width: 100% !important;
   background: var(--Palette2-Dark-blue-900, #3B4A66) !important;
-  padding: 40px !important;
+  padding: 80px 70px !important; /* Matched Login card padding */
   border-radius: 25px !important;
   color: white !important;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
