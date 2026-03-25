@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 const ConfirmationModal = ({
   isOpen,
@@ -19,13 +20,15 @@ const ConfirmationModal = ({
     ? { backgroundColor: '#EF4444', color: '#FFFFFF', borderRadius: '10px' }
     : confirmButtonStyle;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/50 flex flex-col items-center justify-start z-[999999995] p-4 overflow-y-auto"
+      style={{ paddingTop: '85px', paddingBottom: '40px' }}
       onClick={onClose}
     >
       <div
-        className="bg-white !rounded-xl shadow-2xl relative max-w-md w-full mx-4 overflow-hidden flex flex-col"
+        className="bg-white !rounded-xl shadow-2xl relative max-w-md w-full mx-auto overflow-hidden flex flex-col"
+        style={{ margin: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -77,7 +80,8 @@ const ConfirmationModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -117,7 +117,7 @@ export default function Dashboard() {
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-100 text-gray-700 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all !rounded-xl shadow-lg shadow-black/5 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-100 text-gray-700 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all !rounded-xl shadow-lg shadow-black/5 active:scale-95"
             onClick={() => navigate('/taxdashboard/calendar')}
           >
             <AiOutlineCalendar size={20} className="text-[#3AD6F2]" />
@@ -125,7 +125,7 @@ export default function Dashboard() {
           </button>
 
           <button
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
             onClick={() => setShowUploadModal(true)}
           >
             <Uploading size={20} />
