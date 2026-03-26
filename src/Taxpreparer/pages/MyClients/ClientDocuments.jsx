@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { FaSearch, FaFilter, FaFolder, FaDownload, FaEdit, FaTrash, FaPlus, FaFileUpload, FaPenNib } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FileIcon } from "../../component/icons";
@@ -14,6 +14,8 @@ import { UploadsIcon, FileIcon as IconsFileIcon } from "../../component/icons";
 export default function ClientDocuments() {
   const { clientId } = useParams();
   const navigate = useNavigate();
+  const { clientStatus } = useOutletContext() || {};
+  const isFormer = clientStatus === 'former';
 
   const [view, setView] = useState("grid");
   const [isDragging, setIsDragging] = useState(false);
@@ -455,19 +457,23 @@ export default function ClientDocuments() {
             </p>
           </div>
           <div className="d-flex gap-2">
-            <button
-              className="btn btn-outline-primary d-flex align-items-center gap-2"
-              onClick={() => setShowCreateFolderModal(true)}
-            >
-              <FaFolder /> New Folder
-            </button>
-            <button
-              className="btn btn-primary d-flex align-items-center gap-2"
-              onClick={() => setShowUploadModal(true)}
-              style={{ backgroundColor: "#00C0C6", border: "none" }}
-            >
-              <FaFileUpload /> Upload File
-            </button>
+            {!isFormer && (
+              <>
+                <button
+                  className="btn btn-outline-primary d-flex align-items-center gap-2"
+                  onClick={() => setShowCreateFolderModal(true)}
+                >
+                  <FaFolder /> New Folder
+                </button>
+                <button
+                  className="btn btn-primary d-flex align-items-center gap-2"
+                  onClick={() => setShowUploadModal(true)}
+                  style={{ backgroundColor: "#00C0C6", border: "none" }}
+                >
+                  <FaFileUpload /> Upload File
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -524,29 +530,35 @@ export default function ClientDocuments() {
                         </Dropdown.Toggle>
                         <Dropdown.Menu className="p-2" style={{ minWidth: '240px' }}>
                           <div className="d-flex flex-column gap-2">
-                            <Button
-                              variant="light"
-                              size="sm"
-                              className="w-100 d-flex align-items-center justify-content-start gap-2"
-                              onClick={() => {
-                                setItemToRename({ type: 'folder', item: folder });
-                                setNewItemName(folder.title);
-                                setShowRenameModal(true);
-                              }}
-                            >
-                              <FaEdit /> Rename
-                            </Button>
-                            <Button
-                              variant="light"
-                              size="sm"
-                              className="w-100 d-flex align-items-center justify-content-start gap-2 text-danger"
-                              onClick={() => {
-                                setItemToDelete({ type: 'folder', item: folder });
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <FaTrash /> Delete
-                            </Button>
+                            {isFormer ? (
+                              <div className="p-2 text-muted small italic">Read-only historical folder</div>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="light"
+                                  size="sm"
+                                  className="w-100 d-flex align-items-center justify-content-start gap-2"
+                                  onClick={() => {
+                                    setItemToRename({ type: 'folder', item: folder });
+                                    setNewItemName(folder.title);
+                                    setShowRenameModal(true);
+                                  }}
+                                >
+                                  <FaEdit /> Rename
+                                </Button>
+                                <Button
+                                  variant="light"
+                                  size="sm"
+                                  className="w-100 d-flex align-items-center justify-content-start gap-2 text-danger"
+                                  onClick={() => {
+                                    setItemToDelete({ type: 'folder', item: folder });
+                                    setShowDeleteModal(true);
+                                  }}
+                                >
+                                  <FaTrash /> Delete
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
@@ -621,36 +633,42 @@ export default function ClientDocuments() {
                                 <BsThreeDotsVertical size={14} />
                               </Dropdown.Toggle>
                               <Dropdown.Menu align="end" style={{ minWidth: '140px', padding: '4px 0' }}>
-                                <Dropdown.Item onClick={() => {
-                                  setItemToRename({ type: 'file', item: doc });
-                                  setNewItemName(docName);
-                                  setShowRenameModal(true);
-                                }} style={{ fontSize: '11px', padding: '6px 12px' }}>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <FaEdit size={12} /> <span>Rename</span>
-                                  </div>
-                                </Dropdown.Item>
+                                {isFormer ? (
+                                  <div className="p-2 text-muted small italic text-center">Historical document</div>
+                                ) : (
+                                  <>
+                                    <Dropdown.Item onClick={() => {
+                                      setItemToRename({ type: 'file', item: doc });
+                                      setNewItemName(docName);
+                                      setShowRenameModal(true);
+                                    }} style={{ fontSize: '11px', padding: '6px 12px' }}>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <FaEdit size={12} /> <span>Rename</span>
+                                      </div>
+                                    </Dropdown.Item>
 
-                                {isPdf && !doc.esign_status && (
-                                  <Dropdown.Item onClick={() => {
-                                    setFileToEsign(doc);
-                                    setShowAssignEsignModal(true);
-                                  }} style={{ fontSize: '11px', padding: '6px 12px' }}>
-                                    <div className="d-flex align-items-center gap-2">
-                                      <FaPenNib size={12} /> <span>Assign for E-Sign</span>
-                                    </div>
-                                  </Dropdown.Item>
+                                    {isPdf && !doc.esign_status && (
+                                      <Dropdown.Item onClick={() => {
+                                        setFileToEsign(doc);
+                                        setShowAssignEsignModal(true);
+                                      }} style={{ fontSize: '11px', padding: '6px 12px' }}>
+                                        <div className="d-flex align-items-center gap-2">
+                                          <FaPenNib size={12} /> <span>Assign for E-Sign</span>
+                                        </div>
+                                      </Dropdown.Item>
+                                    )}
+
+                                    <Dropdown.Divider style={{ margin: '4px 0' }} />
+                                    <Dropdown.Item className="text-danger" onClick={() => {
+                                      setItemToDelete({ type: 'file', item: doc });
+                                      setShowDeleteModal(true);
+                                    }} style={{ fontSize: '11px', padding: '6px 12px' }}>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <FaTrash size={12} /> <span>Delete</span>
+                                      </div>
+                                    </Dropdown.Item>
+                                  </>
                                 )}
-
-                                <Dropdown.Divider style={{ margin: '4px 0' }} />
-                                <Dropdown.Item className="text-danger" onClick={() => {
-                                  setItemToDelete({ type: 'file', item: doc });
-                                  setShowDeleteModal(true);
-                                }} style={{ fontSize: '11px', padding: '6px 12px' }}>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <FaTrash size={12} /> <span>Delete</span>
-                                  </div>
-                                </Dropdown.Item>
                               </Dropdown.Menu>
                             </Dropdown>
                           </div>
