@@ -144,10 +144,10 @@ export default function ClientDetails() {
   };
 
   useEffect(() => {
-    if (!canEditClient && isEditMode) {
+    if ((!canEditClient || client?.status === 'former') && isEditMode) {
       setIsEditMode(false);
     }
-  }, [canEditClient, isEditMode]);
+  }, [canEditClient, client?.status, isEditMode]);
 
   // Handle browser navigation (back/forward/close) with unsaved changes
   useEffect(() => {
@@ -1197,6 +1197,21 @@ export default function ClientDetails() {
         </button>
       </div>
 
+      {client.status === 'former' && (
+        <div className="mb-4 p-4 rounded-xl border border-gray-200 bg-gray-50 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+            <MiniClock size={20} />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 mb-0">Former Client (Read-Only)</h4>
+            <p className="text-xs text-gray-500 mb-0">
+              This client is no longer active with your firm. You have read-only access to records from your active tenure.
+              {client.account_details?.join_date && ` (Tenure: ${client.account_details.join_date} - Present)`}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="font-semibold font-grotesque">Client Details</h3>
@@ -1243,7 +1258,9 @@ export default function ClientDetails() {
                           ? 'px-2 py-1 rounded-full bg-red-100 text-red-600 text-[10px] capitalize'
                           : (s || '').toLowerCase().includes('active')
                             ? 'px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] capitalize'
-                            : 'px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] capitalize'
+                            : (s || '').toLowerCase().includes('former')
+                              ? 'px-2 py-1 rounded-full bg-gray-200 text-gray-700 text-[10px] capitalize font-bold'
+                              : 'px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] capitalize'
                       }>{s}</span>
                     ))}
                   </div>
@@ -1281,7 +1298,7 @@ export default function ClientDetails() {
               </button>
 
               {/* Fill Intake Form Button - Visible for Unlinked or Pending */}
-              {['Unlinked', 'Pending'].includes(client.status) && (
+              {['Unlinked', 'Pending'].includes(client.status) && client.status !== 'former' && (
                 <button
                   className="rounded-md text-sm"
                   style={{
@@ -1304,36 +1321,38 @@ export default function ClientDetails() {
               )}
 
               {/* Add Task Button */}
-              <button
-                className="rounded-md text-sm"
-                style={{
-                  fontSize: "15px",
-                  width: "110px",
-                  gap: "6px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                  backgroundColor: "#fff",
-                  color: "var(--Palette2-Dark-blue-900, #3B4A66)",
-                  padding: "5px 12px",
-                  opacity: 1,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap"
-                }}
-                onClick={() => {
-                  if (clientId) {
-                    setFormData(prev => ({
-                      ...prev,
-                      client_ids: [clientId.toString()]
-                    }));
-                  }
-                  setShowAddTaskModal(true);
-                }}
-              >
-                Add Task
-              </button>
+              {client.status !== 'former' && (
+                <button
+                  className="rounded-md text-sm"
+                  style={{
+                    fontSize: "15px",
+                    width: "110px",
+                    gap: "6px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                    backgroundColor: "#fff",
+                    color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+                    padding: "5px 12px",
+                    opacity: 1,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap"
+                  }}
+                  onClick={() => {
+                    if (clientId) {
+                      setFormData(prev => ({
+                        ...prev,
+                        client_ids: [clientId.toString()]
+                      }));
+                    }
+                    setShowAddTaskModal(true);
+                  }}
+                >
+                  Add Task
+                </button>
+              )}
 
               {/* Edit Details Button */}
-              {canEditClient && (
+              {canEditClient && client.status !== 'former' && (
                 <div className="d-flex gap-2">
                   {!isEditMode ? (
                     <button
@@ -1648,7 +1667,7 @@ export default function ClientDetails() {
           </button>
         </div>
       </div>
-      <Outlet />
+      <Outlet context={{ client, clientStatus: client?.status }} />
 
       {!(isDocuments || isInvoices || isSchedule || isESignLogs || isSecurity) && activeTab === 'intake' && (
         <IntakeFormTab onOpenFillModal={() => setShowFillIntakeModal(true)} />

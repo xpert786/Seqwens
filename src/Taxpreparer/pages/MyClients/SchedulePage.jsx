@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Calender, MiniClock, PhoneMiniIcon, MiniDocument, MiniContact, FiltIcon } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
@@ -11,6 +11,8 @@ import CreateEventModal from "../Calender/CreateEventModal";
 export default function SchedulePage() {
   const { clientId } = useParams();
   const navigate = useNavigate();
+  const { clientStatus } = useOutletContext() || {};
+  const isFormer = clientStatus === 'former';
 
   const [appointments, setAppointments] = useState([]);
   const [clientInfo, setClientInfo] = useState(null);
@@ -261,16 +263,18 @@ export default function SchedulePage() {
               {filteredAppointments.length} {filteredAppointments.length === 1 ? 'appointment' : 'appointments'} scheduled
             </div>
           </div>
-          <button
-            onClick={() => setShowCreateAppointmentModal(true)}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
-            style={{ backgroundColor: '#178109', borderRadius: '8px' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Create Appointment
-          </button>
+          {!isFormer && (
+            <button
+              onClick={() => setShowCreateAppointmentModal(true)}
+              className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
+              style={{ backgroundColor: '#178109', borderRadius: '8px' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Create Appointment
+            </button>
+          )}
         </div>
 
         {filteredAppointments.length > 0 ? (
@@ -315,13 +319,15 @@ export default function SchedulePage() {
                       </span>
                     </div>
                     <div className="d-flex gap-2">
-                      <button
-                        className="btn  btn-outline-secondary d-flex align-items-center gap-1"
-                        style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "6px" }}
-                        onClick={(e) => openStatusModal(appointment, e)}
-                      >
-                        Update Status
-                      </button>
+                      {!isFormer && (
+                        <button
+                          className="btn  btn-outline-secondary d-flex align-items-center gap-1"
+                          style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "6px" }}
+                          onClick={(e) => openStatusModal(appointment, e)}
+                        >
+                          Update Status
+                        </button>
+                      )}
                       {hasMeetingLink && (
                         <button
                           className="btn d-flex align-items-center justify-content-center gap-2"
