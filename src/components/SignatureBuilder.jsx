@@ -11,6 +11,7 @@ import {
   useSensors,
   DragOverlay,
   defaultDropAnimationSideEffects,
+  rectIntersection,
 } from '@dnd-kit/core';
 import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -143,13 +144,18 @@ const PDFPageWrapper = React.memo(({ pageNumber, placedFields, onRemoveField, on
 }, (prevProps, nextProps) => {
   if (prevProps.scale !== nextProps.scale) return false;
   if (prevProps.pageNumber !== nextProps.pageNumber) return false;
-
+  if (prevProps.placedFields.length !== nextProps.placedFields.length) return false; // Early exit if count changed
+  
   const prevFields = prevProps.placedFields.filter(f => f.page === prevProps.pageNumber);
   const nextFields = nextProps.placedFields.filter(f => f.page === nextProps.pageNumber);
-
+  
   if (prevFields.length !== nextFields.length) return false;
   for (let i = 0; i < prevFields.length; i++) {
-    if (prevFields[i] !== nextFields[i]) return false;
+    // Only re-render if essential field properties changed
+    if (prevFields[i].id !== nextFields[i].id) return false;
+    if (prevFields[i].x !== nextFields[i].x) return false;
+    if (prevFields[i].y !== nextFields[i].y) return false;
+    if (prevFields[i].role !== nextFields[i].role) return false;
   }
   return true;
 });
@@ -165,8 +171,9 @@ const PlacedField = React.memo(({ field, onRemove, scale }) => {
     position: 'absolute',
     left: `${field.x * scale}px`,
     top: `${field.y * scale}px`,
-    zIndex: isDragging ? 0 : 100, // Hide while dragging (overlay handles it)
+    zIndex: isDragging ? 0 : 100, 
     opacity: isDragging ? 0 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
   };
 
   return (
@@ -185,6 +192,33 @@ const PlacedField = React.memo(({ field, onRemove, scale }) => {
   );
 });
 
+const PDFRenderer = React.memo(({ pdfFile, onDocumentLoadSuccess, numPages, placedFields, removeField, updateField, scale }) => {
+  return (
+    <Document
+      file={pdfFile}
+      onLoadSuccess={onDocumentLoadSuccess}
+      loading={
+        <div className="flex flex-col items-center justify-center pt-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+          <p className="text-white font-medium">Preparing document content...</p>
+        </div>
+      }
+      onLoadError={(error) => console.error('PDF error:', error)}
+    >
+      {Array.from({ length: numPages || 0 }, (_, i) => (
+        <PDFPageWrapper
+          key={`page_${i + 1}`}
+          pageNumber={i + 1}
+          placedFields={placedFields}
+          onRemoveField={removeField}
+          onUpdateField={updateField}
+          scale={scale}
+        />
+      ))}
+    </Document>
+  );
+});
+
 export default function SignatureBuilder({
   pdfFile,
   onSave,
@@ -200,8 +234,6 @@ export default function SignatureBuilder({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
   );
 
   const onDocumentLoadSuccess = ({ numPages }) => {
@@ -229,6 +261,10 @@ export default function SignatureBuilder({
     const y = (event.activatorEvent.clientY + event.delta.y - pageRect.top) / scale;
 
     if (fieldData.isSidebarItem) {
+      // For sidebar items, calculate relative to page
+      const x = (event.activatorEvent.clientX + event.delta.x - pageRect.left) / scale;
+      const y = (event.activatorEvent.clientY + event.delta.y - pageRect.top) / scale;
+      
       const newField = {
         id: `field-${Date.now()}`,
         type: fieldData.type,
@@ -237,15 +273,25 @@ export default function SignatureBuilder({
         y: y - 20, // approximate half height
         role: selectedRole,
       };
-      setPlacedFields([...placedFields, newField]);
+      setPlacedFields(prev => [...prev, newField]);
     } else {
+      // For existing items, use relative delta to prevent "jumping"
       setPlacedFields(prev => prev.map(field => {
         if (field.id === active.id) {
+          // If moved to a DIFFERENT page, we need to handle coordinate conversion
+          if (field.page !== pageData.pageNumber) {
+             const x = (event.activatorEvent.clientX + event.delta.x - pageRect.left) / scale;
+             const y = (event.activatorEvent.clientY + event.delta.y - pageRect.top) / scale;
+             // We can't perfectly preserve grab point between pages easily without more math, 
+             // but crossing pages is rare and jumping is less annoying than within the same page.
+             return { ...field, page: pageData.pageNumber, x: x - 60, y: y - 20 };
+          }
+          
+          // Same page: Just apply delta
           return {
             ...field,
-            page: pageData.pageNumber,
-            x: x - 60,
-            y: y - 20,
+            x: field.x + (event.delta.x / scale),
+            y: field.y + (event.delta.y / scale),
           };
         }
         return field;
@@ -279,6 +325,7 @@ export default function SignatureBuilder({
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      collisionDetection={rectIntersection}
     >
       <div className="flex h-full bg-white overflow-hidden font-[BasisGrotesquePro]">
         {/* Sidebar */}
@@ -347,28 +394,15 @@ export default function SignatureBuilder({
             className="flex-1 overflow-y-auto p-12 pt-16 scroll-smooth bg-gray-100"
           >
             <div className="max-w-fit mx-auto">
-              <Document
-                file={pdfFile}
-                onLoadSuccess={onDocumentLoadSuccess}
-                loading={
-                  <div className="flex flex-col items-center justify-center pt-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                    <p className="text-white font-medium">Preparing document content...</p>
-                  </div>
-                }
-                onLoadError={(error) => console.error('PDF error:', error)}
-              >
-                {Array.from({ length: numPages }, (_, i) => (
-                  <PDFPageWrapper
-                    key={`page_${i + 1}`}
-                    pageNumber={i + 1}
-                    placedFields={placedFields}
-                    onRemoveField={removeField}
-                    onUpdateField={updateField}
-                    scale={scale}
-                  />
-                ))}
-              </Document>
+              <PDFRenderer 
+                pdfFile={pdfFile}
+                onDocumentLoadSuccess={onDocumentLoadSuccess}
+                numPages={numPages}
+                placedFields={placedFields}
+                removeField={removeField}
+                updateField={updateField}
+                scale={scale}
+              />
             </div>
           </div>
         </div>
