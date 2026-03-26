@@ -140,19 +140,19 @@ export default function OverviewTab({ client, isEditMode, editFormData, onEditFo
             <div className="flex-1 min-w-0">
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Phone</div>
               {isEditMode && editFormData ? (
-                <PhoneInput
-                  country={phoneCountry}
-                  value={editFormData.phone_number || ''}
-                  onChange={(phone) => onEditFormChange('phone_number', phone)}
-                  onCountryChange={(countryCode) => onPhoneCountryChange(countryCode.toLowerCase())}
-                  inputClass="px-2 py-1 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] w-full"
-                  containerClass="phone-input-container w-full"
-                  inputStyle={{ width: '100%' }}
-                  enableSearch={true}
-                  countryCodeEditable={false}
-                  preferredCountries={['us']}
-                  disableCountryGuess={true}
-                />
+                  <PhoneInput
+                    country={phoneCountry}
+                    value={editFormData.phone_number || ''}
+                    onChange={(phone) => onEditFormChange('phone_number', phone)}
+                    onCountryChange={(countryCode) => onPhoneCountryChange(countryCode.toLowerCase())}
+                    inputClass="pl-11 pr-2 py-1 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] w-full"
+                    containerClass="phone-input-container w-full min-w-0"
+                    inputStyle={{ width: '100%' }}
+                    enableSearch={true}
+                    countryCodeEditable={false}
+                    preferredCountries={['us']}
+                    disableCountryGuess={true}
+                  />
               ) : (
                 <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro] break-words">{client.phone}</div>
               )}

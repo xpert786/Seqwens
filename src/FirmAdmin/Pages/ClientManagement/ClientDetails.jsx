@@ -405,14 +405,14 @@ export default function ClientDetails() {
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Phone</div>
                 {isEditMode ? (
                   <div className="flex items-center gap-2">
-                    <CallIcon />
+                    <CallIcon className="flex-shrink-0" />
                     <PhoneInput
                       country={phoneCountry}
                       value={editFormData.phone_number || ''}
                       onChange={(phone) => handleEditFormChange('phone_number', phone)}
                       onCountryChange={(countryCode) => setPhoneCountry(countryCode.toLowerCase())}
-                      inputClass="flex-1 px-2 py-1 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                      containerClass="phone-input-container"
+                      inputClass="w-full pl-11 pr-2 py-1 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                      containerClass="phone-input-container flex-1 min-w-0"
                       enableSearch={true}
                       countryCodeEditable={false}
                       preferredCountries={['us']}

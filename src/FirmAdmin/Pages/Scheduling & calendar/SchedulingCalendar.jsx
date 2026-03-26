@@ -1,4 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { 
+    CalendarIcon, 
+    TimeIcon as ClockIcon, 
+    UsersIcon, 
+    VideoIcon, 
+    PlusIcon, 
+    ChevronLeftIcon, 
+    ChevronRightIcon, 
+    CloseModalIcon as CloseIcon, 
+    CalendarInputIcon as CalendarAltIcon, 
+    ClockInputIcon as ClockAltIcon, 
+    ChevronDownIcon,
+    AlertTriangleIcon,
+    InfoIcon
+} from '../../FirmAdminIcons/Icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI, taxPreparerThreadsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
@@ -1052,43 +1067,28 @@ const SchedulingCalendar = () => {
     const metricCards = [
         {
             icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 2V6" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M16 2V6" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M3 10H21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <CalendarIcon color="#3AD6F2" />
             ),
             value: statistics.scheduled_month.toString(),
             label: 'Scheduled (month)'
         },
         {
             icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 6V12L16 14M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <ClockIcon color="#3AD6F2" />
             ),
             value: statistics.completed.toString(),
             label: 'Completed'
         },
         {
             icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M9 1.25C7.74022 1.25 6.53204 1.75044 5.64124 2.64124C4.75045 3.53204 4.25 4.74022 4.25 6C4.25 7.25978 4.75045 8.46796 5.64124 9.35876C6.53204 10.2496 7.74022 10.75 9 10.75C10.2598 10.75 11.468 10.2496 12.3588 9.35876C13.2496 8.46796 13.75 7.25978 13.75 6C13.75 4.74022 13.2496 3.53204 12.3588 2.64124C11.468 1.75044 10.2598 1.25 9 1.25ZM5.75 6C5.75 5.13805 6.09241 4.3114 6.7019 3.7019C7.3114 3.09241 8.13805 2.75 9 2.75C9.86195 2.75 10.6886 3.09241 11.2981 3.7019C11.9076 4.3114 12.25 5.13805 12.25 6C12.25 6.86195 11.9076 7.6886 11.2981 8.2981C10.6886 8.90759 9.86195 9.25 9 9.25C8.13805 9.25 7.3114 8.90759 6.7019 8.2981C6.09241 7.6886 5.75 6.86195 5.75 6Z" fill="#00C0C6" />
-                    <path d="M15 2.25C14.8011 2.25 14.6103 2.32902 14.4697 2.46967C14.329 2.61032 14.25 2.80109 14.25 3C14.25 3.19891 14.329 3.38968 14.4697 3.53033C14.6103 3.67098 14.8011 3.75 15 3.75C15.5967 3.75 16.169 3.98705 16.591 4.40901C17.0129 4.83097 17.25 5.40326 17.25 6C17.25 6.59674 17.0129 7.16903 16.591 7.59099C16.169 8.01295 15.5967 8.25 15 8.25C14.8011 8.25 14.6103 8.32902 14.4697 8.46967C14.329 8.61032 14.25 8.80109 14.25 9C14.25 9.19891 14.329 9.38968 14.4697 9.53033C14.6103 9.67098 14.8011 9.75 15 9.75C15.9946 9.75 16.9484 9.35491 17.6517 8.65165C18.3549 7.94839 18.75 6.99456 18.75 6C18.75 5.00544 18.3549 4.05161 17.6517 3.34835C16.9484 2.64509 15.9946 2.25 15 2.25Z" fill="#00C0C6" />
-                    <path fillRule="evenodd" clipRule="evenodd" d="M3.678 13.52C5.078 12.72 6.961 12.25 9 12.25C11.039 12.25 12.922 12.72 14.322 13.52C15.7 14.308 16.75 15.51 16.75 17C16.75 18.49 15.7 19.692 14.322 20.48C12.922 21.28 11.039 21.75 9 21.75C6.961 21.75 5.078 21.28 3.678 20.48C2.3 19.692 1.25 18.49 1.25 17C1.25 15.51 2.3 14.308 3.678 13.52ZM4.422 14.823C3.267 15.483 2.75 16.28 2.75 17C2.75 17.72 3.267 18.517 4.422 19.177C5.556 19.825 7.173 20.25 9 20.25C10.827 20.25 12.444 19.825 13.578 19.177C14.733 18.517 15.25 17.719 15.25 17C15.25 16.281 14.733 15.483 13.578 14.823C12.444 14.175 10.827 13.75 9 13.75C7.173 13.75 5.556 14.175 4.422 14.823Z" fill="#00C0C6" />
-                    <path d="M18.1598 13.2673C17.9654 13.2248 17.7621 13.2614 17.5946 13.3688C17.4271 13.4763 17.3092 13.6459 17.2668 13.8403C17.2243 14.0347 17.2609 14.238 17.3683 14.4054C17.4758 14.5729 17.6454 14.6908 17.8398 14.7333C18.6318 14.9063 19.2648 15.2053 19.6828 15.5473C20.1008 15.8893 20.2498 16.2243 20.2498 16.5003C20.2498 16.7503 20.1298 17.0453 19.7968 17.3543C19.4618 17.6653 18.9468 17.9523 18.2838 18.1523C18.1894 18.1806 18.1016 18.2273 18.0253 18.2896C17.9489 18.3519 17.8856 18.4287 17.839 18.5154C17.7923 18.6022 17.7632 18.6973 17.7533 18.7954C17.7434 18.8934 17.7529 18.9924 17.7813 19.0868C17.8096 19.1811 17.8563 19.269 17.9186 19.3453C17.9809 19.4216 18.0577 19.4849 18.1445 19.5316C18.2312 19.5782 18.3263 19.6073 18.4244 19.6172C18.5224 19.6271 18.6214 19.6176 18.7158 19.5893C19.5388 19.3413 20.2738 18.9583 20.8178 18.4533C21.3638 17.9463 21.7498 17.2793 21.7498 16.5003C21.7498 15.6353 21.2758 14.9123 20.6328 14.3863C19.9888 13.8593 19.1218 13.4783 18.1598 13.2673Z" fill="#00C0C6" />
-                </svg>
+                <UsersIcon color="#3AD6F2" />
             ),
             value: `${statistics.no_show_rate}%`,
             label: 'No-show rate'
         },
         {
             icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 13.0012L21.223 16.4832C21.2983 16.5333 21.3858 16.5621 21.4761 16.5664C21.5664 16.5707 21.6563 16.5505 21.736 16.5078C21.8157 16.4651 21.8824 16.4016 21.9289 16.324C21.9754 16.2464 22 16.1577 22 16.0672V7.87124C22 7.78326 21.9768 7.69684 21.9328 7.62069C21.8887 7.54454 21.8253 7.48136 21.7491 7.43754C21.6728 7.39372 21.5863 7.3708 21.4983 7.3711C21.4103 7.3714 21.324 7.3949 21.248 7.43924L16 10.5012" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M14 6H4C2.89543 6 2 6.89543 2 8V16C2 17.1046 2.89543 18 4 18H14C15.1046 18 16 17.1046 16 16V8C16 6.89543 15.1046 6 14 6Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <VideoIcon color="#3AD6F2" />
             ),
             value: statistics.avg_duration_display,
             label: 'Avg. duration'
@@ -1226,9 +1226,7 @@ const SchedulingCalendar = () => {
                                 onClick={() => setIsAddEventModalOpen(true)}
                                 className="flex-1 sm:flex-none px-4 py-2.5 bg-[#F56D2D] text-white !rounded-xl hover:bg-[#E55A1D] transition-all flex items-center justify-center gap-2 font-[BasisGrotesquePro] text-sm shadow-sm hover:shadow-md"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                                </svg>
+                                <PlusIcon className="w-4 h-4" />
                                 <span className="whitespace-nowrap">Add Event</span>
                             </button>
                         </div>
@@ -1330,9 +1328,7 @@ const SchedulingCalendar = () => {
                                     }}
                                     className="w-9 h-9 flex items-center justify-center bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900 active:scale-95"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
+                                    <ChevronLeftIcon className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={goToToday}
@@ -1349,9 +1345,7 @@ const SchedulingCalendar = () => {
                                     }}
                                     className="w-9 h-9 flex items-center justify-center bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900 active:scale-95"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                    </svg>
+                                    <ChevronRightIcon className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -1595,7 +1589,7 @@ const SchedulingCalendar = () => {
                     <div className="bg-white !rounded-2xl !border border-[#E8F0FF] shadow-sm overflow-hidden flex flex-col">
                         <div className="px-4 py-3 border-b border-[#F8FAFF] bg-[#F8FAFF]/50 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <h6 className="text-[10px] font-black text-[#3AD6F2] font-[BasisGrotesquePro] uppercase tracking-[0.2em] whitespace-nowrap">Schedule Today</h6>
+                                <h6 className="text-[10px] font-black text-[#3AD6F2] font-[BasisGrotesquePro] uppercase whitespace-nowrap">Schedule Today</h6>
                                 <span className="text-[#3AD6F2] font-black text-[10px] opacity-40">·</span>
                                 <h5 className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Today's Events</h5>
                             </div>
@@ -1650,7 +1644,7 @@ const SchedulingCalendar = () => {
                     <div className="bg-white !rounded-2xl !border border-[#E8F0FF] shadow-sm overflow-hidden flex flex-col">
                         <div className="px-4 py-3 border-b border-[#F8FAFF] bg-[#F8FAFF]/50 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <h6 className="text-[10px] font-black text-[#F56D2D] font-[BasisGrotesquePro] uppercase tracking-[0.2em] whitespace-nowrap">Coming Up</h6>
+                                <h6 className="text-[10px] font-black text-[#F56D2D] font-[BasisGrotesquePro] uppercase whitespace-nowrap">Coming Up</h6>
                                 <span className="text-[#F56D2D] font-black text-[10px] opacity-40">·</span>
                                 <h5 className="text-sm font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Upcoming {upcomingEvents.period || 'Events'}</h5>
                             </div>
@@ -1727,9 +1721,7 @@ const SchedulingCalendar = () => {
                                 className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
                                 aria-label="Close"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                                <CloseIcon />
                             </button>
                         </div>
 
@@ -1738,9 +1730,7 @@ const SchedulingCalendar = () => {
                             {eventsModal.events.length === 0 ? (
                                 <div className="py-8 flex flex-col items-center justify-center text-center">
                                     <div className="w-14 h-14 bg-[#F3F7FF] !rounded-full flex items-center justify-center mb-3">
-                                        <svg className="w-7 h-7 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                                        <CalendarIcon className="w-7 h-7 text-[#3AD6F2]" color="#3AD6F2" />
                                     </div>
                                     <p className="text-[10px] font-black text-gray-400 font-[BasisGrotesquePro] uppercase tracking-widest">No meetings scheduled</p>
                                 </div>
@@ -1764,9 +1754,7 @@ const SchedulingCalendar = () => {
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         <div className="flex items-center gap-1.5 px-3 py-1 bg-[#F8FAFF] !rounded-lg border border-[#E8F0FF] text-[10px] font-black text-[#3B4A66] uppercase tracking-wider">
-                                                            <svg className="w-3 h-3 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
+                                                            <ClockAltIcon className="w-3 h-3 text-[#3AD6F2]" color="#3AD6F2" />
                                                             {formatTime(event.appointment_time)}
                                                             {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
                                                         </div>
@@ -1827,9 +1815,7 @@ const SchedulingCalendar = () => {
                                                                 className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black !text-white bg-[#002c47] !rounded-xl transition-all shadow-md uppercase tracking-[0.1em]"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                                </svg>
+                                                                <VideoIcon className="w-4 h-4" />
                                                                 JOIN
                                                             </a>
                                                         )}
@@ -1896,7 +1882,6 @@ const SchedulingCalendar = () => {
                 </div>
             )}
 
-
             {/* Overlap Warning Modal - Premium Responsive */}
             {showOverlapModal && (
                 <div className="fixed inset-0 z-[1110] bg-black/60  flex items-center justify-center p-4">
@@ -1905,9 +1890,7 @@ const SchedulingCalendar = () => {
                         <div className="flex items-center justify-between p-5 border-b border-[#F8FAFF]">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-red-50 !rounded-xl flex items-center justify-center text-red-500">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
+                                    <AlertTriangleIcon className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <h6 className="text-[10px] font-black text-red-500 font-[BasisGrotesquePro] uppercase tracking-[0.2em] mb-1">Scheduling Conflict</h6>
@@ -1922,9 +1905,7 @@ const SchedulingCalendar = () => {
                                 }}
                                 className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                                <CloseIcon />
                             </button>
                         </div>
 
@@ -1984,9 +1965,7 @@ const SchedulingCalendar = () => {
                             </div>
 
                             <div className="p-4 bg-red-50 border border-red-100 !rounded-xl flex gap-3">
-                                <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <InfoIcon className="w-5 h-5 text-red-500 flex-shrink-0" color="#ef4444" />
                                 <p className="text-xs font-bold text-red-700 font-[BasisGrotesquePro] leading-relaxed">
                                     Warning: Confirming this meeting will automatically <span className="underline decoration-2">cancel</span> all conflicting appointments listed above.
                                 </p>
@@ -2017,44 +1996,40 @@ const SchedulingCalendar = () => {
                     </div>
                 </div>
             )}
+
             {/* Add Calendar Event Modal - Premium Responsive */}
             {isAddEventModalOpen && (
-                <div className="fixed inset-0 z-[1120] bg-black/60 flex items-center justify-center p-4">
-                    <div className="bg-white !rounded-3xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
+                <div className="fixed inset-0 z-[100001] bg-black/60 flex items-center justify-center p-4">
+                    <div className="bg-white !rounded-2xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-[#F8FAFF] bg-white">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#F8FAFF] bg-white">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-[#F56D2D]/10 !rounded-2xl flex items-center justify-center text-[#F56D2D]">
-                                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-                                    </svg>
+                                <div className="w-10 h-10 bg-[#F56D2D]/10 !rounded-xl flex items-center justify-center text-[#F56D2D]">
+                                        <PlusIcon className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h6 className="text-[10px] font-black text-[#F56D2D] font-[BasisGrotesquePro] uppercase tracking-[0.2em] mb-1">Event Creator</h6>
-                                    <h5 className="text-2xl font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Add Calendar Event</h5>
+                                    <h6 className="mb-0 text-[9px] font-black text-[#F56D2D] font-[BasisGrotesquePro] uppercase tracking-[0.2em] mb-1">Event Creator</h6>
+                                    <h5 className="mb-0 text-lg font-black text-gray-900 font-[BasisGrotesquePro] leading-none">Add Calendar Event</h5>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsAddEventModalOpen(false)}
-                                className="w-12 h-12 flex items-center justify-center !rounded-2xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
+                                className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                                <CloseIcon />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-8 space-y-8 overflow-y-auto no-scrollbar bg-white">
+                        <div className="px-5 py-3 space-y-5 overflow-y-auto no-scrollbar bg-white">
                             {/* Section: Basic Details */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-4 w-1 bg-[#F56D2D] rounded-full"></div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 mb-1.5">
                                     <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Event Information</h6>
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                         Event Title <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -2062,21 +2037,21 @@ const SchedulingCalendar = () => {
                                         value={eventTitle}
                                         onChange={(e) => setEventTitle(e.target.value)}
                                         placeholder="e.g., Quarterly Tax Review"
-                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300"
+                                        className="w-full px-4 py-2.5 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300"
                                         required
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                             Duration <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <select
                                                 value={appointmentDuration}
                                                 onChange={(e) => setAppointmentDuration(parseInt(e.target.value))}
-                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                className="w-full px-4 py-2.5 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#F56D2D] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                 required
                                             >
                                                 <option value={15}>15 minutes</option>
@@ -2086,22 +2061,20 @@ const SchedulingCalendar = () => {
                                                 <option value={90}>1.5 hours</option>
                                                 <option value={120}>2 hours</option>
                                             </select>
-                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <ChevronDownIcon className="w-4 h-4" />
                                             </div>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                             Timezone <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <select
                                                 value={timezone}
                                                 onChange={(e) => setTimezone(e.target.value)}
-                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                className="w-full px-4 py-2.5 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#F56D2D] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                 required
                                             >
                                                 <option value="America/New_York">America/New_York (EST)</option>
@@ -2110,10 +2083,8 @@ const SchedulingCalendar = () => {
                                                 <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
                                                 <option value="America/Phoenix">America/Phoenix (MST)</option>
                                             </select>
-                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <ChevronDownIcon className="w-4 h-4" />
                                             </div>
                                         </div>
                                     </div>
@@ -2121,14 +2092,13 @@ const SchedulingCalendar = () => {
                             </div>
 
                             {/* Section: Logistics */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-4 w-1 bg-[#3AD6F2] rounded-full"></div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 mb-1.5">
                                     <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Logistics & Timing</h6>
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                         Appointment Date <span className="text-red-500">*</span>
                                     </label>
                                     {(() => {
@@ -2151,7 +2121,7 @@ const SchedulingCalendar = () => {
                                                         setSlots(prev => prev.map(s => s));
                                                     }
                                                 }}
-                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                className="w-full px-4 py-2.5 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#F56D2D] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                 required
                                             />
                                         );
@@ -2159,17 +2129,17 @@ const SchedulingCalendar = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                         Time Slots & Clients <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="space-y-3">
+                                    <div className="space-y-2">
                                         {slots.map((slot, index) => (
-                                            <div key={slot.id} className="flex gap-3 group/slot items-start animate-in slide-in-from-left duration-200" style={{ animationDelay: `${index * 50}ms` }}>
-                                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div key={slot.id} className="flex gap-2 group/slot items-start animate-in slide-in-from-left duration-200" style={{ animationDelay: `${index * 50}ms` }}>
+                                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                     {/* Time — availability-based dropdown */}
                                                     <div className="relative">
                                                         {loadingSlots ? (
-                                                            <div className="w-full px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl flex items-center gap-2 text-sm text-gray-400 font-[BasisGrotesquePro]">
+                                                            <div className="w-full px-4 py-2 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-lg flex items-center gap-2 text-sm text-gray-400 font-[BasisGrotesquePro]">
                                                                 <div className="w-3 h-3 border-2 border-[#3AD6F2] border-t-transparent rounded-full animate-spin"></div>
                                                                 Loading slots...
                                                             </div>
@@ -2177,7 +2147,7 @@ const SchedulingCalendar = () => {
                                                             <select
                                                                 value={slot.time}
                                                                 onChange={(e) => handleTimeSlotChange(slot.id, 'time', e.target.value)}
-                                                                className="w-full px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                                className="w-full px-4 py-2 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-lg focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                                 required
                                                                 disabled={!appointmentDate || !assignedStaffId || availableSlots.length === 0}
                                                             >
@@ -2219,10 +2189,8 @@ const SchedulingCalendar = () => {
                                                                 })}
                                                             </select>
                                                         )}
-                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                                                            </svg>
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                            <ChevronDownIcon className="w-3.5 h-3.5" />
                                                         </div>
                                                     </div>
                                                     {/* Client */}
@@ -2230,7 +2198,7 @@ const SchedulingCalendar = () => {
                                                         <select
                                                             value={slot.client_id}
                                                             onChange={(e) => handleTimeSlotChange(slot.id, 'client_id', e.target.value)}
-                                                            className="w-full px-5 py-3 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                            className="w-full px-4 py-2 bg-gray-50/50 !border-2 !border-[#E8F0FF] !rounded-lg focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                             required
                                                             disabled={loadingClients}
                                                         >
@@ -2243,7 +2211,7 @@ const SchedulingCalendar = () => {
                                                                 </option>
                                                             ))}
                                                         </select>
-                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
                                                             </svg>
@@ -2255,7 +2223,7 @@ const SchedulingCalendar = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => removeTimeSlot(slot.id)}
-                                                            className="mt-3 w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50 transition-all "
+                                                            className="mt-2 w-9 h-9 flex items-center justify-center rounded-lg text-red-400 hover:text-red-500 hover:bg-red-50 transition-all "
                                                         >
                                                             ✕
                                                         </button>
@@ -2265,32 +2233,30 @@ const SchedulingCalendar = () => {
                                         ))}
                                     </div>
                                     {appointmentDate && assignedStaffId && !loadingSlots && availableSlots.length === 0 && (
-                                        <p className="text-sm font-bold text-red-500 mt-2 font-[BasisGrotesquePro]">
+                                        <p className="text-sm font-bold text-red-500 mt-1 font-[BasisGrotesquePro]">
                                             No available slots for this date. Select another date or check staff availability settings.
                                         </p>
                                     )}
                                     <button
                                         type="button"
                                         onClick={addTimeSlot}
-                                        className="flex items-center gap-2 px-5 py-3 text-[10px] font-black text-[#F56D2D] bg-[#F56D2D]/5 hover:bg-[#F56D2D]/10 !rounded-xl transition-all uppercase tracking-[0.2em] border-2 border-dashed border-[#F56D2D]/20 hover:border-[#F56D2D]/40"
+                                        className="flex items-center gap-2 px-4 py-2 text-[9px] font-black text-[#F56D2D] bg-[#F56D2D]/5 hover:bg-[#F56D2D]/10 !rounded-xl transition-all uppercase border-2 border-dashed border-[#F56D2D]/20 hover:border-[#F56D2D]/40"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" />
-                                        </svg>
+                                        <PlusIcon className="w-4 h-4" />
                                         Add Multi-Slot
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                             Meeting Type <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <select
                                                 value={meetingType}
                                                 onChange={(e) => setMeetingType(e.target.value)}
-                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                className="w-full px-4 py-2.5 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                 required
                                             >
                                                 <option value="zoom">Zoom Video</option>
@@ -2298,22 +2264,20 @@ const SchedulingCalendar = () => {
                                                 <option value="in_person">In-Person Meeting</option>
                                                 <option value="on_call">Phone Consultation</option>
                                             </select>
-                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <ChevronDownIcon className="w-4 h-4" />
                                             </div>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                             Assign Staff
                                         </label>
                                         <div className="relative">
                                             <select
                                                 value={assignedStaffId}
                                                 onChange={(e) => setAssignedStaffId(e.target.value)}
-                                                className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
+                                                className="w-full px-4 py-2.5 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 appearance-none transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900"
                                                 disabled={loadingStaff}
                                             >
                                                 {/* Always show Self (Firm Admin) as first option */}
@@ -2323,54 +2287,51 @@ const SchedulingCalendar = () => {
                                                     return <option key={staff.id} value={staff.id}>{staffName}</option>;
                                                 })}
                                             </select>
-                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <ChevronDownIcon className="w-4 h-4" />
                                             </div>
                                         </div>
-                                        {loadingStaff && <p className="text-[9px] font-bold text-[#3AD6F2] mt-2 uppercase tracking-widest">Loading staff roster...</p>}
+                                        {loadingStaff && <p className="text-[9px] font-bold text-[#3AD6F2] mt-1.5 uppercase tracking-widest">Loading staff roster...</p>}
                                         {!loadingStaff && staffMembers.length === 0 && (
-                                            <p className="text-[9px] font-bold text-gray-400 mt-2 uppercase tracking-widest">No staff available — meeting will be hosted by Firm Admin</p>
+                                            <p className="text-[9px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">No staff available — meeting will be hosted by Firm Admin</p>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Section: Additional Information */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-4 w-1 bg-gray-300 rounded-full"></div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 mb-1.5">
                                     <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Additional Information</h6>
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 font-[BasisGrotesquePro]">
+                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 font-[BasisGrotesquePro]">
                                         Description (Optional)
                                     </label>
                                     <textarea
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Add notes, agenda items, or specific instructions..."
-                                        rows={4}
-                                        className="w-full px-5 py-4 bg-white !border-2 !border-[#E8F0FF] !rounded-2xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300 resize-none shadow-inner no-scrollbar"
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-white !border-2 !border-[#E8F0FF] !rounded-xl focus:!border-[#3AD6F2] focus:ring-0 transition-all font-[BasisGrotesquePro] text-sm font-bold text-gray-900 placeholder:text-gray-300 resize-none shadow-inner no-scrollbar"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 border-t border-[#F8FAFF] bg-white flex items-center justify-end gap-4 shadow-[0_-4px_20px_0_rgba(0,0,0,0.02)]">
+                        <div className="px-4 py-3 border-t border-[#F8FAFF] bg-white flex items-center justify-end gap-3 shadow-[0_-4px_20px_0_rgba(0,0,0,0.02)]">
                             <button
                                 onClick={() => setIsAddEventModalOpen(false)}
-                                className="px-8 py-4 text-[10px] font-black bg-white !border !border-[#E8F0FF] !rounded-2xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all uppercase tracking-[0.2em]"
+                                className="px-6 py-2.5 text-[9px] font-black bg-white !border !border-[#E8F0FF] !rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all uppercase"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreateMeeting}
                                 disabled={creatingMeeting || !eventTitle.trim() || !appointmentDate || slots.every(slot => !slot.time || !slot.client_id)}
-                                className="flex-1 max-w-[240px] px-8 py-4 text-[10px] font-black text-white bg-[#F56D2D] hover:bg-[#E55A1D] !rounded-2xl transition-all shadow-xl shadow-orange-100 hover:shadow-orange-200 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+                                className="flex-1 max-w-[200px] px-6 py-2.5 text-[9px] font-black text-white bg-[#F56D2D] hover:bg-[#E55A1D] !rounded-xl transition-all shadow-xl shadow-orange-100 hover:shadow-orange-200 uppercase disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
                             >
                                 {creatingMeeting ? (
                                     <div className="flex items-center justify-center gap-2">
