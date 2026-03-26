@@ -579,11 +579,21 @@ export default function ESignatureManagement() {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setUploadedFiles(prev => [...prev, ...files]);
-      if (files.length === 1) {
-        setUploadedFile(files[0]);
-        if (files[0].type === 'application/pdf') {
-          const url = URL.createObjectURL(files[0]);
+      const validFiles = files.filter(f => f.type === 'application/pdf');
+      const invalidFiles = files.filter(f => f.type !== 'application/pdf');
+
+      if (invalidFiles.length > 0) {
+        toast.error('Only PDF files can be used for eSignature.', {
+          position: "top-right",
+          autoClose: 4000,
+        });
+      }
+
+      if (validFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...validFiles]);
+        if (validFiles.length === 1) {
+          setUploadedFile(validFiles[0]);
+          const url = URL.createObjectURL(validFiles[0]);
           setPdfFileUrl(url);
         }
       }
@@ -1949,11 +1959,21 @@ export default function ESignatureManagement() {
                     e.currentTarget.style.borderColor = '#D1D5DB';
                     const files = Array.from(e.dataTransfer.files);
                     if (files.length > 0) {
-                      setUploadedFiles(prev => [...prev, ...files]);
-                      if (files.length === 1) {
-                        setUploadedFile(files[0]);
-                        if (files[0].type === 'application/pdf') {
-                          const url = URL.createObjectURL(files[0]);
+                      const validFiles = files.filter(f => f.type === 'application/pdf');
+                      const invalidFiles = files.filter(f => f.type !== 'application/pdf');
+
+                      if (invalidFiles.length > 0) {
+                        toast.error('Only PDF files can be used for eSignature.', {
+                          position: "top-right",
+                          autoClose: 4000,
+                        });
+                      }
+
+                      if (validFiles.length > 0) {
+                        setUploadedFiles(prev => [...prev, ...validFiles]);
+                        if (validFiles.length === 1) {
+                          setUploadedFile(validFiles[0]);
+                          const url = URL.createObjectURL(validFiles[0]);
                           setPdfFileUrl(url);
                         }
                       }
@@ -1963,7 +1983,7 @@ export default function ESignatureManagement() {
                   <input
                     id="file-upload"
                     type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                    accept=".pdf"
                     multiple
                     className="hidden"
                     onChange={handleFileChange}
@@ -1973,10 +1993,10 @@ export default function ESignatureManagement() {
                       <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="var(--firm-primary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <p className="text-sm font-medium text-gray-700 mb-1 mt-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Drop files here or click to browse
+                      Drop PDF files here or click to browse
                     </p>
-                    <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Max 10MB per file)
+                    <p className="text-xs text-red-500 font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      Only PDF files can be used for eSignature (Max 10MB per file)
                     </p>
                   </div>
                 </div>
@@ -2009,6 +2029,9 @@ export default function ESignatureManagement() {
                     ))}
                   </div>
                 )}
+                <p className="mt-2 text-xs text-red-500 font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Only PDF files can be used for eSignature
+                </p>
               </div>
 
               {/* Folder Selection */}
