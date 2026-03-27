@@ -311,36 +311,53 @@ export default function Profile() {
                                 Platform Favicon
                             </label>
                             <div className="flex items-center gap-4">
-                                {(faviconPreview || formState.platform_configuration.favicon) && (
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200">
-                                        <img
-                                            src={faviconPreview || formState.platform_configuration.favicon}
-                                            alt="Favicon"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                )}
-                                <input
-                                    type="file"
-                                    accept="image/x-icon,image/png,image/jpeg"
-                                    className="form-control w-full"
-                                    onChange={(event) => {
-                                        if (event.target.files && event.target.files[0]) {
-                                            const file = event.target.files[0];
-                                            setFaviconFile(file);
-                                            setFaviconPreview(URL.createObjectURL(file));
-                                        }
-                                    }}
-                                    disabled={isLoading || isSaving}
-                                    style={{
-                                        backgroundColor: "white",
-                                        border: "1px solid #E8F0FF",
-                                        borderRadius: "6px",
-                                        padding: "8px 12px",
-                                        fontSize: "14px",
-                                        color: "#495057",
-                                    }}
-                                />
+                                <div 
+                                    className="relative w-12 h-12 rounded-xl flex items-center justify-center border-2 border-dashed border-[#E8F0FF] bg-[#F8FAFF] overflow-hidden group transition-all hover:border-[#F56D2D]/30 cursor-pointer"
+                                    onClick={() => document.getElementById('faviconInput').click()}
+                                >
+                                    {faviconPreview || formState.platform_configuration.favicon ? (
+                                        <>
+                                            <img
+                                                src={faviconPreview || formState.platform_configuration.favicon}
+                                                alt="Favicon"
+                                                className="w-full h-full object-contain p-1.5"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-[10px] text-white font-bold">CHANGE</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        id="faviconInput"
+                                        type="file"
+                                        accept="image/x-icon,image/png,image/jpeg"
+                                        className="hidden"
+                                        onChange={(event) => {
+                                            if (event.target.files && event.target.files[0]) {
+                                                const file = event.target.files[0];
+                                                setFaviconFile(file);
+                                                setFaviconPreview(URL.createObjectURL(file));
+                                            }
+                                        }}
+                                        disabled={isLoading || isSaving}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => document.getElementById('faviconInput').click()}
+                                        className="px-4 py-2 bg-white border border-[#E8F0FF] text-[#3B4A66] rounded-lg text-sm font-bold hover:bg-[#F8FAFF] transition-colors shadow-sm"
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        Choose Favicon
+                                    </button>
+                                </div>
                             </div>
                             <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
                                 Recommended size: 32x32px or 64x64px. Formats: .ico, .png
