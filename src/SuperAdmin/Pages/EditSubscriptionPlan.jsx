@@ -99,6 +99,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [fetchingPlan, setFetchingPlan] = useState(false);
+  const [showAutoFillModal, setShowAutoFillModal] = useState(false);
 
   useEffect(() => {
     setActiveTab(normalizePlanType(planType));
@@ -325,12 +326,15 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   };
 
   const autoFillFeatures = () => {
-    if (window.confirm('This will replace your current features with auto-generated ones from limits. Continue?')) {
-      setDisplaySettings(prev => ({
-        ...prev,
-        publicFeatures: generateFeaturesFromLimits()
-      }));
-    }
+    setShowAutoFillModal(true);
+  };
+
+  const confirmAutoFillFeatures = () => {
+    setDisplaySettings(prev => ({
+      ...prev,
+      publicFeatures: generateFeaturesFromLimits()
+    }));
+    setShowAutoFillModal(false);
   };
 
   const handleTabChange = (plan) => {
@@ -618,10 +622,10 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 edit-plan-row">
               <>
                 {/* Pricing Section */}
-                <div className="p-4 bg-white h-fit" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+                <div className="p-4 bg-white h-full flex flex-col" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
                   <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Pricing</h3>
-                  <div className="space-y-4 flex flex-row gap-4 edit-plan-inline">
-                    <div>
+                  <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Monthly Price ($)</label>
                       <input
                         type="number"
@@ -641,7 +645,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       />
 
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Yearly Price ($)</label>
                       <input
                         type="number"
@@ -687,10 +691,10 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 </div>
 
                 {/* Limits Section - Now available for ALL plans including Elite */}
-                <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+                <div className="p-4 bg-white h-full flex flex-col" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
                   <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
-                  <div className="space-y-4 flex flex-row gap-4 edit-plan-inline">
-                    <div>
+                  <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Staff Members</label>
                       <div className="flex gap-2 items-center">
                         <input
@@ -722,7 +726,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         </button>
                       </div>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Clients</label>
                       <div className="flex gap-2 items-center">
                         <input
@@ -755,8 +759,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       </div>
                     </div>
                   </div>
-                  <div className='space-y-4 flex flex-row gap-4 w-fit edit-plan-inline'>
-                    <div>
+                  <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Storage (GB)</label>
                       <input
                         type="number"
@@ -775,7 +779,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                       />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>E-Signatures/month</label>
                       <div className="flex gap-2 items-center">
                         <input
@@ -808,8 +812,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       </div>
                     </div>
                   </div>
-                  <div className='space-y-4 flex flex-row gap-4 w-fit edit-plan-inline'>
-                    <div>
+                  <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Workflows</label>
                       <div className="flex gap-2 items-center">
                         <input
@@ -841,7 +845,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         </button>
                       </div>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Included Offices</label>
                       <input
                         type="number"
@@ -887,18 +891,18 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               </div>
 
               {/* Category Filter Tabs */}
-              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-gray-50/50 rounded-xl border border-gray-100">
+              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-gray-50/50 rounded-xl border border-gray-100 w-fit">
                 {['all', 'esign', 'storage', 'workflow', 'office', 'staff', 'other'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setSelectedAddonCategory(cat)}
-                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${selectedAddonCategory === cat
+                    className={`px-4 py-1.5 text-xs font-bold transition-all ${selectedAddonCategory === cat
                       ? 'bg-[#3B4A66] text-white shadow-sm'
                       : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
                       }`}
                     style={{ borderRadius: "10px" }}
                   >
-                    {cat === 'all' ? 'All Types' : cat}
+                    {cat === 'all' ? 'All Types' : cat === 'esign' ? 'E-Sign' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </button>
                 ))}
               </div>
@@ -1047,7 +1051,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-bold text-sm" style={{ color: '#3B4A66' }}>{addon.name}</h4>
+                                  <h4 className="font-bold text-sm mb-0" style={{ color: '#3B4A66' }}>{addon.name}</h4>
                                   <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-tight border border-gray-200">
                                     {addon.category || 'other'}
                                   </span>
@@ -1398,12 +1402,12 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       {showNewAddonModal && (
         <div
           className="fixed inset-0 flex items-center justify-center z-[9999] p-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowNewAddonModal(false); }}
         >
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" style={{ border: '1px solid #E8F0FF' }}>
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E8F0FF' }}>
+            <div className="flex items-center justify-between px-6 pt-6 pb-4">
               <div>
                 <h4 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Create New Add-on</h4>
                 <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
@@ -1422,7 +1426,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: '65vh' }}>
+            <div className="px-6 overflow-y-auto" style={{ maxHeight: '50vh' }}>
+              <div className="space-y-4 pb-2">
 
               {/* Name */}
               <div>
@@ -1551,14 +1556,15 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   This add-on will be created exclusively for the <strong>{activeTab}</strong> plan. Only firms subscribed to this plan will see it.
                 </p>
               </div>
+              </div>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 p-6 border-t" style={{ borderColor: '#E8F0FF' }}>
+            <div className="flex justify-end gap-3 px-6 pb-6 pt-4">
               <button
                 onClick={() => setShowNewAddonModal(false)}
                 className="px-5 py-2.5 text-sm font-semibold rounded-lg border transition-colors"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '10px' }}
               >
                 Cancel
               </button>
@@ -1566,7 +1572,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 onClick={handleAddNewAddonForPlan}
                 disabled={creatingAddon || !newAddonForm.name.trim()}
                 className="px-6 py-2.5 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{ backgroundColor: '#3B4A66' }}
+                style={{ backgroundColor: '#3B4A66', borderRadius: '10px' }}
               >
                 {creatingAddon ? (
                   <>
@@ -1583,6 +1589,53 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     Create &amp; Add to {activeTab}
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auto-fill Confirmation Modal */}
+      {showAutoFillModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[9999] p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAutoFillModal(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" style={{ border: '1px solid #E8F0FF' }}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <path d="M3 15h6"/>
+                    <path d="M3 18h6"/>
+                    <path d="M3 12h6"/>
+                  </svg>
+                </div>
+                <h4 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Auto-fill Features?</h4>
+              </div>
+              <p className="text-sm" style={{ color: '#6B7280' }}>
+                This will replace your current custom features with auto-generated ones based on the plan limits. Are you sure you want to continue?
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 p-4 bg-gray-50 border-t" style={{ borderColor: '#E8F0FF' }}>
+              <button
+                type="button"
+                onClick={() => setShowAutoFillModal(false)}
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-white hover:bg-gray-50 transition-colors"
+                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '10px' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmAutoFillFeatures}
+                className="px-4 py-2 text-sm font-bold text-white transition-all shadow-sm flex items-center gap-2"
+                style={{ backgroundColor: '#3B4A66', borderRadius: '10px' }}
+              >
+                Auto-fill
               </button>
             </div>
           </div>

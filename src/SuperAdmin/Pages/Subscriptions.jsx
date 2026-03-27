@@ -1407,7 +1407,7 @@ export default function Subscriptions() {
           </div>
 
           {/* Subscriptions Table */}
-          <div>
+          <div className="pb-10">
             {/* Filter Bar */}
             <div className='mb-4'>
               <div className="flex gap-3 subscriptions-filter">

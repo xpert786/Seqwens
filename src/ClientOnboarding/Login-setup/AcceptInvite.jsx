@@ -835,6 +835,29 @@ export default function AcceptInvite() {
                                 {/* Only show form if invitation is valid OR we forced it to be valid for logged-in users */}
                                 {invitationData && (invitationData.is_valid !== false || invitationData.is_valid === true) && !errors.token ? (
                                     <>
+                                        {/* Email Field - Read Only */}
+                                        <div className="form-group mb-3">
+                                            <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
+                                                Email
+                                            </label>
+                                            <input
+                                                type="email"
+                                                className="form-control"
+                                                value={invitationData?.email || ""}
+                                                readOnly
+                                                disabled
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "10px 12px",
+                                                    borderRadius: "5px",
+                                                    border: "1px solid rgba(255, 255, 255, 0.3)",
+                                                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                                    color: "rgba(255, 255, 255, 0.8)",
+                                                    fontSize: "14px",
+                                                    cursor: "not-allowed"
+                                                }}
+                                            />
+                                        </div>
                                         {/* Password Field */}
                                         {!invitationData.user_exists && !isLoggedIn && (
                                             <>
