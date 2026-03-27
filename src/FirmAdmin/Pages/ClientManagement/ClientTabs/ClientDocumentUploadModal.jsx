@@ -126,6 +126,14 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
 
   // Process files (from drag-drop or file input)
   const processFiles = (selectedFiles) => {
+    if (selectedFiles.length > 1) {
+      toast.warning('Only one document can be uploaded at a time. Using the first file selected.', {
+        position: 'top-right',
+        autoClose: 4000
+      });
+      selectedFiles = [selectedFiles[0]];
+    }
+
     const maxSize = 50 * 1024 * 1024; // 50MB
 
     // Filter valid files
@@ -146,7 +154,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
     // Show error for invalid files
     const invalidFiles = selectedFiles.filter(file => !isValidFileType(file));
     if (invalidFiles.length > 0) {
-      toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`, {
+      toast.error(`${invalidFiles[0].name} has an unsupported format and was ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, CSV`, {
         position: 'top-right',
         autoClose: 5000
       });
@@ -163,13 +171,14 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
         // Only keep PDFs
         const pdfOnlyFiles = validFiles.filter(file => file.type.toLowerCase() === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
         if (pdfOnlyFiles.length === 0) return;
-        
-        const newFiles = pdfOnlyFiles.map((file) => ({
+
+        const file = pdfOnlyFiles[0];
+        const newFile = {
           name: file.name,
           size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
           fileObject: file
-        }));
-        setFiles([...files, ...newFiles]);
+        };
+        setFiles([newFile]);
         return;
       }
     }
@@ -178,12 +187,13 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
       return;
     }
 
-    const newFiles = validFiles.map((file) => ({
+    const file = validFiles[0];
+    const newFile = {
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
       fileObject: file
-    }));
-    setFiles([...files, ...newFiles]);
+    };
+    setFiles([newFile]);
   };
 
   const handleFileSelect = () => fileInputRef.current?.click();
@@ -218,7 +228,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
 
       // Prepare upload data
       const fileObjects = files.map(f => f.fileObject);
-      
+
       // If marked for eSign, we need to show the builder first if not already done
       if (markForEsign && !showBuilder && esignFields.length === 0) {
         // Find the first PDF to sign
@@ -279,10 +289,10 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
   };
 
   return (
-    <Modal 
-      show={show} 
-      onHide={resetModal} 
-      backdrop="static" 
+    <Modal
+      show={show}
+      onHide={resetModal}
+      backdrop="static"
       className="upload-modal"
       dialogClassName="upload-dialog-custom"
       contentClassName="upload-content-custom"
@@ -323,7 +333,6 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
         >
           <input
             type="file"
-            multiple
             hidden
             ref={fileInputRef}
             onChange={handleFileChange}
@@ -332,7 +341,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
           />
           <UploadsIcon className="upload-icon mb-2" />
           <p className="upload-text" style={{ fontSize: '13px' }}>
-            <strong className="texts">Drop {markForEsign ? 'PDF' : 'files'} here or click to browse</strong>
+            <strong className="texts">Drop {markForEsign ? 'PDF' : 'file'} here or click to browse</strong>
           </p>
           <p className={`upload-hint ${markForEsign ? 'text-red-500 font-medium' : ''}`} style={{ fontSize: '11px' }}>
             {markForEsign ? 'Only PDF files can be used for eSignature' : 'Supports PDFs, Word, Excel, CSV & Images'} - Max 50MB per file
@@ -343,12 +352,12 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
         {files.length > 0 && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <h6 className="m-0 text-sm font-semibold text-slate-700 font-[BasisGrotesquePro]">Selected Files ({files.length})</h6>
+              <h6 className="m-0 text-sm font-semibold text-slate-700 font-[BasisGrotesquePro]">Selected File</h6>
               <button
                 className="p-0 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 font-[BasisGrotesquePro]"
                 onClick={() => setFiles([])}
               >
-                Clear All
+                Clear
               </button>
             </div>
             <div className="border rounded bg-slate-50 overflow-y-auto custom-scrollbar" style={{ maxHeight: '180px' }}>
@@ -461,6 +470,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             onClick={resetModal}
             disabled={uploading}
             className="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-all font-[BasisGrotesquePro] disabled:opacity-50"
+            style={{ borderRadius: "10px" }}
           >
             Cancel
           </button>
@@ -468,6 +478,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             onClick={handleUpload}
             disabled={uploading || files.length === 0}
             className="btn-upload-custom px-6 py-2 text-sm font-bold text-white rounded-md transition-all shadow-sm font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
+            style={{ borderRadius: "10px" }}
           >
             {uploading ? (
               <div className="flex items-center justify-center gap-2">
@@ -475,14 +486,14 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                 <span>Processing...</span>
               </div>
             ) : (
-              <span>{markForEsign ? 'Prepare & Upload' : `Upload ${files.length > 0 ? files.length : ''} Document${files.length !== 1 ? 's' : ''}`}</span>
+              <span>{markForEsign ? 'Prepare & Upload' : `Upload Document`}</span>
             )}
           </button>
         </div>
 
         {/* Signature Builder Modal */}
-        <Modal 
-          show={showBuilder && !!fileToSign} 
+        <Modal
+          show={showBuilder && !!fileToSign}
           onHide={() => {
             setShowBuilder(false);
             setFileToSign(null);
