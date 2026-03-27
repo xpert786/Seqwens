@@ -770,7 +770,6 @@ export default function AcceptInvite() {
                                     Hello {invitationData?.first_name ? `${invitationData.first_name} ${invitationData.last_name || ''}`.trim() : invitationData?.email || "Staff"},
                                 </p>
                             </div>
-
                             {errors.duplicateInvite && (
                                 <div className="alert alert-warning" role="alert" style={{
                                     backgroundColor: '#FFF3CD',
