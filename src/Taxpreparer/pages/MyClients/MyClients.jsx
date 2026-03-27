@@ -23,6 +23,7 @@ export default function MyClients() {
     total_clients: 0,
     active: 0,
     pending: 0,
+    former: 0,
     high_priority: 0
   });
   const [loading, setLoading] = useState(true);
@@ -288,6 +289,7 @@ export default function MyClients() {
           total_clients: 0,
           active: 0,
           pending: 0,
+          former: 0,
           high_priority: 0
         });
       } else {
@@ -412,6 +414,14 @@ export default function MyClients() {
       case "Pending":
         setActiveTab('pending-invites');
         break;
+      case "Former":
+        setActiveTab('clients');
+        setStatusFilter('former');
+        setPriorityFilter(null);
+        setTimeout(() => {
+          clientListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        break;
       default:
         break;
     }
@@ -439,6 +449,7 @@ export default function MyClients() {
     { label: "Total Clients", icon: <DoubleUserIcon />, count: overview.total_clients, color: "#00bcd4" },
     { label: "Active", icon: <CompletedIcon />, count: overview.active, color: "#4caf50" },
     { label: "Pending", icon: <AwaitingIcon />, count: invitesPagination.total_count > 0 ? invitesPagination.total_count : pendingInvites.length, color: "#3f51b5" },
+    { label: "Former", icon: <FaClock />, count: overview.former || 0, color: "#9e9e9e" },
   ];
 
   // Process client data for display
@@ -483,9 +494,10 @@ export default function MyClients() {
       case "high priority":
       case "high":
         return "badge-higher";
-      case "low":
       case "low priority":
         return "badge-default";
+      case "former":
+        return "badge-former";
       default:
         return "badge-default";
     }
@@ -1349,7 +1361,7 @@ export default function MyClients() {
       {/* Stats */}
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (
-          <div className="col-md-4 col-sm-12" key={index}>
+          <div className="col-md-3 col-sm-6" key={index}>
             <div
               className="stat-card clickable-card"
               onClick={() => handleStatCardClick(item.label)}
@@ -1550,6 +1562,13 @@ export default function MyClients() {
                       onClick={() => handleStatusFilter('pending')}
                     >
                       Pending
+                    </button>
+                    <button
+                      className={`btn btn-sm py-1 ${statusFilter === 'former' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: "12px", borderRadius: "6px" }}
+                      onClick={() => handleStatusFilter('former')}
+                    >
+                      Former
                     </button>
                   </div>
                 </div>

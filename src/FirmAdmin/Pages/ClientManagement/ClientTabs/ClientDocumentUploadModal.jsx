@@ -152,6 +152,28 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
       });
     }
 
+    // Filter non-PDF files if markForEsign is enabled
+    if (markForEsign) {
+      const nonPdfFiles = validFiles.filter(file => file.type.toLowerCase() !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf'));
+      if (nonPdfFiles.length > 0) {
+        toast.warning('Only PDF files can be used for eSignature. Non-PDF files were filtered.', {
+          position: 'top-right',
+          autoClose: 4000
+        });
+        // Only keep PDFs
+        const pdfOnlyFiles = validFiles.filter(file => file.type.toLowerCase() === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
+        if (pdfOnlyFiles.length === 0) return;
+        
+        const newFiles = pdfOnlyFiles.map((file) => ({
+          name: file.name,
+          size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+          fileObject: file
+        }));
+        setFiles([...files, ...newFiles]);
+        return;
+      }
+    }
+
     if (validFiles.length === 0) {
       return;
     }
@@ -305,15 +327,15 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             hidden
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            accept={markForEsign ? ".pdf,application/pdf" : ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"}
             disabled={uploading}
           />
           <UploadsIcon className="upload-icon mb-2" />
           <p className="upload-text" style={{ fontSize: '13px' }}>
-            <strong className="texts">Drop files here or click to browse</strong>
+            <strong className="texts">Drop {markForEsign ? 'PDF' : 'files'} here or click to browse</strong>
           </p>
-          <p className="upload-hint" style={{ fontSize: '11px' }}>
-            Supports PDFs, Word, Excel, CSV & Images - Max 50MB per file
+          <p className={`upload-hint ${markForEsign ? 'text-red-500 font-medium' : ''}`} style={{ fontSize: '11px' }}>
+            {markForEsign ? 'Only PDF files can be used for eSignature' : 'Supports PDFs, Word, Excel, CSV & Images'} - Max 50MB per file
           </p>
         </div>
 
@@ -406,7 +428,26 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                 type="checkbox"
                 className="sr-only peer"
                 checked={markForEsign}
-                onChange={(e) => setMarkForEsign(e.target.checked)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  if (checked && files.length > 0) {
+                    const hasNonPdf = files.some(f => {
+                      const file = f.fileObject;
+                      return file.type.toLowerCase() !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf');
+                    });
+                    if (hasNonPdf) {
+                      toast.warning('Only PDF files can be used for eSignature. Non-PDF files will be removed.', {
+                        position: 'top-right',
+                        autoClose: 4000
+                      });
+                      setFiles(prev => prev.filter(f => {
+                        const file = f.fileObject;
+                        return file.type.toLowerCase() === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+                      }));
+                    }
+                  }
+                  setMarkForEsign(checked);
+                }}
                 disabled={uploading}
               />
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
