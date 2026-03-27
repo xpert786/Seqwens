@@ -390,7 +390,7 @@ export default function LogsAndBackups() {
                 {/* Logs Table */}
                 <div className="space-y-3">
                     {/* Header */}
-                    <div className="grid grid-cols-5 gap-4 py-3 px-4 bg-gray-50 rounded-lg">
+                    <div className="grid gap-4 py-3 px-4 bg-gray-50 rounded-lg items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 2.5fr 60px' }}>
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Timestamp</div>
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Level</div>
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Service</div>
@@ -415,7 +415,7 @@ export default function LogsAndBackups() {
 
                     {/* Rows */}
                     {!loading && systemLogs.map((log, index) => (
-                        <div key={index} className="grid grid-cols-5 gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg">
+                        <div key={index} className="grid gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 2.5fr 60px' }}>
                             <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{log.timestamp}</div>
                             <div>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-2 ${log.borderColor} ${log.textColor}`}>
@@ -543,7 +543,7 @@ export default function LogsAndBackups() {
                 <div className="space-y-3 backup-history">
 
                     {/* Header */}
-                    <div className="grid grid-cols-5 gap-4 py-3 px-4 bg-gray-50 rounded-lg backup-header">
+                    <div className="grid gap-4 py-3 px-4 bg-gray-50 rounded-lg backup-header items-center" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 80px' }}>
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Date</div>
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Size</div>
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Status</div>
@@ -563,7 +563,8 @@ export default function LogsAndBackups() {
                     ) : backups.map((backup, index) => (
                         <div
                             key={index}
-                            className="grid grid-cols-5 gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg backup-row"
+                            className="grid gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg backup-row items-center"
+                            style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 80px' }}
                         >
                             <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
                                 {new Date(backup.created_at).toLocaleString()}

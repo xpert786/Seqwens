@@ -423,7 +423,8 @@ export default function PlatformControl() {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
+                    <div className="custom-scroll" style={{ maxHeight: "300px", overflowY: "auto", overflowX: "hidden", paddingRight: "10px" }}>
+                        <Form>
                         <Form.Group className="mb-3">
                             <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Restriction Type *</Form.Label>
                             <Form.Select
@@ -499,6 +500,7 @@ export default function PlatformControl() {
                             />
                         </Form.Group>
                     </Form>
+                    </div>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={closeIPModal} style={{ borderRadius: '7px' }}>

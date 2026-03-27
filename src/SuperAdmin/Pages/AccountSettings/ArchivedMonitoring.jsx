@@ -253,34 +253,34 @@ export default function ArchivedMonitoring() {
                         <div className="space-y-4">
                             <div className="space-y-3">
                                 {/* Header Row */}
-                                <div className="grid grid-cols-6 gap-4 py-3 px-4 rounded-lg bg-gray-50">
-                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
-                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Offices</div>
-                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Archived Docs</div>
-                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Storage Used</div>
-                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Retention</div>
-                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Last Audit</div>
+                                <div className="grid gap-3 py-3 px-4 rounded-lg bg-gray-50 items-center" style={{ gridTemplateColumns: '2fr 1fr 1.2fr 1.2fr 1fr 1.2fr' }}>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Offices</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Archived Docs</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Storage Used</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Retention</div>
+                                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Last Audit</div>
                                 </div>
 
                                 {/* Data Rows */}
                                 {filteredFirmsData.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((firm, index) => (
-                                    <div key={firm.id || firm.firm_id || index} className="grid grid-cols-6 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                                    <div key={firm.id || firm.firm_id || index} className="grid gap-3 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 transition-colors items-center" style={{ gridTemplateColumns: '2fr 0.8fr 1.1fr 1.1fr 1fr 1.4fr' }}>
                                         <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
                                             {firm.firm || firm.name || firm.firm_name || 'N/A'}
                                         </div>
-                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
                                             {firm.offices || firm.offices_count || '0'}
                                         </div>
-                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
                                             {firm.archivedDocs || firm.archived_docs || firm.archived_documents || '0'}
                                         </div>
-                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
                                             {firm.storageUsed || firm.storage_used || '0'}
                                         </div>
-                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
                                             {firm.retention || firm.retention_period || 'N/A'}
                                         </div>
-                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
                                             {firm.lastAudit || firm.last_audit || firm.last_audit_date || 'N/A'}
                                         </div>
                                     </div>
@@ -334,11 +334,10 @@ export default function ArchivedMonitoring() {
                                                     <button
                                                         key={pageNum}
                                                         onClick={() => setCurrentPage(pageNum)}
-                                                        className={`w-8 h-8 flex items-center justify-center text-xs font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
-                                                            currentPage === pageNum
+                                                        className={`w-8 h-8 flex items-center justify-center text-xs font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
                                                                 ? 'bg-orange-500 text-white shadow-sm'
                                                                 : 'text-gray-700 hover:bg-gray-100 border border-transparent'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {pageNum}
                                                     </button>
@@ -407,22 +406,23 @@ export default function ArchivedMonitoring() {
 
                             {/* Enable Retention Rules */}
                             <div className="p-4 border border-[#E8F0FF] rounded-xl hover:border-orange-200 transition-colors">
-                                <label className="flex items-center cursor-pointer select-none">
+                                <label style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "12px", cursor: "pointer", userSelect: "none", width: "100%" }}>
                                     <input
                                         type="checkbox"
                                         checked={retentionFormData.enable_retention_rules}
-                                        onChange={(e) => setRetentionFormData({
-                                            ...retentionFormData,
-                                            enable_retention_rules: e.target.checked
-                                        })}
-                                        className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500 transition-all cursor-pointer"
-                                        style={{ accentColor: "#F56D2D" }}
+                                        onChange={(e) =>
+                                            setRetentionFormData({
+                                                ...retentionFormData,
+                                                enable_retention_rules: e.target.checked,
+                                            })
+                                        }
+                                        style={{ accentColor: "#F56D2D", width: "20px", height: "20px", flexShrink: 0, marginTop: "2px", cursor: "pointer" }}
                                     />
-                                    <div className="ml-3">
+                                    <div className="leading-tight">
                                         <span className="block text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
                                             Enable Auto-Retention
                                         </span>
-                                        <span className="text-[11px] text-gray-500 font-normal">
+                                        <span className="block text-[11px] text-gray-500 font-normal">
                                             Turn on automated data lifecycle management
                                         </span>
                                     </div>
