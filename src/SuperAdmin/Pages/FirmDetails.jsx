@@ -709,11 +709,11 @@ export default function FirmDetails() {
                                                     key={tab.id}
                                                     type="button"
                                                     onClick={() => handleTabChange(tab.id)}
-                                                    className={`px-5 py-2 text-sm font-medium transition-colors ${isActive
+                                                    className={`px-4 py-1.5 text-xs font-bold transition-colors uppercase tracking-wider ${isActive
                                                         ? 'bg-[#3B4A66] text-white'
                                                         : 'bg-white text-black hover:bg-[#DDE5FF] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                                                         }`}
-                                                    style={{ borderRadius: '8px' }}
+                                                    style={{ borderRadius: '6px' }}
                                                 >
                                                     {tab.label}
                                                 </button>
@@ -780,18 +780,18 @@ export default function FirmDetails() {
                                     {statCards.map(({ id, label, value, subtitle, icon }) => (
                                         <div
                                             key={id}
-                                            className="flex flex-col gap-2 rounded-xl bg-white p-4 dark:bg-gray-800"
+                                            className="flex flex-col gap-1 rounded-xl bg-white p-3 dark:bg-gray-800 border-2 border-[#E8F0FF]"
                                         >
                                             <div className="flex items-center justify-between">
-                                                <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-gray-400">
+                                                <p className="text-xs font-bold uppercase tracking-tight text-black dark:text-gray-400">
                                                     {label}
                                                 </p>
-                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E6F7FB] dark:bg-gray-700">
+                                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E6F7FB] dark:bg-gray-700">
                                                     {icon}
                                                 </span>
                                             </div>
-                                            <p className="text-2xl font-semibold text-[#0F172A] dark:text-white">{value}</p>
-                                            <p className="text-xs text-[#94A3B8] dark:text-gray-500">{subtitle}</p>
+                                            <p className="text-xl font-extrabold text-[#000000] dark:text-white leading-tight">{value}</p>
+                                            <p className="text-[11px] text-[#1E293B] dark:text-gray-300 font-extrabold">{subtitle}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -817,8 +817,8 @@ export default function FirmDetails() {
                                                     key={label}
                                                     className="grid grid-cols-1 gap-1 sm:grid-cols-[140px_1fr] sm:items-center border-b border-gray-100 last:border-0 pb-3 last:pb-0 dark:border-gray-700"
                                                 >
-                                                    <span className="text-sm font-medium text-[#64748B] sm:text-base dark:text-gray-400">{label}</span>
-                                                    <span className="text-sm font-semibold text-[#0F172A] sm:text-left sm:text-base dark:text-white truncate">
+                                                    <span className="text-sm font-bold text-[#1E293B] sm:text-base dark:text-gray-400">{label}</span>
+                                                    <span className="text-sm font-bold text-[#000000] sm:text-left sm:text-base dark:text-white truncate">
                                                         {value}
                                                     </span>
                                                 </div>
@@ -827,7 +827,7 @@ export default function FirmDetails() {
                                     </div>
 
                                     <div className="rounded-xl bg-white/90 p-6 dark:bg-gray-800/90">
-                                        <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">System Health</h5>
+                                        <h5 className="text-lg font-bold text-black dark:text-white">System Health</h5>
                                         <div className="mt-6 space-y-6">
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-xs font-medium text-[#475569] dark:text-gray-400">
@@ -1296,7 +1296,7 @@ const BillingOverviewTab = ({
                     <div className="mb-5 flex items-start justify-between gap-3">
                         <div>
                             <h5 className="text-lg font-semibold text-[#1E293B]">Current Subscription</h5>
-                            <p className="text-sm text-[#64748B]">
+                            <p className="text-sm font-bold text-[#475569]">
                                 Manage and monitor the firm&apos;s active subscription plan.
                             </p>
                         </div>
@@ -1394,17 +1394,17 @@ const BillingOverviewTab = ({
                                 : '—'
                         }].map(({ label, value, badge, status }) => (
                             <div key={label} className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                                <span className="text-sm font-medium text-[#475569]">{label}</span>
+                                <span className="text-sm font-extrabold text-[#111827]">{label}</span>
                                 {badge ? (
-                                    <span className="inline-flex items-center rounded-full bg-[#EFF4FF] px-3 py-1 text-xs font-semibold text-[#1E3A8A]">
+                                    <span className="inline-flex items-center rounded-full bg-[#EFF4FF] px-3 py-1 text-xs font-black text-[#1E3A8A]">
                                         {value}
                                     </span>
                                 ) : status ? (
-                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusClasses(null, status)}`}>
+                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black ${getStatusClasses(null, status)}`}>
                                         {value}
                                     </span>
                                 ) : (
-                                    <span className="text-sm font-semibold text-[#0F172A]">{value}</span>
+                                    <span className="text-sm font-black text-black">{value}</span>
                                 )}
                             </div>
                         ))}
@@ -1427,10 +1427,10 @@ const BillingOverviewTab = ({
                                 value: firmDetails?.storage_limit_gb ? `${firmDetails.storage_limit_gb}GB` : '—',
                                 subtitle: 'Total storage capacity'
                             }].map(({ title, value, subtitle }) => (
-                                <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
-                                    <p className="mt-1 text-lg font-semibold text-[#1F2937]">{value}</p>
-                                    <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>
+                                <div key={title} className="rounded-xl border border-[#E8F0FF] bg-white p-3 shadow-sm">
+                                    <p className="text-[10px] font-black uppercase tracking-tight text-black">{title}</p>
+                                    <p className="mt-1 text-lg font-black text-[#000000]">{value}</p>
+                                    <p className="text-[9px] font-black text-[#1E293B] mt-0.5">{subtitle}</p>
                                 </div>
                             ))}
                         </div>
@@ -1453,10 +1453,10 @@ const BillingOverviewTab = ({
                                 value: firmDetails?.trial_end_date ? formatDate(firmDetails.trial_end_date) : 'Not available',
                                 subtitle: 'Trial period expiration'
                             }].map(({ title, value, subtitle }) => (
-                                <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
-                                    <p className="mt-1 text-sm font-semibold text-[#1F2937]">{value}</p>
-                                    <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>
+                                <div key={title} className="rounded-xl border border-[#E8F0FF] bg-white p-3 shadow-sm">
+                                    <p className="text-[10px] font-black uppercase tracking-tight text-black">{title}</p>
+                                    <p className="mt-1 text-sm font-black text-[#000000]">{value}</p>
+                                    <p className="text-[9px] font-black text-[#1E293B] mt-0.5">{subtitle}</p>
                                 </div>
                             ))}
                         </div>
@@ -1465,23 +1465,23 @@ const BillingOverviewTab = ({
                     {/* Storage Usage Section */}
                     <div className="mt-6">
                         <h6 className="text-base font-semibold text-[#1E293B] mb-4">Storage Usage</h6>
-                        <div className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium text-[#475569]">Storage Used</span>
-                                    <span className="font-semibold text-[#1F2937]">
+                        <div className="rounded-xl border border-[#E8F0FF] bg-white p-3 shadow-sm">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="font-black text-black uppercase tracking-tight text-[10px]">Storage Used</span>
+                                    <span className="font-black text-black">
                                         {firmDetails?.storage_usage?.used_gb ?? 0}GB / {firmDetails?.storage_usage?.limit_gb ?? 0}GB
                                     </span>
                                 </div>
-                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF]">
+                                <div className="h-1.5 w-full rounded-full bg-[#EEF4FF]">
                                     <div
-                                        className="h-full rounded-full bg-[#3B4A66]"
+                                        className="h-full rounded-full bg-[#3AD6F2]"
                                         style={{
                                             width: `${Math.min(100, Math.round((firmDetails?.storage_usage?.used_gb ?? 0) / (firmDetails?.storage_usage?.limit_gb ?? 1) * 100))}%`
                                         }}
                                     />
                                 </div>
-                                <div className="flex items-center justify-between text-xs text-[#64748B]">
+                                <div className="flex items-center justify-between text-[9px] text-[#111827] font-black uppercase tracking-wider">
                                     <span>{firmDetails?.storage_usage?.percent_used ?? 0}% used</span>
                                     <span>{(firmDetails?.storage_usage?.limit_gb ?? 0) - (firmDetails?.storage_usage?.used_gb ?? 0)}GB remaining</span>
                                 </div>
@@ -1503,9 +1503,9 @@ const BillingOverviewTab = ({
                             title: 'Total Revenue',
                             value: firmDetails?.total_revenue ? formatCurrency(firmDetails.total_revenue) : '$0.00'
                         }].map(({ title, value }) => (
-                            <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                                <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
-                                <p className="mt-1 text-lg font-semibold text-[#1F2937]">{value}</p>
+                            <div key={title} className="rounded-xl border border-[#E8F0FF] bg-white p-3 shadow-sm">
+                                <p className="text-[10px] font-black uppercase tracking-tight text-black">{title}</p>
+                                <p className="mt-1 text-lg font-black text-[#000000]">{value}</p>
                             </div>
                         ))}
                     </div>
@@ -1517,16 +1517,16 @@ const BillingOverviewTab = ({
             <div className="rounded-xl bg-white p-6">
                 <div className="mb-4">
                     <h5 className="text-lg font-semibold text-[#1E293B]">Subscription History</h5>
-                    <p className="text-sm text-[#64748B]">{historyCount} records</p>
+                    <p className="text-sm font-bold text-[#475569]">{historyCount} records</p>
                 </div>
                 <div className="mt-6 overflow-x-auto">
                     <div className="min-w-[640px] rounded-2xl border border-[#EFF4FF] bg-[#F9FBFF]">
-                        <div className="grid grid-cols-12 gap-3 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+                        <div className="grid grid-cols-12 gap-3 px-6 py-2.5 text-[10px] font-black uppercase tracking-wider text-black border-b border-[#E8F0FF]">
                             <span className="col-span-2">Invoice #</span>
                             <span className="col-span-3">Plan</span>
                             <span className="col-span-3">Billing Period</span>
                             <span className="col-span-2 text-right">Amount</span>
-                            <span className="col-span-2">Status</span>
+                            <span className="col-span-2 text-center">Status</span>
                         </div>
                         <div className="space-y-2 px-4 pb-4">
                             {history.length > 0 ? history.map(entry => {
@@ -1539,27 +1539,26 @@ const BillingOverviewTab = ({
                                 return (
                                     <div
                                         key={entry.invoice_id || entry.id || entry.invoice_number || `${planLabel}-${periodLabel}`}
-                                        className="grid grid-cols-12 items-center gap-3 rounded-2xl bg-white px-4 py-4 shadow-sm"
-                                        style={{ borderRadius: '8px' }}
+                                        className="grid grid-cols-12 items-center gap-3 bg-white px-6 py-2 hover:bg-gray-50 transition-colors border-b border-[#F0F5FF] last:border-0"
                                     >
-                                        <span className="col-span-2 text-sm font-semibold text-[#1E293B]">{entry.invoice_number || entry.invoice_id || '—'}</span>
-                                        <span className="col-span-3 text-sm font-semibold text-[#1E293B]">
-                                            {planLabel}
+                                        <span className="col-span-2 text-[11px] font-black text-black">{entry.invoice_number || entry.invoice_id || '—'}</span>
+                                        <div className="col-span-3">
+                                            <span className="text-[11px] font-black text-black block">{planLabel}</span>
                                             {entry.client?.name && (
-                                                <span className="block text-xs font-medium text-[#94A3B8]">{entry.client.name}</span>
+                                                <span className="block text-[9px] font-black text-[#111827] uppercase tracking-tight">{entry.client.name}</span>
                                             )}
-                                        </span>
-                                        <span className="col-span-3 text-sm text-[#475569]">{periodLabel}</span>
-                                        <span className="col-span-2 text-right text-sm font-semibold text-[#1E293B]">{amountLabel}</span>
-                                        <span className="col-span-2">
-                                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusClasses}`}>
+                                        </div>
+                                        <span className="col-span-3 text-[11px] font-black text-[#1E293B]">{periodLabel}</span>
+                                        <span className="col-span-2 text-right text-[11px] font-black text-black">{amountLabel}</span>
+                                        <span className="col-span-2 flex justify-center">
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tight ${statusClasses}`}>
                                                 {statusLabel}
                                             </span>
                                         </span>
                                     </div>
                                 );
                             }) : (
-                                <div className="rounded-lg border border-dashed border-[#E2E8F0] bg-white/60 px-6 py-8 text-center text-sm text-[#94A3B8]">
+                                <div className="rounded-lg border border-dashed border-[#E2E8F0] bg-white/60 px-6 py-8 text-center text-sm font-bold text-[#475569]">
                                     No subscription history available.
                                 </div>
                             )}

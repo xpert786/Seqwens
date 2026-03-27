@@ -208,82 +208,65 @@ export default function UserManagement() {
           </button>
         )}
       </div>
-
-
-
       {/* Summary Cards */}
       {!loading && !error && (
         <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
             <div
               onClick={() => {
                 setStatusFilter('All Status');
                 setRoleFilter('All Roles');
               }}
-              className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group"
-              title="Click to view all platform users"
+              className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group"
+              title="Click to view all"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#3B4A66] dark:group-hover:text-white transition-colors">Internal Staff</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.total_internal_staff ?? 0}</p>
-                </div>
-                <FiUsers className="text-gray-300 group-hover:text-[#3B4A66] transition-colors" size={24} />
+              <div className="flex justify-between items-center mb-0.5">
+                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Internal Staff</p>
+                <FiUsers className="text-gray-300" size={14} />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Total users with platform access</p>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] font-medium text-[#3B4A66] dark:text-blue-400">View all staff</span>
+              <div className="flex items-baseline gap-2">
+                <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{summary.total_internal_staff ?? 0}</p>
+                <span className="text-[10px] text-gray-400 font-normal">Active staff</span>
+              </div>
+              <div className="flex justify-between items-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[9px] font-bold text-[#3B4A66] dark:text-blue-400">VIEW ALL</span>
                 {isSuperAdmin && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowAddAdminModal(true);
-                    }}
-                    className="text-[11px] font-medium text-[#F56D2D] hover:underline"
-                  >
-                    + Add Admin
-                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setShowAddAdminModal(true); }} className="text-[9px] font-bold text-[#F56D2D]">+ ADD</button>
                 )}
               </div>
             </div>
 
             <div
               onClick={() => setStatusFilter('Active')}
-              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Active' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
-              title="Click to filter by active users"
+              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Active' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#3B4A66] dark:group-hover:text-white transition-colors">Active</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.active ?? 0}</p>
-                </div>
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500 mt-1.5 shadow-sm shadow-green-200"></div>
+              <div className="flex justify-between items-center mb-0.5">
+                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Active</p>
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Currently active accounts</p>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] font-medium text-[#3B4A66] dark:text-blue-400">View active users</span>
+              <div className="flex items-baseline gap-2">
+                <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{summary.active ?? 0}</p>
+                <span className="text-[10px] text-gray-400 font-normal">Online users</span>
+              </div>
+              <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[9px] font-bold text-[#3B4A66] dark:text-blue-400">VIEW ACTIVE</span>
               </div>
             </div>
 
             <div
               onClick={() => setStatusFilter('Suspended')}
-              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Suspended' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
-              title="Click to filter by suspended users"
+              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Suspended' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#3B4A66] dark:group-hover:text-white transition-colors">Suspended</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{summary.suspended ?? 0}</p>
-                </div>
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500 mt-1.5 shadow-sm shadow-red-200"></div>
+              <div className="flex justify-between items-center mb-0.5">
+                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Suspended</p>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                {summary.suspended > 0
-                  ? `${summary.suspended} users require review`
-                  : 'No accounts requiring review'}
-              </p>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] font-medium text-[#3B4A66] dark:text-blue-400">Review accounts</span>
+              <div className="flex items-baseline gap-2">
+                <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{summary.suspended ?? 0}</p>
+                <span className="text-[10px] text-gray-400 font-normal">Awaiting review</span>
+              </div>
+              <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[9px] font-bold text-[#3B4A66] dark:text-blue-400">REVIEW LIST</span>
               </div>
             </div>
           </div>
@@ -473,6 +456,7 @@ export default function UserManagement() {
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1 || loading}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                style={{ borderRadius: "10px" }}
               >
                 Previous
               </button>
@@ -487,6 +471,7 @@ export default function UserManagement() {
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
                 disabled={currentPage === pagination.total_pages || loading}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                style={{ borderRadius: "10px" }}
               >
                 Next
               </button>
@@ -637,6 +622,7 @@ export default function UserManagement() {
                       onClick={closeAddAdminModal}
                       className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-[#E8F0FF] dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-lg"
                       disabled={creatingAdmin}
+                      style={{ borderRadius: '8px' }}
                     >
                       Cancel
                     </button>

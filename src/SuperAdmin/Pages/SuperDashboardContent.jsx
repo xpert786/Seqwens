@@ -747,7 +747,7 @@ export default function SuperDashboardContent() {
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="taxdashboardr-titler flex items-center gap-2 px-6 py-3 text-black dark:text-white bg-white dark:bg-gray-800 rounded-3xl transition-colors disabled:opacity-50 border border-transparent dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="taxdashboardr-titler flex items-center gap-2 px-4 py-1.5 text-sm text-black dark:text-white bg-white dark:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
           style={{ borderRadius: '7px' }}
         >
           <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -758,7 +758,7 @@ export default function SuperDashboardContent() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
         <div
-          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-7 relative cursor-pointer hover:shadow-md transition-all"
+          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowAllFirmsModal(true);
             setAllFirmsLoading(true);
@@ -793,7 +793,7 @@ export default function SuperDashboardContent() {
         </div>
 
         <div
-          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 relative cursor-pointer hover:shadow-md transition-all"
+          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowActiveUsersModal(true);
             setActiveUsersLoading(true);
@@ -843,7 +843,7 @@ export default function SuperDashboardContent() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 relative">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative">
           <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
             <MonthlyRevenueIcon className="w-4 h-4" />
           </div>
@@ -856,7 +856,7 @@ export default function SuperDashboardContent() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 relative">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative">
           <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
             <SystemHealthIcon className="w-4 h-4" />
           </div>
@@ -869,18 +869,17 @@ export default function SuperDashboardContent() {
           </div>
         </div>
       </div>
-
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* User Registration Trend */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col gap-4 mb-4">
             <div>
-              <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 dark:text-white mb-1">Revenue Growth Trend</h3>
+              <h3 className="taxdashboardr-titler text-base font-bold text-gray-900 dark:text-white mb-1 whitespace-nowrap">Revenue Growth Trend</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Monthly recurring revenue and user growth</p>
             </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="revenue-month-select" className="text-sm text-gray-600 dark:text-gray-400">Filter by month:</label>
+            <div className="flex items-center gap-2 justify-end">
+              <label htmlFor="revenue-month-select" className="text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Filter by month:</label>
               <select
                 id="revenue-month-select"
                 value={selectedRevenueMonth}
@@ -1017,67 +1016,67 @@ export default function SuperDashboardContent() {
                   return (
                     <React.Fragment key={index}>
                       {/* Revenue Growth Card */}
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4 border border-green-200 dark:border-green-800/30 shadow-sm transition-all hover:shadow-md">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
                               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
-                            <span className="text-sm font-medium text-gray-700">Revenue Growth</span>
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Revenue Growth</span>
                           </div>
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${isRevenuePositive ? 'bg-green-200 text-green-800' :
-                            isRevenueNegative ? 'bg-red-200 text-red-800' :
-                              'bg-gray-200 text-gray-800'
+                          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm ${isRevenuePositive ? 'bg-green-500 text-white' :
+                            isRevenueNegative ? 'bg-red-500 text-white' :
+                              'bg-gray-400 text-white'
                             }`}>
                             {isRevenuePositive ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                               </svg>
                             ) : isRevenueNegative ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 17l5-5m0 0l-5-5m5 5H6" />
                               </svg>
                             ) : null}
-                            <span className="text-sm font-bold">
+                            <span>
                               {revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
                             </span>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">Compared to previous month</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Compared to previous month</p>
                       </div>
 
                       {/* Subscriber Growth Card */}
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/30 shadow-sm transition-all hover:shadow-md">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
                               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                               </svg>
                             </div>
-                            <span className="text-sm font-medium text-gray-700">Subscriber Growth</span>
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Subscriber Growth</span>
                           </div>
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${isSubscriberPositive ? 'bg-green-200 text-green-800' :
-                            isSubscriberNegative ? 'bg-red-200 text-red-800' :
-                              'bg-gray-200 text-gray-800'
+                          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm ${isSubscriberPositive ? 'bg-green-500 text-white' :
+                            isSubscriberNegative ? 'bg-red-500 text-white' :
+                              'bg-gray-400 text-white'
                             }`}>
                             {isSubscriberPositive ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                               </svg>
                             ) : isSubscriberNegative ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 17l5-5m0 0l-5-5m5 5H6" />
                               </svg>
                             ) : null}
-                            <span className="text-sm font-bold">
+                            <span>
                               {subscriberGrowth > 0 ? '+' : ''}{subscriberGrowth.toFixed(1)}%
                             </span>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">Compared to previous month</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Compared to previous month</p>
                       </div>
                     </React.Fragment>
                   );
@@ -1089,13 +1088,13 @@ export default function SuperDashboardContent() {
 
         {/* User Role Distribution */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col gap-4 mb-4">
             <div>
-              <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">Subscription Distribution</h3>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 whitespace-nowrap">Subscription Distribution</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Revenue breakdown by plan type</p>
             </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="subscription-month-select" className="text-sm text-gray-600 dark:text-gray-400">Filter by month:</label>
+            <div className="flex items-center gap-2 justify-end">
+              <label htmlFor="subscription-month-select" className="text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Filter by month:</label>
               <select
                 id="subscription-month-select"
                 value={selectedSubscriptionMonth}
@@ -1340,6 +1339,7 @@ export default function SuperDashboardContent() {
                   onClick={() => handleFirmsPageChange(firmsCurrentPage - 1)}
                   disabled={firmsCurrentPage === 1}
                   className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                  style={{ borderRadius: "10px" }}
                 >
                   Previous
                 </button>
@@ -1352,6 +1352,7 @@ export default function SuperDashboardContent() {
                   onClick={() => handleFirmsPageChange(firmsCurrentPage + 1)}
                   disabled={firmsCurrentPage === totalPages}
                   className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                  style={{ borderRadius: "10px" }}
                 >
                   Next
                 </button>
@@ -1470,7 +1471,7 @@ export default function SuperDashboardContent() {
           </div>
 
           {/* Tab Content */}
-          <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px 24px 48px 24px' }}>
             {activeUsersLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A63] mx-auto mb-4"></div>
@@ -1766,7 +1767,7 @@ export default function SuperDashboardContent() {
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" style={{ padding: '24px' }}>
           <button
             className="btn dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
             onClick={() => {
@@ -1808,7 +1809,7 @@ export default function SuperDashboardContent() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: '0' }}>
-          <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px 24px 48px 24px' }}>
             {allFirmsLoading ? (
               <div className="text-center py-5">
                 <p className="text-gray-500">Loading firms...</p>
@@ -1902,7 +1903,7 @@ export default function SuperDashboardContent() {
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" style={{ padding: '24px' }}>
           <button
             className="btn"
             onClick={() => {

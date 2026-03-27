@@ -165,18 +165,19 @@ export default function FirmAddonsTab({ firmId, firmName }) {
   const totalAddonCost = firmAddons.reduce((sum, fa) => sum + (parseFloat(fa.monthly_cost || 0)), 0);
 
   return (
-    <div className="rounded-xl bg-white/95 p-6">
-      <div className="flex items-start justify-between gap-4 mb-6">
+    <div className="rounded-xl bg-white p-4 border border-[#E8F0FF]">
+      <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h5 className="text-xl font-semibold text-[#1E293B] font-[BasisGrotesquePro]">Firm Addons</h5>
-          <p className="mt-1 text-sm text-[#64748B] font-[BasisGrotesquePro]">
+          <h5 className="text-lg font-bold text-[#3B4A66]">Firm Addons</h5>
+          <p className="text-[11px] text-[#64748B] font-medium">
             Manage addons for {firmName || 'this firm'}
           </p>
         </div>
         <button
           type="button"
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+          className="px-3 py-1.5 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors text-xs font-bold uppercase tracking-wider shadow-sm"
+          style={{ borderRadius: "8px" }}
         >
           + Add Addon
         </button>
@@ -191,10 +192,10 @@ export default function FirmAddonsTab({ firmId, firmName }) {
 
       {/* Total Cost Summary */}
       {totalAddonCost > 0 && (
-        <div className="mb-6 bg-[#F6F8FE] border border-[#E8F0FF] rounded-lg p-4">
+        <div className="mb-4 bg-[#F6F8FE] border border-[#E8F0FF] rounded-lg p-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">Total Addon Cost</span>
-            <span className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+            <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">Total Addon Cost</span>
+            <span className="text-xl font-bold text-[#3B4A66]">
               {formatCurrency(totalAddonCost)}/month
             </span>
           </div>
@@ -211,6 +212,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
             type="button"
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC5E0] transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+            style={{ borderRadius: "8px" }}
           >
             Add First Addon
           </button>
@@ -222,15 +224,15 @@ export default function FirmAddonsTab({ firmId, firmName }) {
             return (
               <div
                 key={firmAddon.id}
-                className="border border-[#E8F0FF] rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                className="border border-[#E8F0FF] rounded-lg p-3 hover:bg-gray-50 transition-colors bg-white shadow-sm"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h6 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                  <div className="flex-1 text-[11px]">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h6 className="text-[13px] font-bold text-[#3B4A66]">
                         {addon.name || 'Unknown Addon'}
                       </h6>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full font-[BasisGrotesquePro] ${firmAddon.is_active
+                      <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${firmAddon.is_active
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                         }`}>
@@ -238,37 +240,37 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                       </span>
                     </div>
                     {addon.description && (
-                      <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-3">
+                      <p className="text-[#64748B] mb-2 leading-tight">
                         {addon.description}
                       </p>
                     )}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                       <div>
-                        <span className="text-gray-600 font-[BasisGrotesquePro]">Price: </span>
-                        <span className="font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                        <span className="text-gray-500">Price: </span>
+                        <span className="font-bold text-[#3B4A66]">
                           {addon.price_display || formatCurrency(addon.price)}
                         </span>
                       </div>
                       {firmAddon.monthly_cost > 0 && (
                         <div>
-                          <span className="text-gray-600 font-[BasisGrotesquePro]">Monthly Cost: </span>
-                          <span className="font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                          <span className="text-gray-500">Monthly Cost: </span>
+                          <span className="font-bold text-[#3B4A66]">
                             {formatCurrency(firmAddon.monthly_cost)}
                           </span>
                         </div>
                       )}
                       {firmAddon.usage_limit && (
                         <div>
-                          <span className="text-gray-600 font-[BasisGrotesquePro]">Usage: </span>
-                          <span className="font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                          <span className="text-gray-500">Usage: </span>
+                          <span className="font-bold text-[#3B4A66]">
                             {firmAddon.usage_display || `${firmAddon.usage || 0}/${firmAddon.usage_limit}`}
                           </span>
                         </div>
                       )}
                       {firmAddon.started_at && (
                         <div>
-                          <span className="text-gray-600 font-[BasisGrotesquePro]">Started: </span>
-                          <span className="font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                          <span className="text-gray-500">Started: </span>
+                          <span className="font-bold text-[#3B4A66]">
                             {new Date(firmAddon.started_at).toLocaleDateString()}
                           </span>
                         </div>
@@ -279,7 +281,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                     type="button"
                     onClick={() => handleRemoveAddon(firmAddon)}
                     disabled={removingAddon === firmAddon.id}
-                    className="ml-4 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors font-[BasisGrotesquePro] font-medium disabled:opacity-50"
+                    className="ml-4 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-red-100 disabled:opacity-50"
                   >
                     {removingAddon === firmAddon.id ? 'Removing...' : 'Remove'}
                   </button>
@@ -352,8 +354,8 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                             {addon.price_unit || (addon.billing_frequency === 'one_time' ? 'total' : 'per month')}
                           </span>
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${addon.billing_frequency === 'one_time'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-indigo-100 text-indigo-700'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-indigo-100 text-indigo-700'
                             }`}>
                             {addon.billing_frequency || 'one_time'}
                           </span>

@@ -625,7 +625,7 @@ export default function Subscriptions() {
     );
   }
   return (
-    <div className="w-full h-full p-6 subscriptions-page">
+    <div className="w-full h-full p-6 pb-12 subscriptions-page">
       {/* Hidden PDF Content */}
       <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
         <div style={{ marginBottom: '20px' }}>
@@ -749,7 +749,7 @@ export default function Subscriptions() {
           {/* Metric Cards and main subscriptions content */}
           <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
             {/* Total Revenue */}
-            <div className="bg-white px-4 py-2" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Total Revenue</p>
@@ -790,7 +790,7 @@ export default function Subscriptions() {
 
             {/* Active Subscribers */}
             <div
-              className="bg-white px-4 py-2 cursor-pointer hover:shadow-md transition-shadow group relative"
+              className="bg-white p-4 cursor-pointer hover:shadow-md transition-shadow group relative"
               style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
               onClick={handleActiveSubscribersClick}
               title="Click to view all active subscribers"
@@ -811,7 +811,7 @@ export default function Subscriptions() {
             </div>
 
             {/* Most Popular Plan */}
-            <div className="bg-white px-4 py-2" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
@@ -856,7 +856,7 @@ export default function Subscriptions() {
             </div>
 
             {/* Average Growth */}
-            <div className="bg-white px-4 py-2" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Average Growth</p>
@@ -1454,7 +1454,7 @@ export default function Subscriptions() {
                 </select>
               </div>
             </div>
-            <div className="bg-white p-4 subscriptions-table-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-white p-4 mb-10 subscriptions-table-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-center mb-6 subscriptions-table-card-header">
                 <div>
                   <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
@@ -1483,7 +1483,7 @@ export default function Subscriptions() {
               )}
 
               {/* Table Body */}
-              <div className="space-y-4 subscriptions-table-list">
+              <div className="space-y-1.5 subscriptions-table-list">
                 {tableLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -1494,7 +1494,7 @@ export default function Subscriptions() {
                 ) : subscriptions.length > 0 ? (
                   <>
                     {/* Header for list view */}
-                    <div className="px-6 py-3 mb-2 subscriptions-table-header">
+                    <div className="px-6 py-2 mb-1 subscriptions-table-header">
                       <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 text-xs font-bold uppercase tracking-wider" style={{ color: '#3B4A66' }}>
                         <div>Firm</div>
                         <div>Plan</div>
@@ -1511,8 +1511,8 @@ export default function Subscriptions() {
                       return (
                         <div 
                           key={`${subscription.firm_id}-${subscription.plan}`} 
-                          className="bg-white p-4 subscriptions-table-row hover:bg-gray-50 transition-colors cursor-pointer" 
-                          style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                          className="bg-white px-6 py-1.5 subscriptions-table-row hover:bg-gray-50 transition-colors cursor-pointer" 
+                          style={{ border: '1px solid #E8F0FF', borderRadius: '6px' }}
                           onClick={() => handleRowClick(subscription)}
                         >
                           <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 items-center subscriptions-table-row-grid">
@@ -1855,52 +1855,52 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
+        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Total Revenue</p>
+              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                 {formatCurrency(stats.total_revenue || 0)}
               </p>
             </div>
-            <FaDollarSign className="h-8 w-8 text-green-500" />
+            <BlueDollarIcon className="text-lg" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
-          <div className="flex items-center justify-between">
+        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Monthly Revenue</p>
+              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                 {formatCurrency(stats.monthly_revenue || 0)}
               </p>
             </div>
-            <FaClock className="h-8 w-8 text-blue-500" />
+            <BlueClockIcon className="text-lg" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
-          <div className="flex items-center justify-between">
+        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-600">Paid Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Paid Invoices</p>
+              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                 {stats.status_counts?.find(s => s.status === 'paid')?.count || 0}
               </p>
             </div>
-            <FaUsers className="h-8 w-8 text-purple-500" />
+            <BlueUserIcon className="text-lg" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
-          <div className="flex items-center justify-between">
+        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Pending Invoices</p>
+              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
                 {stats.status_counts?.find(s => s.status === 'pending')?.count || 0}
               </p>
             </div>
-            <FaExclamationTriangle className="h-8 w-8 text-yellow-500" />
+            <BlueExclamationTriangleIcon className="text-lg" />
           </div>
         </div>
       </div>
