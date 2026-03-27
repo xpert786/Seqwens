@@ -214,7 +214,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     }
   }, [pricing.monthly, pricing.discount]);
 
-  const getFeatures = () => {
+  const generateFeaturesFromLimits = () => {
     const list = [];
 
     // User Limit
@@ -291,6 +291,46 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     }
 
     return list;
+  };
+
+  const getFeatures = () => {
+    // If public features are manually defined, use those
+    if (displaySettings.publicFeatures && displaySettings.publicFeatures.length > 0) {
+      return displaySettings.publicFeatures;
+    }
+    return generateFeaturesFromLimits();
+  };
+
+  const addFeatureBullet = () => {
+    setDisplaySettings(prev => ({
+      ...prev,
+      publicFeatures: [...prev.publicFeatures, '']
+    }));
+  };
+
+  const updateFeatureBullet = (index, value) => {
+    const newFeatures = [...displaySettings.publicFeatures];
+    newFeatures[index] = value;
+    setDisplaySettings(prev => ({
+      ...prev,
+      publicFeatures: newFeatures
+    }));
+  };
+
+  const removeFeatureBullet = (index) => {
+    setDisplaySettings(prev => ({
+      ...prev,
+      publicFeatures: prev.publicFeatures.filter((_, i) => i !== index)
+    }));
+  };
+
+  const autoFillFeatures = () => {
+    if (window.confirm('This will replace your current features with auto-generated ones from limits. Continue?')) {
+      setDisplaySettings(prev => ({
+        ...prev,
+        publicFeatures: generateFeaturesFromLimits()
+      }));
+    }
   };
 
   const handleTabChange = (plan) => {
@@ -1138,6 +1178,64 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   />
+                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                    This description will be shown in the Features Preview and on the website.
+                  </p>
+                </div>
+
+                {/* Manual Features Management */}
+                <div className="lg:col-span-2 mt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="block text-sm font-medium" style={{ color: '#3B4A66' }}>Plan Features</label>
+                    <button
+                      type="button"
+                      onClick={autoFillFeatures}
+                      className="text-[10px] font-bold px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 uppercase tracking-tighter"
+                    >
+                      Auto-fill from limits
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {displaySettings.publicFeatures && displaySettings.publicFeatures.map((feature, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => updateFeatureBullet(index, e.target.value)}
+                          placeholder={`Feature #${index + 1}`}
+                          className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFeatureBullet(index)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={addFeatureBullet}
+                      className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 flex items-center justify-center gap-2"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                      </svg>
+                      Add Feature Bullet
+                    </button>
+
+                    {(!displaySettings.publicFeatures || displaySettings.publicFeatures.length === 0) && (
+                      <div className="p-4 bg-gray-50 rounded-lg text-center">
+                        <p className="text-xs text-gray-500 italic">No custom features defined. Showing auto-generated features based on plan limits.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
 
@@ -1245,15 +1343,31 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
               <div className="flex justify-between items-start edit-plan-actions">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Features Preview</h3>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#3B4A66' }}>Features Preview</h3>
+
+                  {/* Show Description in Preview */}
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Plan Description:</p>
+                    <p className="text-sm italic" style={{ color: '#3B4A66' }}>
+                      {displaySettings.description || 'No description provided.'}
+                    </p>
+                  </div>
+
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Bullet Points:</p>
                   <ul className="space-y-2">
                     {getFeatures().map((feature, index) => (
                       <li key={index} className="flex items-center text-sm" style={{ color: '#3B4A66' }}>
-                        <span className="w-1 h-1 bg-black rounded-full mr-3"></span>
-                        {feature}
+                        <span className="w-1.5 h-1.5 bg-[#F56D2D] rounded-full mr-3"></span>
+                        {feature || <span className="opacity-30 italic">Untitled Feature</span>}
                       </li>
                     ))}
                   </ul>
+
+                  {(displaySettings.publicFeatures && displaySettings.publicFeatures.length > 0) && (
+                    <div className="mt-3 py-1 px-2 inline-block bg-blue-50 text-[10px] font-bold text-blue-600 rounded uppercase">
+                      Using Manual Feature List
+                    </div>
+                  )}
                 </div>
 
               </div>
