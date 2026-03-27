@@ -966,6 +966,7 @@ export default function AcceptInvite() {
                                                         </div>
                                                     )}
                                                 </div>
+                                            </>
                                         )}
 
                                         {/* Data Sharing Selection - Show BEFORE Accept */}
