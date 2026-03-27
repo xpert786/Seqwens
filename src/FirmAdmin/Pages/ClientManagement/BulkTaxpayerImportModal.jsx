@@ -877,9 +877,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     >
       <div
         className="bg-white rounded-xl shadow-xl p-4 sm:p-8 max-w-5xl w-full mx-auto modal-content-scroller relative"
-        style={{ 
-          maxHeight: 'calc(100vh - 60px)', 
-          overflowY: 'auto' 
+        style={{
+          maxHeight: 'calc(100vh - 60px)',
+          overflowY: 'auto'
         }}
         onClick={e => e.stopPropagation()}
       >
