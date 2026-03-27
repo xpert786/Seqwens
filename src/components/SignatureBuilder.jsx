@@ -61,7 +61,7 @@ const FieldUI = ({ type, role, isDragging, isOverlay, scale = 1, onRemove }) => 
         <button
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="ml-auto hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-white bg-opacity-50 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+          className="ml-auto hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-white bg-opacity-50 hover:bg-red-500 transition-all shadow-sm"
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -145,10 +145,10 @@ const PDFPageWrapper = React.memo(({ pageNumber, placedFields, onRemoveField, on
   if (prevProps.scale !== nextProps.scale) return false;
   if (prevProps.pageNumber !== nextProps.pageNumber) return false;
   if (prevProps.placedFields.length !== nextProps.placedFields.length) return false; // Early exit if count changed
-  
+
   const prevFields = prevProps.placedFields.filter(f => f.page === prevProps.pageNumber);
   const nextFields = nextProps.placedFields.filter(f => f.page === nextProps.pageNumber);
-  
+
   if (prevFields.length !== nextFields.length) return false;
   for (let i = 0; i < prevFields.length; i++) {
     // Only re-render if essential field properties changed
@@ -171,7 +171,7 @@ const PlacedField = React.memo(({ field, onRemove, scale }) => {
     position: 'absolute',
     left: `${field.x * scale}px`,
     top: `${field.y * scale}px`,
-    zIndex: isDragging ? 0 : 100, 
+    zIndex: isDragging ? 0 : 100,
     opacity: isDragging ? 0 : 1,
     cursor: isDragging ? 'grabbing' : 'grab',
   };
@@ -251,51 +251,51 @@ export default function SignatureBuilder({
     if (!over) return;
 
     const pageData = over.data.current;
-    if (!pageData || !pageData.pageNumber) return;
+    if (!pageData?.pageNumber) return;
 
     const fieldData = active.data.current;
     const pageRect = over.rect;
 
-    // Calculate coordinates relative to the page
-    const x = (event.activatorEvent.clientX + event.delta.x - pageRect.left) / scale;
-    const y = (event.activatorEvent.clientY + event.delta.y - pageRect.top) / scale;
+    // Correct pointer-based drop position
+    const dragRect = active.rect.current.translated;
+
+    const x =
+      (dragRect.left - pageRect.left) / scale;
+
+    const y =
+      (dragRect.top - pageRect.top) / scale;
 
     if (fieldData.isSidebarItem) {
-      // For sidebar items, calculate relative to page
-      const x = (event.activatorEvent.clientX + event.delta.x - pageRect.left) / scale;
-      const y = (event.activatorEvent.clientY + event.delta.y - pageRect.top) / scale;
-      
+
       const newField = {
         id: `field-${Date.now()}`,
         type: fieldData.type,
         page: pageData.pageNumber,
-        x: x - 60, // approximate half width
-        y: y - 20, // approximate half height
+        x,
+        y,
         role: selectedRole,
       };
+
       setPlacedFields(prev => [...prev, newField]);
+
     } else {
-      // For existing items, use relative delta to prevent "jumping"
-      setPlacedFields(prev => prev.map(field => {
-        if (field.id === active.id) {
-          // If moved to a DIFFERENT page, we need to handle coordinate conversion
-          if (field.page !== pageData.pageNumber) {
-             const x = (event.activatorEvent.clientX + event.delta.x - pageRect.left) / scale;
-             const y = (event.activatorEvent.clientY + event.delta.y - pageRect.top) / scale;
-             // We can't perfectly preserve grab point between pages easily without more math, 
-             // but crossing pages is rare and jumping is less annoying than within the same page.
-             return { ...field, page: pageData.pageNumber, x: x - 60, y: y - 20 };
-          }
-          
-          // Same page: Just apply delta
+
+      setPlacedFields(prev =>
+        prev.map(field => {
+
+          if (field.id !== active.id)
+            return field;
+
           return {
             ...field,
-            x: field.x + (event.delta.x / scale),
-            y: field.y + (event.delta.y / scale),
+            page: pageData.pageNumber,
+            x,
+            y,
           };
-        }
-        return field;
-      }));
+
+        })
+      );
+
     }
   };
 
@@ -358,14 +358,14 @@ export default function SignatureBuilder({
           <div className="mt-auto pt-6 border-t border-gray-100 flex flex-col gap-3">
             <button
               onClick={onCancel}
-              className="w-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" style={{ borderRadius: '10px' }}
             >
               Cancel
             </button>
             <button
               onClick={() => onSave(placedFields)}
               className="w-full px-6 py-2.5 text-sm font-medium text-white bg-firm-primary hover:brightness-95 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
-              style={{ backgroundColor: 'var(--firm-primary-color, #3AD6F2)' }}
+              style={{ backgroundColor: 'var(--firm-primary-color, #3AD6F2)', borderRadius: '10px' }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               Save Placement
@@ -394,7 +394,7 @@ export default function SignatureBuilder({
             className="flex-1 overflow-y-auto p-12 pt-16 scroll-smooth bg-gray-100"
           >
             <div className="max-w-fit mx-auto">
-              <PDFRenderer 
+              <PDFRenderer
                 pdfFile={pdfFile}
                 onDocumentLoadSuccess={onDocumentLoadSuccess}
                 numPages={numPages}

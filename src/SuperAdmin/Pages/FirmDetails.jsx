@@ -699,9 +699,9 @@ export default function FirmDetails() {
                         </button>
 
                         <div className="rounded-lg bg-white px-4 py-2 firmdetails-tabs-card dark:bg-gray-800">
-                            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between firmdetails-tabs-row">
-                                <div className="space-y-4">
-                                    <div className="flex flex-wrap gap-2 p-2 firmdetails-tabs">
+                            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between firmdetails-tabs-row">
+                                <div className="space-y-4 overflow-hidden">
+                                    <div className="flex flex-nowrap overflow-x-auto gap-2 p-2 firmdetails-tabs scrollbar-hide pb-3">
                                         {tabs.map((tab) => {
                                             const isActive = activeTab === tab.id;
                                             return (
@@ -733,19 +733,19 @@ export default function FirmDetails() {
                                     >
                                         {getActionType() === 'reactivate' ? (
                                             <>
-                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M10 1.66667V5M10 15V18.3333M3.57501 3.575L5.83334 5.83333M14.1667 14.1667L16.425 16.425M1.66667 10H5M15 10H18.3333M3.57501 16.425L5.83334 14.1667M14.1667 5.83333L16.425 3.575" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                 </svg>
-                                                Reactivate Firm
+                                                <span className="whitespace-nowrap">Reactivate Firm</span>
                                             </>
                                         ) : (
                                             <>
-                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                     <path d="M10 1.66667C5.39763 1.66667 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66667 10 1.66667ZM3.33333 10C3.33333 6.3181 6.3181 3.33333 10 3.33333C13.6819 3.33333 16.6667 6.3181 16.6667 10C16.6667 13.6819 13.6819 16.6667 10 16.6667C6.3181 16.6667 3.33333 13.6819 3.33333 10Z" fill="currentColor" />
                                                     <path d="M13.5 6.5L6.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                 </svg>
-                                                Disable Firm
+                                                <span className="whitespace-nowrap">Disable Firm</span>
                                             </>
                                         )}
                                     </button>
@@ -753,20 +753,20 @@ export default function FirmDetails() {
                                         type="button"
                                         onClick={handleFirmLogin}
                                         disabled={loggingIn}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-[#F56D2D] text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{ borderRadius: '8px' }}
                                     >
                                         {loggingIn ? (
                                             <>
                                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent border-white"></div>
-                                                Logging in...
+                                                <span className="whitespace-nowrap">Logging in...</span>
                                             </>
                                         ) : (
                                             <>
-                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M15.8333 9.16667V5.83333C15.8333 5.39131 15.6577 4.96738 15.345 4.65482C15.0325 4.34226 14.6085 4.16667 14.1667 4.16667H5.83333C5.39131 4.16667 4.96738 4.34226 4.65482 4.65482C4.34226 4.96738 4.16667 5.39131 4.16667 5.83333V14.1667C4.16667 14.6087 4.34226 15.0326 4.65482 15.3452C4.96738 15.6577 5.39131 15.8333 5.83333 15.8333H14.1667C14.6085 15.8333 15.0325 15.6577 15.345 15.3452C15.6577 15.0326 15.8333 14.6087 15.8333 14.1667V10.8333M12.5 10H18.3333M18.3333 10L16.25 7.91667M18.3333 10L16.25 12.0833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                 </svg>
-                                                Login as Firm
+                                                <span className="whitespace-nowrap">Login as Firm</span>
                                             </>
                                         )}
                                     </button>
