@@ -99,7 +99,7 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
   return (
     <div
       className={`firm-sidebar fixed left-0 z-[1000] transition-all duration-300 bg-[var(--firm-primary-color,#32B582)] ${isSidebarOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
-        } ${isImpersonating ? 'top-[110px] h-[calc(100vh-110px)]' : 'top-[70px] h-[calc(100vh-70px)]'} ${sidebarWidth === '280px' ? 'w-[280px]' : 'w-[240px]'
+        } ${sidebarWidth === '280px' ? 'w-[280px]' : 'w-[240px]'
         }`}
     >
       <div

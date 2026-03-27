@@ -405,10 +405,6 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
         <>
             <nav
                 className={`navbar fixed-top fixed top-0 left-0 w-full z-[9999] bg-white border-bottom custom-topbar p-0 ${isImpersonating ? 'impersonating-topbar' : ''}`}
-                style={{
-                    top: isImpersonating ? '40px' : '0',
-                    transition: 'top 0.3s ease'
-                }}
             >
 
                 <div className="container-fluid d-flex justify-content-between align-items-center h-[70px] px-2 sm:px-4">

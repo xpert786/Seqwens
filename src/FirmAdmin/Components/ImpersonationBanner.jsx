@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { performRevertToSuperAdmin, getImpersonationStatus } from '../../ClientOnboarding/utils/userUtils';
 import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
+import '../styles/Impersonation.css';
 
 
 /**

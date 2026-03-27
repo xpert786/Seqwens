@@ -414,9 +414,9 @@ export default function FirmDashboardLayout() {
           onNavItemClick={handleCloseSidebar}
         />
         <div
-          className="flex flex-col w-full h-screen"
+          className="main-content-wrapper flex flex-col w-full h-screen"
           style={{
-            paddingTop: isImpersonating ? '110px' : '70px',
+            paddingTop: '70px',
             marginLeft: (isSidebarOpen && !isMobile) ? sidebarWidth : '0',
             width: (isSidebarOpen && !isMobile) ? `calc(100% - ${sidebarWidth})` : '100%',
           }}

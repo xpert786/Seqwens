@@ -1,0 +1,38 @@
+/* Standard positions (when NOT impersonating) */
+.navbar.fixed-top {
+    top: 0;
+}
+
+.firm-sidebar {
+    top: 70px;
+    height: calc(100vh - 70px);
+}
+
+.main-content-wrapper {
+    padding-top: 70px;
+}
+
+/* Impersonation Layout Shifts */
+
+/* When impersonating, the fixed top nav moves down by 40px */
+body.is-impersonating .navbar.fixed-top {
+    top: 40px !important;
+}
+
+/* Sidebar moves down and reduces its height */
+body.is-impersonating .firm-sidebar {
+    top: 110px !important;
+    height: calc(100vh - 110px) !important;
+}
+
+/* Main content adjusts its top padding */
+body.is-impersonating .main-content-wrapper {
+    padding-top: 110px !important;
+}
+
+/* Ensure smooth transitions */
+.navbar.fixed-top,
+.firm-sidebar,
+.main-content-wrapper {
+    transition: top 0.3s ease, height 0.3s ease, padding-top 0.3s ease !important;
+}

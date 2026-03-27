@@ -573,7 +573,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
 
   return (
     <div className="w-full h-full lg:p-3 md:p-2 sm:p-1 edit-plan-page">
-      <div className="rounded-lg w-full max-w-6xl mx-auto edit-plan-container">
+      <div className="rounded-lg w-full  mx-auto edit-plan-container">
         {/* Header */}
         <div className="p-6 edit-plan-header">
           <button
