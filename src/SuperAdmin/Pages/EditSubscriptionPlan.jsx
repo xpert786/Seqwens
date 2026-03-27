@@ -1182,7 +1182,6 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     This description will be shown in the Features Preview and on the website.
                   </p>
                 </div>
-
                 {/* Manual Features Management */}
                 <div className="lg:col-span-2 mt-4">
                   <div className="flex justify-between items-center mb-4">
