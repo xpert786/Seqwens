@@ -385,7 +385,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[99999] p-2 sm:p-4 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-[99999] p-2 sm:p-4 overflow-y-auto" onClick={onClose}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-auto relative flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
         style={{ maxHeight: "calc(100vh - 40px)" }}
@@ -705,7 +705,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex flex-row justify-end gap-3 p-5 sm:p-6 border-t border-[#F1F5F9] bg-gray-50 sticky bottom-0 z-10">
+          <div className="flex flex-row justify-end gap-3 pt-6 border-t border-[#F1F5F9] bg-white">
             <button
               onClick={onClose}
               disabled={loading}

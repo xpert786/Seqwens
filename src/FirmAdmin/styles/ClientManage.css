@@ -318,9 +318,9 @@
 }
 
 /* Ensure backdrop is above the header but below the modal */
-.modal-backdrop {
+/* .modal-backdrop {
   z-index: 9990 !important;
-}
+} */
 .modal-backdrop.show {
   opacity: 0.5 !important;
 }

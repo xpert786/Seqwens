@@ -1418,8 +1418,8 @@ export default function SuperDashboardContent() {
           setActiveUsersTab('Firm');
         }}
         size="xl"
-        centered
-        style={{ fontFamily: 'BasisGrotesquePro' }}
+        data-bs-theme={isDarkMode ? 'dark' : 'light'}
+        style={{ marginTop: '80px', fontFamily: 'BasisGrotesquePro' }}
       >
         <Modal.Header closeButton className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <Modal.Title className="text-gray-900 dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
@@ -1470,7 +1470,7 @@ export default function SuperDashboardContent() {
           </div>
 
           {/* Tab Content */}
-          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px' }}>
             {activeUsersLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A63] mx-auto mb-4"></div>
@@ -1799,8 +1799,8 @@ export default function SuperDashboardContent() {
           setAllFirmsError(null);
         }}
         size="xl"
-        centered
-        style={{ fontFamily: 'BasisGrotesquePro' }}
+        data-bs-theme={isDarkMode ? 'dark' : 'light'}
+        style={{ marginTop: '80px', fontFamily: 'BasisGrotesquePro' }}
       >
         <Modal.Header closeButton className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <Modal.Title className="text-gray-900 dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
@@ -1808,7 +1808,7 @@ export default function SuperDashboardContent() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: '0' }}>
-          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px' }}>
             {allFirmsLoading ? (
               <div className="text-center py-5">
                 <p className="text-gray-500">Loading firms...</p>

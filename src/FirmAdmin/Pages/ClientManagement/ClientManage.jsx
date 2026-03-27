@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding, FaCopy, FaLink, FaSms } from 'react-icons/fa';
 import PhoneInput from 'react-phone-input-2';
@@ -30,6 +31,7 @@ export default function ClientManage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showDropdown, setShowDropdown] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
@@ -385,6 +387,11 @@ export default function ClientManage() {
           queryParams.append('active', activeFilter);
         }
 
+        // Add link status filter parameter
+        if (linkStatusFilter !== 'all') {
+          queryParams.append('link_status', linkStatusFilter);
+        }
+
         if (debouncedSearchTerm.trim()) {
           queryParams.append('search', debouncedSearchTerm.trim());
         }
@@ -528,7 +535,9 @@ export default function ClientManage() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showDropdown && !event.target.closest('.dropdown-container')) {
+      if (showDropdown && 
+          !event.target.closest('.dropdown-container') && 
+          !event.target.closest('.portal-dropdown')) {
         setShowDropdown(null);
       }
     };
@@ -972,6 +981,11 @@ export default function ClientManage() {
         queryParams.append('active', 'all');
       } else {
         queryParams.append('active', activeFilter);
+      }
+
+      // Add link status filter parameter
+      if (linkStatusFilter !== 'all') {
+        queryParams.append('link_status', linkStatusFilter);
       }
 
       if (debouncedSearchTerm.trim()) {
@@ -2351,24 +2365,30 @@ export default function ClientManage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setDropdownPosition({
+                                    top: rect.top,
+                                    bottom: rect.bottom,
+                                    left: rect.right - 200,
+                                    openUp: rect.bottom > window.innerHeight - 280 // Slightly larger threshold for safety
+                                  });
                                   setShowDropdown(showDropdown === client.id ? null : client.id);
                                 }}
                                 className="text-gray-400 "
                               >
                                 <Action />
                               </button>
-                              {showDropdown === client.id && (
+                              {showDropdown === client.id && createPortal(
                                 <div
-                                  className="absolute w-48 bg-white shadow-lg z-10"
+                                  className="portal-dropdown absolute w-48 bg-white shadow-lg z-[9999]"
                                   style={{
+                                    position: 'fixed',
                                     border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
                                     borderRadius: '8px',
-                                    right: '8px',
+                                    top: dropdownPosition.openUp ? 'auto' : `${dropdownPosition.bottom + 8}px`,
+                                    bottom: dropdownPosition.openUp ? `${window.innerHeight - dropdownPosition.top + 8}px` : 'auto',
+                                    left: `${dropdownPosition.left}px`,
                                     width: '200px',
-                                    ...(index >= filteredClients.length - 2 && filteredClients.length > 2
-                                      ? { bottom: '100%', marginBottom: '8px' }
-                                      : { top: '100%', marginTop: '8px' }
-                                    )
                                   }}
                                 >
                                   <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
@@ -2468,7 +2488,8 @@ export default function ClientManage() {
                                       {client.is_deleted ? 'Permanently Remove' : 'Remove from Firm'}
                                     </button>
                                   </div>
-                                </div>
+                                </div>,
+                                document.body
                               )}
                             </div>
                           </div>
@@ -2780,6 +2801,34 @@ export default function ClientManage() {
                         </label>
                       );
                     })}
+                  </div>
+
+                  {/* Link Status Filter - consolidated here too */}
+                  <div className="mt-4">
+                    <h4 className="taxdashboardr-titler mb-2">Link Status</h4>
+                    <div className="space-y-1 flex flex-col">
+                      {['All', 'Linked', 'Unlinked'].map((status) => {
+                        const key = status.toLowerCase();
+                        return (
+                          <label key={status} className="flex items-center gap-4 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="linkStatusFilterModal"
+                              checked={linkStatusFilter === key}
+                              onChange={() => {
+                                setLinkStatusFilter(key);
+                                setCurrentPage(1);
+                              }}
+                              className="w-3 h-3 border-gray-300"
+                              style={{
+                                accentColor: '#3AD6F2',
+                              }}
+                            />
+                            <span className="text-xs text-gray-600 ml-4">{status}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -552,7 +552,7 @@ export default function InvoiceDetails() {
       {/* Edit Invoice Modal */}
       {showEditModal && createPortal(
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-black/60 flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowEditModal(false)}
         >
           <div
@@ -659,7 +659,7 @@ export default function InvoiceDetails() {
       {/* Send Invoice Modal */}
       {showSendModal && createPortal(
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-black/60 flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowSendModal(false)}
         >
           <div

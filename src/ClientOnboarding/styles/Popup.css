@@ -21,7 +21,7 @@
 /* Paymentpopup */
 
 .modal-content {
-  max-height: 90vh;
+  max-height: 75vh;
   overflow: hidden !important;
 }
 
