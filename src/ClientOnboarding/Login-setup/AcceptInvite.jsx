@@ -859,7 +859,7 @@ export default function AcceptInvite() {
                                             />
                                         </div>
                                         {/* Password Field */}
-                                        {!invitationData.user_exists && !isLoggedIn && (
+                                        {!invitationData.user_exists && (
                                             <>
                                                 <div className="form-group mb-3">
                                                     <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
