@@ -96,22 +96,22 @@ export default function GlobalUserLookup() {
   };
 
   return (
-    <div className="p-6 bg-[#F6F7FF] dark:bg-gray-900 transition-colors duration-200">
+    <div className="p-6 bg-[var(--sa-bg-primary)] transition-colors duration-200">
       {/* Page Title and Description */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Global User Lookup</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Search and manage credentials for any user in the system (Clients, Firms, Admin Staff)</p>
+        <h3 className="text-lg font-semibold text-[var(--sa-text-primary)]">Global User Lookup</h3>
+        <p className="text-sm text-[var(--sa-text-secondary)]">Search and manage credentials for any user in the system (Clients, Firms, Admin Staff)</p>
       </div>
 
       {/* Filters Bar */}
-      <div className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-[#E8F0FF] dark:border-gray-700">
+      <div className="mb-6 bg-[var(--sa-bg-card)] p-4 rounded-lg border border-[var(--sa-border-color)]">
         <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
           {/* Search Input */}
           <div className="relative w-full md:w-[450px] md:mr-auto">
             <input
               type="text"
               placeholder="Search by name, email, or firm..."
-              className="w-full pl-10 pr-4 py-2 border border-[#E8F0FF] dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-2 border border-[var(--sa-border-color)] rounded-lg text-sm bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)] focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -151,13 +151,13 @@ export default function GlobalUserLookup() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-2 pr-8 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px] transition-colors"
+              className="w-full appearance-none bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--sa-text-primary)] focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px] transition-colors"
             >
               <option value="All Status">All Status</option>
               <option value="Active">Active</option>
               <option value="Suspended">Suspended</option>
             </select>
-            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[var(--sa-text-secondary)] pointer-events-none" size={14} />
           </div>
 
           {/* Role Dropdown */}
@@ -168,7 +168,7 @@ export default function GlobalUserLookup() {
                 setRoleFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-2 pr-8 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px] transition-colors"
+              className="w-full appearance-none bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--sa-text-primary)] focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px] transition-colors"
             >
               <option value="All Roles">All Roles</option>
               <option value="client">Client</option>
@@ -178,7 +178,7 @@ export default function GlobalUserLookup() {
               <option value="Billing Admin">Billing Admin</option>
               <option value="Support Admin">Support Admin</option>
             </select>
-            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[var(--sa-text-secondary)] pointer-events-none" size={14} />
           </div>
         </div>
       </div>
@@ -211,20 +211,20 @@ export default function GlobalUserLookup() {
 
       {/* Users Table */}
       {!loading && !error && users.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-[#E8F0FF] dark:border-gray-700 transition-all">
-          <div className="p-4 border-b border-[#E8F0FF] dark:border-gray-700">
+        <div className="bg-[var(--sa-bg-card)] rounded-lg border border-[var(--sa-border-color)] transition-all">
+          <div className="p-4 border-b border-[var(--sa-border-color)]">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
-                <h6 className="text-sm font-semibold text-gray-800 dark:text-white mb-0 uppercase tracking-wide">
+                <h6 className="text-sm font-semibold text-[var(--sa-text-primary)] mb-0 uppercase tracking-wide">
                   Search Results ({pagination.total_count})
                 </h6>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Rows per page:</span>
+                <span className="text-xs font-medium text-[var(--sa-text-secondary)]">Rows per page:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
-                  className="text-xs border border-[#E8F0FF] dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
+                  className="text-xs border border-[var(--sa-border-color)] bg-[var(--sa-bg-card)] text-[var(--sa-text-primary)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
                 >
                   {[25, 50, 100, 250].map((size) => (
                     <option key={size} value={size}>
@@ -236,8 +236,8 @@ export default function GlobalUserLookup() {
             </div>
           </div>
 
-          <div className="px-4 py-2 border-[#E8F0FF]">
-            <div className="flex items-center text-[#4B5563] dark:text-gray-400 uppercase tracking-wider text-[11px]">
+          <div className="px-4 py-2 border-[var(--sa-border-color)]">
+            <div className="flex items-center text-[var(--sa-text-secondary)] uppercase tracking-wider text-[11px]">
               <div className="flex-1 text-left pr-4">User</div>
               <div className="w-48 text-left">Email</div>
               <div className="w-40 text-left">Firm/Organization</div>
@@ -253,24 +253,24 @@ export default function GlobalUserLookup() {
                 role="button"
                 tabIndex={0}
                 onClick={() => navigate(`/superadmin/users-details/${user.id}?mode=lookup`)}
-                className="border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-2 transition-colors cursor-pointer hover:border-[#3B4A66] dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3B4A66] bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className="border border-[var(--sa-border-color)] rounded-lg p-2 transition-colors cursor-pointer hover:border-[var(--sa-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] hover:bg-[var(--sa-bg-secondary)]"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0 pr-4">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white truncate hover:underline">
+                    <span className="text-sm font-semibold text-[var(--sa-text-primary)] truncate hover:underline">
                       {user.full_name || 'Unnamed User'}
                     </span>
                   </div>
 
-                  <div className="w-48 text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <div className="w-48 text-sm text-[var(--sa-text-primary)] truncate">
                     {user.email || '—'}
                   </div>
 
-                  <div className="w-40 text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <div className="w-40 text-sm text-[var(--sa-text-primary)] truncate">
                     {user.firm_name || user.firm_id ? (user.firm_name || 'Firm #' + user.firm_id) : '—'}
                   </div>
 
-                  <div className="w-36 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="w-36 text-sm text-[var(--sa-text-primary)]">
                     {user.role_display_name || user.role || '—'}
                   </div>
 
@@ -286,17 +286,17 @@ export default function GlobalUserLookup() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-card)] rounded-b-lg">
             <div className="flex items-center gap-6">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-gray-900 dark:text-white">{pagination.total_count}</span>
+              <span className="text-sm text-[var(--sa-text-secondary)]">
+                Showing <span className="font-medium text-[var(--sa-text-primary)]">{startItem}-{endItem}</span> of <span className="font-medium text-[var(--sa-text-primary)]">{pagination.total_count}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1 || loading}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] hover:bg-[var(--sa-bg-secondary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                 style={{ borderRadius: '8px' }}
               >
                 Previous
@@ -304,7 +304,7 @@ export default function GlobalUserLookup() {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
                 disabled={currentPage === pagination.total_pages || loading}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] hover:bg-[var(--sa-bg-secondary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                 style={{ borderRadius: '8px' }}
               >
                 Next

@@ -583,30 +583,30 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-2 text-sm text-[#3B4A66] hover:underline focus:outline-none edit-plan-back"
+            className="inline-flex items-center gap-2 text-sm text-[var(--sa-text-primary)] hover:underline focus:outline-none edit-plan-back"
           >
             ← Back to Subscription Plans
           </button>
           <div className="mt-4">
-            <h3 className="text-2xl font-bold" style={{ color: '#3B4A66' }}>Edit Subscription Plan</h3>
-            <p className="text-sm mt-1" style={{ color: '#3B4A66' }}>Modify pricing, features, limits, and display settings for subscription plans</p>
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--sa-text-primary)' }}>Edit Subscription Plan</h3>
+            <p className="text-sm mt-1" style={{ color: 'var(--sa-text-primary)' }}>Modify pricing, features, limits, and display settings for subscription plans</p>
           </div>
         </div>
 
         {/* Plan Tabs */}
         <div className="lg:p-6 md:p-4 sm:p-2 edit-plan-tabs-wrap">
-          <div className="flex gap-2 mb-6 bg-white p-2 w-fit edit-plan-tabs" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex gap-2 mb-6 bg-[var(--sa-bg-card)] p-2 w-fit edit-plan-tabs" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
             {plans.map((plan) => (
               <button
                 key={plan}
                 onClick={() => handleTabChange(plan)}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === plan
                   ? 'text-white'
-                  : 'hover:bg-gray-100'
+                  : 'hover:bg-[var(--sa-bg-secondary)]'
                   }`}
                 style={{
-                  color: activeTab === plan ? 'white' : '#3B4A66',
-                  backgroundColor: activeTab === plan ? '#3B4A66' : 'white',
+                  color: activeTab === plan ? 'white' : 'var(--sa-text-primary)',
+                  backgroundColor: activeTab === plan ? 'var(--sa-text-primary)' : 'white',
                   borderRadius: '7px',
 
                 }}
@@ -622,11 +622,11 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 edit-plan-row">
               <>
                 {/* Pricing Section */}
-                <div className="p-4 bg-white h-full flex flex-col" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
-                  <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Pricing</h3>
+                <div className="p-4 bg-[var(--sa-bg-card)] h-full flex flex-col" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '8px' }}>
+                  <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--sa-text-primary)' }}>Pricing</h3>
                   <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Monthly Price ($)</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Monthly Price ($)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -640,13 +640,13 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                           const n = parseFloat(e.target.value);
                           setPricing({ ...pricing, monthly: isNaN(n) ? 0 : Math.max(0, Number(n.toFixed(2))) });
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                        className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                       />
 
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Yearly Price ($)</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Yearly Price ($)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -654,21 +654,21 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         value={pricing.yearly ?? ''}
                         disabled
                         readOnly
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         style={{
-                          border: '1px solid #E8F0FF',
-                          color: '#3B4A66',
+                          border: '1px solid var(--sa-border-color)',
+                          color: 'var(--sa-text-primary)',
                           backgroundColor: '#F3F4F6',
                           cursor: 'not-allowed'
                         }}
                       />
-                      <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                      <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
                         Auto-calculated from monthly price and discount
                       </p>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Discount Percentage (Yearly)</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Discount Percentage (Yearly)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -684,18 +684,18 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         const clamped = isNaN(n) ? 0 : Math.min(100, Math.max(0, Number(n.toFixed(2))));
                         setPricing({ ...pricing, discount: clamped });
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                     />
                   </div>
                 </div>
 
                 {/* Limits Section - Now available for ALL plans including Elite */}
-                <div className="p-4 bg-white h-full flex flex-col" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
-                  <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
+                <div className="p-4 bg-[var(--sa-bg-card)] h-full flex flex-col" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '8px' }}>
+                  <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--sa-text-primary)' }}>Limits & Features</h3>
                   <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Staff Members</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Max Staff Members</label>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"
@@ -714,20 +714,20 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             }
                           }}
                           placeholder="e.g., 10 or Unlimited"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                          className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                         />
                         <button
                           type="button"
                           onClick={() => setLimits(prev => ({ ...prev, maxUsers: 'Unlimited' }))}
-                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.maxUsers) ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.maxUsers) ? 'bg-green-500 text-white' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-secondary)]'}`}
                         >
                           ∞
                         </button>
                       </div>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Clients</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Max Clients</label>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"
@@ -746,13 +746,13 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             }
                           }}
                           placeholder="e.g., 100 or Unlimited"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                          className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                         />
                         <button
                           type="button"
                           onClick={() => setLimits(prev => ({ ...prev, maxClients: 'Unlimited' }))}
-                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.maxClients) ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.maxClients) ? 'bg-green-500 text-white' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-secondary)]'}`}
                         >
                           ∞
                         </button>
@@ -761,7 +761,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   </div>
                   <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Storage (GB)</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Storage (GB)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -775,12 +775,12 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                           const n = parseFloat(e.target.value);
                           setLimits({ ...limits, storage: isNaN(n) ? 0 : Math.max(0, Number(n.toFixed(2))) });
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                        className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>E-Signatures/month</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>E-Signatures/month</label>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"
@@ -799,13 +799,13 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             }
                           }}
                           placeholder="e.g., 50 or Unlimited"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                          className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                         />
                         <button
                           type="button"
                           onClick={() => setLimits(prev => ({ ...prev, eSignatures: 'Unlimited' }))}
-                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.eSignatures) ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.eSignatures) ? 'bg-green-500 text-white' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-secondary)]'}`}
                         >
                           ∞
                         </button>
@@ -814,7 +814,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   </div>
                   <div className="flex flex-row gap-4 w-full edit-plan-inline mb-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Workflows</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Max Workflows</label>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"
@@ -833,20 +833,20 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             }
                           }}
                           placeholder="e.g., 5 or Unlimited"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                          className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                         />
                         <button
                           type="button"
                           onClick={() => setLimits(prev => ({ ...prev, maxWorkflows: 'Unlimited' }))}
-                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.maxWorkflows) ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                          className={`px-2 py-1 text-xs rounded ${isUnlimited(limits.maxWorkflows) ? 'bg-green-500 text-white' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-secondary)]'}`}
                         >
                           ∞
                         </button>
                       </div>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Included Offices</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Included Offices</label>
                       <input
                         type="number"
                         step="1"
@@ -860,8 +860,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                           const n = parseInt(e.target.value);
                           setLimits({ ...limits, includedOffices: isNaN(n) ? 1 : Math.max(0, n) });
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                        className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                         placeholder="1"
                       />
                     </div>
@@ -870,18 +870,18 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               </>
             </div>
 
-            <div className="p-6 bg-white" id="addon-config" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
+            <div className="p-6 bg-[var(--sa-bg-card)]" id="addon-config" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '8px' }}>
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Plan Add-Ons</h3>
-                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
-                    Add-ons available only to firms on the <span className="font-bold" style={{ color: '#3B4A66' }}>{activeTab}</span> plan.
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--sa-text-primary)' }}>Plan Add-Ons</h3>
+                  <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
+                    Add-ons available only to firms on the <span className="font-bold" style={{ color: 'var(--sa-text-primary)' }}>{activeTab}</span> plan.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowNewAddonModal(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
-                  style={{ backgroundColor: '#3B4A66', borderRadius: '10px' }}
+                  style={{ backgroundColor: 'var(--sa-text-primary)', borderRadius: '10px' }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
@@ -891,14 +891,14 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               </div>
 
               {/* Category Filter Tabs */}
-              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-gray-50/50 rounded-xl border border-gray-100 w-fit">
+              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-[var(--sa-bg-secondary)]/50 rounded-xl border border-gray-100 w-fit">
                 {['all', 'esign', 'storage', 'workflow', 'office', 'staff', 'other'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setSelectedAddonCategory(cat)}
                     className={`px-4 py-1.5 text-xs font-bold transition-all ${selectedAddonCategory === cat
-                      ? 'bg-[#3B4A66] text-white shadow-sm'
-                      : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                      ? 'bg-[var(--sa-text-primary)] text-white shadow-sm'
+                      : 'bg-[var(--sa-bg-card)] text-[var(--sa-text-secondary)] border border-[var(--sa-border-color)] hover:border-blue-300 hover:text-blue-600'
                       }`}
                     style={{ borderRadius: "10px" }}
                   >
@@ -914,33 +914,33 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     .map((addon) => (
                       <div
                         key={addon.id}
-                        className="p-5 bg-white transition-all"
-                        style={{ border: '1px solid #E8F0FF', borderRadius: '12px' }}
+                        className="p-5 bg-[var(--sa-bg-card)] transition-all"
+                        style={{ border: '1px solid var(--sa-border-color)', borderRadius: '12px' }}
                       >
                         {editingAddonId === addon.id ? (
                           /* ── Inline Edit Mode ── */
                           <div className="space-y-4">
                             {/* Name */}
                             <div>
-                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Add-on Name</label>
+                              <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Add-on Name</label>
                               <input
                                 type="text" value={editAddonForm.name}
                                 onChange={e => setEditAddonForm(f => ({ ...f, name: e.target.value }))}
                                 className="w-full px-3 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 placeholder="Add-on name"
                               />
                             </div>
 
                             {/* Description */}
                             <div>
-                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Description</label>
+                              <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Description</label>
                               <textarea
                                 value={editAddonForm.description}
                                 onChange={e => setEditAddonForm(f => ({ ...f, description: e.target.value }))}
                                 rows={2}
                                 className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 placeholder="Description"
                               />
                             </div>
@@ -948,25 +948,25 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             {/* Price, Billing Term, Scope, Category — 2×2 grid */}
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Price</label>
+                                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Price</label>
                                 <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: '#3B4A66' }}>$</span>
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: 'var(--sa-text-primary)' }}>$</span>
                                   <input
                                     type="number" step="0.01" min="0"
                                     value={editAddonForm.price}
                                     onChange={e => setEditAddonForm(f => ({ ...f, price: e.target.value }))}
                                     className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                   />
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Billing Term</label>
+                                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Billing Term</label>
                                 <select
                                   value={editAddonForm.billing_frequency}
                                   onChange={e => setEditAddonForm(f => ({ ...f, billing_frequency: e.target.value }))}
-                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 >
                                   <option value="monthly">Monthly</option>
                                   <option value="yearly">Annually</option>
@@ -974,24 +974,24 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Scope</label>
+                                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Scope</label>
                                 <select
                                   value={editAddonForm.scope}
                                   onChange={e => setEditAddonForm(f => ({ ...f, scope: e.target.value }))}
-                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 >
                                   <option value="firm">Firm-wide</option>
                                   <option value="office">Per Office</option>
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Category</label>
+                                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Category</label>
                                 <select
                                   value={editAddonForm.category}
                                   onChange={e => setEditAddonForm(f => ({ ...f, category: e.target.value }))}
-                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 >
                                   <option value="esign">E-Sign</option>
                                   <option value="storage">Storage</option>
@@ -1006,42 +1006,42 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             {/* Capacity Edit Grid */}
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Limit Value</label>
+                                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Limit Value</label>
                                 <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">Qty</span>
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--sa-text-secondary)]">Qty</span>
                                   <input
                                     type="number" min="1"
                                     value={editAddonForm.unit_quantity}
                                     onChange={e => setEditAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
                                     className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                   />
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Unit Type</label>
+                                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Unit Type</label>
                                 <input
                                   type="text"
                                   value={editAddonForm.unit_type}
                                   onChange={e => setEditAddonForm(f => ({ ...f, unit_type: e.target.value }))}
                                   className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                   placeholder="Unit (e.g. GB)"
                                 />
                               </div>
                             </div>
 
                             {/* Actions */}
-                            <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid #E8F0FF' }}>
+                            <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid var(--sa-border-color)' }}>
                               <button
                                 onClick={() => setEditingAddonId(null)}
                                 className="px-4 py-1.5 text-xs font-semibold rounded-lg border transition-colors"
-                                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                                style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                               >Cancel</button>
                               <button
                                 onClick={() => handleSaveEdit(addon.id)}
                                 className="px-4 py-2 text-xs font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
-                                style={{ backgroundColor: '#3B4A66' }}
+                                style={{ backgroundColor: 'var(--sa-text-primary)' }}
                               >Save</button>
                             </div>
                           </div>
@@ -1051,13 +1051,13 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-bold text-sm mb-0" style={{ color: '#3B4A66' }}>{addon.name}</h4>
-                                  <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-tight border border-gray-200">
+                                  <h4 className="font-bold text-sm mb-0" style={{ color: 'var(--sa-text-primary)' }}>{addon.name}</h4>
+                                  <span className="px-1.5 py-0.5 bg-[var(--sa-bg-secondary)] text-[var(--sa-text-secondary)] rounded text-[9px] font-bold uppercase tracking-tight border border-[var(--sa-border-color)]">
                                     {addon.category || 'other'}
                                   </span>
                                 </div>
                                 {addon.description && (
-                                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{addon.description}</p>
+                                  <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>{addon.description}</p>
                                 )}
                                 {(addon.unit_quantity > 0 || addon.unit_type) && (
                                   <p className="text-[10px] font-semibold mt-1" style={{ color: '#4B5563' }}>
@@ -1093,10 +1093,10 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                 </button>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid #E8F0FF' }}>
+                            <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid var(--sa-border-color)' }}>
                               <div className="flex items-center gap-1.5">
-                                <span className="text-lg font-bold" style={{ color: '#3B4A66' }}>${parseFloat(addon.price || 0).toFixed(2)}</span>
-                                <span className="text-[10px] font-medium opacity-60" style={{ color: '#3B4A66' }}>{addon.billing_frequency === 'one_time' ? 'one-time' : addon.billing_frequency === 'yearly' ? 'per year' : 'per month'}</span>
+                                <span className="text-lg font-bold" style={{ color: 'var(--sa-text-primary)' }}>${parseFloat(addon.price || 0).toFixed(2)}</span>
+                                <span className="text-[10px] font-medium opacity-60" style={{ color: 'var(--sa-text-primary)' }}>{addon.billing_frequency === 'one_time' ? 'one-time' : addon.billing_frequency === 'yearly' ? 'per year' : 'per month'}</span>
                               </div>
                               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full" style={{
                                 backgroundColor: addon.scope === 'office' ? '#FEF3C7' : '#DBEAFE',
@@ -1116,7 +1116,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       </div>
                     ))
                 ) : (
-                  <div className="md:col-span-2 py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <div className="md:col-span-2 py-12 text-center bg-[var(--sa-bg-secondary)] rounded-xl border border-dashed border-[var(--sa-border-color)]">
                     <p className="text-sm font-medium italic" style={{ color: '#9CA3AF' }}>
                       {selectedAddonCategory === 'all'
                         ? 'No add-ons for this plan yet. Click "New Add-on" to create one.'
@@ -1128,14 +1128,14 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             </div>
 
             {/* Display Settings Section */}
-            <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="p-6 bg-[var(--sa-bg-card)]" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Display & Website Settings</h3>
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--sa-text-primary)' }}>Display & Website Settings</h3>
                 <button
                   type="button"
                   onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
                   className="text-sm px-3 py-1 rounded"
-                  style={{ backgroundColor: showAdvancedSettings ? '#3B4A66' : '#E8F0FF', color: showAdvancedSettings ? 'white' : '#3B4A66' }}
+                  style={{ backgroundColor: showAdvancedSettings ? 'var(--sa-text-primary)' : 'var(--sa-border-color)', color: showAdvancedSettings ? 'white' : 'var(--sa-text-primary)' }}
                 >
                   {showAdvancedSettings ? 'Hide Advanced' : 'Show Advanced'}
                 </button>
@@ -1144,52 +1144,52 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Display Name */}
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Display Name (Optional)</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Display Name (Optional)</label>
                   <input
                     type="text"
                     value={displaySettings.displayName}
                     onChange={(e) => setDisplaySettings(prev => ({ ...prev, displayName: e.target.value }))}
                     placeholder={`e.g., Enterprise (defaults to "${activeTab}")`}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   />
-                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                  <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
                     Custom name shown on website (leave empty to use "{activeTab}")
                   </p>
                 </div>
 
                 {/* Badge Text */}
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Badge Text (Optional)</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Badge Text (Optional)</label>
                   <input
                     type="text"
                     value={displaySettings.badgeText}
                     onChange={(e) => setDisplaySettings(prev => ({ ...prev, badgeText: e.target.value }))}
                     placeholder="e.g., Most Popular, Best Value"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   />
                 </div>
 
                 {/* Description */}
                 <div className="lg:col-span-2">
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Description</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Description</label>
                   <textarea
                     value={displaySettings.description}
                     onChange={(e) => setDisplaySettings(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Marketing description for this plan..."
                     rows={2}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   />
-                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                  <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
                     This description will be shown in the Features Preview and on the website.
                   </p>
                 </div>
                 {/* Manual Features Management */}
                 <div className="lg:col-span-2 mt-4">
                   <div className="flex justify-between items-center mb-4">
-                    <label className="block text-sm font-medium" style={{ color: '#3B4A66' }}>Plan Features</label>
+                    <label className="block text-sm font-medium" style={{ color: 'var(--sa-text-primary)' }}>Plan Features</label>
                     <button
                       type="button"
                       onClick={autoFillFeatures}
@@ -1208,7 +1208,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                           onChange={(e) => updateFeatureBullet(index, e.target.value)}
                           placeholder={`Feature #${index + 1}`}
                           className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                          style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                         />
                         <button
                           type="button"
@@ -1225,7 +1225,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     <button
                       type="button"
                       onClick={addFeatureBullet}
-                      className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 flex items-center justify-center gap-2"
+                      className="w-full py-2 border border-dashed border-[var(--sa-border-color)] rounded-lg text-sm font-medium text-[var(--sa-text-secondary)] hover:bg-[var(--sa-bg-secondary)] flex items-center justify-center gap-2"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
@@ -1234,8 +1234,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     </button>
 
                     {(!displaySettings.publicFeatures || displaySettings.publicFeatures.length === 0) && (
-                      <div className="p-4 bg-gray-50 rounded-lg text-center">
-                        <p className="text-xs text-gray-500 italic">No custom features defined. Showing auto-generated features based on plan limits.</p>
+                      <div className="p-4 bg-[var(--sa-bg-secondary)] rounded-lg text-center">
+                        <p className="text-xs text-[var(--sa-text-secondary)] italic">No custom features defined. Showing auto-generated features based on plan limits.</p>
                       </div>
                     )}
                   </div>
@@ -1248,8 +1248,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
 
               {/* Advanced Settings */}
               {showAdvancedSettings && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h4 className="text-md font-semibold mb-4" style={{ color: '#3B4A66' }}>Limit Visibility (What to show on website)</h4>
+                <div className="mt-6 pt-4 border-t border-[var(--sa-border-color)]">
+                  <h4 className="text-md font-semibold mb-4" style={{ color: 'var(--sa-text-primary)' }}>Limit Visibility (What to show on website)</h4>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1258,7 +1258,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, showUserLimit: e.target.checked }))}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-sm" style={{ color: '#3B4A66' }}>Show User Limit</span>
+                      <span className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Show User Limit</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1268,7 +1268,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, showClientLimit: e.target.checked }))}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-sm" style={{ color: '#3B4A66' }}>Show Client Limit</span>
+                      <span className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Show Client Limit</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1278,7 +1278,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, showStorageLimit: e.target.checked }))}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-sm" style={{ color: '#3B4A66' }}>Show Storage Limit</span>
+                      <span className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Show Storage Limit</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1288,7 +1288,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, showWorkflowLimit: e.target.checked }))}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-sm" style={{ color: '#3B4A66' }}>Show Workflow Limit</span>
+                      <span className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Show Workflow Limit</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1298,7 +1298,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, showEsignatureLimit: e.target.checked }))}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-sm" style={{ color: '#3B4A66' }}>Show E-Signature Limit</span>
+                      <span className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Show E-Signature Limit</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1308,33 +1308,33 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, showOfficeLimit: e.target.checked }))}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-sm" style={{ color: '#3B4A66' }}>Show Office Limit</span>
+                      <span className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Show Office Limit</span>
                     </label>
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Display Order</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Display Order</label>
                       <input
                         type="number"
                         min="0"
                         value={displaySettings.displayOrder}
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                       />
-                      <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Lower numbers appear first</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>Lower numbers appear first</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Badge Color (Hex)</label>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--sa-text-primary)' }}>Badge Color (Hex)</label>
                       <input
                         type="text"
                         value={displaySettings.badgeColor}
                         onChange={(e) => setDisplaySettings(prev => ({ ...prev, badgeColor: e.target.value }))}
                         placeholder="#F56D2D"
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                       />
                     </div>
                   </div>
@@ -1343,23 +1343,23 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             </div>
 
             {/* Features List Section - Full Width */}
-            <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="p-6 bg-[var(--sa-bg-card)]" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-start edit-plan-actions">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#3B4A66' }}>Features Preview</h3>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sa-text-primary)' }}>Features Preview</h3>
 
                   {/* Show Description in Preview */}
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Plan Description:</p>
-                    <p className="text-sm italic" style={{ color: '#3B4A66' }}>
+                  <div className="mb-4 p-3 bg-[var(--sa-bg-secondary)] rounded-lg border border-gray-100">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-secondary)] mb-1">Plan Description:</p>
+                    <p className="text-sm italic" style={{ color: 'var(--sa-text-primary)' }}>
                       {displaySettings.description || 'No description provided.'}
                     </p>
                   </div>
 
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Bullet Points:</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-secondary)] mb-2">Bullet Points:</p>
                   <ul className="space-y-2">
                     {getFeatures().map((feature, index) => (
-                      <li key={index} className="flex items-center text-sm" style={{ color: '#3B4A66' }}>
+                      <li key={index} className="flex items-center text-sm" style={{ color: 'var(--sa-text-primary)' }}>
                         <span className="w-1.5 h-1.5 bg-[#F56D2D] rounded-full mr-3"></span>
                         {feature || <span className="opacity-30 italic">Untitled Feature</span>}
                       </li>
@@ -1382,7 +1382,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             <button
               onClick={onClose}
               className="px-4 py-2 transition-colors"
-              style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
+              style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)', borderRadius: '7px' }}
             >
               Cancel
             </button>
@@ -1405,19 +1405,19 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowNewAddonModal(false); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" style={{ border: '1px solid #E8F0FF' }}>
+          <div className="bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" style={{ border: '1px solid var(--sa-border-color)' }}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4">
               <div>
-                <h4 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Create New Add-on</h4>
-                <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
+                <h4 className="text-lg font-bold" style={{ color: 'var(--sa-text-primary)' }}>Create New Add-on</h4>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--sa-text-secondary)' }}>
                   Create an add-on exclusively for the{' '}
-                  <span className="font-bold" style={{ color: '#3B4A66' }}>{activeTab}</span> plan.
+                  <span className="font-bold" style={{ color: 'var(--sa-text-primary)' }}>{activeTab}</span> plan.
                 </p>
               </div>
               <button
                 onClick={() => setShowNewAddonModal(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--sa-bg-secondary)] transition-colors"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1431,39 +1431,39 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
 
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Add-on Name *</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Add-on Name *</label>
                 <input
                   type="text"
                   value={newAddonForm.name}
                   onChange={e => setNewAddonForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Priority E-Sign Pack"
                   className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Description</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Description</label>
                 <textarea
                   value={newAddonForm.description}
                   onChange={e => setNewAddonForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Brief description of what this add-on provides..."
                   rows={2}
                   className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                 />
               </div>
 
               {/* Category + Billing */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Category</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Category</label>
                   <select
                     value={newAddonForm.category}
                     onChange={e => setNewAddonForm(f => ({ ...f, category: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   >
                     <option value="esign">E-Sign</option>
                     <option value="storage">Storage</option>
@@ -1474,12 +1474,12 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Billing</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Billing</label>
                   <select
                     value={newAddonForm.billing_frequency}
                     onChange={e => setNewAddonForm(f => ({ ...f, billing_frequency: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   >
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
@@ -1491,26 +1491,26 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               {/* Price + Scope */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Price ($)</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Price ($)</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: '#3B4A66' }}>$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: 'var(--sa-text-primary)' }}>$</span>
                     <input
                       type="number" step="0.01" min="0"
                       value={newAddonForm.price}
                       onChange={e => setNewAddonForm(f => ({ ...f, price: e.target.value }))}
                       placeholder="0.00"
                       className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Scope</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Scope</label>
                   <select
                     value={newAddonForm.scope}
                     onChange={e => setNewAddonForm(f => ({ ...f, scope: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   >
                     <option value="firm">Firm-wide</option>
                     <option value="office">Per Office</option>
@@ -1521,26 +1521,26 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               {/* Unit Label + Quantity */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Unit Label <span className="text-gray-400 font-normal">(e.g. signatures, GB)</span></label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Unit Label <span className="text-[var(--sa-text-secondary)] font-normal">(e.g. signatures, GB)</span></label>
                   <input
                     type="text"
                     value={newAddonForm.unit_type}
                     onChange={e => setNewAddonForm(f => ({ ...f, unit_type: e.target.value }))}
                     placeholder="e.g. signatures, GB, users"
                     className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: '#3B4A66' }}>Quantity</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Quantity</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">Qty</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--sa-text-secondary)]">Qty</span>
                     <input
                       type="number" min="1"
                       value={newAddonForm.unit_quantity}
                       onChange={e => setNewAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
                       className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                     />
                   </div>
                 </div>
@@ -1564,7 +1564,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               <button
                 onClick={() => setShowNewAddonModal(false)}
                 className="px-5 py-2.5 text-sm font-semibold rounded-lg border transition-colors"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '10px' }}
+                style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)', borderRadius: '10px' }}
               >
                 Cancel
               </button>
@@ -1572,7 +1572,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 onClick={handleAddNewAddonForPlan}
                 disabled={creatingAddon || !newAddonForm.name.trim()}
                 className="px-6 py-2.5 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{ backgroundColor: '#3B4A66', borderRadius: '10px' }}
+                style={{ backgroundColor: 'var(--sa-text-primary)', borderRadius: '10px' }}
               >
                 {creatingAddon ? (
                   <>
@@ -1602,7 +1602,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowAutoFillModal(false); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" style={{ border: '1px solid #E8F0FF' }}>
+          <div className="bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" style={{ border: '1px solid var(--sa-border-color)' }}>
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
@@ -1614,18 +1614,18 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     <path d="M3 12h6"/>
                   </svg>
                 </div>
-                <h4 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Auto-fill Features?</h4>
+                <h4 className="text-lg font-bold" style={{ color: 'var(--sa-text-primary)' }}>Auto-fill Features?</h4>
               </div>
-              <p className="text-sm" style={{ color: '#6B7280' }}>
+              <p className="text-sm" style={{ color: 'var(--sa-text-secondary)' }}>
                 This will replace your current custom features with auto-generated ones based on the plan limits. Are you sure you want to continue?
               </p>
             </div>
-            <div className="flex justify-end gap-3 p-4 bg-gray-50 border-t" style={{ borderColor: '#E8F0FF' }}>
+            <div className="flex justify-end gap-3 p-4 bg-[var(--sa-bg-secondary)] border-t" style={{ borderColor: 'var(--sa-border-color)' }}>
               <button
                 type="button"
                 onClick={() => setShowAutoFillModal(false)}
-                className="px-4 py-2 text-sm font-semibold rounded-lg bg-white hover:bg-gray-50 transition-colors"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '10px' }}
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[var(--sa-bg-card)] hover:bg-[var(--sa-bg-secondary)] transition-colors"
+                style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)', borderRadius: '10px' }}
               >
                 Cancel
               </button>
@@ -1633,7 +1633,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 type="button"
                 onClick={confirmAutoFillFeatures}
                 className="px-4 py-2 text-sm font-bold text-white transition-all shadow-sm flex items-center gap-2"
-                style={{ backgroundColor: '#3B4A66', borderRadius: '10px' }}
+                style={{ backgroundColor: 'var(--sa-text-primary)', borderRadius: '10px' }}
               >
                 Auto-fill
               </button>

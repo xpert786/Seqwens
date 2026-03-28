@@ -32,15 +32,15 @@ export const ThemeProvider = ({ children }) => {
             root.classList.add('dark-mode');
             root.classList.add('dark'); // For Tailwind
             root.classList.remove('light-mode');
-            // Set CSS variables for dark mode
-            root.style.setProperty('--sa-bg-primary', '#0f172a');
-            root.style.setProperty('--sa-bg-secondary', '#1e293b');
-            root.style.setProperty('--sa-bg-card', '#1e293b');
-            root.style.setProperty('--sa-bg-sidebar', '#0f172a');
-            root.style.setProperty('--sa-bg-active', '#334155');
-            root.style.setProperty('--sa-text-primary', '#f8fafc');
-            root.style.setProperty('--sa-text-secondary', '#94a3b8');
-            root.style.setProperty('--sa-border-color', '#475569'); // Brighter border for dark mode so it's visible
+            // Set CSS variables for dark mode (True Dark)
+            root.style.setProperty('--sa-bg-primary', '#000000');
+            root.style.setProperty('--sa-bg-secondary', '#111111');
+            root.style.setProperty('--sa-bg-card', '#0a0a0a');
+            root.style.setProperty('--sa-bg-sidebar', '#000000');
+            root.style.setProperty('--sa-bg-active', '#1f1f1f');
+            root.style.setProperty('--sa-text-primary', '#ffffff');
+            root.style.setProperty('--sa-text-secondary', '#d1d5db'); // Slate-300 for secondary
+            root.style.setProperty('--sa-border-color', '#262626'); // Dark border
             root.style.setProperty('--sa-accent', '#f56d2d');
         } else {
             root.classList.remove('dark-mode');
@@ -48,13 +48,13 @@ export const ThemeProvider = ({ children }) => {
             root.classList.add('light-mode');
             // Set CSS variables for light mode
             root.style.setProperty('--sa-bg-primary', '#ffffff');
-            root.style.setProperty('--sa-bg-secondary', '#f3f7ff');
+            root.style.setProperty('--sa-bg-secondary', '#f8f9fa');
             root.style.setProperty('--sa-bg-card', '#ffffff');
             root.style.setProperty('--sa-bg-sidebar', '#ffffff');
             root.style.setProperty('--sa-bg-active', '#f1f5f9');
-            root.style.setProperty('--sa-text-primary', '#1e293b');
-            root.style.setProperty('--sa-text-secondary', '#64748b');
-            root.style.setProperty('--sa-border-color', '#94a3b8'); // Much darker border for light mode visibility
+            root.style.setProperty('--sa-text-primary', '#000000');
+            root.style.setProperty('--sa-text-secondary', '#4b5563'); // Slate-600 for secondary
+            root.style.setProperty('--sa-border-color', '#e5e7eb'); // Standard border
             root.style.setProperty('--sa-accent', '#f56d2d');
         }
 

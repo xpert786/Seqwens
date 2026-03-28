@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -380,7 +380,7 @@ export default function Overview() {
             className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 overview-clear-btn"
             title="Clear filter"
           >
-            ✕
+            âœ•
           </button>
         )}
       </div>
@@ -395,7 +395,7 @@ export default function Overview() {
         <div className="bg-white p-4 border border-[#E8F0FF] rounded-lg">
           <p className="text-xs font-medium text-gray-500 mb-1">Highlighted Month</p>
           <p className="text-lg font-semibold text-gray-900">
-            {revenueHighlight?.month || '—'}
+            {revenueHighlight?.month || 'â€”'}
           </p>
           <p className="text-sm text-gray-700">
             {revenueHighlight?.formatted_revenue || formatCurrency(revenueHighlight?.revenue ?? 0)}
@@ -439,18 +439,18 @@ export default function Overview() {
                   bottom: 0,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--sa-border-color)" opacity={0.3} />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   tickFormatter={(value) => formatMonthLabel(value)}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
                 <Tooltip content={<BarTooltip />} />
@@ -491,18 +491,18 @@ export default function Overview() {
                 }}
                 style={{ filter: 'drop-shadow(0 0 0 transparent)' }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--sa-border-color)" opacity={0.3} />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   tickFormatter={(value) => formatMonthLabel(value)}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   domain={[0, 'auto']}
                 />
                 <Tooltip content={<MultiLineTooltip />} />
@@ -595,18 +595,18 @@ export default function Overview() {
                   bottom: 0,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--sa-border-color)" opacity={0.3} />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   tickFormatter={(value) => formatMonthLabel(value)}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
                 <Tooltip content={<BarTooltip />} />

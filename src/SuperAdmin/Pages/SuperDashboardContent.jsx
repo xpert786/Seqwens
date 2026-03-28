@@ -649,7 +649,7 @@ export default function SuperDashboardContent() {
       const revenueEntry = payload.find(item => item.dataKey === 'revenue');
       const subscribersEntry = payload.find(item => item.dataKey === 'subscribers');
       return (
-        <div className="bg-white rounded-lg p-3 border" style={{ minWidth: '140px' }}>
+        <div className="bg-[var(--sa-bg-card)] rounded-lg p-3 border" style={{ minWidth: '140px' }}>
           <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
           {revenueEntry && (
             <div className="text-sm" style={{ color: '#10B981' }}>
@@ -672,7 +672,7 @@ export default function SuperDashboardContent() {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
+        <div className="bg-[var(--sa-bg-card)] rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
           <div className="text-sm font-semibold mb-1" style={{ color: data.payload.color }}>{data.name}</div>
           <div className="text-lg font-bold" style={{ color: data.payload.color }}>
             {data.value}
@@ -687,7 +687,7 @@ export default function SuperDashboardContent() {
   const ActivityTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
+        <div className="bg-[var(--sa-bg-card)] rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
           <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
           <div className="text-sm" style={{ color: '#374151' }}>
             Activity: <span style={{ color: '#10B981' }}>{formatNumber(payload[0].value)}</span>
@@ -701,12 +701,12 @@ export default function SuperDashboardContent() {
   // Show loading state
   if (loading) {
     return (
-      <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen flex items-center justify-center">
+      <div className="w-full px-3 py-4 bg-[var(--sa-bg-primary)] min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="spinner-border text-primary mb-4" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="text-gray-600">Loading dashboard data...</p>
+          <p className="text-[var(--sa-text-secondary)]">Loading dashboard data...</p>
         </div>
       </div>
     );
@@ -715,15 +715,15 @@ export default function SuperDashboardContent() {
   // Show error state
   if (error) {
     return (
-      <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen flex items-center justify-center">
+      <div className="w-full px-3 py-4 bg-[var(--sa-bg-primary)] min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 mb-4">
             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Dashboard</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-2">Error Loading Dashboard</h3>
+          <p className="text-[var(--sa-text-secondary)] mb-4">{error}</p>
           <button
             onClick={handleRefresh}
             className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
@@ -736,18 +736,18 @@ export default function SuperDashboardContent() {
   }
 
   return (
-    <div className="w-full px-3 pt-4 pb-0 bg-[#F6F7FF] dark:bg-gray-900 transition-colors duration-200">
+    <div className="w-full px-3 pt-4 pb-0 bg-[var(--sa-bg-primary)] dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h4 className=" font-bold text-gray-900 dark:text-white">Platform Overview</h4>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage the entire tax practice platform</p>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
+          <h4 className=" font-bold text-[var(--sa-text-primary)] dark:text-white">Platform Overview</h4>
+          <p className="text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-1">Monitor and manage the entire tax practice platform</p>
+          <p className="text-xs text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="taxdashboardr-titler flex items-center gap-2 px-4 py-1.5 text-sm text-black dark:text-white bg-white dark:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="taxdashboardr-titler flex items-center gap-2 px-4 py-1.5 text-sm text-black dark:text-white bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 dark:border-gray-700 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700"
           style={{ borderRadius: '7px' }}
         >
           <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -758,7 +758,7 @@ export default function SuperDashboardContent() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
         <div
-          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
+          className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowAllFirmsModal(true);
             setAllFirmsLoading(true);
@@ -780,20 +780,20 @@ export default function SuperDashboardContent() {
             }
           }}
         >
-          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
+          <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <TotalFirmsIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Firms</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">Total Firms</p>
+            <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatNumber(dashboardData?.summary?.total_firms)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Firms onboarded</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Firms onboarded</p>
           </div>
         </div>
 
         <div
-          className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
+          className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowActiveUsersModal(true);
             setActiveUsersLoading(true);
@@ -831,60 +831,60 @@ export default function SuperDashboardContent() {
             }
           }}
         >
-          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
+          <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <ActiveUsersIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Active Users</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">Active Users</p>
+            <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatNumber(dashboardData?.summary?.active_users)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Across all firms</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Across all firms</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative">
-          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
+        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
+          <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <MonthlyRevenueIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Monthly Revenue</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">Monthly Revenue</p>
+            <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatCurrency(dashboardData?.summary?.monthly_revenue)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Recurring revenue</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Recurring revenue</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-4 relative">
-          <div className="absolute top-4 right-4 text-gray-400 dark:text-gray-500">
+        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
+          <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">System Health</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">System Health</p>
+            <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatNumber(dashboardData?.summary?.system_health_score)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Health Score</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Health Score</p>
           </div>
         </div>
       </div>
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* User Registration Trend */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
+        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 transition-all">
           <div className="flex flex-col gap-4 mb-4">
             <div>
-              <h3 className="taxdashboardr-titler text-base font-bold text-gray-900 dark:text-white mb-1 whitespace-nowrap">Revenue Growth Trend</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly recurring revenue and user growth</p>
+              <h3 className="taxdashboardr-titler text-base font-bold text-[var(--sa-text-primary)] dark:text-white mb-1 whitespace-nowrap">Revenue Growth Trend</h3>
+              <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">Monthly recurring revenue and user growth</p>
             </div>
             <div className="flex items-center gap-2 justify-end">
-              <label htmlFor="revenue-month-select" className="text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Filter by month:</label>
+              <label htmlFor="revenue-month-select" className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] whitespace-nowrap">Filter by month:</label>
               <select
                 id="revenue-month-select"
                 value={selectedRevenueMonth}
                 onChange={(e) => setSelectedRevenueMonth(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="px-3 py-1.5 text-sm border border-[var(--sa-border-color)] dark:border-gray-600 rounded-md bg-[var(--sa-bg-card)] dark:bg-gray-700 text-[var(--sa-text-primary)] dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="all">All Months</option>
                 {last6Months.map((month) => (
@@ -920,14 +920,14 @@ export default function SuperDashboardContent() {
                     dataKey="month"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : 'var(--sa-text-secondary)', fontWeight: 500 }}
                     tickFormatter={(value) => formatMonthLabel(value)}
                   />
                   <YAxis
                     yAxisId="left"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : 'var(--sa-text-secondary)', fontWeight: 500 }}
                     domain={[0, revenueUpperBound]}
                   />
                   <YAxis
@@ -935,7 +935,7 @@ export default function SuperDashboardContent() {
                     orientation="right"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: isDarkMode ? '#9CA3AF' : 'var(--sa-text-secondary)', fontWeight: 500 }}
                     domain={[subscriberLowerBound, subscriberUpperBound]}
                     allowDecimals={false}
                   />
@@ -983,13 +983,13 @@ export default function SuperDashboardContent() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+              <div className="h-full flex items-center justify-center text-sm text-[var(--sa-text-secondary)] border border-dashed border-[var(--sa-border-color)] rounded-lg">
                 No data available
               </div>
             )}
           </div>
 
-          <div className="mt-4 text-sm text-gray-600">
+          <div className="mt-4 text-sm text-[var(--sa-text-secondary)]">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
               <span>Revenue</span>
@@ -1002,8 +1002,8 @@ export default function SuperDashboardContent() {
 
           {/* Growth Metrics Display - Show when a specific month is selected */}
           {selectedRevenueMonth !== 'all' && revenueData.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Growth Metrics</h4>
+            <div className="mt-6 pt-6 border-t border-[var(--sa-border-color)]">
+              <h4 className="text-sm font-semibold text-[var(--sa-text-primary)] mb-4">Growth Metrics</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {revenueData.map((item, index) => {
                   const revenueGrowth = item.revenueGrowth ?? 0;
@@ -1024,7 +1024,7 @@ export default function SuperDashboardContent() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Revenue Growth</span>
+                            <span className="text-sm font-semibold text-[var(--sa-text-primary)] dark:text-gray-200">Revenue Growth</span>
                           </div>
                           <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm ${isRevenuePositive ? 'bg-green-500 text-white' :
                             isRevenueNegative ? 'bg-red-500 text-white' :
@@ -1044,7 +1044,7 @@ export default function SuperDashboardContent() {
                             </span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Compared to previous month</p>
+                        <p className="text-[10px] text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Compared to previous month</p>
                       </div>
 
                       {/* Subscriber Growth Card */}
@@ -1056,7 +1056,7 @@ export default function SuperDashboardContent() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                               </svg>
                             </div>
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Subscriber Growth</span>
+                            <span className="text-sm font-semibold text-[var(--sa-text-primary)] dark:text-gray-200">Subscriber Growth</span>
                           </div>
                           <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm ${isSubscriberPositive ? 'bg-green-500 text-white' :
                             isSubscriberNegative ? 'bg-red-500 text-white' :
@@ -1076,7 +1076,7 @@ export default function SuperDashboardContent() {
                             </span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Compared to previous month</p>
+                        <p className="text-[10px] text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Compared to previous month</p>
                       </div>
                     </React.Fragment>
                   );
@@ -1087,19 +1087,19 @@ export default function SuperDashboardContent() {
         </div>
 
         {/* User Role Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
+        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 transition-all">
           <div className="flex flex-col gap-4 mb-4">
             <div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 whitespace-nowrap">Subscription Distribution</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Revenue breakdown by plan type</p>
+              <h3 className="text-base font-bold text-[var(--sa-text-primary)] dark:text-white mb-1 whitespace-nowrap">Subscription Distribution</h3>
+              <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">Revenue breakdown by plan type</p>
             </div>
             <div className="flex items-center gap-2 justify-end">
-              <label htmlFor="subscription-month-select" className="text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Filter by month:</label>
+              <label htmlFor="subscription-month-select" className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] whitespace-nowrap">Filter by month:</label>
               <select
                 id="subscription-month-select"
                 value={selectedSubscriptionMonth}
                 onChange={(e) => setSelectedSubscriptionMonth(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="px-3 py-1.5 text-sm border border-[var(--sa-border-color)] dark:border-gray-600 rounded-md bg-[var(--sa-bg-card)] dark:bg-gray-700 text-[var(--sa-text-primary)] dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="all">All Months</option>
                 {last6Months.map((month) => (
@@ -1134,7 +1134,7 @@ export default function SuperDashboardContent() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+              <div className="h-full flex items-center justify-center text-sm text-[var(--sa-text-secondary)] border border-dashed border-[var(--sa-border-color)] rounded-lg">
                 No data available
               </div>
             )}
@@ -1142,7 +1142,7 @@ export default function SuperDashboardContent() {
 
           {/* Legend */}
           {subscriptionData.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
               {subscriptionData.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
@@ -1159,9 +1159,9 @@ export default function SuperDashboardContent() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Real-Time Activity */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
-            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Recent Firm Registrations</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Latest firms that joined the platform</p>
+          <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
+            <h4 className="text-base font-semibold text-[var(--sa-text-primary)] dark:text-white mb-1">Recent Firm Registrations</h4>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-4">Latest firms that joined the platform</p>
 
             <div className="flex-1 h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -1179,12 +1179,12 @@ export default function SuperDashboardContent() {
                     dataKey="hour"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                   />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    tick={{ fontSize: 12, fill: 'var(--sa-text-secondary)', fontWeight: 500 }}
                     domain={[0, activityUpperBound]}
                   />
                   <Tooltip content={<ActivityTooltip />} />
@@ -1200,7 +1200,7 @@ export default function SuperDashboardContent() {
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <div className="mt-4 text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded"></div>
                 <span>Activity count</span>
@@ -1213,15 +1213,15 @@ export default function SuperDashboardContent() {
         {/* Middle Column */}
         <div className="space-y-6">
           {/* Performance Metrics */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
-            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Performance Metrics</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">System performance indicators</p>
+          <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
+            <h4 className="text-base font-semibold text-[var(--sa-text-primary)] dark:text-white mb-1">Performance Metrics</h4>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-4">System performance indicators</p>
             <div className="flex-1 space-y-4">
               {performanceData.map((metric, index) => (
                 <div key={index}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{metric.metric}</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-300">{metric.metric}</span>
+                    <span className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
                       {formatNumber(metric.current)}
                       {metric.unit}
                       {metric.target ? ` / ${formatNumber(metric.target)}${metric.unit}` : ''}
@@ -1232,7 +1232,7 @@ export default function SuperDashboardContent() {
                       className="h-2 rounded-full"
                       style={{
                         width: `${metric.target ? Math.min((metric.current / metric.target) * 100, 100) : 0}%`,
-                        backgroundColor: '#3B4A66'
+                        backgroundColor: 'var(--sa-text-primary)'
                       }}
                     ></div>
                   </div>
@@ -1245,9 +1245,9 @@ export default function SuperDashboardContent() {
         {/* Right Column */}
         <div className="space-y-3">
           {/* Security Status */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
-            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Security Status</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Platform security overview</p>
+          <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 h-100 flex flex-col transition-all">
+            <h4 className="text-base font-semibold text-[var(--sa-text-primary)] dark:text-white mb-1">Security Status</h4>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-4">Platform security overview</p>
             <div className="flex-1 space-y-3">
               {securityLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -1268,9 +1268,9 @@ export default function SuperDashboardContent() {
                       <div className="flex items-center gap-2 flex-1">
                         <StatusIcon className="w-5 h-5 flex-shrink-0" />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200 block">{item.name}</span>
+                          <span className="text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 block">{item.name}</span>
                           {item.description && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 block mt-0.5">{item.description}</span>
+                            <span className="text-xs text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] block mt-0.5">{item.description}</span>
                           )}
                         </div>
                       </div>
@@ -1287,7 +1287,7 @@ export default function SuperDashboardContent() {
                         <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${isUpdating ? 'opacity-50 cursor-wait' : ''
                           } ${itemEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${itemEnabled ? 'translate-x-5' : 'translate-x-0'
+                            className={`inline-block h-4 w-4 transform rounded-full bg-[var(--sa-bg-card)] transition-transform ${itemEnabled ? 'translate-x-5' : 'translate-x-0'
                               }`}
                           />
                         </div>
@@ -1304,26 +1304,26 @@ export default function SuperDashboardContent() {
       {/* Bottom Row - Recent Firms and Quick Actions */}
       <div className={`grid grid-cols-1 ${showRecentFirmsSection ? 'lg:grid-cols-2' : ''} gap-2 mt-4 pb-0`}>
         {showRecentFirmsSection && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 self-start transition-all">
+          <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 self-start transition-all">
             <div className="flex justify-between items-center">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Firm Registrations</h4>
+              <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] dark:text-white">Recent Firm Registrations</h4>
               {totalFirms > FIRMS_PER_PAGE && (
                 <button
                   onClick={handleViewAll}
-                  className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors border border-[#E8F0FF] dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors border border-[var(--sa-border-color)] dark:border-gray-700 rounded-lg hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700"
                   style={{ borderRadius: '6px' }}
                 >
                   {showAllFirms ? 'Show Less' : 'View All'}
                 </button>
               )}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Latest firms that joined the platform</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-3">Latest firms that joined the platform</p>
             <div className="space-y-2">
               {displayedFirms.map((firm, index) => (
-                <div key={index} className="border border-[#E8F0FF] dark:border-gray-700 flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <div key={index} className="border border-[var(--sa-border-color)] dark:border-gray-700 flex items-center justify-between p-3 rounded-lg hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700/50 transition-colors">
                   <div className="flex-1">
-                    <h6 className="font-medium text-gray-900 dark:text-white">{firm.name}</h6>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <h6 className="font-medium text-[var(--sa-text-primary)] dark:text-white">{firm.name}</h6>
+                    <p className="text-xs text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
                       Joined: {firm.created_at_display || firm.created_at || 'N/A'} • Users: {formatNumber(firm.active_users)} • Monthly Fee: {formatCurrency(firm.monthly_fee)}
                     </p>
                   </div>
@@ -1334,24 +1334,24 @@ export default function SuperDashboardContent() {
               ))}
             </div>
             {shouldShowPagination && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#E8F0FF]">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--sa-border-color)]">
                 <button
                   onClick={() => handleFirmsPageChange(firmsCurrentPage - 1)}
                   disabled={firmsCurrentPage === 1}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                  className="px-3 py-1.5 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 bg-[var(--sa-bg-card)] dark:bg-gray-800 border border-[var(--sa-border-color)] dark:border-gray-700 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                   style={{ borderRadius: "10px" }}
                 >
                   Previous
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-[var(--sa-text-secondary)]">
                     Page {firmsCurrentPage} of {totalPages}
                   </span>
                 </div>
                 <button
                   onClick={() => handleFirmsPageChange(firmsCurrentPage + 1)}
                   disabled={firmsCurrentPage === totalPages}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                  className="px-3 py-1.5 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 bg-[var(--sa-bg-card)] dark:bg-gray-800 border border-[var(--sa-border-color)] dark:border-gray-700 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                   style={{ borderRadius: "10px" }}
                 >
                   Next
@@ -1362,9 +1362,9 @@ export default function SuperDashboardContent() {
         )}
 
         {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E8F0FF] dark:border-gray-700 p-6 transition-all">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Quick Actions</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Common administrative tasks</p>
+        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 transition-all">
+          <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] dark:text-white mb-1">Quick Actions</h4>
+          <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-3">Common administrative tasks</p>
           <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, index) => {
               const actionLabel = getActionLabelText(action).trim();
@@ -1372,10 +1372,10 @@ export default function SuperDashboardContent() {
 
               const cardContent = (
                 <>
-                  <div className={`mb-2 w-8 h-8 flex items-center justify-center ${targetRoute ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-600'}`}>
+                  <div className={`mb-2 w-8 h-8 flex items-center justify-center ${targetRoute ? 'text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]' : 'text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]'}`}>
                     {getQuickActionIcon(actionLabel)}
                   </div>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight">
+                  <span className="text-xs font-medium text-[var(--sa-text-primary)] dark:text-gray-300 text-center leading-tight">
                     {action.label}
                   </span>
                 </>
@@ -1386,7 +1386,7 @@ export default function SuperDashboardContent() {
                   <Link
                     key={index}
                     to={targetRoute}
-                    className="flex flex-col items-center justify-center p-4 border border-[#E8F0FF] dark:border-gray-700 rounded-lg transition-all hover:border-[#3B4A66] dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm cursor-pointer"
+                    className="flex flex-col items-center justify-center p-4 border border-[var(--sa-border-color)] dark:border-gray-700 rounded-lg transition-all hover:border-[var(--sa-text-primary)] dark:hover:border-gray-500 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 hover:shadow-sm cursor-pointer"
                     style={{ borderRadius: '0.5rem', minHeight: '100px' }}
                   >
                     {cardContent}
@@ -1397,7 +1397,7 @@ export default function SuperDashboardContent() {
               return (
                 <div
                   key={index}
-                  className="flex flex-col items-center justify-center p-4 border border-dashed border-[#E5E7EB] dark:border-gray-700 rounded-lg text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  className="flex flex-col items-center justify-center p-4 border border-dashed border-[#E5E7EB] dark:border-gray-700 rounded-lg text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] cursor-not-allowed"
                   style={{ borderRadius: '0.5rem', minHeight: '100px' }}
                   title="This action is not available."
                 >
@@ -1422,20 +1422,20 @@ export default function SuperDashboardContent() {
         data-bs-theme={isDarkMode ? 'dark' : 'light'}
         style={{ marginTop: '80px', fontFamily: 'BasisGrotesquePro' }}
       >
-        <Modal.Header closeButton className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <Modal.Title className="text-gray-900 dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
+        <Modal.Header closeButton className="border-b border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800">
+          <Modal.Title className="text-[var(--sa-text-primary)] dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             Active Users Details
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: '0' }}>
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="border-b border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800">
             <div className="flex gap-0">
               <button
                 onClick={() => setActiveUsersTab('Firm')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Firm'
                   ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  : 'border-transparent text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-primary)] dark:hover:text-gray-200'
                   }`}
               >
                 Firm ({activeUsersData?.firm_users?.length || 0})
@@ -1444,7 +1444,7 @@ export default function SuperDashboardContent() {
                 onClick={() => setActiveUsersTab('Taxpayer')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Taxpayer'
                   ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  : 'border-transparent text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-primary)] dark:hover:text-gray-200'
                   }`}
               >
                 Taxpayer ({activeUsersData?.taxpayer_users?.length || 0})
@@ -1453,7 +1453,7 @@ export default function SuperDashboardContent() {
                 onClick={() => setActiveUsersTab('Taxpreparer')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Taxpreparer'
                   ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  : 'border-transparent text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-primary)] dark:hover:text-gray-200'
                   }`}
               >
                 Tax Preparer ({activeUsersData?.taxpreparer_users?.length || 0})
@@ -1462,7 +1462,7 @@ export default function SuperDashboardContent() {
                 onClick={() => setActiveUsersTab('Superadmin')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${activeUsersTab === 'Superadmin'
                   ? 'border-[#3AD6F2] text-[#3AD6F2]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  : 'border-transparent text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-primary)] dark:hover:text-gray-200'
                   }`}
               >
                 Super Admin ({activeUsersData?.super_admin_users?.length || 0})
@@ -1475,7 +1475,7 @@ export default function SuperDashboardContent() {
             {activeUsersLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A63] mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading active users...</p>
+                <p className="text-[var(--sa-text-secondary)]">Loading active users...</p>
               </div>
             ) : activeUsersError ? (
               <div className="text-center py-8">
@@ -1485,26 +1485,26 @@ export default function SuperDashboardContent() {
               <div>
                 {activeUsersTab === 'Firm' && (
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Firms</h4>
+                    <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-4">Active Firms</h4>
                     {activeUsersData.firm_users && activeUsersData.firm_users.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeUsersData.firm_users.map((firm, index) => (
-                          <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all">
+                          <div key={index} className="bg-[var(--sa-bg-secondary)] dark:bg-gray-700/30 rounded-lg p-4 border border-[var(--sa-border-color)] dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {firm.name?.charAt(0)?.toUpperCase() || 'F'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{firm.name || 'Unknown Firm'}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{firm.email || 'No email'}</p>
+                                <p className="font-medium text-[var(--sa-text-primary)] dark:text-white">{firm.name || 'Unknown Firm'}</p>
+                                <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">{firm.email || 'No email'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                               <p><span className="font-medium">Phone:</span> {firm.phone || 'N/A'}</p>
                               <p><span className="font-medium">Total Users:</span> {firm.total_users || 0}</p>
                               <p><span className="font-medium">Subscription:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${firm.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
-                                  'bg-gray-100 text-gray-800'
+                                  'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                   }`}>
                                   {firm.subscription_status || 'Unknown'}
                                 </span>
@@ -1512,7 +1512,7 @@ export default function SuperDashboardContent() {
                               <p><span className="font-medium">Status:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${firm.status === 'active' ? 'bg-green-100 text-green-800' :
                                   firm.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                   }`}>
                                   {firm.status || 'Unknown'}
                                 </span>
@@ -1522,28 +1522,28 @@ export default function SuperDashboardContent() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-center py-8">No active firms found</p>
+                      <p className="text-[var(--sa-text-secondary)] text-center py-8">No active firms found</p>
                     )}
                   </div>
                 )}
 
                 {activeUsersTab === 'Taxpayer' && (
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Taxpayers</h4>
+                    <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-4">Active Taxpayers</h4>
                     {activeUsersData.taxpayer_users && activeUsersData.taxpayer_users.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeUsersData.taxpayer_users.map((taxpayer, index) => (
-                          <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-400 transition-all">
+                          <div key={index} className="bg-[var(--sa-bg-secondary)] dark:bg-gray-700/30 rounded-lg p-4 border border-[var(--sa-border-color)] dark:border-gray-700 hover:border-green-400 dark:hover:border-green-400 transition-all">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {(taxpayer.first_name || taxpayer.last_name) ? `${taxpayer.first_name?.charAt(0) || ''}${taxpayer.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{`${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || 'Unknown User'}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{taxpayer.email || 'No email'}</p>
+                                <p className="font-medium text-[var(--sa-text-primary)] dark:text-white">{`${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || 'Unknown User'}</p>
+                                <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">{taxpayer.email || 'No email'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                               <p><span className="font-medium">Phone:</span> {taxpayer.phone || 'N/A'}</p>
                               <p><span className="font-medium">Firm:</span> {taxpayer.firm_name || 'N/A'}</p>
                               <p><span className="font-medium">Email Verified:</span>
@@ -1555,7 +1555,7 @@ export default function SuperDashboardContent() {
                               <p><span className="font-medium">Status:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${taxpayer.status === 'active' ? 'bg-green-100 text-green-800' :
                                   taxpayer.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                   }`}>
                                   {taxpayer.status || 'Unknown'}
                                 </span>
@@ -1565,28 +1565,28 @@ export default function SuperDashboardContent() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-center py-8">No active taxpayers found</p>
+                      <p className="text-[var(--sa-text-secondary)] text-center py-8">No active taxpayers found</p>
                     )}
                   </div>
                 )}
 
                 {activeUsersTab === 'Taxpreparer' && (
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Tax Preparers</h4>
+                    <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-4">Active Tax Preparers</h4>
                     {activeUsersData.taxpreparer_users && activeUsersData.taxpreparer_users.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeUsersData.taxpreparer_users.map((preparer, index) => (
-                          <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-400 transition-all">
+                          <div key={index} className="bg-[var(--sa-bg-secondary)] dark:bg-gray-700/30 rounded-lg p-4 border border-[var(--sa-border-color)] dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-400 transition-all">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {(preparer.first_name || preparer.last_name) ? `${preparer.first_name?.charAt(0) || ''}${preparer.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{`${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() || 'Unknown User'}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{preparer.email || 'No email'}</p>
+                                <p className="font-medium text-[var(--sa-text-primary)] dark:text-white">{`${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() || 'Unknown User'}</p>
+                                <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">{preparer.email || 'No email'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                               <p><span className="font-medium">Phone:</span> {preparer.phone || 'N/A'}</p>
                               <p><span className="font-medium">Role:</span> {preparer.role || 'Tax Preparer'}</p>
                               <p><span className="font-medium">Firm:</span> {preparer.firm_name || 'N/A'}</p>
@@ -1599,7 +1599,7 @@ export default function SuperDashboardContent() {
                               <p><span className="font-medium">Status:</span>
                                 <span className={`ml-1 px-2 py-1 rounded text-xs ${preparer.status === 'active' ? 'bg-green-100 text-green-800' :
                                   preparer.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                   }`}>
                                   {preparer.status || 'Unknown'}
                                 </span>
@@ -1609,7 +1609,7 @@ export default function SuperDashboardContent() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-center py-8">No active tax preparers found</p>
+                      <p className="text-[var(--sa-text-secondary)] text-center py-8">No active tax preparers found</p>
                     )}
                   </div>
                 )}
@@ -1618,21 +1618,21 @@ export default function SuperDashboardContent() {
                   <div className="space-y-6">
                     {/* General Super Admins */}
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">System Super Admins ({activeUsersData.general_admins?.length || 0})</h4>
+                      <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-4">System Super Admins ({activeUsersData.general_admins?.length || 0})</h4>
                       {activeUsersData.general_admins && activeUsersData.general_admins.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeUsersData.general_admins.map((admin, index) => (
-                            <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-gray-400 transition-all">
+                            <div key={index} className="bg-[var(--sa-bg-secondary)] dark:bg-gray-700/30 rounded-lg p-4 border border-[var(--sa-border-color)] dark:border-gray-700 hover:border-black dark:hover:border-gray-400 transition-all">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-black dark:bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                   {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'S'}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-gray-900 dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{admin.email || 'No email'}</p>
+                                  <p className="font-medium text-[var(--sa-text-primary)] dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
+                                  <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">{admin.email || 'No email'}</p>
                                 </div>
                               </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                              <div className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Super Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
@@ -1642,7 +1642,7 @@ export default function SuperDashboardContent() {
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Super User:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                     }`}>
                                     {admin.is_superuser ? 'Yes' : 'No'}
                                   </span>
@@ -1650,7 +1650,7 @@ export default function SuperDashboardContent() {
                                 <p><span className="font-medium">Status:</span>
                                   <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
                                     admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                                      'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                     }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
@@ -1660,26 +1660,26 @@ export default function SuperDashboardContent() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-center py-4">No system super admins found</p>
+                        <p className="text-[var(--sa-text-secondary)] text-center py-4">No system super admins found</p>
                       )}
                     </div>
 
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Billing Admins ({activeUsersData.billing_users?.length || 0})</h4>
+                      <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-4">Billing Admins ({activeUsersData.billing_users?.length || 0})</h4>
                       {activeUsersData.billing_users && activeUsersData.billing_users.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeUsersData.billing_users.map((admin, index) => (
-                            <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-400 transition-all">
+                            <div key={index} className="bg-[var(--sa-bg-secondary)] dark:bg-gray-700/30 rounded-lg p-4 border border-[var(--sa-border-color)] dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-400 transition-all">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                   {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'S'}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-gray-900 dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{admin.email || 'No email'}</p>
+                                  <p className="font-medium text-[var(--sa-text-primary)] dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
+                                  <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">{admin.email || 'No email'}</p>
                                 </div>
                               </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                              <div className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Billing Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
@@ -1689,7 +1689,7 @@ export default function SuperDashboardContent() {
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Super User:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                     }`}>
                                     {admin.is_superuser ? 'Yes' : 'No'}
                                   </span>
@@ -1697,7 +1697,7 @@ export default function SuperDashboardContent() {
                                 <p><span className="font-medium">Status:</span>
                                   <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
                                     admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                                      'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                     }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
@@ -1707,26 +1707,26 @@ export default function SuperDashboardContent() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-center py-4">No billing admins found</p>
+                        <p className="text-[var(--sa-text-secondary)] text-center py-4">No billing admins found</p>
                       )}
                     </div>
 
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Support Admins ({activeUsersData.support_users?.length || 0})</h4>
+                      <h4 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-4">Support Admins ({activeUsersData.support_users?.length || 0})</h4>
                       {activeUsersData.support_users && activeUsersData.support_users.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeUsersData.support_users.map((admin, index) => (
-                            <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all">
+                            <div key={index} className="bg-[var(--sa-bg-secondary)] dark:bg-gray-700/30 rounded-lg p-4 border border-[var(--sa-border-color)] dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                   {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'S'}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-gray-900 dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{admin.email || 'No email'}</p>
+                                  <p className="font-medium text-[var(--sa-text-primary)] dark:text-white">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'System Admin'}</p>
+                                  <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">{admin.email || 'No email'}</p>
                                 </div>
                               </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                              <div className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                                 <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
                                 <p><span className="font-medium">Role:</span> {admin.role || 'Support Admin'}</p>
                                 <p><span className="font-medium">Email Verified:</span>
@@ -1736,7 +1736,7 @@ export default function SuperDashboardContent() {
                                   </span>
                                 </p>
                                 <p><span className="font-medium">Super User:</span>
-                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                     }`}>
                                     {admin.is_superuser ? 'Yes' : 'No'}
                                   </span>
@@ -1744,7 +1744,7 @@ export default function SuperDashboardContent() {
                                 <p><span className="font-medium">Status:</span>
                                   <span className={`ml-1 px-2 py-1 rounded text-xs ${admin.status === 'active' ? 'bg-green-100 text-green-800' :
                                     admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                                      'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]'
                                     }`}>
                                     {admin.status || 'Unknown'}
                                   </span>
@@ -1754,7 +1754,7 @@ export default function SuperDashboardContent() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-center py-4">No support admins found</p>
+                        <p className="text-[var(--sa-text-secondary)] text-center py-4">No support admins found</p>
                       )}
                     </div>
                   </div>
@@ -1762,12 +1762,12 @@ export default function SuperDashboardContent() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">No data available</p>
+                <p className="text-[var(--sa-text-secondary)]">No data available</p>
               </div>
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" style={{ padding: '24px' }}>
+        <Modal.Footer className="border-t border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800" style={{ padding: '24px' }}>
           <button
             className="btn dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
             onClick={() => {
@@ -1779,7 +1779,7 @@ export default function SuperDashboardContent() {
             style={{
               fontFamily: 'BasisGrotesquePro',
               backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
-              color: isDarkMode ? '#F9FAFB' : '#3B4A66',
+              color: isDarkMode ? '#F9FAFB' : 'var(--sa-text-primary)',
               border: isDarkMode ? '1px solid #4B5563' : '1px solid #E5E7EB',
               fontWeight: '500',
               padding: '8px 16px',
@@ -1803,8 +1803,8 @@ export default function SuperDashboardContent() {
         data-bs-theme={isDarkMode ? 'dark' : 'light'}
         style={{ marginTop: '80px', fontFamily: 'BasisGrotesquePro' }}
       >
-        <Modal.Header closeButton className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <Modal.Title className="text-gray-900 dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
+        <Modal.Header closeButton className="border-b border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800">
+          <Modal.Title className="text-[var(--sa-text-primary)] dark:text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             All Firms ({allFirms.length})
           </Modal.Title>
         </Modal.Header>
@@ -1812,7 +1812,7 @@ export default function SuperDashboardContent() {
           <div style={{ maxHeight: '55vh', overflowY: 'auto', padding: '24px 24px 48px 24px' }}>
             {allFirmsLoading ? (
               <div className="text-center py-5">
-                <p className="text-gray-500">Loading firms...</p>
+                <p className="text-[var(--sa-text-secondary)]">Loading firms...</p>
               </div>
             ) : allFirmsError ? (
               <div className="text-center py-5">
@@ -1820,21 +1820,21 @@ export default function SuperDashboardContent() {
               </div>
             ) : allFirms.length === 0 ? (
               <div className="text-center py-5">
-                <p className="text-gray-500">No firms found</p>
+                <p className="text-[var(--sa-text-secondary)]">No firms found</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {allFirms.map((firm) => (
                   <div
                     key={firm.id}
-                    className="border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="border border-[var(--sa-border-color)] dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all bg-[var(--sa-bg-card)] dark:bg-gray-800 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700/50"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h5 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                        <h5 className="text-lg font-semibold text-[var(--sa-text-primary)] dark:text-white mb-1">
                           {firm.name || firm.firm_name || 'Unnamed Firm'}
                         </h5>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
+                        <div className="flex flex-wrap gap-4 text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">
                           {firm.owner_name && (
                             <div>
                               <span className="font-medium">Owner:</span> {firm.owner_name}
@@ -1858,7 +1858,7 @@ export default function SuperDashboardContent() {
                                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                   : firm.status.toLowerCase() === 'suspended'
                                     ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                    : 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)] dark:bg-gray-700 dark:text-gray-300'
                                   }`}
                               >
                                 {firm.status}
@@ -1873,7 +1873,7 @@ export default function SuperDashboardContent() {
                             setShowAllFirmsModal(false);
                             navigate(`/superadmin/firms/${firm.id}`);
                           }}
-                          className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
+                          className="px-3 py-1.5 text-xs font-medium text-[var(--sa-text-primary)] dark:text-gray-200 bg-[var(--sa-bg-card)] dark:bg-gray-700 border border-[var(--sa-border-color)] dark:border-gray-600 rounded-lg hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
                           style={{ borderRadius: '6px' }}
                         >
                           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1903,7 +1903,7 @@ export default function SuperDashboardContent() {
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" style={{ padding: '24px' }}>
+        <Modal.Footer className="border-t border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800" style={{ padding: '24px' }}>
           <button
             className="btn"
             onClick={() => {
@@ -1914,7 +1914,7 @@ export default function SuperDashboardContent() {
             style={{
               fontFamily: 'BasisGrotesquePro',
               backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
-              color: isDarkMode ? '#F9FAFB' : '#3B4A66',
+              color: isDarkMode ? '#F9FAFB' : 'var(--sa-text-primary)',
               border: isDarkMode ? '1px solid #4B5563' : '1px solid #E5E7EB',
               fontWeight: '500',
               padding: '8px 16px',
