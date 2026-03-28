@@ -269,8 +269,8 @@ export default function FirmPerformance() {
             setFilterMonth(e.target.value);
             if (!e.target.value) setFilterYear('');
           }}
-          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 firmperf-filter-control"
-          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+          className="px-3 py-1.5 text-sm border dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 firmperf-filter-control bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+          style={{ border: '1px solid #E8F0FF' }}
         >
           <option value="">All Months</option>
           {monthOptions.map(month => (
@@ -283,8 +283,8 @@ export default function FirmPerformance() {
             setFilterYear(e.target.value);
             if (!e.target.value) setFilterMonth('');
           }}
-          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 firmperf-filter-control"
-          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+          className="px-3 py-1.5 text-sm border dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 firmperf-filter-control bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+          style={{ border: '1px solid #E8F0FF' }}
           disabled={!filterMonth}
         >
           <option value="">Year</option>
@@ -308,7 +308,7 @@ export default function FirmPerformance() {
               setAppliedFilterMonth('');
               setAppliedFilterYear('');
             }}
-            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 firmperf-clear-btn"
+            className="px-2 py-1.5 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 firmperf-clear-btn"
             title="Clear filter"
           >
             ✕
@@ -318,11 +318,11 @@ export default function FirmPerformance() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700 font-[BasisGrotesquePro]">{error}</p>
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-700 dark:text-red-400 font-[BasisGrotesquePro]">{error}</p>
           <button
             onClick={fetchAnalytics}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline font-[BasisGrotesquePro]"
+            className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline font-[BasisGrotesquePro]"
           >
             Retry
           </button>
@@ -333,7 +333,7 @@ export default function FirmPerformance() {
       {loading && (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-          <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading analytics data...</p>
+          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 font-[BasisGrotesquePro]">Loading analytics data...</p>
         </div>
       )}
 
@@ -342,10 +342,10 @@ export default function FirmPerformance() {
         <>
           {/* API Calls Per Firm Table */}
           {apiCallsPerFirm.length > 0 && (
-            <div className="bg-white p-6 mb-8 firmperf-api-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+            <div className="bg-white dark:bg-gray-800 p-6 mb-8 firmperf-api-card dark:border dark:border-gray-700" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
               <div className="mb-6">
-                <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>API Calls Per Firm</h3>
-                <p className="text-sm" style={{color: '#6B7280'}}>
+                <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">API Calls Per Firm</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {appliedFilterMonth && appliedFilterYear ? (
                     <>Showing data for {monthOptions.find(m => m.value === appliedFilterMonth)?.label} {appliedFilterYear}</>
                   ) : (
@@ -357,13 +357,13 @@ export default function FirmPerformance() {
               <div className="overflow-x-auto">
                 <table className="w-full" style={{borderCollapse: 'collapse'}}>
                   <thead>
-                    <tr style={{borderBottom: '1px solid #E8F0FF'}}>
-                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{color: '#3B4A66'}}>Firm Name</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{color: '#3B4A66'}}>Total Calls</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{color: '#3B4A66'}}>Successful</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{color: '#3B4A66'}}>Failed</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{color: '#3B4A66'}}>Top API Used</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{color: '#3B4A66'}}>Last Call</th>
+                    <tr style={{borderBottom: '1px solid #E8F0FF'}} className="dark:border-gray-700">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Firm Name</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Total Calls</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Successful</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Failed</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top API Used</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Last Call</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -373,29 +373,29 @@ export default function FirmPerformance() {
                         style={{
                           borderBottom: index < apiCallsPerFirm.length - 1 ? '1px solid #F3F4F6' : 'none'
                         }}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:border-gray-700"
                       >
-                        <td className="py-3 px-4 text-sm font-medium" style={{color: '#3B4A66'}}>
+                        <td className="py-3 px-4 text-sm font-medium text-gray-700 dark:text-gray-300">
                           {firm.firm_name || `Firm ${firm.firm_id}`}
                         </td>
-                        <td className="py-3 px-4 text-sm" style={{color: '#6B7280'}}>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
                           {firm.total_calls?.toLocaleString() || '0'}
                         </td>
-                        <td className="py-3 px-4 text-sm" style={{color: '#10B981'}}>
+                        <td className="py-3 px-4 text-sm text-green-600 dark:text-green-400">
                           {firm.successful_calls?.toLocaleString() || '0'}
                         </td>
-                        <td className="py-3 px-4 text-sm" style={{color: '#EF4444'}}>
+                        <td className="py-3 px-4 text-sm text-red-600 dark:text-red-400">
                           {firm.failed_calls?.toLocaleString() || '0'}
                         </td>
-                        <td className="py-3 px-4 text-sm" style={{color: '#6B7280'}}>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
                           {firm.top_api_used || 'N/A'}
                           {firm.top_api_count && (
-                            <span className="text-xs text-gray-500 ml-1">
+                            <span className="text-xs text-gray-500 dark:text-gray-500 ml-1">
                               ({firm.top_api_count.toLocaleString()})
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-sm" style={{color: '#6B7280'}}>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
                           {firm.last_call_time_formatted || firm.last_call_time || 'N/A'}
                         </td>
                       </tr>
@@ -409,14 +409,14 @@ export default function FirmPerformance() {
           {/* Two Charts Dashboard */}
           <div className="grid grid-cols-2 gap-6 mb-8 firmperf-two-charts">
             {/* Left Chart - API Usage (Area Chart) */}
-            <div className="bg-white p-6 transition-all duration-300 ease-in-out firmperf-chart-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+            <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out firmperf-chart-card dark:border dark:border-gray-700" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
               <div className="mb-6">
-                <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>API Usage</h3>
-                <p className="text-sm" style={{color: '#3B4A66'}}>
+                <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">API Usage</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {apiUsageChart?.totalFormatted ? (
-                    <span className="text-lg font-bold">{apiUsageChart.totalFormatted}</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">{apiUsageChart.totalFormatted}</span>
                   ) : (
-                    <span className="text-lg font-bold">Loading...</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">Loading...</span>
                   )}
                 </p>
               </div>
@@ -467,7 +467,7 @@ export default function FirmPerformance() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 font-[BasisGrotesquePro]">
+                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 font-[BasisGrotesquePro]">
                     No data available
                   </div>
                 )}
@@ -475,10 +475,10 @@ export default function FirmPerformance() {
             </div>
             
             {/* Right Chart - IRS E-File Stats (Pie Chart) */}
-            <div className="bg-white p-6 transition-all duration-300 ease-in-out firmperf-chart-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+            <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out firmperf-chart-card dark:border dark:border-gray-700" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
               <div className="mb-6">
-                <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>IRS E-File Stats</h3>
-                <p className="text-sm" style={{color: '#3B4A66'}}>
+                <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">IRS E-File Stats</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {irsEfileStats ? (
                     <>Total: {irsEfileStats.total.toLocaleString()} submissions</>
                   ) : (
@@ -511,7 +511,7 @@ export default function FirmPerformance() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 font-[BasisGrotesquePro]">
+                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 font-[BasisGrotesquePro]">
                     No data available
                   </div>
                 )}
@@ -524,19 +524,19 @@ export default function FirmPerformance() {
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-4 h-4 rounded-full" style={{backgroundColor: item.color}}></div>
-                        <span className="text-sm font-medium" style={{color: '#3B4A66'}}>{item.name}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold" style={{color: '#3B4A66'}}>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                           {item.value}%
                         </span>
                         {index === 0 && irsEfileStats.accepted.count && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             ({irsEfileStats.accepted.count.toLocaleString()})
                           </span>
                         )}
                         {index === 1 && irsEfileStats.rejected.count && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             ({irsEfileStats.rejected.count.toLocaleString()})
                           </span>
                         )}
@@ -549,9 +549,9 @@ export default function FirmPerformance() {
           </div>
 
           {/* Client Adoption Rates Double Bar Chart */}
-          <div className="bg-white p-6 mb-8 firmperf-chart-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+          <div className="bg-white dark:bg-gray-800 p-6 mb-8 firmperf-chart-card dark:border dark:border-gray-700" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
             <div className="mb-6">
-              <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Client Adoption Rates</h3>
+              <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Client Adoption Rates</h3>
             </div>
             
             <div className="h-80">
@@ -600,7 +600,7 @@ export default function FirmPerformance() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500 font-[BasisGrotesquePro]">
+                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 font-[BasisGrotesquePro]">
                   No data available
                 </div>
               )}
@@ -610,11 +610,11 @@ export default function FirmPerformance() {
             <div className="flex justify-center gap-6 mt-4 firmperf-legend">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded" style={{backgroundColor: '#1E40AF'}}></div>
-                <span className="text-sm" style={{color: '#3B4A66'}}>Total Signups</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Total Signups</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded" style={{backgroundColor: '#EF4444'}}></div>
-                <span className="text-sm" style={{color: '#3B4A66'}}>Active Clients</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Active Clients</span>
               </div>
             </div>
           </div>

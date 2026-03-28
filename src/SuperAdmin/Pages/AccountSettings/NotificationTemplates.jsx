@@ -119,7 +119,7 @@ export default function NotificationTemplates() {
     }
   };
 
-  // Styles
+  // Styles with dark mode support
   const styles = {
     container: {
       display: "flex",
@@ -130,31 +130,33 @@ export default function NotificationTemplates() {
     sidebar: {
       width: "340px",
       minWidth: "340px",
-      background: "#fff",
+      background: "var(--bg-sidebar, #fff)",
       borderRadius: "12px",
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--border-color, #E5E7EB)",
       overflow: "hidden",
       display: "flex",
       flexDirection: "column",
     },
     sidebarHeader: {
       padding: "20px",
-      borderBottom: "1px solid #E5E7EB",
+      borderBottom: "1px solid var(--border-color, #E5E7EB)",
     },
     sidebarTitle: {
       fontSize: "16px",
       fontWeight: "600",
-      color: "#1F2937",
+      color: "var(--text-primary, #1F2937)",
       margin: "0 0 12px 0",
     },
     searchInput: {
       width: "100%",
       padding: "8px 12px",
       borderRadius: "8px",
-      border: "1px solid #D1D5DB",
+      border: "1px solid var(--input-border, #D1D5DB)",
       fontSize: "13px",
       outline: "none",
       boxSizing: "border-box",
+      background: "var(--input-bg, #fff)",
+      color: "var(--text-primary, #1F2937)",
     },
     templateList: {
       flex: 1,
@@ -166,19 +168,19 @@ export default function NotificationTemplates() {
       borderRadius: "8px",
       cursor: "pointer",
       marginBottom: "4px",
-      background: isActive ? "#EEF2FF" : "transparent",
-      border: isActive ? "1px solid #C7D2FE" : "1px solid transparent",
+      background: isActive ? "var(--item-active-bg, #EEF2FF)" : "transparent",
+      border: isActive ? "1px solid var(--item-active-border, #C7D2FE)" : "1px solid transparent",
       transition: "all 0.15s ease",
     }),
     templateName: {
       fontSize: "14px",
       fontWeight: "500",
-      color: "#1F2937",
+      color: "var(--text-primary, #1F2937)",
       margin: "0 0 2px 0",
     },
     templateType: {
       fontSize: "12px",
-      color: "#6B7280",
+      color: "var(--text-secondary, #6B7280)",
       margin: 0,
     },
     badge: (active) => ({
@@ -187,21 +189,21 @@ export default function NotificationTemplates() {
       borderRadius: "12px",
       fontSize: "11px",
       fontWeight: "500",
-      backgroundColor: active ? "#D1FAE5" : "#FEE2E2",
-      color: active ? "#065F46" : "#991B1B",
+      backgroundColor: active ? "var(--badge-active-bg, #D1FAE5)" : "var(--badge-inactive-bg, #FEE2E2)",
+      color: active ? "var(--badge-active-text, #065F46)" : "var(--badge-inactive-text, #991B1B)",
     }),
     main: {
       flex: 1,
-      background: "#fff",
+      background: "var(--bg-main, #fff)",
       borderRadius: "12px",
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--border-color, #E5E7EB)",
       overflow: "hidden",
       display: "flex",
       flexDirection: "column",
     },
     mainHeader: {
       padding: "20px 24px",
-      borderBottom: "1px solid #E5E7EB",
+      borderBottom: "1px solid var(--border-color, #E5E7EB)",
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
@@ -209,7 +211,7 @@ export default function NotificationTemplates() {
     mainTitle: {
       fontSize: "18px",
       fontWeight: "600",
-      color: "#1F2937",
+      color: "var(--text-primary, #1F2937)",
       margin: 0,
     },
     btnGroup: {
@@ -219,9 +221,9 @@ export default function NotificationTemplates() {
     btn: (variant = "default") => ({
       padding: "8px 16px",
       borderRadius: "8px",
-      border: variant === "default" ? "1px solid #D1D5DB" : "none",
-      background: variant === "primary" ? "#4F46E5" : variant === "danger" ? "#EF4444" : "#fff",
-      color: variant === "primary" || variant === "danger" ? "#fff" : "#374151",
+      border: variant === "default" ? "1px solid var(--btn-border, #D1D5DB)" : "none",
+      background: variant === "primary" ? "#4F46E5" : variant === "danger" ? "#EF4444" : "var(--btn-bg, #fff)",
+      color: variant === "primary" || variant === "danger" ? "#fff" : "var(--btn-text, #374151)",
       fontSize: "13px",
       fontWeight: "500",
       cursor: "pointer",
@@ -239,39 +241,44 @@ export default function NotificationTemplates() {
       display: "block",
       fontSize: "13px",
       fontWeight: "500",
-      color: "#374151",
+      color: "var(--text-label, #374151)",
       marginBottom: "6px",
     },
     input: {
       width: "100%",
       padding: "10px 14px",
       borderRadius: "8px",
-      border: "1px solid #D1D5DB",
+      border: "1px solid var(--input-border, #D1D5DB)",
       fontSize: "14px",
       outline: "none",
       boxSizing: "border-box",
+      background: "var(--input-bg, #fff)",
+      color: "var(--text-primary, #1F2937)",
     },
     textarea: {
       width: "100%",
       padding: "10px 14px",
       borderRadius: "8px",
-      border: "1px solid #D1D5DB",
+      border: "1px solid var(--input-border, #D1D5DB)",
       fontSize: "13px",
       fontFamily: "monospace",
       outline: "none",
       boxSizing: "border-box",
       minHeight: "300px",
       resize: "vertical",
+      background: "var(--input-bg, #fff)",
+      color: "var(--text-primary, #1F2937)",
     },
     select: {
       width: "100%",
       padding: "10px 14px",
       borderRadius: "8px",
-      border: "1px solid #D1D5DB",
+      border: "1px solid var(--input-border, #D1D5DB)",
       fontSize: "14px",
       outline: "none",
       boxSizing: "border-box",
-      background: "#fff",
+      background: "var(--input-bg, #fff)",
+      color: "var(--text-primary, #1F2937)",
     },
     row: {
       display: "flex",
@@ -286,7 +293,7 @@ export default function NotificationTemplates() {
       alignItems: "center",
       justifyContent: "center",
       height: "100%",
-      color: "#9CA3AF",
+      color: "var(--text-muted, #9CA3AF)",
       fontSize: "14px",
       textAlign: "center",
       padding: "40px",
@@ -297,8 +304,8 @@ export default function NotificationTemplates() {
       right: "24px",
       padding: "12px 20px",
       borderRadius: "8px",
-      background: type === "error" ? "#FEE2E2" : "#D1FAE5",
-      color: type === "error" ? "#991B1B" : "#065F46",
+      background: type === "error" ? "var(--toast-error-bg, #FEE2E2)" : "var(--toast-success-bg, #D1FAE5)",
+      color: type === "error" ? "var(--toast-error-text, #991B1B)" : "var(--toast-success-text, #065F46)",
       fontSize: "13px",
       fontWeight: "500",
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -307,17 +314,17 @@ export default function NotificationTemplates() {
     }),
     previewFrame: {
       width: "100%",
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--border-color, #E5E7EB)",
       borderRadius: "8px",
       minHeight: "400px",
-      background: "#fff",
+      background: "var(--bg-preview, #fff)",
     },
     toggleSwitch: (isOn) => ({
       position: "relative",
       width: "40px",
       height: "22px",
       borderRadius: "12px",
-      background: isOn ? "#4F46E5" : "#D1D5DB",
+      background: isOn ? "#4F46E5" : "var(--toggle-off, #D1D5DB)",
       cursor: "pointer",
       transition: "background 0.2s ease",
       border: "none",
@@ -337,7 +344,63 @@ export default function NotificationTemplates() {
   };
 
   return (
-    <div>
+    <div className="dark">
+      {/* CSS Variables for theming */}
+      <style>{`
+        :root {
+          --bg-sidebar: #fff;
+          --bg-main: #fff;
+          --bg-preview: #fff;
+          --border-color: #E5E7EB;
+          --text-primary: #1F2937;
+          --text-secondary: #6B7280;
+          --text-muted: #9CA3AF;
+          --text-label: #374151;
+          --input-bg: #fff;
+          --input-border: #D1D5DB;
+          --btn-bg: #fff;
+          --btn-text: #374151;
+          --btn-border: #D1D5DB;
+          --toggle-off: #D1D5DB;
+          --item-active-bg: #EEF2FF;
+          --item-active-border: #C7D2FE;
+          --badge-active-bg: #D1FAE5;
+          --badge-active-text: #065F46;
+          --badge-inactive-bg: #FEE2E2;
+          --badge-inactive-text: #991B1B;
+          --toast-success-bg: #D1FAE5;
+          --toast-success-text: #065F46;
+          --toast-error-bg: #FEE2E2;
+          --toast-error-text: #991B1B;
+        }
+        .dark {
+          --bg-sidebar: #1F2937;
+          --bg-main: #1F2937;
+          --bg-preview: #111827;
+          --border-color: #374151;
+          --text-primary: #F3F4F6;
+          --text-secondary: #9CA3AF;
+          --text-muted: #6B7280;
+          --text-label: #D1D5DB;
+          --input-bg: #374151;
+          --input-border: #4B5563;
+          --btn-bg: #374151;
+          --btn-text: #F3F4F6;
+          --btn-border: #4B5563;
+          --toggle-off: #4B5563;
+          --item-active-bg: #312E81;
+          --item-active-border: #4F46E5;
+          --badge-active-bg: #065F46;
+          --badge-active-text: #D1FAE5;
+          --badge-inactive-bg: #7F1D1D;
+          --badge-inactive-text: #FEE2E2;
+          --toast-success-bg: #065F46;
+          --toast-success-text: #D1FAE5;
+          --toast-error-bg: #7F1D1D;
+          --toast-error-text: #FEE2E2;
+        }
+      `}</style>
+
       {/* Toast */}
       {toast.show && <div style={styles.toast(toast.type)}>{toast.message}</div>}
 
@@ -356,11 +419,11 @@ export default function NotificationTemplates() {
           </div>
           <div style={styles.templateList}>
             {loading ? (
-              <div style={{ padding: "20px", textAlign: "center", color: "#9CA3AF" }}>
+              <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted, #9CA3AF)" }}>
                 Loading templates…
               </div>
             ) : templates.length === 0 ? (
-              <div style={{ padding: "20px", textAlign: "center", color: "#9CA3AF" }}>
+              <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted, #9CA3AF)" }}>
                 No templates found
               </div>
             ) : (
@@ -370,7 +433,7 @@ export default function NotificationTemplates() {
                   style={styles.templateItem(selectedTemplate?.id === t.id)}
                   onClick={() => handleSelectTemplate(t)}
                   onMouseEnter={(e) => {
-                    if (selectedTemplate?.id !== t.id) e.currentTarget.style.background = "#F3F4F6";
+                    if (selectedTemplate?.id !== t.id) e.currentTarget.style.background = "rgba(156, 163, 175, 0.2)";
                   }}
                   onMouseLeave={(e) => {
                     if (selectedTemplate?.id !== t.id) e.currentTarget.style.background = "transparent";

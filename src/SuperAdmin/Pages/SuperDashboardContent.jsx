@@ -875,7 +875,7 @@ export default function SuperDashboardContent() {
         <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 transition-all">
           <div className="flex flex-col gap-4 mb-4">
             <div>
-              <h3 className="taxdashboardr-titler text-base font-bold text-[var(--sa-text-primary)] dark:text-white mb-1 whitespace-nowrap">Revenue Growth Trend</h3>
+              <h3 className="taxdashboardr-titler text-base font-bold text-[var(--sa-text-primary)] dark:text-white mb-1 whitespace-nowrap dark:text-white">Revenue Growth Trend</h3>
               <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">Monthly recurring revenue and user growth</p>
             </div>
             <div className="flex items-center gap-2 justify-end">
@@ -1044,7 +1044,7 @@ export default function SuperDashboardContent() {
                             </span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Compared to previous month</p>
+                        <p className="text-[10px] text-gray-600 font-medium uppercase tracking-wider">Compared to previous month</p>
                       </div>
 
                       {/* Subscriber Growth Card */}
@@ -1076,7 +1076,7 @@ export default function SuperDashboardContent() {
                             </span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Compared to previous month</p>
+                        <p className="text-[10px] text-gray-600 font-medium uppercase tracking-wider">Compared to previous month</p>
                       </div>
                     </React.Fragment>
                   );
