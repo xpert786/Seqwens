@@ -878,7 +878,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 <button
                   onClick={() => setShowNewAddonModal(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
-                  style={{ backgroundColor: 'var(--sa-text-primary)', borderRadius: '10px' }}
+                  style={{ backgroundColor: '#F56D2D', borderRadius: '10px' }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
@@ -1041,7 +1041,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                               <button
                                 onClick={() => handleSaveEdit(addon.id)}
                                 className="px-4 py-2 text-xs font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
-                                style={{ backgroundColor: 'var(--sa-text-primary)' }}
+                                style={{ backgroundColor: '#F56D2D' }}
                               >Save</button>
                             </div>
                           </div>
@@ -1572,7 +1572,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 onClick={handleAddNewAddonForPlan}
                 disabled={creatingAddon || !newAddonForm.name.trim()}
                 className="px-6 py-2.5 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{ backgroundColor: 'var(--sa-text-primary)', borderRadius: '10px' }}
+                style={{ backgroundColor: '#F56D2D', borderRadius: '10px' }}
               >
                 {creatingAddon ? (
                   <>
