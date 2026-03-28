@@ -78,9 +78,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   // State for "Add New Addon for This Plan" modal
   const [showNewAddonModal, setShowNewAddonModal] = useState(false);
   const [newAddonForm, setNewAddonForm] = useState({
-    name: '',
-    description: '',
-    category: 'staff',
+    category: '',
     price: '',
     price_unit: 'per month',
     scope: 'firm',
@@ -471,7 +469,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       price_unit: addon.price_unit || 'per month',
       billing_frequency: addon.billing_frequency || 'monthly',
       scope: addon.scope || 'firm',
-      category: addon.category || 'staff',
+      category: addon.category || '',
       unit_quantity: addon.unit_quantity || 1,
       unit_type: addon.unit_type || 'unit',
     });
@@ -490,7 +488,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           price_unit: editAddonForm.price_unit,
           billing_frequency: editAddonForm.billing_frequency || 'monthly',
           scope: editAddonForm.scope,
-          category: editAddonForm.category,
+          category: editAddonForm.category || null,
           unit_quantity: parseInt(editAddonForm.unit_quantity) || 1,
           unit_type: editAddonForm.unit_type,
         })
@@ -521,8 +519,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       const payload = {
         name: newAddonForm.name.trim(),
         description: newAddonForm.description.trim(),
-        category: newAddonForm.category,
-        addon_type: `${newAddonForm.category}_${Date.now()}`,
+        category: newAddonForm.category || null,
+        addon_type: `${newAddonForm.category || 'other'}_${Date.now()}`,
         price: parseFloat(newAddonForm.price) || 0,
         price_unit: derivedPriceUnit,
         unit_type: newAddonForm.unit_type || 'unit',
@@ -560,7 +558,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       setSelectedAddonCategory('all');
       setShowNewAddonModal(false);
       setNewAddonForm({
-        name: '', description: '', category: 'staff',
+        name: '', description: '', category: '',
         price: '', price_unit: 'per month',
         scope: 'firm', billing_frequency: 'monthly',
         unit_type: 'unit', unit_quantity: 1,
