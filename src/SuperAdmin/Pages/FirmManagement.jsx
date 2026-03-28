@@ -1028,7 +1028,7 @@ export default function FirmManagement() {
                 {showSuspendModal && firmToSuspend && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
                         <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px' }}>
+                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px', height: '75vh' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Suspend Firm</h3>
@@ -1163,30 +1163,30 @@ export default function FirmManagement() {
                 {/* ── DELETE MODAL ───────────────────────────────────────────────────── */}
                 {showDeleteModal && firmToDelete && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+                        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
                         <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-lg font-semibold text-red-600 dark:text-red-500">Delete Firm</h3>
-                                    <p className="text-sm text-gray-500">Permanently delete {firmToDelete.name || firmToDelete.firm_name || 'this firm'}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Permanently delete {firmToDelete.name || firmToDelete.firm_name || 'this firm'}</p>
                                 </div>
                                 <button onClick={() => { setShowDeleteModal(false); setFirmToDelete(null); setDeleteError(null); }}
                                     style={{ borderRadius: '7px' }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                     disabled={deletingFirm}><CloseIcon /></button>
                             </div>
 
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
                                 {deleteError && <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-3"><div className="text-sm text-red-700 dark:text-red-400">{deleteError}</div></div>}
 
-                                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-4">
+                                <div className="bg-red-50 dark:bg-gray-900 border border-red-200 dark:border-red-700 rounded-lg p-4">
                                     <div className="flex items-start">
                                         <svg className="w-5 h-5 text-red-600 dark:text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
                                         <div>
                                             <h4 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1">This action cannot be undone</h4>
-                                            <p className="text-sm text-red-700 dark:text-red-400">Deleting this firm will permanently remove all associated data including:</p>
-                                            <ul className="text-sm text-red-700 dark:text-red-400 mt-2 list-disc list-inside space-y-1">
+                                            <p className="text-sm text-red-700 dark:text-gray-300">Deleting this firm will permanently remove all associated data including:</p>
+                                            <ul className="text-sm text-red-700 dark:text-gray-300 mt-2 list-disc list-inside space-y-1">
                                                 <li>Firm account and settings</li>
                                                 <li>All users and their access</li>
                                                 <li>Client data and documents</li>
@@ -1224,8 +1224,7 @@ export default function FirmManagement() {
 
                 {/* ── ASSIGN CLIENTS MODAL ───────────────────────────────────────────── */}
                 {showAssignClientsModal && assignClientsFirm && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8 px-4">
-                        <div className="absolute inset-0 bg-black bg-opacity-50" onClick={closeAssignClientsModal}></div>
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
                         <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg mx-auto transition-all" style={{ borderRadius: '12px' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
@@ -1272,7 +1271,7 @@ export default function FirmManagement() {
 
                             <div className="flex justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
                                 <button onClick={closeAssignClientsModal}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                     style={{ borderRadius: '7px' }} disabled={assigningClient}>Cancel</button>
                                 <button onClick={handleAssignClient}
                                     disabled={assigningClient || loadingAssignClients || !selectedClientId || assignClientOptions.length === 0}

@@ -616,7 +616,7 @@ const Notifications = () => {
           >
             <div
               className="bg-white rounded-4 p-4"
-              style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}
+              style={{ width: '90%', maxWidth: '600px', maxHeight: '75vh', overflowY: 'auto' }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
