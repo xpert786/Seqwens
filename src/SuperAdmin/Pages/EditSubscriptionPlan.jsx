@@ -519,8 +519,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       const payload = {
         name: newAddonForm.name.trim(),
         description: newAddonForm.description.trim(),
-        category: newAddonForm.category || null,
-        addon_type: `${newAddonForm.category || 'other'}_${Date.now()}`,
+        category: newAddonForm.category || 'other',
+        addon_type: newAddonForm.addon_type || `other_${Date.now()}`,
         price: parseFloat(newAddonForm.price) || 0,
         price_unit: derivedPriceUnit,
         unit_type: newAddonForm.unit_type || 'unit',
@@ -887,9 +887,9 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 </button>
               </div>
 
-              {/* Category Filter Tabs */}
+              {/* Category Filter Tabs - removed 'other' since null/empty is now allowed */}
               <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-[var(--sa-bg-secondary)] rounded-xl border border-[var(--sa-border-color)] w-fit">
-                {['all', 'esign', 'storage', 'workflow', 'office', 'staff', 'other'].map(cat => (
+                {['all', 'esign', 'storage', 'workflow', 'office', 'staff', 'none'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setSelectedAddonCategory(cat)}
@@ -902,15 +902,15 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       backgroundColor: selectedAddonCategory === cat ? '#F56D2D' : 'var(--sa-bg-card)'
                     }}
                   >
-                    {cat === 'all' ? 'All Types' : cat === 'esign' ? 'E-Sign' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    {cat === 'all' ? 'All Types' : cat === 'esign' ? 'E-Sign' : cat === 'none' ? 'Uncategorized' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </button>
                 ))}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {planAddons.filter(a => selectedAddonCategory === 'all' || (a.category && a.category === selectedAddonCategory)).length > 0 ? (
+                {planAddons.filter(a => selectedAddonCategory === 'all' || (a.category && a.category === selectedAddonCategory) || (selectedAddonCategory === 'none' && !a.category)).length > 0 ? (
                   planAddons
-                    .filter(a => selectedAddonCategory === 'all' || (a.category && a.category === selectedAddonCategory))
+                    .filter(a => selectedAddonCategory === 'all' || (a.category && a.category === selectedAddonCategory) || (selectedAddonCategory === 'none' && !a.category))
                     .map((addon) => (
                       <div
                         key={addon.id}
@@ -988,11 +988,12 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                               <div>
                                 <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-wider mb-1">Category</label>
                                 <select
-                                  value={editAddonForm.category}
-                                  onChange={e => setEditAddonForm(f => ({ ...f, category: e.target.value }))}
+                                  value={(editAddonForm.category === 'other' ? '' : editAddonForm.category) || ''}
+                                  onChange={e => setEditAddonForm(f => ({ ...f, category: e.target.value || null }))}
                                   className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
                                   style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 >
+                                  <option value="">— Select Category —</option>
                                   <option value="esign">E-Sign</option>
                                   <option value="storage">Storage</option>
                                   <option value="workflow">Workflow</option>
@@ -1053,7 +1054,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                 <div className="flex items-center gap-2 mb-1">
                                   <h4 className="font-bold text-sm mb-0" style={{ color: 'var(--sa-text-primary)' }}>{addon.name}</h4>
                                   <span className="px-1.5 py-0.5 bg-[var(--sa-bg-secondary)] text-[var(--sa-text-secondary)] rounded text-[9px] font-bold uppercase tracking-tight border border-[var(--sa-border-color)]">
-                                    {addon.category || 'other'}
+                                    {addon.category === 'other' ? <span className="italic opacity-50">—</span> : (addon.category || <span className="italic opacity-50">—</span>)}
                                   </span>
                                 </div>
                                 {addon.description && (
@@ -1120,7 +1121,9 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     <p className="text-sm font-medium italic" style={{ color: '#9CA3AF' }}>
                       {selectedAddonCategory === 'all'
                         ? 'No add-ons for this plan yet. Click "New Add-on" to create one.'
-                        : `No "${selectedAddonCategory}" add-ons for this plan.`}
+                        : selectedAddonCategory === 'none'
+                          ? 'No uncategorized add-ons for this plan.'
+                          : `No "${selectedAddonCategory}" add-ons for this plan.`}
                     </p>
                   </div>
                 )}
@@ -1460,11 +1463,19 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Category</label>
                   <select
-                    value={newAddonForm.category}
-                    onChange={e => setNewAddonForm(f => ({ ...f, category: e.target.value }))}
+                    value={(newAddonForm.category === 'other' ? '' : newAddonForm.category) || ''}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setNewAddonForm(f => ({ 
+                        ...f, 
+                        category: val || 'other',
+                        addon_type: val ? `${val}_${Date.now()}` : `other_${Date.now()}` 
+                      }));
+                    }}
                     className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
                     style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   >
+                    <option value="">— Select Category —</option>
                     <option value="esign">E-Sign</option>
                     <option value="storage">Storage</option>
                     <option value="workflow">Workflow</option>
