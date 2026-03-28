@@ -419,11 +419,11 @@ export default function Overview() {
       </div>
 
       {/* First Chart - Area Chart */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out overview-chart-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out overview-chart-card dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
           <div>
-            <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
-            <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue displayed as bar chart</p>
+            <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Revenue Growth Trend</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Monthly recurring revenue displayed as bar chart</p>
           </div>
         </div>
 
@@ -472,10 +472,10 @@ export default function Overview() {
       </div>
 
       {/* Second Chart - Multi-line Chart */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8 overview-chart-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out mb-8 overview-chart-card dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>User Engagement Metrics</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Active users, new registrations, and session data by month</p>
+          <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">User Engagement Metrics</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Active users, new registrations, and session data by month</p>
         </div>
 
         <div className="h-80">
@@ -562,25 +562,25 @@ export default function Overview() {
           <div className="flex justify-center gap-6 mt-4 overview-legend">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }}></div>
-              <span className="text-sm" style={{ color: '#3B4A66' }}>Active Users</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Active Users</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF7043' }}></div>
-              <span className="text-sm" style={{ color: '#3B4A66' }}>New Users</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">New Users</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
-              <span className="text-sm" style={{ color: '#3B4A66' }}>Sessions</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Sessions</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Third Chart - Bar Chart */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8 overview-chart-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out mb-8 overview-chart-card dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Monthly Revenue Breakdown</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed revenue analysis by subscription plan.</p>
+          <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Monthly Revenue Breakdown</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Detailed revenue analysis by subscription plan.</p>
         </div>
 
         <div className="h-80">
@@ -630,7 +630,7 @@ export default function Overview() {
           <div className="flex justify-center mt-4 overview-legend">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4285F4' }}></div>
-              <span className="text-sm" style={{ color: '#3B4A66' }}>Total Revenue</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Total Revenue</span>
             </div>
           </div>
         )}

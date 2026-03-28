@@ -747,21 +747,21 @@ export default function Reports() {
   return (
     <div className="space-y-8 mb-8">
       {/* Platform Reports Section */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Platform Reports</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Generate platform-wide reports for firms, staff, or clients.</p>
+          <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Platform Reports</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Generate platform-wide reports for firms, staff, or clients.</p>
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Type *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Report Type *</label>
               <select
                 value={platformReportForm.report_type}
                 onChange={handlePlatformReportFormChange('report_type')}
-                className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                style={{ border: '1px solid #E8F0FF' }}
                 disabled={platformReportLoading}
               >
                 {/* Custom Reports */}
@@ -781,12 +781,12 @@ export default function Reports() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Time Period *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Time Period *</label>
               <select
                 value={platformReportForm.time_period}
                 onChange={handlePlatformReportFormChange('time_period')}
-                className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                style={{ border: '1px solid #E8F0FF' }}
                 disabled={platformReportLoading}
               >
                 <option value="last_7_days">Last 7 Days</option>
@@ -801,12 +801,12 @@ export default function Reports() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Format *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Format *</label>
               <select
                 value={platformReportForm.format}
                 onChange={handlePlatformReportFormChange('format')}
-                className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                style={{ border: '1px solid #E8F0FF' }}
                 disabled={platformReportLoading}
               >
                 {(() => {
@@ -823,26 +823,26 @@ export default function Reports() {
 
           {/* Custom Date Range */}
           {platformReportForm.time_period === 'custom' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Start Date *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Start Date *</label>
                 <input
                   type="date"
                   value={platformReportForm.custom_start_date}
                   onChange={handlePlatformReportFormChange('custom_start_date')}
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                  style={{ border: '1px solid #E8F0FF' }}
                   disabled={platformReportLoading}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>End Date *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">End Date *</label>
                 <input
                   type="date"
                   value={platformReportForm.custom_end_date}
                   onChange={handlePlatformReportFormChange('custom_end_date')}
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                  style={{ border: '1px solid #E8F0FF' }}
                   disabled={platformReportLoading}
                 />
               </div>
@@ -857,9 +857,9 @@ export default function Reports() {
               checked={platformReportForm.include_detailed_breakdowns}
               onChange={handlePlatformReportFormChange('include_detailed_breakdowns')}
               disabled={platformReportLoading}
-              className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+              className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
             />
-            <label htmlFor="detailed-breakdowns" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+            <label htmlFor="detailed-breakdowns" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Include detailed breakdowns
             </label>
           </div>
@@ -871,20 +871,20 @@ export default function Reports() {
             return (
               <div className="space-y-3">
                 {/* Report Description */}
-                <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+                <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
                   {config.description}
                 </div>
 
                 {/* Firm Filter */}
                 {config.showFirmFilter && (
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Firm Filter</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Firm Filter</label>
                     <select
                       value={platformReportForm.firm_filter}
                       onChange={handlePlatformReportFormChange('firm_filter')}
                       disabled={platformReportLoading}
-                      className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                      style={{ border: '1px solid #E8F0FF' }}
                     >
                       <option value="all">All Firms</option>
                       <option value="active">Active Firms Only</option>
@@ -896,13 +896,13 @@ export default function Reports() {
                 {/* User Type Filter */}
                 {config.showUserTypeFilter && (
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>User Type Filter</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">User Type Filter</label>
                     <select
                       value={platformReportForm.user_type_filter}
                       onChange={handlePlatformReportFormChange('user_type_filter')}
                       disabled={platformReportLoading}
-                      className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                      style={{ border: '1px solid #E8F0FF' }}
                     >
                       <option value="all">All Users</option>
                       <option value="admin">Admins Only</option>
@@ -921,9 +921,9 @@ export default function Reports() {
                       checked={platformReportForm.include_charts}
                       onChange={handlePlatformReportFormChange('include_charts')}
                       disabled={platformReportLoading}
-                      className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                      className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
                     />
-                    <label htmlFor="include-charts" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                    <label htmlFor="include-charts" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Include charts and visualizations
                     </label>
                   </div>
@@ -938,9 +938,9 @@ export default function Reports() {
                       checked={platformReportForm.include_raw_data}
                       onChange={handlePlatformReportFormChange('include_raw_data')}
                       disabled={platformReportLoading}
-                      className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                      className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
                     />
-                    <label htmlFor="include-raw-data" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                    <label htmlFor="include-raw-data" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Include raw data export
                     </label>
                   </div>
@@ -1042,8 +1042,8 @@ export default function Reports() {
 
             <button
               onClick={() => setShowScheduleModal(true)}
-              className="flex items-center justify-center gap-2 px-6 py-2 bg-white border font-medium transition-colors"
-              style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
+              className="flex items-center justify-center gap-2 px-6 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 font-medium transition-colors text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
             >
               <FaBell className="text-sm" />
               Schedule Report
@@ -1053,42 +1053,42 @@ export default function Reports() {
       </div>
 
       {/* Generated Reports History */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-4">
-          <h4 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Generated Reports History</h4>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Recent reports generated on the platform</p>
+          <h4 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Generated Reports History</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Recent reports generated on the platform</p>
         </div>
 
         {generatedReportsLoading ? (
-          <div className="text-center py-8 text-sm text-gray-500">Loading report history...</div>
+          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">Loading report history...</div>
         ) : generatedReportsHistory.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-500">No generated reports found</div>
+          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">No generated reports found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E8F0FF]">
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Report Type</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Period</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Format</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Status</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Created</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>S3 Folder</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Details</th>
-                  <th className="text-left py-2 px-3 font-medium" style={{ color: '#3B4A66' }}>Actions</th>
+                <tr className="border-b border-[#E8F0FF] dark:border-gray-700">
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Report Type</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Period</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Format</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Status</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Created</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">S3 Folder</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Details</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {generatedReportsHistory.slice(0, 10).map((report) => (
-                  <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-2 px-3" style={{ color: '#3B4A66' }}>
+                  <tr key={report.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
                       {report.report_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                     </td>
-                    <td className="py-2 px-3 text-gray-600">
+                    <td className="py-2 px-3 text-gray-600 dark:text-gray-400">
                       {report.time_period?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                     </td>
                     <td className="py-2 px-3">
-                      <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-300">
                         {report.format?.toUpperCase()}
                       </span>
                     </td>
@@ -1117,19 +1117,19 @@ export default function Reports() {
                         {report.status_display || report.status}
                       </span>
                     </td>
-                    <td className="py-2 px-3 text-gray-600 text-xs">
+                    <td className="py-2 px-3 text-gray-600 dark:text-gray-400 text-xs">
                       {new Date(report.created_at).toLocaleString()}
                     </td>
-                    <td className="py-2 px-3 text-xs text-gray-500">
+                    <td className="py-2 px-3 text-xs text-gray-500 dark:text-gray-400">
                       {report.file_path ? (
-                        <div className="font-mono bg-gray-50 px-1 py-0.5 rounded text-xs">
+                        <div className="font-mono bg-gray-50 dark:bg-gray-700 px-1 py-0.5 rounded text-xs">
                           {report.file_path.split('/').slice(-2).join('/')}
                         </div>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">—</span>
                       )}
                     </td>
-                    <td className="py-2 px-3 text-xs text-gray-500">
+                    <td className="py-2 px-3 text-xs text-gray-500 dark:text-gray-400">
                       {report.rows_count && <div>{report.rows_count.toLocaleString()} rows</div>}
                       {report.generation_time_seconds && <div>{report.generation_time_seconds}s</div>}
                       {report.file_size && <div>{(report.file_size / 1024).toFixed(0)} KB</div>}
@@ -1156,18 +1156,18 @@ export default function Reports() {
       </div>
 
       {/* Scheduled Reports Section */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 transition-all duration-300 ease-in-out dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h4 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>All Scheduled Reports</h4>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Automated reports that will be delivered to stakeholders.</p>
+          <h4 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">All Scheduled Reports</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Automated reports that will be delivered to stakeholders.</p>
         </div>
 
         {platformScheduledLoading || schedulesLoading ? (
-          <div className="h-32 flex items-center justify-center text-sm text-gray-500">
+          <div className="h-32 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
             Loading schedules...
           </div>
         ) : (platformScheduledError || schedulesError) ? (
-          <div className="p-4 border border-red-200 rounded-lg bg-red-50 text-sm text-red-600">
+          <div className="p-4 border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400">
             {platformScheduledError || schedulesError}
           </div>
         ) : (
@@ -1175,24 +1175,24 @@ export default function Reports() {
             {/* All Scheduled Reports */}
             {platformScheduledReports && platformScheduledReports.length > 0 ? (
               <div className="mb-6">
-                <h5 className="text-sm font-semibold mb-3" style={{ color: '#3B4A66' }}>
+                <h5 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
                   Scheduled Reports ({platformScheduledReports.length})
                 </h5>
                 <div className="space-y-3">
                   {platformScheduledReports.map((schedule) => (
                     <div
                       key={schedule.id}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
+                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4 dark:border dark:border-gray-700"
                       style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
                     >
                       <div className="flex-1">
-                        <h6 className="text-sm font-semibold mb-1" style={{ color: '#3B4A66' }}>
+                        <h6 className="text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                           {schedule.name || schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                         </h6>
-                        <p className="text-xs" style={{ color: '#6B7280' }}>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {schedule.time_period?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {schedule.format?.toUpperCase()}
                         </p>
-                        <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                        <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
                           {schedule.last_run
                             ? `Last run: ${new Date(schedule.last_run).toLocaleString()}`
                             : 'Never run'}
@@ -1202,7 +1202,7 @@ export default function Reports() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium px-2 py-1" style={{ border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66' }}>
+                        <span className="text-xs font-medium px-2 py-1 dark:border dark:border-gray-600 rounded-[50px] text-gray-700 dark:text-gray-300">
                           {schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                         </span>
                         <button
@@ -1216,7 +1216,7 @@ export default function Reports() {
                         </button>
                         <button
                           onClick={() => handleEditScheduledReport(schedule)}
-                          className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-xs"
+                          className="px-2 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded text-xs"
                         >
                           Edit
                         </button>
@@ -1225,7 +1225,7 @@ export default function Reports() {
                             setDeletingSchedule(schedule);
                             setShowDeleteModal(true);
                           }}
-                          className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs"
+                          className="px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-xs"
                         >
                           Delete
                         </button>
@@ -1235,7 +1235,7 @@ export default function Reports() {
                 </div>
               </div>
             ) : (
-              <div className="p-4 border border-dashed border-[#E8F0FF] rounded-lg text-sm text-gray-500 text-center">
+              <div className="p-4 border border-dashed border-[#E8F0FF] dark:border-gray-700 rounded-lg text-sm text-gray-500 dark:text-gray-400 text-center">
                 No scheduled reports yet. Click "Schedule Report" to create one.
               </div>
             )}
@@ -1246,12 +1246,12 @@ export default function Reports() {
       {/* Schedule Report Modal */}
       {showScheduleModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto dark:border dark:border-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Schedule Recurring Report</h3>
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Schedule Recurring Report</h3>
               <button
                 onClick={() => setShowScheduleModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1261,25 +1261,25 @@ export default function Reports() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Name *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Report Name *</label>
                 <input
                   type="text"
                   value={scheduleFormData.name}
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Monthly Revenue Report"
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                  style={{ border: '1px solid #E8F0FF' }}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Type *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Report Type *</label>
                   <select
                     value={scheduleFormData.report_type}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, report_type: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     {/* Custom Reports */}
                     <optgroup label="Custom Reports">
@@ -1298,12 +1298,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Time Period *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Time Period *</label>
                   <select
                     value={scheduleFormData.time_period}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, time_period: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     <option value="last_7_days">Last 7 Days</option>
                     <option value="last_30_days">Last 30 Days</option>
@@ -1319,12 +1319,12 @@ export default function Reports() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Format *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Format *</label>
                   <select
                     value={scheduleFormData.format}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, format: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     {(() => {
                       const config = getReportTypeConfig(scheduleFormData.report_type);
@@ -1338,12 +1338,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Frequency *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Frequency *</label>
                   <select
                     value={scheduleFormData.frequency}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, frequency: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     <option value="once">Run Once</option>
                     <option value="daily">Daily</option>
@@ -1354,13 +1354,13 @@ export default function Reports() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>First Delivery *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">First Delivery *</label>
                 <input
                   type="datetime-local"
                   value={scheduleFormData.first_delivery}
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, first_delivery: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                  style={{ border: '1px solid #E8F0FF' }}
                 />
               </div>
 
@@ -1373,9 +1373,9 @@ export default function Reports() {
                     ...prev,
                     include_detailed_breakdowns: e.target.checked
                   }))}
-                  className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                  className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="schedule-detailed" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                <label htmlFor="schedule-detailed" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Include detailed breakdowns
                 </label>
               </div>
@@ -1389,9 +1389,9 @@ export default function Reports() {
                     ...prev,
                     is_active: e.target.checked
                   }))}
-                  className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                  className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="schedule-active" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                <label htmlFor="schedule-active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Activate immediately
                 </label>
               </div>
@@ -1400,8 +1400,8 @@ export default function Reports() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowScheduleModal(false)}
-                className="px-4 py-2 bg-white border font-medium transition-colors"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
+                className="px-4 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 font-medium transition-colors text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
               >
                 Cancel
               </button>
@@ -1420,15 +1420,15 @@ export default function Reports() {
       {/* Edit Scheduled Report Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto dark:border dark:border-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Edit Scheduled Report</h3>
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Edit Scheduled Report</h3>
               <button
                 onClick={() => {
                   setShowEditModal(false);
                   setEditingSchedule(null);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1438,25 +1438,25 @@ export default function Reports() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Name *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Report Name *</label>
                 <input
                   type="text"
                   value={scheduleFormData.name}
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Monthly Revenue Report"
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                  style={{ border: '1px solid #E8F0FF' }}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Report Type *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Report Type *</label>
                   <select
                     value={scheduleFormData.report_type}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, report_type: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     {/* Custom Reports */}
                     <optgroup label="Custom Reports">
@@ -1475,12 +1475,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Time Period *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Time Period *</label>
                   <select
                     value={scheduleFormData.time_period}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, time_period: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     <option value="last_7_days">Last 7 Days</option>
                     <option value="last_30_days">Last 30 Days</option>
@@ -1496,12 +1496,12 @@ export default function Reports() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Format *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Format *</label>
                   <select
                     value={scheduleFormData.format}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, format: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     <option value="csv">CSV</option>
                     <option value="pdf">PDF</option>
@@ -1510,12 +1510,12 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Frequency *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Frequency *</label>
                   <select
                     value={scheduleFormData.frequency}
                     onChange={(e) => setScheduleFormData(prev => ({ ...prev, frequency: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                    style={{ border: '1px solid #E8F0FF' }}
                   >
                     <option value="once">Run Once</option>
                     <option value="daily">Daily</option>
@@ -1526,13 +1526,13 @@ export default function Reports() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>First Delivery *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">First Delivery *</label>
                 <input
                   type="datetime-local"
                   value={scheduleFormData.first_delivery}
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, first_delivery: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
+                  style={{ border: '1px solid #E8F0FF' }}
                 />
               </div>
 
@@ -1545,9 +1545,9 @@ export default function Reports() {
                     ...prev,
                     include_detailed_breakdowns: e.target.checked
                   }))}
-                  className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                  className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="edit-detailed" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                <label htmlFor="edit-detailed" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Include detailed breakdowns
                 </label>
               </div>
@@ -1561,9 +1561,9 @@ export default function Reports() {
                     ...prev,
                     is_active: e.target.checked
                   }))}
-                  className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                  className="w-4 h-4 text-[#F56D2D] border-gray-300 dark:border-gray-600 rounded focus:ring-[#F56D2D]"
                 />
-                <label htmlFor="edit-active" className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                <label htmlFor="edit-active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Activate immediately
                 </label>
               </div>
@@ -1575,8 +1575,8 @@ export default function Reports() {
                   setShowEditModal(false);
                   setEditingSchedule(null);
                 }}
-                className="px-4 py-2 bg-white border font-medium transition-colors"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
+                className="px-4 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 font-medium transition-colors text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
               >
                 Cancel
               </button>
@@ -1595,26 +1595,26 @@ export default function Reports() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingSchedule && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 dark:border dark:border-gray-700">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold" style={{ color: '#3B4A66' }}>Delete Scheduled Report</h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Delete Scheduled Report</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Are you sure you want to delete this scheduled report? This action cannot be undone.
                 </p>
               </div>
             </div>
 
-            <div className="bg-gray-50 p-3 rounded-lg mb-4">
-              <h4 className="font-medium text-sm" style={{ color: '#3B4A66' }}>
+            <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-4">
+              <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
                 {deletingSchedule.name || deletingSchedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
               </h4>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 {deletingSchedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {deletingSchedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
               </p>
             </div>
@@ -1625,8 +1625,8 @@ export default function Reports() {
                   setShowDeleteModal(false);
                   setDeletingSchedule(null);
                 }}
-                className="px-4 py-2 bg-white border font-medium transition-colors"
-                style={{ border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px' }}
+                className="px-4 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 font-medium transition-colors text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
               >
                 Cancel
               </button>

@@ -797,8 +797,8 @@ export default function FirmDetails() {
                                 </div>
 
                                 <div className="grid gap-4 lg:grid-cols-2 xl:gap-6 firmdetails-overview-grid">
-                                    <div className="rounded-xl bg-white/90 p-6 dark:bg-gray-800/90">
-                                        <h5 className="text-lg font-medium text-grey-600 dark:text-white">Firm Information</h5>
+                                    <div className="rounded-xl bg-white p-6 dark:bg-gray-800">
+                                        <h5 className="text-lg font-medium text-gray-700 dark:text-white">Firm Information</h5>
                                         <div className="mt-6 space-y-4 text-sm">
                                             {[
                                                 firmOwner !== 'Not provided' && { label: 'Owner:', value: firmOwner },
@@ -826,8 +826,8 @@ export default function FirmDetails() {
                                         </div>
                                     </div>
 
-                                    <div className="rounded-xl bg-white/90 p-6 dark:bg-gray-800/90">
-                                        <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">System Health</h5>
+                                    <div className="rounded-xl bg-white p-6 dark:bg-gray-800">
+                                        <h5 className="text-lg font-semibold text-gray-800 dark:text-white">System Health</h5>
                                         <div className="mt-6 space-y-6">
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-xs font-medium text-[#475569] dark:text-gray-400">
@@ -916,7 +916,7 @@ export default function FirmDetails() {
                         )}
 
                         {activeTab === 'Settings' && (
-                            <div className="rounded-xl bg-white/95 dark:bg-gray-800/95 p-6">
+                            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--sa-bg-card, #ffffff)' }}>
                                 <div className="flex items-start justify-between gap-4 firmdetails-settings-header">
                                     <div>
                                         <h5 className="text-xl font-semibold text-[#1E293B] dark:text-white">Firm Settings</h5>
@@ -1190,7 +1190,7 @@ const BillingOverviewTab = ({
 
     if (loading) {
         return (
-            <div className="flex min-h-[320px] items-center justify-center rounded-xl bg-white">
+            <div className="flex min-h-[320px] items-center justify-center rounded-xl bg-white dark:bg-gray-800">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-b-transparent border-[#F56D2D]" />
                     Loading billing overview...
@@ -1293,84 +1293,19 @@ const BillingOverviewTab = ({
     return (
         <div className="flex flex-col">
             <div className="grid gap-6 ">
-                <div className="rounded-xl bg-white p-6">
+                <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--sa-bg-card, #ffffff)' }}>
                     <div className="mb-5 flex items-start justify-between gap-3">
                         <div>
-                            <h5 className="text-lg font-semibold text-[#1E293B]">Current Subscription</h5>
-                            <p className="text-sm text-[#64748B]">
+                            <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">Current Subscription</h5>
+                            <p className="text-sm text-[#64748B] dark:text-gray-400">
                                 Manage and monitor the firm&apos;s active subscription plan.
                             </p>
                         </div>
                         {(overview?.firm?.status_display || fallbackSubscription?.status) && (
-                            <span className="inline-flex items-center rounded-full bg-[#EEF2FF] px-3 py-1 text-xs font-semibold text-[#312E81]">
+                            <span className="inline-flex items-center rounded-full bg-[#EEF2FF] dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-[#312E81] dark:text-blue-300">
                                 {overview?.firm?.status_display || fallbackSubscription.status}
                             </span>
                         )}
-                    </div>
-
-                    {/* Developer Subscription Banner - Always show to Super Admin for easy access */}
-                    {(true) && (
-                        <div className="mb-6 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 dark:bg-blue-900/20 p-5">
-
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
-                                            <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
-                                            <path d="M13.5 7L15.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                            <path d="M17 10H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                        </svg>
-                                        <h6 className="text-base font-semibold text-blue-900 dark:text-blue-200">
-                                            {firmDetails?.is_billing_bypass ? 'Developer Subscription Active' : 'Enable QA Testing Mode'}
-                                        </h6>
-                                    </div>
-                                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                                        {firmDetails?.is_billing_bypass
-                                            ? 'This firm has full access to all features for QA testing purposes. No subscription required.'
-                                            : 'Enable Developer Subscription to grant full access to all features for QA testing purposes.'}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDevModeConfirm(true)}
-                                    disabled={enablingDevMode}
-                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${firmDetails?.is_billing_bypass
-                                        ? 'bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'
-                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
-                                        }`}
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    {enablingDevMode ? (
-                                        <>
-                                            <div className={`h-4 w-4 animate-spin rounded-full border-2 border-b-transparent ${firmDetails?.is_billing_bypass ? 'border-red-500' : 'border-white'}`}></div>
-                                            {firmDetails?.is_billing_bypass ? 'Disabling...' : 'Enabling...'}
-                                        </>
-                                    ) : (
-                                        <>
-                                            {firmDetails?.is_billing_bypass ? (
-                                                <>
-                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                    Disable Developer Mode
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M10 3L8.5 6.5H5L8 9L7 12.5L10 10.5L13 12.5L12 9L15 6.5H11.5L10 3Z" fill="currentColor" />
-                                                    </svg>
-                                                    Enable Developer Subscription
-                                                </>
-                                            )}
-                                        </>
-                                    )}
-                                </button>
-
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="divide-y divide-[#EFF4FF] rounded-xl border border-[#EFF4FF]">
                         {[{
                             label: 'Plan',
                             value: currentSubscription.plan || currentSubscription.plan_display || '—',
@@ -1395,9 +1330,9 @@ const BillingOverviewTab = ({
                                 : '—'
                         }].map(({ label, value, badge, status }) => (
                             <div key={label} className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                                <span className="text-sm font-medium text-[#475569]">{label}</span>
+                                <span className="text-sm font-medium text-[#475569] dark:text-gray-300">{label}</span>
                                 {badge ? (
-                                    <span className="inline-flex items-center rounded-full bg-[#EFF4FF] px-3 py-1 text-xs font-semibold text-[#1E3A8A]">
+                                    <span className="inline-flex items-center rounded-full bg-[#EFF4FF] dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-[#1E3A8A] dark:text-blue-300">
                                         {value}
                                     </span>
                                 ) : status ? (
@@ -1405,7 +1340,7 @@ const BillingOverviewTab = ({
                                         {value}
                                     </span>
                                 ) : (
-                                    <span className="text-sm font-semibold text-[#0F172A]">{value}</span>
+                                    <span className="text-sm font-semibold text-[#0F172A] dark:text-white">{value}</span>
                                 )}
                             </div>
                         ))}
@@ -1413,7 +1348,7 @@ const BillingOverviewTab = ({
 
                     {/* Usage Limits Section */}
                     <div className="mt-6">
-                        <h6 className="text-base font-semibold text-[#1E293B] mb-4">Usage Limits</h6>
+                        <h6 className="text-base font-semibold text-[#1E293B] dark:text-white mb-4">Usage Limits</h6>
                         <div className="grid gap-3 sm:grid-cols-3">
                             {[{
                                 title: 'Max Users',
@@ -1428,10 +1363,10 @@ const BillingOverviewTab = ({
                                 value: firmDetails?.storage_limit_gb ? `${firmDetails.storage_limit_gb}GB` : '—',
                                 subtitle: 'Total storage capacity'
                             }].map(({ title, value, subtitle }) => (
-                                <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
-                                    <p className="mt-1 text-lg font-semibold text-[#1F2937]">{value}</p>
-                                    <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>
+                                <div key={title} className="rounded-xl border border-[#EFF4FF] dark:border-gray-700 p-4" style={{ backgroundColor: 'var(--sa-bg-card, #F9FBFF)' }}>
+                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8] dark:text-gray-400">{title}</p>
+                                    <p className="mt-1 text-lg font-semibold text-[#1F2937] dark:text-white">{value}</p>
+                                    <p className="text-xs text-[#64748B] dark:text-gray-400 mt-1">{subtitle}</p>
                                 </div>
                             ))}
                         </div>
@@ -1439,7 +1374,7 @@ const BillingOverviewTab = ({
 
                     {/* Subscription Dates Section */}
                     <div className="mt-6">
-                        <h6 className="text-base font-semibold text-[#1E293B] mb-4">Subscription Dates</h6>
+                        <h6 className="text-base font-semibold text-[#1E293B] dark:text-white mb-4">Subscription Dates</h6>
                         <div className="grid gap-3 sm:grid-cols-3">
                             {[{
                                 title: 'Subscription Start',
@@ -1454,10 +1389,10 @@ const BillingOverviewTab = ({
                                 value: firmDetails?.trial_end_date ? formatDate(firmDetails.trial_end_date) : 'Not available',
                                 subtitle: 'Trial period expiration'
                             }].map(({ title, value, subtitle }) => (
-                                <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
-                                    <p className="mt-1 text-sm font-semibold text-[#1F2937]">{value}</p>
-                                    <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>
+                                <div key={title} className="rounded-xl border border-[#EFF4FF] dark:border-gray-700 p-4" style={{ backgroundColor: 'var(--sa-bg-card, #F9FBFF)' }}>
+                                    <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8] dark:text-gray-400">{title}</p>
+                                    <p className="mt-1 text-sm font-semibold text-[#1F2937] dark:text-white">{value}</p>
+                                    <p className="text-xs text-[#64748B] dark:text-gray-400 mt-1">{subtitle}</p>
                                 </div>
                             ))}
                         </div>
@@ -1465,16 +1400,16 @@ const BillingOverviewTab = ({
 
                     {/* Storage Usage Section */}
                     <div className="mt-6">
-                        <h6 className="text-base font-semibold text-[#1E293B] mb-4">Storage Usage</h6>
-                        <div className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
+                        <h6 className="text-base font-semibold text-[#1E293B] dark:text-white mb-4">Storage Usage</h6>
+                        <div className="rounded-xl border border-[#EFF4FF] dark:border-gray-700 p-4" style={{ backgroundColor: 'var(--sa-bg-card, #F9FBFF)' }}>
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium text-[#475569]">Storage Used</span>
-                                    <span className="font-semibold text-[#1F2937]">
+                                    <span className="font-medium text-[#475569] dark:text-gray-300">Storage Used</span>
+                                    <span className="font-semibold text-[#1F2937] dark:text-white">
                                         {firmDetails?.storage_usage?.used_gb ?? 0}GB / {firmDetails?.storage_usage?.limit_gb ?? 0}GB
                                     </span>
                                 </div>
-                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF]">
+                                <div className="h-2.5 w-full rounded-full bg-[#EEF4FF] dark:bg-gray-600">
                                     <div
                                         className="h-full rounded-full bg-[#3B4A66]"
                                         style={{
@@ -1482,7 +1417,7 @@ const BillingOverviewTab = ({
                                         }}
                                     />
                                 </div>
-                                <div className="flex items-center justify-between text-xs text-[#64748B]">
+                                <div className="flex items-center justify-between text-xs text-[#64748B] dark:text-gray-400">
                                     <span>{firmDetails?.storage_usage?.percent_used ?? 0}% used</span>
                                     <span>{(firmDetails?.storage_usage?.limit_gb ?? 0) - (firmDetails?.storage_usage?.used_gb ?? 0)}GB remaining</span>
                                 </div>
@@ -1504,9 +1439,9 @@ const BillingOverviewTab = ({
                             title: 'Total Revenue',
                             value: firmDetails?.total_revenue ? formatCurrency(firmDetails.total_revenue) : '$0.00'
                         }].map(({ title, value }) => (
-                            <div key={title} className="rounded-xl border border-[#EFF4FF] bg-[#F9FBFF] p-4">
-                                <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">{title}</p>
-                                <p className="mt-1 text-lg font-semibold text-[#1F2937]">{value}</p>
+                            <div key={title} className="rounded-xl border border-[#EFF4FF] dark:border-gray-700 p-4" style={{ backgroundColor: 'var(--sa-bg-card, #F9FBFF)' }}>
+                                <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8] dark:text-gray-400">{title}</p>
+                                <p className="mt-1 text-lg font-semibold text-[#1F2937] dark:text-white">{value}</p>
                             </div>
                         ))}
                     </div>
@@ -1515,14 +1450,14 @@ const BillingOverviewTab = ({
 
             </div>
 
-            <div className="rounded-xl bg-white p-6">
+            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--sa-bg-card, #ffffff)' }}>
                 <div className="mb-4">
-                    <h5 className="text-lg font-semibold text-[#1E293B]">Subscription History</h5>
-                    <p className="text-sm text-[#64748B]">{historyCount} records</p>
+                    <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">Subscription History</h5>
+                    <p className="text-sm text-[#64748B] dark:text-gray-400">{historyCount} records</p>
                 </div>
                 <div className="mt-6 overflow-x-auto">
-                    <div className="min-w-[640px] rounded-2xl border border-[#EFF4FF] bg-[#F9FBFF]">
-                        <div className="grid grid-cols-12 gap-3 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+                    <div className="min-w-[640px] rounded-2xl border border-[#EFF4FF] dark:border-gray-700" style={{ backgroundColor: 'var(--sa-bg-secondary, #F9FBFF)' }}>
+                        <div className="grid grid-cols-12 gap-3 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-gray-400">
                             <span className="col-span-2">Invoice #</span>
                             <span className="col-span-3">Plan</span>
                             <span className="col-span-3">Billing Period</span>
@@ -1540,18 +1475,18 @@ const BillingOverviewTab = ({
                                 return (
                                     <div
                                         key={entry.invoice_id || entry.id || entry.invoice_number || `${planLabel}-${periodLabel}`}
-                                        className="grid grid-cols-12 items-center gap-3 rounded-2xl bg-white px-4 py-4 shadow-sm"
+                                        className="grid grid-cols-12 items-center gap-3 rounded-2xl bg-white dark:bg-gray-800 px-4 py-4 shadow-sm"
                                         style={{ borderRadius: '8px' }}
                                     >
-                                        <span className="col-span-2 text-sm font-semibold text-[#1E293B]">{entry.invoice_number || entry.invoice_id || '—'}</span>
-                                        <span className="col-span-3 text-sm font-semibold text-[#1E293B]">
+                                        <span className="col-span-2 text-sm font-semibold text-[#1E293B] dark:text-white">{entry.invoice_number || entry.invoice_id || '—'}</span>
+                                        <span className="col-span-3 text-sm font-semibold text-[#1E293B] dark:text-white">
                                             {planLabel}
                                             {entry.client?.name && (
-                                                <span className="block text-xs font-medium text-[#94A3B8]">{entry.client.name}</span>
+                                                <span className="block text-xs font-medium text-[#94A3B8] dark:text-gray-400">{entry.client.name}</span>
                                             )}
                                         </span>
-                                        <span className="col-span-3 text-sm text-[#475569]">{periodLabel}</span>
-                                        <span className="col-span-2 text-right text-sm font-semibold text-[#1E293B]">{amountLabel}</span>
+                                        <span className="col-span-3 text-sm text-[#475569] dark:text-gray-300">{periodLabel}</span>
+                                        <span className="col-span-2 text-right text-sm font-semibold text-[#1E293B] dark:text-white">{amountLabel}</span>
                                         <span className="col-span-2">
                                             <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusClasses}`}>
                                                 {statusLabel}
@@ -1560,7 +1495,7 @@ const BillingOverviewTab = ({
                                     </div>
                                 );
                             }) : (
-                                <div className="rounded-lg border border-dashed border-[#E2E8F0] bg-white/60 px-6 py-8 text-center text-sm text-[#94A3B8]">
+                                <div className="rounded-lg border border-dashed border-[#E2E8F0] dark:border-gray-600 bg-white/60 dark:bg-gray-800/60 px-6 py-8 text-center text-sm text-[#94A3B8] dark:text-gray-400">
                                     No subscription history available.
                                 </div>
                             )}

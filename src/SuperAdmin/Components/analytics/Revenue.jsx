@@ -270,6 +270,7 @@ export default function Revenue() {
           dominantBaseline="central"
           fontSize="10"
           fontWeight="600"
+          className="dark:fill-gray-300"
         >
           {`${displayName}: ${formattedRevenue}`}
         </text>
@@ -307,9 +308,9 @@ export default function Revenue() {
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-lg font-semibold mb-1" style={{ color: '#3B4A66' }}>Revenue Insights</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed revenue analysis and performance across plans</p>
-          <p className="text-xs text-gray-500 mt-2">
+          <h3 className="text-lg font-semibold mb-1 text-gray-700 dark:text-gray-200">Revenue Insights</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Detailed revenue analysis and performance across plans</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             Range: {dateRangeLabel}
             {generatedAt ? ` • Generated at ${generatedAt}` : ''}
           </p>
@@ -319,14 +320,8 @@ export default function Revenue() {
             <button
               key={option.value}
               onClick={() => setSelectedRange(option.value)}
-              className={`px-3 py-1 text-xs font-medium transition-all duration-300 ease-in-out ${selectedRange === option.value ? 'text-white' : 'hover:bg-gray-100'
+              className={`px-3 py-1 text-xs font-medium transition-all duration-300 ease-in-out rounded-[7px] border dark:border-gray-600 ${selectedRange === option.value ? 'bg-gray-600 text-white dark:bg-gray-500' : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
-              style={{
-                backgroundColor: selectedRange === option.value ? '#3B4A66' : 'white',
-                color: selectedRange === option.value ? 'white' : '#3B4A66',
-                borderRadius: '7px',
-                border: '1px solid #E8F0FF'
-              }}
             >
               {option.label}
             </button>
@@ -335,49 +330,49 @@ export default function Revenue() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-8">
-        <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-          <p className="text-xs font-medium text-gray-500 mb-1">Total Revenue</p>
-          <p className="text-2xl font-bold text-gray-900">{totalRevenue}</p>
-          <p className="text-xs text-gray-500 mt-2">Across all subscription plans</p>
+        <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Total Revenue</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalRevenue}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Across all subscription plans</p>
         </div>
-        <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-          <p className="text-xs font-medium text-gray-500 mb-1">Highlighted Month</p>
-          <p className="text-lg font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Highlighted Month</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">
             {highlightMonth?.month || '—'}
           </p>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
             {highlightMonth?.formatted_revenue || formatCurrency(highlightMonth?.revenue ?? 0)}
           </p>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {highlightMonth?.start_date && highlightMonth?.end_date
               ? `${highlightMonth.start_date} - ${highlightMonth.end_date}`
               : 'Most recent period'}
           </p>
         </div>
-        <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-          <p className="text-xs font-medium text-gray-500 mb-1">Top Plan</p>
-          <p className="text-lg font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Plan</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">
             {revenueByPlan[0]?.name || '—'}
           </p>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
             {revenueByPlan[0]?.formattedRevenue || '—'}
           </p>
           {typeof revenueByPlan[0]?.percentage === 'number' && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {revenueByPlan[0].percentage.toFixed(2)}% of total revenue
             </p>
           )}
         </div>
-        <div className="bg-white border border-[#E8F0FF] rounded-lg p-4">
-          <p className="text-xs font-medium text-gray-500 mb-1">Top Firm</p>
-          <p className="text-lg font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-4">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Firm</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">
             {topRevenueFirms[0]?.name || '—'}
           </p>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
             {topRevenueFirms[0]?.formatted_revenue || formatCurrency(topRevenueFirms[0]?.revenue ?? 0)}
           </p>
           {topRevenueFirms[0] && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {formatNumber(topRevenueFirms[0].users)} users • {topRevenueFirms[0].invoice_count || 0} invoices
             </p>
           )}
@@ -385,10 +380,10 @@ export default function Revenue() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 h-fit" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="bg-white dark:bg-gray-800 p-6 h-fit dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="mb-6">
-            <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue By Plan</h3>
-            <p className="text-sm" style={{ color: '#3B4A66' }}>Distribution of revenue across subscription plans.</p>
+            <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Revenue By Plan</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Distribution of revenue across subscription plans.</p>
           </div>
 
           {revenueByPlan.length > 0 ? (
@@ -416,7 +411,7 @@ export default function Revenue() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+            <div className="h-64 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-[#E8F0FF] dark:border-gray-700 rounded-lg">
               No revenue data available for this period.
             </div>
           )}
@@ -427,28 +422,28 @@ export default function Revenue() {
                 <div key={`${item.name}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-sm font-medium" style={{ color: '#3B4A66' }}>{item.name}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.name}</span>
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     {item.formattedRevenue}
                   </span>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center">No plan revenue breakdown to display.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">No plan revenue breakdown to display.</p>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-6" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="bg-white dark:bg-gray-800 p-6 dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="mb-6">
-            <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Top Revenue Generating Firms</h3>
-            <p className="text-sm" style={{ color: '#3B4A66' }}>Highest revenue firms and their growth rates.</p>
+            <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Top Revenue Generating Firms</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Highest revenue firms and their growth rates.</p>
           </div>
 
           <div className="space-y-4">
             {topRevenueFirms.length === 0 && (
-              <div className="text-sm text-gray-500 text-center py-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                 No firm revenue data available for this period.
               </div>
             )}
@@ -461,19 +456,19 @@ export default function Revenue() {
                 ? `${growthValue >= 0 ? '+' : ''}${growthValue.toFixed(1)}%`
                 : '—';
               return (
-                <div key={`${firm.rank}-${firm.firm_id}-${firm.name}`} className="p-2 rounded-lg border border-[#E8F0FF]">
+                <div key={`${firm.rank}-${firm.firm_id}-${firm.name}`} className="p-2 rounded-lg border border-[#E8F0FF] dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                         {firm.rank ?? '-'}
                       </span>
                       <div>
-                        <p className="text-xs font-semibold" style={{ color: '#3B4A66' }}>{firm.name}</p>
-                        <p className="text-xs" style={{ color: '#6B7280' }}>{formatNumber(firm.users)} users</p>
+                        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{firm.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(firm.users)} users</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-semibold" style={{ color: '#3B4A66' }}>
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                         {firm.formatted_revenue || formatCurrency(firm.revenue)}
                       </p>
                       <div className="flex items-center gap-1 justify-end">
@@ -482,7 +477,7 @@ export default function Revenue() {
                           {growthLabel}
                         </span>
                       </div>
-                      <p className="text-[10px]" style={{ color: '#6B7280' }}>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">
                         {firm.invoice_count || 0} invoices
                       </p>
                     </div>
@@ -494,10 +489,10 @@ export default function Revenue() {
         </div>
       </div>
 
-      <div className="bg-white p-6 mb-8" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white dark:bg-gray-800 p-6 mb-8 dark:border dark:border-gray-700" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Monthly Revenue Breakdown</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed revenue analysis by subscription plan.</p>
+          <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Monthly Revenue Breakdown</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Detailed revenue analysis by subscription plan.</p>
         </div>
 
         {monthlyRevenueData.length > 0 ? (
@@ -537,7 +532,7 @@ export default function Revenue() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-80 flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+          <div className="h-80 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-[#E8F0FF] dark:border-gray-700 rounded-lg">
             No monthly revenue data available for this period.
           </div>
         )}
@@ -546,7 +541,7 @@ export default function Revenue() {
           <div className="flex justify-center mt-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4285F4' }}></div>
-              <span className="text-sm" style={{ color: '#3B4A66' }}>Total Revenue</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Total Revenue</span>
             </div>
           </div>
         )}

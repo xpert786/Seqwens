@@ -157,75 +157,75 @@ export default function UsagePerformance() {
   return (
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
       {/* System Performance Metrics */}
-      <div className="bg-white p-6 mb-8 usage-metrics-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+      <div className="bg-white dark:bg-gray-800 p-6 mb-8 usage-metrics-card dark:border dark:border-gray-700" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>System Performance Metrics</h3>
-          <p className="text-sm" style={{color: '#3B4A66'}}>Real-time platform health and performance indicators</p>
+          <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">System Performance Metrics</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Real-time platform health and performance indicators</p>
         </div>
         
         {loading ? (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B4A66]"></div>
-            <p className="text-sm text-[#6B7280] mt-2" style={{fontFamily: 'BasisGrotesquePro'}}>Loading metrics...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 dark:border-gray-400"></div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2" style={{fontFamily: 'BasisGrotesquePro'}}>Loading metrics...</p>
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-4 usage-metrics-grid">
             {/* Uptime */}
-            <div className="text-center p-4 border border-gray-100 rounded-lg">
-              <div className="text-3xl font-bold mb-1" style={{color: '#22C55E'}}>
+            <div className="text-center p-4 border border-gray-100 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-3xl font-bold mb-1 text-green-500">
                 {getFormattedValue(metrics.uptime, formatPercentage)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getMetricLabel(metrics.uptime, 'Uptime')}
               </div>
             </div>
             
             {/* Avg Response Time */}
-            <div className="text-center p-4 border border-gray-100 rounded-lg">
-              <div className="text-3xl font-bold mb-1" style={{color: '#3AD6F2'}}>
+            <div className="text-center p-4 border border-gray-100 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-3xl font-bold mb-1 text-cyan-400">
                 {getFormattedValue(metrics.avg_response_time, formatTime)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getMetricLabel(metrics.avg_response_time, 'Avg Response Time')}
               </div>
             </div>
             
             {/* Error Rate */}
-            <div className="text-center p-4 border border-gray-100 rounded-lg">
-              <div className="text-3xl font-bold mb-1" style={{color: '#EF4444'}}>
+            <div className="text-center p-4 border border-gray-100 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-3xl font-bold mb-1 text-red-500">
                 {getFormattedValue(metrics.error_rate, formatPercentage)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getMetricLabel(metrics.error_rate, 'Error Rate')}
               </div>
             </div>
             
             {/* API Calls (24h) */}
-            <div className="text-center p-4 border border-gray-100 rounded-lg">
-              <div className="text-3xl font-bold mb-1" style={{color: '#1E40AF'}}>
+            <div className="text-center p-4 border border-gray-100 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-3xl font-bold mb-1 text-blue-800 dark:text-blue-400">
                 {getFormattedValue(metrics.api_calls_24h, formatNumber)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getMetricLabel(metrics.api_calls_24h, 'API Calls (24h)')}
               </div>
             </div>
             
             {/* Data Processed */}
-            <div className="text-center p-4 border border-gray-100 rounded-lg">
-              <div className="text-3xl font-bold mb-1" style={{color: '#F49C2D'}}>
+            <div className="text-center p-4 border border-gray-100 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-3xl font-bold mb-1 text-orange-500">
                 {getFormattedValue(metrics.data_processed, formatNumber)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getMetricLabel(metrics.data_processed, 'Data Processed')}
               </div>
             </div>
             
             {/* Active Connections */}
-            <div className="text-center p-4 border border-gray-100 rounded-lg">
-              <div className="text-3xl font-bold mb-1" style={{color: '#22C55E'}}>
+            <div className="text-center p-4 border border-gray-100 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-3xl font-bold mb-1 text-green-500">
                 {getFormattedValue(metrics.active_connections, formatNumber)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getMetricLabel(metrics.active_connections, 'Active Connections')}
               </div>
             </div>
