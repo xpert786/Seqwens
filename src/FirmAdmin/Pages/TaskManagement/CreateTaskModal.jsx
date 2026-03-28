@@ -618,7 +618,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
 
                       {/* Assign to Self */}
                       <div
-                        className="px-3 py-2 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
+                        className="px-3 py-0.5 cursor-pointer hover:bg-gray-50 transition-colors"
                         onClick={() => {
                           setFormData(prev => ({
                             ...prev,
@@ -642,7 +642,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                         return (
                           <div
                             key={tp.id}
-                            className="px-3 py-2 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0"
+                            className="px-3 py-0.5 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors last:border-0"
                             onClick={() => {
                               setFormData(prev => ({
                                 ...prev,
@@ -715,7 +715,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
 
                       {/* No Client Assigned */}
                       <div
-                        className="px-3 py-2 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
+                        className="px-3 py-0.5 cursor-pointer hover:bg-gray-50 transition-colors"
                         onClick={() => {
                           setFormData(prev => ({
                             ...prev,
@@ -739,7 +739,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                         return (
                           <div
                             key={client.id}
-                            className="px-3 py-2 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0 flex items-center gap-2"
+                            className="px-3 py-0.5 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors last:border-0 flex items-center gap-2"
                             onClick={() => {
                               const newClientIds = isSelected
                                 ? formData.client_ids.filter(
@@ -852,7 +852,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                     <FaChevronDown size={10} className={`transition-transform duration-200 ${showFolderDropdown ? 'rotate-180' : ''}`} />
                   </button>
                   {showFolderDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[250px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[250px] overflow-y-auto custom-scrollbar overflow-x-hidden">
                       {folderTree.length > 0 ? renderFolderTree(folderTree) : <div className="p-4 text-center text-xs text-gray-400">No folders found</div>}
                     </div>
                   )}
