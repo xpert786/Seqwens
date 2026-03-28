@@ -5,19 +5,27 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
   const navigate = useNavigate();
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
+  const isOptionClicked = useRef(false);
 
   // Close dropdown on outside click
   useEffect(() => {
     const handleOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        handleActionClick(null);
+      // If option was just clicked, don't close yet - let it process
+      if (isOptionClicked.current) {
+        isOptionClicked.current = false;
+        return;
       }
+      // Check if click is inside dropdown
+      if (dropdownRef.current && dropdownRef.current.contains(e.target)) {
+        return;
+      }
+      handleActionClick(null);
     };
     if (openDropdown !== null) {
-      document.addEventListener('mousedown', handleOutside);
+      document.addEventListener('click', handleOutside);
     }
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [openDropdown]);
+    return () => document.removeEventListener('click', handleOutside);
+  }, [openDropdown, handleActionClick]);
 
   return (
     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
@@ -60,7 +68,7 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                       <div className="grid grid-cols-8 gap-6 items-center" style={{ minWidth: '1200px' }}>
                         <div className="px-3 py-2 min-w-[200px]">
                           <div>
-                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] line-clamp-2">{task.task_title}</div>
+                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] line-clamp-2">{task.task || task.task_title || ''}</div>
                             <div className="text-sm text-gray-500 font-[BasisGrotesquePro] mt-0.5">{task.description}</div>
                           </div>
                         </div>
@@ -68,21 +76,21 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-8 w-8 mr-3">
                               <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-xs font-medium text-gray-600 font-[BasisGrotesquePro]">{task.assigned_to_initials}</span>
+                                <span className="text-xs font-medium text-gray-600 font-[BasisGrotesquePro]">{task.assignedTo?.initials || task.assigned_to_initials || 'NA'}</span>
                               </div>
                             </div>
-                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.assigned_to_name}</div>
+                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.assignedTo?.name || task.assigned_to_name || 'Unassigned'}</div>
                           </div>
                         </div>
-                        <div className="px-3 py-2 text-sm text-gray-900 min-w-[120px] font-[BasisGrotesquePro] whitespace-nowrap ml-8">{task.client_name}</div>
+                        <div className="px-3 py-2 text-sm text-gray-900 min-w-[120px] font-[BasisGrotesquePro] whitespace-nowrap ml-8">{task.client || task.client_name || 'No Client'}</div>
                         <div className="px-3 py-2 min-w-[80px] flex justify-start">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold !rounded-full font-[BasisGrotesquePro] ml-8 ${getPriorityColor(task.priority)}`}>
-                            {task.priority_display || task.priority}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold !rounded-full font-[BasisGrotesquePro] ml-8 ${getPriorityColor(task.priority || task.priority_display || 'Medium')}>`}>
+                            {task.priority || task.priority_display || 'Medium'}
                           </span>
                         </div>
                         <div className="px-3 py-2 min-w-[100px] flex justify-start">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold !rounded-full font-[BasisGrotesquePro] ${getStatusColor(task.status)}`}>
-                            {task.status_display || task.status}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold !rounded-full font-[BasisGrotesquePro] ${getStatusColor(task.status || task.status_display || 'Pending')}>`}>
+                            {task.status || task.status_display || 'Pending'}
                           </span>
                         </div>
                         <div className="px-3 py-2 min-w-[120px] flex items-center justify-start">
@@ -90,25 +98,28 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                             <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                               <div
                                 className="bg-[#3AD6F2] h-2 rounded-full"
-                                style={{ width: `${task.progress_percentage || 0}%` }}
+                                style={{ width: `${task.progress || task.progress_percentage || 0}%` }}
                               ></div>
                             </div>
-                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">{task.progress_percentage || 0}%</span>
+                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">{task.progress || task.progress_percentage || 0}%</span>
                           </div>
                         </div>
                         <div className="px-3 py-2 min-w-[120px]">
                           <div>
-                            <div className="text-sm text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.due_date_formatted || task.due_date}</div>
-                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap">{task.hours_display}</div>
+                            <div className="text-sm text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.dueDate || task.due_date_formatted || task.due_date || ''}</div>
+                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap">{task.hours || task.hours_display || ''}</div>
 
                           </div>
                         </div>
-                        <div className="px-3 py-2 text-sm font-medium min-w-[80px] flex justify-center">
+                        <div className="px-3 py-2 text-sm font-medium min-w-[80px] flex justify-center relative">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               const rect = e.currentTarget.getBoundingClientRect();
-                              setDropdownPos({ top: rect.bottom + 6, left: rect.right - 160 });
+                              // Position dropdown to the left of the button
+                              const dropdownWidth = 160;
+                              const left = Math.max(10, rect.right - dropdownWidth);
+                              setDropdownPos({ top: rect.bottom + 6, left: left });
                               handleActionClick(openDropdown === task.id ? null : task.id);
                             }}
                             className="text-gray-400 hover:text-gray-600 p-1 rounded"
@@ -118,31 +129,32 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                             </svg>
                           </button>
 
-                          {/* Dropdown Menu — fixed position to escape overflow clipping */}
+                          {/* Dropdown Menu - fixed position to escape overflow clipping */}
                           {openDropdown === task.id && (
                             <div
                               ref={dropdownRef}
-                              className="w-40 bg-white rounded-lg border border-gray-200 shadow-lg"
-                              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }}
-                              onClick={(e) => e.stopPropagation()}
+                              className="w-40 bg-white rounded-lg border border-gray-200 shadow-lg py-1"
+                              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
                             >
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  isOptionClicked.current = true;
                                   handleActionSelect('View Details', task.id);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:!text-black transition-colors font-[BasisGrotesquePro]"
-                                style={{ borderRadius: '7px' }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:!text-black transition-colors font-[BasisGrotesquePro] rounded-lg mx-1"
+                                style={{ width: 'calc(100% - 8px)' }}
                               >
                                 View Details
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  isOptionClicked.current = true;
                                   handleActionSelect('Delete Task', task.id);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:!text-red-600 transition-colors font-[BasisGrotesquePro]"
-                                style={{ borderRadius: '7px' }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:!text-red-600 transition-colors font-[BasisGrotesquePro] rounded-lg mx-1"
+                                style={{ width: 'calc(100% - 8px)' }}
                               >
                                 Delete Task
                               </button>
