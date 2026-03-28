@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, handleActionClick, openDropdown, handleActionSelect }) => {
   const navigate = useNavigate();
 
-  taskData = []
   return (
     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
       <div className="mb-6">
@@ -46,7 +45,7 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                       <div className="grid grid-cols-8 gap-6 items-center" style={{ minWidth: '1200px' }}>
                         <div className="px-3 py-2 min-w-[200px]">
                           <div>
-                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] line-clamp-2">{task.task}</div>
+                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] line-clamp-2">{task.task_title}</div>
                             <div className="text-sm text-gray-500 font-[BasisGrotesquePro] mt-0.5">{task.description}</div>
                           </div>
                         </div>
@@ -54,21 +53,21 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-8 w-8 mr-3">
                               <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-xs font-medium text-gray-600 font-[BasisGrotesquePro]">{task.assignedTo.initials}</span>
+                                <span className="text-xs font-medium text-gray-600 font-[BasisGrotesquePro]">{task.assigned_to_initials}</span>
                               </div>
                             </div>
-                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.assignedTo.name}</div>
+                            <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.assigned_to_name}</div>
                           </div>
                         </div>
-                        <div className="px-3 py-2 text-sm text-gray-900 min-w-[120px] font-[BasisGrotesquePro] whitespace-nowrap ml-8">{task.client}</div>
+                        <div className="px-3 py-2 text-sm text-gray-900 min-w-[120px] font-[BasisGrotesquePro] whitespace-nowrap ml-8">{task.client_name}</div>
                         <div className="px-3 py-2 min-w-[80px] flex justify-start">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold !rounded-full font-[BasisGrotesquePro] ml-8 ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
+                            {task.priority_display || task.priority}
                           </span>
                         </div>
                         <div className="px-3 py-2 min-w-[100px] flex justify-start">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold !rounded-full font-[BasisGrotesquePro] ${getStatusColor(task.status)}`}>
-                            {task.status}
+                            {task.status_display || task.status}
                           </span>
                         </div>
                         <div className="px-3 py-2 min-w-[120px] flex items-center justify-start">
@@ -76,16 +75,17 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                             <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                               <div
                                 className="bg-[#3AD6F2] h-2 rounded-full"
-                                style={{ width: `${task.progress}%` }}
+                                style={{ width: `${task.progress_percentage || 0}%` }}
                               ></div>
                             </div>
-                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">{task.progress}%</span>
+                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">{task.progress_percentage || 0}%</span>
                           </div>
                         </div>
                         <div className="px-3 py-2 min-w-[120px]">
                           <div>
-                            <div className="text-sm text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.dueDate}</div>
-                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap">{task.hours}</div>
+                            <div className="text-sm text-gray-900 font-[BasisGrotesquePro] whitespace-nowrap">{task.due_date_formatted || task.due_date}</div>
+                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap">{task.hours_display}</div>
+
                           </div>
                         </div>
                         <div className="px-3 py-2 text-sm font-medium min-w-[80px] relative dropdown-container flex justify-center">

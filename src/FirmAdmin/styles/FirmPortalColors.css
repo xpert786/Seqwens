@@ -143,15 +143,15 @@
 /* Ensure buttons with primary background keep white text on hover */
 .firm-panel button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover,
 .firm-dashboard-layout button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover,
-.firm-panel button[style*="background-color"]:hover,
+.firm-panel button[style*="background-color"]:not([style*="color"]):hover,
 .btn-primary:hover {
   color: white !important;
 }
 
-/* Ensure buttons without solid backgrounds get primary color on hover - exclude active */
-.firm-panel button:not([class*="bg-"]):hover:not(.active):not([aria-current="page"]),
-.firm-panel button[class*="bg-white"]:hover:not(.active):not([aria-current="page"]),
-.firm-dashboard-layout button:not([class*="bg-"]):hover:not(.active):not([aria-current="page"]) {
+/* Ensure buttons without solid backgrounds get primary color on hover - exclude active and buttons with explicit inline color */
+.firm-panel button:not([class*="bg-"]):not([style*="color"]):hover:not(.active):not([aria-current="page"]),
+.firm-panel button[class*="bg-white"]:not([style*="color"]):hover:not(.active):not([aria-current="page"]),
+.firm-dashboard-layout button:not([class*="bg-"]):not([style*="color"]):hover:not(.active):not([aria-current="page"]) {
   color: var(--firm-primary-color, #3AD6F2) !important;
 }
 

@@ -350,17 +350,24 @@ const AddOns = () => {
                                 <button
                                     onClick={() => handleAddAddon(addon.id, addon.name)}
                                     disabled={addon.is_added || addingAddon === addon.id}
-                                    className={`w-full px-6 py-3 rounded-lg text-sm font-bold transition-all ${addon.is_added
+                                    className={`w-full px-6 py-3 rounded-lg text-sm font-bold ${addon.is_added
                                         ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
-                                        : 'shadow-sm'
+                                        : ''
                                         }`}
                                     style={{
                                         borderRadius: "8px",
                                         backgroundColor: !addon.is_added ? primaryColor : undefined,
-                                        color: !addon.is_added ? contrastTextColor : undefined
+                                        color: !addon.is_added ? contrastTextColor : undefined,
+                                        transition: "none",
+                                        boxShadow: "none",
+                                        transform: "none"
                                     }}
                                 >
-                                    {addingAddon === addon.id ? 'Starting...' : addon.is_added ? 'Activated' : 'Activate'}
+                                    {addingAddon === addon.id
+                                        ? 'Starting...'
+                                        : addon.is_added
+                                            ? 'Activated'
+                                            : 'Activate'}
                                 </button>
                             )}
                         </div>
