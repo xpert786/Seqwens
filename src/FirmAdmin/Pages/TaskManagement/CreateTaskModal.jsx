@@ -484,7 +484,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
   const modalContent = (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-300"
+        className="absolute inset-0 bg-black/60 animate-in fade-in duration-300"
         onClick={onClose}
       />
       <div
@@ -590,41 +590,74 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                 <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
                   Tax Preparer <span className="text-[10px] font-normal text-gray-500">(optional)</span>
                 </label>
+
                 <div className="relative">
                   <button
                     type="button"
-                    className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 text-left flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.tax_preparer_id ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 text-left flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.tax_preparer_id ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     onClick={() => setShowTaxPreparerDropdown(!showTaxPreparerDropdown)}
                   >
-                    <span className="truncate">{loadingTaxPreparers ? 'Loading...' : (formData.tax_preparer_id ? selectedTaxPreparerName : 'Assign to Self')}</span>
-                    <FaChevronDown size={10} className={`text-gray-400 transition-transform duration-200 ${showTaxPreparerDropdown ? 'rotate-180' : ''}`} />
+                    <span className="truncate">
+                      {loadingTaxPreparers
+                        ? 'Loading...'
+                        : formData.tax_preparer_id
+                          ? selectedTaxPreparerName
+                          : 'Assign to Self'}
+                    </span>
+
+                    <FaChevronDown
+                      size={10}
+                      className={`text-gray-400 transition-transform duration-200 ${showTaxPreparerDropdown ? 'rotate-180' : ''
+                        }`}
+                    />
                   </button>
+
                   {showTaxPreparerDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[200px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8F0FF] rounded-xl shadow-xl z-[100] max-h-[200px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+
+                      {/* Assign to Self */}
                       <div
-                        className="p-3 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
+                        className="px-3 py-2 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
                         onClick={() => {
-                          setFormData(prev => ({ ...prev, tax_preparer_id: '' }));
+                          setFormData(prev => ({
+                            ...prev,
+                            tax_preparer_id: ''
+                          }));
                           setShowTaxPreparerDropdown(false);
                         }}
                       >
-                        <p className="text-xs font-black text-gray-900 font-[BasisGrotesquePro]">Assign to Self (Admin)</p>
+                        <p className="text-xs font-black text-gray-900 leading-tight font-[BasisGrotesquePro]">
+                          Assign to Self (Admin)
+                        </p>
                       </div>
+
+                      {/* Tax Preparers List */}
                       {taxPreparers.map((tp) => {
-                        const displayName = tp.staff_member?.name || `${tp.first_name || ''} ${tp.last_name || ''}`.trim() || tp.email;
+                        const displayName =
+                          tp.staff_member?.name ||
+                          `${tp.first_name || ''} ${tp.last_name || ''}`.trim() ||
+                          tp.email;
+
                         return (
                           <div
                             key={tp.id}
-                            className="p-3 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0"
+                            className="px-3 py-2 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0"
                             onClick={() => {
-                              setFormData(prev => ({ ...prev, tax_preparer_id: tp.id.toString() }));
+                              setFormData(prev => ({
+                                ...prev,
+                                tax_preparer_id: tp.id.toString()
+                              }));
                               setShowTaxPreparerDropdown(false);
                             }}
                           >
-                            <p className="text-xs font-bold text-gray-700 font-[BasisGrotesquePro]">{displayName}</p>
+                            <p className="text-xs font-bold text-gray-700 leading-tight font-[BasisGrotesquePro]">
+                              {displayName}
+                            </p>
                           </div>
                         );
                       })}
+
                     </div>
                   )}
                 </div>
@@ -650,8 +683,12 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
             {formData.task_type !== 'signature_request' && (
               <div className="space-y-1" ref={clientDropdownRef}>
                 <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
-                  Assign Client(s) <span className="text-[10px] font-normal text-gray-500">(optional)</span>
+                  Assign Client(s)
+                  <span className="text-[10px] font-normal text-gray-500">
+                    (optional)
+                  </span>
                 </label>
+
                 <div className="relative">
                   <button
                     type="button"
@@ -659,59 +696,134 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                     onClick={() => setShowClientDropdown(!showClientDropdown)}
                   >
                     <span className="truncate">
-                      {loadingClients ? 'Loading...' : (formData.client_ids.length > 0 ? `${formData.client_ids.length} Client(s) Selected` : 'Internal / No Client')}
+                      {loadingClients
+                        ? 'Loading...'
+                        : formData.client_ids.length > 0
+                          ? `${formData.client_ids.length} Client(s) Selected`
+                          : 'Internal / No Client'}
                     </span>
-                    <FaChevronDown size={10} className={`transition-transform duration-200 ${showClientDropdown ? 'rotate-180' : ''}`} />
+
+                    <FaChevronDown
+                      size={10}
+                      className={`transition-transform duration-200 ${showClientDropdown ? 'rotate-180' : ''
+                        }`}
+                    />
                   </button>
+
                   {showClientDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E8F0FF] !rounded-xl shadow-xl z-[100] max-h-[250px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8F0FF] rounded-xl shadow-xl z-[100] max-h-[250px] overflow-y-auto custom-scrollbar overflow-x-hidden">
+
+                      {/* No Client Assigned */}
                       <div
-                        className="p-3 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
+                        className="px-3 py-2 cursor-pointer hover:bg-gray-50 border-b border-[#F8FAFF] transition-colors"
                         onClick={() => {
-                          setFormData(prev => ({ ...prev, client_ids: [] }));
+                          setFormData(prev => ({
+                            ...prev,
+                            client_ids: []
+                          }));
                           setShowClientDropdown(false);
                         }}
                       >
-                        <p className="text-xs font-black text-gray-900 font-[BasisGrotesquePro]">No Client Assigned</p>
+                        <p className="text-xs font-black text-gray-900 leading-tight font-[BasisGrotesquePro]">
+                          No Client Assigned
+                        </p>
                       </div>
+
+                      {/* Clients List */}
                       {clients.map((client) => {
-                        const isSelected = formData.client_ids.includes(client.id.toString());
+                        const isSelected =
+                          formData.client_ids.includes(
+                            client.id.toString()
+                          );
+
                         return (
                           <div
                             key={client.id}
-                            className="p-3 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0 flex items-center gap-3"
+                            className="px-3 py-2 cursor-pointer hover:bg-[#3AD6F2]/5 transition-colors border-b border-[#F8FAFF] last:border-0 flex items-center gap-2"
                             onClick={() => {
                               const newClientIds = isSelected
-                                ? formData.client_ids.filter(id => id !== client.id.toString())
-                                : [...formData.client_ids, client.id.toString()];
-                              setFormData(prev => ({ ...prev, client_ids: newClientIds }));
+                                ? formData.client_ids.filter(
+                                  id => id !== client.id.toString()
+                                )
+                                : [
+                                  ...formData.client_ids,
+                                  client.id.toString()
+                                ];
+
+                              setFormData(prev => ({
+                                ...prev,
+                                client_ids: newClientIds
+                              }));
                             }}
                           >
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-200 bg-white'}`}>
-                              {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+
+                            {/* Checkbox */}
+                            <div
+                              className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isSelected
+                                  ? 'bg-[#3AD6F2] border-[#3AD6F2]'
+                                  : 'border-gray-200 bg-white'
+                                }`}
+                            >
+                              {isSelected && (
+                                <svg
+                                  className="w-2.5 h-2.5 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="4"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
                             </div>
-                            <p className="text-xs font-bold text-gray-700 font-[BasisGrotesquePro]">
-                              {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
+
+                            {/* Client Name */}
+                            <p className="text-xs font-bold text-gray-700 leading-tight font-[BasisGrotesquePro]">
+                              {`${client.first_name || ''} ${client.last_name || ''}`.trim() ||
+                                client.email}
                             </p>
+
                           </div>
                         );
                       })}
                     </div>
                   )}
                 </div>
+
+                {/* Selected Clients Chips */}
                 {formData.client_ids.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {formData.client_ids.map(id => {
-                      const client = clients.find(c => c.id.toString() === id);
+                      const client = clients.find(
+                        c => c.id.toString() === id
+                      );
+
                       if (!client) return null;
+
                       return (
-                        <div key={id} className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 !rounded-lg border border-blue-100 group animate-in slide-in-from-left-2 duration-200">
+                        <div
+                          key={id}
+                          className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-100 group animate-in slide-in-from-left-2 duration-200"
+                        >
                           <span className="text-[10px] font-black text-blue-600 font-[BasisGrotesquePro]">
-                            {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email}
+                            {`${client.first_name || ''} ${client.last_name || ''}`.trim() ||
+                              client.email}
                           </span>
+
                           <button
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, client_ids: prev.client_ids.filter(cid => cid !== id) }))}
+                            onClick={() =>
+                              setFormData(prev => ({
+                                ...prev,
+                                client_ids: prev.client_ids.filter(
+                                  cid => cid !== id
+                                )
+                              }))
+                            }
                             className="text-blue-300 hover:text-blue-500 transition-colors"
                           >
                             <FaTimes size={8} />

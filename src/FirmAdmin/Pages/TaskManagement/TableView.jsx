@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, handleActionClick, openDropdown, handleActionSelect }) => {
   const navigate = useNavigate();
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        handleActionClick(null);
+      }
+    };
+    if (openDropdown !== null) {
+      document.addEventListener('mousedown', handleOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [openDropdown]);
 
   return (
     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
@@ -88,11 +103,13 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
 
                           </div>
                         </div>
-                        <div className="px-3 py-2 text-sm font-medium min-w-[80px] relative dropdown-container flex justify-center">
+                        <div className="px-3 py-2 text-sm font-medium min-w-[80px] flex justify-center">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleActionClick(task.id);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setDropdownPos({ top: rect.bottom + 6, left: rect.right - 160 });
+                              handleActionClick(openDropdown === task.id ? null : task.id);
                             }}
                             className="text-gray-400 hover:text-gray-600 p-1 rounded"
                           >
@@ -101,31 +118,34 @@ const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, han
                             </svg>
                           </button>
 
-                          {/* Dropdown Menu */}
+                          {/* Dropdown Menu — fixed position to escape overflow clipping */}
                           {openDropdown === task.id && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 z-50">
-                              <div className="">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleActionSelect('View Details', task.id);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:!text-black transition-colors font-[BasisGrotesquePro]"
-                                  style={{ borderRadius: '7px' }}
-                                >
-                                  View Details
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleActionSelect('Delete Task', task.id);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:!text-red-600 transition-colors font-[BasisGrotesquePro]"
-                                  style={{ borderRadius: '7px' }}
-                                >
-                                  Delete Task
-                                </button>
-                              </div>
+                            <div
+                              ref={dropdownRef}
+                              className="w-40 bg-white rounded-lg border border-gray-200 shadow-lg"
+                              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActionSelect('View Details', task.id);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:!text-black transition-colors font-[BasisGrotesquePro]"
+                                style={{ borderRadius: '7px' }}
+                              >
+                                View Details
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActionSelect('Delete Task', task.id);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:!text-red-600 transition-colors font-[BasisGrotesquePro]"
+                                style={{ borderRadius: '7px' }}
+                              >
+                                Delete Task
+                              </button>
                             </div>
                           )}
                         </div>
