@@ -23,13 +23,19 @@
 .dark-mode .bg-white,
 .dark-mode .bg-gray-50,
 .dark-mode .bg-slate-50,
-.dark-mode .bg-neutral-50 {
+.dark-mode .bg-neutral-50,
+.dark-mode .bg-zinc-50 {
     background-color: var(--sa-bg-card) !important;
 }
 
 .dark-mode .bg-\[\#F6F7FF\],
+.dark-mode .bg-\[\#F6F7FF\],
 .dark-mode .bg-\[\#F3F7FF\],
 .dark-mode .bg-gray-100,
+.dark-mode .bg-slate-100,
+.dark-mode .bg-zinc-100,
+.dark-mode .dark\:bg-gray-800,
+.dark-mode .dark\:bg-slate-800,
 .dark-mode .active-tab-bg {
     background-color: var(--sa-bg-secondary) !important;
 }
@@ -37,25 +43,69 @@
 /* Specific background for the main dashboard container */
 .dark-mode div.w-full.bg-\[\#F6F7FF\],
 .dark-mode main.bg-\[rgb\(243\2C 247\2C 255\)\],
-.dark-mode .bg-\[rgb\(243\2C 247\2C 255\)\] {
-    background-color: var(--sa-bg-secondary) !important;
+.dark-mode .bg-\[rgb\(243\2C 247\2C 255\)\],
+.dark-mode [style*="background-color: rgb(243, 247, 255)"],
+.dark-mode [style*="background-color:#F6F7FF"],
+.dark-mode [style*="background-color:#F3F7FF"],
+.dark-mode .bg-gray-900,
+.dark-mode .bg-slate-900,
+.dark-mode .bg-zinc-900,
+.dark-mode .dark\:bg-gray-900,
+.dark-mode .dark\:bg-slate-900 {
+    background-color: var(--sa-bg-primary) !important;
+}
+
+.dark-mode .taxdashboardr-titler,
+.dark-mode [style*="color: #3B4A66"],
+.dark-mode [style*="color:#3B4A66"] {
+    color: var(--sa-text-primary) !important;
 }
 
 /* Text overrides */
 .dark-mode .text-gray-900,
 .dark-mode .text-gray-800,
+.dark-mode .text-gray-700,
 .dark-mode .text-blue-900,
 .dark-mode .text-\[\#3B4A66\],
-.dark-mode .text-slate-900 {
+.dark-mode .text-\[\#374151\],
+.dark-mode .text-slate-900,
+.dark-mode .text-zinc-900,
+.dark-mode .text-black,
+.dark-mode .dark\:text-white,
+.dark-mode .dark\:text-gray-100,
+.dark-mode .dark\:text-gray-200,
+.dark-mode [style*="color: #3B4A66"],
+.dark-mode [style*="color:#3B4A66"],
+.dark-mode [style*="color: #374151"],
+.dark-mode [style*="color:#374151"] {
     color: var(--sa-text-primary) !important;
 }
 
 .dark-mode .text-gray-700,
 .dark-mode .text-gray-600,
 .dark-mode .text-gray-500,
+.dark-mode .text-gray-400,
+.dark-mode .text-\[\#4B5563\],
+.dark-mode .text-slate-700,
 .dark-mode .text-slate-600,
-.dark-mode .text-slate-500 {
+.dark-mode .text-slate-500,
+.dark-mode .text-zinc-500,
+.dark-mode .dark\:text-gray-300,
+.dark-mode .dark\:text-gray-400,
+.dark-mode .dark\:text-gray-500,
+.dark-mode [style*="color: #4B5563"],
+.dark-mode [style*="color:#4B5563"],
+.dark-mode [style*="color: #6B7280"],
+.dark-mode [style*="color:#6B7280"] {
     color: var(--sa-text-secondary) !important;
+}
+
+/* Light mode text specific - Black as requested */
+.light-mode .text-\[\#3B4A66\],
+.light-mode [style*="color: #3B4A66"],
+.light-mode [style*="color:#3B4A66"],
+.light-mode .taxdashboardr-titler {
+    color: var(--sa-text-primary) !important;
 }
 
 /* Border overrides */
@@ -66,20 +116,22 @@
 .light-mode .border-\[\#E8F0FF\],
 .light-mode .border-\[\#E5E7EB\],
 .light-mode .border-slate-200 {
-    border-color: #94a3b8 !important;
-    /* Much darker gray for light mode */
+    border-color: var(--sa-border-color) !important;
 }
 
 .dark-mode .border,
 .dark-mode .border-gray-100,
 .dark-mode .border-gray-200,
 .dark-mode .border-gray-300,
+.dark-mode .border-gray-400,
 .dark-mode .border-\[\#E8F0FF\],
 .dark-mode .border-\[\#E5E7EB\],
 .dark-mode .border-slate-200,
+.dark-mode .border-zinc-800,
+.dark-mode [style*="border: 1px solid #E8F0FF"],
+.dark-mode [style*="border: 1px solid #E5E7EB"],
 .dark-mode hr {
-    border-color: #576881 !important;
-    /* Brighter, visible border for dark mode */
+    border-color: var(--sa-border-color) !important;
 }
 
 /* SVG Icon overrides */
@@ -93,7 +145,7 @@
 .dark-mode svg path[stroke="#3B4A66"],
 .dark-mode svg path[stroke="#1F2937"],
 .dark-mode svg path[stroke="#4B5563"] {
-    stroke: var(--sa-text-primary) !important;
+    stroke: var(--sa-text-secondary) !important;
 }
 
 .dark-mode svg path[fill="#3B4A66"],
@@ -103,7 +155,8 @@
 }
 
 /* Modal specific overrides */
-.dark-mode .modal-content {
+.dark-mode .modal-content,
+.dark-mode .modal-body {
     background-color: var(--sa-bg-card) !important;
     color: var(--sa-text-primary) !important;
     border: 1px solid var(--sa-border-color) !important;
@@ -112,7 +165,7 @@
 .dark-mode .modal-header,
 .dark-mode .modal-footer {
     border-color: var(--sa-border-color) !important;
-    background-color: var(--sa-bg-card) !important;
+    background-color: var(--sa-bg-secondary) !important;
 }
 
 .dark-mode .modal-title {
@@ -121,6 +174,7 @@
 
 /* Search and Input overrides */
 .dark-mode input.form-control,
+.dark-mode input,
 .dark-mode select,
 .dark-mode textarea {
     background-color: var(--sa-bg-secondary) !important;
@@ -136,12 +190,14 @@
 /* Card and Hover overrides */
 .dark-mode .hover\:bg-gray-50:hover,
 .dark-mode .hover\:bg-slate-50:hover,
-.dark-mode .hover\:bg-gray-100:hover {
+.dark-mode .hover\:bg-gray-100:hover,
+.dark-mode .hover\:bg-zinc-50:hover {
     background-color: var(--sa-bg-active) !important;
 }
 
 /* Sidebar specific overrides */
-.dark-mode .super-sidebar-container {
+.dark-mode .super-sidebar-container,
+.dark-mode .sidebar-container {
     background-color: var(--sa-bg-sidebar) !important;
 }
 
@@ -154,6 +210,22 @@
     background-color: var(--sa-bg-active) !important;
     opacity: 0.9;
 }
+
+/* Badge Contrast in Dark Mode */
+.dark-mode .bg-green-100 { background-color: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; }
+.dark-mode .bg-yellow-100 { background-color: rgba(245, 158, 11, 0.2) !important; color: #fbbf24 !important; }
+.dark-mode .bg-red-100 { background-color: rgba(239, 68, 68, 0.2) !important; color: #f87171 !important; }
+.dark-mode .bg-blue-100 { background-color: rgba(59, 130, 246, 0.2) !important; color: #60a5fa !important; }
+.dark-mode .bg-gray-100 { background-color: rgba(107, 114, 128, 0.2) !important; color: #9ca3af !important; }
+
+/* Table specific for dark mode */
+.dark-mode table thead { background-color: var(--sa-bg-secondary) !important; }
+.dark-mode table thead th { color: var(--sa-text-primary) !important; border-bottom: 2px solid var(--sa-border-color) !important; }
+.dark-mode table tbody tr { border-bottom: 1px solid var(--sa-border-color) !important; }
+.dark-mode table tbody tr:hover { background-color: var(--sa-bg-active) !important; }
+
+/* Invoices Tab Specific */
+.dark-mode .subscriptions-metrics .bg-white { background-color: var(--sa-bg-card) !important; }
 
 /* Chart Tooltip */
 .dark-mode .recharts-default-tooltip {

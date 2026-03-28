@@ -188,11 +188,11 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="p-6 bg-[#F6F7FF] dark:bg-gray-900 transition-colors duration-200">
+    <div className="p-6 bg-[var(--sa-bg-primary)] transition-colors duration-200">
       {/* Page Title and Description */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">User Management</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Manage internal platform administrators and support staff</p>
+        <h3 className="text-lg font-semibold text-[var(--sa-text-primary)]">User Management</h3>
+        <p className="text-sm text-[var(--sa-text-secondary)]">Manage internal platform administrators and support staff</p>
       </div>
 
       {/* Action Buttons */}
@@ -217,19 +217,19 @@ export default function UserManagement() {
                 setStatusFilter('All Status');
                 setRoleFilter('All Roles');
               }}
-              className="bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group"
+              className="bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[var(--sa-text-primary)] group"
               title="Click to view all"
             >
               <div className="flex justify-between items-center mb-0.5">
-                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Internal Staff</p>
+                <p className="text-[10px] text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Internal Staff</p>
                 <FiUsers className="text-gray-300" size={14} />
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{summary.total_internal_staff ?? 0}</p>
-                <span className="text-[10px] text-gray-400 font-normal">Active staff</span>
+                <p className="text-lg font-bold text-[var(--sa-text-primary)] leading-none">{summary.total_internal_staff ?? 0}</p>
+                <span className="text-[10px] text-[var(--sa-text-secondary)] font-normal">Active staff</span>
               </div>
               <div className="flex justify-between items-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[9px] font-bold text-[#3B4A66] dark:text-blue-400">VIEW ALL</span>
+                <span className="text-[9px] font-bold text-[var(--sa-text-primary)]">VIEW ALL</span>
                 {isSuperAdmin && (
                   <button onClick={(e) => { e.stopPropagation(); setShowAddAdminModal(true); }} className="text-[9px] font-bold text-[#F56D2D]">+ ADD</button>
                 )}
@@ -238,35 +238,35 @@ export default function UserManagement() {
 
             <div
               onClick={() => setStatusFilter('Active')}
-              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Active' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
+              className={`bg-[var(--sa-bg-card)] border ${statusFilter === 'Active' ? 'border-[var(--sa-text-primary)] ring-1 ring-[var(--sa-text-primary)]' : 'border-[var(--sa-border-color)]'} rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[var(--sa-text-primary)] group`}
             >
               <div className="flex justify-between items-center mb-0.5">
-                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Active</p>
+                <p className="text-[10px] text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Active</p>
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{summary.active ?? 0}</p>
-                <span className="text-[10px] text-gray-400 font-normal">Online users</span>
+                <p className="text-lg font-bold text-[var(--sa-text-primary)] leading-none">{summary.active ?? 0}</p>
+                <span className="text-[10px] text-[var(--sa-text-secondary)] font-normal">Online users</span>
               </div>
               <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[9px] font-bold text-[#3B4A66] dark:text-blue-400">VIEW ACTIVE</span>
+                <span className="text-[9px] font-bold text-[var(--sa-text-primary)]">VIEW ACTIVE</span>
               </div>
             </div>
 
             <div
               onClick={() => setStatusFilter('Suspended')}
-              className={`bg-white dark:bg-gray-800 border ${statusFilter === 'Suspended' ? 'border-[#3B4A66] ring-1 ring-[#3B4A66]' : 'border-[#E8F0FF]'} dark:border-gray-700 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[#3B4A66] dark:hover:border-gray-500 group`}
+              className={`bg-[var(--sa-bg-card)] border ${statusFilter === 'Suspended' ? 'border-[var(--sa-text-primary)] ring-1 ring-[var(--sa-text-primary)]' : 'border-[var(--sa-border-color)]'} rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[var(--sa-text-primary)] group`}
             >
               <div className="flex justify-between items-center mb-0.5">
-                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Suspended</p>
+                <p className="text-[10px] text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Suspended</p>
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{summary.suspended ?? 0}</p>
-                <span className="text-[10px] text-gray-400 font-normal">Awaiting review</span>
+                <p className="text-lg font-bold text-[var(--sa-text-primary)] leading-none">{summary.suspended ?? 0}</p>
+                <span className="text-[10px] text-[var(--sa-text-secondary)] font-normal">Awaiting review</span>
               </div>
               <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[9px] font-bold text-[#3B4A66] dark:text-blue-400">REVIEW LIST</span>
+                <span className="text-[9px] font-bold text-[var(--sa-text-primary)]">REVIEW LIST</span>
               </div>
             </div>
           </div>
@@ -288,13 +288,13 @@ export default function UserManagement() {
               onChange={(e) => {
                 setStatusFilter(e.target.value);
               }}
-              className="appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px] transition-colors"
+              className="appearance-none bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg px-3 py-1.5 pr-6 text-sm text-[var(--sa-text-primary)] focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[140px] transition-colors"
             >
               <option value="All Status">All Status</option>
               <option value="Active">Active</option>
               <option value="Suspended">Suspended</option>
             </select>
-            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[var(--sa-text-secondary)] pointer-events-none" size={14} />
           </div>
 
           {/* Role Dropdown */}
@@ -304,30 +304,30 @@ export default function UserManagement() {
               onChange={(e) => {
                 setRoleFilter(e.target.value);
               }}
-              className="appearance-none bg-white dark:bg-gray-700 border border-[#E8F0FF] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px] transition-colors"
+              className="appearance-none bg-[var(--sa-bg-card)] dark:bg-gray-700 border border-[var(--sa-border-color)] dark:border-gray-600 rounded-lg px-3 py-1.5 pr-6 text-sm text-[var(--sa-text-primary)] dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[160px] transition-colors"
             >
               <option value="All Roles">All Roles</option>
               <option value="Super Admin">Super Admin</option>
               <option value="Billing Admin">Billing Admin</option>
               <option value="Support Admin">Support Admin</option>
             </select>
-            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[var(--sa-text-secondary)] pointer-events-none" size={14} />
           </div>
         </div>
       </div>
       {/* Loading State */}
       {loading && (
-        <div className="bg-white rounded-lg border border-[#E8F0FF] p-12 text-center">
+        <div className="bg-[var(--sa-bg-card)] rounded-lg border border-[var(--sa-border-color)] p-12 text-center">
           <div className="spinner-border text-primary mx-auto" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-3 text-gray-600">Loading users...</p>
+          <p className="mt-3 text-[var(--sa-text-secondary)]">Loading users...</p>
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-white rounded-lg border border-red-200 p-6">
+        <div className="bg-[var(--sa-bg-card)] rounded-lg border border-red-200 p-6">
           <div className="text-red-600 text-center">
             <p className="font-semibold">Error loading users</p>
             <p className="text-sm mt-1">{error}</p>
@@ -343,32 +343,32 @@ export default function UserManagement() {
 
       {/* No Users Message */}
       {!loading && !error && users.length === 0 && (
-        <div className="bg-white rounded-lg border border-[#E8F0FF] p-12 text-center">
-          <FiUsers className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No Users Found</h3>
-          <p className="text-gray-600">No platform users match your current filters.</p>
+        <div className="bg-[var(--sa-bg-card)] rounded-lg border border-[var(--sa-border-color)] p-12 text-center">
+          <FiUsers className="mx-auto text-[var(--sa-text-secondary)] mb-4" size={48} />
+          <h3 className="text-lg font-semibold text-[var(--sa-text-primary)] mb-2">No Users Found</h3>
+          <p className="text-[var(--sa-text-secondary)]">No platform users match your current filters.</p>
         </div>
       )}
 
       {/* Users Table */}
       {!loading && !error && users.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-[#E8F0FF] dark:border-gray-700 transition-all">
-          <div className="p-4 border-b border-[#E8F0FF] dark:border-gray-700">
+        <div className="bg-[var(--sa-bg-card)] rounded-lg border border-[var(--sa-border-color)] transition-all">
+          <div className="p-4 border-b border-[var(--sa-border-color)]">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
-                <h6 className="text-sm font-semibold text-gray-800 dark:text-white mb-0 uppercase tracking-wide">
+                <h6 className="text-sm font-semibold text-[var(--sa-text-primary)] mb-0 uppercase tracking-wide">
                   Platform Users ({pagination.total_count})
                 </h6>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-xs text-[var(--sa-text-secondary)] mt-1">
                   Internal administrators and support staff with access to the Seqwens platform.
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Rows per page:</span>
+                <span className="text-xs font-medium text-[var(--sa-text-secondary)]">Rows per page:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
-                  className="text-xs border border-[#E8F0FF] dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
+                  className="text-xs border border-[var(--sa-border-color)] dark:border-gray-600 bg-[var(--sa-bg-card)] dark:bg-gray-700 text-[var(--sa-text-primary)] dark:text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
                 >
                   {[25, 50, 100, 250].map((size) => (
                     <option key={size} value={size}>
@@ -381,8 +381,8 @@ export default function UserManagement() {
           </div>
 
           {/* Table Headers */}
-          <div className="px-4 py-2 border-[#E8F0FF]">
-            <div className="flex items-center text-[#4B5563] dark:text-gray-400 uppercase tracking-wider text-[11px]">
+          <div className="px-4 py-2 border-[var(--sa-border-color)]">
+            <div className="flex items-center text-[var(--sa-text-secondary)] uppercase tracking-wider text-[11px]">
               <div className="flex-1 text-left pr-4">User</div>
               <div className="w-48 text-left">Email</div>
               <div className="w-36 text-left">Role</div>
@@ -405,23 +405,23 @@ export default function UserManagement() {
                     navigate(`/superadmin/users-details/${user.id}`);
                   }
                 }}
-                className="border border-[#E8F0FF] dark:border-gray-700 rounded-lg p-2 transition-colors cursor-pointer hover:border-[#3B4A66] dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3B4A66] bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className="border border-[var(--sa-border-color)] dark:border-gray-700 rounded-lg p-2 transition-colors cursor-pointer hover:border-[var(--sa-text-primary)] dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] dark:bg-gray-800 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700/50"
               >
                 <div className="flex items-center gap-3">
                   {/* Name Column */}
                   <div className="flex-1 min-w-0 pr-4">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white truncate hover:underline">
+                    <span className="text-sm font-semibold text-[var(--sa-text-primary)] truncate hover:underline">
                       {user.full_name || 'Unnamed User'}
                     </span>
                   </div>
 
                   {/* Email Column */}
-                  <div className="w-48 text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <div className="w-48 text-sm text-[var(--sa-text-primary)] truncate">
                     {user.email || '—'}
                   </div>
 
                   {/* Role Column */}
-                  <div className="w-36 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="w-36 text-sm text-[var(--sa-text-primary)]">
                     {user.role_display_name || user.role || '—'}
                   </div>
 
@@ -435,7 +435,7 @@ export default function UserManagement() {
                   </div>
 
                   {/* Last Login Column */}
-                  <div className="w-40 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="w-40 text-sm text-[var(--sa-text-secondary)]">
                     {user.last_login_display || 'N/A'}
                   </div>
                 </div>
@@ -444,10 +444,10 @@ export default function UserManagement() {
           </div>
 
           {/* Server-side Pagination Controls */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-b-lg">
             <div className="flex items-center gap-6">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-gray-900 dark:text-white">{pagination.total_count}</span> users
+              <span className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
+                Showing <span className="font-medium text-[var(--sa-text-primary)] dark:text-white">{startItem}-{endItem}</span> of <span className="font-medium text-[var(--sa-text-primary)] dark:text-white">{pagination.total_count}</span> users
               </span>
             </div>
 
@@ -455,14 +455,14 @@ export default function UserManagement() {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1 || loading}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 bg-[var(--sa-bg-card)] dark:bg-gray-800 border border-[var(--sa-border-color)] dark:border-gray-700 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                 style={{ borderRadius: "10px" }}
               >
                 Previous
               </button>
 
               <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-gray-900 dark:text-white px-2">
+                <span className="text-sm font-medium text-[var(--sa-text-primary)] dark:text-white px-2">
                   Page {currentPage} of {pagination.total_pages}
                 </span>
               </div>
@@ -470,7 +470,7 @@ export default function UserManagement() {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
                 disabled={currentPage === pagination.total_pages || loading}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-[#E8F0FF] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 bg-[var(--sa-bg-card)] dark:bg-gray-800 border border-[var(--sa-border-color)] dark:border-gray-700 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
                 style={{ borderRadius: "10px" }}
               >
                 Next
@@ -487,20 +487,20 @@ export default function UserManagement() {
             style={{ backgroundColor: 'var(--Color-overlay, #00000099)' }}
             onClick={closeAddAdminModal}
           ></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-auto transition-all">
-            <div className="flex justify-between items-start p-6 border-b border-[#E8F0FF] dark:border-gray-700">
+          <div className="relative bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-auto transition-all">
+            <div className="flex justify-between items-start p-6 border-b border-[var(--sa-border-color)] dark:border-gray-700">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Super Admin User</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create a new super admin, billing admin, or support admin account.</p>
+                <h3 className="text-lg font-semibold text-[var(--sa-text-primary)] dark:text-white">Add Super Admin User</h3>
+                <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-1">Create a new super admin, billing admin, or support admin account.</p>
               </div>
               <button
                 onClick={closeAddAdminModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-secondary)] transition-colors"
                 aria-label="Close"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                  <path d="M15.7793 8.21899C16.0723 8.51196 16.0723 8.98682 15.7793 9.27979L12.9976 12.0615L15.777 14.8408C16.07 15.1338 16.07 15.6086 15.777 15.9016C15.484 16.1946 15.0092 16.1946 14.7162 15.9016L11.9369 13.1223L9.15759 15.9016C8.86462 16.1946 8.38976 16.1946 8.0968 15.9016C7.80383 15.6086 7.80383 15.1338 8.0968 14.8408L10.8761 12.0615L8.09444 9.27979C7.80147 8.98682 7.80147 8.51196 8.09444 8.21899C8.3874 7.92603 8.86227 7.92603 9.15523 8.21899L11.9369 10.9993L14.7186 8.21899C15.0115 7.92603 15.4864 7.92603 15.7793 8.21899Z" fill="#3B4A66" />
+                  <rect width="24" height="24" rx="12" fill="var(--sa-border-color)" />
+                  <path d="M15.7793 8.21899C16.0723 8.51196 16.0723 8.98682 15.7793 9.27979L12.9976 12.0615L15.777 14.8408C16.07 15.1338 16.07 15.6086 15.777 15.9016C15.484 16.1946 15.0092 16.1946 14.7162 15.9016L11.9369 13.1223L9.15759 15.9016C8.86462 16.1946 8.38976 16.1946 8.0968 15.9016C7.80383 15.6086 7.80383 15.1338 8.0968 14.8408L10.8761 12.0615L8.09444 9.27979C7.80147 8.98682 7.80147 8.51196 8.09444 8.21899C8.3874 7.92603 8.86227 7.92603 9.15523 8.21899L11.9369 10.9993L14.7186 8.21899C15.0115 7.92603 15.4864 7.92603 15.7793 8.21899Z" fill="var(--sa-text-primary)" />
                 </svg>
               </button>
             </div>
@@ -514,31 +514,31 @@ export default function UserManagement() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-300 mb-1">
                     Full Name<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={newAdmin.fullName}
                     onChange={(e) => setNewAdmin((prev) => ({ ...prev, fullName: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 text-sm border border-[var(--sa-border-color)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--sa-bg-card)] dark:bg-gray-700 text-[var(--sa-text-primary)] dark:text-white"
                     placeholder="Alex Doe"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-300 mb-1">
                     Email<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     value={newAdmin.email}
                     onChange={(e) => setNewAdmin((prev) => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 text-sm border border-[var(--sa-border-color)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--sa-bg-card)] dark:bg-gray-700 text-[var(--sa-text-primary)] dark:text-white"
                     placeholder="alex.doe@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-300 mb-1">
                     Phone Number<span className="text-red-500">*</span>
                   </label>
                   <PhoneInput
@@ -555,13 +555,13 @@ export default function UserManagement() {
                       paddingLeft: '48px',
                       height: '38px',
                       fontSize: '14px',
-                      border: '1px solid #E8F0FF',
+                      border: '1px solid var(--sa-border-color)',
                       borderRadius: '8px',
                       backgroundColor: 'white',
                       color: '#374151'
                     }}
                     buttonStyle={{
-                      border: '1px solid #E8F0FF',
+                      border: '1px solid var(--sa-border-color)',
                       borderRadius: '8px 0 0 8px',
                       backgroundColor: 'white'
                     }}
@@ -574,13 +574,13 @@ export default function UserManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-300 mb-1">
                     Role<span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newAdmin.role}
                     onChange={(e) => setNewAdmin((prev) => ({ ...prev, role: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 text-sm border border-[var(--sa-border-color)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--sa-bg-card)] dark:bg-gray-700 text-[var(--sa-text-primary)] dark:text-white"
                   >
                     <option value="super_admin">Super Admin</option>
                     <option value="billing_admin">Billing Admin</option>
@@ -590,7 +590,7 @@ export default function UserManagement() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <p className="text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-300">
                         Send welcome email with login details
                       </p>
 
@@ -610,7 +610,7 @@ export default function UserManagement() {
                       style={{ borderRadius: '13px', padding: '0px' }}
                     >
                       <span
-                        className={`absolute left-0.5 inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
+                        className={`absolute left-0.5 inline-block h-5 w-5 rounded-full bg-[var(--sa-bg-card)] shadow-sm transition-transform duration-200 ease-in-out
       ${newAdmin.sendWelcomeEmail ? 'translate-x-5' : 'translate-x-0'}`}
                       />
                     </button>
@@ -620,7 +620,7 @@ export default function UserManagement() {
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={closeAddAdminModal}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-[#E8F0FF] dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-lg"
+                      className="px-4 py-2 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 border border-[var(--sa-border-color)] dark:border-gray-600 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 transition-colors rounded-lg"
                       disabled={creatingAdmin}
                       style={{ borderRadius: '8px' }}
                     >

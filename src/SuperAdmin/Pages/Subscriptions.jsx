@@ -164,7 +164,7 @@ export default function Subscriptions() {
       case 'elite':
         return { badgeClass: 'bg-[#CEC6FF]', textClass: 'text-[#1E1B4B]' };
       default:
-        return { badgeClass: 'bg-gray-500', textClass: 'text-white' };
+        return { badgeClass: 'bg-[var(--sa-bg-secondary)]0', textClass: 'text-white' };
     }
   };
 
@@ -356,9 +356,9 @@ export default function Subscriptions() {
       case 'trial':
         return 'bg-blue-100 text-blue-700';
       case 'inactive':
-        return 'bg-gray-200 text-gray-700';
+        return 'bg-gray-200 text-[var(--sa-text-primary)]';
       default:
-        return 'bg-gray-200 text-gray-700';
+        return 'bg-gray-200 text-[var(--sa-text-primary)]';
     }
   };
 
@@ -599,7 +599,7 @@ export default function Subscriptions() {
       <div className="w-full h-full p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading subscription data...</p>
+          <p className="text-[var(--sa-text-secondary)]">Loading subscription data...</p>
         </div>
       </div>
     );
@@ -611,8 +611,8 @@ export default function Subscriptions() {
       <div className="w-full h-full p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Data</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h3 className="text-xl font-semibold text-[var(--sa-text-primary)] mb-2">Error Loading Data</h3>
+          <p className="text-[var(--sa-text-secondary)] mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -629,13 +629,13 @@ export default function Subscriptions() {
       {/* Hidden PDF Content */}
       <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
         <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#3B4A66', marginBottom: '10px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--sa-text-primary)', marginBottom: '10px' }}>
             Subscriptions Report
           </h1>
-          <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '5px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--sa-text-secondary)', marginBottom: '5px' }}>
             Generated on: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
-          <p style={{ fontSize: '12px', color: '#6B7280' }}>
+          <p style={{ fontSize: '12px', color: 'var(--sa-text-secondary)' }}>
             Total Subscriptions: {subscriptions.length}
           </p>
         </div>
@@ -643,35 +643,35 @@ export default function Subscriptions() {
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
           <thead>
             <tr style={{ backgroundColor: '#F3F4F6', borderBottom: '2px solid #E5E7EB' }}>
-              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Firm</th>
-              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Plan</th>
-              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Amount</th>
-              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Status</th>
-              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Next Billing</th>
-              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Total Paid</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>Firm</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>Plan</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>Amount</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>Status</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>Next Billing</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>Total Paid</th>
             </tr>
           </thead>
           <tbody>
             {subscriptions.map((subscription, index) => (
               <tr key={`${subscription.firm_id}-${subscription.plan}-${index}`} style={{ borderBottom: '1px solid #E5E7EB' }}>
-                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>
                   <div style={{ fontWeight: '600' }}>{subscription.firm_name || '—'}</div>
-                  <div style={{ fontSize: '10px', color: '#6B7280' }}>{subscription.firm_owner || '—'}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--sa-text-secondary)' }}>{subscription.firm_owner || '—'}</div>
                 </td>
-                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>
                   {subscription.plan_label || subscription.plan || '—'}
                 </td>
-                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>
                   <div style={{ fontWeight: '600' }}>{subscription.amount_formatted || formatCurrency(subscription.amount)}</div>
-                  <div style={{ fontSize: '10px', color: '#6B7280' }}>{subscription.billing_frequency || '—'}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--sa-text-secondary)' }}>{subscription.billing_frequency || '—'}</div>
                 </td>
-                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>
                   {subscription.status_label || subscription.status || '—'}
                 </td>
-                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>
                   {formatDateDisplay(subscription.next_billing_date)}
                 </td>
-                <td style={{ padding: '10px', fontSize: '11px', fontWeight: '600', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', fontWeight: '600', color: 'var(--sa-text-primary)', border: '1px solid #E5E7EB' }}>
                   {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
                 </td>
               </tr>
@@ -682,13 +682,13 @@ export default function Subscriptions() {
       {/* Header Section */}
       <div className="flex justify-between items-start mb-8 subscriptions-header">
         <div>
-          <h3 className="taxdashboardr-titler font-bold mb-2" style={{ color: '#3B4A66' }}>Subscription & Billing Management</h3>
-          <p style={{ color: '#3B4A66' }}>Monitor and manage all platform subscriptions</p>
+          <h3 className="taxdashboardr-titler font-bold mb-2" style={{ color: 'var(--sa-text-primary)' }}>Subscription & Billing Management</h3>
+          <p style={{ color: 'var(--sa-text-primary)' }}>Monitor and manage all platform subscriptions</p>
         </div>
         <div className="flex gap-3 subscriptions-actions">
           <button
             onClick={handleExportReport}
-            className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+            className="px-2 py-1 text-[10px] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] text-[var(--sa-text-primary)] rounded-lg hover:bg-[var(--sa-bg-secondary)] transition-colors flex items-center"
             style={{ borderRadius: '7px' }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -714,13 +714,13 @@ export default function Subscriptions() {
 
       {/* Tabs */}
       <div className="mb-6">
-        <div className="bg-white rounded-lg border border-[#E8F0FF] p-1.5 w-fit">
+        <div className="bg-[var(--sa-bg-card)] rounded-lg border border-[var(--sa-border-color)] p-1.5 w-fit">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('Plans')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Plans'
                 ? 'bg-[#3AD6F2] text-white'
-                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                : 'bg-transparent text-[var(--sa-text-primary)] hover:bg-[var(--sa-bg-secondary)]'
                 }`}
               style={{ borderRadius: '7px' }}
             >
@@ -731,7 +731,7 @@ export default function Subscriptions() {
               onClick={() => setActiveTab('Invoices')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${activeTab === 'Invoices'
                 ? 'bg-[#3AD6F2] text-white'
-                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                : 'bg-transparent text-[var(--sa-text-primary)] hover:bg-[var(--sa-bg-secondary)]'
                 }`}
               style={{ borderRadius: '7px' }}
             >
@@ -749,11 +749,11 @@ export default function Subscriptions() {
           {/* Metric Cards and main subscriptions content */}
           <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
             {/* Total Revenue */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Total Revenue</p>
-                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Total Revenue</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                     {metrics?.total_revenue?.formatted || '$0.00'}
                   </p>
                   {/* {metrics?.total_revenue && (
@@ -776,7 +776,7 @@ export default function Subscriptions() {
                   )}
                   {metrics.total_revenue.trend === 'neutral' && (
                     <>
-                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                      <span className="text-xs font-medium" style={{ color: 'var(--sa-text-secondary)' }}>
                         {metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
                       </span>
                     </>
@@ -790,15 +790,15 @@ export default function Subscriptions() {
 
             {/* Active Subscribers */}
             <div
-              className="bg-white p-4 cursor-pointer hover:shadow-md transition-shadow group relative"
-              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+              className="bg-[var(--sa-bg-card)] p-4 cursor-pointer hover:shadow-md transition-shadow group relative"
+              style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}
               onClick={handleActiveSubscribersClick}
               title="Click to view all active subscribers"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold mb-1 group-hover:text-blue-500 transition-colors uppercase tracking-tight" style={{ color: '#3B4A66' }}>Active Subscribers</p>
-                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 group-hover:text-blue-500 transition-colors uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Active Subscribers</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                     {metrics?.active_subscribers?.formatted || '0'}
                   </p>
 
@@ -811,11 +811,11 @@ export default function Subscriptions() {
             </div>
 
             {/* Most Popular Plan */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
-                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Most Popular Plan</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                     {metrics?.most_popular_plan?.plan_label || 'N/A'}
                   </p>
                   {metrics?.most_popular_plan && (
@@ -839,13 +839,13 @@ export default function Subscriptions() {
                     )}
                     {metrics.most_popular_plan.trend === 'neutral' && (
                       <>
-                        <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        <span className="text-xs font-medium" style={{ color: 'var(--sa-text-secondary)' }}>
                           {metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
                         </span>
                       </>
                     )} */}
                       </div>
-                      <span className="text-xs" style={{ color: '#6B7280' }}>
+                      <span className="text-xs" style={{ color: 'var(--sa-text-secondary)' }}>
                         {metrics.most_popular_plan.count || 0} subscribers
                       </span>
                     </div>
@@ -856,11 +856,11 @@ export default function Subscriptions() {
             </div>
 
             {/* Average Growth */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Average Growth</p>
-                  <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+                  <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Average Growth</p>
+                  <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                     {metrics?.average_growth?.formatted || '+0.00%'}
                   </p>
                   {metrics?.average_growth && (
@@ -883,7 +883,7 @@ export default function Subscriptions() {
                       )}
                       {metrics.average_growth.trend === 'neutral' && (
                         <>
-                          <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                          <span className="text-xs font-medium" style={{ color: 'var(--sa-text-secondary)' }}>
                             Monthly
                           </span>
                         </>
@@ -898,7 +898,7 @@ export default function Subscriptions() {
                   {notificationError ? (
                     <p className="text-xs text-red-500">{notificationError}</p>
                   ) : (
-                    <p className="text-xs text-gray-500">Saving notification settings...</p>
+                    <p className="text-xs text-[var(--sa-text-secondary)]">Saving notification settings...</p>
                   )}
                 </div>
               )}
@@ -908,11 +908,11 @@ export default function Subscriptions() {
           {/* Plan and Alerts Section */}
           <div className="grid gap-8 mb-8 subscriptions-plan-grid" style={{ gridTemplateColumns: '70% 25%' }}>
             {/* Plan Section */}
-            <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className='bg-[var(--sa-bg-card)] p-3' style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-center mb-3 ">
                 <div>
-                  <h3 className="text-lg font-bold" style={{ color: '#3B4A66' }}>Plan</h3>
-                  <p className="text-sm" style={{ color: '#3B4A66' }}>Revenue and growth metrics by subscription plan</p>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--sa-text-primary)' }}>Plan</h3>
+                  <p className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>Revenue and growth metrics by subscription plan</p>
                 </div>
               </div>
 
@@ -927,8 +927,8 @@ export default function Subscriptions() {
                     return (
                       <div
                         key={normalizedKey}
-                        className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors"
-                        style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                        className="bg-[var(--sa-bg-card)] p-2 cursor-pointer hover:bg-[var(--sa-bg-secondary)] transition-colors"
+                        style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}
                         onClick={() => {
                           setSelectedPlan(plan.plan_display || label);
                           setShowEditPlan(true);
@@ -947,37 +947,37 @@ export default function Subscriptions() {
                                 e.stopPropagation();
                                 handleEditPlan(plan.plan_type || label);
                               }}
-                              className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                              className="p-1 text-[var(--sa-text-secondary)] hover:text-blue-500 transition-colors"
                               title="Edit Plan Definition"
                             >
                               <FaEdit size={14} />
                             </button>
                             <div>
-                              <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
+                              <p className="text-xs mb-1" style={{ color: 'var(--sa-text-primary)', fontWeight: '800' }}>
                                 {plan.total_subscribers} subscribers
                               </p>
                               <div className='flex flex-col gap-1'>
                                 {revenuePlan && (
                                   <>
                                     <div className='flex flex-row gap-2'>
-                                      <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                      <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>
                                         {revenuePlan.formatted_revenue || '$0.00'} revenue
                                       </p>
-                                      <p className="text-xs" style={{ color: '#6B7280' }}>
+                                      <p className="text-xs" style={{ color: 'var(--sa-text-secondary)' }}>
                                         ({revenuePlan.percentage?.toFixed(1) || '0'}%)
                                       </p>
                                     </div>
-                                    <p className="text-xs" style={{ color: '#6B7280' }}>
+                                    <p className="text-xs" style={{ color: 'var(--sa-text-secondary)' }}>
                                       {revenuePlan.invoice_count || 0} invoice{revenuePlan.invoice_count !== 1 ? 's' : ''}
                                     </p>
                                   </>
                                 )}
                                 {!revenuePlan && (
                                   <div className='flex flex-row gap-2'>
-                                    <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                    <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>
                                       {plan.formatted_revenue || '$0.00'} revenue.
                                     </p>
-                                    <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                    <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>
                                       {plan.formatted_growth || '0%'} growth
                                     </p>
                                   </div>
@@ -987,7 +987,7 @@ export default function Subscriptions() {
                           </div>
                           <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Active</span>
+                              <span className="text-[10px] text-[var(--sa-text-secondary)] font-bold uppercase tracking-tight">Active</span>
                               <button
                                 type="button"
                                 onClick={() => handlePlanToggle(plan.plan_type || label, 'is_active', plan.is_active)}
@@ -999,12 +999,12 @@ export default function Subscriptions() {
                                 }}
                               >
                                 <span
-                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${plan.is_active ? 'translate-x-5' : 'translate-x-1'}`}
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-[var(--sa-bg-card)] transition-transform ${plan.is_active ? 'translate-x-5' : 'translate-x-1'}`}
                                 />
                               </button>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Show on Website</span>
+                              <span className="text-[10px] text-[var(--sa-text-secondary)] font-bold uppercase tracking-tight">Show on Website</span>
                               <button
                                 type="button"
                                 onClick={() => handlePlanToggle(plan.plan_type || label, 'show_on_website', plan.show_on_website)}
@@ -1016,7 +1016,7 @@ export default function Subscriptions() {
                                 }}
                               >
                                 <span
-                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${plan.show_on_website ? 'translate-x-5' : 'translate-x-1'}`}
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-[var(--sa-bg-card)] transition-transform ${plan.show_on_website ? 'translate-x-5' : 'translate-x-1'}`}
                                 />
                               </button>
                             </div>
@@ -1030,17 +1030,17 @@ export default function Subscriptions() {
                   return (
                     <div
                       key={normalizedKey}
-                      className="bg-white p-4 border border-dashed border-[#E8F0FF] rounded-[7px] flex items-center justify-between"
+                      className="bg-[var(--sa-bg-card)] p-4 border border-dashed border-[var(--sa-border-color)] rounded-[7px] flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
                         <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
                           {label}
                         </span>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                          <span className="text-sm font-medium" style={{ color: 'var(--sa-text-primary)' }}>
                             No {label} plan configured
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-[var(--sa-text-secondary)]">
                             Click the plus icon to create this plan
                           </span>
                         </div>
@@ -1061,16 +1061,16 @@ export default function Subscriptions() {
             </div>
 
             {/* Alerts & Notifications */}
-            <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px', height: 'fit-content' }}>
-              <h3 className="text-lg font-bold mb-4" style={{ color: '#3B4A66' }}>Alerts & Notifications</h3>
+            <div className='bg-[var(--sa-bg-card)] p-3' style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px', height: 'fit-content' }}>
+              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--sa-text-primary)' }}>Alerts & Notifications</h3>
 
               <div className="space-y-4">
                 {/* Email Notifications */}
-                <div className="bg-white p-4">
+                <div className="bg-[var(--sa-bg-card)] p-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium" style={{ color: '#3B4A66' }}>Email Notifications</p>
-                      <p className="text-xs" style={{ color: '#3B4A66' }}>Send email when  <br /> subscription events occur</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--sa-text-primary)' }}>Email Notifications</p>
+                      <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>Send email when  <br /> subscription events occur</p>
                     </div>
                     <button
                       type="button"
@@ -1084,7 +1084,7 @@ export default function Subscriptions() {
                       aria-pressed={emailNotifications}
                     >
                       <span
-                        className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        className="inline-block h-4 w-4 transform rounded-full bg-[var(--sa-bg-card)] transition-transform"
                         style={{
                           transform: emailNotifications ? 'translateX(24px)' : 'translateX(4px)'
                         }}
@@ -1094,11 +1094,11 @@ export default function Subscriptions() {
                 </div>
 
                 {/* SMS Alerts */}
-                <div className="bg-white p-4" >
+                <div className="bg-[var(--sa-bg-card)] p-4" >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium" style={{ color: '#3B4A66' }}>SMS Alerts</p>
-                      <p className="text-xs" style={{ color: '#3B4A66' }}>Optional SMS notifications</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--sa-text-primary)' }}>SMS Alerts</p>
+                      <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>Optional SMS notifications</p>
                     </div>
                     <button
                       type="button"
@@ -1112,7 +1112,7 @@ export default function Subscriptions() {
                       aria-pressed={smsAlerts}
                     >
                       <span
-                        className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        className="inline-block h-4 w-4 transform rounded-full bg-[var(--sa-bg-card)] transition-transform"
                         style={{
                           transform: smsAlerts ? 'translateX(24px)' : 'translateX(4px)'
                         }}
@@ -1128,12 +1128,12 @@ export default function Subscriptions() {
 
 
           {/* Plan Performance Section */}
-          <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="mb-8 bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
             <div className="flex flex-col gap-4 mb-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between subscriptions-plan-performance-header">
                 <div>
-                  <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
-                  <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
+                  <h3 className="text-xl font-bold" style={{ color: 'var(--sa-text-primary)' }}>Plan Performance</h3>
+                  <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>MRR, churn, and plan distribution</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   {/* Filter Dropdowns - Upper Right */}
@@ -1145,7 +1145,7 @@ export default function Subscriptions() {
                         if (!e.target.value) setFilterYear('');
                       }}
                       className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                     >
                       <option value="">All Months</option>
                       {monthOptions.map(month => (
@@ -1159,7 +1159,7 @@ export default function Subscriptions() {
                         if (!e.target.value) setFilterMonth('');
                       }}
                       className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                       disabled={!filterMonth}
                     >
                       <option value="">Year</option>
@@ -1183,7 +1183,7 @@ export default function Subscriptions() {
                           setAppliedFilterMonth('');
                           setAppliedFilterYear('');
                         }}
-                        className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 subscriptions-clear-btn"
+                        className="px-2 py-1.5 text-xs text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-primary)] subscriptions-clear-btn"
                         title="Clear filter"
                         style={{ borderRadius: '7px' }}
                       >
@@ -1192,7 +1192,7 @@ export default function Subscriptions() {
                     )}
                   </div>
                   {planPerformance?.timestamp && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[var(--sa-text-secondary)]">
                       Last updated: {formatDateTime(planPerformance.timestamp)}
                     </span>
                   )}
@@ -1202,8 +1202,8 @@ export default function Subscriptions() {
 
             {planPerformance ? (
               <div className="grid gap-6 lg:grid-cols-2 subscriptions-plan-performance-grid">
-                <div className="border border-[#E8F0FF] rounded-[10px] p-3 subscriptions-plan-card">
-                  <h4 className="text-xs font-bold text-[#3B4A66] mb-2 uppercase tracking-tight">Monthly Recurring Revenue</h4>
+                <div className="border border-[var(--sa-border-color)] rounded-[10px] p-3 subscriptions-plan-card">
+                  <h4 className="text-xs font-bold text-[var(--sa-text-primary)] mb-2 uppercase tracking-tight">Monthly Recurring Revenue</h4>
                   {mrrTrend.length > 0 ? (() => {
                     const svgWidth = 400;
                     const svgHeight = 180;
@@ -1237,7 +1237,7 @@ export default function Subscriptions() {
                                   y={y + 4}
                                   textAnchor="end"
                                   fontSize="10"
-                                  fill="#6B7280"
+                                  fill="var(--sa-text-secondary)"
                                 >
                                   {formatCurrency(labelValue)}
                                 </text>
@@ -1256,7 +1256,7 @@ export default function Subscriptions() {
                                   y={y}
                                   width={barWidth}
                                   height={height}
-                                  fill="#3B4A66"
+                                  fill="var(--sa-text-primary)"
                                   rx="6"
                                 />
                                 <text
@@ -1264,7 +1264,7 @@ export default function Subscriptions() {
                                   y={y - 6}
                                   textAnchor="middle"
                                   fontSize="10"
-                                  fill="#3B4A66"
+                                  fill="var(--sa-text-primary)"
                                   fontWeight="600"
                                 >
                                   {formatCurrency(value)}
@@ -1274,7 +1274,7 @@ export default function Subscriptions() {
                                   y={svgHeight - 8}
                                   textAnchor="middle"
                                   fontSize="10"
-                                  fill="#6B7280"
+                                  fill="var(--sa-text-secondary)"
                                 >
                                   {item.month || `M${index + 1}`}
                                 </text>
@@ -1285,12 +1285,12 @@ export default function Subscriptions() {
                       </div>
                     );
                   })() : (
-                    <p className="text-xs text-gray-500 mt-4">No revenue trend data available.</p>
+                    <p className="text-xs text-[var(--sa-text-secondary)] mt-4">No revenue trend data available.</p>
                   )}
                 </div>
 
-                <div className="border border-[#E8F0FF] rounded-[10px] p-3 subscriptions-plan-card">
-                  <h4 className="text-xs font-bold text-[#3B4A66] mb-2 uppercase tracking-tight">Churn Rate</h4>
+                <div className="border border-[var(--sa-border-color)] rounded-[10px] p-3 subscriptions-plan-card">
+                  <h4 className="text-xs font-bold text-[var(--sa-text-primary)] mb-2 uppercase tracking-tight">Churn Rate</h4>
                   {churnTrend.length > 0 ? (() => {
                     const svgWidth = 400;
                     const svgHeight = 180;
@@ -1322,7 +1322,7 @@ export default function Subscriptions() {
                                   y={y + 4}
                                   textAnchor="end"
                                   fontSize="12"
-                                  fill="#6B7280"
+                                  fill="var(--sa-text-secondary)"
                                 >
                                   {formatPercentage(labelValue)}
                                 </text>
@@ -1359,7 +1359,7 @@ export default function Subscriptions() {
                                   y={svgHeight - 8}
                                   textAnchor="middle"
                                   fontSize="12"
-                                  fill="#6B7280"
+                                  fill="var(--sa-text-secondary)"
                                 >
                                   {item.month || `M${index + 1}`}
                                 </text>
@@ -1370,18 +1370,18 @@ export default function Subscriptions() {
                       </div>
                     );
                   })() : (
-                    <p className="text-xs text-gray-500 mt-4">No churn trend data available.</p>
+                    <p className="text-xs text-[var(--sa-text-secondary)] mt-4">No churn trend data available.</p>
                   )}
                 </div>
 
-                <div className="border border-[#E8F0FF] rounded-[10px] p-3 lg:col-span-2 subscriptions-plan-card-full">
-                  <h4 className="text-xs font-bold text-[#3B4A66] mb-4 uppercase tracking-tight">Plan Distribution</h4>
+                <div className="border border-[var(--sa-border-color)] rounded-[10px] p-3 lg:col-span-2 subscriptions-plan-card-full">
+                  <h4 className="text-xs font-bold text-[var(--sa-text-primary)] mb-4 uppercase tracking-tight">Plan Distribution</h4>
                   <div className="space-y-3">
                     {planDistributionData.length > 0 ? planDistributionData.map((item) => {
                       const width = distributionMax ? Math.max((item.firms / distributionMax) * 100, 6) : 0;
                       return (
                         <div key={item.plan} className="flex items-center gap-3">
-                          <span className="w-24 text-sm font-medium text-[#3B4A66]">
+                          <span className="w-24 text-sm font-medium text-[var(--sa-text-primary)]">
                             {item.label}
                           </span>
                           <div className="flex-1 h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
@@ -1390,19 +1390,19 @@ export default function Subscriptions() {
                               style={{ width: `${width}%`, backgroundColor: '#3B82F6' }}
                             ></div>
                           </div>
-                          <span className="w-16 text-right text-xs font-semibold text-[#3B4A66]">
+                          <span className="w-16 text-right text-xs font-semibold text-[var(--sa-text-primary)]">
                             {formatNumber(item.firms)} firms
                           </span>
                         </div>
                       );
                     }) : (
-                      <p className="text-xs text-gray-500">No plan distribution data available.</p>
+                      <p className="text-xs text-[var(--sa-text-secondary)]">No plan distribution data available.</p>
                     )}
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Plan performance data is not available at the moment.</p>
+              <p className="text-sm text-[var(--sa-text-secondary)]">Plan performance data is not available at the moment.</p>
             )}
           </div>
 
@@ -1417,18 +1417,18 @@ export default function Subscriptions() {
                     placeholder="Search subscriptions..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
-                    className="w-[400px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}
+                    className="w-[400px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
                   />
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[var(--sa-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
                 </div>
                 <select
-                  className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                  className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                  style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -1440,8 +1440,8 @@ export default function Subscriptions() {
                   ))}
                 </select>
                 <select
-                  className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                  className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                  style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}
                   value={planFilter}
                   onChange={(e) => setPlanFilter(e.target.value)}
                 >
@@ -1454,18 +1454,18 @@ export default function Subscriptions() {
                 </select>
               </div>
             </div>
-            <div className="bg-white p-4 mb-10 subscriptions-table-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+            <div className="bg-[var(--sa-bg-card)] p-4 mb-10 subscriptions-table-card" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
               <div className="flex justify-between items-center mb-6 subscriptions-table-card-header">
                 <div>
-                  <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
-                  <p className="text-sm text-gray-500 mt-1">Showing {startItem}-{endItem} of {pagination.total_count} subscriptions</p>
+                  <h3 className="text-xl font-bold" style={{ color: 'var(--sa-text-primary)' }}>Subscriptions</h3>
+                  <p className="text-sm text-[var(--sa-text-secondary)] mt-1">Showing {startItem}-{endItem} of {pagination.total_count} subscriptions</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-gray-500">Rows per page:</span>
+                  <span className="text-xs font-medium text-[var(--sa-text-secondary)]">Rows per page:</span>
                   <select
                     value={pageSize}
                     onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
-                    className="text-xs border border-[#E8F0FF] bg-white text-gray-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
+                    className="text-xs border border-[var(--sa-border-color)] bg-[var(--sa-bg-card)] text-[var(--sa-text-primary)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
                   >
                     {[25, 50, 100, 250].map((size) => (
                       <option key={size} value={size}>
@@ -1486,7 +1486,7 @@ export default function Subscriptions() {
               <div className="space-y-1.5 subscriptions-table-list">
                 {tableLoading ? (
                   <div className="flex justify-center items-center py-8">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-[var(--sa-text-secondary)]">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                       Loading subscriptions...
                     </div>
@@ -1495,7 +1495,7 @@ export default function Subscriptions() {
                   <>
                     {/* Header for list view */}
                     <div className="px-6 py-2 mb-1 subscriptions-table-header">
-                      <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 text-xs font-bold uppercase tracking-wider" style={{ color: '#3B4A66' }}>
+                      <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--sa-text-primary)' }}>
                         <div>Firm</div>
                         <div>Plan</div>
                         <div>Amount</div>
@@ -1511,13 +1511,13 @@ export default function Subscriptions() {
                       return (
                         <div 
                           key={`${subscription.firm_id}-${subscription.plan}`} 
-                          className="bg-white px-6 py-1.5 subscriptions-table-row hover:bg-gray-50 transition-colors cursor-pointer" 
-                          style={{ border: '1px solid #E8F0FF', borderRadius: '6px' }}
+                          className="bg-[var(--sa-bg-card)] px-6 py-1.5 subscriptions-table-row hover:bg-[var(--sa-bg-secondary)] transition-colors cursor-pointer" 
+                          style={{ border: '1px solid var(--sa-border-color)', borderRadius: '6px' }}
                           onClick={() => handleRowClick(subscription)}
                         >
                           <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr_1fr] gap-4 items-center subscriptions-table-row-grid">
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold truncate" style={{ color: '#3B4A66' }}>
+                              <p className="text-sm font-semibold truncate" style={{ color: 'var(--sa-text-primary)' }}>
                                 {subscription.firm_name || '—'}
                               </p>
                               <p className="text-xs truncate" style={{ color: '#6C757D' }}>
@@ -1533,7 +1533,7 @@ export default function Subscriptions() {
                               </span>
                             </div>
                             <div className="whitespace-nowrap">
-                              <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                              <p className="text-sm font-semibold" style={{ color: 'var(--sa-text-primary)' }}>
                                 {subscription.amount_formatted || formatCurrency(subscription.amount)}
                               </p>
                               <p className="text-[10px]" style={{ color: '#6C757D', fontWeight: 600 }}>
@@ -1549,12 +1549,12 @@ export default function Subscriptions() {
                               </span>
                             </div>
                             <div className="whitespace-nowrap">
-                              <p className="text-sm" style={{ color: '#3B4A66' }}>
+                              <p className="text-sm" style={{ color: 'var(--sa-text-primary)' }}>
                                 {formatDateDisplay(subscription.next_billing_date)}
                               </p>
                             </div>
                             <div className="whitespace-nowrap">
-                              <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                              <p className="text-sm font-semibold" style={{ color: 'var(--sa-text-primary)' }}>
                                 {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
                               </p>
                             </div>
@@ -1564,8 +1564,8 @@ export default function Subscriptions() {
                     })}
 
                     {/* Pagination Footer */}
-                    <div className="flex items-center justify-between px-2 py-4 border-t border-[#E8F0FF] mt-4">
-                      <span className="text-xs font-medium text-gray-500">
+                    <div className="flex items-center justify-between px-2 py-4 border-t border-[var(--sa-border-color)] mt-4">
+                      <span className="text-xs font-medium text-[var(--sa-text-secondary)]">
                         Page {currentPage} of {pagination.total_pages}
                       </span>
                       <div className="flex items-center gap-2">
@@ -1589,8 +1589,8 @@ export default function Subscriptions() {
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                    <p className="text-sm text-gray-500">No subscriptions found for the selected filters.</p>
+                  <div className="text-center py-12 bg-[var(--sa-bg-secondary)] rounded-lg border border-dashed border-[var(--sa-border-color)]">
+                    <p className="text-sm text-[var(--sa-text-secondary)]">No subscriptions found for the selected filters.</p>
                   </div>
                 )}
               </div>
@@ -1668,19 +1668,19 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       ></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[#E8F0FF]">
+      <div className="relative bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--sa-border-color)]">
         {/* Modal Header */}
-        <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
+        <div className="flex justify-between items-center p-6 border-b border-[var(--sa-border-color)]">
           <div>
-            <h3 className="text-xl font-bold text-[#3B4A66]">Active Subscribers</h3>
-            <p className="text-sm text-gray-500 mt-1">Total {subscribers.length} firms with active subscriptions</p>
+            <h3 className="text-xl font-bold text-[var(--sa-text-primary)]">Active Subscribers</h3>
+            <p className="text-sm text-[var(--sa-text-secondary)] mt-1">Total {subscribers.length} firms with active subscriptions</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M18 6L6 18M6 6L18 18" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
@@ -1690,24 +1690,24 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2] mb-4"></div>
-              <p className="text-gray-500">Loading subscriber list...</p>
+              <p className="text-[var(--sa-text-secondary)]">Loading subscriber list...</p>
             </div>
           ) : subscribers.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-4 px-4 py-2 text-xs font-bold text-[#3B4A66] uppercase tracking-wider bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-4 px-4 py-2 text-xs font-bold text-[var(--sa-text-primary)] uppercase tracking-wider bg-[var(--sa-bg-secondary)] rounded-lg">
                 <div>Firm Name</div>
                 <div>Plan</div>
                 <div>Status</div>
                 <div>Total Paid</div>
               </div>
               {subscribers.map((sub, idx) => (
-                <div key={`${sub.firm_id}-${idx}`} className="grid grid-cols-4 items-center px-4 py-3 border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-colors">
+                <div key={`${sub.firm_id}-${idx}`} className="grid grid-cols-4 items-center px-4 py-3 border border-[var(--sa-border-color)] rounded-xl hover:bg-[var(--sa-bg-secondary)] transition-colors">
                   <div>
-                    <p className="text-sm font-semibold text-[#3B4A66]">{sub.firm_name || '—'}</p>
-                    <p className="text-xs text-gray-500">{sub.firm_owner || '—'}</p>
+                    <p className="text-sm font-semibold text-[var(--sa-text-primary)]">{sub.firm_name || '—'}</p>
+                    <p className="text-xs text-[var(--sa-text-secondary)]">{sub.firm_owner || '—'}</p>
                   </div>
                   <div>
-                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-[#E8F0FF] text-[#3B4A66]">
+                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--sa-border-color)] text-[var(--sa-text-primary)]">
                       {sub.plan_label || sub.plan || '—'}
                     </span>
                   </div>
@@ -1716,7 +1716,7 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
                       {sub.status_label || sub.status || 'Active'}
                     </span>
                   </div>
-                  <div className="text-sm font-bold text-[#3B4A66]">
+                  <div className="text-sm font-bold text-[var(--sa-text-primary)]">
                     {sub.total_paid_formatted || `$${Number(sub.total_paid || 0).toFixed(2)}`}
                   </div>
                 </div>
@@ -1724,13 +1724,13 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
             </div>
           ) : (
             <div className="text-center py-20">
-              <p className="text-gray-500">No active subscribers found.</p>
+              <p className="text-[var(--sa-text-secondary)]">No active subscribers found.</p>
             </div>
           )}
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex justify-end">
+        <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors"
@@ -1818,9 +1818,9 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
       'paid': 'bg-green-100 text-green-800',
       'pending': 'bg-yellow-100 text-yellow-800',
       'overdue': 'bg-red-100 text-red-800',
-      'cancelled': 'bg-gray-100 text-gray-800',
+      'cancelled': 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]',
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]';
   };
 
   const formatCurrency = (amount) => {
@@ -1856,11 +1856,11 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Total Revenue</p>
-              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Total Revenue</p>
+              <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                 {formatCurrency(stats.total_revenue || 0)}
               </p>
             </div>
@@ -1868,11 +1868,11 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
           </div>
         </div>
 
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Monthly Revenue</p>
-              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Monthly Revenue</p>
+              <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                 {formatCurrency(stats.monthly_revenue || 0)}
               </p>
             </div>
@@ -1880,11 +1880,11 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
           </div>
         </div>
 
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Paid Invoices</p>
-              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Paid Invoices</p>
+              <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                 {stats.status_counts?.find(s => s.status === 'paid')?.count || 0}
               </p>
             </div>
@@ -1892,11 +1892,11 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
           </div>
         </div>
 
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="bg-[var(--sa-bg-card)] p-4" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: '#3B4A66' }}>Pending Invoices</p>
-              <p className="text-lg font-bold mb-0" style={{ color: '#3B4A66' }}>
+              <p className="text-[10px] font-bold mb-1 uppercase tracking-tight" style={{ color: 'var(--sa-text-primary)' }}>Pending Invoices</p>
+              <p className="text-lg font-bold mb-0" style={{ color: 'var(--sa-text-primary)' }}>
                 {stats.status_counts?.find(s => s.status === 'pending')?.count || 0}
               </p>
             </div>
@@ -1906,7 +1906,7 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg border border-[#E8F0FF]">
+      <div className="bg-[var(--sa-bg-card)] p-6 rounded-lg border border-[var(--sa-border-color)]">
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex-1 min-w-[200px]">
             <input
@@ -1914,14 +1914,14 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
               placeholder="Search by invoice number or firm name..."
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => handleStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">All Statuses</option>
             <option value="paid">Paid</option>
@@ -1933,7 +1933,7 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
           <select
             value={typeFilter}
             onChange={(e) => handleTypeFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">All Plans</option>
             {(plansData?.plans || []).map(plan => (
@@ -1946,35 +1946,35 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
       </div>
 
       {/* Invoices Table */}
-      <div className="bg-white rounded-lg border border-[#E8F0FF] overflow-hidden">
+      <div className="bg-[var(--sa-bg-card)] rounded-lg border border-[var(--sa-border-color)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-[var(--sa-bg-secondary)]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Invoice
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Firm
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-[var(--sa-text-secondary)] uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-[var(--sa-bg-card)] divide-y divide-gray-200">
               {loading ? (
                 <tr>
                   <td colSpan="7" className="px-6 py-4 text-center">
@@ -1985,33 +1985,33 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
                 </tr>
               ) : invoices.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-[var(--sa-text-secondary)]">
                     No subscription invoices found
                   </td>
                 </tr>
               ) : (
                 invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50">
+                  <tr key={invoice.id} className="hover:bg-[var(--sa-bg-secondary)]">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-[var(--sa-text-primary)]">
                         {invoice.invoice_number}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-[var(--sa-text-primary)]">
                         {invoice.firm.name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-[var(--sa-text-secondary)]">
                         {invoice.firm.email}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900 capitalize">
+                      <span className="text-sm text-[var(--sa-text-primary)] capitalize">
                         {invoice.invoice_type.replace('subscription_', '').replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-[var(--sa-text-primary)]">
                         {formatCurrency(invoice.amount)}
                       </span>
                     </td>
@@ -2020,7 +2020,7 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
                         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--sa-text-primary)]">
                       {formatDate(invoice.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -2044,26 +2044,26 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="bg-[var(--sa-bg-card)] px-4 py-3 flex items-center justify-between border-t border-[var(--sa-border-color)] sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-md hover:bg-[var(--sa-bg-secondary)] disabled:opacity-50"
               >
                 Previous
               </button>
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-md hover:bg-[var(--sa-bg-secondary)] disabled:opacity-50"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-[var(--sa-text-primary)]">
                   Showing page <span className="font-medium">{currentPage}</span> of{' '}
                   <span className="font-medium">{totalPages}</span> ({totalCount} total invoices)
                 </p>
@@ -2073,14 +2073,14 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-[var(--sa-border-color)] bg-[var(--sa-bg-card)] text-sm font-medium text-[var(--sa-text-secondary)] hover:bg-[var(--sa-bg-secondary)] disabled:opacity-50"
                   >
                     <FaChevronUp className="h-5 w-5 rotate-90" />
                   </button>
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-[var(--sa-border-color)] bg-[var(--sa-bg-card)] text-sm font-medium text-[var(--sa-text-secondary)] hover:bg-[var(--sa-bg-secondary)] disabled:opacity-50"
                   >
                     <FaChevronDown className="h-5 w-5 rotate-90" />
                   </button>
@@ -2122,37 +2122,37 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
       case 'past_due': return 'bg-yellow-100 text-yellow-700';
       case 'canceled': return 'bg-red-100 text-red-700';
       case 'trialing': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
+      default: return 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]';
     }
   };
 
   return (
     <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[#E8F0FF]">
+      <div className="relative bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--sa-border-color)]">
         {/* Modal Header */}
-        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-start">
+        <div className="p-6 border-b border-[var(--sa-border-color)] flex justify-between items-start">
           <div>
-            <h3 className="text-xl font-bold text-[#3B4A66]">{subscription?.firm_name || 'Subscription Details'}</h3>
+            <h3 className="text-xl font-bold text-[var(--sa-text-primary)]">{subscription?.firm_name || 'Subscription Details'}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(subscription?.status)}`}>
                 {subscription?.status_label || subscription?.status || 'Active'}
               </span>
-              <span className="text-sm text-gray-500">• Firm ID: {subscription?.firm_id}</span>
+              <span className="text-sm text-[var(--sa-text-secondary)]">• Firm ID: {subscription?.firm_id}</span>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <button onClick={onClose} className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex border-b border-[#E8F0FF] px-6">
+        <div className="flex border-b border-[var(--sa-border-color)] px-6">
           {['Overview', 'Billing History', 'Subscription History', 'Audit Logs'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === tab ? 'border-[#3AD6F2] text-[#3AD6F2]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === tab ? 'border-[#3AD6F2] text-[#3AD6F2]' : 'border-transparent text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-primary)]'}`}
             >
               {tab}
             </button>
@@ -2160,35 +2160,35 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+        <div className="flex-1 overflow-y-auto p-6 bg-[var(--sa-bg-secondary)]/50">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2] mb-4"></div>
-              <p className="text-gray-500">Loading firm details...</p>
+              <p className="text-[var(--sa-text-secondary)]">Loading firm details...</p>
             </div>
           ) : error ? (
             <div className="text-center py-20 text-red-500">{error}</div>
           ) : !details ? (
-            <div className="text-center py-20 text-gray-500">No data available.</div>
+            <div className="text-center py-20 text-[var(--sa-text-secondary)]">No data available.</div>
           ) : (
             <div className="space-y-6">
               {activeTab === 'Overview' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Current Subscription</h4>
+                  <div className="bg-[var(--sa-bg-card)] p-4 rounded-xl border border-[var(--sa-border-color)] shadow-sm">
+                    <h4 className="text-xs font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-4">Current Subscription</h4>
                     <div className="space-y-3">
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Plan</span><span className="text-sm font-bold text-[#3B4A66]">{details.subscription_plan_name || details.subscription_plan || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Amount</span><span className="text-sm font-bold text-[#3B4A66]">{formatCurrency(details.monthly_fee)} / month</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Start Date</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.subscription_start_date)}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Next Billing</span><span className="text-sm font-bold text-[#3B4A66]">{formatDate(details.subscription_end_date)}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Plan</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{details.subscription_plan_name || details.subscription_plan || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Amount</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{formatCurrency(details.monthly_fee)} / month</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Start Date</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{formatDate(details.subscription_start_date)}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Next Billing</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{formatDate(details.subscription_end_date)}</span></div>
                       {details.trial_end_date && (
-                         <div className="flex justify-between"><span className="text-sm text-gray-600">Trial Ends</span><span className="text-sm font-bold text-orange-500">{formatDate(details.trial_end_date)}</span></div>
+                         <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Trial Ends</span><span className="text-sm font-bold text-orange-500">{formatDate(details.trial_end_date)}</span></div>
                       )}
                     </div>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-[#E8F0FF] shadow-sm">
+                  <div className="bg-[var(--sa-bg-card)] p-4 rounded-xl border border-[var(--sa-border-color)] shadow-sm">
                     <div className="flex justify-between items-start mb-4">
-                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account Information</h4>
+                      <h4 className="text-xs font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest">Account Information</h4>
                       <button 
                         onClick={() => handleManagePlan(details)}
                         className="px-3 py-1 text-[10px] font-bold text-white bg-[#F56D2D] rounded-lg hover:bg-[#e05d20] transition-colors uppercase tracking-wider"
@@ -2198,42 +2198,42 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
                       </button>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Firm Name</span><span className="text-sm font-bold text-[#3B4A66]">{details.name || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Owner</span><span className="text-sm font-bold text-[#3B4A66]">{details.admin_user_name || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Email</span><span className="text-sm font-bold text-[#3B4A66]">{details.admin_user_email || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Phone</span><span className="text-sm font-bold text-[#3B4A66]">{details.phone_number || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-sm text-gray-600">Status</span><span className="text-sm font-bold text-[#3B4A66] capitalize">{details.status || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Firm Name</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{details.name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Owner</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{details.admin_user_name || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Email</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{details.admin_user_email || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Phone</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{details.phone_number || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Status</span><span className="text-sm font-bold text-[var(--sa-text-primary)] capitalize">{details.status || '—'}</span></div>
                     </div>
                   </div>
                 </div>
               )}
 
               {activeTab === 'Billing History' && (
-                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                <div className="bg-[var(--sa-bg-card)] rounded-xl border border-[var(--sa-border-color)] shadow-sm overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[var(--sa-bg-secondary)]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Period Start</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Invoice</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Period Start</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Amount</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Invoice</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {(details.billing_records || []).map((bill, i) => (
                         <tr key={i}>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(bill.billing_period_start)}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(bill.total_amount)}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-primary)]">{formatDate(bill.billing_period_start)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[var(--sa-text-primary)]">{formatCurrency(bill.total_amount)}</td>
                           <td className="px-4 py-3 text-sm">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${bill.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>
                               {bill.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{bill.invoice_number || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-secondary)]">{bill.invoice_number || '—'}</td>
                         </tr>
                       ))}
                       {(!details.billing_records || details.billing_records.length === 0) && (
-                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No billing records found.</td></tr>
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-[var(--sa-text-secondary)]">No billing records found.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -2241,27 +2241,27 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
               )}
 
               {activeTab === 'Subscription History' && (
-                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                <div className="bg-[var(--sa-bg-card)] rounded-xl border border-[var(--sa-border-color)] shadow-sm overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[var(--sa-bg-secondary)]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Period</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Plan</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Amount</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Period</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Plan</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Amount</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {(details.subscription_history || []).map((hist, i) => (
                         <tr key={i}>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{formatDate(hist.period_start)} - {formatDate(hist.period_end)}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{hist.subscription_plan__display_name || '—'}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{formatCurrency(hist.amount)}</td>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66] capitalize">{hist.payment_status}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-primary)]">{formatDate(hist.period_start)} - {formatDate(hist.period_end)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[var(--sa-text-primary)]">{hist.subscription_plan__display_name || '—'}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[var(--sa-text-primary)]">{formatCurrency(hist.amount)}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-primary)] capitalize">{hist.payment_status}</td>
                         </tr>
                       ))}
                       {(!details.subscription_history || details.subscription_history.length === 0) && (
-                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No subscription history found.</td></tr>
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-[var(--sa-text-secondary)]">No subscription history found.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -2269,27 +2269,27 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
               )}
 
               {activeTab === 'Audit Logs' && (
-                <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+                <div className="bg-[var(--sa-bg-card)] rounded-xl border border-[var(--sa-border-color)] shadow-sm overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[var(--sa-bg-secondary)]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Timestamp</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Action</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Admin</th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Description</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Timestamp</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Action</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Admin</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase">Description</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {(details.plan_change_history || []).map((log, i) => (
                         <tr key={i}>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66] ">{new Date(log.created_at).toLocaleString()}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-[#3B4A66]">{log.action_title || 'Update'}</td>
-                          <td className="px-4 py-3 text-sm text-[#3B4A66]">{log.admin_user__email || 'System'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{log.action_description}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-primary)] ">{new Date(log.created_at).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-[var(--sa-text-primary)]">{log.action_title || 'Update'}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-primary)]">{log.admin_user__email || 'System'}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--sa-text-secondary)]">{log.action_description}</td>
                         </tr>
                       ))}
                       {(!details.plan_change_history || details.plan_change_history.length === 0) && (
-                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-gray-500">No audit logs found.</td></tr>
+                        <tr><td colSpan="4" className="px-4 py-8 text-center text-sm text-[var(--sa-text-secondary)]">No audit logs found.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -2300,7 +2300,7 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex justify-end">
+        <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex justify-end">
           <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors shadow-sm">
             Close
           </button>
@@ -2358,22 +2358,22 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
 
   return (
     <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white">
-          <h3 className="text-xl font-bold text-[#3B4A66]">Manage Firm Plan</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <div className="bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-[var(--sa-border-color)] flex justify-between items-center bg-[var(--sa-bg-card)]">
+          <h3 className="text-xl font-bold text-[var(--sa-text-primary)]">Manage Firm Plan</h3>
+          <button onClick={onClose} className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Firm Name</label>
-            <p className="text-sm font-bold text-[#3B4A66]">{firm?.name}</p>
+            <label className="block text-xs font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-2">Firm Name</label>
+            <p className="text-sm font-bold text-[var(--sa-text-primary)]">{firm?.name}</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Select New Plan</label>
+            <label className="block text-xs font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-2">Select New Plan</label>
             {loading ? (
               <div className="py-4 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3AD6F2]"></div></div>
             ) : (
@@ -2381,7 +2381,7 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
                 {plans.map((plan) => (
                   <label 
                     key={plan.id} 
-                    className={`flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer ${selectedPlan === plan.subscription_type ? 'border-[#3AD6F2] bg-[#F0FDFF]' : 'border-[#E8F0FF] hover:border-[#3AD6F2]/30 bg-white'}`}
+                    className={`flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer ${selectedPlan === plan.subscription_type ? 'border-[#3AD6F2] bg-[#F0FDFF]' : 'border-[var(--sa-border-color)] hover:border-[#3AD6F2]/30 bg-[var(--sa-bg-card)]'}`}
                   >
                     <input
                       type="radio"
@@ -2392,8 +2392,8 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
                       onChange={(e) => setSelectedPlan(e.target.value)}
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-[#3B4A66]">{plan.display_name}</p>
-                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">{plan.subscription_type}</p>
+                      <p className="text-sm font-bold text-[var(--sa-text-primary)]">{plan.display_name}</p>
+                      <p className="text-[10px] text-[var(--sa-text-secondary)] uppercase tracking-wider">{plan.subscription_type}</p>
                     </div>
                     {selectedPlan === plan.subscription_type && (
                       <div className="w-5 h-5 bg-[#3AD6F2] rounded-full flex items-center justify-center">
@@ -2407,10 +2407,10 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
           </div>
         </div>
 
-        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex gap-3">
+        <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex gap-3">
           <button 
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex-1 px-4 py-2 border border-[var(--sa-border-color)] text-[var(--sa-text-secondary)] font-bold rounded-lg hover:bg-[var(--sa-bg-secondary)] transition-colors"
           >
             Cancel
           </button>
@@ -2489,14 +2489,14 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
 
   return (
     <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white">
+      <div className="bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-[var(--sa-border-color)] flex justify-between items-center bg-[var(--sa-bg-card)]">
           <div>
-            <h3 className="text-xl font-bold text-[#3B4A66]">Edit Plan: {plan.display_name}</h3>
-            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">{plan.subscription_type}</p>
+            <h3 className="text-xl font-bold text-[var(--sa-text-primary)]">Edit Plan: {plan.display_name}</h3>
+            <p className="text-xs text-[var(--sa-text-secondary)] mt-1 uppercase tracking-widest">{plan.subscription_type}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button onClick={onClose} className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
@@ -2504,48 +2504,48 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Info */}
             <div className="space-y-4">
-              <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Basic Information</h4>
+              <h4 className="text-sm font-bold text-[var(--sa-text-primary)] border-b pb-2">Basic Information</h4>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Display Name</label>
+                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Display Name</label>
                 <input
                   type="text"
                   name="display_name"
                   value={formData.display_name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Description</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
-                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                  className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monthly Price</label>
+                  <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Monthly Price</label>
                   <input
                     type="number"
                     name="monthly_price"
                     value={formData.monthly_price}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Yearly Price</label>
+                  <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Yearly Price</label>
                   <input
                     type="number"
                     name="yearly_price"
                     value={formData.yearly_price}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                     required
                   />
                 </div>
@@ -2554,50 +2554,50 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
 
             {/* Limits & Config */}
             <div className="space-y-4">
-              <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Limits & Configuration</h4>
+              <h4 className="text-sm font-bold text-[var(--sa-text-primary)] border-b pb-2">Limits & Configuration</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Max Users</label>
+                  <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Max Users</label>
                   <input
                     type="number"
                     name="max_users"
                     value={formData.max_users}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Storage (GB)</label>
+                  <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Storage (GB)</label>
                   <input
                     type="number"
                     name="storage_limit_gb"
                     value={formData.storage_limit_gb}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Badge Text</label>
+                  <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Badge Text</label>
                   <input
                     type="text"
                     name="badge_text"
                     value={formData.badge_text}
                     onChange={handleChange}
                     placeholder="e.g. Popular"
-                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Badge Color</label>
+                  <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Badge Color</label>
                   <input
                     type="text"
                     name="badge_color"
                     value={formData.badge_color}
                     onChange={handleChange}
                     placeholder="e.g. #F56D2D"
-                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
+                    className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm"
                   />
                 </div>
               </div>
@@ -2610,43 +2610,43 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
                   onChange={handleChange}
                   className="w-4 h-4 text-[#3AD6F2] rounded focus:ring-[#3AD6F2]"
                 />
-                <label htmlFor="is_fully_configurable" className="text-sm font-medium text-[#3B4A66]">Fully Configurable</label>
+                <label htmlFor="is_fully_configurable" className="text-sm font-medium text-[var(--sa-text-primary)]">Fully Configurable</label>
               </div>
             </div>
           </div>
 
           <div className="space-y-4 pt-4">
-            <h4 className="text-sm font-bold text-[#3B4A66] border-b pb-2">Features</h4>
+            <h4 className="text-sm font-bold text-[var(--sa-text-primary)] border-b pb-2">Features</h4>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Public Features (Comma separated)</label>
+              <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Public Features (Comma separated)</label>
               <textarea
                 name="public_features"
                 value={formData.public_features}
                 onChange={handleChange}
                 rows="3"
-                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
+                className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
                 placeholder="Feature 1, Feature 2, Feature 3..."
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Hidden Features (Comma separated)</label>
+              <label className="block text-[10px] font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest mb-1">Hidden Features (Comma separated)</label>
               <textarea
                 name="hidden_features"
                 value={formData.hidden_features}
                 onChange={handleChange}
                 rows="2"
-                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
+                className="w-full px-3 py-2 border border-[var(--sa-border-color)] rounded-lg focus:ring-2 focus:ring-[#3AD6F2] outline-none text-sm font-mono"
                 placeholder="Hidden Feature 1, Hidden Feature 2..."
               />
             </div>
           </div>
         </form>
 
-        <div className="p-6 border-t border-[#E8F0FF] bg-gray-50 flex gap-4">
+        <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex gap-4">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-6 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex-1 px-6 py-2 border border-[var(--sa-border-color)] text-[var(--sa-text-secondary)] font-bold rounded-lg hover:bg-[var(--sa-bg-secondary)] transition-colors"
           >
             Cancel
           </button>

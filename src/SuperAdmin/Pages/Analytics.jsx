@@ -16,26 +16,26 @@ export default function Analytics() {
       {/* Header Section and Top Actions */}
       <div className="flex justify-between items-start mb-8 analytics-header">
         <div>
-          <h3 className="text-2xl font-bold mb-2" style={{ color: '#3B4A66' }}>Platform Analytics & Reporting</h3>
-          <p style={{ color: '#3B4A66' }}>Comprehensive insights into platform performance and growth</p>
+          <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--sa-text-primary)' }}>Platform Analytics & Reporting</h3>
+          <p style={{ color: 'var(--sa-text-primary)' }}>Comprehensive insights into platform performance and growth</p>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-1 mb-8 bg-white p-2 w-fit transition-all duration-300 ease-in-out analytics-tabs" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="flex gap-2 mb-8 bg-[var(--sa-bg-secondary)] p-1.5 w-fit transition-all duration-300 ease-in-out analytics-tabs" style={{ border: '1px solid var(--sa-border-color)', borderRadius: '10px' }}>
         {['Overview', 'Revenue', 'Firm Performance', 'Usage & Performance', 'Reports'].map((tab) => (
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
-            className={`px-2 py-1 text-xs font-medium transition-all duration-300 ease-in-out analytics-tab-btn ${selectedTab === tab
-              ? 'text-white transform scale-105'
-              : 'hover:bg-gray-100 hover:transform hover:scale-102'
+            className={`px-4 py-1.5 text-xs font-semibold transition-all duration-300 ease-in-out analytics-tab-btn ${selectedTab === tab
+              ? 'transform scale-105 shadow-md'
+              : 'hover:bg-[var(--sa-bg-active)] hover:transform hover:scale-102'
               }`}
             style={{
-              backgroundColor: selectedTab === tab ? '#3B4A66' : 'white',
-              color: selectedTab === tab ? 'white' : '#3B4A66',
-              borderRadius: '7px',
-
+              backgroundColor: selectedTab === tab ? '#f56d2d' : 'transparent',
+              color: selectedTab === tab ? 'white' : 'var(--sa-text-primary)',
+              borderRadius: '8px',
+              border: 'none'
             }}
           >
             {tab}

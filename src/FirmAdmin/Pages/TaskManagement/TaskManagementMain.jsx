@@ -533,7 +533,7 @@ const TaskManagementMain = () => {
             {!advancedReportingEnabled && (
               <button
                 onClick={exportTasksToPDF}
-                className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro] taskmanage-action-button"
+                className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro] taskmanage-action-button"
               >
                 <svg
                   width="18"
@@ -560,7 +560,7 @@ const TaskManagementMain = () => {
                 e.stopPropagation();
                 setShowCreateTaskModal(true);
               }}
-              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro] taskmanage-action-button"
+              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg  transition-colors flex items-center font-[BasisGrotesquePro] taskmanage-action-button"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -707,19 +707,24 @@ const TaskManagementMain = () => {
                   Page {currentPage} of {pagination.total_pages}
                 </span>
                 <button
-                  className="btn  taskmanage-pagination-button"
+                  className="btn taskmanage-pagination-button"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= pagination.total_pages}
                   style={{
-                    backgroundColor: currentPage >= pagination.total_pages ? '#E5E7EB' : 'var(--firm-primary-color)',
-                    color: currentPage >= pagination.total_pages ? '#9CA3AF' : '#FFFFFF',
+                    backgroundColor: currentPage >= pagination.total_pages
+                      ? '#E5E7EB'
+                      : 'var(--firm-primary-color)',
+                    color: currentPage >= pagination.total_pages
+                      ? '#9CA3AF'
+                      : '#FFFFFF',
                     border: 'none',
                     borderRadius: '6px',
                     padding: '6px 12px',
                     fontSize: '14px',
                     cursor: currentPage >= pagination.total_pages ? 'not-allowed' : 'pointer',
                     opacity: currentPage >= pagination.total_pages ? 0.6 : 1,
-                    fontFamily: 'BasisGrotesquePro'
+                    fontFamily: 'BasisGrotesquePro',
+                    transition: 'none',
                   }}
                 >
                   Next
@@ -744,7 +749,7 @@ const TaskManagementMain = () => {
             <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
             <button
               onClick={fetchTasks}
-              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg  font-[BasisGrotesquePro]"
             >
               Retry
             </button>
@@ -786,14 +791,14 @@ const TaskManagementMain = () => {
                     setTaskToDelete(null);
                   }}
                   disabled={deleting}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gray-100 text-gray-700 !rounded-lg  transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteTask}
                   disabled={deleting}
-                  className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg hover:bg-[#DC2626] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg  transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {deleting ? (
                     <>
