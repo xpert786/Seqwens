@@ -604,9 +604,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                   }`}
                 style={{
                   color: activeTab === plan ? 'white' : 'var(--sa-text-primary)',
-                  backgroundColor: activeTab === plan ? 'var(--sa-text-primary)' : 'white',
+                  backgroundColor: activeTab === plan ? '#F56D2D' : 'transparent',
                   borderRadius: '7px',
-
                 }}
               >
                 {plan}
