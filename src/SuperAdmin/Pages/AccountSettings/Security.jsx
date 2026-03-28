@@ -143,7 +143,7 @@ export default function Security() {
 
         try {
             setSubmitting(true);
-            console.log("Updating API key:", selectedKey.id, formData);
+            console.log("Updating API key:", selectedKey.service, formData);
 
             // The API expects 'key_value' but we'll send 'key' as well for compatibility
             const payload = {
@@ -152,7 +152,7 @@ export default function Security() {
                 service: selectedKey.service
             };
 
-            const response = await superAdminAPI.updateApiKey(selectedKey.id, payload);
+            const response = await superAdminAPI.updateApiKey(selectedKey.service, payload);
 
             if (response.success) {
                 toast.success("API Key updated successfully", superToastOptions);
@@ -185,7 +185,7 @@ export default function Security() {
             }
 
             // Otherwise fetch it
-            const response = await superAdminAPI.revealApiKey(keyObj.id);
+            const response = await superAdminAPI.revealApiKey(keyObj.service);
             if (response.success && response.data) {
                 setRevealedKey(response.data.key);
                 setShowRevealModal(true);
@@ -554,7 +554,7 @@ export default function Security() {
                             </thead>
                             <tbody>
                                 {apiKeys.map((apiKey) => (
-                                    <tr key={apiKey.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
+                                    <tr key={apiKey.service} style={{ borderBottom: "1px solid #F3F4F6" }}>
                                         <td style={{ padding: "12px 0", border: "none", verticalAlign: "middle" }}>
                                             <div>
                                                 <div style={{
