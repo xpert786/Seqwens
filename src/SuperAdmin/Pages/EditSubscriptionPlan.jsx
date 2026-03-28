@@ -488,7 +488,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           price_unit: editAddonForm.price_unit,
           billing_frequency: editAddonForm.billing_frequency || 'monthly',
           scope: editAddonForm.scope,
-          category: editAddonForm.category || null,
+          category: (editAddonForm.category === 'other' ? null : editAddonForm.category) || null,
           unit_quantity: parseInt(editAddonForm.unit_quantity) || 1,
           unit_type: editAddonForm.unit_type,
         })
@@ -519,8 +519,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
       const payload = {
         name: newAddonForm.name.trim(),
         description: newAddonForm.description.trim(),
-        category: newAddonForm.category || 'other',
-        addon_type: newAddonForm.addon_type || `other_${Date.now()}`,
+        category: (newAddonForm.category && newAddonForm.category !== 'other') ? newAddonForm.category : null,
+        addon_type: (newAddonForm.category && newAddonForm.category !== 'other' ? newAddonForm.category : 'other') + `_${Date.now()}`,
         price: parseFloat(newAddonForm.price) || 0,
         price_unit: derivedPriceUnit,
         unit_type: newAddonForm.unit_type || 'unit',
@@ -1468,8 +1468,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       const val = e.target.value;
                       setNewAddonForm(f => ({ 
                         ...f, 
-                        category: val || 'other',
-                        addon_type: val ? `${val}_${Date.now()}` : `other_${Date.now()}` 
+                        category: val || null,
+                        addon_type: (val || 'other') + `_${Date.now()}` 
                       }));
                     }}
                     className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
