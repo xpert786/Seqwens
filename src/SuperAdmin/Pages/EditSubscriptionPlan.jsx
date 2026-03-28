@@ -888,16 +888,19 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               </div>
 
               {/* Category Filter Tabs */}
-              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-[var(--sa-bg-secondary)]/50 rounded-xl border border-gray-100 w-fit">
+              <div className="flex flex-wrap gap-2 mb-6 p-1.5 bg-[var(--sa-bg-secondary)] rounded-xl border border-[var(--sa-border-color)] w-fit">
                 {['all', 'esign', 'storage', 'workflow', 'office', 'staff', 'other'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setSelectedAddonCategory(cat)}
                     className={`px-4 py-1.5 text-xs font-bold transition-all ${selectedAddonCategory === cat
-                      ? 'bg-[var(--sa-text-primary)] text-white shadow-sm'
-                      : 'bg-[var(--sa-bg-card)] text-[var(--sa-text-secondary)] border border-[var(--sa-border-color)] hover:border-blue-300 hover:text-blue-600'
+                      ? 'text-white shadow-sm'
+                      : 'text-[var(--sa-text-secondary)] border border-[var(--sa-border-color)]'
                       }`}
-                    style={{ borderRadius: "10px" }}
+                    style={{ 
+                      borderRadius: "10px",
+                      backgroundColor: selectedAddonCategory === cat ? '#F56D2D' : 'var(--sa-bg-card)'
+                    }}
                   >
                     {cat === 'all' ? 'All Types' : cat === 'esign' ? 'E-Sign' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </button>
@@ -1096,9 +1099,9 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                 <span className="text-[10px] font-medium opacity-60" style={{ color: 'var(--sa-text-primary)' }}>{addon.billing_frequency === 'one_time' ? 'one-time' : addon.billing_frequency === 'yearly' ? 'per year' : 'per month'}</span>
                               </div>
                               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full" style={{
-                                backgroundColor: addon.scope === 'office' ? '#FEF3C7' : '#DBEAFE',
-                                color: addon.scope === 'office' ? '#92400E' : '#1E40AF',
-                                border: `1px solid ${addon.scope === 'office' ? '#FDE68A' : '#93C5FD'}`
+                                backgroundColor: addon.scope === 'office' ? 'var(--sa-bg-secondary)' : '#DBEAFE',
+                                color: addon.scope === 'office' ? 'var(--sa-text-primary)' : '#1E40AF',
+                                border: `1px solid ${addon.scope === 'office' ? 'var(--sa-border-color)' : '#93C5FD'}`
                               }}>
                                 {addon.scope === 'office' ? 'Per Office' : 'Firm-wide'}
                               </span>
