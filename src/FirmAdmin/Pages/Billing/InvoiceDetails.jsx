@@ -560,7 +560,7 @@ export default function InvoiceDetails() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9]">
+            <div className="flex justify-between items-center p-4 sm:p-6 pb-3 border-b border-[#F1F5F9]">
               <div>
                 <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Edit Invoice</h5>
                 <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Update invoice details and status</p>
@@ -577,7 +577,7 @@ export default function InvoiceDetails() {
               </button>
             </div>
 
-            <div className="p-5 sm:p-8 space-y-6">
+            <div className="p-4 sm:p-6 pb-3 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Status</label>
@@ -632,7 +632,7 @@ export default function InvoiceDetails() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex flex-row justify-end gap-3 p-5 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
+            <div className="flex flex-row justify-end gap-3 p-4 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
@@ -667,7 +667,7 @@ export default function InvoiceDetails() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9]">
+            <div className="flex justify-between items-center p-4 sm:p-6 pb-3 border-b border-[#F1F5F9]">
               <div>
                 <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Send Invoice</h5>
                 <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Email this invoice to your client</p>
@@ -684,7 +684,7 @@ export default function InvoiceDetails() {
               </button>
             </div>
 
-            <div className="p-5 sm:p-8 space-y-6">
+            <div className="p-4 sm:p-6 pb-3 space-y-6">
               <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -713,7 +713,7 @@ export default function InvoiceDetails() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex flex-row justify-end gap-3 p-5 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
+            <div className="flex flex-row justify-end gap-3 p-4 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
               <button
                 type="button"
                 onClick={() => setShowSendModal(false)}

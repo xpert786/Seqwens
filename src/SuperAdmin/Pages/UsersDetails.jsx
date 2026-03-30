@@ -708,7 +708,11 @@ const UsersDetails = () => {
                                 </div>
 
                                 {passwordMode === 'generate' ? (
-                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-700">
+                                   <div className="
+  bg-blue-50 border border-blue-100 text-blue-700
+  dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300
+  rounded-lg p-3 text-sm
+">
                                         <p>Clicking "Confirm" will generate a secure random password and email it to <strong>{profile.email}</strong>.</p>
                                     </div>
                                 ) : (

@@ -356,7 +356,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 return (
                   <div
                     key={stageInstance.id}
-                    className={`border-l-4 pl-3 sm:pl-4 pb-4 ${isCurrent ? 'border-blue-500 bg-blue-50' :
+                    className={`border-l-4 p-3 sm:p-4 ${isCurrent ? 'border-blue-500 bg-blue-50' :
                         isCompleted ? 'border-green-500' :
                           'border-gray-300'
                       }`}
@@ -366,7 +366,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                         <span className="text-xl flex-shrink-0">{getStatusIcon(stageInstance.status)}</span>
                         <h5 className={`font-semibold text-sm sm:text-base ${getStatusColor(stageInstance.status)} font-[BasisGrotesquePro]`}>
                           {stageInstance.stage?.name || `Stage ${index + 1}`}
-                        </h5>
+                        </h5>Manage Taxpayers
                         {isCurrent && (
                           <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                             Current
